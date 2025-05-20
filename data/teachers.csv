@@ -1,0 +1,572 @@
+staff_code,role,specialization,working_hours,department_name,email
+AE05,Professor and Dean,,,AERO,muthusamy.n@rajalakshmi.edu.in
+AE23,Professor and HOD,,,AERO,sureshchandrakhandai@rajalakshmi.edu.in
+AE49,Associate Professor,,,AERO,surendrabogadi@rajalakshmi.edu.in
+AE60,Assistant Professor-SS,,,AERO,balaji.rajendran@rajalakshmi.edu.in
+AE67,Assistant Professor,,,AERO,shebazahamed.jp@rajalakshmi.edu.in
+AE72,Assistant Professor-SS,,,AERO,vasthaduvasukannah.dl@rajalakshmi.edu.in
+AE73,Assistant Professor,,,AERO,premanand.tp@rajalakshmi.edu.in
+AE75,Associate Professor,,,AERO,nithiyanantham.kk@rajalakshmi.edu.in
+AE76,Assistant Professor,,,AERO,pradesh.s@rajalakshmi.edu.in
+AE78,Professor,,,AERO,kathiravan.b@rajalakshmi.edu.in
+AE79,Assistant Professor,,,AERO,harish.s.aero@rajalakshmi.edu.in
+AE80,Assistant Professor,,,AERO, harikrishnan.r@rajalakshmi.edu.in
+AE81,Assistant Professor POP,,,AERO,nithiyaraj.m@rajalakshmi.edu.in
+CS49,Professor,,,AI-DS,sureshkumar.s@rajalakshmi.edu.in
+CS66,Associate Professor,,,AI-DS,sornashanthi.d@rajalakshmi.edu.in
+IT213,Professor,,,AI-DS,indirapriya.p@rajalakshmi.edu.in
+IT216,Assistant Professor,,,AI-DS,renukadevi.s@rajalakshmi.edu.in
+IT217,Assistant Professor,,,AI-DS,thiyagarajan.g@rajalakshmi.edu.in
+IT224,Assistant professor-SG,,,AI-DS,jayasriarchanadevi.p@rajalakshmi.edu.in
+IT228,Assistant Professor -SS,,,AI-DS,nirmalaanandhi.y@rajalakshmi.edu.in
+IT234,Associate Professor,,,AI-DS,manoranjini.j@rajalakshmi.edu.in
+IT237,Professor,,,AI-DS,saravanakumar.v@rajalakshmi.edu.in
+IT239,Professor and HOD,,,AI-DS,gnanasekar.jm@rajalakshmi.edu.in
+IT243,Assistant Professor POP,,,AI-DS,preejith.p@rajalakshmi.edu.in
+IT245,Assistant Professor,,,AI-DS,selvarani.k@rajalakshmi.edu.in
+IT253,Assistant Professor -SS,,,AI-DS,ponnila.p@rajalakshmi.edu.in
+IT254,Professor Of Practice,,,AI-DS,srinivasan.thiagarajan@rajalakshmi.edu.in
+IT255,Assistant Professor,,,AI-DS,mariyamonicacelestina.a@rajalakshmi.edu.in
+IT256,Director -Startup HQ,,,AI-DS,sampathkumar.v@rajalakshmi.edu.in
+IT257,Associate Professor,,,AI-DS,beulah.a@rajalakshmi.edu.in
+IT265,Assistant Professor,,,AI-DS,aswinjabamahir@rajalakshmi.edu.in
+CS09,Professor and Director - Alumni Affairs,,,AI-ML,poonkuzhali.s@rajalakshmi.edu.in
+CS175,Assistant Professor SG,,,AI-ML,vijay.k@rajalakshmi.edu.in
+IT178,Assistant Professor SG,,,AI-ML,sowmia.kr@rajalakshmi.edu.in
+IT195,Assistant Professor,,,AI-ML,sangeetha.k@rajalakshmi.edu.in
+CS266,Assistant Professor,,,AI-ML,saranya.s@rajalakshmi.edu.in
+IT209,Assistant Professor,,,AI-ML,aloysieanisha.t@rajalakshmi.edu.in
+IT211,Assistant Professor,,,AI-ML,devendarrao.b@rajalakshmi.edu.in
+IT212,Assistant Professor,,,AI-ML,akshaya.v@rajalakshmi.edu.in
+IT214,Assistant Professor,,,AI-ML,manju.m@rajalakshmi.edu.in
+IT215,Assistant Professor,,,AI-ML,anitha.r@rajalakshmi.edu.in
+CS295,Professor and HOD,,,AI-ML,sekar.k@rajalakshmi.edu.in
+IT225,Assistant Professor,,,AI-ML,divya.s@rajalakshmi.edu.in
+IT226,Associate Professor,,,AI-ML,ramasubramanian.g@rajalakshmi.edu.in
+IT227,Assistant professor-SG,,,AI-ML,sreesubha.s@rajalakshmi.edu.in
+IT232,Assistant Professor -SS,,,AI-ML,kumaran.u@rajalakshmi.edu.in
+IT236,Professor,,,AI-ML,balamurugan.mn@rajalakshmi.edu.in
+IT242,Assistant Professor,,,AI-ML,priya.m@rajalakshmi.edu.in
+IT244,Associate Professor,,,AI-ML, magesh.mp@rajalakshmi.edu.in
+CS330,Professor,,,AI-ML, gayathri.m@rajalakshmi.edu.in
+IT246,Professor,,,AI-ML,rajasekaran.a@rajalakshmi.edu.in
+IT248,Professor And COE,,,AI-ML, karthikeyan.r3@rajalakshmi.edu.in
+IT250,Associate Professor,,,AI-ML,raju.k@rajalakshmi.edu.in
+IT252,Assistant Professor,,,AI-ML,jasminegabriel.j@rajalakshmi.edu.in
+IT261,Assistant Professor,,,AI-ML,soundarya.m@rajalakshmi.edu.in
+IT262,Professor,,,AI-ML,malathy.em@rajalakshmi.edu.in
+IT264,Assistant professor-SG,,,AI-ML,raja.r@rajalakshmi.edu.in
+IT287,Professor Of Practice,,,AI-ML,srinivasan.t@rajalakshmi.edu.in
+AU11,Assistant Professor SG,,,AUTO,anbalagan.r@rajalakshmi.edu.in
+AU20,Assistant Professor-SS,,,AUTO,mohanraj.k@rajalakshmi.edu.in
+AU35,AP SS Coordin PG Studies,,,AUTO,pavan.p@rajalakshmi.edu.in
+AU37,Professor and HOD,,,AUTO,bhaskar.k@rajalakshmi.edu.in;hod.auto@rajalakshmi.edu.in
+AU46,Assistant Professor SG,,,AUTO,zahirhussain.m@rajalakshmi.edu.in
+AU49,Assistant Professor,,,AUTO,edwinjoseph.r@rajalakshmi.edu.in
+ME232,Associate Professor,,,AUTO,mullaisudaroli.b@rajalakshmi.edu.in
+AU50,Associate Professor,,,AUTO,selvaraju.pn@rajalakshmi.edu.in
+AU51,Assistant Professor,,,AUTO,karthikeyan.r2@rajalakshmi.edu.in
+BM23,Professor,,,BIO MEDICAL,premkumar.r@rajalakshmi.edu.in
+BM22,Associate Professor,,,BIO MEDICAL,sudha.singaram@rajalakshmi.edu.in
+BM26,Assistant Professor SG,,,BIO MEDICAL,muralidharan.c@rajalakshmi.edu.in
+BM28,Professor and Dean,,,BIO MEDICAL,kalpana.r@rajalakshmi.edu.in
+BM35,Associate Professor,,,BIO MEDICAL,padmasini.n@rajalakshmi.edu.in
+BM59,Professor,,,BIO MEDICAL,jobinchrist.mc@rajalakshmi.edu.in
+BM60,Assistant Professor,,,BIO MEDICAL,karuppathal.e@rajalakshmi.edu.in
+BM61,Professor and HOD,,,BIO MEDICAL,rajkumar.s@rajalakshmi.edu.in
+BM65,Adjunct Faculty,,,BIO MEDICAL,sapthagirishsrinivas.c.2014.mech@rajalakshmi.edu.in
+BM66,Assistant Professor,,,BIO MEDICAL,krishnakumar.s@rajalakshmi.edu.in
+BM71,Assistant Professor,,,BIO MEDICAL,sankar.k@rajalakshmi.edu.in
+BM70,Assistant Professor -SS,,,BIO MEDICAL,subathra.y@rajalakshmi.edu.in
+BM72,Assistant Professor,,,BIO MEDICAL,prathisha.m@rajalakshmi.edu.in
+BM73,Assistant Professor,,,BIO MEDICAL,abiramy.s@rajalakshmi.edu.in
+BM74,Assistant Professor SG,,,BIO MEDICAL,rubeshkumar.t@rajalakshmi.edu.in
+BM78,Associate Professor,,,BIO MEDICAL,Ramachandran R <ramachandran.r@rajalakshmi.edu.in>
+BM79,Assistant Professor,,,BIO MEDICAL,senthilkumar.p@rajalakshmi.edu.in
+BM80,Assistant professor-SG,,,BIO MEDICAL, jeminaasnothsylvia.j@rajalakshmi.edu.in
+BM81,Assistant Professor,,,BIO MEDICAL,gloryprecious.j@rajalakshmi.edu.in
+BM82,Assistant Professor,,,BIO MEDICAL,nithyakalyanikrishnan@rajalakshmi.edu.in
+BM83,Assistant Professor,,,BIO MEDICAL,revathy.p.bme@rajalakshmi.edu.in
+BM84,Associate Professor,,,BIO MEDICAL,vigneswaran.narayanamurthy@rajalakshmi.edu.in
+BM86,Assistant Professor -SS,,,BIO MEDICAL,shanthipriya.a@rajalakshmi.edu.in
+BT01,Professor and Dean,,,BIO TECH,johannarajkumar@rajalakshmi.edu.in
+BT30,Associate Professor,,,BIO TECH,sridhar.d@rajalakshmi.edu.in
+BT33,Professor and HOD,,,BIO TECH,sankar.m@rajalakshmi.edu.in
+BT119,Associate Professor,,,BIO TECH,selvakumar.ta@rajalakshmi.edu.in
+BT103,Associate Professor,,,BIO TECH,rajasekar.p@rajalakshmi.edu.in
+BT107,Associate Professor,,,BIO TECH,millicentmable.m@rajalakshmi.edu.in
+BT85,Associate Professor,,,BIO TECH,anila.r@rajalakshmi.edu.in
+BT109,Professor,,,BIO TECH,thiruvengadam.s@rajalakshmi.edu.in
+BT114,Associate Professor,,,BIO TECH,vijayageetha.b@rajalakshmi.edu.in
+BT118,Assistant professor-SG,,,BIO TECH,sujataroy@rajalakshmi.edu.in
+BT122,Associate Professor,,,BIO TECH,anitha.t@rajalakshmi.edu.in
+BT123,Associate Professor,,,BIO TECH,haripriya.d@rajalakshmi.edu.in
+BT124,Professor,,,BIO TECH,sathya.k@rajalakshmi.edu.in
+BT125,Assistant Professor -SS,,,BIO TECH,arunkumar.s@rajalakshmi.edu.in
+BT131,Associate Professor,,,BIO TECH,hemavathy.rv@rajalakshmi.edu.in
+BT153,Associate Professor,,,BIO TECH,saravanan.p@rajalakshmi.edu.in
+BT156,Assistant Professor,,,BIO TECH,carlingeormalar.g@rajalakshmi.edu.in
+BT158,Assistant Professor,,,BIO TECH,shreenidhi.ks@rajalakshmi.edu.in
+BT165,Assistant Professor,,,BIO TECH,kavitha.k@rajalakshmi.edu.in
+BT166,Assistant Professor,,,BIO TECH,preethi.b@rajalakshmi.edu.in
+BT168,Assistant Professor,,,BIO TECH,arun.a@rajalakshmi.edu.in
+BT169,Assistant Professor,,,BIO TECH,premalatha.n@rajalakshmi.edu.in
+BT170,Assistant Professor,,,BIO TECH,divyalakshmi.s@rajalakshmi.edu.in
+BT171,Assistant Professor,,,BIO TECH,sangeethagandhi.s@rajalakshmi.edu.in
+BT172,Assistant Professor,,,BIO TECH,pavithra.ks@rajalakshmi.edu.in
+BT173,Assistant Professor,,,BIO TECH,saranya.sr@rajalakshmi.edu.in
+BT176,Assistant Professor,,,BIO TECH,poorani.tr@rajalakshmi.edu.in
+BT177,Assistant professor-SG,,,BIO TECH,rekha.ravendran@rajalakshmi.edu.in
+BT178,Assistant Professor,,,BIO TECH,surya.s@rajalakshmi.edu.in
+BT179,Assistant Professor,,,BIO TECH,vimaladevi.m@rajalakshmi.edu.in
+BT180,Assistant Professor,,,BIO TECH,sinduja.me@rajalakshmi.edu.in
+BT181,Assistant Professor -SS,,,BIO TECH,preethy.kr@rajalakshmi.edu.in
+BT182,Assistant Professor,,,BIO TECH,shanthi.m@rajalakshmi.edu.in
+BT115,Professor and HOD,,,CHEMICAL,sundararaman.tr@rajalakshmi.edu.in
+CL02,Associate Professor,,,CHEMICAL,vijayaraghavan.g@rajalakshmi.edu.in
+CL03,Assistant Professor,,,CHEMICAL,ambigadevi.j@rajalakshmi.edu.in
+CL05,Associate Professor,,,CHEMICAL,maryrosana.nt@rajalakshmi.edu.in
+CL10,Assistant Professor,,,CHEMICAL,Anithajegadeeshwari.l@rajalakshmi.edu.in
+CL11,Assistant Professor,,,CHEMICAL,kalaiarasi.n@rajalakshmi.edu.in
+CL12,Assistant Professor SG,,,CHEMICAL,narasimhareddy.s@rajalakshmi.edu.in
+CL14,Professor,,,CHEMICAL,vincentjoseph.kl@rajalakshmi.edu.in
+CL15,Associate Professor,,,CHEMICAL,sivamani.s@rajalakshmi.edu.in
+CL16,Assistant Professor,,,CHEMICAL,abhilasha.krishnamurthy@rajalakshmi.edu.in
+CL17,Professor,,,CHEMICAL,rameschandrapanda@rajalakshmi.edu.in
+CL18,Assistant Professor -SS,,,CHEMICAL,mangaleswari.s@rajalakshmi.edu.in
+CH02,Professor And Academic Head,,,CHEMISTRY,vasumathi.v@rajalakshmi.edu.in
+CH18,Professor,,,CHEMISTRY,ramadevi.p@rajalakshmi.edu.in
+CH22,Associate Professor,,,CHEMISTRY,mohandoss.s@rajalakshmi.edu.in
+CH37,Assistant Professor-SS,,,CHEMISTRY,seethalakshmi.k@rajalakshmi.edu.in
+CH41,Assistant Professor SG,,,CHEMISTRY,anu.s@rajalakshmi.edu.in
+CH44,Assistant Professor-SS,,,CHEMISTRY,sureshbabu.k@rajalakshmi.edu.in
+CH49,Assistant Professor-SS,,,CHEMISTRY,inbaraj.v@rajalakshmi.edu.in
+CH48,Assistant Professor SG,,,CHEMISTRY,jasminefrancis.s@rajalakshmi.edu.in
+CH50,Assistant professor-SG,,,CHEMISTRY,mohan.s@rajalakshmi.edu.in
+CH51,Professor,,,CHEMISTRY,jayakumar.s@rajalakshmi.edu.in
+CH52,Assistant Professor-SS,,,CHEMISTRY,geetha.j@rajalakshmi.edu.in
+CH53,Assistant Professor -SS,,,CHEMISTRY,udayakumari.d@rajalakshmi.edu.in
+CH58,Assistant Professor,,,CHEMISTRY,saraswathi.k@rajalakshmi.edu.in
+CH59,Assistant Professor,,,CHEMISTRY,arikrishnan.j@rajalakshmi.edu.in
+CH60,Associate Professor,,,CHEMISTRY,manigandan.r@rajalakshmi.edu.in
+CH61,Assistant Professor -SS,,,CHEMISTRY,edwardjeyakumar.j@rajalakshmi.edu.in
+CV19,Assistant professor-SG,,,CIVIL,mahamoodulhasan.n@rajalakshmi.edu.in
+CV27,Professor and Dean,,,CIVIL,selvakumar.m@rajalakshmi.edu.in;
+CV29,Assistant Professor SG,,,CIVIL,muthulakshmi.s@rajalakshmi.edu.in
+CV30,Professor and HOD,,,CIVIL,geetha.s@rajalakshmi.edu.in
+CV35,Assistant professor-SG,,,CIVIL,gouthampriya.m@rajalakshmi.edu.in
+CV39,Assistant Professor -SS,,,CIVIL,jeyaarthi.aj@rajalakshmi.edu.in
+CV61,Assistant Professor-SS,,,CIVIL,premkumar.s@rajalakshmi.edu.in
+CV67,Assistant Professor-SS,,,CIVIL,ammaiappan.m@rajalakshmi.edu.in
+CV65,Assistant Professor,,,CIVIL,manoharan.m@rajalakshmi.edu.in
+CV70,Assistant Professor,,,CIVIL,yugasini.s@rajalakshmi.edu.in
+CV72,Assistant Professor,,,CIVIL,madhavaperumal.r@rajalakshmi.edu.in
+CV81,Professor,,,CIVIL,umamaguesvari.m@rajalakshmi.edu.in
+CV083,Assistant professor-SG,,,CIVIL,eswarydevi.t@rajalakshmi.edu.in
+IT172,Assistant Professor SG,,,CSBS,nisha.rs@rajalakshmi.edu.in
+IT116,Assistant Professor SG,,,CSBS,poornimathi.k@rajalakshmi.edu.in
+CS195,Professor and HOD,,,CSBS,devaki.k@rajalakshmi.edu.in
+CS250,Assistant Professor,,,CSBS,bakiyalakshmis@rajalakshmi.edu.in
+CS263,Assistant Professor SG,,,CSBS,maharasi.m@rajalakshmi.edu.in
+CS270,Professor,,,CSBS,tamilselvi.p@rajalakshmi.edu.in
+IT208,Assistant Professor SG,,,CSBS,gopinath.k@rajalakshmi.edu.in
+CS278,Professor,,,CSBS,shanmugapriya.prakasam@rajalakshmi.edu.in
+CS287,Associate Professor,,,CSBS,vishnukumar.a@rajalakshmi.edu.in
+CS299,Assistant Professor,,,CSBS,jayanthi.m@rajalakshmi.edu.in
+CS300,Assistant Professor,,,CSBS,praveen.ds@rajalakshmi.edu.in
+CS316,Professor,,,CSBS,manikandan.thirumalaisamy@rajalakshmi.edu.in
+CS323,Teaching Assistant,,,CSBS,janani.u@rajalakshmi.edu.in
+CS327,Assistant Professor,,,CSBS,rajammal.k@rajalakshmi.edu.in
+CS11,Professor,,,CSD,revathy.p@rajalakshmi.edu.in
+CS176,Assistant Professor-SS,,,CSD,vijayakumar.r@rajalakshmi.edu.in
+CS289,AOP And HOD,,,CSD,umamaheswararao.s@rajalakshmi.edu.in
+CS290,Assistant Professor,,,CSD,preethi.e@rajalakshmi.edu.in
+CS296,Assistant Professor,,,CSD,kalpana.d@rajalakshmi.edu.in
+CS306,Assistant Professor,,,CSD,thirumalairajan.g@rajalakshmi.edu.in
+CS307,Assistant professor-SG,,,CSD,gunasekar.s@rajalakshmi.edu.in
+CS331,Assistant Professor,,,CSD,pradeepkumar.s@rajalakshmi.edu.in
+IT03,Director And HOD,,,CSE,kumar@rajalakshmi.edu.in
+CSL21,System Administrator,,,CSE,systemadmin@rajalakshmi.edu.in
+CS69,Professor,,,CSE,vinodkumar.s@rajalakshmi.edu.in
+CS77,Assistant Professor SG,,,CSE,bhuvaneswaran@rajalakshmi.edu.in
+CS171,Assistant Professor SG,,,CSE,ponmani.s@rajalakshmi.edu.in
+CS178,Assistant Professor-SS,,,CSE,akiladevi.r@rajalakshmi.edu.in
+CS182,Assistant Professor SG,,,CSE,jananee.v@rajalakshmi.edu.in
+CS208,Associate Professor,,,CSE,duraimurugan.n@rajalakshmi.edu.in
+CS203,Assistant Professor -SS,,,CSE,jaeyalakshmi.m@rajalakshmi.edu.in
+CS218,PROFESSOR AND DEAN (ACADEMICS),,,CSE,muralibhaskaran.v@rajalakshmi.edu.in
+CS221,Assistant Professor SG,,,CSE,jinusophia.j@rajalakshmi.edu.in
+CS224,Assistant Professor -SS,,,CSE,bhavani.m@rajalakshmi.edu.in
+CS226,Assistant Professor,,,CSE,santhiya.m@rajalakshmi.edu.in
+CS237,Professor,,,CSE,ananthasivaprakasam.s@rajalakshmi.edu.in
+CS239,Professor,,,CSE,srinivasan.n@rajalakshmi.edu.in
+CS247,Assistant Professor,,,CSE,preethi.j@rajalakshmi.edu.in
+IT191,Associate Professor,,,CSE,dharanidevi.g@rajalakshmi.edu.in
+IT194,Assistant Professor,,,CSE,farjana.u@rajalakshmi.edu.in
+CS251,Associate Professor,,,CSE,shanmugam.p@rajalakshmi.edu.in
+CS253,Professor,,,CSE,anand.k@rajalakshmi.edu.in
+CS255,Professor,,,CSE,ananthajothi.k@rajalakshmi.edu.in
+CS256,Professor,,,CSE,sabitha.r@rajalakshmi.edu.in
+CS258,Associate Professor,,,CSE,senthilpandi.s@rajalakshmi.edu.in
+CS262,Assistant Professor SG,,,CSE,kumaragurubaran.t@rajalakshmi.edu.in
+CS265,Assistant Professor,,,CSE,saravanagokul.g@rajalakshmi.edu.in
+CS268,Assistant Professor,,,CSE,Rahulchiranjeevi.v@rajalakshmi.edu.in
+CS269,Assistant Professor,,,CSE,anandhi.s@rajalakshmi.edu.in
+CS272,Assistant Professor,,,CSE,vinothini.s@rajalakshmi.edu.in
+CS273,Assistant Professor,,,CSE,deepakkumar.k@rajalakshmi.edu.in
+CS274,Assistant Professor,,,CSE,sasikala.gm@rajalakshmi.edu.in
+IT210,Assistant Professor,,,CSE,adlinlayola.ja@rajalakshmi.edu.in
+CS279,Assistant Professor Cum CSRC Coordinator,,,CSE,rakeshkumar.m@rajalakshmi.edu.in
+CS281,Associate Professor,,,CSE,karthick.v@rajalakshmi.edu.in
+CS282,Assistant Professor,,,CSE,ariyamala.v@rajalakshmi.edu.in
+CS284,Professor,,,CSE,muneeshwari.p@rajalakshmi.edu.in
+IT218,Assistant Professor,,,CSE,shafiyabanu.m@rajalakshmi.edu.in
+CS291,Assistant Professor,,,CSE,mahesmeena@rajalakshmi.edu.in
+CS297,Assistant Professor,,,CSE,muthupandeeswari.r@rajalakshmi.edu.in
+CS298,Assistant Professor,,,CSE,divya.m@rajalakshmi.edu.in
+CS301,Assistant Professor POP,,,CSE,srinivas.vadlamani@rajalakshmi.edu.in
+CS302,Assistant Professor,,,CSE,auxiliaosvinnancy.v@rajalakshmi.edu.in
+CS305,Professor,,,CSE,parthasarathy.c@rajalakshmi.edu.in
+CS308,Assistant Professor,,,CSE,aswanalal@rajalakshmi.edu.in
+CS309,Assistant Professor,,,CSE,sivagami.s@rajalakshmi.edu.in
+CS310,Assistant Professor,,,CSE,sandhiyavani.s@rajalakshmi.edu.in
+CS312,Assistant Professor,,,CSE,akshaikhaanth.jm@rajalakshmi.edu.in
+CS313,Associate Professor,,,CSE,ayyadurai.m@rajalakshmi.edu.in
+CS314,Assistant professor-SG,,,CSE,deepa.b@rajalakshmi.edu.in
+CS317,Assistant Professor,,,CSE,ragu.g@rajalakshmi.edu.in
+CS318,Assistant Professor -SS,,,CSE,senthilkumar.ss@rajalakshmi.edu.in
+CS319,Professor,,,CSE,chettiyarvanivivekanand@rajalakshmi.edu.in
+CS321,Associate Professor,,,CSE,bhuvaneswari.r@rajalakshmi.edu.in
+CS320,Associate Professor,,,CSE,madhusudhan.s@rajalakshmi.edu.in
+CS322,Assistant Professor,,,CSE,dharshini.bs@rajalakshmi.edu.in
+CS326,Professor and Dean,,,CSE,duraipandian.n@rajalakshmi.edu.in /dean.cs@rajalakshmi.edu.in
+CS238,Assistant Professor,,,CSE,sathiyavathi.s@rajalakshmi.edu.in
+CS332,Professor Of Practice,,,CSE,senthilkumar.k1@rajalakshmi.edu.in
+CS334,Assistant Professor POP,,,CSE,kirubhakar.tt@rajalakshmi.edu.in
+CS333,Assistant Professor,,,CSE,subamalai.r@rajalakshmi.edu.in
+CS40,Assistant ProfessorSG HOD,,,CSE Cyber Security,benedictjn@rajalakshmi.edu.in ; hod.csecs@rajalakshmi.edu.in
+CS315,Professor,,,CSE Cyber Security,balasubramanian.v@rajalakshmi.edu.in
+CS324,Teaching Assistant,,,CSE Cyber Security,rupmala.r@rajalakshmi.edu.in
+IT258,Assistant Professor,,,CSE Cyber Security,subashrimeenakshi.g@rajalakshmi.edu.in
+EC04,Professor,,,ECE,thilakavathi.b@rajalakshmi.edu.in
+EC31,Professor Director PG Stu,,,ECE,palanivelan.m@rajalakshmi.edu.in
+EC34,Professor,,,ECE,asha.a@rajalakshmi.edu.in
+EC47,Professor,,,ECE,chitra.s@rajalakshmi.edu.in
+EC67,Professor,,,ECE,selvakumar.vs@rajalakshmi.edu.in
+EE55,Assistant Professor SG,,,ECE,sudha.k@rajalakshmi.edu.in
+EC101,Professor,,,ECE,manikandan.t@rajalakshmi.edu.in
+EC104,Professor,,,ECE,suganthi.s@rajalakshmi.edu.in
+EC106,Professor And Research,,,ECE,sujatha.l@rajalakshmi.edu.in
+EC114,Professor,,,ECE,sathish.m@rajalakshmi.edu.in
+EC121,Assistant Professor SG,,,ECE,shaikthasleembanu@rajalakshmi.edu.in
+EC130,Professor,,,ECE,priya.b@rajalakshmi.edu.in
+EC134,Assistant Professor SG,,,ECE,radhamani.v@rajalakshmi.edu.in
+EC135,Associate Professor,,,ECE,saranya.j@rajalakshmi.edu.in
+EC143,Assistant Professor-SS,,,ECE,gururaj.d@rajalakshmi.edu.in
+EC147,Assistant Professor-SS,,,ECE,bharathy.r@rajalakshmi.edu.in
+EC149,Assistant Professor-SS,,,ECE,anithamary.m@rajalakshmi.edu.in
+EE98,Professor,,,ECE,mariammal.t@rajalakshmi.edu.in
+EC163,Assistant Professor-SS,,,ECE,karthi.j@rajalakshmi.edu.in
+EC162,Assistant Professor-SS,,,ECE,benazirbegam.r@rajalakshmi.edu.in
+EC160,Assistant Professor-SS,,,ECE,jananishree.u@rajalakshmi.edu.in
+EC167,Assistant Professor-SS,,,ECE,asokan.v@rajalakshmi.edu.in
+EC171,Assistant Professor SG,,,ECE,helanvidhya.t@rajalakshmi.edu.in
+EC172,Assistant Professor-SS,,,ECE,shanmugapriya.p@rajalakshmi.edu.in
+EC173,Professor and HOD,,,ECE,bhagyalakshmi.l@rajalakshmi.edu.in
+EC175,Assistant Professor SG,,,ECE,sasirekha.d@rajalakshmi.edu.in
+EC181,Assistant Professor-SS,,,ECE,sathya.r@rajalakshmi.edu.in
+EC179,Assistant Professor,,,ECE,sushmasjagtap@rajalakshmi.edu.in
+EC177,Assistant Professor-SS,,,ECE,tamilarasi.m@rajalakshmi.edu.in
+EC185,Assistant Professor,,,ECE,muralikrishna.k@rajalakshmi.edu.in
+EC186,Assistant professor-SG,,,ECE,yogalakshmi.v@rajalakshmi.edu.in
+EC190,Assistant Professor -SS,,,ECE,saranya.g@rajalakshmi.edu.in
+EC192,Assistant Professor,,,ECE,sudharsan.s@rajalakshmi.edu.in
+EC193,Professor,,,ECE,gayathri.r@rajalakshmi.edu.in
+EC194,Assistant Professor,,,ECE,prabhu.ae@rajalakshmi.edu.in
+EC197,Assistant Professor,,,ECE,indhumathi.g@rajalakshmi.edu.in
+EC198,Assistant Professor,,,ECE,vinodhini.sv@rajalakshmi.edu.in
+EC200,Assistant Professor,,,ECE,brenda.m@rajalakshmi.edu.in
+EC201,Assistant Professor,,,ECE,priyankadevi.s@rajalakshmi.edu.in
+EC204,Associate Professor,,,ECE,latha.m@rajalakshmi.edu.in
+EC205,Assistant Professor SG,,,ECE,ganesamoorthy.r@rajalakshmi.edu.in
+EC206,Assistant Professor,,,ECE,sowmiya.g@rajalakshmi.edu.in
+EC207,Assistant Professor,,,ECE,loganathan.g@rajalakshmi.edu.in
+EC209,Assistant professor-SG,,,ECE,kumaran.n@rajalakshmi.edu.in
+EC210,Assistant Professor,,,ECE,senthilraja.b@rajalakshmi.edu.in
+EC211,Professor,,,ECE,jayanthi.d@rajalakshmi.edu.in
+EC212,Assistant Professor,,,ECE,nirmala.d@rajalakshmi.edu.in
+EC213,Professor,,,ECE,uppuramachandraiah@rajalakshmi.edu.in
+EC215,Professor,,,ECE,sathiyavathi.sasikumar@rajalakshmi.edu.in
+EC214,Assistant professor-SG,,,ECE,balaji.sr@rajalakshmi.edu.in
+EC216,Assistant Professor -SS,,,ECE,jeevani.r@rajalakshmi.edu.in
+EC217,Assistant Professor,,,ECE,indhubala.b@rajalakshmi.edu.in
+EE08,Dean Student Affairs,,,EEE,philippraveen.i@rajalakshmi.edu.in
+EE03,Professor,,,EEE,geethapriya.v@rajalakshmi.edu.in
+EE05,Professor,,,EEE,kavitha.j@rajalakshmi.edu.in
+EE10,Professor,,,EEE,alicehepzibah.a@rajalakshmi.edu.in
+EE11,Professor,,,EEE,kalaivani.r@rajalakshmi.edu.in
+EE23,Assistant Professor SG,,,EEE,santhanakrishnan.t@rajalakshmi.edu.in
+EE40,Assistant Professor SG,,,EEE,padmavathi.r@rajalakshmi.edu.in
+EE43,Professor,,,EEE,essakiraj.r@rajalakshmi.edu.in
+EE47,Professor And Adminoffice,,,EEE,thamizhselvan.t@rajalakshmi.edu.in
+EE50,Professor PG,,,EEE,subbiah.m@rajalakshmi.edu.in
+EE48,Associate Professor,,,EEE,devimaheswaran.v@rajalakshmi.edu.in
+EE52,Associate Professor,,,EEE,sangari.a@rajalakshmi.edu.in
+EE54,Professor,,,EEE,selvaraj.a@rajalakshmi.edu.in
+EE56,Professor,,,EEE,rajalakshmi.a@rajalakshmi.edu.in
+EE57,Assistant Professor SG,,,EEE,saravanan.ts@rajalakshmi.edu.in
+EE59,Associate Professor,,,EEE,thirusenthilkumaran.p@rajalakshmi.edu.in
+EE77,Assistant Professor SG,,,EEE,jayasree.k@rajalakshmi.edu.in
+EE78,Assistant Professor SG,,,EEE,antosheeba.j@rajalakshmi.edu.in
+EE82,Associate Professor,,,EEE,sivaraman.pr@rajalakshmi.edu.in
+EE90,Assistant Professor SG,,,EEE,ragupathy.p@rajalakshmi.edu.in
+EE96,Assistant Professor SG,,,EEE,shyam.d@rajalakshmi.edu.in
+EE99,Assistant Professor SG,,,EEE,amutha.c@rajalakshmi.edu.in
+EE102,Assistant Professor-SS,,,EEE,roncarter.sb@rajalakshmi.edu.in
+EE108,Assistant Professor SG,,,EEE,sivagami.v@rajalakshmi.edu.in
+EE60,Assistant Professor-SS,,,EEE,sivamani.d@rajalakshmi.edu.in
+EE114,Assistant Professor-SS,,,EEE,anitha.d@rajalakshmi.edu.in
+EE112,Professor,,,EEE,sivakumar.p@rajalakshmi.edu.in
+EE117,Assistant Professor,,,EEE,jenysophia.s@rajalakshmi.edu.in
+EE121,Professor,,,EEE,umamaheswari.mg@rajalakshmi.edu.in
+EE125,Professor,,,EEE,nazarali.a@rajalakshmi.edu.in
+EE126,Professor and Dean,,,EEE,ramareddy.s@rajalakshmi.edu.in
+EE127,Professor and HOD,,,EEE,kamalakannanc@rajalakshmi.edu.in ; hod.eee@rajalakshmi.edu.in
+EE128,Assistant Professor,,,EEE,sowmiya.a@rajalakshmi.edu.in
+EE130,Assistant Professor,,,EEE,manimegalai.d@rajalakshmi.edu.in
+EE129,Assistant Professor SG,,,EEE,vinitha.jc@rajalakshmi.edu.in
+EE132,Assistant Professor,,,EEE,vijayalakshmi.km@rajalakshmi.edu.in
+EE133,Professor,,,EEE,sridevi.m@rajalakshmi.edu.in
+EE134,Associate Professor,,,EEE,kandaswamy.kv@rajalakshmi.edu.in
+EE136,Assistant professor-SG,,,EEE,srinivasan.c@rajalakshmi.edu.in
+EE135,Assistant Professor,,,EEE,aswini.a@rajalakshmi.edu.in
+EE137,Assistant Professor -SS,,,EEE,krishnan.s@rajalakshmi.edu.in
+EE138,Assistant Professor -SS,,,EEE,dhandayuthapani.s@rajalakshmi.edu.in
+EE139,Assistant Professor -SS,,,EEE,brindhukumari.a@rajalakshmi.edu.in
+EN33,Assistant professor-SG,,,ENGLISH,hastin.fernandez@rajalakshmi.edu.in
+EN35,Assistant Professor SG,,,ENGLISH,srihari.g@rajalakshmi.edu.in
+EN36,AOP Academic Head,,,ENGLISH,alamelu.g@rajalakshmi.edu.in
+EN38,Assistant Professor SG,,,ENGLISH,vijay.m@rajalakshmi.edu.in
+EN40,Assistant Professor-SS,,,ENGLISH,janet.g@rajalakshmi.edu.in
+EN46,Assistant Professor-SS,,,ENGLISH,andria.babu@rajalakshmi.edu.in
+EN57,Assistant Professor-SS,,,ENGLISH,rajalakshmi.b@rajalakshmi.edu.in
+EN59,Assistant Professor,,,ENGLISH,angel.p@rajalakshmi.edu.in
+EN62,Assistant Professor SG,,,ENGLISH,muthumanikandan.m@rajalakshmi.edu.in
+EN63,Associate Professor,,,ENGLISH,lakshmi.b@rajalakshmi.edu.in
+EN68,Assistant Professor,,,ENGLISH,rohini.s@rajalakshmi.edu.in
+EN49,Assistant Professor-SS,,,ENGLISH,renuga.bs@rajalakshmi.edu.in
+EN69,Assistant Professor,,,ENGLISH,raghavi.kk@rajalakshmi.edu.in
+EN70,Assistant Professor,,,ENGLISH,jebarajkabriel@rajalakshmi.edu.in
+EN71,Assistant Professor,,,ENGLISH,sharmila.b@rajalakshmi.edu.in
+EN72,Assistant Professor,,,ENGLISH,malikunnisha.n@rajalakshmi.edu.in
+EN73,Assistant Professor,,,ENGLISH,dinakaran.s@rajalakshmi.edu.in
+EN75,Assistant Professor -SS,,,ENGLISH,rajasree.b@rajalakshmi.edu.in
+EN76,Assistant Professor -SS,,,ENGLISH,vijayalakshmi.m@rajalakshmi.edu.in
+EN77,Assistant Professor,,,ENGLISH,gayathri.k.english@rajalakshmi.edu.in
+EN78,Assistant Professor,,,ENGLISH,chitradevi.p@rajalakshmi.edu.in
+EN79,Assistant Professor,,,ENGLISH,saviermutjabraj.a@rajalakshmi.edu.in
+EN80,Assistant Professor,,,ENGLISH,shanmugapriya.k@rajalakshmi.edu.in
+EN81,Assistant Professor,,,ENGLISH,malathy.g@rajalakshmi.edu.in
+EN82,Assistant Professor,,,ENGLISH,aishwarya.m@rajalakshmi.edu.in
+EN83,Associate Professor,,,ENGLISH,agnesnirmala.j@rajalakshmi.edu.in
+EN84,Assistant Professor,,,ENGLISH,manasa.k@rajalakshmi.edu.in
+BT159,Professor and HOD,,,FOOD TECH,hod.ft@rajalakshmi.edu.in;ramalakshmi.k@rajalakshmi.edu.in
+FT08,Assistant Professor,,,FOOD TECH,aruthradevi.g@rajalakshmi.edu.in
+FT09,Assistant Professor SG,,,FOOD TECH,niveadhitha.s@rajalakshmi.edu.in
+FT19,Professor,,,FOOD TECH,sudhakar.v@rajalakshmi.edu.in
+FT10,Assistant Professor,,,FOOD TECH,kulasticjassy.a@rajalakshmi.edu.in
+FT12,Assistant Professor,,,FOOD TECH,srimagal.a@rajalakshmi.edu.in
+FT13,Assistant Professor,,,FOOD TECH,manonmani.k@rajalakshmi.edu.in
+FT16,Associate Professor,,,FOOD TECH,bharathi.p@rajalakshmi.edu.in
+FT23,Assistant Professor,,,FOOD TECH,anand.r@rajalakshmi.edu.in
+FT24,Assistant Professor,,,FOOD TECH, priyadarshini.sr@rajalakshmi.edu.in
+FT25,Assistant Professor,,,FOOD TECH,nithyabalasundari.s@rajalakshmi.edu.in
+FT26,Assistant Professor,,,FOOD TECH,divyashree.js@rajalakshmi.edu.in
+CS47,Professor,,,IT,Priya.vijay@rajalakshmi.edu.in
+IT30,Assistant Professor SG,,,IT,usha.s@rajalakshmi.edu.in
+IT118,Professor,,,IT,priya.l@rajalakshmi.edu.in
+MC55,Professor,,,IT,prasannakumari.v@rajalakshmi.edu.in
+CS200,Assistant Professor SG,,,IT,narayana.ke@rajalakshmi.edu.in
+IT173,Assistant professor-SG,,,IT,madhurani.m@rajalakshmi.edu.in
+IT186,Associate Professor,,,IT,nalini.s@rajalakshmi.edu.in
+IT187,Assistant Professor,,,IT,arunajameela.ap@rajalakshmi.edu.in
+IT189,Assistant Professor,,,IT,sandhiya.m@rajalakshmi.edu.in
+IT192,Assistant Professor,,,IT,bhalashri.sethuraman@rajalakshmi.edu.in
+IT201,Professor,,,IT,babu.m@rajalakshmi.edu.in
+IT198,Professor,,,IT,subbiah.s@rajalakshmi.edu.in
+IT199,Professor,,,IT,kalaivani.a@rajalakshmi.edu.in
+IT200,Professor,,,IT,neelaveni.p@rajalakshmi.edu.in
+CS259,Assistant Professor SG,,,IT,sangeetha.tupili@rajalakshmi.edu.in
+IT203,Assistant Professor,,,IT,leenajeniferl@rajalakshmi.edu.in
+IT204,Assistant Professor,,,IT,pragadeeshm@rajalakshmi.edu.in
+IT205,Assistant Professor SG,,,IT,indumathik@rajalakshmi.edu.in
+CS277,Assistant Professor-SS,,,IT,deivanai.k@rajalakshmi.edu.in
+IT221,Assistant Professor,,,IT,kalaivani.j@rajalakshmi.edu.in
+IT223,Assistant Professor,,,IT,padmini.s@rajalakshmi.edu.in
+IT230,Professor,,,IT,muthukumar.b@rajalakshmi.edu.in
+IT231,Assistant Professor,,,IT,kalaivani.s@rajalakshmi.edu.in
+IT240,Professor and HOD,,,IT,valarmathie.dinakaran@rajalakshmi.edu.in
+IT241,Assistant Professor POP,,,IT, premalatha.pn@rajalakshmi.edu.in
+CS325,Professor and Dean,,,IT,shunmuganathan.kl@rajalakshmi.edu.in
+IT247,Assistant Professor,,,IT, janani.m@rajalakshmi.edu.in
+IT249,Assistant Professor,,,IT,priyanka.d@rajalakshmi.edu.in
+IT251,Assistant Professor -SS,,,IT,sureshkumar.k@rajalakshmi.edu.in
+IT259,Assistant Professor POP,,,IT,bhuvaneshwari.m@rajalakshmi.edu.in
+IT260,Assistant Professor -SS,,,IT,vimalan.m@rajalakshmi.edu.in
+IT263,Assistant Professor -SS,,,IT,sathish.m1@rajalakshmi.edu.in
+MA08,Professor And Academic Head,,,MATHS,lakshmi.v@rajalakshmi.edu.in
+MA02,Professor and HOD,,,MATHS,hodmath.s@rajalakshmi.edu.in; muthusamy.m@rajalakshmi.edu.in
+MA21,Associate Professor,,,MATHS,james.v@rajalakshmi.edu.in
+MA72,Associate Professor,,,MATHS,rajalakshmy.d@rajalakshmi.edu.in
+MA76,Assistant Professor SG,,,MATHS,renuga.c@rajalakshmi.edu.in
+MA87,Associate Professor,,,MATHS,venkatesan.j@rajalakshmi.edu.in
+MA100,Assistant professor-SG,,,MATHS,nathiya.r@rajalakshmi.edu.in
+MA103,Assistant Professor SG,,,MATHS,sunilkumar.vr@rajalakshmi.edu.in
+MA104,Assistant professor-SG,,,MATHS,vasanthi.s@rajalakshmi.edu.in
+MA111,Assistant Professor -SS,,,MATHS,azhagarasu.a@rajalakshmi.edu.in
+MA112,Assistant Professor,,,MATHS,rajkumar.v@rajalakshmi.edu.in
+MA113,Assistant Professor-SS,,,MATHS,siluvaidasan.r@rajalakshmi.edu.in
+MA114,Associate Professor,,,MATHS,julie.j@rajalakshmi.edu.in
+MA116,Assistant Professor-SS,,,MATHS,shakila.v@rajalakshmi.edu.in
+MA118,Assistant Professor,,,MATHS,shanthini.c@rajalakshmi.edu.in
+MA119,Assistant Professor-SS,,,MATHS,bhavani.s@rajalakshmi.edu.in
+MA121,Assistant Professor -SS,,,MATHS,mageshwaran.k@rajalakshmi.edu.in
+MA123,Associate Professor,,,MATHS,prabhu.s.maths@rajalakshmi.edu.in
+MA125,Assistant Professor -SS,,,MATHS,priyanair@rajalakshmi.edu.in
+MA127,Assistant Professor SG,,,MATHS,sivakumaran.v@rajalakshmi.edu.in
+MA129,Assistant Professor SG,,,MATHS,subha.m@rajalakshmi.edu.in
+MA130,Assistant Professor,,,MATHS,anbarasi.v@rajalakshmi.edu.in
+MA131,Assistant Professor SG,,,MATHS,bharathi.v@rajalakshmi.edu.in
+MA132,Assistant Professor,,,MATHS,rajaannam.k@rajalakshmi.edu.in
+MA134,Assistant Professor SG,,,MATHS,pomanaselvan.a@rajalakshmi.edu.in
+MA135,Associate Professor,,,MATHS,chalressagayaraj.ac@rajalakshmi.edu.in
+MA136,Assistant Professor,,,MATHS,sathiragavan.m@rajalakshmi.edu.in
+MA137,Assistant professor-SG,,,MATHS,vikram.st@rajalakshmi.edu.in
+MA138,Assistant Professor,,,MATHS,maimoonnisa.s@rajalakshmi.edu.in
+MA139,Assistant Professor -SS,,,MATHS,meenakumari.r@rajalakshmi.edu.in
+MA140,Professor,,,MATHS,sriram.s@rajalakshmi.edu.in
+MA141,Assistant Professor,,,MATHS,thilagavathi.r@rajalakshmi.edu.in
+MA142,Assistant Professor,,,MATHS, gurunathan.s@rajalakshmi.edu.in
+MA144,Assistant Professor,,,MATHS,ramalakshmi.k.maths@rajalakshmi.edu.in
+MA143,Assistant Professor,,,MATHS,santhiya.s@rajalakshmi.edu.in
+MA145,Assistant Professor,,,MATHS,yuvashri.p@rajalakshmi.edu.in
+MA146,Assistant Professor,,,MATHS,hemasurya.s@rajalakshmi.edu.in
+MA147,Assistant Professor -SS,,,MATHS,balavidhya.s@rajalakshmi.edu.in
+MA148,Assistant professor-SG,,,MATHS,vinodkumar.r@rajalakshmi.edu.in
+MA150,Assistant Professor,,,MATHS,chitra.r@rajalakshmi.edu.in
+MA149,Assistant Professor,,,MATHS,bharathi.d.maths@rajalakshmi.edu.in
+MA151,Assistant Professor,,,MATHS,akshaya.a@rajalakshmi.edu.in
+MA152,Assistant professor-SG,,,MATHS,arulmozhi.s@rajalakshmi.edu.in
+MB12,Professor,,,MBA,sankararaman.g@rajalakshmi.edu.in
+MB19,Professor,,,MBA,ragothaman.cb@rajalakshmi.edu.in
+MB42,Associate Professor,,,MBA,suresh.s@rajalakshmi.edu.in
+MB49,Assistant professor-SG,,,MBA,deborahsharon.s@rajalakshmi.edu.in
+MB62,Assistant Professor -SS,,,MBA,kumar.k@rajalakshmi.edu.in
+MB64,Assistant Professor -SS,,,MBA,sajana.kp@rajalakshmi.edu.in
+MB65,Assistant professor-SG,,,MBA,babitha.s@rajalakshmi.edu.in
+MB70,Professor and HOD,,,MBA,umaraman.m@rajalakshmi.edu.in
+MB71,Assistant Professor SG,,,MBA,padmanaaban.p@rajalakshmi.edu.in
+MB72,Assistant Professor,,,MBA,devikomathy@rajalakshmi.edu.in
+MB74,Professor,,,MBA,valliammal.m@rajalakshmi.edu.in
+MB75,Assistant Professor,,,MBA,anithaelavarasi.gn@rajalakshmi.edu.in
+MB76,Assistant Professor,,,MBA,seema.balan@rajalakshmi.edu.in
+MB77,Assistant Professor,,,MBA,silambarasi.s@rajalakshmi.edu.in
+MB80,Assistant Professor,,,MBA,rekha.r@rajalakshmi.edu.in
+MB81,Assistant Professor,,,MBA,preetha.t@rajalakshmi.edu.in
+MB83,Assistant Professor,,,MBA,immaculateamali.j@rajalakshmi.edu.in
+MB84,Assistant Professor,,,MBA,sudhan.sk@rajalakshmi.edu.in
+MB86,Professor Of Practice,,,MBA,ravichandran.t@rajalakshmi.edu.in
+MB85,Professor Of Practice,,,MBA,vasudevan.c@rajalakshmi.edu.in
+MB87,Assistant Professor POP,,,MBA,sridhar.k@rajalakshmi.edu.in
+MB88,Professor Of Practice,,,MBA, ramanathan.kv@rajalakshmi.edu.in
+MB89,Assistant Professor,,,MBA,sindhu.al@rajalakshmi.edu.in
+ME35,Professor,,,MCT,santhanam.v@rajalakshmi.edu.in
+ME197,Assistant Professor,,,MCT,sridharan.m@rajalakshmi.edu.in
+ME227,Associate Professor,,,MCT,balakarthikeyan.m@rajalakshmi.edu.in
+ME231,Assistant Professor,,,MCT,nareshbabu.g@rajalakshmi.edu.in
+ME228,Assistant Professor,,,MCT,nivethitha.sb@rajalakshmi.edu.in
+ME235,Assistant Professor,,,MCT,prakash.e@rajalakshmi.edu.in
+ME239,Professor,,,MCT,chandramohan.p@rajalakshmi.edu.in
+ME242,Assistant Professor,,,MCT,vimalesh.a@rajalakshmi.edu.in
+ME251,Professor and HOD,,,MCT,riteshbhat.rb@rajalakshmi.edu.in
+ME254,Assistant professor-SG,,,MCT, umamaheswari.m@rajalakshmi.edu.in
+ME255,Assistant Professor,,,MCT,shobana.d@rajalakshmi.edu.in
+ME256,Assistant Professor -SS,,,MCT,ramesh.s@rajalakshmi.edu.in
+ME257,Associate Professor,,,MCT,gopinath.s@rajalakshmi.edu.in
+ME258,Assistant Professor,,,MCT,nambiraj.m@rajalakshmi.edu.in
+ME11,Vice Principal,,,MECHANICAL,srinivasan.sp@rajalakshmi.edu.in
+ME31,Professor,,,MECHANICAL,venkateshwaran.n@rajalakshmi.edu.in
+ME32,Professor,,,MECHANICAL,rajkumar.a@rajalakshmi.edu.in
+ME40,Professor and HOD,,,MECHANICAL,shanthi.r@rajalakshmi.edu.in
+ME93,Selection Grade Lecturer,,,MECHANICAL,parthiban.m@rajalakshmi.edu.in
+ME51,Associate Professor,,,MECHANICAL,ramya.g@rajalakshmi.edu.in
+ME102,Associate Professor,,,MECHANICAL,panneerselvan.s@rajalakshmi.edu.in
+ME123,Principal and Professor,,,MECHANICAL,principal@rajalakshmi.edu.in
+ME132,Associate Professor,,,MECHANICAL,shankar.e@rajalakshmi.edu.in
+ME137,Professor,,,MECHANICAL,sudharsan.nm@rajalakshmi.edu.in
+ME146,AOP Academic Head,,,MECHANICAL,vinothbabu.n@rajalakshmi.edu.in
+ME147,Associate Professor,,,MECHANICAL,chandrasekar.p@rajalakshmi.edu.in
+ME150,Assistant professor-SG,,,MECHANICAL,arulmurugan.s@rajalakshmi.edu.in
+ME157,Assistant Professor -SS,,,MECHANICAL,arunprakash.n@rajalakshmi.edu.in
+ME163,Assistant Professor-SS,,,MECHANICAL,hariram.s@rajalakshmi.edu.in
+ME171,Associate Professor,,,MECHANICAL,arumugam.p@rajalakshmi.edu.in
+ME177,Associate Professor,,,MECHANICAL,muthiah.ct@rajalakshmi.edu.in
+ME188,Assistant professor-SG,,,MECHANICAL,devanathan.c@rajalakshmi.edu.in
+ME184,Assistant Professor-SS,,,MECHANICAL,Loganathan.k@rajalakshmi.edu.in
+ME186,Assistant Professor,,,MECHANICAL,dineshkumar.pt@rajalakshmi.edu.in
+ME183,Assistant Professor-SS,,,MECHANICAL,santhanakrishnan.m@rajalakshmi.edu.in
+ME195,Assistant Professor,,,MECHANICAL,vidhushini.p@rajalakshmi.edu.in
+ME199,Professor,,,MECHANICAL,dhandapani.s@rajalakshmi.edu.in
+ME201,Assistant Professor -SS,,,MECHANICAL,abrahamantony@rajalakshmi.edu.in
+ME203,Assistant Professor -SS,,,MECHANICAL,aruna.r@rajalakshmi.edu.in
+ME214,Assistant Professor -SS,,,MECHANICAL,vigneswaran.k@rajalakshmi.edu.in
+ME209,Associate Professor,,,MECHANICAL,paramasivam.a@rajalakshmi.edu.in
+ME210,Associate Professor,,,MECHANICAL,kumar.s@rajalakshmi.edu.in
+ME215,Assistant Professor-SS,,,MECHANICAL,natarajan.s@rajalakshmi.edu.in
+ME212,Assistant Professor-SS,,,MECHANICAL,rajkumar.m@rajalakshmi.edu.in
+ME220,Associate Professor,,,MECHANICAL,dhanaraj.r@rajalakshmi.edu.in
+ME221,Assistant Professor SG,,,MECHANICAL,rajeshkumar.b@rajalakshmi.edu.in
+ME226,Director Research Publica,,,MECHANICAL,sekar.s@rajalakshmi.edu.in
+ME223,Assistant Professor,,,MECHANICAL,parthiban.n@rajalakshmi.edu.in
+ME233,Asst Prof Product Associa,,,MECHANICAL,ghadhatharan.v@rajalakshmi.edu.in
+ME234,Assistant Professor SG,,,MECHANICAL,senthilmurugan.s@rajalakshmi.edu.in
+ME238,Assistant Professor,,,MECHANICAL,muthaimanoj.p@rajalakshmi.edu.in
+ME241,Assistant Professor SG,,,MECHANICAL,ragavendiran.r@rajalakshmi.edu.in
+ME245,Assistant Professor,,,MECHANICAL,tamizhselvan.ls@rajalakshmi.edu.in
+ME249,Professor,,,MECHANICAL,venkataprasat.s@rajalakshmi.edu.in
+ME253,Professor,,,MECHANICAL,baskar.s@rajalakshmi.edu.in
+ME259,Associate Professor,,,MECHANICAL,ramkumar.s.aiml@rajalakshmi.edu.in
+ME260,Professor,,,MECHANICAL,ramesh.g@rajalakshmi.edu.in
+PE04,Physical Director,,,PED,renuka.r@rajalakshmi.edu.in
+PE06,Physical Director,,,PED,vijayaraghavan.m@rajalakshmi.edu.in
+PH09,Assistant Professor SG,,,PHYSICS,anandraj.m@rajalakshmi.edu.in
+PH25,Associate Professor,,,PHYSICS,rubarani.p.gangadharan@rajalakshmi.edu.in
+PH31,Assistant Professor-SS,,,PHYSICS,anumanthakannan.g@rajalakshmi.edu.in
+PH32,Assistant Professor SG,,,PHYSICS,kavitha.r@rajalakshmi.edu.in
+PH34,Assistant professor-SG,,,PHYSICS,sankarkumar.m@rajalakshmi.edu.in
+PH36,Assistant Professor-SS,,,PHYSICS,vijayanarasimhan.k@rajalakshmi.edu.in
+PH38,Assistant Professor-SS,,,PHYSICS,bhavani.r@rajalakshmi.edu.in
+PH39,Assistant Professor SG,,,PHYSICS,latha.b@rajalakshmi.edu.in
+PH42,Assistant Professor SG,,,PHYSICS,senthilkumar.k@rajalakshmi.edu.in
+PH49,AOP Academic Head,,,PHYSICS,vasudevan.p@rajalakshmi.edu.in
+PH51,Assistant Professor -SS,,,PHYSICS,saravanakumar.g@rajalakshmi.edu.in
+PH52,Assistant Professor,,,PHYSICS,Muralidharan.r@rajalakshmi.edu.in
+PH53,Professor,,,PHYSICS,venkatamuthukumar.j@rajalakshmi.edu.in
+PH55,Assistant professor-SG,,,PHYSICS,gobalakrishnan.s@rajalakshmi.edu.in
+PH54,Assistant Professor,,,PHYSICS,muthupradeepa.r@rajalakshmi.edu.in
+PH56,Assistant Professor,,,PHYSICS,sankeeda.i@rajalakshmi.edu.in
+PH57,Associate Professor,,,PHYSICS,ragavendran.v@rajalakshmi.edu.in
+PH58,Associate Professor,,,PHYSICS,pugazhvadivu.ks@rajalakshmi.edu.in
+PH59,Assistant Professor,,,PHYSICS,manumohan@rajalakshmi.edu.in
+PH60,Assistant professor-SG,,,PHYSICS,ahilandeswari.g@rajalakshmi.edu.in
+PH61,Assistant Professor -SS,,,PHYSICS,mahesh.r@rajalakshmi.edu.in
+ME50,Professor and HOD,,,ROBOTICS AND AUTOMATION,giri.r@rajalakshmi.edu.in;hod.ra@rajalakshmi.edu.in
+ME185,Assistant Professor-SS,,,ROBOTICS AND AUTOMATION,eswaran.a@rajalakshmi.edu.in
+ME213,Assistant Professor,,,ROBOTICS AND AUTOMATION,ramkumar.s@rajalakshmi.edu.in
+ME237,Assistant Professor -SS,,,ROBOTICS AND AUTOMATION,rajapandi.r@rajalakshmi.edu.in
+ME236,Assistant Professor,,,ROBOTICS AND AUTOMATION,vimalanathan.p@rajalakshmi.edu.in
+ME243,Assistant Professor,,,ROBOTICS AND AUTOMATION,priyadharshini.r@rajalakshmi.edu.in
+ME244,Assistant Professor,,,ROBOTICS AND AUTOMATION,venugopal.k@rajalakshmi.edu.in
+ME246,Assistant professor-SG,,,ROBOTICS AND AUTOMATION,ganeshbabu.l@rajalakshmi.edu.in
+ME247,Assistant Professor,,,ROBOTICS AND AUTOMATION,saravanan.r@rajalakshmi.edu.in
+ME248,Assistant Professor,,,ROBOTICS AND AUTOMATION,senthilrajan.r@rajalakshmi.edu.in
