@@ -2,6 +2,8 @@
 *.py[cod]
 *$py.class
 
+generated_data/
+
 # Distribution / packaging 
 .Python build/ 
 develop-eggs/ 
