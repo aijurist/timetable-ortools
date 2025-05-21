@@ -37,5 +37,5 @@ Labs are split into 2 batches, must be scheduled accordingly.
 Teacher Sharing
 For one lab with 120 students, two teachers must be assigned.
 
-Course Sharing
+Course Sharing (only lab applicable)
 A course may be handled by two teachers (e.g., each handling a different batch).
