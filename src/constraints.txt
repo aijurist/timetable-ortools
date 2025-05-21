@@ -1,0 +1,41 @@
+Teacher Course Allocation Constraint
+No two courses can be allocated to the same teacher in the same time slot.
+
+Daily Teaching Load
+A teacher should not be assigned more than 5 hours/day.
+
+L-T-P Constraints (Lecture, Tutorial, Practical)
+Each course has a fixed number of hours for Lecture (L), Tutorial (T), and Practical (P).
+Example: JAVA → L=1, T=2, P=0 ⇒ Total = 3 hours/week.
+
+Slot Consecutiveness Constraint
+If a teacher is assigned two consecutive slots, a break must be provided afterwards.
+
+Slot Timings and Durations
+Slot 1: 8:00–8:50 (no break before)
+Slot 2: 9:00–9:50 (10 min break before)
+Slot 3: Similar setup with 10 min breaks
+upto Slot 11
+
+Lab Slot Structuring
+Labs should span two consecutive slots (e.g., 8:00–9:50 with a 10-min break in between).
+upto Slot 6
+
+30-Hour Load Constraint
+If a teacher handles 60 students, she/he must take the class twice.
+If practical hours are 3 hours, then she/he should split them accordingly.
+
+Teacher Availability
+A teacher cannot handle two different classes at the same time.
+
+Special Teacher Assignment
+Some teachers (e.g., lab or specialized) are available only on specific days.
+
+Lab Division
+Labs are split into 2 batches, must be scheduled accordingly.
+
+Teacher Sharing
+For one lab with 120 students, two teachers must be assigned.
+
+Course Sharing
+A course may be handled by two teachers (e.g., each handling a different batch).

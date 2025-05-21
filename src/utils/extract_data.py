@@ -184,14 +184,11 @@ def get_timetable_changes():
     return get_data_as_dataframe('timetable_change')
 
 # Example of a more complex query for related data
-def get_teacher_with_courses(teacher_id: str) -> Dict[str, Any]:
-    """Get teacher details along with assigned courses
+def get_teacher_with_courses() -> Dict[str, Any]:
+    """Get all teachers details along with their assigned courses
     
-    Args:
-        teacher_id (str): Teacher's ID
-        
     Returns:
-        Dict: Teacher details with courses
+        Dict: Dictionary with teachers and their courses
     """
     conn = connect_db()
     if not conn:
@@ -201,31 +198,40 @@ def get_teacher_with_courses(teacher_id: str) -> Dict[str, Any]:
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
-        # Get teacher details
+        # Get all teachers
         teacher_query = """
         SELECT * FROM teacher_teacher 
-        JOIN authentication_user ON authentication_user.email = teacher_teacher.teacher_id_id 
-        WHERE teacher_id_id = ?
+        JOIN authentication_user ON authentication_user.email = teacher_teacher.teacher_id_id
         """
-        cursor.execute(teacher_query, (teacher_id,))
-        teacher = dict(cursor.fetchone()) if cursor.fetchone() else None
+        cursor.execute(teacher_query)
+        teachers = [dict(row) for row in cursor.fetchall()]
         
-        if not teacher:
+        if not teachers:
             return None
         
-        # Get teacher's courses
+        # Get all teacher courses
         courses_query = """
-        SELECT * FROM teacherCourse_teachercourse
-        JOIN course_course ON course_course.id = teacherCourse_teachercourse.course_id_id
-        JOIN courseMaster_coursemaster ON courseMaster_coursemaster.id = course_course.course_id_id
-        WHERE teacherCourse_teachercourse.teacher_id_id = ?
+        SELECT tc.*, cc.*, cm.* 
+        FROM teacherCourse_teachercourse tc
+        JOIN course_course cc ON cc.id = tc.course_id_id
+        JOIN courseMaster_coursemaster cm ON cm.id = cc.course_id_id
         """
-        cursor.execute(courses_query, (teacher_id,))
-        courses = [dict(row) for row in cursor.fetchall()]
+        cursor.execute(courses_query)
+        all_courses = [dict(row) for row in cursor.fetchall()]
         
-        # Combine results
-        teacher['courses'] = courses
-        return teacher
+        # Map courses to respective teachers
+        result = {}
+        for teacher in teachers:
+            teacher_id = teacher.get('teacher_id_id')
+            teacher_courses = [
+                course for course in all_courses 
+                if course.get('teacher_id_id') == teacher_id
+            ]
+            teacher_info = dict(teacher)
+            teacher_info['courses'] = teacher_courses
+            result[teacher_id] = teacher_info
+        
+        return result
     except sqlite3.Error as e:
         print(f"Error fetching teacher data: {e}")
         return None
