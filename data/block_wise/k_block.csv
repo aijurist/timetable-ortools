@@ -1,0 +1,8 @@
+,id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_projector,has_ac,tech_level,maintained_by_id_id,green_board,isLcsAvailable,smart_board
+165,166,KFL01,K Block,Computer Lab (KFL01),1,Laboratory,20,35,1,0,Advanced,12,0,0,0
+166,167,KFL02,K Block,Computer Lab (KFL02),1,Laboratory,20,35,1,0,Advanced,4,0,0,0
+167,168,KFL03,K Block,Computer Lab (KFL03),1,Laboratory,20,35,1,0,High-tech,12,0,0,0
+168,169,KFR01,K Block,Computer Lab (KFR01),1,Laboratory,20,35,1,0,Advanced,4,0,0,0
+169,170,KFR02,K Block,Computer Lab (KFR02),1,Laboratory,20,35,1,0,High-tech,3,0,0,0
+170,171,KFR03,K Block,Computer Lab (KFR03),1,Laboratory,20,35,1,0,Advanced,13,0,0,0
+171,172,KSL03,K Block,Computer Lab (KSL03),1,Laboratory,110,140,1,0,Advanced,13,0,0,0

@@ -1,0 +1,131 @@
+course_code,course_name,department_name,year,semester,regulation,category,lecture_hours,tutorial_hours,practical_hours,credits
+EC23531,Digital Signal Processing,Electronics and Communication Engineering,3.0,5.0,2023.0,LOT,2.0,1.0,2.0,4.0
+CD23531,3D Modelling and Texturing,Computer Science and Design,3.0,5.0,2023.0,LOT,2.0,0.0,6.0,5.0
+CS23431,Operating Systems,Artificial Intelligence and Data Science,2.0,4.0,2023.0,LOT,3.0,0.0,4.0,5.0
+CS23431,Operating Systems,Artificial Intelligence and Machine Learning,2.0,4.0,2023.0,LOT,3.0,0.0,4.0,5.0
+CS23431,Operating Systems,Computer Science and Design,3.0,5.0,2023.0,LOT,3.0,0.0,4.0,5.0
+CS23431,Operating Systems,Computer Science and Engineering,2.0,4.0,2023.0,LOT,3.0,0.0,4.0,5.0
+CS23431,Operating Systems,Computer Science and Engineering (Cyber Security),2.0,4.0,2023.0,LOT,3.0,0.0,4.0,5.0
+CS23431,Operating Systems,Information Technology,2.0,4.0,2023.0,LOT,3.0,0.0,4.0,5.0
+IT23E31,Graphics and Multimedia,,,,,,,,,
+CS23531,Web Programming,Computer Science and Design,3.0,5.0,2023.0,LOT,1.0,0.0,4.0,3.0
+CS23531,Web Programming,Computer Science and Engineering,3.0,5.0,2023.0,LOT,1.0,0.0,6.0,4.0
+CS23531,Web Programming,Computer Science and Engineering (Cyber Security),3.0,5.0,2023.0,LOT,1.0,0.0,6.0,4.0
+CS23531,Web Programming,Information Technology,3.0,5.0,2023.0,LOT,1.0,0.0,6.0,4.0
+CS23533,Foundations of Artificial Intelligence,,,,,,,,,
+EC23512,Modern Digital Communication,Electronics and Communication Engineering,3.0,5.0,2023.0,Theory,3.0,0.0,0.0,3.0
+EC23511,Control System Engineering,Electronics and Communication Engineering,3.0,5.0,2023.0,Theory,2.0,1.0,0.0,3.0
+EC23B11,Information theory and coding,,,,,,,,,
+EC23A11,Medical electronics,,,,,,,,,
+EC23E11,Introduction to MEMS,,,,,,,,,
+BT23511,Bioprocess Principles,Biotechnology,3.0,5.0,2023.0,Theory,3.0,0.0,0.0,3.0
+BT23521,Bioprocess Laboratory- I,Biotechnology,3.0,5.0,2023.0,Laboratory,0.0,0.0,4.0,2.0
+BT23513,Separation Process Principles,Biotechnology,3.0,5.0,2023.0,Theory,3.0,1.0,0.0,3.0
+GE23311,Fundamentals of Management for Engineers,Automobile Engineering,3.0,5.0,2023.0,Theory,3.0,0.0,0.0,3.0
+GE23311,Fundamentals of Management for Engineers,Information Technology,2.0,4.0,2023.0,Theory,3.0,0.0,0.0,3.0
+GE23311,Fundamentals of Management for Engineers,Mechatronics Engineering,3.0,6.0,2023.0,Theory,3.0,0.0,0.0,3.0
+AT23G12,Two and Three Wheelers,,,,,,,,,
+AT23532,Electric and Hybrid Vehicles - II,Automobile Engineering,3.0,5.0,2023.0,LOT,3.0,0.0,2.0,4.0
+AT23521,Two and Three wheelers Laboratory,Automobile Engineering,3.0,5.0,2023.0,Laboratory,0.0,0.0,2.0,1.0
+AT23522,Computer Aided Vehicle Design Data Characteristics Laboratory,Automobile Engineering,3.0,5.0,2023.0,Laboratory,0.0,0.0,2.0,1.0
+CS23532,Computer Networks,Artificial Intelligence and Data Science,3.0,5.0,2023.0,LOT,3.0,0.0,4.0,5.0
+CS23532,Computer Networks,Artificial Intelligence and Machine Learning,3.0,5.0,2023.0,LOT,3.0,0.0,4.0,5.0
+CS23532,Computer Networks,Computer Science and Design,2.0,4.0,2023.0,LOT,3.0,0.0,2.0,4.0
+CS23532,Computer Networks,Computer Science and Engineering,3.0,5.0,2023.0,LOT,3.0,0.0,4.0,5.0
+CS23532,Computer Networks,Computer Science and Engineering (Cyber Security),2.0,3.0,2023.0,LOT,3.0,0.0,4.0,5.0
+CS23532,Computer Networks,Information Technology,3.0,5.0,2023.0,LOT,3.0,0.0,4.0,5.0
+CS23512,Fundamentals of Mobile Computing,Computer Science and Engineering,3.0,5.0,2023.0,Theory,3.0,0.0,0.0,3.0
+CS23512,Fundamentals of Mobile Computing,Information Technology,3.0,6.0,2023.0,Theory,3.0,0.0,0.0,3.0
+CS23511,Theory of Computation,Computer Science and Engineering,3.0,5.0,2023.0,Theory,3.0,1.0,0.0,4.0
+CE23513,Waste Water Engineering,Civil Engineering,3.0,5.0,2023.0,Theory,3.0,0.0,0.0,3.0
+CE23511,Design of Reinforced Concrete Elements,Civil Engineering,3.0,5.0,2023.0,Theory,3.0,1.0,0.0,4.0
+CE23512,Foundation Engineering,Civil Engineering,3.0,5.0,2023.0,Theory,3.0,0.0,0.0,3.0
+CE19712,CREATIVE AND INNOVATIVE PROJECT,,,,,,,,,
+CE23531,Structural Analysis,Civil Engineering,3.0,5.0,2023.0,LOT,3.0,0.0,2.0,4.0
+CE23C11,ADVANCED CONSTRUCTION TECHNIQUES,,,,,,,,,
+CE23F14,URBAN PLANNING AND DEVELOPMENT,,,,,,,,,
+AE23511,Aircraft Propulsion,Aeronautical Engineering,3.0,5.0,2023.0,Theory,2.0,1.0,0.0,3.0
+AE23513,Flight Dynamics,Aeronautical Engineering,3.0,5.0,2023.0,Theory,2.0,1.0,0.0,3.0
+AE23512,Compressible Aerodynamics,Aeronautical Engineering,3.0,5.0,2023.0,Theory,2.0,1.0,0.0,3.0
+CE23521,Water and Waste Water Analysis Laboratory,Civil Engineering,3.0,5.0,2023.0,Laboratory,0.0,0.0,4.0,2.0
+RO23511,AI for Robotics,Robotics and Automation,3.0,5.0,2023.0,Theory,3.0,0.0,0.0,3.0
+AD23531,Big Data Architecture,Artificial Intelligence and Data Science,3.0,5.0,2023.0,LOT,3.0,0.0,2.0,4.0
+AE23531,Aircraft Structures - II,Aeronautical Engineering,3.0,5.0,2023.0,LOT,2.0,1.0,2.0,4.0
+GE23521,Soft Skills – II,Artificial Intelligence and Data Science,3.0,5.0,2023.0,Laboratory,0.0,0.0,2.0,1.0
+GE23521,Soft Skills – II,Artificial Intelligence and Machine Learning,3.0,5.0,2023.0,Laboratory,0.0,0.0,2.0,1.0
+GE23521,Soft Skills – II,Biomedical Engineering,3.0,5.0,2023.0,Laboratory,0.0,0.0,2.0,1.0
+GE23521,Soft Skills – II,Biotechnology,3.0,5.0,2023.0,Laboratory,0.0,0.0,2.0,1.0
+GE23521,Soft Skills – II,Computer Science and Design,3.0,5.0,2023.0,Laboratory,0.0,0.0,2.0,1.0
+GE23521,Soft Skills – II,Computer Science and Engineering,3.0,5.0,2023.0,Laboratory,0.0,0.0,2.0,1.0
+GE23521,Soft Skills – II,Computer Science and Engineering (Cyber Security),3.0,5.0,2023.0,Laboratory,0.0,0.0,2.0,1.0
+GE23521,Soft Skills – II,Computer Science and Business Systems,3.0,5.0,2023.0,Laboratory,0.0,0.0,2.0,1.0
+GE23521,Soft Skills – II,Information Technology,3.0,5.0,2023.0,Laboratory,0.0,0.0,2.0,1.0
+GE23521,Soft Skills – II,Mechanical Engineering,3.0,5.0,2023.0,Laboratory,0.0,0.0,2.0,1.0
+GE23521,Soft Skills – II,Robotics and Automation,3.0,5.0,2023.0,Laboratory,0.0,0.0,2.0,1.0
+Nptel,Nptel,,,,,,,,,
+AD19751,Basics of Computer Vision,,,,,,,,,
+AD23532,Principles of Data Science,Artificial Intelligence and Data Science,3.0,5.0,2023.0,LOT,3.0,0.0,2.0,4.0
+AD23532,Principles of Data Science,Artificial Intelligence and Machine Learning,3.0,5.0,2023.0,LOT,3.0,0.0,2.0,4.0
+AE23D11,Fundamentals of UAV Systems and Design,,,,,,,,,
+RO23512,Theory of Mechanisms and Machines-II,Robotics and Automation,3.0,5.0,2023.0,Theory,3.0,1.0,0.0,4.0
+MT23512,Industrial Electronics,,,,,,,,,
+RO23521,Mobile Robotics laboratory,Robotics and Automation,3.0,5.0,2023.0,Laboratory,0.0,0.0,4.0,2.0
+RO23522,"Industrial Automation 
+ Laboratory-II",Robotics and Automation,3.0,5.0,2023.0,Laboratory,0.0,0.0,4.0,2.0
+MT23511,Semiconductor Manufacturing,Mechatronics Engineering,3.0,5.0,2023.0,Theory,3.0,0.0,0.0,3.0
+MT23513,Basic Engineering Research Methods,,,,,,,,,
+CS23422,Python Programming for Machine Learning,Aeronautical Engineering,2.0,3.0,2023.0,Laboratory,0.0,0.0,4.0,2.0
+CS23422,Python Programming for Machine Learning,Automobile Engineering,2.0,4.0,2023.0,LOT,0.0,0.0,4.0,2.0
+CS23422,Python Programming for Machine Learning,Biomedical Engineering,3.0,5.0,2023.0,LOT,1.0,0.0,4.0,3.0
+CS23422,Python Programming for Machine Learning,Biotechnology,2.0,4.0,2023.0,Laboratory,0.0,0.0,4.0,2.0
+CS23422,Python Programming for Machine Learning,Civil Engineering,2.0,3.0,2023.0,Laboratory,0.0,0.0,4.0,2.0
+CS23422,Python Programming for Machine Learning,Electrical and Electronics Engineering,2.0,4.0,2023.0,Laboratory,0.0,0.0,4.0,2.0
+CS23422,Python Programming for Machine Learning,Electronics and Communication Engineering,2.0,4.0,2023.0,Laboratory,0.0,0.0,4.0,2.0
+CS23422,Python Programming for Machine Learning,Mechanical Engineering,2.0,3.0,2023.0,Laboratory,0.0,0.0,4.0,2.0
+CS23422,Python Programming for Machine Learning,Robotics and Automation,2.0,3.0,2023.0,Laboratory,0.0,0.0,4.0,2.0
+MT23522,Industrial Electronics Laboratory,,,,,,,,,
+FT19713,Industry training during vacation,,,,,,,,,
+MT23523,Internship,,,,,,,,,
+FT23503,Heat and Mass Transfer in Food Processing,Food Technology,3.0,5.0,2023.0,Theory,3.0,0.0,0.0,3.0
+FT19711,Food Packaging Technology Laboratory,,,,,,,,,
+FT23512,Food Processing and Preservation Laboratory - II,Food Technology,3.0,5.0,2023.0,Laboratory,0.0,0.0,4.0,2.0
+FT19704,Professional Ethics,,,,,,,,,
+FT23511,Food Analysis Laboratory,Food Technology,3.0,5.0,2023.0,Laboratory,0.0,0.0,4.0,2.0
+RO23C13,Farm Automation,,,,,,,,,
+FT23502,Food Process Engineering,Food Technology,3.0,5.0,2023.0,Theory,3.0,0.0,0.0,3.0
+FT23501,Food Analysis,Food Technology,3.0,5.0,2023.0,Theory,3.0,0.0,0.0,3.0
+PE I,Professional Elective I,,,,,,,,,
+PE II,Professional Elective II,,,,,,,,,
+BT23512,Bioinformatics,Biotechnology,3.0,5.0,2023.0,Theory,3.0,0.0,0.0,3.0
+AI23A37,Computer Vision and Applications,,,,,,,,,
+AI23531,Deep Learning,Artificial Intelligence and Machine Learning,3.0,5.0,2023.0,LOT,3.0,0.0,2.0,4.0
+AI23521,Build and Deploy Machine Learning Applications,Artificial Intelligence and Machine Learning,3.0,5.0,2023.0,Laboratory,0.0,0.0,2.0,1.0
+AT23511,Design of Machine Elements,Automobile Engineering,3.0,5.0,2023.0,Theory,2.0,1.0,0.0,3.0
+AD23532,Framework for Data and Visual Analytics,Artificial Intelligence and Data Science,3.0,5.0,2023.0,LOT,3.0,0.0,2.0,4.0
+AD23532,Framework for Data and Visual Analytics,Artificial Intelligence and Machine Learning,3.0,5.0,2023.0,LOT,3.0,0.0,2.0,4.0
+EE23521,Control and Instrumentation Laboratory,Electrical and Electronics Engineering,3.0,5.0,2023.0,Laboratory,0.0,0.0,2.0,1.0
+EE23513,Control Systems,Electrical and Electronics Engineering,3.0,5.0,2023.0,Theory,3.0,0.0,0.0,3.0
+GE23627,Design Thinking and Innovation,Aeronautical Engineering,3.0,6.0,2023.0,Laboratory,0.0,0.0,2.0,1.0
+GE23627,Design Thinking and Innovation,Automobile Engineering,3.0,6.0,2023.0,Others,0.0,0.0,2.0,1.0
+GE23627,Design Thinking and Innovation,Chemical Engineering,3.0,6.0,2023.0,Others,0.0,0.0,2.0,1.0
+GE23627,Design Thinking and Innovation,Electrical and Electronics Engineering,3.0,6.0,2023.0,Laboratory,0.0,0.0,2.0,1.0
+GE23627,Design Thinking and Innovation,Electronics and Communication Engineering,3.0,6.0,2023.0,Laboratory,0.0,0.0,2.0,1.0
+GE23627,Design Thinking and Innovation,Robotics and Automation,3.0,6.0,2023.0,Laboratory,0.0,0.0,2.0,1.0
+EE23531,"Microprocessors, Microcontrollers and Applications",Electrical and Electronics Engineering,3.0,5.0,2023.0,LOT,3.0,0.0,2.0,4.0
+EE23B21,Wiring Harness Design Engineering,,,,,,,,,
+ME23511,Machine Design,Mechanical Engineering,3.0,5.0,2023.0,Theory,3.0,0.0,0.0,3.0
+ME23511,Machine Design,Robotics and Automation,3.0,5.0,2023.0,Theory,3.0,0.0,0.0,3.0
+EE23512,Power Electronics,Electrical and Electronics Engineering,3.0,5.0,2023.0,Theory,3.0,0.0,0.0,3.0
+EE23511,Power System Analysis,Electrical and Electronics Engineering,3.0,5.0,2023.0,Theory,3.0,0.0,0.0,3.0
+GE23511,Economics for Engineers,Mechanical Engineering,3.0,5.0,2023.0,Theory,3.0,0.0,0.0,3.0
+ME23G11,Automobile Engineering,,,,,,,,,
+ME23G12,Industrial Safety,,,,,,,,,
+ME23F12,Energy conservation and waste heat recovery,,,,,,,,,
+ME23531,Heat and Mass Transfer,Mechanical Engineering,3.0,5.0,2023.0,LOT,3.0,0.0,2.0,4.0
+ME23532,Metrology and Measurements,Mechanical Engineering,3.0,5.0,2023.0,LOT,3.0,0.0,2.0,4.0
+ME23521,Component Modeling Laboratory,Mechanical Engineering,3.0,5.0,2023.0,Laboratory,0.0,0.0,4.0,2.0
+CH23511,Process Plant Utilities,Chemical Engineering,3.0,5.0,2023.0,Theory,3.0,0.0,0.0,3.0
+CH23513,Mass Transfer I,Chemical Engineering,3.0,5.0,2023.0,Theory,3.0,0.0,0.0,3.0
+CH23514,Chemical Reaction Engineering I,Chemical Engineering,3.0,5.0,2023.0,Theory,3.0,0.0,0.0,3.0
+CH23A11,Petroleum chemistry and Refining Fundamemtals,,,,,,,,,
+CH23521,Heat Transfer Lab,Chemical Engineering,3.0,5.0,2023.0,Laboratory,0.0,0.0,4.0,2.0

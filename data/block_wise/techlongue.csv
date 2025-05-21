@@ -1,0 +1,15 @@
+,id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_projector,has_ac,tech_level,maintained_by_id_id,green_board,isLcsAvailable,smart_board
+173,174,TLFL1,Techlounge,Computer Lab (TLFL1),1,Laboratory,20,35,1,0,High-tech,3,0,0,0
+174,175,TLFL2,Techlounge,Computer Lab (TLFL2),1,Laboratory,20,35,1,0,Basic,11,0,0,0
+175,176,TLFL3,Techlounge,Computer Lab (TLFL3),1,Laboratory,20,35,1,0,Basic,13,0,0,0
+176,177,TLFL4,Techlounge,Computer Lab (TLFL4),1,Laboratory,20,35,1,0,,4,0,0,0
+177,178,TLFL5,Techlounge,Computer Lab (TLFL5),1,Laboratory,20,35,1,0,Basic,13,0,0,0
+178,179,TLFR1,Techlounge,Computer Lab (TLFR1),1,Laboratory,20,35,1,0,,13,0,0,0
+179,180,TLFR2,Techlounge,Computer Lab (TLFR2),1,Laboratory,20,35,1,0,High-tech,20,0,0,0
+180,181,TLFR3,Techlounge,Computer Lab (TLFR3),1,Laboratory,20,35,1,0,Basic,4,0,0,0
+181,182,TLFR4,Techlounge,Computer Lab (TLFR4),1,Laboratory,20,35,1,0,,3,0,0,0
+182,183,TLFR5,Techlounge,Computer Lab (TLFR5),1,Laboratory,20,35,1,0,Advanced,20,0,0,0
+183,184,TLGL1,Techlounge,Computer Lab (TLGL1),1,Laboratory,50,70,1,0,Advanced,20,0,0,0
+184,185,TLGL2,Techlounge,Computer Lab (TLGL2),1,Laboratory,50,70,1,0,Advanced,13,0,0,0
+185,186,TLGL3,Techlounge,Computer Lab (TLGL3),1,Laboratory,20,35,1,0,,13,0,0,0
+186,187,TLGL4,Techlounge,Computer Lab (TLGL4),1,Laboratory,20,35,1,0,Basic,4,0,0,0

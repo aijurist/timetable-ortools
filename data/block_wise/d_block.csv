@@ -1,0 +1,42 @@
+,id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_projector,has_ac,tech_level,maintained_by_id_id,green_board,isLcsAvailable,smart_board
+68,69,D109,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+69,70,D110,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+70,71,D111,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+71,72,D202,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+72,73,D203,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+73,74,D204,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+74,75,D205,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+75,76,D209,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+76,77,D210,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+77,78,D211,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+78,79,D302,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+79,80,D305,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+80,81,D309,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+81,82,D310,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+82,83,D311,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+83,84,D402,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+84,85,D405,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+85,86,D409,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+86,87,D410,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+87,88,D411,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+88,89,D510,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+89,90,D511,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+90,91,D512,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+91,92,D610,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+92,93,D611,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+93,94,D612,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+94,95,D702,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+95,96,D703,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+96,97,D704,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+97,98,D705,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+98,99,D709,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+99,100,D710,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+100,101,D711,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+151,152,D102,D Block,Auto CAD Lab,1,Laboratory,20,35,1,0,,5,0,0,0
+152,153,DG,D Block,Food Chemistry Lab,1,Laboratory,20,35,1,0,High-tech,18,0,0,0
+153,154,DG,D Block,Isaac Asimov Laboratory,1,Laboratory,20,35,1,0,Basic,27,0,0,0
+154,155,DG004,D Block,Medical Image Processing Lab,1,Laboratory,20,35,1,0,Advanced,6,0,0,0
+155,156,DG012,D Block,Electronics and Instrumentation,1,Laboratory,20,35,1,0,,6,0,0,0
+156,157,DG013,D Block,Diagnostic and Therapeutic Equipment Lab,1,Laboratory,20,35,1,0,Basic,6,0,0,0
+157,158,DG02,D Block,Computer Lab (DG02),1,Laboratory,50,70,1,0,High-tech,13,0,0,0
+158,159,DG03,D Block,Computer Lab (DG03),1,Laboratory,50,70,1,0,Basic,13,0,0,0
