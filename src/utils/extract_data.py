@@ -124,8 +124,31 @@ def get_course_master_room_preference():
     return get_data_as_dataframe('courseMaster_coursemasterroompreference')
 
 def get_courses():
-    """Get data from course_course table"""
-    return get_data_as_dataframe('course_course')
+    """Get data from course_course table with related information"""
+    conn = connect_db()
+    if not conn:
+        return None
+    
+    try:
+        query = """
+        SELECT cc.*,
+               cm.course_id, cm.course_name, cm.is_zero_credit_course, cm.lecture_hours,
+               cm.practical_hours, cm.tutorial_hours, cm.credits, cm.regulation, 
+               cm.course_type, cm.degree_type,
+               fd.dept_name as for_dept_name,
+               td.dept_name as teaching_dept_name
+        FROM course_course cc
+        JOIN courseMaster_coursemaster cm ON cc.course_id_id = cm.id
+        LEFT JOIN department_department fd ON cc.for_dept_id_id = fd.id
+        LEFT JOIN department_department td ON cc.teaching_dept_id_id = td.id
+        """
+        df = pd.read_sql_query(query, conn)
+        return df
+    except sqlite3.Error as e:
+        print(f"Error fetching courses: {e}")
+        return None
+    finally:
+        close_connection(conn)
 
 def get_course_resource_allocation():
     """Get data from course_courseresourceallocation table"""
@@ -160,8 +183,32 @@ def get_students():
     return get_data_as_dataframe('student_student')
 
 def get_teacher_courses():
-    """Get data from teacherCourse_teachercourse table"""
-    return get_data_as_dataframe('teacherCourse_teachercourse')
+    """Get data from teacherCourse_teachercourse table with related information"""
+    conn = connect_db()
+    if not conn:
+        return None
+    
+    try:
+        query = """
+        SELECT tc.*, 
+               cc.course_year, cc.course_semester, cc.elective_type, cc.lab_type, cc.teaching_status,
+               cm.course_id, cm.course_name, cm.is_zero_credit_course, cm.credits, 
+               cm.regulation, cm.course_type, cm.degree_type,
+               t.staff_code, t.teacher_role, t.teacher_specialisation,
+               au.first_name, au.last_name, au.email
+        FROM teacherCourse_teachercourse tc
+        JOIN course_course cc ON tc.course_id_id = cc.id
+        JOIN courseMaster_coursemaster cm ON cc.course_id_id = cm.id
+        JOIN teacher_teacher t ON tc.teacher_id_id = t.id
+        JOIN authentication_user au ON t.teacher_id_id = au.email
+        """
+        df = pd.read_sql_query(query, conn)
+        return df
+    except sqlite3.Error as e:
+        print(f"Error fetching teacher courses: {e}")
+        return None
+    finally:
+        close_connection(conn)
 
 def get_teacher_course_availability():
     """Get data from teacherCourse_teachercourse_preferred_availability_slots table"""
@@ -274,29 +321,54 @@ def get_teacher_timetable(teacher_id: str) -> pd.DataFrame:
 
 # Example usage
 if __name__ == "__main__":
-    # Example 1: Get all departments
-    departments_df = get_departments()
-    if departments_df is not None:
-        print("Departments:")
-        print(departments_df.head())
-        print()
+    # Example 1: Get teachers with courses (dictionary return)
+    print("\n=== TEACHERS WITH COURSES (Dictionary) ===")
+    teachers_with_courses = get_teacher_with_courses()
+    if teachers_with_courses is not None:
+        # Get the first 2 teacher entries
+        sample_teachers = list(teachers_with_courses.items())[:2]
+        for teacher_id, teacher_data in sample_teachers:
+            print(f"Teacher ID: {teacher_id}")
+            print(f"Name: {teacher_data.get('first_name')} {teacher_data.get('last_name')}")
+            print(f"Number of courses: {len(teacher_data.get('courses', []))}")
+            if teacher_data.get('courses'):
+                print("Course names:")
+                for course in teacher_data.get('courses', [])[:2]:  # Show max 2 courses
+                    print(f"  - {course.get('course_name', 'Unknown')}")
+            print("---")
     
-    # Example 2: Get all courses
+    # Example 2: Get enhanced teacher courses (dataframe return)
+    print("\n=== TEACHER COURSES (DataFrame) ===")
+    teacher_courses_df = get_teacher_courses()
+    if teacher_courses_df is not None:
+        print(f"Total records: {len(teacher_courses_df)}")
+        if not teacher_courses_df.empty:
+            # Display specific columns to see the joined data
+            print(teacher_courses_df[['first_name', 'last_name', 'course_name', 'course_semester', 'student_count']].head(3))
+            # Show all columns
+            print("\nAll columns available:")
+            print(teacher_courses_df.columns.tolist())
+    
+    # Example 3: Get enhanced courses data
+    print("\n=== COURSES (Enhanced) ===")
     courses_df = get_courses()
     if courses_df is not None:
-        print("Courses:")
-        print(courses_df.head())
-        print()
+        print(f"Total courses: {len(courses_df)}")
+        if not courses_df.empty:
+            # Display specific columns
+            print(courses_df[['course_id', 'course_name', 'course_year', 'course_semester', 'for_dept_name', 'teaching_dept_name']].head(3))
+            # Show all columns
+            print("\nAll columns available:")
+            print(courses_df.columns.tolist())
     
-    # Example 3: Get all teachers
-    teachers_df = get_teachers()
-    if teachers_df is not None:
-        print("Teachers:")
-        print(teachers_df.head())
-        print()
+    # Example 4: Get departments (original simple function)
+    print("\n=== DEPARTMENTS (Simple) ===")
+    departments_df = get_departments()
+    if departments_df is not None:
+        print(departments_df.head(3))
     
-    # Example 4: Get all timetable entries
+    # Example 5: Get timetable entries
+    print("\n=== TIMETABLE ===")
     timetable_df = get_timetable()
     if timetable_df is not None:
-        print("Timetable:")
-        print(timetable_df.head()) 
+        print(timetable_df.head(3)) 
