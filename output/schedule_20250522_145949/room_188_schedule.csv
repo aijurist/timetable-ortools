@@ -1,6 +1,0 @@
-day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
-Thursday,Lab,16:00-17:50,195,188,TLSL1,1868,CS23533,Foundations of Artificial Intelligence
-Thursday,Lab,14:00-15:50,203,188,TLSL1,1545,CS23333,Object Oriented Programming Using JAVA
-Saturday,Lab,12:00-13:50,216,188,TLSL1,1545,CS23333,Object Oriented Programming Using JAVA
-Friday,Lab,10:00-11:50,224,188,TLSL1,1544,CS23332,Database Management Systems
-Thursday,Lab,12:00-13:50,235,188,TLSL1,1544,CS23332,Database Management Systems

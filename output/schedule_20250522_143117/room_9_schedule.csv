@@ -1,6 +1,0 @@
-day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
-Tuesday,Theory,13:00-13:50,198,9,A204,1556,CS23532,Computer Networks
-Monday,Theory,16:00-16:50,219,9,A204,1546,CS23334,Fundamentals of Data Science
-Wednesday,Theory,18:00-18:50,223,9,A204,1553,CS23511,Theory of Computation
-Wednesday,Theory,17:00-17:50,224,9,A204,1544,CS23332,Database Management Systems
-Thursday,Theory,18:00-18:50,235,9,A204,1544,CS23332,Database Management Systems

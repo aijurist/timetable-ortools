@@ -1,8 +1,0 @@
-day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
-Wednesday,Theory,15:00-15:50,192,9,A204,1544,CS23332,Database Management Systems
-Thursday,Theory,13:00-13:50,192,26,B211,1544,CS23332,Database Management Systems
-Saturday,Theory,18:00-18:50,192,18,A305,1544,CS23332,Database Management Systems
-Thursday,Lab,16:00-17:50,192,183,TLFR5,1544,CS23332,Database Management Systems
-Friday,Lab,14:00-15:50,192,172,KSL03,1544,CS23332,Database Management Systems
-Saturday,Lab,10:00-11:50,192,165,JR3,1544,CS23332,Database Management Systems
-Saturday,Lab,12:00-13:50,192,185,TLGL2,1544,CS23332,Database Management Systems

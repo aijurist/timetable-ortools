@@ -1,4 +1,0 @@
-day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
-Tuesday,Theory,13:00-13:50,240,28,B213,1554,CS23512,Fundamentals of Mobile Computing
-Wednesday,Theory,9:00-9:50,240,2,A103,1554,CS23512,Fundamentals of Mobile Computing
-Wednesday,Theory,16:00-16:50,240,23,B106,1554,CS23512,Fundamentals of Mobile Computing

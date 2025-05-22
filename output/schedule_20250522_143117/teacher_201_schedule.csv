@@ -1,6 +1,0 @@
-day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
-Tuesday,Theory,14:00-14:50,201,20,A309,1542,CS23311,Computer Architecture
-Friday,Theory,8:00-8:50,201,33,B222,1542,CS23311,Computer Architecture
-Saturday,Theory,8:00-8:50,201,22,A311,1542,CS23311,Computer Architecture
-Tuesday,Lab,8:00-9:50,201,174,TLFL1,1544,CS23332,Database Management Systems
-Friday,Lab,12:00-13:50,201,168,KFL03,1544,CS23332,Database Management Systems
