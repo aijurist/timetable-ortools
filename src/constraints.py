@@ -85,41 +85,136 @@ class TimetableConstraints:
     
     def apply_course_hours_constraint(self, teacher_theory_assignments, teacher_lab_assignments):
         """
-        Constraint 3: Allocate the correct number of hours for each course.
-        Ensures that each course gets allocated the required lecture and practical hours.
+        Constraint 3: Allocate the correct number of hours for each course instance.
+        Ensures that each course instance gets allocated the required lecture and practical hours.
+        When a teacher has multiple instances of the same course, each instance must receive its 
+        FULL allocation of hours (no sharing of hours between instances).
         """
         logger.info("Applying course hours constraint...")
         
+        # Create variables to track which course instance each time slot is assigned to
+        # We need these to ensure each instance gets its own allocation without sharing
+        course_instance_vars = {}
+        
         for teacher in self.teachers:
             if teacher in self.teacher_course_assignments:
-                for course_info in self.teacher_course_assignments[teacher]:
-                    lecture_hours = course_info['lecture_hours']
-                    practical_hours = course_info['practical_hours']
+                # Get all course instances for this teacher
+                course_instances = self.teacher_course_assignments[teacher]
+                
+                # Skip if teacher has no courses
+                if not course_instances:
+                    continue
+                
+                # Create decision variables for each course instance and time slot combination
+                course_instance_vars[teacher] = {}
+                
+                # Theory slots assignment variables
+                for d in range(self.num_days):
+                    for s in range(self.num_theory_slots):
+                        slot_key = (d, s, 'theory')
+                        course_instance_vars[teacher][slot_key] = {}
+                        for instance in course_instances:
+                            instance_id = instance['id']
+                            if instance['lecture_hours'] > 0:  # Only create vars for courses with theory hours
+                                course_instance_vars[teacher][slot_key][instance_id] = self.model.NewBoolVar(
+                                    f'teacher_{teacher}_day_{d}_theory_{s}_instance_{instance_id}')
+                
+                # Lab slots assignment variables
+                for d in range(self.num_days):
+                    for s in range(self.num_lab_slots):
+                        slot_key = (d, s, 'lab')
+                        course_instance_vars[teacher][slot_key] = {}
+                        for instance in course_instances:
+                            instance_id = instance['id']
+                            if instance['practical_hours'] > 0:  # Only create vars for courses with lab hours
+                                course_instance_vars[teacher][slot_key][instance_id] = self.model.NewBoolVar(
+                                    f'teacher_{teacher}_day_{d}_lab_{s}_instance_{instance_id}')
+                
+                # Link course instance vars to teacher assignment vars for theory slots
+                for d in range(self.num_days):
+                    for s in range(self.num_theory_slots):
+                        slot_key = (d, s, 'theory')
+                        
+                        # Sum of all room assignments for this teacher in this theory slot
+                        theory_slot_vars = []
+                        for _, room_row in self.classrooms.iterrows():
+                            room_id = room_row['id']
+                            theory_slot_vars.append(teacher_theory_assignments[teacher][d][s][room_id])
+                        
+                        # If any room is assigned to this teacher for this slot, exactly one course instance must be assigned
+                        is_slot_assigned = self.model.NewBoolVar(f'teacher_{teacher}_assigned_theory_{d}_{s}')
+                        self.model.Add(sum(theory_slot_vars) > 0).OnlyEnforceIf(is_slot_assigned)
+                        self.model.Add(sum(theory_slot_vars) == 0).OnlyEnforceIf(is_slot_assigned.Not())
+                        
+                        # Sum of all course instance assignments for this slot
+                        instance_vars = list(course_instance_vars[teacher][slot_key].values())
+                        
+                        # If slot is assigned, exactly one course instance must be assigned
+                        if instance_vars:
+                            self.model.Add(sum(instance_vars) == 1).OnlyEnforceIf(is_slot_assigned)
+                            self.model.Add(sum(instance_vars) == 0).OnlyEnforceIf(is_slot_assigned.Not())
+                
+                # Link course instance vars to teacher assignment vars for lab slots
+                for d in range(self.num_days):
+                    for s in range(self.num_lab_slots):
+                        slot_key = (d, s, 'lab')
+                        
+                        # Sum of all room assignments for this teacher in this lab slot
+                        lab_slot_vars = []
+                        for _, room_row in self.labs.iterrows():
+                            room_id = room_row['id']
+                            lab_slot_vars.append(teacher_lab_assignments[teacher][d][s][room_id])
+                        
+                        # If any room is assigned to this teacher for this slot, exactly one course instance must be assigned
+                        is_slot_assigned = self.model.NewBoolVar(f'teacher_{teacher}_assigned_lab_{d}_{s}')
+                        self.model.Add(sum(lab_slot_vars) > 0).OnlyEnforceIf(is_slot_assigned)
+                        self.model.Add(sum(lab_slot_vars) == 0).OnlyEnforceIf(is_slot_assigned.Not())
+                        
+                        # Sum of all course instance assignments for this slot
+                        instance_vars = list(course_instance_vars[teacher][slot_key].values())
+                        
+                        # If slot is assigned, exactly one course instance must be assigned
+                        if instance_vars:
+                            self.model.Add(sum(instance_vars) == 1).OnlyEnforceIf(is_slot_assigned)
+                            self.model.Add(sum(instance_vars) == 0).OnlyEnforceIf(is_slot_assigned.Not())
+                
+                # Ensure each course instance gets its required number of hours
+                for instance in course_instances:
+                    instance_id = instance['id']
+                    lecture_hours = instance['lecture_hours']
+                    practical_hours = instance['practical_hours']
                     
-                    # Track lecture hours allocation (1 theory slot = 1 lecture hour)
-                    theory_vars = []
+                    # Get all theory slot assignments for this instance
+                    theory_instance_vars = []
                     for d in range(self.num_days):
                         for s in range(self.num_theory_slots):
-                            for _, room_row in self.classrooms.iterrows():
-                                room_id = room_row['id']
-                                theory_vars.append(teacher_theory_assignments[teacher][d][s][room_id])
+                            slot_key = (d, s, 'theory')
+                            if instance_id in course_instance_vars[teacher][slot_key]:
+                                theory_instance_vars.append(course_instance_vars[teacher][slot_key][instance_id])
                     
-                    # We need to ensure at least lecture_hours theory slots are assigned
+                    # Ensure the required number of theory slots
                     if lecture_hours > 0:
-                        self.model.Add(sum(theory_vars) >= lecture_hours)
+                        self.model.Add(sum(theory_instance_vars) == lecture_hours)
                     
-                    # Track practical hours allocation (1 lab slot = 2 practical hours)
-                    lab_vars = []
+                    # Get all lab slot assignments for this instance
+                    lab_instance_vars = []
                     for d in range(self.num_days):
                         for s in range(self.num_lab_slots):
-                            for _, room_row in self.labs.iterrows():
-                                room_id = room_row['id']
-                                lab_vars.append(teacher_lab_assignments[teacher][d][s][room_id])
+                            slot_key = (d, s, 'lab')
+                            if instance_id in course_instance_vars[teacher][slot_key]:
+                                lab_instance_vars.append(course_instance_vars[teacher][slot_key][instance_id])
                     
-                    # We need to ensure at least practical_hours/2 lab slots are assigned (rounded up)
-                    required_lab_slots = (practical_hours + 1) // 2  # Ceiling division
+                    # Calculate required lab slots based on practical hours and student count
+                    required_lab_slots = (practical_hours + 1) // 2  # Ceiling division for base lab slots
+                    
+                    # For large classes (>35 students), we need multiple batches
+                    if instance['student_count'] > 35:
+                        num_batches = (instance['student_count'] + 34) // 35
+                        required_lab_slots *= num_batches
+                    
+                    # Ensure the required number of lab slots
                     if practical_hours > 0:
-                        self.model.Add(sum(lab_vars) >= required_lab_slots)
+                        self.model.Add(sum(lab_instance_vars) == required_lab_slots)
         
         return True
     
@@ -152,56 +247,6 @@ class TimetableConstraints:
         
         return True
     
-    def apply_lab_batch_constraint(self, teacher_theory_assignments, teacher_lab_assignments):
-        """
-        Constraint 5: Labs have limited capacity (35 students), so classes with 70 students need two separate lab slots.
-        This ensures proper lab sessions for all students in batches.
-        """
-        logger.info("Applying lab batch constraint...")
-        
-        for teacher in self.teachers:
-            if teacher in self.teacher_course_assignments:
-                for course_info in self.teacher_course_assignments[teacher]:
-                    # Only apply this constraint to courses with practical hours and student count > 35
-                    practical_hours = course_info['practical_hours']
-                    student_count = course_info['student_count']
-                    
-                    if practical_hours > 0 and student_count > 35:
-                        # Calculate the number of batches needed
-                        num_batches = (student_count + 34) // 35  # Ceiling division by 35
-                        
-                        # For each batch, we need practical_hours/2 lab slots (rounded up)
-                        required_lab_slots_per_batch = (practical_hours + 1) // 2
-                        total_required_lab_slots = required_lab_slots_per_batch * num_batches
-                        
-                        # Collect all lab assignment variables for this teacher
-                        lab_vars = []
-                        for d in range(self.num_days):
-                            for s in range(self.num_lab_slots):
-                                for _, room_row in self.labs.iterrows():
-                                    room_id = room_row['id']
-                                    lab_vars.append(teacher_lab_assignments[teacher][d][s][room_id])
-                        
-                        # Ensure the teacher gets enough lab slots for all batches
-                        self.model.Add(sum(lab_vars) >= total_required_lab_slots)
-                        
-                        # Try to schedule lab slots on different days for different batches
-                        # This is a soft constraint, so we'll use a heuristic approach
-                        if num_batches > 1:
-                            for d1 in range(self.num_days):
-                                # Count labs on this day
-                                day1_lab_vars = []
-                                for s in range(self.num_lab_slots):
-                                    for _, room_row in self.labs.iterrows():
-                                        room_id = room_row['id']
-                                        day1_lab_vars.append(teacher_lab_assignments[teacher][d1][s][room_id])
-                                
-                                # Try to limit labs on a single day to one batch worth
-                                # This is a soft constraint that helps spread batches across days
-                                self.model.Add(sum(day1_lab_vars) <= required_lab_slots_per_batch)
-        
-        return True
-    
     def apply_all_constraints(self, teacher_theory_assignments, teacher_lab_assignments):
         """Apply all timetable constraints."""
         logger.info("Applying all timetable constraints...")
@@ -210,8 +255,8 @@ class TimetableConstraints:
             self.apply_teacher_single_assignment_constraint(teacher_theory_assignments, teacher_lab_assignments),
             self.apply_no_overlapping_slots_constraint(teacher_theory_assignments, teacher_lab_assignments),
             self.apply_course_hours_constraint(teacher_theory_assignments, teacher_lab_assignments),
-            self.apply_room_single_assignment_constraint(teacher_theory_assignments, teacher_lab_assignments),
-            self.apply_lab_batch_constraint(teacher_theory_assignments, teacher_lab_assignments)
+            self.apply_room_single_assignment_constraint(teacher_theory_assignments, teacher_lab_assignments)
+            # Lab batch constraint logic is now incorporated into the course hours constraint
         ]
         
         return all(constraints_applied)

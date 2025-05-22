@@ -203,4 +203,61 @@ class TimetableVisualizer:
         ax.legend(handles=handles, loc='upper center', bbox_to_anchor=(0.5, -0.15),
                  fancybox=True, shadow=True, ncol=3)
     
-        def _plot_room_schedule(self, ax, room_id, room_df, slot_type, slots):        """Plot the schedule for a specific room and slot type."""        # Filter data for the room and slot type        df = room_df[room_df['slot_type'] == slot_type]                # Create a grid for days and slots        grid = np.zeros((len(self.days), len(slots)), dtype=object)        teacher_grid = np.zeros((len(self.days), len(slots)), dtype=object)        teacher_name_grid = np.zeros((len(self.days), len(slots)), dtype=object)                # Fill the grid with course codes and teacher information        for _, row in df.iterrows():            day_idx = self.days.index(row['day'])            slot_idx = slots.index(row['slot_time'])            grid[day_idx, slot_idx] = row['course_code']            teacher_grid[day_idx, slot_idx] = row['teacher_id']                        # Get teacher name if available            teacher_name = ""            if 'first_name' in row and 'last_name' in row:                if row['first_name'] and row['last_name']:                    teacher_name = f"{row['first_name']} {row['last_name']}"                elif row['staff_code']:                    teacher_name = row['staff_code']            elif 'staff_code' in row and row['staff_code']:                teacher_name = row['staff_code']                        if not teacher_name:                teacher_name = f"Teacher {row['teacher_id']}"                            teacher_name_grid[day_idx, slot_idx] = teacher_name                # Plot the grid        for i in range(len(self.days)):            for j in range(len(slots)):                course = grid[i, j]                teacher_name = teacher_name_grid[i, j]                if course:                    color = self.course_colors.get(course, 'white')                    ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, color=color, alpha=0.7))                    # Display course code and teacher name                    ax.text(j + 0.5, i + 0.5, f"{course}\n{teacher_name}", ha='center', va='center', fontsize=8)                # Set the axes properties        ax.set_xlim(0, len(slots))        ax.set_ylim(0, len(self.days))        ax.set_xticks(np.arange(len(slots)) + 0.5)        ax.set_yticks(np.arange(len(self.days)) + 0.5)        ax.set_xticklabels(slots, rotation=45, ha='right')        ax.set_yticklabels(self.days)        ax.grid(True, linestyle='-', linewidth=0.5, color='gray')                # Add a colorbar legend        import matplotlib.patches as mpatches        handles = [mpatches.Patch(color=color, label=course)                    for course, color in self.course_colors.items() if course in df['course_code'].values]        ax.legend(handles=handles, loc='upper center', bbox_to_anchor=(0.5, -0.15),                 fancybox=True, shadow=True, ncol=3) 
+    def _plot_room_schedule(self, ax, room_id, room_df, slot_type, slots):
+        """Plot the schedule for a specific room and slot type."""
+        # Filter data for the room and slot type
+        df = room_df[room_df['slot_type'] == slot_type]
+        
+        # Create a grid for days and slots
+        grid = np.zeros((len(self.days), len(slots)), dtype=object)
+        teacher_grid = np.zeros((len(self.days), len(slots)), dtype=object)
+        teacher_name_grid = np.zeros((len(self.days), len(slots)), dtype=object)
+        
+        # Fill the grid with course codes and teacher information
+        for _, row in df.iterrows():
+            day_idx = self.days.index(row['day'])
+            slot_idx = slots.index(row['slot_time'])
+            grid[day_idx, slot_idx] = row['course_code']
+            teacher_grid[day_idx, slot_idx] = row['teacher_id']
+            
+            # Get teacher name if available
+            teacher_name = ""
+            if 'first_name' in row and 'last_name' in row:
+                if row['first_name'] and row['last_name']:
+                    teacher_name = f"{row['first_name']} {row['last_name']}"
+                elif row['staff_code']:
+                    teacher_name = row['staff_code']
+            elif 'staff_code' in row and row['staff_code']:
+                teacher_name = row['staff_code']
+            
+            if not teacher_name:
+                teacher_name = f"Teacher {row['teacher_id']}"
+                
+            teacher_name_grid[day_idx, slot_idx] = teacher_name
+        
+        # Plot the grid
+        for i in range(len(self.days)):
+            for j in range(len(slots)):
+                course = grid[i, j]
+                teacher_name = teacher_name_grid[i, j]
+                if course:
+                    color = self.course_colors.get(course, 'white')
+                    ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, color=color, alpha=0.7))
+                    # Display course code and teacher name
+                    ax.text(j + 0.5, i + 0.5, f"{course}\n{teacher_name}", ha='center', va='center', fontsize=8)
+        
+        # Set the axes properties
+        ax.set_xlim(0, len(slots))
+        ax.set_ylim(0, len(self.days))
+        ax.set_xticks(np.arange(len(slots)) + 0.5)
+        ax.set_yticks(np.arange(len(self.days)) + 0.5)
+        ax.set_xticklabels(slots, rotation=45, ha='right')
+        ax.set_yticklabels(self.days)
+        ax.grid(True, linestyle='-', linewidth=0.5, color='gray')
+        
+        # Add a colorbar legend
+        import matplotlib.patches as mpatches
+        handles = [mpatches.Patch(color=color, label=course) 
+                   for course, color in self.course_colors.items() if course in df['course_code'].values]
+        ax.legend(handles=handles, loc='upper center', bbox_to_anchor=(0.5, -0.15),
+                 fancybox=True, shadow=True, ncol=3) 
