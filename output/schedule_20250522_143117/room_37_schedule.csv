@@ -1,4 +1,0 @@
-day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
-Saturday,Theory,11:00-11:50,197,37,B322,1545,CS23333,Object Oriented Programming Using JAVA
-Saturday,Theory,8:00-8:50,236,37,B322,1542,CS23311,Computer Architecture
-Friday,Theory,13:00-13:50,248,37,B322,1546,CS23334,Fundamentals of Data Science

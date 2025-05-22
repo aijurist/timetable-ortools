@@ -1,4 +1,0 @@
-day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
-Saturday,Lab,12:00-13:50,197,189,TLSL2,1545,CS23333,Object Oriented Programming Using JAVA
-Saturday,Lab,8:00-9:50,199,189,TLSL2,1545,CS23333,Object Oriented Programming Using JAVA
-Wednesday,Lab,10:00-11:50,245,189,TLSL2,1556,CS23532,Computer Networks

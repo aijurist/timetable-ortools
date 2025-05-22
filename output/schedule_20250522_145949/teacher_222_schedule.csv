@@ -1,4 +1,0 @@
-day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
-Tuesday,Theory,13:00-13:50,222,4,A108,1553,CS23511,Theory of Computation
-Friday,Theory,10:00-10:50,222,23,B106,1553,CS23511,Theory of Computation
-Friday,Theory,15:00-15:50,222,26,B211,1553,CS23511,Theory of Computation

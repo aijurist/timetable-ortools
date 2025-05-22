@@ -1,4 +1,0 @@
-day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
-Saturday,Theory,14:00-14:50,253,16,A303,378,GE23131,Programming using C
-Monday,Lab,14:00-15:50,253,176,TLFL3,378,GE23131,Programming using C
-Friday,Lab,8:00-9:50,253,185,TLGL2,378,GE23131,Programming using C

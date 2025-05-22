@@ -1,4 +1,0 @@
-day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
-Saturday,Theory,18:00-18:50,192,18,A305,1544,CS23332,Database Management Systems
-Wednesday,Theory,17:00-17:50,195,18,A305,1868,CS23533,Foundations of Artificial Intelligence
-Monday,Theory,10:00-10:50,212,18,A305,1546,CS23334,Fundamentals of Data Science
