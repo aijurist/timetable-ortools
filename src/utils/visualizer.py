@@ -12,7 +12,14 @@ class TimetableVisualizer:
         self.output_dir = output_dir
         self.days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
         self.theory_slots = [f"{h}:00-{h}:50" for h in range(8, 19)]
-        self.lab_slots = ["8:00-9:50", "10:00-11:50", "12:00-13:50", "14:00-15:50", "16:00-17:50"]
+        self.lab_slots = [
+            "8:00-9:40",    # L1
+            "10:00-11:40",  # L2 
+            "11:40-1:20",   # L3
+            "1:20-3:00",    # L4
+            "3:00-4:40",    # L5
+            "5:10-6:50"     # L6
+        ]
         
         # Create color map for courses
         self.courses = schedule_df['course_code'].unique()
@@ -129,21 +136,33 @@ class TimetableVisualizer:
         
         # Create a grid for days and slots
         grid = np.zeros((len(self.days), len(slots)), dtype=object)
+        batch_grid = np.zeros((len(self.days), len(slots)), dtype=object)  # Add batch tracking
         
-        # Fill the grid with course codes
+        # Fill the grid with course codes and batch info
         for _, row in df.iterrows():
             day_idx = self.days.index(row['day'])
             slot_idx = slots.index(row['slot_time'])
             grid[day_idx, slot_idx] = row['course_code']
+            
+            # Add batch information for lab slots if available
+            if slot_type == 'Lab' and 'batch' in row and row['batch'] is not None:
+                batch_grid[day_idx, slot_idx] = f"B{row['batch']}"
         
         # Plot the grid
         for i in range(len(self.days)):
             for j in range(len(slots)):
                 course = grid[i, j]
+                batch = batch_grid[i, j]  # Get batch info
                 if course:
                     color = self.course_colors.get(course, 'white')
                     ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, color=color, alpha=0.7))
-                    ax.text(j + 0.5, i + 0.5, course, ha='center', va='center', fontsize=10)
+                    
+                    # Include batch info in the display if available
+                    display_text = course
+                    if batch:
+                        display_text += f"\n{batch}"
+                    
+                    ax.text(j + 0.5, i + 0.5, display_text, ha='center', va='center', fontsize=10)
         
         # Set the axes properties
         ax.set_xlim(0, len(slots))
@@ -169,23 +188,35 @@ class TimetableVisualizer:
         # Create a grid for days and slots
         grid = np.zeros((len(self.days), len(slots)), dtype=object)
         room_grid = np.zeros((len(self.days), len(slots)), dtype=object)
+        batch_grid = np.zeros((len(self.days), len(slots)), dtype=object)  # Add batch tracking
         
-        # Fill the grid with course codes and room numbers
+        # Fill the grid with course codes, room numbers and batch info
         for _, row in df.iterrows():
             day_idx = self.days.index(row['day'])
             slot_idx = slots.index(row['slot_time'])
             grid[day_idx, slot_idx] = row['course_code']
             room_grid[day_idx, slot_idx] = row['room_number']
+            
+            # Add batch information for lab slots if available
+            if slot_type == 'Lab' and 'batch' in row and row['batch'] is not None:
+                batch_grid[day_idx, slot_idx] = f"B{row['batch']}"
         
         # Plot the grid
         for i in range(len(self.days)):
             for j in range(len(slots)):
                 course = grid[i, j]
                 room = room_grid[i, j]
+                batch = batch_grid[i, j]  # Get batch info
                 if course:
                     color = self.course_colors.get(course, 'white')
                     ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, color=color, alpha=0.7))
-                    ax.text(j + 0.5, i + 0.5, f"{course}\n{room}", ha='center', va='center', fontsize=8)
+                    
+                    # Include batch info in the display if available
+                    display_text = f"{course}\n{room}"
+                    if batch:
+                        display_text += f"\n{batch}"
+                    
+                    ax.text(j + 0.5, i + 0.5, display_text, ha='center', va='center', fontsize=8)
         
         # Set the axes properties
         ax.set_xlim(0, len(slots))
@@ -212,6 +243,7 @@ class TimetableVisualizer:
         grid = np.zeros((len(self.days), len(slots)), dtype=object)
         teacher_grid = np.zeros((len(self.days), len(slots)), dtype=object)
         teacher_name_grid = np.zeros((len(self.days), len(slots)), dtype=object)
+        batch_grid = np.zeros((len(self.days), len(slots)), dtype=object)  # Add batch tracking
         
         # Fill the grid with course codes and teacher information
         for _, row in df.iterrows():
@@ -234,17 +266,27 @@ class TimetableVisualizer:
                 teacher_name = f"Teacher {row['teacher_id']}"
                 
             teacher_name_grid[day_idx, slot_idx] = teacher_name
+            
+            # Add batch information for lab slots if available
+            if slot_type == 'Lab' and 'batch' in row and row['batch'] is not None:
+                batch_grid[day_idx, slot_idx] = f"B{row['batch']}"
         
         # Plot the grid
         for i in range(len(self.days)):
             for j in range(len(slots)):
                 course = grid[i, j]
                 teacher_name = teacher_name_grid[i, j]
+                batch = batch_grid[i, j]  # Get batch info
                 if course:
                     color = self.course_colors.get(course, 'white')
                     ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, color=color, alpha=0.7))
-                    # Display course code and teacher name
-                    ax.text(j + 0.5, i + 0.5, f"{course}\n{teacher_name}", ha='center', va='center', fontsize=8)
+                    
+                    # Include batch info in the display if available
+                    display_text = f"{course}\n{teacher_name}"
+                    if batch:
+                        display_text += f"\n{batch}"
+                    
+                    ax.text(j + 0.5, i + 0.5, display_text, ha='center', va='center', fontsize=8)
         
         # Set the axes properties
         ax.set_xlim(0, len(slots))

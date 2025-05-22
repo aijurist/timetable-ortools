@@ -62,3 +62,9 @@ slot 2 - 10 - 17
 slot 3 - 12 - 19
 Teacher should be distributed in all three shifts in this fashion 2,1,2 which is 2 day slot 1, 1 day slot 2, 2 day slot 3
 
+
+
+1) constraint4 (lab constraint enhanced):-
+if the practical_hours is greater than 3, example take it as 4 p hours then 8hrs of lab slot should be taken because of 2 batch and lab constraint for the teacher it is assigned for but if an assist teacher is assigned for the same course then assign primary for one batch and assist for one batch, you can even allow them to run paralelly cause different teacher or event not in respect to the available slot and overlapping 
+i will be more clear check is_assist is true or not that say he or she is assist for that course assignment example 
+if she is assigned as datastructure course assist then she should only take 1 batch of lab of datastructure course by sharing the batch with other instance of datastructure can be choosen random then this is applicable only for p hours more than 3 
