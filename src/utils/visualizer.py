@@ -25,6 +25,30 @@ class TimetableVisualizer:
         self.courses = schedule_df['course_code'].unique()
         colors = plt.cm.tab20(np.linspace(0, 1, len(self.courses)))
         self.course_colors = {course: mcolors.rgb2hex(color) for course, color in zip(self.courses, colors)}
+        
+        # Create a mapping for course instance numbers
+        self._create_instance_mapping()
+    
+    def _create_instance_mapping(self):
+        """Create a mapping for course instances to display instance numbers."""
+        self.instance_mapping = {}
+        
+        # Group by teacher_id and course_code
+        for teacher_id in self.schedule_df['teacher_id'].unique():
+            teacher_data = self.schedule_df[self.schedule_df['teacher_id'] == teacher_id]
+            
+            # For each unique course code this teacher teaches
+            for course_code in teacher_data['course_code'].unique():
+                course_data = teacher_data[teacher_data['course_code'] == course_code]
+                
+                # If multiple instances exist (by course_instance_id)
+                if 'course_instance_id' in course_data.columns:
+                    instance_ids = course_data['course_instance_id'].unique()
+                    
+                    if len(instance_ids) > 1:
+                        # Create mapping from instance_id to instance number
+                        for i, instance_id in enumerate(sorted(instance_ids), 1):
+                            self.instance_mapping[(teacher_id, course_code, instance_id)] = i
     
     def generate_teacher_schedules(self):
         """Generate schedule visualizations for each teacher."""
@@ -189,17 +213,24 @@ class TimetableVisualizer:
         grid = np.zeros((len(self.days), len(slots)), dtype=object)
         room_grid = np.zeros((len(self.days), len(slots)), dtype=object)
         batch_grid = np.zeros((len(self.days), len(slots)), dtype=object)  # Add batch tracking
+        instance_grid = np.zeros((len(self.days), len(slots)), dtype=object)  # Track instance numbers
         
-        # Fill the grid with course codes, room numbers and batch info
+        # Fill the grid with course codes, room numbers, batch info, and instance numbers
         for _, row in df.iterrows():
             day_idx = self.days.index(row['day'])
             slot_idx = slots.index(row['slot_time'])
-            grid[day_idx, slot_idx] = row['course_code']
+            course_code = row['course_code']
+            grid[day_idx, slot_idx] = course_code
             room_grid[day_idx, slot_idx] = row['room_number']
             
             # Add batch information for lab slots if available
             if slot_type == 'Lab' and 'batch' in row and row['batch'] is not None:
                 batch_grid[day_idx, slot_idx] = f"B{row['batch']}"
+            
+            # Add instance number if multiple instances exist and course_instance_id is available
+            if 'course_instance_id' in row and (teacher_id, course_code, row['course_instance_id']) in self.instance_mapping:
+                instance_num = self.instance_mapping[(teacher_id, course_code, row['course_instance_id'])]
+                instance_grid[day_idx, slot_idx] = f"I{instance_num}"
         
         # Plot the grid
         for i in range(len(self.days)):
@@ -207,12 +238,19 @@ class TimetableVisualizer:
                 course = grid[i, j]
                 room = room_grid[i, j]
                 batch = batch_grid[i, j]  # Get batch info
+                instance = instance_grid[i, j]  # Get instance number
+                
                 if course:
                     color = self.course_colors.get(course, 'white')
                     ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, color=color, alpha=0.7))
                     
-                    # Include batch info in the display if available
+                    # Include batch and instance info in the display if available
                     display_text = f"{course}\n{room}"
+                    
+                    if instance:
+                        # Add instance number first if available
+                        display_text += f"\n{instance}"
+                    
                     if batch:
                         display_text += f"\n{batch}"
                     
@@ -244,13 +282,17 @@ class TimetableVisualizer:
         teacher_grid = np.zeros((len(self.days), len(slots)), dtype=object)
         teacher_name_grid = np.zeros((len(self.days), len(slots)), dtype=object)
         batch_grid = np.zeros((len(self.days), len(slots)), dtype=object)  # Add batch tracking
+        instance_grid = np.zeros((len(self.days), len(slots)), dtype=object)  # Track instance numbers
         
-        # Fill the grid with course codes and teacher information
+        # Fill the grid with course codes, teacher information, and instance numbers
         for _, row in df.iterrows():
             day_idx = self.days.index(row['day'])
             slot_idx = slots.index(row['slot_time'])
-            grid[day_idx, slot_idx] = row['course_code']
-            teacher_grid[day_idx, slot_idx] = row['teacher_id']
+            course_code = row['course_code']
+            teacher_id = row['teacher_id']
+            
+            grid[day_idx, slot_idx] = course_code
+            teacher_grid[day_idx, slot_idx] = teacher_id
             
             # Get teacher name if available
             teacher_name = ""
@@ -270,6 +312,11 @@ class TimetableVisualizer:
             # Add batch information for lab slots if available
             if slot_type == 'Lab' and 'batch' in row and row['batch'] is not None:
                 batch_grid[day_idx, slot_idx] = f"B{row['batch']}"
+            
+            # Add instance number if multiple instances exist and course_instance_id is available
+            if 'course_instance_id' in row and (teacher_id, course_code, row['course_instance_id']) in self.instance_mapping:
+                instance_num = self.instance_mapping[(teacher_id, course_code, row['course_instance_id'])]
+                instance_grid[day_idx, slot_idx] = f"I{instance_num}"
         
         # Plot the grid
         for i in range(len(self.days)):
@@ -277,12 +324,19 @@ class TimetableVisualizer:
                 course = grid[i, j]
                 teacher_name = teacher_name_grid[i, j]
                 batch = batch_grid[i, j]  # Get batch info
+                instance = instance_grid[i, j]  # Get instance number
+                
                 if course:
                     color = self.course_colors.get(course, 'white')
                     ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, color=color, alpha=0.7))
                     
-                    # Include batch info in the display if available
+                    # Include batch and instance info in the display if available
                     display_text = f"{course}\n{teacher_name}"
+                    
+                    if instance:
+                        # Add instance number first if available
+                        display_text += f"\n{instance}"
+                        
                     if batch:
                         display_text += f"\n{batch}"
                     

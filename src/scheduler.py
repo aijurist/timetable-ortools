@@ -524,7 +524,8 @@ class TimetableScheduler:
                                 'instance_id': instance_id,
                                 'theory_slots': theory_slots,
                                 'batches': batches,
-                                'course_name': instance_data.iloc[0]['course_name']
+                                'course_name': instance_data.iloc[0]['course_name'],
+                                'raw_id': instance_data.iloc[0].get('id', 0)  # Original ID from CSV
                             })
                         
                         # Output each course with its instances
@@ -535,8 +536,22 @@ class TimetableScheduler:
                             total_theory = 0
                             total_lab = 0
                             
+                            # Sort instances for more predictable output
+                            # Try to sort by original row ID if available 
+                            instances.sort(key=lambda x: x.get('raw_id', 0) or x['instance_id'])
+                            
+                            # Check if we have multiple instances of the same course
+                            multiple_instances = len(instances) > 1
+                            
                             for i, instance in enumerate(instances):
-                                f.write(f"    Instance {i+1} (ID: {instance['instance_id']}):\n")
+                                # Add instance number label for multiple instances
+                                instance_label = f"Instance {i+1}" if multiple_instances else "Assignment"
+                                
+                                # Include original CSV ID to help identify the source row
+                                if multiple_instances:
+                                    f.write(f"    {instance_label} (ID: {instance['instance_id']}, Row: {instance.get('raw_id', 'N/A')}):\n")
+                                else:
+                                    f.write(f"    {instance_label}:\n")
                                 
                                 # Theory slots summary
                                 f.write(f"      Theory: {instance['theory_slots']} slots\n")
@@ -555,7 +570,11 @@ class TimetableScheduler:
                                 else:
                                     f.write(f"      Lab: 0 slots\n")
                             
-                            f.write(f"    Total for {course_code}: {total_theory} theory slots, {total_lab} lab slots\n\n")
+                            # Only display totals if multiple instances
+                            if multiple_instances:
+                                f.write(f"    Total for {course_code} (All {len(instances)} Instances): {total_theory} theory slots, {total_lab} lab slots\n\n")
+                            else:
+                                f.write("\n")
                     else:
                         # Fallback to old method if instance IDs are not available
                         course_groups = teacher_data.groupby('course_code')
