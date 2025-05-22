@@ -1,41 +1,64 @@
-Teacher Course Allocation Constraint
+1.Teacher Course Allocation Constraint
 No two courses can be allocated to the same teacher in the same time slot.
 
-Daily Teaching Load
+2.Daily Teaching Load
 A teacher should not be assigned more than 5 hours/day.
 
-L-T-P Constraints (Lecture, Tutorial, Practical)
+3.L-T-P Constraints (Lecture, Tutorial, Practical)
 Each course has a fixed number of hours for Lecture (L), Tutorial (T), and Practical (P).
 Example: JAVA → L=1, T=2, P=0 ⇒ Total = 3 hours/week.
 
-Slot Consecutiveness Constraint
+4.Slot Consecutiveness Constraint
 If a teacher is assigned two consecutive slots, a break must be provided afterwards.
 
-Slot Timings and Durations
-Slot 1: 8:00–8:50 (no break before)
-Slot 2: 9:00–9:50 (10 min break before)
-Slot 3: Similar setup with 10 min breaks
-upto Slot 11
+5.Slot Timings and Durations
+    Slot 1: 8:00–8:50 (no break before)
+    Slot 2: 9:00–9:50 (10 min break before)
+    Slot 3: Similar setup with 10 min breaks
+    upto Slot 11
 
-Lab Slot Structuring
-Labs should span two consecutive slots (e.g., 8:00–9:50 with a 10-min break in between).
-upto Slot 6
+6.Lab Slot Structuring
+    Labs should span two consecutive slots (e.g., 8:00–9:50 with a 10-min break in between).
+    upto Slot 6
 
-30-Hour Load Constraint
-If a teacher handles 60 students, she/he must take the class twice.
-If practical hours are 3 hours, then she/he should split them accordingly.
+7.LAB constraints
+    FOR 30 students lab (regular lab):
+    - If a teacher handles 60 students and practical hours are 2, the teacher must take the lab twice in two batches totaling 4 hours. The two batches must be scheduled on different days.
+    - If practical hours are 3 hours, the teacher must take the lab twice in two batches totaling 6 hours, with batches scheduled on different days.
+    - A teacher who teaches the theory portion of a course must also teach the practical portion of that same course.
+    - If a teacher is assigned the same course twice, they should handle both sections of that course.
 
-Teacher Availability
-A teacher cannot handle two different classes at the same time.
+    Equipment and Resource Management:
+    - Each lab session must have all necessary equipment prepared 30 minutes before class.
+    - Lab assistants must be present for complex labs that require additional supervision.
 
-Special Teacher Assignment
-Some teachers (e.g., lab or specialized) are available only on specific days.
+    Special Room Constraints:
+    - For labs with 120 students (very large), two teachers must be assigned to the same course. No need for multiple batches.
+    - For labs with 60 students (large), one teacher must be assigned. No batches are required.
+    - Labs requiring specialized equipment must be scheduled in rooms with appropriate facilities.
 
-Lab Division
-Labs are split into 2 batches, must be scheduled accordingly.
+8.Special Teacher Assignment
+    Some teachers (e.g., lab or specialized) are available only on specific days.
+    Allow teachers to specify preferred or unavailable slots (e.g., avoid early morning).
 
-Teacher Sharing
-For one lab with 120 students, two teachers must be assigned.
+9.Room Availability Constraint
+    No two classes should be scheduled in the same room at the same time.
 
-Course Sharing (only lab applicable)
-A course may be handled by two teachers (e.g., each handling a different batch).
+10.Max Consecutive Teaching Hours
+    A teacher shouldn't teach for more than 3 hours continuously, even with small breaks.
+
+11.Faculty Idle Time Minimization
+    Minimize gaps between classes for a teacher (optimize teacher presence time).
+
+12.Course Spread Constraint
+    Distribute L/T/P hours of a course across the week (not all in one day).
+
+13.Student Clash Avoidance
+    Ensure students don't have overlapping sessions (especially electives).
+
+total three shifts
+slot 1 - 8 - 15
+slot 2 - 10 - 17
+slot 3 - 12 - 19
+Teacher should be distributed in all three shifts in this fashion 2,1,2 which is 2 day slot 1, 1 day slot 2, 2 day slot 3
+

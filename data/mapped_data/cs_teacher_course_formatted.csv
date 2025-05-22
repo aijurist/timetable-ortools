@@ -1,0 +1,76 @@
+id,teacher_id,staff_code,first_name,last_name,course_id,course_code,course_name,course_type,student_count,credits
+89,171,CS296,Mrs.,Kalpana D,1863,CS23332,Database Management Systems,LoT,64,5.0
+681,171,CS296,Mrs.,Kalpana D,2052,GE23627,Design Thinking and Innovation,L,64,2.0
+65,178,CS307,Dr.,Gunasekar S,1809,CD19P15,Foundations of Machine Learning Concepts,LoT,67,3.0
+80,178,CS307,Dr.,Gunasekar S,1852,CS23431,Operating Systems,LoT,64,5.0
+77,179,CS11,Mrs.,Revathy Padmanabhan,1849,GE23131,Programming using C,LoT,70,4.0
+79,179,CS11,Mrs.,Revathy Padmanabhan,1850,CS23331,Design and Analysis of Algorithms,LoT,64,4.0
+67,182,CS331,Mr.,S Pradeep Kumar,1817,CD19711,Project-I,L,67,3.0
+92,182,CS331,Mr.,S Pradeep Kumar,1458,CD23331,Design Processes and Perspectives,LoT,64,4.0
+93,182,CS331,Mr.,S Pradeep Kumar,166,CD23111,Design Drawing and Sketching,T,70,3.0
+87,184,CS176,Mr.,Vijayakumar R,1457,CD23321,Python Programming for Design,L,64,3.0
+88,184,CS176,Mr.,Vijayakumar R,1862,IT23E31,Graphics and Multimedia,LoT,64,3.0
+66,185,CS306,Mr.,Thirumalairajan G,1803,CD19P11,Digital Media Entrepreneurship,LoT,67,3.0
+91,185,CS306,Mr.,Thirumalairajan G,1866,CS23531,Web Programming,LoT,64,3.0
+64,189,CS289,Mr.,S Umamaheswararao,1820,CD19721,Introduction to 3D Animation,T,67,1.0
+76,189,CS289,Mr.,S Umamaheswararao,1846,CD23531,3D Modelling and Texturing,LoT,64,3.0
+95,187,IT03,Mr.,Dr. Kumar P,1868,CS23533,Foundations of Artificial Intelligence,LoT,70,4.0
+109,187,IT03,Mr.,Dr. Kumar P,1868,CS23533,Foundations of Artificial Intelligence,LoT,70,4.0
+243,188,CS69,Mr.,Dr.S.Vinodhkumar,1868,CS23533,Foundations of Artificial Intelligence,LoT,70,4.0
+207,191,CS218,Mr.,Dr V.Murali Bhaskaran,1542,CS23311,Computer Architecture,T,70,3.0
+208,191,CS218,Mr.,Dr V.Murali Bhaskaran,1542,CS23311,Computer Architecture,T,70,3.0
+220,192,CS182,Mrs.,Jananee V,1544,CS23332,Database Management Systems,LoT,70,5.0
+270,192,CS182,Mrs.,Jananee V,1555,CS23531,Web Programming,LoT,70,3.0
+274,195,CS203,Ms.,Jaeyalakshmi M,1868,CS23533,Foundations of Artificial Intelligence,LoT,70,4.0
+275,195,CS203,Ms.,Jaeyalakshmi M,1868,CS23533,Foundations of Artificial Intelligence,LoT,70,4.0
+214,196,CS251,Mr.,Dr.P.Shanmugam,1543,CS23331,Design and Analysis of Algorithms,LoT,70,4.0
+259,196,CS251,Mr.,Dr.P.Shanmugam,1554,CS23512,Fundamentals of Mobile Computing,T,70,3.0
+268,197,CS171,Mrs.,S.Ponmani,1545,CS23333,Object Oriented Programming Using JAVA,LoT,70,4.0
+269,197,CS171,Mrs.,S.Ponmani,1554,CS23512,Fundamentals of Mobile Computing,T,70,3.0
+276,198,IT194,Mrs.,Farjana U,1556,CS23532,Computer Networks,LoT,70,5.0
+272,199,CS221,Mrs.,J.Jinu Sophia,1545,CS23333,Object Oriented Programming Using JAVA,LoT,70,4.0
+209,201,IT191,Mrs.,Dharani Devi G,1542,CS23311,Computer Architecture,T,70,3.0
+218,201,IT191,Mrs.,Dharani Devi G,1544,CS23332,Database Management Systems,LoT,70,5.0
+261,202,CS208,Mr.,Dr. N. Duraimurugan,1555,CS23531,Web Programming,LoT,70,3.0
+273,203,CS178,Mrs.,Akiladevi R,1545,CS23333,Object Oriented Programming Using JAVA,LoT,70,4.0
+260,205,CS226,Mrs.,Santhiya M,1543,CS23331,Design and Analysis of Algorithms,LoT,70,4.0
+360,207,CS239,Mr.,Srinivasan N,378,GE23131,Programming using C,LoT,70,4.0
+251,211,CS253,Mr.,Dr.K.Anand,1556,CS23532,Computer Networks,LoT,70,5.0
+252,211,CS253,Mr.,Dr.K.Anand,1546,CS23334,Fundamentals of Data Science,LoT,70,4.0
+246,212,CS284,Ms.,Muneeshwari R,1546,CS23334,Fundamentals of Data Science,LoT,70,4.0
+247,212,CS284,Ms.,Muneeshwari R,1546,CS23334,Fundamentals of Data Science,LoT,70,4.0
+257,216,CS281,Mr.,V Karthick,1545,CS23333,Object Oriented Programming Using JAVA,LoT,70,4.0
+244,217,CS256,Mrs.,Dr.R.Sabitha,1556,CS23532,Computer Networks,LoT,70,5.0
+581,217,CS256,Mrs.,Dr.R.Sabitha,1556,CS23532,Computer Networks,LoT,65,5.0
+279,219,CS308,Mrs.,Aswana Lal,1546,CS23334,Fundamentals of Data Science,LoT,70,4.0
+280,219,CS308,Mrs.,Aswana Lal,1556,CS23532,Computer Networks,LoT,70,5.0
+216,220,CS282,Ms.,V.Ariyamala,1543,CS23331,Design and Analysis of Algorithms,LoT,70,4.0
+217,220,CS282,Ms.,V.Ariyamala,1543,CS23331,Design and Analysis of Algorithms,LoT,70,4.0
+253,222,CS255,Mr.,Dr.K.Ananthajothi,1553,CS23511,Theory of Computation,T,70,4.0
+254,222,CS255,Mr.,Dr.K.Ananthajothi,1553,CS23511,Theory of Computation,T,70,4.0
+277,223,CS272,Mrs.,S.Vinothini,1553,CS23511,Theory of Computation,T,70,4.0
+278,223,CS272,Mrs.,S.Vinothini,1553,CS23511,Theory of Computation,T,70,4.0
+219,224,CS291,Mrs.,Mahesmeena,1544,CS23332,Database Management Systems,LoT,70,5.0
+289,229,CS238,Mrs.,Sathiyavathi S,1555,CS23531,Web Programming,LoT,70,3.0
+283,231,CS298,Ms.,Divya M,1868,CS23533,Foundations of Artificial Intelligence,LoT,70,4.0
+284,231,CS298,Ms.,Divya M,1545,CS23333,Object Oriented Programming Using JAVA,LoT,70,4.0
+281,234,IT210,Mrs.,J.A.Adlin Layola,1553,CS23511,Theory of Computation,T,70,4.0
+282,234,IT210,Mrs.,J.A.Adlin Layola,1553,CS23511,Theory of Computation,T,70,4.0
+221,235,CS321,Dr.,Bhuvaneswari R,1544,CS23332,Database Management Systems,LoT,70,5.0
+211,236,CS314,Mrs.,Deepa B,1542,CS23311,Computer Architecture,T,70,3.0
+271,236,CS314,Mrs.,Deepa B,1545,CS23333,Object Oriented Programming Using JAVA,LoT,70,4.0
+110,239,CS301,Mr.,Srinivas Vadlamani,1546,CS23334,Fundamentals of Data Science,LoT,70,4.0
+249,240,CS305,Mr.,Dr Parthasarathy C,1554,CS23512,Fundamentals of Mobile Computing,T,70,3.0
+286,243,CS322,Ms.,Dharshini B S,1554,CS23512,Fundamentals of Mobile Computing,T,70,3.0
+287,243,CS322,Ms.,Dharshini B S,1545,CS23333,Object Oriented Programming Using JAVA,LoT,70,4.0
+267,244,CS320,Dr.,Madhusudhanan S,1555,CS23531,Web Programming,LoT,70,3.0
+255,245,CS319,Dr.,Chettiyar Vani Vivekanand,1556,CS23532,Computer Networks,LoT,70,5.0
+256,245,CS319,Dr.,Chettiyar Vani Vivekanand,1554,CS23512,Fundamentals of Mobile Computing,T,70,3.0
+294,248,CS333,Mrs.,Suba Malai Rajasekar,1546,CS23334,Fundamentals of Data Science,LoT,70,4.0
+263,250,CS313,Mr.,Ayyadurai M,1542,CS23311,Computer Architecture,T,70,3.0
+266,250,CS313,Mr.,Ayyadurai M,1546,CS23334,Fundamentals of Data Science,LoT,70,4.0
+212,253,CS326,Dr.,Duraipandian N,378,GE23131,Programming using C,LoT,70,4.0
+295,268,CS334,Mr.,Kirubhakar T T,1555,CS23531,Web Programming,LoT,70,3.0
+296,268,CS334,Mr.,Kirubhakar T T,1555,CS23531,Web Programming,LoT,70,3.0
+96,238,CS315,Dr.,Balasubramanian V,1526,CR23331,Cryptography,LoT,64,4.0
+97,591,CS40,HOD,CSE(CS),1526,CR23331,Cryptography,LoT,64,4.0
