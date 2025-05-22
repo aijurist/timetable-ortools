@@ -1,0 +1,6 @@
+day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
+Thursday,Lab,14:00-15:50,197,162,JL3,1545,CS23333,Object Oriented Programming Using JAVA
+Friday,Lab,12:00-13:50,202,162,JL3,1555,CS23531,Web Programming
+Thursday,Lab,10:00-11:50,207,162,JL3,378,GE23131,Programming using C
+Saturday,Lab,8:00-9:50,231,162,JL3,1868,CS23533,Foundations of Artificial Intelligence
+Friday,Lab,14:00-15:50,235,162,JL3,1544,CS23332,Database Management Systems

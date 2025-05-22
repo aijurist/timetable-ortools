@@ -1,0 +1,6 @@
+day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
+Monday,Theory,8:00-8:50,217,4,A108,1556,CS23532,Computer Networks
+Tuesday,Theory,13:00-13:50,222,4,A108,1553,CS23511,Theory of Computation
+Friday,Theory,12:00-12:50,231,4,A108,1868,CS23533,Foundations of Artificial Intelligence
+Saturday,Theory,18:00-18:50,236,4,A108,1542,CS23311,Computer Architecture
+Friday,Theory,14:00-14:50,239,4,A108,1546,CS23334,Fundamentals of Data Science

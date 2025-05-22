@@ -1,0 +1,6 @@
+day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
+Monday,Theory,8:00-8:50,217,4,A108,1556,CS23532,Computer Networks
+Thursday,Theory,12:00-12:50,217,29,B218,1556,CS23532,Computer Networks
+Friday,Theory,8:00-8:50,217,17,A304,1556,CS23532,Computer Networks
+Monday,Lab,16:00-17:50,217,168,KFL03,1556,CS23532,Computer Networks
+Thursday,Lab,16:00-17:50,217,177,TLFL4,1556,CS23532,Computer Networks

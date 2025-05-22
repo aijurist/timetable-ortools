@@ -1,0 +1,4 @@
+day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
+Friday,Theory,10:00-10:50,198,13,A210,1556,CS23532,Computer Networks
+Friday,Theory,9:00-9:50,234,13,A210,1553,CS23511,Theory of Computation
+Monday,Theory,16:00-16:50,243,13,A210,1554,CS23512,Fundamentals of Mobile Computing

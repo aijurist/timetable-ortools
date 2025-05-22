@@ -1,0 +1,4 @@
+day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
+Thursday,Theory,8:00-8:50,211,35,B320,1556,CS23532,Computer Networks
+Monday,Theory,16:00-16:50,216,35,B320,1545,CS23333,Object Oriented Programming Using JAVA
+Thursday,Theory,17:00-17:50,243,35,B320,1554,CS23512,Fundamentals of Mobile Computing

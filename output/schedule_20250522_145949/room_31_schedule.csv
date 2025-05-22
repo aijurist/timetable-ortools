@@ -1,0 +1,5 @@
+day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
+Saturday,Theory,17:00-17:50,187,31,B220,1868,CS23533,Foundations of Artificial Intelligence
+Saturday,Theory,18:00-18:50,197,31,B220,1545,CS23333,Object Oriented Programming Using JAVA
+Wednesday,Theory,17:00-17:50,205,31,B220,1543,CS23331,Design and Analysis of Algorithms
+Saturday,Theory,14:00-14:50,220,31,B220,1543,CS23331,Design and Analysis of Algorithms

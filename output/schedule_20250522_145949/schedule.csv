@@ -1,0 +1,192 @@
+day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
+Wednesday,Theory,10:00-10:50,187,27,B212,1868,CS23533,Foundations of Artificial Intelligence
+Friday,Theory,17:00-17:50,187,6,A110,1868,CS23533,Foundations of Artificial Intelligence
+Saturday,Theory,17:00-17:50,187,31,B220,1868,CS23533,Foundations of Artificial Intelligence
+Monday,Theory,8:00-8:50,188,26,B211,1868,CS23533,Foundations of Artificial Intelligence
+Tuesday,Theory,11:00-11:50,188,22,A311,1868,CS23533,Foundations of Artificial Intelligence
+Wednesday,Theory,12:00-12:50,188,17,A304,1868,CS23533,Foundations of Artificial Intelligence
+Tuesday,Theory,11:00-11:50,191,25,B210,1542,CS23311,Computer Architecture
+Wednesday,Theory,10:00-10:50,191,7,A202,1542,CS23311,Computer Architecture
+Thursday,Theory,8:00-8:50,191,19,A308,1542,CS23311,Computer Architecture
+Wednesday,Theory,15:00-15:50,192,9,A204,1544,CS23332,Database Management Systems
+Thursday,Theory,13:00-13:50,192,26,B211,1544,CS23332,Database Management Systems
+Saturday,Theory,18:00-18:50,192,18,A305,1544,CS23332,Database Management Systems
+Monday,Theory,9:00-9:50,195,9,A204,1868,CS23533,Foundations of Artificial Intelligence
+Wednesday,Theory,17:00-17:50,195,18,A305,1868,CS23533,Foundations of Artificial Intelligence
+Saturday,Theory,14:00-14:50,195,38,B325,1868,CS23533,Foundations of Artificial Intelligence
+Tuesday,Theory,10:00-10:50,196,32,B221,1543,CS23331,Design and Analysis of Algorithms
+Wednesday,Theory,8:00-8:50,196,36,B321,1543,CS23331,Design and Analysis of Algorithms
+Thursday,Theory,12:00-12:50,196,23,B106,1543,CS23331,Design and Analysis of Algorithms
+Monday,Theory,13:00-13:50,197,38,B325,1545,CS23333,Object Oriented Programming Using JAVA
+Tuesday,Theory,17:00-17:50,197,35,B320,1545,CS23333,Object Oriented Programming Using JAVA
+Saturday,Theory,18:00-18:50,197,31,B220,1545,CS23333,Object Oriented Programming Using JAVA
+Friday,Theory,10:00-10:50,198,13,A210,1556,CS23532,Computer Networks
+Friday,Theory,13:00-13:50,198,33,B222,1556,CS23532,Computer Networks
+Saturday,Theory,17:00-17:50,198,9,A204,1556,CS23532,Computer Networks
+Thursday,Theory,9:00-9:50,199,32,B221,1545,CS23333,Object Oriented Programming Using JAVA
+Monday,Theory,12:00-12:50,201,10,A205,1542,CS23311,Computer Architecture
+Thursday,Theory,9:00-9:50,201,21,A310,1542,CS23311,Computer Architecture
+Friday,Theory,13:00-13:50,201,25,B210,1542,CS23311,Computer Architecture
+Wednesday,Theory,12:00-12:50,202,25,B210,1555,CS23531,Web Programming
+Monday,Theory,9:00-9:50,203,29,B218,1545,CS23333,Object Oriented Programming Using JAVA
+Wednesday,Theory,17:00-17:50,205,31,B220,1543,CS23331,Design and Analysis of Algorithms
+Saturday,Theory,11:00-11:50,205,38,B325,1543,CS23331,Design and Analysis of Algorithms
+Saturday,Theory,13:00-13:50,205,11,A208,1543,CS23331,Design and Analysis of Algorithms
+Saturday,Theory,12:00-12:50,207,5,A109,378,GE23131,Programming using C
+Tuesday,Theory,11:00-11:50,211,2,A103,1556,CS23532,Computer Networks
+Tuesday,Theory,18:00-18:50,211,9,A204,1556,CS23532,Computer Networks
+Friday,Theory,13:00-13:50,211,1,A102,1556,CS23532,Computer Networks
+Monday,Theory,10:00-10:50,212,18,A305,1546,CS23334,Fundamentals of Data Science
+Monday,Theory,15:00-15:50,212,37,B322,1546,CS23334,Fundamentals of Data Science
+Friday,Theory,13:00-13:50,212,20,A309,1546,CS23334,Fundamentals of Data Science
+Wednesday,Theory,8:00-8:50,216,17,A304,1545,CS23333,Object Oriented Programming Using JAVA
+Monday,Theory,8:00-8:50,217,4,A108,1556,CS23532,Computer Networks
+Thursday,Theory,12:00-12:50,217,29,B218,1556,CS23532,Computer Networks
+Friday,Theory,8:00-8:50,217,17,A304,1556,CS23532,Computer Networks
+Monday,Theory,11:00-11:50,219,34,B302,1546,CS23334,Fundamentals of Data Science
+Thursday,Theory,13:00-13:50,219,9,A204,1546,CS23334,Fundamentals of Data Science
+Friday,Theory,13:00-13:50,219,5,A109,1546,CS23334,Fundamentals of Data Science
+Monday,Theory,13:00-13:50,220,29,B218,1543,CS23331,Design and Analysis of Algorithms
+Saturday,Theory,14:00-14:50,220,31,B220,1543,CS23331,Design and Analysis of Algorithms
+Saturday,Theory,17:00-17:50,220,29,B218,1543,CS23331,Design and Analysis of Algorithms
+Tuesday,Theory,13:00-13:50,222,4,A108,1553,CS23511,Theory of Computation
+Friday,Theory,10:00-10:50,222,23,B106,1553,CS23511,Theory of Computation
+Friday,Theory,15:00-15:50,222,26,B211,1553,CS23511,Theory of Computation
+Tuesday,Theory,11:00-11:50,223,1,A102,1553,CS23511,Theory of Computation
+Thursday,Theory,8:00-8:50,223,12,A209,1553,CS23511,Theory of Computation
+Friday,Theory,15:00-15:50,223,27,B212,1553,CS23511,Theory of Computation
+Monday,Theory,14:00-14:50,224,12,A209,1544,CS23332,Database Management Systems
+Wednesday,Theory,18:00-18:50,224,32,B221,1544,CS23332,Database Management Systems
+Saturday,Theory,12:00-12:50,224,26,B211,1544,CS23332,Database Management Systems
+Wednesday,Theory,8:00-8:50,229,11,A208,1555,CS23531,Web Programming
+Monday,Theory,8:00-8:50,231,35,B320,1868,CS23533,Foundations of Artificial Intelligence
+Tuesday,Theory,10:00-10:50,231,19,A308,1868,CS23533,Foundations of Artificial Intelligence
+Friday,Theory,12:00-12:50,231,4,A108,1868,CS23533,Foundations of Artificial Intelligence
+Thursday,Theory,15:00-15:50,234,16,A303,1553,CS23511,Theory of Computation
+Friday,Theory,9:00-9:50,234,13,A210,1553,CS23511,Theory of Computation
+Saturday,Theory,14:00-14:50,234,33,B222,1553,CS23511,Theory of Computation
+Wednesday,Theory,8:00-8:50,235,16,A303,1544,CS23332,Database Management Systems
+Friday,Theory,11:00-11:50,235,20,A309,1544,CS23332,Database Management Systems
+Saturday,Theory,10:00-10:50,235,8,A203,1544,CS23332,Database Management Systems
+Tuesday,Theory,18:00-18:50,236,34,B302,1542,CS23311,Computer Architecture
+Wednesday,Theory,11:00-11:50,236,26,B211,1542,CS23311,Computer Architecture
+Saturday,Theory,18:00-18:50,236,4,A108,1542,CS23311,Computer Architecture
+Tuesday,Theory,10:00-10:50,239,16,A303,1546,CS23334,Fundamentals of Data Science
+Tuesday,Theory,13:00-13:50,239,35,B320,1546,CS23334,Fundamentals of Data Science
+Friday,Theory,14:00-14:50,239,4,A108,1546,CS23334,Fundamentals of Data Science
+Thursday,Theory,18:00-18:50,240,26,B211,1554,CS23512,Fundamentals of Mobile Computing
+Friday,Theory,10:00-10:50,240,37,B322,1554,CS23512,Fundamentals of Mobile Computing
+Friday,Theory,15:00-15:50,240,9,A204,1554,CS23512,Fundamentals of Mobile Computing
+Monday,Theory,16:00-16:50,243,13,A210,1554,CS23512,Fundamentals of Mobile Computing
+Thursday,Theory,10:00-10:50,243,10,A205,1554,CS23512,Fundamentals of Mobile Computing
+Thursday,Theory,11:00-11:50,243,19,A308,1554,CS23512,Fundamentals of Mobile Computing
+Tuesday,Theory,13:00-13:50,244,30,B219,1555,CS23531,Web Programming
+Tuesday,Theory,9:00-9:50,245,26,B211,1556,CS23532,Computer Networks
+Tuesday,Theory,10:00-10:50,245,14,A211,1556,CS23532,Computer Networks
+Saturday,Theory,14:00-14:50,245,19,A308,1556,CS23532,Computer Networks
+Monday,Theory,15:00-15:50,248,35,B320,1546,CS23334,Fundamentals of Data Science
+Friday,Theory,15:00-15:50,248,36,B321,1546,CS23334,Fundamentals of Data Science
+Saturday,Theory,17:00-17:50,248,16,A303,1546,CS23334,Fundamentals of Data Science
+Tuesday,Theory,15:00-15:50,250,34,B302,1542,CS23311,Computer Architecture
+Thursday,Theory,15:00-15:50,250,26,B211,1542,CS23311,Computer Architecture
+Saturday,Theory,11:00-11:50,250,11,A208,1542,CS23311,Computer Architecture
+Tuesday,Theory,11:00-11:50,253,24,B107,378,GE23131,Programming using C
+Monday,Theory,10:00-10:50,268,38,B325,1555,CS23531,Web Programming
+Thursday,Lab,10:00-11:50,187,185,TLGL2,1868,CS23533,Foundations of Artificial Intelligence
+Saturday,Lab,12:00-13:50,187,177,TLFL4,1868,CS23533,Foundations of Artificial Intelligence
+Tuesday,Lab,8:00-9:50,188,181,TLFR3,1868,CS23533,Foundations of Artificial Intelligence
+Wednesday,Lab,8:00-9:50,188,170,KFR02,1868,CS23533,Foundations of Artificial Intelligence
+Thursday,Lab,16:00-17:50,192,183,TLFR5,1544,CS23332,Database Management Systems
+Friday,Lab,14:00-15:50,192,172,KSL03,1544,CS23332,Database Management Systems
+Saturday,Lab,10:00-11:50,192,165,JR3,1544,CS23332,Database Management Systems
+Saturday,Lab,12:00-13:50,192,185,TLGL2,1544,CS23332,Database Management Systems
+Thursday,Lab,16:00-17:50,195,188,TLSL1,1868,CS23533,Foundations of Artificial Intelligence
+Saturday,Lab,12:00-13:50,195,190,TLSR1,1868,CS23533,Foundations of Artificial Intelligence
+Monday,Lab,10:00-11:50,196,182,TLFR4,1543,CS23331,Design and Analysis of Algorithms
+Thursday,Lab,8:00-9:50,196,163,JR1,1543,CS23331,Design and Analysis of Algorithms
+Thursday,Lab,14:00-15:50,197,162,JL3,1545,CS23333,Object Oriented Programming Using JAVA
+Friday,Lab,8:00-9:50,197,181,TLFR3,1545,CS23333,Object Oriented Programming Using JAVA
+Friday,Lab,14:00-15:50,197,160,JL1,1545,CS23333,Object Oriented Programming Using JAVA
+Saturday,Lab,12:00-13:50,197,189,TLSL2,1545,CS23333,Object Oriented Programming Using JAVA
+Monday,Lab,10:00-11:50,198,165,JR3,1556,CS23532,Computer Networks
+Wednesday,Lab,8:00-9:50,198,169,KFR01,1556,CS23532,Computer Networks
+Thursday,Lab,12:00-13:50,199,183,TLFR5,1545,CS23333,Object Oriented Programming Using JAVA
+Friday,Lab,12:00-13:50,199,186,TLGL3,1545,CS23333,Object Oriented Programming Using JAVA
+Saturday,Lab,8:00-9:50,199,189,TLSL2,1545,CS23333,Object Oriented Programming Using JAVA
+Saturday,Lab,16:00-17:50,199,165,JR3,1545,CS23333,Object Oriented Programming Using JAVA
+Friday,Lab,10:00-11:50,201,166,KFL01,1544,CS23332,Database Management Systems
+Friday,Lab,16:00-17:50,201,176,TLFL3,1544,CS23332,Database Management Systems
+Saturday,Lab,10:00-11:50,201,179,TLFR1,1544,CS23332,Database Management Systems
+Saturday,Lab,14:00-15:50,201,186,TLGL3,1544,CS23332,Database Management Systems
+Thursday,Lab,16:00-17:50,202,172,KSL03,1555,CS23531,Web Programming
+Friday,Lab,12:00-13:50,202,162,JL3,1555,CS23531,Web Programming
+Friday,Lab,16:00-17:50,202,185,TLGL2,1555,CS23531,Web Programming
+Saturday,Lab,16:00-17:50,202,180,TLFR2,1555,CS23531,Web Programming
+Thursday,Lab,14:00-15:50,203,188,TLSL1,1545,CS23333,Object Oriented Programming Using JAVA
+Thursday,Lab,16:00-17:50,203,175,TLFL2,1545,CS23333,Object Oriented Programming Using JAVA
+Friday,Lab,10:00-11:50,203,180,TLFR2,1545,CS23333,Object Oriented Programming Using JAVA
+Friday,Lab,16:00-17:50,203,182,TLFR4,1545,CS23333,Object Oriented Programming Using JAVA
+Monday,Lab,10:00-11:50,205,177,TLFL4,1543,CS23331,Design and Analysis of Algorithms
+Thursday,Lab,16:00-17:50,205,165,JR3,1543,CS23331,Design and Analysis of Algorithms
+Thursday,Lab,10:00-11:50,207,162,JL3,378,GE23131,Programming using C
+Thursday,Lab,14:00-15:50,207,174,TLFL1,378,GE23131,Programming using C
+Friday,Lab,14:00-15:50,207,168,KFL03,378,GE23131,Programming using C
+Saturday,Lab,14:00-15:50,207,164,JR2,378,GE23131,Programming using C
+Tuesday,Lab,14:00-15:50,211,181,TLFR3,1556,CS23532,Computer Networks
+Saturday,Lab,16:00-17:50,211,172,KSL03,1556,CS23532,Computer Networks
+Tuesday,Lab,8:00-9:50,212,167,KFL02,1546,CS23334,Fundamentals of Data Science
+Thursday,Lab,10:00-11:50,212,165,JR3,1546,CS23334,Fundamentals of Data Science
+Thursday,Lab,14:00-15:50,216,163,JR1,1545,CS23333,Object Oriented Programming Using JAVA
+Friday,Lab,10:00-11:50,216,190,TLSR1,1545,CS23333,Object Oriented Programming Using JAVA
+Saturday,Lab,8:00-9:50,216,166,KFL01,1545,CS23333,Object Oriented Programming Using JAVA
+Saturday,Lab,12:00-13:50,216,188,TLSL1,1545,CS23333,Object Oriented Programming Using JAVA
+Monday,Lab,16:00-17:50,217,168,KFL03,1556,CS23532,Computer Networks
+Thursday,Lab,16:00-17:50,217,177,TLFL4,1556,CS23532,Computer Networks
+Monday,Lab,14:00-15:50,219,190,TLSR1,1546,CS23334,Fundamentals of Data Science
+Wednesday,Lab,16:00-17:50,219,178,TLFL5,1546,CS23334,Fundamentals of Data Science
+Wednesday,Lab,12:00-13:50,220,190,TLSR1,1543,CS23331,Design and Analysis of Algorithms
+Thursday,Lab,8:00-9:50,220,161,JL2,1543,CS23331,Design and Analysis of Algorithms
+Thursday,Lab,14:00-15:50,224,164,JR2,1544,CS23332,Database Management Systems
+Friday,Lab,8:00-9:50,224,178,TLFL5,1544,CS23332,Database Management Systems
+Friday,Lab,10:00-11:50,224,188,TLSL1,1544,CS23332,Database Management Systems
+Saturday,Lab,16:00-17:50,224,163,JR1,1544,CS23332,Database Management Systems
+Thursday,Lab,14:00-15:50,229,180,TLFR2,1555,CS23531,Web Programming
+Thursday,Lab,16:00-17:50,229,166,KFL01,1555,CS23531,Web Programming
+Saturday,Lab,12:00-13:50,229,187,TLGL4,1555,CS23531,Web Programming
+Saturday,Lab,16:00-17:50,229,167,KFL02,1555,CS23531,Web Programming
+Monday,Lab,16:00-17:50,231,166,KFL01,1868,CS23533,Foundations of Artificial Intelligence
+Tuesday,Lab,16:00-17:50,231,185,TLGL2,1868,CS23533,Foundations of Artificial Intelligence
+Wednesday,Lab,12:00-13:50,231,160,JL1,1868,CS23533,Foundations of Artificial Intelligence
+Saturday,Lab,8:00-9:50,231,162,JL3,1868,CS23533,Foundations of Artificial Intelligence
+Thursday,Lab,8:00-9:50,235,169,KFR01,1544,CS23332,Database Management Systems
+Thursday,Lab,12:00-13:50,235,188,TLSL1,1544,CS23332,Database Management Systems
+Friday,Lab,14:00-15:50,235,162,JL3,1544,CS23332,Database Management Systems
+Friday,Lab,16:00-17:50,235,164,JR2,1544,CS23332,Database Management Systems
+Friday,Lab,12:00-13:50,236,169,KFR01,1545,CS23333,Object Oriented Programming Using JAVA
+Friday,Lab,16:00-17:50,236,165,JR3,1545,CS23333,Object Oriented Programming Using JAVA
+Saturday,Lab,10:00-11:50,236,178,TLFL5,1545,CS23333,Object Oriented Programming Using JAVA
+Saturday,Lab,16:00-17:50,236,164,JR2,1545,CS23333,Object Oriented Programming Using JAVA
+Monday,Lab,14:00-15:50,239,187,TLGL4,1546,CS23334,Fundamentals of Data Science
+Saturday,Lab,10:00-11:50,239,161,JL2,1546,CS23334,Fundamentals of Data Science
+Thursday,Lab,8:00-9:50,243,185,TLGL2,1545,CS23333,Object Oriented Programming Using JAVA
+Thursday,Lab,14:00-15:50,243,176,TLFL3,1545,CS23333,Object Oriented Programming Using JAVA
+Friday,Lab,8:00-9:50,243,165,JR3,1545,CS23333,Object Oriented Programming Using JAVA
+Friday,Lab,16:00-17:50,243,179,TLFR1,1545,CS23333,Object Oriented Programming Using JAVA
+Thursday,Lab,10:00-11:50,244,164,JR2,1555,CS23531,Web Programming
+Friday,Lab,8:00-9:50,244,164,JR2,1555,CS23531,Web Programming
+Friday,Lab,14:00-15:50,244,186,TLGL3,1555,CS23531,Web Programming
+Saturday,Lab,10:00-11:50,244,181,TLFR3,1555,CS23531,Web Programming
+Monday,Lab,16:00-17:50,245,183,TLFR5,1556,CS23532,Computer Networks
+Wednesday,Lab,10:00-11:50,245,189,TLSL2,1556,CS23532,Computer Networks
+Wednesday,Lab,16:00-17:50,248,161,JL2,1546,CS23334,Fundamentals of Data Science
+Thursday,Lab,8:00-9:50,248,181,TLFR3,1546,CS23334,Fundamentals of Data Science
+Monday,Lab,14:00-15:50,250,164,JR2,1546,CS23334,Fundamentals of Data Science
+Friday,Lab,10:00-11:50,250,164,JR2,1546,CS23334,Fundamentals of Data Science
+Thursday,Lab,14:00-15:50,253,178,TLFL5,378,GE23131,Programming using C
+Friday,Lab,16:00-17:50,253,167,KFL02,378,GE23131,Programming using C
+Saturday,Lab,10:00-11:50,253,172,KSL03,378,GE23131,Programming using C
+Saturday,Lab,16:00-17:50,253,178,TLFL5,378,GE23131,Programming using C
+Thursday,Lab,10:00-11:50,268,168,KFL03,1555,CS23531,Web Programming
+Thursday,Lab,16:00-17:50,268,160,JL1,1555,CS23531,Web Programming
+Saturday,Lab,8:00-9:50,268,176,TLFL3,1555,CS23531,Web Programming
+Saturday,Lab,12:00-13:50,268,167,KFL02,1555,CS23531,Web Programming

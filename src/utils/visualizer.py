@@ -1,0 +1,206 @@
+import os
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+import numpy as np
+from matplotlib.gridspec import GridSpec
+
+class TimetableVisualizer:
+    def __init__(self, schedule_df, output_dir):
+        """Initialize the timetable visualizer."""
+        self.schedule_df = schedule_df
+        self.output_dir = output_dir
+        self.days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+        self.theory_slots = [f"{h}:00-{h}:50" for h in range(8, 19)]
+        self.lab_slots = ["8:00-9:50", "10:00-11:50", "12:00-13:50", "14:00-15:50", "16:00-17:50"]
+        
+        # Create color map for courses
+        self.courses = schedule_df['course_code'].unique()
+        colors = plt.cm.tab20(np.linspace(0, 1, len(self.courses)))
+        self.course_colors = {course: mcolors.rgb2hex(color) for course, color in zip(self.courses, colors)}
+    
+    def generate_teacher_schedules(self):
+        """Generate schedule visualizations for each teacher."""
+        teachers = self.schedule_df['teacher_id'].unique()
+        
+        for teacher in teachers:
+            teacher_df = self.schedule_df[self.schedule_df['teacher_id'] == teacher]
+            if not teacher_df.empty:
+                self._create_teacher_schedule(teacher, teacher_df)
+    
+    def generate_room_schedules(self):
+        """Generate schedule visualizations for each room."""
+        rooms = self.schedule_df['room_id'].unique()
+        
+        for room in rooms:
+            room_df = self.schedule_df[self.schedule_df['room_id'] == room]
+            if not room_df.empty:
+                room_number = room_df.iloc[0]['room_number']
+                self._create_room_schedule(room, room_number, room_df)
+    
+    def generate_master_schedule(self):
+        """Generate a master schedule visualization."""
+        # Create a figure with subplots for theory and lab schedules
+        fig = plt.figure(figsize=(20, 16))
+        gs = GridSpec(2, 1, height_ratios=[2, 1], figure=fig)
+        
+        # Theory schedule
+        ax_theory = fig.add_subplot(gs[0])
+        self._plot_schedule(ax_theory, 'Theory', self.theory_slots)
+        ax_theory.set_title('Master Theory Schedule', fontsize=16)
+        
+        # Lab schedule
+        ax_lab = fig.add_subplot(gs[1])
+        self._plot_schedule(ax_lab, 'Lab', self.lab_slots)
+        ax_lab.set_title('Master Lab Schedule', fontsize=16)
+        
+        plt.tight_layout()
+        fig.savefig(os.path.join(self.output_dir, 'master_schedule.png'), dpi=300, bbox_inches='tight')
+        plt.close(fig)
+    
+    def _create_teacher_schedule(self, teacher_id, teacher_df):
+        """Create a schedule visualization for a specific teacher."""
+        # Create a figure with subplots for theory and lab schedules
+        fig = plt.figure(figsize=(16, 12))
+        gs = GridSpec(2, 1, height_ratios=[2, 1], figure=fig)
+        
+        # Get teacher information
+        teacher_info = self.schedule_df[self.schedule_df['teacher_id'] == teacher_id].iloc[0]
+        # Extract teacher name from the first row
+        teacher_first_name = teacher_info.get('first_name', '')
+        teacher_last_name = teacher_info.get('last_name', '')
+        teacher_name = f"{teacher_first_name} {teacher_last_name}".strip()
+        if not teacher_name:
+            # Fallback to staff code if name not available
+            teacher_name = teacher_info.get('staff_code', f'Teacher {teacher_id}')
+        
+        # Theory schedule
+        ax_theory = fig.add_subplot(gs[0])
+        self._plot_teacher_schedule(ax_theory, teacher_id, teacher_df, 'Theory', self.theory_slots)
+        ax_theory.set_title(f'Theory Schedule for {teacher_name}', fontsize=16)
+        
+        # Lab schedule
+        ax_lab = fig.add_subplot(gs[1])
+        self._plot_teacher_schedule(ax_lab, teacher_id, teacher_df, 'Lab', self.lab_slots)
+        ax_lab.set_title(f'Lab Schedule for {teacher_name}', fontsize=16)
+        
+        plt.tight_layout()
+        # Add teacher name to filename but keep ID for uniqueness
+        fig.savefig(os.path.join(self.output_dir, f'teacher_{teacher_id}_{teacher_name.replace(" ", "_")}_schedule.png'), dpi=300, bbox_inches='tight')
+        plt.close(fig)
+    
+    def _create_room_schedule(self, room_id, room_number, room_df):
+        """Create a schedule visualization for a specific room."""
+        # Determine if this is a classroom or a lab
+        is_lab = 'Lab' in room_df['slot_type'].values
+        
+        # Get additional room information if available
+        room_info = room_df.iloc[0]
+        block = room_info.get('block', '')
+        description = room_info.get('description', '')
+        
+        # Create a descriptive room name
+        room_title = room_number
+        if block:
+            room_title = f"{room_number}, {block}"
+        
+        room_subtitle = ""
+        if description and description != room_number:
+            room_subtitle = f" - {description}"
+        
+        fig, ax = plt.figure(figsize=(16, 10)), plt.gca()
+        
+        if is_lab:
+            self._plot_room_schedule(ax, room_id, room_df, 'Lab', self.lab_slots)
+            ax.set_title(f'Lab Schedule for Room: {room_title}{room_subtitle}', fontsize=16)
+        else:
+            self._plot_room_schedule(ax, room_id, room_df, 'Theory', self.theory_slots)
+            ax.set_title(f'Classroom Schedule for Room: {room_title}{room_subtitle}', fontsize=16)
+        
+        plt.tight_layout()
+        # Use room number in filename instead of just ID
+        fig.savefig(os.path.join(self.output_dir, f'room_{room_number.replace("/", "_")}_{room_id}_schedule.png'), dpi=300, bbox_inches='tight')
+        plt.close(fig)
+    
+    def _plot_schedule(self, ax, slot_type, slots):
+        """Plot the schedule for a given slot type."""
+        # Filter data for the slot type
+        df = self.schedule_df[self.schedule_df['slot_type'] == slot_type]
+        
+        # Create a grid for days and slots
+        grid = np.zeros((len(self.days), len(slots)), dtype=object)
+        
+        # Fill the grid with course codes
+        for _, row in df.iterrows():
+            day_idx = self.days.index(row['day'])
+            slot_idx = slots.index(row['slot_time'])
+            grid[day_idx, slot_idx] = row['course_code']
+        
+        # Plot the grid
+        for i in range(len(self.days)):
+            for j in range(len(slots)):
+                course = grid[i, j]
+                if course:
+                    color = self.course_colors.get(course, 'white')
+                    ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, color=color, alpha=0.7))
+                    ax.text(j + 0.5, i + 0.5, course, ha='center', va='center', fontsize=10)
+        
+        # Set the axes properties
+        ax.set_xlim(0, len(slots))
+        ax.set_ylim(0, len(self.days))
+        ax.set_xticks(np.arange(len(slots)) + 0.5)
+        ax.set_yticks(np.arange(len(self.days)) + 0.5)
+        ax.set_xticklabels(slots, rotation=45, ha='right')
+        ax.set_yticklabels(self.days)
+        ax.grid(True, linestyle='-', linewidth=0.5, color='gray')
+        
+        # Add a colorbar legend
+        import matplotlib.patches as mpatches
+        handles = [mpatches.Patch(color=color, label=course) 
+                   for course, color in self.course_colors.items()]
+        ax.legend(handles=handles, loc='upper center', bbox_to_anchor=(0.5, -0.15),
+                 fancybox=True, shadow=True, ncol=5)
+    
+    def _plot_teacher_schedule(self, ax, teacher_id, teacher_df, slot_type, slots):
+        """Plot the schedule for a specific teacher and slot type."""
+        # Filter data for the teacher and slot type
+        df = teacher_df[teacher_df['slot_type'] == slot_type]
+        
+        # Create a grid for days and slots
+        grid = np.zeros((len(self.days), len(slots)), dtype=object)
+        room_grid = np.zeros((len(self.days), len(slots)), dtype=object)
+        
+        # Fill the grid with course codes and room numbers
+        for _, row in df.iterrows():
+            day_idx = self.days.index(row['day'])
+            slot_idx = slots.index(row['slot_time'])
+            grid[day_idx, slot_idx] = row['course_code']
+            room_grid[day_idx, slot_idx] = row['room_number']
+        
+        # Plot the grid
+        for i in range(len(self.days)):
+            for j in range(len(slots)):
+                course = grid[i, j]
+                room = room_grid[i, j]
+                if course:
+                    color = self.course_colors.get(course, 'white')
+                    ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, color=color, alpha=0.7))
+                    ax.text(j + 0.5, i + 0.5, f"{course}\n{room}", ha='center', va='center', fontsize=8)
+        
+        # Set the axes properties
+        ax.set_xlim(0, len(slots))
+        ax.set_ylim(0, len(self.days))
+        ax.set_xticks(np.arange(len(slots)) + 0.5)
+        ax.set_yticks(np.arange(len(self.days)) + 0.5)
+        ax.set_xticklabels(slots, rotation=45, ha='right')
+        ax.set_yticklabels(self.days)
+        ax.grid(True, linestyle='-', linewidth=0.5, color='gray')
+        
+        # Add a colorbar legend
+        import matplotlib.patches as mpatches
+        handles = [mpatches.Patch(color=color, label=course) 
+                   for course, color in self.course_colors.items() if course in df['course_code'].values]
+        ax.legend(handles=handles, loc='upper center', bbox_to_anchor=(0.5, -0.15),
+                 fancybox=True, shadow=True, ncol=3)
+    
+        def _plot_room_schedule(self, ax, room_id, room_df, slot_type, slots):        """Plot the schedule for a specific room and slot type."""        # Filter data for the room and slot type        df = room_df[room_df['slot_type'] == slot_type]                # Create a grid for days and slots        grid = np.zeros((len(self.days), len(slots)), dtype=object)        teacher_grid = np.zeros((len(self.days), len(slots)), dtype=object)        teacher_name_grid = np.zeros((len(self.days), len(slots)), dtype=object)                # Fill the grid with course codes and teacher information        for _, row in df.iterrows():            day_idx = self.days.index(row['day'])            slot_idx = slots.index(row['slot_time'])            grid[day_idx, slot_idx] = row['course_code']            teacher_grid[day_idx, slot_idx] = row['teacher_id']                        # Get teacher name if available            teacher_name = ""            if 'first_name' in row and 'last_name' in row:                if row['first_name'] and row['last_name']:                    teacher_name = f"{row['first_name']} {row['last_name']}"                elif row['staff_code']:                    teacher_name = row['staff_code']            elif 'staff_code' in row and row['staff_code']:                teacher_name = row['staff_code']                        if not teacher_name:                teacher_name = f"Teacher {row['teacher_id']}"                            teacher_name_grid[day_idx, slot_idx] = teacher_name                # Plot the grid        for i in range(len(self.days)):            for j in range(len(slots)):                course = grid[i, j]                teacher_name = teacher_name_grid[i, j]                if course:                    color = self.course_colors.get(course, 'white')                    ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, color=color, alpha=0.7))                    # Display course code and teacher name                    ax.text(j + 0.5, i + 0.5, f"{course}\n{teacher_name}", ha='center', va='center', fontsize=8)                # Set the axes properties        ax.set_xlim(0, len(slots))        ax.set_ylim(0, len(self.days))        ax.set_xticks(np.arange(len(slots)) + 0.5)        ax.set_yticks(np.arange(len(self.days)) + 0.5)        ax.set_xticklabels(slots, rotation=45, ha='right')        ax.set_yticklabels(self.days)        ax.grid(True, linestyle='-', linewidth=0.5, color='gray')                # Add a colorbar legend        import matplotlib.patches as mpatches        handles = [mpatches.Patch(color=color, label=course)                    for course, color in self.course_colors.items() if course in df['course_code'].values]        ax.legend(handles=handles, loc='upper center', bbox_to_anchor=(0.5, -0.15),                 fancybox=True, shadow=True, ncol=3) 

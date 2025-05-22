@@ -1,0 +1,3 @@
+day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
+Wednesday,Theory,12:00-12:50,235,2,A103,1544,CS23332,Database Management Systems
+Wednesday,Theory,9:00-9:50,240,2,A103,1554,CS23512,Fundamentals of Mobile Computing

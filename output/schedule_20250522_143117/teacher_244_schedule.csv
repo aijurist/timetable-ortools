@@ -1,0 +1,4 @@
+day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
+Friday,Theory,11:00-11:50,244,26,B211,1555,CS23531,Web Programming
+Wednesday,Lab,14:00-15:50,244,177,TLFL4,1555,CS23531,Web Programming
+Saturday,Lab,10:00-11:50,244,174,TLFL1,1555,CS23531,Web Programming

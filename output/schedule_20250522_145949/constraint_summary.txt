@@ -1,0 +1,59 @@
+Timetable Scheduling Constraints Summary
+=====================================
+
+Constraint: Teacher Single Assignment Constraint
+Description: Prevents teachers from being assigned to multiple rooms in the same time slot
+Impact: Ensures teachers aren't double-booked, which is critical for a valid timetable
+Computational Complexity: O(T × D × (S_theory × R_classroom + S_lab × R_lab))
+Complexity Level: High
+Explanation: T = teachers, D = days, S = slots, R = rooms
+Notes: Scales linearly with number of teachers, days, slots, and rooms
+
+------------------------------------------------------------
+
+Constraint: No Overlapping Slots Constraint
+Description: Prevents teachers from being assigned to lab and theory slots that overlap in time
+Impact: Ensures teachers can't physically be in two places at once when lab slots overlap with theory slots
+Computational Complexity: O(T × D × S_lab × (R_lab × R_classroom))
+Complexity Level: High
+Explanation: Each lab slot overlaps with two theory slots
+Notes: Complex constraint as it must check all possible combinations of lab and theory slots
+
+------------------------------------------------------------
+
+Constraint: Course Hours Constraint
+Description: Ensures each course gets allocated the required lecture and practical hours
+Impact: Critical for educational outcomes - ensures students receive the proper instructional time
+Computational Complexity: O(T × C × (D × S_theory × R_classroom + D × S_lab × R_lab))
+Complexity Level: Very High
+Explanation: C = courses per teacher
+Notes: Most complex constraint as it requires tracking hours across all possible assignments
+
+------------------------------------------------------------
+
+Constraint: Room Single Assignment Constraint
+Description: Prevents rooms from being assigned to multiple teachers in the same time slot
+Impact: Ensures rooms aren't double-booked, preventing scheduling conflicts
+Computational Complexity: O((R_classroom × D × S_theory + R_lab × D × S_lab) × T)
+Complexity Level: Medium
+Explanation: Physical constraint - a room can only host one class at a time
+Notes: Must be checked for every room, time slot, and teacher combination
+
+------------------------------------------------------------
+
+Constraint: Lab Batch Constraint
+Description: Handles lab capacity limitations by creating multiple batches for large classes
+Impact: Ensures all students get proper lab time despite lab capacity limits (35 students per lab)
+Computational Complexity: O(T × C × D × S_lab × R_lab)
+Complexity Level: High
+Explanation: Requires calculating batches based on student count and scheduling accordingly
+Notes: Classes with 70 students require two separate lab batches, doubling the needed lab slots
+
+Example:
+For a course with 2 practical hours and 70 students:
+- Batch 1 (35 students): 2hrs = 1 lab slot
+- Batch 2 (35 students): 2hrs = 1 lab slot
+- Total: 4hrs = 2 lab slots needed
+
+------------------------------------------------------------
+

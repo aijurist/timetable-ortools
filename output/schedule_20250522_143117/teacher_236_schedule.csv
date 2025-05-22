@@ -1,0 +1,6 @@
+day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
+Wednesday,Theory,18:00-18:50,236,18,A305,1542,CS23311,Computer Architecture
+Friday,Theory,17:00-17:50,236,11,A208,1542,CS23311,Computer Architecture
+Saturday,Theory,8:00-8:50,236,37,B322,1542,CS23311,Computer Architecture
+Friday,Lab,8:00-9:50,236,179,TLFR1,1545,CS23333,Object Oriented Programming Using JAVA
+Friday,Lab,12:00-13:50,236,186,TLGL3,1545,CS23333,Object Oriented Programming Using JAVA

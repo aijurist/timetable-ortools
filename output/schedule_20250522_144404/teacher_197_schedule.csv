@@ -1,0 +1,6 @@
+day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
+Tuesday,Theory,8:00-8:50,197,29,B218,1545,CS23333,Object Oriented Programming Using JAVA
+Thursday,Theory,14:00-14:50,197,16,A303,1545,CS23333,Object Oriented Programming Using JAVA
+Saturday,Theory,11:00-11:50,197,37,B322,1545,CS23333,Object Oriented Programming Using JAVA
+Monday,Lab,8:00-9:50,197,171,KFR03,1545,CS23333,Object Oriented Programming Using JAVA
+Thursday,Lab,12:00-13:50,197,189,TLSL2,1545,CS23333,Object Oriented Programming Using JAVA

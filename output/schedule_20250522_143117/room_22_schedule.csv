@@ -1,0 +1,4 @@
+day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
+Tuesday,Theory,8:00-8:50,198,22,A311,1556,CS23532,Computer Networks
+Saturday,Theory,8:00-8:50,201,22,A311,1542,CS23311,Computer Architecture
+Saturday,Theory,16:00-16:50,248,22,A311,1546,CS23334,Fundamentals of Data Science

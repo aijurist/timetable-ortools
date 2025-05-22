@@ -1,0 +1,5 @@
+day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
+Thursday,Theory,13:00-13:50,205,11,A208,1543,CS23331,Design and Analysis of Algorithms
+Friday,Theory,8:00-8:50,205,18,A305,1543,CS23331,Design and Analysis of Algorithms
+Saturday,Theory,9:00-9:50,205,32,B221,1543,CS23331,Design and Analysis of Algorithms
+Friday,Lab,10:00-11:50,205,184,TLGL1,1543,CS23331,Design and Analysis of Algorithms

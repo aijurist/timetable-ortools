@@ -1,0 +1,5 @@
+day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
+Saturday,Lab,12:00-13:50,195,190,TLSR1,1868,CS23533,Foundations of Artificial Intelligence
+Friday,Lab,10:00-11:50,216,190,TLSR1,1545,CS23333,Object Oriented Programming Using JAVA
+Monday,Lab,14:00-15:50,219,190,TLSR1,1546,CS23334,Fundamentals of Data Science
+Wednesday,Lab,12:00-13:50,220,190,TLSR1,1543,CS23331,Design and Analysis of Algorithms

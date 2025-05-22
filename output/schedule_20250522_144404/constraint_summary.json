@@ -1,0 +1,30 @@
+{
+    "teacher_single_assignment": {
+        "name": "Teacher Single Assignment Constraint",
+        "description": "Prevents teachers from being assigned to multiple rooms in the same time slot",
+        "impact": "Ensures teachers aren't double-booked, which is critical for a valid timetable",
+        "complexity": "O(T \u00d7 D \u00d7 (S_theory \u00d7 R_classroom + S_lab \u00d7 R_lab))",
+        "where": "T = number of teachers, D = number of days, S = number of slots, R = number of rooms"
+    },
+    "no_overlapping_slots": {
+        "name": "No Overlapping Slots Constraint",
+        "description": "Prevents teachers from being assigned to lab and theory slots that overlap in time",
+        "impact": "Ensures teachers can't physically be in two places at once when lab slots overlap with theory slots",
+        "complexity": "O(T \u00d7 D \u00d7 S_lab \u00d7 (R_lab \u00d7 R_classroom))",
+        "note": "Each lab slot (1hr:50min) overlaps with two theory slots (50min each)"
+    },
+    "course_hours": {
+        "name": "Course Hours Constraint",
+        "description": "Ensures each course gets allocated the required lecture and practical hours",
+        "impact": "Critical for educational outcomes - ensures students receive the proper instructional time",
+        "complexity": "O(T \u00d7 C \u00d7 (D \u00d7 S_theory \u00d7 R_classroom + D \u00d7 S_lab \u00d7 R_lab))",
+        "where": "C = number of courses per teacher"
+    },
+    "room_single_assignment": {
+        "name": "Room Single Assignment Constraint",
+        "description": "Prevents rooms from being assigned to multiple teachers in the same time slot",
+        "impact": "Ensures rooms aren't double-booked, preventing scheduling conflicts",
+        "complexity": "O((R_classroom \u00d7 D \u00d7 S_theory + R_lab \u00d7 D \u00d7 S_lab) \u00d7 T)",
+        "note": "Physical constraint - a room can only host one class at a time"
+    }
+}

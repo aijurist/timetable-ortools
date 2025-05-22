@@ -1,0 +1,6 @@
+day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
+Tuesday,Lab,10:00-11:50,207,188,TLSL1,378,GE23131,Programming using C
+Wednesday,Lab,8:00-9:50,207,188,TLSL1,378,GE23131,Programming using C
+Thursday,Lab,12:00-13:50,217,188,TLSL1,1556,CS23532,Computer Networks
+Monday,Lab,16:00-17:50,229,188,TLSL1,1555,CS23531,Web Programming
+Friday,Lab,8:00-9:50,229,188,TLSL1,1555,CS23531,Web Programming

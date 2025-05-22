@@ -1,0 +1,6 @@
+day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
+Thursday,Theory,17:00-17:50,243,35,B320,1554,CS23512,Fundamentals of Mobile Computing
+Saturday,Theory,17:00-17:50,243,12,A209,1554,CS23512,Fundamentals of Mobile Computing
+Saturday,Theory,18:00-18:50,243,11,A208,1554,CS23512,Fundamentals of Mobile Computing
+Tuesday,Lab,16:00-17:50,243,179,TLFR1,1545,CS23333,Object Oriented Programming Using JAVA
+Wednesday,Lab,14:00-15:50,243,161,JL2,1545,CS23333,Object Oriented Programming Using JAVA

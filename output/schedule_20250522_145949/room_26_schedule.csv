@@ -1,0 +1,9 @@
+day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
+Monday,Theory,8:00-8:50,188,26,B211,1868,CS23533,Foundations of Artificial Intelligence
+Thursday,Theory,13:00-13:50,192,26,B211,1544,CS23332,Database Management Systems
+Friday,Theory,15:00-15:50,222,26,B211,1553,CS23511,Theory of Computation
+Saturday,Theory,12:00-12:50,224,26,B211,1544,CS23332,Database Management Systems
+Wednesday,Theory,11:00-11:50,236,26,B211,1542,CS23311,Computer Architecture
+Thursday,Theory,18:00-18:50,240,26,B211,1554,CS23512,Fundamentals of Mobile Computing
+Tuesday,Theory,9:00-9:50,245,26,B211,1556,CS23532,Computer Networks
+Thursday,Theory,15:00-15:50,250,26,B211,1542,CS23311,Computer Architecture

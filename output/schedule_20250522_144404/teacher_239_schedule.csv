@@ -1,0 +1,5 @@
+day,slot_type,slot_time,teacher_id,room_id,room_number,course_id,course_code,course_name
+Monday,Theory,8:00-8:50,239,3,A104/105,1546,CS23334,Fundamentals of Data Science
+Saturday,Theory,8:00-8:50,239,38,B325,1546,CS23334,Fundamentals of Data Science
+Saturday,Theory,11:00-11:50,239,31,B220,1546,CS23334,Fundamentals of Data Science
+Tuesday,Lab,10:00-11:50,239,170,KFR02,1546,CS23334,Fundamentals of Data Science
