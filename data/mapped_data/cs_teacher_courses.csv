@@ -6,7 +6,7 @@ id,student_count,academic_year,semester,requires_special_scheduling,is_assistant
 208,70,2,3,0,0,191,CS218,Mr.,Dr V.Murali Bhaskaran,muralibhaskaran.v@rajalakshmi.edu.in,1542,CS23311,Computer Architecture,T,3,0,0,3.0,Computer Science & Engineering
 220,70,2,3,0,0,192,CS182,Mrs.,Jananee V,jananee.v@rajalakshmi.edu.in,1544,CS23332,Database Management Systems,LoT,3,4,0,5.0,Computer Science & Engineering
 270,70,3,5,0,0,192,CS182,Mrs.,Jananee V,jananee.v@rajalakshmi.edu.in,1555,CS23531,Web Programming,LoT,1,4,0,3.0,Computer Science & Engineering
-293,70,3,5,0,1,195,CS203,Ms.,Jaeyalakshmi M,jaeyalakshmi.m@rajalakshmi.edu.in,1868,CS23531,Database Management Systems,LoT,3,4,0,5.0,Computer Science & Engineering
+293,70,3,5,0,1,195,CS203,Ms.,Jaeyalakshmi M,jaeyalakshmi.m@rajalakshmi.edu.in,1544,CS23332,Database Management Systems,LoT,3,4,0,5.0,Computer Science & Engineering
 274,70,3,5,0,0,195,CS203,Ms.,Jaeyalakshmi M,jaeyalakshmi.m@rajalakshmi.edu.in,1868,CS23533,Foundations of Artificial Intelligence,LoT,3,2,0,4.0,Computer Science & Engineering
 214,70,2,3,0,0,196,CS251,Mr.,Dr.P.Shanmugam,shanmugam.p@rajalakshmi.edu.in,1543,CS23331,Design and Analysis of Algorithms,LoT,3,2,0,4.0,Computer Science & Engineering
 259,70,3,5,0,0,196,CS251,Mr.,Dr.P.Shanmugam,shanmugam.p@rajalakshmi.edu.in,1554,CS23512,Fundamentals of Mobile Computing,T,3,0,0,3.0,Computer Science & Engineering

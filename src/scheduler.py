@@ -215,7 +215,9 @@ class TimetableScheduler:
                     'required_lab': course['practical_hours'],
                     'student_count': course['student_count'],
                     'course_info': course,
-                    'days_used': set()  # Track which days are used for this instance
+                    'days_used': set(),  # Track which days are used for this instance
+                    'lab_capacity_used': None,  # Track which lab capacity was chosen
+                    'room_capacity': 35  # Default to 35-capacity lab logic
                 }
                 
                 # Calculate number of batches needed for this course instance
@@ -391,6 +393,36 @@ class TimetableScheduler:
                                         remaining_students = course_info['student_count'] - ((batch_num - 1) * 35)
                                         students_in_batch = min(35, remaining_students)
                                     
+                                    # Detect lab capacity used and adjust student count
+                                    room_capacity = room_row['room_max_cap']
+                                    
+                                    # Update tracking with actual lab capacity used
+                                    if tracking['lab_capacity_used'] is None:
+                                        tracking['lab_capacity_used'] = room_capacity
+                                        tracking['room_capacity'] = room_capacity
+                                        
+                                        # For courses >60 students using large labs, recalculate batching
+                                        if course_info['student_count'] > 60 and room_capacity >= 70:
+                                            if room_capacity >= 140 or course_info['student_count'] <= room_capacity:
+                                                # Can fit all students in one batch!
+                                                students_in_batch = course_info['student_count']
+                                                batch_num = 1  # Only one batch needed
+                                                
+                                                # Clear old batch tracking and set up single batch
+                                                tracking['batch_tracking'] = {
+                                                    1: {
+                                                        'slots_allocated': 0,
+                                                        'required_slots': (course_info['practical_hours'] + 1) // 2
+                                                    }
+                                                }
+                                    
+                                    # If using large lab, ensure we're tracking the single batch correctly  
+                                    if (tracking['lab_capacity_used'] and tracking['lab_capacity_used'] >= 70 and 
+                                        course_info['student_count'] > 60 and 
+                                        course_info['student_count'] <= tracking['lab_capacity_used']):
+                                        students_in_batch = course_info['student_count']
+                                        batch_num = 1
+                                    
                                     schedule_data.append({
                                         'day': self.days[d],
                                         'slot_type': 'Lab',
@@ -401,6 +433,7 @@ class TimetableScheduler:
                                         'staff_code': staff_code,
                                         'room_id': room_id,
                                         'room_number': room_row['room_number'],
+                                        'room_capacity': room_row['room_max_cap'],
                                         'block': room_row.get('block', ''),
                                         'description': room_row.get('description', ''),
                                         'course_id': course_info['course_id'],
@@ -408,7 +441,9 @@ class TimetableScheduler:
                                         'course_name': course_info['course_name'],
                                         'course_instance_id': instance_id,
                                         'batch': batch_num,
-                                        'batch_students': students_in_batch
+                                        'batch_students': students_in_batch,
+                                        'total_students': course_info['student_count'],
+                                        'intelligent_batching': 'Yes' if (course_info['student_count'] > 60 and room_row['room_max_cap'] >= 70) else 'No'
                                     })
         
         # Create a dataframe from the schedule data

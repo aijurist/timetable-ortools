@@ -83,6 +83,103 @@ class TimetableConstraints:
         
         return True
     
+    def apply_intelligent_lab_capacity_constraint(self, teacher_theory_assignments, teacher_lab_assignments):
+        """
+        Constraint 7: Intelligent lab capacity allocation.
+        For courses with >60 students:
+        - 70-capacity labs: No batching needed (all students in one batch)
+        - 140-capacity labs: No batching needed if students ≤ 140
+        This reduces total lab slots needed compared to always using 35-capacity labs.
+        """
+        logger.info("Applying intelligent lab capacity constraint...")
+        
+        # Categorize labs by capacity
+        labs_35 = self.labs[self.labs['room_max_cap'] <= 35]
+        labs_70 = self.labs[(self.labs['room_max_cap'] >= 70) & (self.labs['room_max_cap'] < 140)]
+        labs_140 = self.labs[self.labs['room_max_cap'] >= 140]
+        
+        # Create decision variables for lab capacity choice per course instance
+        self.lab_capacity_choices = {}
+        
+        for teacher in self.teachers:
+            if teacher in self.teacher_course_assignments:
+                course_instances = self.teacher_course_assignments[teacher]
+                
+                for instance in course_instances:
+                    if instance['practical_hours'] <= 0:
+                        continue  # Skip courses without lab requirements
+                    
+                    instance_id = instance['id']
+                    student_count = instance['student_count']
+                    practical_hours = instance['practical_hours']
+                    
+                    # Only apply intelligent allocation for courses with >60 students
+                    if student_count > 60:
+                        key = f"{teacher}_{instance_id}"
+                        self.lab_capacity_choices[key] = {}
+                        
+                        # Create choice variables for different lab capacities
+                        if len(labs_35) > 0:
+                            self.lab_capacity_choices[key]['uses_35'] = self.model.NewBoolVar(
+                                f'instance_{key}_uses_35_cap_labs')
+                        
+                        if len(labs_70) > 0:
+                            self.lab_capacity_choices[key]['uses_70'] = self.model.NewBoolVar(
+                                f'instance_{key}_uses_70_cap_labs')
+                        
+                        if len(labs_140) > 0:
+                            self.lab_capacity_choices[key]['uses_140'] = self.model.NewBoolVar(
+                                f'instance_{key}_uses_140_cap_labs')
+                        
+                        # Exactly one capacity type must be chosen
+                        choice_vars = list(self.lab_capacity_choices[key].values())
+                        if len(choice_vars) > 1:
+                            self.model.Add(sum(choice_vars) == 1)
+                        
+                        # Link lab assignments to capacity choices
+                        for d in range(self.num_days):
+                            for s in range(self.num_lab_slots):
+                                
+                                # 35-capacity lab assignments
+                                if 'uses_35' in self.lab_capacity_choices[key]:
+                                    lab_35_assignments = []
+                                    for _, room_row in labs_35.iterrows():
+                                        room_id = room_row['id']
+                                        lab_35_assignments.append(teacher_lab_assignments[teacher][d][s][room_id])
+                                    
+                                    # If using 35-cap labs, can only assign to 35-cap labs in this slot
+                                    if lab_35_assignments:
+                                        uses_35 = self.lab_capacity_choices[key]['uses_35']
+                                        # If not using 35-cap labs, cannot assign to any 35-cap lab
+                                        for var in lab_35_assignments:
+                                            self.model.Add(var == 0).OnlyEnforceIf(uses_35.Not())
+                                
+                                # 70-capacity lab assignments  
+                                if 'uses_70' in self.lab_capacity_choices[key]:
+                                    lab_70_assignments = []
+                                    for _, room_row in labs_70.iterrows():
+                                        room_id = room_row['id']
+                                        lab_70_assignments.append(teacher_lab_assignments[teacher][d][s][room_id])
+                                    
+                                    if lab_70_assignments:
+                                        uses_70 = self.lab_capacity_choices[key]['uses_70']
+                                        for var in lab_70_assignments:
+                                            self.model.Add(var == 0).OnlyEnforceIf(uses_70.Not())
+                                
+                                # 140-capacity lab assignments
+                                if 'uses_140' in self.lab_capacity_choices[key]:
+                                    lab_140_assignments = []
+                                    for _, room_row in labs_140.iterrows():
+                                        room_id = room_row['id']
+                                        lab_140_assignments.append(teacher_lab_assignments[teacher][d][s][room_id])
+                                    
+                                    if lab_140_assignments:
+                                        uses_140 = self.lab_capacity_choices[key]['uses_140']
+                                        for var in lab_140_assignments:
+                                            self.model.Add(var == 0).OnlyEnforceIf(uses_140.Not())
+        
+        return True
+    
     def apply_course_hours_constraint(self, teacher_theory_assignments, teacher_lab_assignments):
         """
         Constraint 3: Allocate the correct number of hours for each course instance.
@@ -204,17 +301,52 @@ class TimetableConstraints:
                             if instance_id in course_instance_vars[teacher][slot_key]:
                                 lab_instance_vars.append(course_instance_vars[teacher][slot_key][instance_id])
                     
-                    # Calculate required lab slots based on practical hours and student count
-                    required_lab_slots = (practical_hours + 1) // 2  # Ceiling division for base lab slots
-                    
-                    # For large classes (>35 students), we need multiple batches
-                    if instance['student_count'] > 35:
-                        num_batches = (instance['student_count'] + 34) // 35
-                        required_lab_slots *= num_batches
-                    
-                    # Ensure the required number of lab slots
+                    # Calculate required lab slots based on practical hours and lab capacity choice
                     if practical_hours > 0:
-                        self.model.Add(sum(lab_instance_vars) == required_lab_slots)
+                        base_lab_slots = (practical_hours + 1) // 2  # Ceiling division
+                        
+                        # Check if this instance uses intelligent lab capacity allocation
+                        key = f"{teacher}_{instance_id}"
+                        
+                        if (instance['student_count'] > 60 and 
+                            hasattr(self, 'lab_capacity_choices') and 
+                            key in self.lab_capacity_choices):
+                            
+                            # For courses >60 students with intelligent allocation
+                            choices = self.lab_capacity_choices[key]
+                            
+                            if 'uses_35' in choices:
+                                # Using 35-capacity labs: need batching (2 batches for 70 students)
+                                num_batches_35 = (instance['student_count'] + 34) // 35
+                                required_slots_35 = base_lab_slots * num_batches_35
+                                self.model.Add(sum(lab_instance_vars) == required_slots_35).OnlyEnforceIf(choices['uses_35'])
+                            
+                            if 'uses_70' in choices:
+                                # Using 70-capacity labs: no batching needed (1 batch)
+                                # But still need enough slots to cover all practical hours
+                                required_slots_70 = base_lab_slots  # Respect practical hours!
+                                self.model.Add(sum(lab_instance_vars) == required_slots_70).OnlyEnforceIf(choices['uses_70'])
+                            
+                            if 'uses_140' in choices:
+                                # Using 140-capacity labs: no batching needed if ≤140 students
+                                # But still need enough slots to cover all practical hours
+                                if instance['student_count'] <= 140:
+                                    required_slots_140 = base_lab_slots  # Respect practical hours!
+                                else:
+                                    num_batches_140 = (instance['student_count'] + 139) // 140
+                                    required_slots_140 = base_lab_slots * num_batches_140
+                                self.model.Add(sum(lab_instance_vars) == required_slots_140).OnlyEnforceIf(choices['uses_140'])
+                        
+                        else:
+                            # Standard allocation for courses ≤60 students or without intelligent allocation
+                            required_lab_slots = base_lab_slots
+                            
+                            # For large classes (>35 students), use standard batching
+                            if instance['student_count'] > 35:
+                                num_batches = (instance['student_count'] + 34) // 35
+                                required_lab_slots *= num_batches
+                            
+                            self.model.Add(sum(lab_instance_vars) == required_lab_slots)
         
         return True
     
@@ -247,6 +379,38 @@ class TimetableConstraints:
         
         return True
     
+    def apply_weekly_working_hour_constraint(self, teacher_theory_assignments, teacher_lab_assignments):
+        """
+        Constraint 5: Weekly working hour limit (21 hours per teacher).
+        Ensures no teacher exceeds 21 hours of teaching per week.
+        Theory slots count as 1 hour each, lab slots count as 2 hours each.
+        """
+        logger.info("Applying weekly working hour constraint...")
+        
+        for teacher in self.teachers:
+            # Collect all theory slot assignments for this teacher (1 hour each)
+            theory_vars = []
+            for d in range(self.num_days):
+                for s in range(self.num_theory_slots):
+                    for _, room_row in self.classrooms.iterrows():
+                        room_id = room_row['id']
+                        theory_vars.append(teacher_theory_assignments[teacher][d][s][room_id])
+            
+            # Collect all lab slot assignments for this teacher (2 hours each)
+            lab_vars = []
+            for d in range(self.num_days):
+                for s in range(self.num_lab_slots):
+                    for _, room_row in self.labs.iterrows():
+                        room_id = room_row['id']
+                        lab_vars.append(teacher_lab_assignments[teacher][d][s][room_id])
+            
+            # Weekly working hour constraint: theory_hours + 2*lab_hours <= 21
+            # Theory slots are 50 minutes (~1 hour), lab slots are 100 minutes (~2 hours)
+            total_weekly_hours = sum(theory_vars) + 2 * sum(lab_vars)
+            self.model.Add(total_weekly_hours <= 21)
+        
+        return True
+    
     def apply_all_constraints(self, teacher_theory_assignments, teacher_lab_assignments):
         """Apply all timetable constraints."""
         logger.info("Applying all timetable constraints...")
@@ -254,9 +418,10 @@ class TimetableConstraints:
         constraints_applied = [
             self.apply_teacher_single_assignment_constraint(teacher_theory_assignments, teacher_lab_assignments),
             self.apply_no_overlapping_slots_constraint(teacher_theory_assignments, teacher_lab_assignments),
+            self.apply_intelligent_lab_capacity_constraint(teacher_theory_assignments, teacher_lab_assignments),
             self.apply_course_hours_constraint(teacher_theory_assignments, teacher_lab_assignments),
-            self.apply_room_single_assignment_constraint(teacher_theory_assignments, teacher_lab_assignments)
-            # Lab batch constraint logic is now incorporated into the course hours constraint
+            self.apply_room_single_assignment_constraint(teacher_theory_assignments, teacher_lab_assignments),
+            self.apply_weekly_working_hour_constraint(teacher_theory_assignments, teacher_lab_assignments)
         ]
         
         return all(constraints_applied)
@@ -319,6 +484,28 @@ class TimetableConstraints:
                     "notes": "Classes with 70 students require two separate lab batches, doubling the needed lab slots"
                 },
                 "example": "For a course with 2 practical hours and 70 students:\n- Batch 1 (35 students): 2hrs = 1 lab slot\n- Batch 2 (35 students): 2hrs = 1 lab slot\n- Total: 4hrs = 2 lab slots needed"
+            },
+            "weekly_working_hour": {
+                "name": "Weekly Working Hour Constraint",
+                "description": "Ensures no teacher exceeds 21 hours of teaching per week",
+                "impact": "Critical for teacher well-being and teaching quality",
+                "complexity": {
+                    "formula": "O(T × D × (S_theory + 2 × S_lab))",
+                    "explanation": "T = teachers, D = days, S = slots",
+                    "level": "Medium",
+                    "notes": "Ensures teachers don't work excessive hours"
+                }
+            },
+            "intelligent_lab_capacity": {
+                "name": "Intelligent Lab Capacity Constraint",
+                "description": "Handles different lab capacities (35, 70, 140) to optimize lab usage",
+                "impact": "Ensures proper lab time allocation based on student count and lab capacity",
+                "complexity": {
+                    "formula": "O(T × C × D × S_lab × R_lab)",
+                    "explanation": "T = teachers, C = courses per teacher, D = days, S = slots, R = rooms",
+                    "level": "High",
+                    "notes": "Complex constraint as it requires handling multiple lab capacity scenarios"
+                }
             }
         }
         
