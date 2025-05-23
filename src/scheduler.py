@@ -92,30 +92,32 @@ class TimetableScheduler:
         # Create the CP-SAT model
         model = cp_model.CpModel()
         
+        # Pre-compute room IDs for efficiency (avoid repeated DataFrame iterations)
+        classroom_ids = self.classrooms['id'].tolist()
+        lab_ids = self.labs['id'].tolist()
+        
         # Define variables
         # teacher_theory_assignments[t][d][s][r] = 1 if teacher t is assigned to theory slot s on day d in room r
         teacher_theory_assignments = {}
-        for t_idx, teacher in enumerate(self.teachers):
+        for teacher in self.teachers:
             teacher_theory_assignments[teacher] = {}
             for d in range(self.num_days):
                 teacher_theory_assignments[teacher][d] = {}
                 for s in range(self.num_theory_slots):
                     teacher_theory_assignments[teacher][d][s] = {}
-                    for _, room_row in self.classrooms.iterrows():
-                        room_id = room_row['id']
+                    for room_id in classroom_ids:
                         teacher_theory_assignments[teacher][d][s][room_id] = model.NewBoolVar(
                             f'teacher_{teacher}_day_{d}_theory_slot_{s}_room_{room_id}')
         
         # teacher_lab_assignments[t][d][s][r] = 1 if teacher t is assigned to lab slot s on day d in room r
         teacher_lab_assignments = {}
-        for t_idx, teacher in enumerate(self.teachers):
+        for teacher in self.teachers:
             teacher_lab_assignments[teacher] = {}
             for d in range(self.num_days):
                 teacher_lab_assignments[teacher][d] = {}
                 for s in range(self.num_lab_slots):
                     teacher_lab_assignments[teacher][d][s] = {}
-                    for _, room_row in self.labs.iterrows():
-                        room_id = room_row['id']
+                    for room_id in lab_ids:
                         teacher_lab_assignments[teacher][d][s][room_id] = model.NewBoolVar(
                             f'teacher_{teacher}_day_{d}_lab_slot_{s}_room_{room_id}')
         
@@ -201,7 +203,60 @@ class TimetableScheduler:
         # Create a dataframe to store the schedule
         schedule_data = []
         
+        # Pre-compute teacher information cache to avoid repeated DataFrame lookups
+        teacher_info_cache = {}
+        for teacher in self.teachers:
+            teacher_rows = self.courses_df[self.courses_df['teacher_id'] == teacher]
+            if not teacher_rows.empty:
+                first_row = teacher_rows.iloc[0]
+                teacher_info_cache[teacher] = {
+                    'first_name': first_row.get('first_name', ''),
+                    'last_name': first_row.get('last_name', ''),
+                    'staff_code': first_row.get('staff_code', '')
+                }
+            else:
+                teacher_info_cache[teacher] = {
+                    'first_name': '',
+                    'last_name': '',
+                    'staff_code': ''
+                }
+        
+        # Pre-compute room information for efficiency
+        classroom_info = {}
+        for _, room_row in self.classrooms.iterrows():
+            room_id = room_row['id']
+            classroom_info[room_id] = {
+                'room_number': room_row['room_number'],
+                'block': room_row.get('block', ''),
+                'description': room_row.get('description', '')
+            }
+        
+        lab_info = {}
+        for _, room_row in self.labs.iterrows():
+            room_id = room_row['id']
+            lab_info[room_id] = {
+                'room_number': room_row['room_number'],
+                'room_max_cap': room_row['room_max_cap'],
+                'block': room_row.get('block', ''),
+                'description': room_row.get('description', '')
+            }
+        
         # Create tracking structures for assigned slots per course instance
+        instance_tracking = self._initialize_instance_tracking()
+        
+        # Process theory assignments first
+        self._process_theory_assignments(solver, teacher_theory_assignments, instance_tracking, 
+                                        schedule_data, teacher_info_cache, classroom_info)
+        
+        # Process lab assignments
+        self._process_lab_assignments(solver, teacher_lab_assignments, instance_tracking,
+                                     schedule_data, teacher_info_cache, lab_info)
+        
+        # Create and save dataframe
+        return self._create_and_save_schedule_dataframe(schedule_data)
+    
+    def _initialize_instance_tracking(self):
+        """Initialize tracking structures for course instances."""
         instance_tracking = {}
         for teacher_id, courses in self.teacher_course_assignments.items():
             instance_tracking[teacher_id] = {}
@@ -223,33 +278,27 @@ class TimetableScheduler:
                 # Calculate number of batches needed for this course instance
                 if course['student_count'] > 35 and course['practical_hours'] > 0:
                     num_batches = (course['student_count'] + 34) // 35
-                    for batch_num in range(1, num_batches+1):
+                    for batch_num in range(1, num_batches + 1):
                         instance_tracking[teacher_id][instance_id]['batch_tracking'][batch_num] = {
                             'slots_allocated': 0,
                             'required_slots': (course['practical_hours'] + 1) // 2  # Required lab slots per batch
                         }
+        return instance_tracking
+    
+    def _process_theory_assignments(self, solver, teacher_theory_assignments, instance_tracking,
+                                   schedule_data, teacher_info_cache, classroom_info):
+        """Process theory assignments from the solution."""
+        classroom_ids = list(classroom_info.keys())
         
-        # Process theory assignments first
         for teacher in self.teachers:
             for d in range(self.num_days):
                 for s in range(self.num_theory_slots):
-                    for _, room_row in self.classrooms.iterrows():
-                        room_id = room_row['id']
+                    for room_id in classroom_ids:
                         if solver.Value(teacher_theory_assignments[teacher][d][s][room_id]) == 1:
                             # Find which course instance to assign this slot to
                             if teacher in self.teacher_course_assignments:
-                                # Find course instances that need more theory slots
-                                available_instances = []
-                                for course_info in self.teacher_course_assignments[teacher]:
-                                    instance_id = course_info['id']
-                                    tracking = instance_tracking[teacher][instance_id]
-                                    if (course_info['lecture_hours'] > 0 and 
-                                        tracking['theory_allocated'] < tracking['required_theory']):
-                                        available_instances.append({
-                                            'instance_id': instance_id,
-                                            'remaining': tracking['required_theory'] - tracking['theory_allocated'],
-                                            'course_info': course_info
-                                        })
+                                available_instances = self._find_available_theory_instances(
+                                    teacher, instance_tracking)
                                 
                                 if available_instances:
                                     # Select the instance with the most remaining required hours
@@ -262,83 +311,58 @@ class TimetableScheduler:
                                     instance_tracking[teacher][instance_id]['theory_allocated'] += 1
                                     instance_tracking[teacher][instance_id]['days_used'].add(d)
                                     
-                                    # Find teacher information from the original data
-                                    teacher_rows = self.courses_df[self.courses_df['teacher_id'] == teacher]
-                                    teacher_first_name = ""
-                                    teacher_last_name = ""
-                                    staff_code = ""
-                                    if not teacher_rows.empty:
-                                        first_row = teacher_rows.iloc[0]
-                                        if 'first_name' in first_row:
-                                            teacher_first_name = first_row['first_name']
-                                        if 'last_name' in first_row:
-                                            teacher_last_name = first_row['last_name']
-                                        if 'staff_code' in first_row:
-                                            staff_code = first_row['staff_code']
+                                    # Get cached teacher information
+                                    teacher_info = teacher_info_cache[teacher]
+                                    room_details = classroom_info[room_id]
                                     
                                     schedule_data.append({
                                         'day': self.days[d],
                                         'slot_type': 'Theory',
                                         'slot_time': self.theory_slots[s],
                                         'teacher_id': teacher,
-                                        'first_name': teacher_first_name,
-                                        'last_name': teacher_last_name,
-                                        'staff_code': staff_code,
+                                        'first_name': teacher_info['first_name'],
+                                        'last_name': teacher_info['last_name'],
+                                        'staff_code': teacher_info['staff_code'],
                                         'room_id': room_id,
-                                        'room_number': room_row['room_number'],
-                                        'block': room_row.get('block', ''),
-                                        'description': room_row.get('description', ''),
+                                        'room_number': room_details['room_number'],
+                                        'block': room_details['block'],
+                                        'description': room_details['description'],
                                         'course_id': course_info['course_id'],
                                         'course_code': course_info['course_code'],
                                         'course_name': course_info['course_name'],
                                         'course_instance_id': instance_id,
                                         'batch': None  # Theory classes don't have batches
                                     })
+    
+    def _find_available_theory_instances(self, teacher, instance_tracking):
+        """Find available theory instances for a teacher that need more slots."""
+        available_instances = []
+        for course_info in self.teacher_course_assignments[teacher]:
+            instance_id = course_info['id']
+            tracking = instance_tracking[teacher][instance_id]
+            if (course_info['lecture_hours'] > 0 and 
+                tracking['theory_allocated'] < tracking['required_theory']):
+                available_instances.append({
+                    'instance_id': instance_id,
+                    'remaining': tracking['required_theory'] - tracking['theory_allocated'],
+                    'course_info': course_info
+                })
+        return available_instances
+    
+    def _process_lab_assignments(self, solver, teacher_lab_assignments, instance_tracking,
+                                 schedule_data, teacher_info_cache, lab_info):
+        """Process lab assignments from the solution."""
+        lab_ids = list(lab_info.keys())
         
-        # Now process lab assignments, trying to assign batches intelligently
         for teacher in self.teachers:
             for d in range(self.num_days):
                 for s in range(self.num_lab_slots):
-                    for _, room_row in self.labs.iterrows():
-                        room_id = room_row['id']
+                    for room_id in lab_ids:
                         if solver.Value(teacher_lab_assignments[teacher][d][s][room_id]) == 1:
                             # Find which course instance to assign this slot to
                             if teacher in self.teacher_course_assignments:
-                                # Find instances with lab hours that need more lab slots
-                                available_instances = []
-                                
-                                # First, prioritize instances that already have theory slots on this day
-                                for course_info in self.teacher_course_assignments[teacher]:
-                                    instance_id = course_info['id']
-                                    tracking = instance_tracking[teacher][instance_id]
-                                    
-                                    if course_info['practical_hours'] <= 0:
-                                        continue  # Skip courses without labs
-                                    
-                                    # Check if this instance needs more lab slots
-                                    total_required_lab_slots = 0
-                                    
-                                    # For large classes (>35 students), check batch requirements
-                                    if course_info['student_count'] > 35:
-                                        # Add up required slots for all batches
-                                        for batch_num, batch_info in tracking['batch_tracking'].items():
-                                            if batch_info['slots_allocated'] < batch_info['required_slots']:
-                                                total_required_lab_slots += batch_info['required_slots'] - batch_info['slots_allocated']
-                                    else:
-                                        # Single batch course
-                                        required_lab_slots = (course_info['practical_hours'] + 1) // 2
-                                        total_required_lab_slots = required_lab_slots - tracking['lab_allocated']
-                                    
-                                    if total_required_lab_slots > 0:
-                                        # Calculate priority - give higher priority to instances with theory on same day
-                                        priority = 10 if d in tracking['days_used'] else 0
-                                        
-                                        available_instances.append({
-                                            'instance_id': instance_id,
-                                            'remaining': total_required_lab_slots,
-                                            'course_info': course_info,
-                                            'priority': priority
-                                        })
+                                available_instances = self._find_available_lab_instances(
+                                    teacher, instance_tracking, d)
                                 
                                 if available_instances:
                                     # Sort by priority first, then by remaining slots
@@ -349,93 +373,38 @@ class TimetableScheduler:
                                     tracking = instance_tracking[teacher][instance_id]
                                     
                                     # Determine which batch to assign this slot to
-                                    batch_num = None
+                                    batch_num = self._determine_batch_assignment(course_info, tracking)
                                     
-                                    if course_info['student_count'] > 35:
-                                        # For multi-batch courses, find the batch with the most remaining required slots
-                                        available_batches = []
-                                        for b_num, b_info in tracking['batch_tracking'].items():
-                                            if b_info['slots_allocated'] < b_info['required_slots']:
-                                                available_batches.append({
-                                                    'batch_num': b_num,
-                                                    'remaining': b_info['required_slots'] - b_info['slots_allocated']
-                                                })
-                                        
-                                        if available_batches:
-                                            available_batches.sort(key=lambda x: x['remaining'], reverse=True)
-                                            batch_num = available_batches[0]['batch_num']
-                                            # Update batch allocation
-                                            tracking['batch_tracking'][batch_num]['slots_allocated'] += 1
-                                    else:
-                                        # Single batch course
-                                        batch_num = 1  # Only one batch for small classes
-                                    
-                                    # Update overall tracking
+                                    # Update tracking
                                     tracking['lab_allocated'] += 1
                                     
-                                    # Find teacher information from the original data
-                                    teacher_rows = self.courses_df[self.courses_df['teacher_id'] == teacher]
-                                    teacher_first_name = ""
-                                    teacher_last_name = ""
-                                    staff_code = ""
-                                    if not teacher_rows.empty:
-                                        first_row = teacher_rows.iloc[0]
-                                        if 'first_name' in first_row:
-                                            teacher_first_name = first_row['first_name']
-                                        if 'last_name' in first_row:
-                                            teacher_last_name = first_row['last_name']
-                                        if 'staff_code' in first_row:
-                                            staff_code = first_row['staff_code']
+                                    # Update batch tracking if applicable
+                                    if batch_num and batch_num in tracking['batch_tracking']:
+                                        tracking['batch_tracking'][batch_num]['slots_allocated'] += 1
+                                    
+                                    # Get cached teacher information
+                                    teacher_info = teacher_info_cache[teacher]
+                                    room_details = lab_info[room_id]
                                     
                                     # Calculate student count for this batch
-                                    students_in_batch = min(35, course_info['student_count'])
-                                    if batch_num and batch_num > 1:
-                                        remaining_students = course_info['student_count'] - ((batch_num - 1) * 35)
-                                        students_in_batch = min(35, remaining_students)
+                                    students_in_batch = self._calculate_batch_students(course_info, batch_num, room_details)
                                     
-                                    # Detect lab capacity used and adjust student count
-                                    room_capacity = room_row['room_max_cap']
-                                    
-                                    # Update tracking with actual lab capacity used
-                                    if tracking['lab_capacity_used'] is None:
-                                        tracking['lab_capacity_used'] = room_capacity
-                                        tracking['room_capacity'] = room_capacity
-                                        
-                                        # For courses >60 students using large labs, recalculate batching
-                                        if course_info['student_count'] > 60 and room_capacity >= 70:
-                                            if room_capacity >= 140 or course_info['student_count'] <= room_capacity:
-                                                # Can fit all students in one batch!
-                                                students_in_batch = course_info['student_count']
-                                                batch_num = 1  # Only one batch needed
-                                                
-                                                # Clear old batch tracking and set up single batch
-                                                tracking['batch_tracking'] = {
-                                                    1: {
-                                                        'slots_allocated': 0,
-                                                        'required_slots': (course_info['practical_hours'] + 1) // 2
-                                                    }
-                                                }
-                                    
-                                    # If using large lab, ensure we're tracking the single batch correctly  
-                                    if (tracking['lab_capacity_used'] and tracking['lab_capacity_used'] >= 70 and 
-                                        course_info['student_count'] > 60 and 
-                                        course_info['student_count'] <= tracking['lab_capacity_used']):
-                                        students_in_batch = course_info['student_count']
-                                        batch_num = 1
+                                    # Update lab capacity tracking
+                                    self._update_lab_capacity_tracking(course_info, tracking, room_details)
                                     
                                     schedule_data.append({
                                         'day': self.days[d],
                                         'slot_type': 'Lab',
                                         'slot_time': self.lab_slots[s],
                                         'teacher_id': teacher,
-                                        'first_name': teacher_first_name,
-                                        'last_name': teacher_last_name,
-                                        'staff_code': staff_code,
+                                        'first_name': teacher_info['first_name'],
+                                        'last_name': teacher_info['last_name'],
+                                        'staff_code': teacher_info['staff_code'],
                                         'room_id': room_id,
-                                        'room_number': room_row['room_number'],
-                                        'room_capacity': room_row['room_max_cap'],
-                                        'block': room_row.get('block', ''),
-                                        'description': room_row.get('description', ''),
+                                        'room_number': room_details['room_number'],
+                                        'room_capacity': room_details['room_max_cap'],
+                                        'block': room_details['block'],
+                                        'description': room_details['description'],
                                         'course_id': course_info['course_id'],
                                         'course_code': course_info['course_code'],
                                         'course_name': course_info['course_name'],
@@ -443,10 +412,103 @@ class TimetableScheduler:
                                         'batch': batch_num,
                                         'batch_students': students_in_batch,
                                         'total_students': course_info['student_count'],
-                                        'intelligent_batching': 'Yes' if (course_info['student_count'] > 60 and room_row['room_max_cap'] >= 70) else 'No'
+                                        'intelligent_batching': 'Yes' if (course_info['student_count'] > 60 and room_details['room_max_cap'] >= 70) else 'No'
                                     })
+    
+    def _determine_batch_assignment(self, course_info, tracking):
+        """Determine which batch to assign the current lab slot to."""
+        if course_info['student_count'] > 35:
+            # For multi-batch courses, find the batch with the most remaining required slots
+            available_batches = []
+            for b_num, b_info in tracking['batch_tracking'].items():
+                if b_info['slots_allocated'] < b_info['required_slots']:
+                    available_batches.append({
+                        'batch_num': b_num,
+                        'remaining': b_info['required_slots'] - b_info['slots_allocated']
+                    })
+            
+            if available_batches:
+                available_batches.sort(key=lambda x: x['remaining'], reverse=True)
+                return available_batches[0]['batch_num']
         
-        # Create a dataframe from the schedule data
+        return 1  # Default to batch 1 for small classes or single batch
+    
+    def _calculate_batch_students(self, course_info, batch_num, room_details):
+        """Calculate the number of students in this specific batch."""
+        students_in_batch = min(35, course_info['student_count'])
+        
+        if batch_num and batch_num > 1:
+            remaining_students = course_info['student_count'] - ((batch_num - 1) * 35)
+            students_in_batch = min(35, remaining_students)
+        
+        # Adjust for large lab capacity
+        room_capacity = room_details['room_max_cap']
+        if (course_info['student_count'] > 60 and room_capacity >= 70 and
+            course_info['student_count'] <= room_capacity):
+            students_in_batch = course_info['student_count']
+        
+        return students_in_batch
+    
+    def _update_lab_capacity_tracking(self, course_info, tracking, room_details):
+        """Update lab capacity tracking for intelligent batching."""
+        room_capacity = room_details['room_max_cap']
+        
+        # Update tracking with actual lab capacity used
+        if tracking['lab_capacity_used'] is None:
+            tracking['lab_capacity_used'] = room_capacity
+            tracking['room_capacity'] = room_capacity
+            
+            # For courses >60 students using large labs, recalculate batching
+            if course_info['student_count'] > 60 and room_capacity >= 70:
+                if room_capacity >= 140 or course_info['student_count'] <= room_capacity:
+                    # Clear old batch tracking and set up single batch
+                    tracking['batch_tracking'] = {
+                        1: {
+                            'slots_allocated': 0,
+                            'required_slots': (course_info['practical_hours'] + 1) // 2
+                        }
+                    }
+    
+    def _find_available_lab_instances(self, teacher, instance_tracking, current_day=None):
+        """Find available lab instances for a teacher that need more slots."""
+        available_instances = []
+        
+        for course_info in self.teacher_course_assignments[teacher]:
+            instance_id = course_info['id']
+            tracking = instance_tracking[teacher][instance_id]
+            
+            if course_info['practical_hours'] <= 0:
+                continue  # Skip courses without labs
+            
+            # Check if this instance needs more lab slots
+            total_required_lab_slots = 0
+            
+            # For large classes (>35 students), check batch requirements
+            if course_info['student_count'] > 35:
+                # Add up required slots for all batches
+                for batch_num, batch_info in tracking['batch_tracking'].items():
+                    if batch_info['slots_allocated'] < batch_info['required_slots']:
+                        total_required_lab_slots += batch_info['required_slots'] - batch_info['slots_allocated']
+            else:
+                # Single batch course
+                required_lab_slots = (course_info['practical_hours'] + 1) // 2
+                total_required_lab_slots = required_lab_slots - tracking['lab_allocated']
+            
+            if total_required_lab_slots > 0:
+                # Calculate priority - give higher priority to instances with theory on same day
+                priority = 10 if (current_day is not None and current_day in tracking['days_used']) else 0
+                
+                available_instances.append({
+                    'instance_id': instance_id,
+                    'remaining': total_required_lab_slots,
+                    'course_info': course_info,
+                    'priority': priority
+                })
+        
+        return available_instances
+    
+    def _create_and_save_schedule_dataframe(self, schedule_data):
+        """Create and save the schedule dataframe to a CSV file."""
         if schedule_data:
             schedule_df = pd.DataFrame(schedule_data)
             
@@ -462,8 +524,9 @@ class TimetableScheduler:
                     teacher_schedule_path = os.path.join(self.output_dir, f'teacher_{teacher}_schedule.csv')
                     teacher_schedule.to_csv(teacher_schedule_path, index=False)
             
-            # Generate separate schedules for each room
-            for _, room_row in pd.concat([self.classrooms, self.labs]).iterrows():
+            # Generate separate schedules for each room (using pre-computed room info)
+            all_rooms = pd.concat([self.classrooms, self.labs])
+            for _, room_row in all_rooms.iterrows():
                 room_id = room_row['id']
                 room_schedule = schedule_df[schedule_df['room_id'] == room_id]
                 if not room_schedule.empty:

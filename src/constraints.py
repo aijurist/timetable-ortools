@@ -17,6 +17,30 @@ class TimetableConstraints:
         self.labs = labs
         self.teacher_course_assignments = teacher_course_assignments
         
+        # Pre-compute room IDs for efficiency
+        self.classroom_ids = self.classrooms['id'].tolist()
+        self.lab_ids = self.labs['id'].tolist()
+    
+    def _get_teacher_theory_slot_vars(self, teacher, day, slot, teacher_theory_assignments):
+        """Helper method to get all theory slot variables for a teacher in a specific slot."""
+        return [teacher_theory_assignments[teacher][day][slot][room_id] 
+                for room_id in self.classroom_ids]
+    
+    def _get_teacher_lab_slot_vars(self, teacher, day, slot, teacher_lab_assignments):
+        """Helper method to get all lab slot variables for a teacher in a specific slot."""
+        return [teacher_lab_assignments[teacher][day][slot][room_id] 
+                for room_id in self.lab_ids]
+    
+    def _get_room_theory_slot_vars(self, room_id, day, slot, teacher_theory_assignments):
+        """Helper method to get all teacher variables for a specific theory slot in a room."""
+        return [teacher_theory_assignments[teacher][day][slot][room_id] 
+                for teacher in self.teachers]
+    
+    def _get_room_lab_slot_vars(self, room_id, day, slot, teacher_lab_assignments):
+        """Helper method to get all teacher variables for a specific lab slot in a room."""
+        return [teacher_lab_assignments[teacher][day][slot][room_id] 
+                for teacher in self.teachers]
+    
     def apply_teacher_single_assignment_constraint(self, teacher_theory_assignments, teacher_lab_assignments):
         """
         Constraint 1: A teacher cannot be assigned to multiple rooms in the same time slot.
@@ -29,19 +53,13 @@ class TimetableConstraints:
                 # For each theory slot
                 for s in range(self.num_theory_slots):
                     # Sum of all room assignments for this teacher in this theory slot must be at most 1
-                    theory_vars = []
-                    for _, room_row in self.classrooms.iterrows():
-                        room_id = room_row['id']
-                        theory_vars.append(teacher_theory_assignments[teacher][d][s][room_id])
+                    theory_vars = self._get_teacher_theory_slot_vars(teacher, d, s, teacher_theory_assignments)
                     self.model.Add(sum(theory_vars) <= 1)
                 
                 # For each lab slot
                 for s in range(self.num_lab_slots):
                     # Sum of all room assignments for this teacher in this lab slot must be at most 1
-                    lab_vars = []
-                    for _, room_row in self.labs.iterrows():
-                        room_id = room_row['id']
-                        lab_vars.append(teacher_lab_assignments[teacher][d][s][room_id])
+                    lab_vars = self._get_teacher_lab_slot_vars(teacher, d, s, teacher_lab_assignments)
                     self.model.Add(sum(lab_vars) <= 1)
         
         return True
@@ -62,18 +80,11 @@ class TimetableConstraints:
                     
                     if first_theory_slot < self.num_theory_slots and second_theory_slot < self.num_theory_slots:
                         # Get all variables for this teacher's lab assignments in this lab slot
-                        lab_vars = []
-                        for _, lab_row in self.labs.iterrows():
-                            lab_id = lab_row['id']
-                            lab_vars.append(teacher_lab_assignments[teacher][d][lab_slot][lab_id])
+                        lab_vars = self._get_teacher_lab_slot_vars(teacher, d, lab_slot, teacher_lab_assignments)
                         
                         # Get all variables for this teacher's theory assignments in the overlapping theory slots
-                        first_theory_vars = []
-                        second_theory_vars = []
-                        for _, room_row in self.classrooms.iterrows():
-                            room_id = room_row['id']
-                            first_theory_vars.append(teacher_theory_assignments[teacher][d][first_theory_slot][room_id])
-                            second_theory_vars.append(teacher_theory_assignments[teacher][d][second_theory_slot][room_id])
+                        first_theory_vars = self._get_teacher_theory_slot_vars(teacher, d, first_theory_slot, teacher_theory_assignments)
+                        second_theory_vars = self._get_teacher_theory_slot_vars(teacher, d, second_theory_slot, teacher_theory_assignments)
                         
                         # If the teacher is assigned to a lab in this lab slot, they cannot be assigned to
                         # either of the overlapping theory slots
@@ -233,10 +244,7 @@ class TimetableConstraints:
                         slot_key = (d, s, 'theory')
                         
                         # Sum of all room assignments for this teacher in this theory slot
-                        theory_slot_vars = []
-                        for _, room_row in self.classrooms.iterrows():
-                            room_id = room_row['id']
-                            theory_slot_vars.append(teacher_theory_assignments[teacher][d][s][room_id])
+                        theory_slot_vars = self._get_teacher_theory_slot_vars(teacher, d, s, teacher_theory_assignments)
                         
                         # If any room is assigned to this teacher for this slot, exactly one course instance must be assigned
                         is_slot_assigned = self.model.NewBoolVar(f'teacher_{teacher}_assigned_theory_{d}_{s}')
@@ -257,10 +265,7 @@ class TimetableConstraints:
                         slot_key = (d, s, 'lab')
                         
                         # Sum of all room assignments for this teacher in this lab slot
-                        lab_slot_vars = []
-                        for _, room_row in self.labs.iterrows():
-                            room_id = room_row['id']
-                            lab_slot_vars.append(teacher_lab_assignments[teacher][d][s][room_id])
+                        lab_slot_vars = self._get_teacher_lab_slot_vars(teacher, d, s, teacher_lab_assignments)
                         
                         # If any room is assigned to this teacher for this slot, exactly one course instance must be assigned
                         is_slot_assigned = self.model.NewBoolVar(f'teacher_{teacher}_assigned_lab_{d}_{s}')
@@ -362,9 +367,7 @@ class TimetableConstraints:
             room_id = room_row['id']
             for d in range(self.num_days):
                 for s in range(self.num_theory_slots):
-                    room_vars = []
-                    for teacher in self.teachers:
-                        room_vars.append(teacher_theory_assignments[teacher][d][s][room_id])
+                    room_vars = self._get_room_theory_slot_vars(room_id, d, s, teacher_theory_assignments)
                     self.model.Add(sum(room_vars) <= 1)
         
         # For labs
@@ -372,9 +375,7 @@ class TimetableConstraints:
             room_id = room_row['id']
             for d in range(self.num_days):
                 for s in range(self.num_lab_slots):
-                    room_vars = []
-                    for teacher in self.teachers:
-                        room_vars.append(teacher_lab_assignments[teacher][d][s][room_id])
+                    room_vars = self._get_room_lab_slot_vars(room_id, d, s, teacher_lab_assignments)
                     self.model.Add(sum(room_vars) <= 1)
         
         return True
@@ -392,22 +393,62 @@ class TimetableConstraints:
             theory_vars = []
             for d in range(self.num_days):
                 for s in range(self.num_theory_slots):
-                    for _, room_row in self.classrooms.iterrows():
-                        room_id = room_row['id']
-                        theory_vars.append(teacher_theory_assignments[teacher][d][s][room_id])
+                    theory_vars.extend(self._get_teacher_theory_slot_vars(teacher, d, s, teacher_theory_assignments))
             
             # Collect all lab slot assignments for this teacher (2 hours each)
             lab_vars = []
             for d in range(self.num_days):
                 for s in range(self.num_lab_slots):
-                    for _, room_row in self.labs.iterrows():
-                        room_id = room_row['id']
-                        lab_vars.append(teacher_lab_assignments[teacher][d][s][room_id])
+                    lab_vars.extend(self._get_teacher_lab_slot_vars(teacher, d, s, teacher_lab_assignments))
             
             # Weekly working hour constraint: theory_hours + 2*lab_hours <= 21
             # Theory slots are 50 minutes (~1 hour), lab slots are 100 minutes (~2 hours)
             total_weekly_hours = sum(theory_vars) + 2 * sum(lab_vars)
             self.model.Add(total_weekly_hours <= 21)
+        
+        return True
+    
+    def apply_no_continuous_lab_slots_constraint(self, teacher_theory_assignments, teacher_lab_assignments):
+        """
+        Constraint 8: Teachers should not be assigned to continuous lab slots unless there's sufficient break.
+        Lab slots timing:
+        - L1: 8:00-9:40
+        - L2: 10:00-11:40 (20 min break from L1) - ALLOWED consecutive assignment
+        - L3: 11:40-1:20 (0 min break from L2) - FORBIDDEN consecutive assignment
+        - L4: 1:20-3:00 (0 min break from L3) - FORBIDDEN consecutive assignment
+        - L5: 3:00-4:40 (0 min break from L4) - FORBIDDEN consecutive assignment
+        - L6: 5:10-6:50 (30 min break from L5) - ALLOWED consecutive assignment
+        
+        Only consecutive lab slot pairs with 20+ minute breaks are allowed:
+        - L1-L2 (20 min break) and L5-L6 (30 min break) are ALLOWED
+        - L2-L3, L3-L4, L4-L5 are FORBIDDEN (continuous)
+        """
+        logger.info("Applying no continuous lab slots constraint...")
+        
+        # Define which consecutive lab slot pairs are forbidden (0 break time)
+        # Lab slots: L1(0), L2(1), L3(2), L4(3), L5(4), L6(5)
+        forbidden_consecutive_pairs = [
+            (1, 2),  # L2-L3: 11:40 to 11:40 (continuous - 0 min break)
+            (2, 3),  # L3-L4: 1:20 to 1:20 (continuous - 0 min break)  
+            (3, 4),  # L4-L5: 3:00 to 3:00 (continuous - 0 min break)
+        ]
+        
+        for teacher in self.teachers:
+            for d in range(self.num_days):
+                for first_slot, second_slot in forbidden_consecutive_pairs:
+                    # Get all lab assignments for the teacher in the first slot
+                    first_slot_vars = self._get_teacher_lab_slot_vars(teacher, d, first_slot, teacher_lab_assignments)
+                    
+                    # Get all lab assignments for the teacher in the second slot
+                    second_slot_vars = self._get_teacher_lab_slot_vars(teacher, d, second_slot, teacher_lab_assignments)
+                    
+                    # Add constraint: teacher cannot be assigned to both consecutive slots
+                    # For each pair of assignments (one in first slot, one in second slot),
+                    # at least one must be false (using Boolean OR with negation)
+                    for first_var in first_slot_vars:
+                        for second_var in second_slot_vars:
+                            # If teacher is assigned to first slot, they cannot be assigned to second slot
+                            self.model.AddBoolOr([first_var.Not(), second_var.Not()])
         
         return True
     
@@ -421,7 +462,8 @@ class TimetableConstraints:
             self.apply_intelligent_lab_capacity_constraint(teacher_theory_assignments, teacher_lab_assignments),
             self.apply_course_hours_constraint(teacher_theory_assignments, teacher_lab_assignments),
             self.apply_room_single_assignment_constraint(teacher_theory_assignments, teacher_lab_assignments),
-            self.apply_weekly_working_hour_constraint(teacher_theory_assignments, teacher_lab_assignments)
+            self.apply_weekly_working_hour_constraint(teacher_theory_assignments, teacher_lab_assignments),
+            self.apply_no_continuous_lab_slots_constraint(teacher_theory_assignments, teacher_lab_assignments)
         ]
         
         return all(constraints_applied)
@@ -506,6 +548,18 @@ class TimetableConstraints:
                     "level": "High",
                     "notes": "Complex constraint as it requires handling multiple lab capacity scenarios"
                 }
+            },
+            "no_continuous_lab_slots": {
+                "name": "No Continuous Lab Slots Constraint", 
+                "description": "Prevents teachers from being assigned to continuous lab slots unless there's sufficient break time (20+ minutes)",
+                "impact": "Ensures teacher well-being by preventing back-to-back lab sessions without adequate break, while allowing consecutive assignments when sufficient break time exists",
+                "complexity": {
+                    "formula": "O(T × D × 3 × R_lab²)",
+                    "explanation": "T = teachers, D = days, 3 = forbidden consecutive pairs, R_lab = lab rooms",
+                    "level": "Medium",
+                    "notes": "Checks 3 specific consecutive lab slot pairs (L2-L3, L3-L4, L4-L5) for each teacher and day"
+                },
+                "example": "Lab slot timings:\n- L1-L2: 20 min break (ALLOWED)\n- L2-L3: 0 min break (FORBIDDEN)\n- L3-L4: 0 min break (FORBIDDEN)\n- L4-L5: 0 min break (FORBIDDEN)\n- L5-L6: 30 min break (ALLOWED)"
             }
         }
         

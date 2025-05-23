@@ -26,6 +26,14 @@ class TimetableVisualizer:
         colors = plt.cm.tab20(np.linspace(0, 1, len(self.courses)))
         self.course_colors = {course: mcolors.rgb2hex(color) for course, color in zip(self.courses, colors)}
         
+        # Pre-compute filtered data for efficiency
+        self.theory_data = schedule_df[schedule_df['slot_type'] == 'Theory'].copy()
+        self.lab_data = schedule_df[schedule_df['slot_type'] == 'Lab'].copy()
+        
+        # Pre-compute unique lists for efficiency
+        self.teachers = schedule_df['teacher_id'].unique()
+        self.rooms = schedule_df['room_id'].unique()
+        
         # Create a mapping for course instance numbers
         self._create_instance_mapping()
     
@@ -52,18 +60,14 @@ class TimetableVisualizer:
     
     def generate_teacher_schedules(self):
         """Generate schedule visualizations for each teacher."""
-        teachers = self.schedule_df['teacher_id'].unique()
-        
-        for teacher in teachers:
+        for teacher in self.teachers:
             teacher_df = self.schedule_df[self.schedule_df['teacher_id'] == teacher]
             if not teacher_df.empty:
                 self._create_teacher_schedule(teacher, teacher_df)
     
     def generate_room_schedules(self):
         """Generate schedule visualizations for each room."""
-        rooms = self.schedule_df['room_id'].unique()
-        
-        for room in rooms:
+        for room in self.rooms:
             room_df = self.schedule_df[self.schedule_df['room_id'] == room]
             if not room_df.empty:
                 room_number = room_df.iloc[0]['room_number']
@@ -155,40 +159,63 @@ class TimetableVisualizer:
     
     def _plot_schedule(self, ax, slot_type, slots):
         """Plot the schedule for a given slot type."""
-        # Filter data for the slot type
-        df = self.schedule_df[self.schedule_df['slot_type'] == slot_type]
+        # Use pre-computed filtered data instead of filtering again
+        df = self.theory_data if slot_type == 'Theory' else self.lab_data
         
-        # Create a grid for days and slots
-        grid = np.zeros((len(self.days), len(slots)), dtype=object)
-        batch_grid = np.zeros((len(self.days), len(slots)), dtype=object)  # Add batch tracking
+        # Create a grid for days and slots using more efficient approach
+        grid = self._create_schedule_grid(df, slots)
+        batch_grid = self._create_batch_grid(df, slots) if slot_type == 'Lab' else None
         
-        # Fill the grid with course codes and batch info
+        # Plot the grid
+        self._plot_grid_data(ax, grid, batch_grid, slots)
+        
+        # Set axes properties
+        self._configure_plot_axes(ax, slots)
+        
+        # Add legend
+        self._add_plot_legend(ax, df)
+    
+    def _create_schedule_grid(self, df, slots):
+        """Create schedule grid more efficiently."""
+        grid = {}  # Use dict instead of np.array for sparse data
+        
         for _, row in df.iterrows():
             day_idx = self.days.index(row['day'])
             slot_idx = slots.index(row['slot_time'])
-            grid[day_idx, slot_idx] = row['course_code']
-            
-            # Add batch information for lab slots if available
-            if slot_type == 'Lab' and 'batch' in row and row['batch'] is not None:
-                batch_grid[day_idx, slot_idx] = f"B{row['batch']}"
+            grid[(day_idx, slot_idx)] = row['course_code']
         
-        # Plot the grid
+        return grid
+    
+    def _create_batch_grid(self, df, slots):
+        """Create batch grid for lab slots."""
+        batch_grid = {}
+        
+        for _, row in df.iterrows():
+            if 'batch' in row and row['batch'] is not None:
+                day_idx = self.days.index(row['day'])
+                slot_idx = slots.index(row['slot_time'])
+                batch_grid[(day_idx, slot_idx)] = f"B{row['batch']}"
+        
+        return batch_grid
+    
+    def _plot_grid_data(self, ax, grid, batch_grid, slots):
+        """Plot grid data efficiently."""
         for i in range(len(self.days)):
             for j in range(len(slots)):
-                course = grid[i, j]
-                batch = batch_grid[i, j]  # Get batch info
+                course = grid.get((i, j))
                 if course:
                     color = self.course_colors.get(course, 'white')
                     ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, color=color, alpha=0.7))
                     
                     # Include batch info in the display if available
                     display_text = course
-                    if batch:
-                        display_text += f"\n{batch}"
+                    if batch_grid and (i, j) in batch_grid:
+                        display_text += f"\n{batch_grid[(i, j)]}"
                     
                     ax.text(j + 0.5, i + 0.5, display_text, ha='center', va='center', fontsize=10)
-        
-        # Set the axes properties
+    
+    def _configure_plot_axes(self, ax, slots):
+        """Configure plot axes properties."""
         ax.set_xlim(0, len(slots))
         ax.set_ylim(0, len(self.days))
         ax.set_xticks(np.arange(len(slots)) + 0.5)
@@ -196,13 +223,15 @@ class TimetableVisualizer:
         ax.set_xticklabels(slots, rotation=45, ha='right')
         ax.set_yticklabels(self.days)
         ax.grid(True, linestyle='-', linewidth=0.5, color='gray')
-        
-        # Add a colorbar legend
+    
+    def _add_plot_legend(self, ax, df):
+        """Add legend to plot."""
         import matplotlib.patches as mpatches
-        handles = [mpatches.Patch(color=color, label=course) 
-                   for course, color in self.course_colors.items()]
+        relevant_courses = df['course_code'].unique()
+        handles = [mpatches.Patch(color=self.course_colors[course], label=course) 
+                   for course in relevant_courses if course in self.course_colors]
         ax.legend(handles=handles, loc='upper center', bbox_to_anchor=(0.5, -0.15),
-                 fancybox=True, shadow=True, ncol=5)
+                 fancybox=True, shadow=True, ncol=min(5, len(handles)))
     
     def _plot_teacher_schedule(self, ax, teacher_id, teacher_df, slot_type, slots):
         """Plot the schedule for a specific teacher and slot type."""
