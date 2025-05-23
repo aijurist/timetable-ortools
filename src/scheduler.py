@@ -136,6 +136,9 @@ class TimetableScheduler:
         # Apply all constraints
         constraints.apply_all_constraints(teacher_theory_assignments, teacher_lab_assignments)
         
+        # Capture shift assignments if available (from the shift-based constraint)
+        teacher_shift_assignments = getattr(constraints, 'teacher_shift_assignments', None)
+        
         # Generate constraint summary for reporting
         constraint_summary = constraints.generate_constraint_summary()
         self.save_constraint_summary(constraint_summary)
@@ -151,7 +154,7 @@ class TimetableScheduler:
             self.logger.info(f"Solution found with status {status}!")
             
             # Process the solution
-            schedule_df = self.process_solution(solver, teacher_theory_assignments, teacher_lab_assignments)
+            schedule_df = self.process_solution(solver, teacher_theory_assignments, teacher_lab_assignments, teacher_shift_assignments)
             
             # Generate visualizations
             if not schedule_df.empty:
@@ -198,7 +201,7 @@ class TimetableScheduler:
         
         self.logger.info(f"Constraint summaries saved to {self.output_dir}")
     
-    def process_solution(self, solver, teacher_theory_assignments, teacher_lab_assignments):
+    def process_solution(self, solver, teacher_theory_assignments, teacher_lab_assignments, teacher_shift_assignments):
         """Process the solution and save the results."""
         # Create a dataframe to store the schedule
         schedule_data = []
@@ -246,11 +249,11 @@ class TimetableScheduler:
         
         # Process theory assignments first
         self._process_theory_assignments(solver, teacher_theory_assignments, instance_tracking, 
-                                        schedule_data, teacher_info_cache, classroom_info)
+                                        schedule_data, teacher_info_cache, classroom_info, teacher_shift_assignments)
         
         # Process lab assignments
         self._process_lab_assignments(solver, teacher_lab_assignments, instance_tracking,
-                                     schedule_data, teacher_info_cache, lab_info)
+                                     schedule_data, teacher_info_cache, lab_info, teacher_shift_assignments)
         
         # Create and save dataframe
         return self._create_and_save_schedule_dataframe(schedule_data)
@@ -286,7 +289,7 @@ class TimetableScheduler:
         return instance_tracking
     
     def _process_theory_assignments(self, solver, teacher_theory_assignments, instance_tracking,
-                                   schedule_data, teacher_info_cache, classroom_info):
+                                   schedule_data, teacher_info_cache, classroom_info, teacher_shift_assignments=None):
         """Process theory assignments from the solution."""
         classroom_ids = list(classroom_info.keys())
         
@@ -315,6 +318,9 @@ class TimetableScheduler:
                                     teacher_info = teacher_info_cache[teacher]
                                     room_details = classroom_info[room_id]
                                     
+                                    # Determine teacher's shift for this day
+                                    teacher_shift = self._determine_teacher_shift(solver, teacher, d, teacher_shift_assignments)
+                                    
                                     schedule_data.append({
                                         'day': self.days[d],
                                         'slot_type': 'Theory',
@@ -331,7 +337,8 @@ class TimetableScheduler:
                                         'course_code': course_info['course_code'],
                                         'course_name': course_info['course_name'],
                                         'course_instance_id': instance_id,
-                                        'batch': None  # Theory classes don't have batches
+                                        'batch': None,  # Theory classes don't have batches
+                                        'shift': teacher_shift
                                     })
     
     def _find_available_theory_instances(self, teacher, instance_tracking):
@@ -350,7 +357,7 @@ class TimetableScheduler:
         return available_instances
     
     def _process_lab_assignments(self, solver, teacher_lab_assignments, instance_tracking,
-                                 schedule_data, teacher_info_cache, lab_info):
+                                 schedule_data, teacher_info_cache, lab_info, teacher_shift_assignments):
         """Process lab assignments from the solution."""
         lab_ids = list(lab_info.keys())
         
@@ -362,7 +369,7 @@ class TimetableScheduler:
                             # Find which course instance to assign this slot to
                             if teacher in self.teacher_course_assignments:
                                 available_instances = self._find_available_lab_instances(
-                                    teacher, instance_tracking, d)
+                                    teacher, instance_tracking, d, teacher_shift_assignments, solver)
                                 
                                 if available_instances:
                                     # Sort by priority first, then by remaining slots
@@ -412,7 +419,8 @@ class TimetableScheduler:
                                         'batch': batch_num,
                                         'batch_students': students_in_batch,
                                         'total_students': course_info['student_count'],
-                                        'intelligent_batching': 'Yes' if (course_info['student_count'] > 60 and room_details['room_max_cap'] >= 70) else 'No'
+                                        'intelligent_batching': 'Yes' if (course_info['student_count'] > 60 and room_details['room_max_cap'] >= 70) else 'No',
+                                        'shift': self._determine_teacher_shift(solver, teacher, d, teacher_shift_assignments)
                                     })
     
     def _determine_batch_assignment(self, course_info, tracking):
@@ -469,7 +477,7 @@ class TimetableScheduler:
                         }
                     }
     
-    def _find_available_lab_instances(self, teacher, instance_tracking, current_day=None):
+    def _find_available_lab_instances(self, teacher, instance_tracking, current_day=None, teacher_shift_assignments=None, solver=None):
         """Find available lab instances for a teacher that need more slots."""
         available_instances = []
         
@@ -498,11 +506,15 @@ class TimetableScheduler:
                 # Calculate priority - give higher priority to instances with theory on same day
                 priority = 10 if (current_day is not None and current_day in tracking['days_used']) else 0
                 
+                # Determine teacher's shift for this day
+                teacher_shift = self._determine_teacher_shift(solver, teacher, current_day, teacher_shift_assignments)
+                
                 available_instances.append({
                     'instance_id': instance_id,
                     'remaining': total_required_lab_slots,
                     'course_info': course_info,
-                    'priority': priority
+                    'priority': priority,
+                    'shift': teacher_shift
                 })
         
         return available_instances
@@ -551,6 +563,9 @@ class TimetableScheduler:
         visualizer.generate_master_schedule()
         visualizer.generate_teacher_schedules()
         visualizer.generate_room_schedules()
+        
+        # Generate shift visualizations
+        visualizer.generate_shift_schedules()
         
         self.logger.info(f"Visualizations saved to {self.output_dir}")
     
@@ -687,4 +702,23 @@ class TimetableScheduler:
             
             f.write("\nSchedule generated on: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         
-        self.logger.info(f"Summary saved to {summary_path}") 
+        self.logger.info(f"Summary saved to {summary_path}")
+
+    def _determine_teacher_shift(self, solver, teacher, day, teacher_shift_assignments):
+        """Determine which shift a teacher is assigned to on a given day."""
+        if teacher_shift_assignments is None or solver is None:
+            return None
+        
+        if teacher in teacher_shift_assignments and day < len(teacher_shift_assignments[teacher]):
+            shift_vars = teacher_shift_assignments[teacher][day]
+            
+            if solver.Value(shift_vars['shift1']) == 1:
+                return 'Shift1 (8:00-15:00)'
+            elif solver.Value(shift_vars['shift2']) == 1:
+                return 'Shift2 (10:00-17:00)'
+            elif solver.Value(shift_vars['shift3']) == 1:
+                return 'Shift3 (12:00-19:00)'
+            else:
+                return 'No Shift'
+        
+        return None 

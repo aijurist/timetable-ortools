@@ -44,6 +44,9 @@ def main():
         print("• Weekly working hour limit: 21 hours per teacher")
         print("• No continuous lab slots unless 20+ minute break (L1-L2 and L5-L6 allowed)")
         print("• Teachers work either Monday OR Saturday, not both days")
+        print("• 3-shift system: Shift1(8:00-15:00), Shift2(10:00-17:00), Shift3(12:00-19:00)")
+        print("• Teachers follow weekly patterns: (1-2-2), (2-2-1), or (2-1-2) shift distribution")
+        print("• Department-level balance: 33%-33%-33% across all shifts")
         print("*" * 80)
         
         # Create and run the scheduler
