@@ -268,8 +268,9 @@ class TimetableVisualizer:
         room_grid = np.zeros((len(self.days), len(slots)), dtype=object)
         batch_grid = np.zeros((len(self.days), len(slots)), dtype=object)  # Add batch tracking
         instance_grid = np.zeros((len(self.days), len(slots)), dtype=object)  # Track instance numbers
+        shift_grid = np.zeros((len(self.days), len(slots)), dtype=object)  # Track shift information
         
-        # Fill the grid with course codes, room numbers, batch info, and instance numbers
+        # Fill the grid with course codes, room numbers, batch info, instance numbers, and shift info
         for _, row in df.iterrows():
             day_idx = self.days.index(row['day'])
             slot_idx = slots.index(row['slot_time'])
@@ -285,30 +286,61 @@ class TimetableVisualizer:
             if 'course_instance_id' in row and (teacher_id, course_code, row['course_instance_id']) in self.instance_mapping:
                 instance_num = self.instance_mapping[(teacher_id, course_code, row['course_instance_id'])]
                 instance_grid[day_idx, slot_idx] = f"I{instance_num}"
+            
+            # Add shift information if available
+            if 'shift' in row and row['shift'] is not None:
+                shift_info = str(row['shift'])
+                if 'Shift1' in shift_info:
+                    shift_grid[day_idx, slot_idx] = 'S1'
+                elif 'Shift2' in shift_info:
+                    shift_grid[day_idx, slot_idx] = 'S2'
+                elif 'Shift3' in shift_info:
+                    shift_grid[day_idx, slot_idx] = 'S3'
+                else:
+                    shift_grid[day_idx, slot_idx] = 'S?'
         
-        # Plot the grid
+        # Plot the grid with shift background coloring
         for i in range(len(self.days)):
             for j in range(len(slots)):
                 course = grid[i, j]
                 room = room_grid[i, j]
                 batch = batch_grid[i, j]  # Get batch info
                 instance = instance_grid[i, j]  # Get instance number
+                shift = shift_grid[i, j]  # Get shift info
                 
                 if course:
-                    color = self.course_colors.get(course, 'white')
-                    ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, color=color, alpha=0.7))
+                    # Determine background color based on shift
+                    bg_color = 'white'  # Default
+                    if shift == 'S1':
+                        bg_color = '#E8F4FD'  # Light blue for Shift 1
+                    elif shift == 'S2':
+                        bg_color = '#FFF2CC'  # Light yellow for Shift 2
+                    elif shift == 'S3':
+                        bg_color = '#E1D5E7'  # Light purple for Shift 3
                     
-                    # Include batch and instance info in the display if available
+                    # Add background rectangle with shift color
+                    ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, color=bg_color, alpha=0.5))
+                    
+                    # Add course color overlay
+                    course_color = self.course_colors.get(course, 'white')
+                    ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, color=course_color, alpha=0.7))
+                    
+                    # Create comprehensive display text
                     display_text = f"{course}\n{room}"
                     
+                    # Add shift information prominently
+                    if shift:
+                        display_text += f"\n[{shift}]"
+                    
                     if instance:
-                        # Add instance number first if available
+                        # Add instance number
                         display_text += f"\n{instance}"
                     
                     if batch:
                         display_text += f"\n{batch}"
                     
-                    ax.text(j + 0.5, i + 0.5, display_text, ha='center', va='center', fontsize=8)
+                    ax.text(j + 0.5, i + 0.5, display_text, ha='center', va='center', fontsize=8, 
+                           fontweight='bold' if shift else 'normal')
         
         # Set the axes properties
         ax.set_xlim(0, len(slots))
@@ -319,12 +351,27 @@ class TimetableVisualizer:
         ax.set_yticklabels(self.days)
         ax.grid(True, linestyle='-', linewidth=0.5, color='gray')
         
-        # Add a colorbar legend
+        # Add comprehensive legend including course colors and shift colors
         import matplotlib.patches as mpatches
-        handles = [mpatches.Patch(color=color, label=course) 
-                   for course, color in self.course_colors.items() if course in df['course_code'].values]
-        ax.legend(handles=handles, loc='upper center', bbox_to_anchor=(0.5, -0.15),
-                 fancybox=True, shadow=True, ncol=3)
+        
+        # Course legend
+        course_handles = [mpatches.Patch(color=color, label=course, alpha=0.7) 
+                         for course, color in self.course_colors.items() if course in df['course_code'].values]
+        
+        # Shift legend
+        shift_handles = [
+            mpatches.Patch(color='#E8F4FD', label='Shift 1 (8:00-15:00)', alpha=0.7),
+            mpatches.Patch(color='#FFF2CC', label='Shift 2 (10:00-17:00)', alpha=0.7),
+            mpatches.Patch(color='#E1D5E7', label='Shift 3 (12:00-19:00)', alpha=0.7)
+        ]
+        
+        # Combine legends
+        all_handles = course_handles + shift_handles
+        
+        # Create legend in two columns if there are many items
+        ncol = 2 if len(all_handles) > 6 else 1
+        ax.legend(handles=all_handles, loc='upper center', bbox_to_anchor=(0.5, -0.15),
+                 fancybox=True, shadow=True, ncol=ncol, fontsize=8)
     
     def _plot_room_schedule(self, ax, room_id, room_df, slot_type, slots):
         """Plot the schedule for a specific room and slot type."""
@@ -337,8 +384,9 @@ class TimetableVisualizer:
         teacher_name_grid = np.zeros((len(self.days), len(slots)), dtype=object)
         batch_grid = np.zeros((len(self.days), len(slots)), dtype=object)  # Add batch tracking
         instance_grid = np.zeros((len(self.days), len(slots)), dtype=object)  # Track instance numbers
+        shift_grid = np.zeros((len(self.days), len(slots)), dtype=object)  # Track shift information
         
-        # Fill the grid with course codes, teacher information, and instance numbers
+        # Fill the grid with course codes, teacher information, instance numbers, and shift info
         for _, row in df.iterrows():
             day_idx = self.days.index(row['day'])
             slot_idx = slots.index(row['slot_time'])
@@ -371,30 +419,61 @@ class TimetableVisualizer:
             if 'course_instance_id' in row and (teacher_id, course_code, row['course_instance_id']) in self.instance_mapping:
                 instance_num = self.instance_mapping[(teacher_id, course_code, row['course_instance_id'])]
                 instance_grid[day_idx, slot_idx] = f"I{instance_num}"
+            
+            # Add shift information if available
+            if 'shift' in row and row['shift'] is not None:
+                shift_info = str(row['shift'])
+                if 'Shift1' in shift_info:
+                    shift_grid[day_idx, slot_idx] = 'S1'
+                elif 'Shift2' in shift_info:
+                    shift_grid[day_idx, slot_idx] = 'S2'
+                elif 'Shift3' in shift_info:
+                    shift_grid[day_idx, slot_idx] = 'S3'
+                else:
+                    shift_grid[day_idx, slot_idx] = 'S?'
         
-        # Plot the grid
+        # Plot the grid with shift background coloring
         for i in range(len(self.days)):
             for j in range(len(slots)):
                 course = grid[i, j]
                 teacher_name = teacher_name_grid[i, j]
                 batch = batch_grid[i, j]  # Get batch info
                 instance = instance_grid[i, j]  # Get instance number
+                shift = shift_grid[i, j]  # Get shift info
                 
                 if course:
-                    color = self.course_colors.get(course, 'white')
-                    ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, color=color, alpha=0.7))
+                    # Determine background color based on shift
+                    bg_color = 'white'  # Default
+                    if shift == 'S1':
+                        bg_color = '#E8F4FD'  # Light blue for Shift 1
+                    elif shift == 'S2':
+                        bg_color = '#FFF2CC'  # Light yellow for Shift 2
+                    elif shift == 'S3':
+                        bg_color = '#E1D5E7'  # Light purple for Shift 3
                     
-                    # Include batch and instance info in the display if available
+                    # Add background rectangle with shift color
+                    ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, color=bg_color, alpha=0.5))
+                    
+                    # Add course color overlay
+                    course_color = self.course_colors.get(course, 'white')
+                    ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, color=course_color, alpha=0.7))
+                    
+                    # Create comprehensive display text
                     display_text = f"{course}\n{teacher_name}"
                     
+                    # Add shift information prominently
+                    if shift:
+                        display_text += f"\n[{shift}]"
+                    
                     if instance:
-                        # Add instance number first if available
+                        # Add instance number
                         display_text += f"\n{instance}"
                         
                     if batch:
                         display_text += f"\n{batch}"
                     
-                    ax.text(j + 0.5, i + 0.5, display_text, ha='center', va='center', fontsize=8)
+                    ax.text(j + 0.5, i + 0.5, display_text, ha='center', va='center', fontsize=8,
+                           fontweight='bold' if shift else 'normal')
         
         # Set the axes properties
         ax.set_xlim(0, len(slots))
@@ -405,12 +484,27 @@ class TimetableVisualizer:
         ax.set_yticklabels(self.days)
         ax.grid(True, linestyle='-', linewidth=0.5, color='gray')
         
-        # Add a colorbar legend
+        # Add comprehensive legend including course colors and shift colors
         import matplotlib.patches as mpatches
-        handles = [mpatches.Patch(color=color, label=course) 
-                   for course, color in self.course_colors.items() if course in df['course_code'].values]
-        ax.legend(handles=handles, loc='upper center', bbox_to_anchor=(0.5, -0.15),
-                 fancybox=True, shadow=True, ncol=3)
+        
+        # Course legend
+        course_handles = [mpatches.Patch(color=color, label=course, alpha=0.7) 
+                         for course, color in self.course_colors.items() if course in df['course_code'].values]
+        
+        # Shift legend
+        shift_handles = [
+            mpatches.Patch(color='#E8F4FD', label='Shift 1 (8:00-15:00)', alpha=0.7),
+            mpatches.Patch(color='#FFF2CC', label='Shift 2 (10:00-17:00)', alpha=0.7),
+            mpatches.Patch(color='#E1D5E7', label='Shift 3 (12:00-19:00)', alpha=0.7)
+        ]
+        
+        # Combine legends
+        all_handles = course_handles + shift_handles
+        
+        # Create legend in two columns if there are many items
+        ncol = 2 if len(all_handles) > 6 else 1
+        ax.legend(handles=all_handles, loc='upper center', bbox_to_anchor=(0.5, -0.15),
+                 fancybox=True, shadow=True, ncol=ncol, fontsize=8)
     
     def generate_shift_schedules(self):
         """Generate visualizations for all three shifts."""
