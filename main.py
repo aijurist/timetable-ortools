@@ -43,6 +43,7 @@ def main():
         print("• Lab batches created for classes exceeding lab capacity (35 students)")
         print("• Weekly working hour limit: 21 hours per teacher")
         print("• No continuous lab slots unless 20+ minute break (L1-L2 and L5-L6 allowed)")
+        print("• Teachers work either Monday OR Saturday, not both days")
         print("*" * 80)
         
         # Create and run the scheduler

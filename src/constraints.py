@@ -452,6 +452,71 @@ class TimetableConstraints:
         
         return True
     
+    def apply_monday_or_saturday_constraint(self, teacher_theory_assignments, teacher_lab_assignments):
+        """
+        Constraint 9: Teachers should work either on Monday OR Saturday, but not both days.
+        This ensures better work-life balance by preventing teachers from working both 
+        the beginning and end of the week.
+        
+        Implementation:
+        - Monday is day 0, Saturday is day 5 in the days array
+        - For each teacher, create boolean variables indicating if they work on each day
+        - Add constraint: if teacher works Monday, they cannot work Saturday (and vice versa)
+        """
+        logger.info("Applying Monday or Saturday constraint...")
+        
+        # Days array: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+        monday_index = 0      # Monday is day 0
+        saturday_index = 5    # Saturday is day 5
+        
+        for teacher in self.teachers:
+            # Create boolean variables to track if teacher works on Monday or Saturday
+            works_monday = self.model.NewBoolVar(f'teacher_{teacher}_works_monday')
+            works_saturday = self.model.NewBoolVar(f'teacher_{teacher}_works_saturday')
+            
+            # Collect all Monday assignments (theory and lab)
+            monday_theory_vars = []
+            for s in range(self.num_theory_slots):
+                monday_theory_vars.extend(self._get_teacher_theory_slot_vars(teacher, monday_index, s, teacher_theory_assignments))
+            
+            monday_lab_vars = []
+            for s in range(self.num_lab_slots):
+                monday_lab_vars.extend(self._get_teacher_lab_slot_vars(teacher, monday_index, s, teacher_lab_assignments))
+            
+            monday_all_vars = monday_theory_vars + monday_lab_vars
+            
+            # Collect all Saturday assignments (theory and lab)
+            saturday_theory_vars = []
+            for s in range(self.num_theory_slots):
+                saturday_theory_vars.extend(self._get_teacher_theory_slot_vars(teacher, saturday_index, s, teacher_theory_assignments))
+            
+            saturday_lab_vars = []
+            for s in range(self.num_lab_slots):
+                saturday_lab_vars.extend(self._get_teacher_lab_slot_vars(teacher, saturday_index, s, teacher_lab_assignments))
+            
+            saturday_all_vars = saturday_theory_vars + saturday_lab_vars
+            
+            # Link boolean variables to actual assignments
+            # If any Monday slot is assigned, works_monday must be true
+            if monday_all_vars:
+                for var in monday_all_vars:
+                    self.model.Add(works_monday >= var)
+                # If works_monday is true, at least one Monday assignment must exist
+                self.model.Add(sum(monday_all_vars) >= works_monday)
+            
+            # If any Saturday slot is assigned, works_saturday must be true
+            if saturday_all_vars:
+                for var in saturday_all_vars:
+                    self.model.Add(works_saturday >= var)
+                # If works_saturday is true, at least one Saturday assignment must exist
+                self.model.Add(sum(saturday_all_vars) >= works_saturday)
+            
+            # Main constraint: teacher cannot work both Monday and Saturday
+            # Either works_monday OR works_saturday, but not both
+            self.model.Add(works_monday + works_saturday <= 1)
+        
+        return True
+    
     def apply_all_constraints(self, teacher_theory_assignments, teacher_lab_assignments):
         """Apply all timetable constraints."""
         logger.info("Applying all timetable constraints...")
@@ -463,7 +528,8 @@ class TimetableConstraints:
             self.apply_course_hours_constraint(teacher_theory_assignments, teacher_lab_assignments),
             self.apply_room_single_assignment_constraint(teacher_theory_assignments, teacher_lab_assignments),
             self.apply_weekly_working_hour_constraint(teacher_theory_assignments, teacher_lab_assignments),
-            self.apply_no_continuous_lab_slots_constraint(teacher_theory_assignments, teacher_lab_assignments)
+            self.apply_no_continuous_lab_slots_constraint(teacher_theory_assignments, teacher_lab_assignments),
+            self.apply_monday_or_saturday_constraint(teacher_theory_assignments, teacher_lab_assignments)
         ]
         
         return all(constraints_applied)
@@ -560,6 +626,18 @@ class TimetableConstraints:
                     "notes": "Checks 3 specific consecutive lab slot pairs (L2-L3, L3-L4, L4-L5) for each teacher and day"
                 },
                 "example": "Lab slot timings:\n- L1-L2: 20 min break (ALLOWED)\n- L2-L3: 0 min break (FORBIDDEN)\n- L3-L4: 0 min break (FORBIDDEN)\n- L4-L5: 0 min break (FORBIDDEN)\n- L5-L6: 30 min break (ALLOWED)"
+            },
+            "monday_or_saturday": {
+                "name": "Monday or Saturday Constraint",
+                "description": "Ensures teachers work either on Monday OR Saturday, but not both days",
+                "impact": "Promotes better work-life balance by preventing teachers from working both the beginning and end of the week, while ensuring weekend and week-start coverage",
+                "complexity": {
+                    "formula": "O(T × (S_theory + S_lab) × 2)",
+                    "explanation": "T = teachers, S = slots per day, 2 = Monday and Saturday",
+                    "level": "Medium",
+                    "notes": "Creates boolean variables to track Monday/Saturday work and enforces mutual exclusion"
+                },
+                "example": "Teacher scheduling scenarios:\n- Teacher A: Works Monday (theory + lab) -> Cannot work Saturday\n- Teacher B: Works Saturday (theory + lab) -> Cannot work Monday\n- Teacher C: Works Tuesday-Friday -> Can work either Monday OR Saturday\n- Teacher D: No Monday/Saturday assignments -> Constraint satisfied"
             }
         }
         

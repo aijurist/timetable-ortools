@@ -165,12 +165,12 @@ class TimetableScheduler:
     def save_constraint_summary(self, constraint_summary):
         """Save the constraint summary to a JSON file."""
         constraint_summary_path = os.path.join(self.output_dir, 'constraint_summary.json')
-        with open(constraint_summary_path, 'w') as f:
-            json.dump(constraint_summary, f, indent=4)
+        with open(constraint_summary_path, 'w', encoding='utf-8') as f:
+            json.dump(constraint_summary, f, indent=4, ensure_ascii=False)
         
         # Also generate a human-readable text version
         constraint_summary_txt_path = os.path.join(self.output_dir, 'constraint_summary.txt')
-        with open(constraint_summary_txt_path, 'w') as f:
+        with open(constraint_summary_txt_path, 'w', encoding='utf-8') as f:
             f.write("Timetable Scheduling Constraints Summary\n")
             f.write("=====================================\n\n")
             
@@ -512,9 +512,9 @@ class TimetableScheduler:
         if schedule_data:
             schedule_df = pd.DataFrame(schedule_data)
             
-            # Save the schedule to a CSV file
+            # Save the schedule to a CSV file with UTF-8 encoding
             schedule_csv_path = os.path.join(self.output_dir, 'schedule.csv')
-            schedule_df.to_csv(schedule_csv_path, index=False)
+            schedule_df.to_csv(schedule_csv_path, index=False, encoding='utf-8')
             self.logger.info(f"Schedule saved to {schedule_csv_path}")
             
             # Generate separate schedules for each teacher
@@ -522,7 +522,7 @@ class TimetableScheduler:
                 teacher_schedule = schedule_df[schedule_df['teacher_id'] == teacher]
                 if not teacher_schedule.empty:
                     teacher_schedule_path = os.path.join(self.output_dir, f'teacher_{teacher}_schedule.csv')
-                    teacher_schedule.to_csv(teacher_schedule_path, index=False)
+                    teacher_schedule.to_csv(teacher_schedule_path, index=False, encoding='utf-8')
             
             # Generate separate schedules for each room (using pre-computed room info)
             all_rooms = pd.concat([self.classrooms, self.labs])
@@ -531,7 +531,7 @@ class TimetableScheduler:
                 room_schedule = schedule_df[schedule_df['room_id'] == room_id]
                 if not room_schedule.empty:
                     room_schedule_path = os.path.join(self.output_dir, f'room_{room_id}_schedule.csv')
-                    room_schedule.to_csv(room_schedule_path, index=False)
+                    room_schedule.to_csv(room_schedule_path, index=False, encoding='utf-8')
             
             # Generate a summary
             self.generate_summary(schedule_df)
@@ -557,7 +557,7 @@ class TimetableScheduler:
     def generate_summary(self, schedule_df):
         """Generate a summary of the schedule."""
         summary_path = os.path.join(self.output_dir, 'summary.txt')
-        with open(summary_path, 'w') as f:
+        with open(summary_path, 'w', encoding='utf-8') as f:
             f.write("Timetable Schedule Summary\n")
             f.write("=========================\n\n")
             
