@@ -5,36 +5,43 @@ import logging
 import json
 from datetime import datetime
 from ortools.sat.python import cp_model
-from src.utils.visualizer import TimetableVisualizer
-from src.constraints import TimetableConstraints
+from src.constraints import MacroblockTimetableConstraints
+from src.utils.macroblock_visualizer import MacroblockTimetableVisualizer
 
-class TimetableScheduler:
+class MacroblockTimetableScheduler:
     def __init__(self, course_file, room_file):
-        """Initialize the timetable scheduler with course and room data."""
+        """Initialize the macroblock timetable scheduler with course and room data."""
         self.logger = logging.getLogger(__name__)
         
         # Load the data
         self.courses_df = pd.read_csv(course_file)
         self.rooms_df = pd.read_csv(room_file)
         
-        # Setup time slots
-        self.days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+        # Setup time slots from update.txt structure
+        self.days = ["tuesday", "wed", "thur", "fri", "sat"]  # Excluding Monday
         self.num_days = len(self.days)
         
-        # Theory slots: 11 slots per day of 50 min each (with 10 min break)
-        self.theory_slots = [f"{h}:00-{h}:50" for h in range(8, 19)]
-        self.num_theory_slots = len(self.theory_slots)
-        
-        # Lab slots: 6 slots per day based on provided image
-        self.lab_slots = [
-            "8:00-9:40",    # L1
-            "10:00-11:40",  # L2 
-            "11:40-1:20",   # L3
-            "1:20-3:00",    # L4
-            "3:00-4:40",    # L5
-            "5:10-6:50"     # L6
+        # Time slots (12 slots per day based on update.txt)
+        self.time_slots = [
+            "8:00 - 8:50", "8:50 - 9:40", "9:50 - 10:40", "10:40 - 11:30",
+            "11:50 - 12:40", "12:40 - 1:30", "1:50 - 2:40", "2:40 - 3:30", 
+            "3:50 - 4:40", "4:40 - 5:30", "5:30 - 6:20", "6:20 - 7:10"
         ]
-        self.num_lab_slots = len(self.lab_slots)
+        self.num_slots = len(self.time_slots)
+        
+        # Macroblock structure from update.txt
+        self.daily_schedule_structure = {
+            "tuesday": ["a1/L1", "f1/L2", "d1/L3", "b1/a2/L4", "g1/f2/L5", "d2/L6", 
+                       "b2/a3/L7", "g2/f3/L8", "d3/L9", "b3/L10", "g3/L11", "L12"],
+            "wed": ["b1/L12", "g1/L14", "e1/L15", "c1/b2/L24", "ta1/g2/L17", "e1/L18", 
+                   "c2/b3/L19", "ta2/g3/L20", "e3/L21", "c3/L22", "ta3/L23", "L24"],
+            "thur": ["c1/L25", "a1/L26", "f1/L27", "d1/c2/L28", "tb1/a2/L29", "f2/L30", 
+                    "d2/c3/L31", "tb2/a3/L32", "f3/L33", "d3/L34", "tb3/L35", "L36"],
+            "fri": ["d1/L37", "b1/L38", "g1/L39", "e1/d2/L40", "tc1/b2/L41", "g2/L42", 
+                   "e2/d3/L43", "tc2/b4/L44", "g3/L45", "e3/L46", "tc3/L47", "L46"],
+            "sat": ["e1/L49", "c1/L50", "a1/L51", "f1/e2/L52", "td1/c2/L53", "a2/L54", 
+                   "f2/e3/L55", "td2/c3/L56", "a3/L57", "f3/L58", "td3/L59", "L60"]
+        }
         
         # Process rooms - separate classrooms and labs
         self.classrooms = self.rooms_df[self.rooms_df['is_lab'] == 0]
@@ -46,7 +53,7 @@ class TimetableScheduler:
         # Create output directory
         self.output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
                                       'output', 
-                                      f'schedule_{datetime.now().strftime("%Y%m%d_%H%M%S")}')
+                                      f'macroblock_schedule_{datetime.now().strftime("%Y%m%d_%H%M%S")}')
         os.makedirs(self.output_dir, exist_ok=True)
     
     def process_teacher_courses(self):
@@ -60,7 +67,6 @@ class TimetableScheduler:
         self.num_courses = len(self.courses)
         
         # Create a mapping of teachers to their courses with required hours
-        # Each entry in the data is treated as a separate teaching assignment
         self.teacher_course_assignments = {}
         for _, row in self.courses_df.iterrows():
             teacher_id = row['teacher_id']
@@ -70,11 +76,10 @@ class TimetableScheduler:
                 self.teacher_course_assignments[teacher_id] = []
             
             # Create a unique identifier for each course instance
-            # This will help us track each instance separately
             course_instance_id = str(row['id'])
             
             self.teacher_course_assignments[teacher_id].append({
-                'id': course_instance_id,  # Add the original row ID as a course instance identifier
+                'id': course_instance_id,
                 'course_id': course_id,
                 'course_code': row['course_code'],
                 'course_name': row['course_name'],
@@ -82,131 +87,80 @@ class TimetableScheduler:
                 'lecture_hours': int(row['lecture_hours']),
                 'tutorial_hours': int(row['tutorial_hours']),
                 'practical_hours': int(row['practical_hours']),
-                'student_count': int(row['student_count'])
+                'student_count': int(row['student_count']),
+                'academic_year': row.get('academic_year', 3),  # Default to 3 if not present
+                'semester': row.get('semester', 5),  # Default to 5 if not present
+                'course_dept': row.get('course_dept', 'Computer Science & Engineering')  # Default dept
             })
     
     def generate_timetable(self):
-        """Generate the timetable using OR-Tools CP-SAT solver."""
-        self.logger.info("Starting timetable generation...")
+        """Generate the timetable using OR-Tools CP-SAT solver with macroblock structure."""
+        self.logger.info("Starting macroblock timetable generation...")
         
         # Create the CP-SAT model
         model = cp_model.CpModel()
         
-        # Pre-compute room IDs for efficiency (avoid repeated DataFrame iterations)
+        # Pre-compute room IDs for efficiency
         classroom_ids = self.classrooms['id'].tolist()
-        lab_ids = self.labs['id'].tolist()
+        # Skip lab IDs as we're not allocating labs for now
         
-        # Define variables
-        # teacher_theory_assignments[t][d][s][r] = 1 if teacher t is assigned to theory slot s on day d in room r
+        # Define assignment variables
+        # teacher_theory_assignments[t][d][s][r] = 1 if teacher t is assigned to classroom r in slot s on day d
         teacher_theory_assignments = {}
         for teacher in self.teachers:
             teacher_theory_assignments[teacher] = {}
             for d in range(self.num_days):
                 teacher_theory_assignments[teacher][d] = {}
-                for s in range(self.num_theory_slots):
+                for s in range(self.num_slots):
                     teacher_theory_assignments[teacher][d][s] = {}
                     for room_id in classroom_ids:
                         teacher_theory_assignments[teacher][d][s][room_id] = model.NewBoolVar(
-                            f'teacher_{teacher}_day_{d}_theory_slot_{s}_room_{room_id}')
+                            f'teacher_{teacher}_day_{d}_slot_{s}_classroom_{room_id}')
         
-        # teacher_lab_assignments[t][d][s][r] = 1 if teacher t is assigned to lab slot s on day d in room r
-        teacher_lab_assignments = {}
-        for teacher in self.teachers:
-            teacher_lab_assignments[teacher] = {}
-            for d in range(self.num_days):
-                teacher_lab_assignments[teacher][d] = {}
-                for s in range(self.num_lab_slots):
-                    teacher_lab_assignments[teacher][d][s] = {}
-                    for room_id in lab_ids:
-                        teacher_lab_assignments[teacher][d][s][room_id] = model.NewBoolVar(
-                            f'teacher_{teacher}_day_{d}_lab_slot_{s}_room_{room_id}')
+        # Skip lab assignments as requested
+        # teacher_lab_assignments = None  # Not needed for now
         
         # Initialize constraints handler
-        constraints = TimetableConstraints(
+        constraints = MacroblockTimetableConstraints(
             model, 
             self.teachers, 
-            self.days, 
-            self.theory_slots, 
-            self.lab_slots, 
+            self.teacher_course_assignments,
             self.classrooms, 
-            self.labs, 
-            self.teacher_course_assignments
+            self.labs
         )
         
-        # Apply all constraints
-        constraints.apply_all_constraints(teacher_theory_assignments, teacher_lab_assignments)
-        
-        # Capture shift assignments if available (from the shift-based constraint)
-        teacher_shift_assignments = getattr(constraints, 'teacher_shift_assignments', None)
-        
-        # Generate constraint summary for reporting
-        constraint_summary = constraints.generate_constraint_summary()
-        self.save_constraint_summary(constraint_summary)
+        # Apply all constraints (skip lab assignments)
+        constraints.apply_all_constraints(teacher_theory_assignments, None)
         
         # Create the solver and solve the model
         solver = cp_model.CpSolver()
         solver.parameters.max_time_in_seconds = 300  # 5 minutes time limit
         
-        self.logger.info("Solving the model...")
+        self.logger.info("Solving the macroblock model...")
         status = solver.Solve(model)
         
         if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
             self.logger.info(f"Solution found with status {status}!")
             
-            # Process the solution
-            schedule_df = self.process_solution(solver, teacher_theory_assignments, teacher_lab_assignments, teacher_shift_assignments)
+            # Process the solution (skip lab assignments)
+            schedule_result = self.process_solution(solver, teacher_theory_assignments, None, constraints)
+            
+            # Save schedule results
+            self.save_schedule_results(schedule_result)
             
             # Generate visualizations
-            if not schedule_df.empty:
-                self.generate_visualizations(schedule_df)
+            self.generate_visualizations(schedule_result)
             
             return True
         else:
             self.logger.warning(f"No solution found. Status: {status}")
             return False
     
-    def save_constraint_summary(self, constraint_summary):
-        """Save the constraint summary to a JSON file."""
-        constraint_summary_path = os.path.join(self.output_dir, 'constraint_summary.json')
-        with open(constraint_summary_path, 'w', encoding='utf-8') as f:
-            json.dump(constraint_summary, f, indent=4, ensure_ascii=False)
-        
-        # Also generate a human-readable text version
-        constraint_summary_txt_path = os.path.join(self.output_dir, 'constraint_summary.txt')
-        with open(constraint_summary_txt_path, 'w', encoding='utf-8') as f:
-            f.write("Timetable Scheduling Constraints Summary\n")
-            f.write("=====================================\n\n")
-            
-            for constraint_id, constraint_info in constraint_summary.items():
-                f.write(f"Constraint: {constraint_info['name']}\n")
-                f.write(f"Description: {constraint_info['description']}\n")
-                f.write(f"Impact: {constraint_info['impact']}\n")
-                
-                # Handle the new complexity structure
-                complexity = constraint_info['complexity']
-                if isinstance(complexity, dict):
-                    f.write(f"Computational Complexity: {complexity['formula']}\n")
-                    f.write(f"Complexity Level: {complexity['level']}\n")
-                    f.write(f"Explanation: {complexity['explanation']}\n")
-                    if 'notes' in complexity:
-                        f.write(f"Notes: {complexity['notes']}\n")
-                else:
-                    f.write(f"Computational Complexity: {complexity}\n")
-                
-                # Include example if available
-                if 'example' in constraint_info:
-                    f.write(f"\nExample:\n{constraint_info['example']}\n")
-                
-                f.write("\n" + "-" * 60 + "\n\n")
-        
-        self.logger.info(f"Constraint summaries saved to {self.output_dir}")
-    
-    def process_solution(self, solver, teacher_theory_assignments, teacher_lab_assignments, teacher_shift_assignments):
-        """Process the solution and save the results."""
-        # Create a dataframe to store the schedule
+    def process_solution(self, solver, teacher_theory_assignments, teacher_lab_assignments, constraints):
+        """Process the solution and extract the schedule. Skip lab processing."""
         schedule_data = []
         
-        # Pre-compute teacher information cache to avoid repeated DataFrame lookups
+        # Pre-compute teacher information cache
         teacher_info_cache = {}
         for teacher in self.teachers:
             teacher_rows = self.courses_df[self.courses_df['teacher_id'] == teacher]
@@ -224,107 +178,40 @@ class TimetableScheduler:
                     'staff_code': ''
                 }
         
-        # Pre-compute room information for efficiency
+        # Pre-compute room information
         classroom_info = {}
         for _, room_row in self.classrooms.iterrows():
             room_id = room_row['id']
             classroom_info[room_id] = {
                 'room_number': room_row['room_number'],
                 'block': room_row.get('block', ''),
-                'description': room_row.get('description', '')
+                'description': room_row.get('description', ''),
+                'capacity': room_row.get('room_max_cap', 0)
             }
         
-        lab_info = {}
-        for _, room_row in self.labs.iterrows():
-            room_id = room_row['id']
-            lab_info[room_id] = {
-                'room_number': room_row['room_number'],
-                'room_max_cap': room_row['room_max_cap'],
-                'block': room_row.get('block', ''),
-                'description': room_row.get('description', '')
-            }
+        # Skip lab info as we're not processing labs
         
-        # Create tracking structures for assigned slots per course instance
-        instance_tracking = self._initialize_instance_tracking()
-        
-        # Process theory assignments first
-        self._process_theory_assignments(solver, teacher_theory_assignments, instance_tracking, 
-                                        schedule_data, teacher_info_cache, classroom_info, teacher_shift_assignments)
-        
-        # Process lab assignments
-        self._process_lab_assignments(solver, teacher_lab_assignments, instance_tracking,
-                                     schedule_data, teacher_info_cache, lab_info, teacher_shift_assignments)
-        
-        # Create and save dataframe
-        return self._create_and_save_schedule_dataframe(schedule_data)
-    
-    def _initialize_instance_tracking(self):
-        """Initialize tracking structures for course instances."""
-        instance_tracking = {}
-        for teacher_id, courses in self.teacher_course_assignments.items():
-            instance_tracking[teacher_id] = {}
-            for course in courses:
-                instance_id = course['id']
-                instance_tracking[teacher_id][instance_id] = {
-                    'theory_allocated': 0,
-                    'lab_allocated': 0,
-                    'batch_tracking': {},  # Track lab batches
-                    'required_theory': course['lecture_hours'],
-                    'required_lab': course['practical_hours'],
-                    'student_count': course['student_count'],
-                    'course_info': course,
-                    'days_used': set(),  # Track which days are used for this instance
-                    'lab_capacity_used': None,  # Track which lab capacity was chosen
-                    'room_capacity': 35  # Default to 35-capacity lab logic
-                }
-                
-                # Calculate number of batches needed for this course instance
-                if course['student_count'] > 35 and course['practical_hours'] > 0:
-                    num_batches = (course['student_count'] + 34) // 35
-                    for batch_num in range(1, num_batches + 1):
-                        instance_tracking[teacher_id][instance_id]['batch_tracking'][batch_num] = {
-                            'slots_allocated': 0,
-                            'required_slots': (course['practical_hours'] + 1) // 2  # Required lab slots per batch
-                        }
-        return instance_tracking
-    
-    def _process_theory_assignments(self, solver, teacher_theory_assignments, instance_tracking,
-                                   schedule_data, teacher_info_cache, classroom_info, teacher_shift_assignments=None):
-        """Process theory assignments from the solution."""
-        classroom_ids = list(classroom_info.keys())
-        
+        # Process theory assignments only
         for teacher in self.teachers:
-            for d in range(self.num_days):
-                for s in range(self.num_theory_slots):
-                    for room_id in classroom_ids:
-                        if solver.Value(teacher_theory_assignments[teacher][d][s][room_id]) == 1:
-                            # Find which course instance to assign this slot to
-                            if teacher in self.teacher_course_assignments:
-                                available_instances = self._find_available_theory_instances(
-                                    teacher, instance_tracking)
-                                
-                                if available_instances:
-                                    # Select the instance with the most remaining required hours
-                                    available_instances.sort(key=lambda x: x['remaining'], reverse=True)
-                                    selected = available_instances[0]
-                                    instance_id = selected['instance_id']
-                                    course_info = selected['course_info']
-                                    
-                                    # Update tracking
-                                    instance_tracking[teacher][instance_id]['theory_allocated'] += 1
-                                    instance_tracking[teacher][instance_id]['days_used'].add(d)
-                                    
-                                    # Get cached teacher information
+            for day_idx, day in enumerate(self.days):
+                for slot_idx in range(self.num_slots):
+                    # Check theory assignments
+                    for room_id in classroom_info.keys():
+                        if solver.Value(teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]) == 1:
+                            # Determine which course instance and macroblock this represents
+                            course_info = self._determine_assigned_course(
+                                teacher, day_idx, slot_idx, constraints, solver, 'theory')
+                            
+                            if course_info:
                                     teacher_info = teacher_info_cache[teacher]
                                     room_details = classroom_info[room_id]
                                     
-                                    # Determine teacher's shift for this day
-                                    teacher_shift = self._determine_teacher_shift(solver, teacher, d, teacher_shift_assignments)
-                                    
                                     schedule_data.append({
-                                        'day': self.days[d],
-                                        'slot_type': 'Theory',
-                                        'slot_time': self.theory_slots[s],
+                                    'day': day,
+                                    'slot_index': slot_idx,
+                                    'time_interval': self.time_slots[slot_idx],
+                                    'slot_type': course_info['slot_type'],  # 'Lecture' or 'Tutorial'
+                                    'macroblock': course_info['macroblock'],
                                         'teacher_id': teacher,
                                         'first_name': teacher_info['first_name'],
                                         'last_name': teacher_info['last_name'],
@@ -332,211 +219,167 @@ class TimetableScheduler:
                                         'room_id': room_id,
                                         'room_number': room_details['room_number'],
                                         'block': room_details['block'],
-                                        'description': room_details['description'],
+                                    'room_type': 'Classroom',
+                                    'capacity': room_details['capacity'],
                                         'course_id': course_info['course_id'],
                                         'course_code': course_info['course_code'],
                                         'course_name': course_info['course_name'],
-                                        'course_instance_id': instance_id,
-                                        'batch': None,  # Theory classes don't have batches
-                                        'shift': teacher_shift
-                                    })
+                                    'course_instance_id': course_info['instance_id'],
+                                    'student_count': course_info['student_count'],
+                                    'academic_year': course_info.get('academic_year', ''),
+                                    'semester': course_info.get('semester', ''),
+                                    'course_dept': course_info.get('course_dept', ''),
+                                    'teacher_shift': constraints.teacher_shift_assignments.get(teacher, 'shift1')
+                                })
+                    
+                    # Skip lab assignments processing as requested
+        
+        return {
+            'schedule_data': schedule_data,
+            'daily_schedules': self._create_daily_schedule_structure(schedule_data),
+            'time_slot_definitions': {
+                'T': self.time_slots,  # Theory time slots
+                # Skip lab time slots
+            }
+        }
     
-    def _find_available_theory_instances(self, teacher, instance_tracking):
-        """Find available theory instances for a teacher that need more slots."""
-        available_instances = []
-        for course_info in self.teacher_course_assignments[teacher]:
-            instance_id = course_info['id']
-            tracking = instance_tracking[teacher][instance_id]
-            if (course_info['lecture_hours'] > 0 and 
-                tracking['theory_allocated'] < tracking['required_theory']):
-                available_instances.append({
+    def _determine_assigned_course(self, teacher, day_idx, slot_idx, constraints, solver, assignment_type):
+        """Determine which course instance is assigned to a specific slot."""
+        if teacher not in self.teacher_course_assignments:
+            return None
+        
+        # Get the macroblock structure for this day and slot
+        day = self.days[day_idx]
+        slot_content = self.daily_schedule_structure[day][slot_idx]
+        
+        # Parse the slot content to identify theory blocks
+        parts = slot_content.split('/')
+        theory_blocks = []
+        for part in parts:
+            if part in ['a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'c1', 'c2', 'c3', 
+                       'd1', 'd2', 'd3', 'e1', 'e2', 'e3', 'f1', 'f2', 'f3', 
+                       'g1', 'g2', 'g3', 'ta1', 'ta2', 'ta3', 'tb1', 'tb2', 'tb3',
+                       'tc1', 'tc2', 'tc3', 'td1', 'td2', 'td3']:
+                theory_blocks.append(part)
+        
+        # Check each course instance for this teacher
+        for instance in self.teacher_course_assignments[teacher]:
+            instance_id = instance['id']
+            
+            if assignment_type == 'theory':
+                # Check macroblock assignments
+                if hasattr(constraints, 'macroblock_assignments') and teacher in constraints.macroblock_assignments:
+                    if instance_id in constraints.macroblock_assignments[teacher]:
+                        macroblock_vars = constraints.macroblock_assignments[teacher][instance_id]
+                        
+                        for block in theory_blocks:
+                            if block in ['a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'c1', 'c2', 'c3', 
+                                       'd1', 'd2', 'd3', 'e1', 'e2', 'e3', 'f1', 'f2', 'f3', 'g1', 'g2', 'g3']:
+                                if f'{block}_chosen' in macroblock_vars:
+                                    if solver.Value(macroblock_vars[f'{block}_chosen']) == 1:
+                                        return {
+                                            'instance_id': instance_id,
+                                            'course_id': instance['course_id'],
+                                            'course_code': instance['course_code'],
+                                            'course_name': instance['course_name'],
+                                            'student_count': instance['student_count'],
+                                            'academic_year': instance.get('academic_year', ''),
+                                            'semester': instance.get('semester', ''),
+                                            'course_dept': instance.get('course_dept', ''),
+                                            'macroblock': block,
+                                            'slot_type': 'Lecture'
+                                        }
+                            
+                            elif block in ['ta1', 'ta2', 'ta3', 'tb1', 'tb2', 'tb3', 'tc1', 'tc2', 'tc3', 'td1', 'td2', 'td3']:
+                                # Tutorial block - find parent block
+                                parent_block = block[1:]  # Remove 't' prefix
+                                if f'{parent_block}_chosen' in macroblock_vars:
+                                    if solver.Value(macroblock_vars[f'{parent_block}_chosen']) == 1:
+                                        return {
+                                            'instance_id': instance_id,
+                                            'course_id': instance['course_id'],
+                                            'course_code': instance['course_code'],
+                                            'course_name': instance['course_name'],
+                                            'student_count': instance['student_count'],
+                                            'academic_year': instance.get('academic_year', ''),
+                                            'semester': instance.get('semester', ''),
+                                            'course_dept': instance.get('course_dept', ''),
+                                            'macroblock': block,
+                                            'slot_type': 'Tutorial'
+                                        }
+            
+            elif assignment_type == 'lab' and instance['practical_hours'] > 0:
+                # For labs, any course with practical hours could be assigned
+                return {
                     'instance_id': instance_id,
-                    'remaining': tracking['required_theory'] - tracking['theory_allocated'],
-                    'course_info': course_info
-                })
-        return available_instances
+                    'course_id': instance['course_id'],
+                    'course_code': instance['course_code'],
+                    'course_name': instance['course_name'],
+                    'student_count': instance['student_count'],
+                    'macroblock': 'Lab',
+                    'slot_type': 'Practical'
+                }
+        
+        return None
     
-    def _process_lab_assignments(self, solver, teacher_lab_assignments, instance_tracking,
-                                 schedule_data, teacher_info_cache, lab_info, teacher_shift_assignments):
-        """Process lab assignments from the solution."""
-        lab_ids = list(lab_info.keys())
+    def _create_daily_schedule_structure(self, schedule_data):
+        """Create the daily schedule structure matching the required format."""
+        daily_schedules = {}
         
-        for teacher in self.teachers:
-            for d in range(self.num_days):
-                for s in range(self.num_lab_slots):
-                    for room_id in lab_ids:
-                        if solver.Value(teacher_lab_assignments[teacher][d][s][room_id]) == 1:
-                            # Find which course instance to assign this slot to
-                            if teacher in self.teacher_course_assignments:
-                                available_instances = self._find_available_lab_instances(
-                                    teacher, instance_tracking, d, teacher_shift_assignments, solver)
-                                
-                                if available_instances:
-                                    # Sort by priority first, then by remaining slots
-                                    available_instances.sort(key=lambda x: (x['priority'], x['remaining']), reverse=True)
-                                    selected = available_instances[0]
-                                    instance_id = selected['instance_id']
-                                    course_info = selected['course_info']
-                                    tracking = instance_tracking[teacher][instance_id]
-                                    
-                                    # Determine which batch to assign this slot to
-                                    batch_num = self._determine_batch_assignment(course_info, tracking)
-                                    
-                                    # Update tracking
-                                    tracking['lab_allocated'] += 1
-                                    
-                                    # Update batch tracking if applicable
-                                    if batch_num and batch_num in tracking['batch_tracking']:
-                                        tracking['batch_tracking'][batch_num]['slots_allocated'] += 1
-                                    
-                                    # Get cached teacher information
-                                    teacher_info = teacher_info_cache[teacher]
-                                    room_details = lab_info[room_id]
-                                    
-                                    # Calculate student count for this batch
-                                    students_in_batch = self._calculate_batch_students(course_info, batch_num, room_details)
-                                    
-                                    # Update lab capacity tracking
-                                    self._update_lab_capacity_tracking(course_info, tracking, room_details)
-                                    
-                                    schedule_data.append({
-                                        'day': self.days[d],
-                                        'slot_type': 'Lab',
-                                        'slot_time': self.lab_slots[s],
-                                        'teacher_id': teacher,
-                                        'first_name': teacher_info['first_name'],
-                                        'last_name': teacher_info['last_name'],
-                                        'staff_code': teacher_info['staff_code'],
-                                        'room_id': room_id,
-                                        'room_number': room_details['room_number'],
-                                        'room_capacity': room_details['room_max_cap'],
-                                        'block': room_details['block'],
-                                        'description': room_details['description'],
-                                        'course_id': course_info['course_id'],
-                                        'course_code': course_info['course_code'],
-                                        'course_name': course_info['course_name'],
-                                        'course_instance_id': instance_id,
-                                        'batch': batch_num,
-                                        'batch_students': students_in_batch,
-                                        'total_students': course_info['student_count'],
-                                        'intelligent_batching': 'Yes' if (course_info['student_count'] > 60 and room_details['room_max_cap'] >= 70) else 'No',
-                                        'shift': self._determine_teacher_shift(solver, teacher, d, teacher_shift_assignments)
-                                    })
-    
-    def _determine_batch_assignment(self, course_info, tracking):
-        """Determine which batch to assign the current lab slot to."""
-        if course_info['student_count'] > 35:
-            # For multi-batch courses, find the batch with the most remaining required slots
-            available_batches = []
-            for b_num, b_info in tracking['batch_tracking'].items():
-                if b_info['slots_allocated'] < b_info['required_slots']:
-                    available_batches.append({
-                        'batch_num': b_num,
-                        'remaining': b_info['required_slots'] - b_info['slots_allocated']
-                    })
+        for day in self.days:
+            daily_schedules[day] = []
+            day_data = [item for item in schedule_data if item['day'] == day]
             
-            if available_batches:
-                available_batches.sort(key=lambda x: x['remaining'], reverse=True)
-                return available_batches[0]['batch_num']
-        
-        return 1  # Default to batch 1 for small classes or single batch
-    
-    def _calculate_batch_students(self, course_info, batch_num, room_details):
-        """Calculate the number of students in this specific batch."""
-        students_in_batch = min(35, course_info['student_count'])
-        
-        if batch_num and batch_num > 1:
-            remaining_students = course_info['student_count'] - ((batch_num - 1) * 35)
-            students_in_batch = min(35, remaining_students)
-        
-        # Adjust for large lab capacity
-        room_capacity = room_details['room_max_cap']
-        if (course_info['student_count'] > 60 and room_capacity >= 70 and
-            course_info['student_count'] <= room_capacity):
-            students_in_batch = course_info['student_count']
-        
-        return students_in_batch
-    
-    def _update_lab_capacity_tracking(self, course_info, tracking, room_details):
-        """Update lab capacity tracking for intelligent batching."""
-        room_capacity = room_details['room_max_cap']
-        
-        # Update tracking with actual lab capacity used
-        if tracking['lab_capacity_used'] is None:
-            tracking['lab_capacity_used'] = room_capacity
-            tracking['room_capacity'] = room_capacity
-            
-            # For courses >60 students using large labs, recalculate batching
-            if course_info['student_count'] > 60 and room_capacity >= 70:
-                if room_capacity >= 140 or course_info['student_count'] <= room_capacity:
-                    # Clear old batch tracking and set up single batch
-                    tracking['batch_tracking'] = {
-                        1: {
-                            'slots_allocated': 0,
-                            'required_slots': (course_info['practical_hours'] + 1) // 2
-                        }
-                    }
-    
-    def _find_available_lab_instances(self, teacher, instance_tracking, current_day=None, teacher_shift_assignments=None, solver=None):
-        """Find available lab instances for a teacher that need more slots."""
-        available_instances = []
-        
-        for course_info in self.teacher_course_assignments[teacher]:
-            instance_id = course_info['id']
-            tracking = instance_tracking[teacher][instance_id]
-            
-            if course_info['practical_hours'] <= 0:
-                continue  # Skip courses without labs
-            
-            # Check if this instance needs more lab slots
-            total_required_lab_slots = 0
-            
-            # For large classes (>35 students), check batch requirements
-            if course_info['student_count'] > 35:
-                # Add up required slots for all batches
-                for batch_num, batch_info in tracking['batch_tracking'].items():
-                    if batch_info['slots_allocated'] < batch_info['required_slots']:
-                        total_required_lab_slots += batch_info['required_slots'] - batch_info['slots_allocated']
-            else:
-                # Single batch course
-                required_lab_slots = (course_info['practical_hours'] + 1) // 2
-                total_required_lab_slots = required_lab_slots - tracking['lab_allocated']
-            
-            if total_required_lab_slots > 0:
-                # Calculate priority - give higher priority to instances with theory on same day
-                priority = 10 if (current_day is not None and current_day in tracking['days_used']) else 0
+            for slot_idx in range(self.num_slots):
+                # Get assignments for this slot
+                slot_assignments = [item for item in day_data if item['slot_index'] == slot_idx]
                 
-                # Determine teacher's shift for this day
-                teacher_shift = self._determine_teacher_shift(solver, teacher, current_day, teacher_shift_assignments)
+                # Create content string
+                content_parts = []
                 
-                available_instances.append({
-                    'instance_id': instance_id,
-                    'remaining': total_required_lab_slots,
-                    'course_info': course_info,
-                    'priority': priority,
-                    'shift': teacher_shift
+                # Add macroblock assignments
+                for assignment in slot_assignments:
+                    if assignment['slot_type'] in ['Lecture', 'Tutorial']:
+                        content_parts.append(assignment['macroblock'])
+                
+                # Add lab identifiers from original structure
+                original_content = self.daily_schedule_structure[day][slot_idx]
+                lab_parts = [part for part in original_content.split('/') if part.startswith('L')]
+                content_parts.extend(lab_parts)
+                
+                # If no assignments, use original content
+                if not content_parts:
+                    content = original_content
+                else:
+                    content = '/'.join(content_parts)
+                
+                daily_schedules[day].append({
+                    'content': content,
+                    'slot_index': slot_idx,
+                    'time_interval': self.time_slots[slot_idx]
                 })
         
-        return available_instances
+        return daily_schedules
     
-    def _create_and_save_schedule_dataframe(self, schedule_data):
-        """Create and save the schedule dataframe to a CSV file."""
-        if schedule_data:
-            schedule_df = pd.DataFrame(schedule_data)
+    def save_schedule_results(self, schedule_result):
+        """Save the schedule results to files."""
+        # Save as CSV
+        if schedule_result['schedule_data']:
+            schedule_df = pd.DataFrame(schedule_result['schedule_data'])
             
-            # Save the schedule to a CSV file with UTF-8 encoding
-            schedule_csv_path = os.path.join(self.output_dir, 'schedule.csv')
+            # Save main schedule
+            schedule_csv_path = os.path.join(self.output_dir, 'macroblock_schedule.csv')
             schedule_df.to_csv(schedule_csv_path, index=False, encoding='utf-8')
             self.logger.info(f"Schedule saved to {schedule_csv_path}")
             
-            # Generate separate schedules for each teacher
+            # Save individual teacher schedules
             for teacher in self.teachers:
                 teacher_schedule = schedule_df[schedule_df['teacher_id'] == teacher]
                 if not teacher_schedule.empty:
                     teacher_schedule_path = os.path.join(self.output_dir, f'teacher_{teacher}_schedule.csv')
                     teacher_schedule.to_csv(teacher_schedule_path, index=False, encoding='utf-8')
             
-            # Generate separate schedules for each room (using pre-computed room info)
+            # Save individual room schedules
             all_rooms = pd.concat([self.classrooms, self.labs])
             for _, room_row in all_rooms.iterrows():
                 room_id = room_row['id']
@@ -545,180 +388,92 @@ class TimetableScheduler:
                     room_schedule_path = os.path.join(self.output_dir, f'room_{room_id}_schedule.csv')
                     room_schedule.to_csv(room_schedule_path, index=False, encoding='utf-8')
             
-            # Generate a summary
-            self.generate_summary(schedule_df)
-            
-            return schedule_df
+        # Save as JSON (structured format)
+        json_result = {
+            'daily_schedules': schedule_result['daily_schedules'],
+            'time_slot_definitions': schedule_result['time_slot_definitions']
+        }
         
-        return pd.DataFrame()
+        json_path = os.path.join(self.output_dir, 'macroblock_schedule.json')
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(json_result, f, indent=2, ensure_ascii=False)
+        
+        self.logger.info(f"JSON schedule saved to {json_path}")
+        
+        # Generate summary
+        self.generate_summary(schedule_result)
     
-    def generate_visualizations(self, schedule_df):
-        """Generate visualizations for the timetable."""
-        self.logger.info("Generating visualizations...")
+    def generate_summary(self, schedule_result):
+        """Generate a summary of the macroblock schedule."""
+        summary_path = os.path.join(self.output_dir, 'macroblock_summary.txt')
         
-        # Create visualizer
-        visualizer = TimetableVisualizer(schedule_df, self.output_dir)
+        schedule_data = schedule_result['schedule_data']
         
-        # Generate schedules
-        visualizer.generate_master_schedule()
-        visualizer.generate_teacher_schedules()
-        visualizer.generate_room_schedules()
-        
-        # Generate shift visualizations
-        visualizer.generate_shift_schedules()
-        
-        self.logger.info(f"Visualizations saved to {self.output_dir}")
-    
-    def generate_summary(self, schedule_df):
-        """Generate a summary of the schedule."""
-        summary_path = os.path.join(self.output_dir, 'summary.txt')
         with open(summary_path, 'w', encoding='utf-8') as f:
-            f.write("Timetable Schedule Summary\n")
-            f.write("=========================\n\n")
+            f.write("Macroblock Timetable Schedule Summary\n")
+            f.write("====================================\n\n")
             
-            # Count of scheduled classes
-            theory_count = len(schedule_df[schedule_df['slot_type'] == 'Theory'])
-            lab_count = len(schedule_df[schedule_df['slot_type'] == 'Lab'])
-            f.write(f"Total scheduled theory classes: {theory_count}\n")
-            f.write(f"Total scheduled lab classes: {lab_count}\n\n")
+            # Count of scheduled classes by type
+            lecture_count = len([item for item in schedule_data if item['slot_type'] == 'Lecture'])
+            tutorial_count = len([item for item in schedule_data if item['slot_type'] == 'Tutorial'])
+            practical_count = len([item for item in schedule_data if item['slot_type'] == 'Practical'])
+            
+            f.write(f"Total scheduled lecture classes: {lecture_count}\n")
+            f.write(f"Total scheduled tutorial classes: {tutorial_count}\n")
+            f.write(f"Total scheduled practical classes: {practical_count}\n\n")
             
             # Teachers with assignments
-            teachers_scheduled = schedule_df['teacher_id'].nunique()
+            teachers_scheduled = len(set(item['teacher_id'] for item in schedule_data))
             f.write(f"Total teachers scheduled: {teachers_scheduled} out of {self.num_teachers}\n\n")
             
             # Rooms utilized
-            rooms_scheduled = schedule_df['room_id'].nunique()
+            rooms_scheduled = len(set(item['room_id'] for item in schedule_data))
             total_rooms = len(self.classrooms) + len(self.labs)
             f.write(f"Total rooms utilized: {rooms_scheduled} out of {total_rooms}\n\n")
             
-            # Teacher-Course assignments with instance details
-            f.write("Teacher-Course Assignments:\n")
-            for teacher in self.teachers:
-                teacher_data = schedule_df[schedule_df['teacher_id'] == teacher]
-                if not teacher_data.empty:
-                    # Get teacher name for display
-                    teacher_row = teacher_data.iloc[0]
-                    teacher_name = f"{teacher_row['first_name']} {teacher_row['last_name']}".strip()
-                    if not teacher_name:
-                        teacher_name = teacher_row.get('staff_code', f'Teacher {teacher}')
-                    
-                    f.write(f"Teacher {teacher} ({teacher_name}):\n")
-                    
-                    # Group by course code and instance ID
-                    if 'course_instance_id' in teacher_data.columns:
-                        course_instances = teacher_data.groupby(['course_code', 'course_instance_id'])
-                        
-                        # Track courses to organize output
-                        courses = {}
-                        for (course_code, instance_id), instance_data in course_instances:
-                            if course_code not in courses:
-                                courses[course_code] = []
-                            
-                            # Count theory slots
-                            theory_data = instance_data[instance_data['slot_type'] == 'Theory']
-                            theory_slots = len(theory_data)
-                            
-                            # Process lab data - group by batch
-                            lab_data = instance_data[instance_data['slot_type'] == 'Lab']
-                            
-                            # Organize lab slots by batch
-                            batches = {}
-                            for _, row in lab_data.iterrows():
-                                batch_num = row.get('batch', 1)  # Default to batch 1 if not specified
-                                if batch_num not in batches:
-                                    batches[batch_num] = {
-                                        'slots': 0,
-                                        'student_count': row.get('batch_students', 0)
-                                    }
-                                batches[batch_num]['slots'] += 1
-                            
-                            # Add instance info
-                            courses[course_code].append({
-                                'instance_id': instance_id,
-                                'theory_slots': theory_slots,
-                                'batches': batches,
-                                'course_name': instance_data.iloc[0]['course_name'],
-                                'raw_id': instance_data.iloc[0].get('id', 0)  # Original ID from CSV
-                            })
-                        
-                        # Output each course with its instances
-                        for course_code, instances in courses.items():
-                            course_name = instances[0]['course_name']
-                            f.write(f"  {course_code} ({course_name}):\n")
-                            
-                            total_theory = 0
-                            total_lab = 0
-                            
-                            # Sort instances for more predictable output
-                            # Try to sort by original row ID if available 
-                            instances.sort(key=lambda x: x.get('raw_id', 0) or x['instance_id'])
-                            
-                            # Check if we have multiple instances of the same course
-                            multiple_instances = len(instances) > 1
-                            
-                            for i, instance in enumerate(instances):
-                                # Add instance number label for multiple instances
-                                instance_label = f"Instance {i+1}" if multiple_instances else "Assignment"
-                                
-                                # Include original CSV ID to help identify the source row
-                                if multiple_instances:
-                                    f.write(f"    {instance_label} (ID: {instance['instance_id']}, Row: {instance.get('raw_id', 'N/A')}):\n")
-                                else:
-                                    f.write(f"    {instance_label}:\n")
-                                
-                                # Theory slots summary
-                                f.write(f"      Theory: {instance['theory_slots']} slots\n")
-                                total_theory += instance['theory_slots']
-                                
-                                # Lab batches summary
-                                if instance['batches']:
-                                    f.write(f"      Lab:\n")
-                                    instance_lab_slots = 0
-                                    for batch_num, batch_info in sorted(instance['batches'].items()):
-                                        f.write(f"        Batch {batch_num} ({batch_info['student_count']} students): {batch_info['slots']} slots\n")
-                                        instance_lab_slots += batch_info['slots']
-                                    
-                                    f.write(f"      Total Lab: {instance_lab_slots} slots\n")
-                                    total_lab += instance_lab_slots
-                                else:
-                                    f.write(f"      Lab: 0 slots\n")
-                            
-                            # Only display totals if multiple instances
-                            if multiple_instances:
-                                f.write(f"    Total for {course_code} (All {len(instances)} Instances): {total_theory} theory slots, {total_lab} lab slots\n\n")
-                            else:
-                                f.write("\n")
-                    else:
-                        # Fallback to old method if instance IDs are not available
-                        course_groups = teacher_data.groupby('course_code')
-                        for course_code, course_data in course_groups:
-                            course_name = course_data.iloc[0]['course_name']
-                            theory_slots = len(course_data[course_data['slot_type'] == 'Theory'])
-                            lab_slots = len(course_data[course_data['slot_type'] == 'Lab'])
-                            
-                            f.write(f"  {course_code} ({course_name}): {theory_slots} theory slots, {lab_slots} lab slots\n")
-                    
-                    f.write("\n")
+            # Macroblock distribution
+            f.write("Macroblock Distribution:\n")
+            macroblock_counts = {}
+            for item in schedule_data:
+                if item['slot_type'] in ['Lecture', 'Tutorial']:
+                    macroblock = item['macroblock']
+                    macroblock_counts[macroblock] = macroblock_counts.get(macroblock, 0) + 1
             
-            f.write("\nSchedule generated on: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            for macroblock, count in sorted(macroblock_counts.items()):
+                f.write(f"  {macroblock}: {count} assignments\n")
+            
+            # Shift distribution
+            f.write("\nTeacher Shift Distribution:\n")
+            shift_counts = {}
+            for item in schedule_data:
+                shift = item.get('teacher_shift', 'Unknown')
+                shift_counts[shift] = shift_counts.get(shift, 0) + 1
+            
+            for shift, count in sorted(shift_counts.items()):
+                f.write(f"  {shift}: {count} assignments\n")
+            
+            f.write(f"\nSchedule generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         
         self.logger.info(f"Summary saved to {summary_path}")
 
-    def _determine_teacher_shift(self, solver, teacher, day, teacher_shift_assignments):
-        """Determine which shift a teacher is assigned to on a given day."""
-        if teacher_shift_assignments is None or solver is None:
-            return None
-        
-        if teacher in teacher_shift_assignments and day < len(teacher_shift_assignments[teacher]):
-            shift_vars = teacher_shift_assignments[teacher][day]
+    def generate_visualizations(self, schedule_result):
+        """Generate schedule visualizations using the macroblock visualizer."""
+        try:
+            self.logger.info("Generating schedule visualizations...")
             
-            if solver.Value(shift_vars['shift1']) == 1:
-                return 'Shift1 (8:00-15:00)'
-            elif solver.Value(shift_vars['shift2']) == 1:
-                return 'Shift2 (10:00-17:00)'
-            elif solver.Value(shift_vars['shift3']) == 1:
-                return 'Shift3 (12:00-19:00)'
-            else:
-                return 'No Shift'
-        
-        return None 
+            # Create visualizer with schedule data
+            visualizer = MacroblockTimetableVisualizer(
+                schedule_result['schedule_data'], 
+                self.output_dir
+            )
+            
+            # Generate all visualizations
+            visualizer.generate_all_visualizations()
+            
+            self.logger.info("Schedule visualizations generated successfully")
+            
+        except ImportError as e:
+            self.logger.warning(f"Could not generate visualizations due to missing dependencies: {e}")
+        except Exception as e:
+            self.logger.error(f"Error generating visualizations: {e}")
+            self.logger.exception("Visualization error details") 

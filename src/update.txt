@@ -1,0 +1,50 @@
+T,       8:00 - 8:50,9:00 - 9:50,10:00 - 10:50,11:00 - 11:50,12:00 - 12:50,1:00  - 1:50,2:00 - 2:50,3:00 - 3:50,4:00 - 4:50,5:00 - 5:50,6:00 - 6:50
+L,       8:00 - 8:50,8:50 - 9:40, 9:50 - 10:40,10:40 - 11:30,11:50 - 12:40,12:40 - 1:30,1:50 - 2:40,2:40 - 3:30,3:50 - 4:40,4:40 - 5:30,5:30 - 6:20, 6:20 - 7:10
+tuesday, a1/L1,      f1/L2,       d1/L3,       b1/a2/L4,     g1/f2/L5,     d2/L6,       b2/a3/L7,   g2/f3/L8,   d3/L9,      b3/L10,     g3/L11,      L12
+wed,     b1/L12,     g1/L14,      e1/L15,      c1/b2/L24,    ta1/g2/L17,   e2/L18,      c2/b3/L19,  ta2/g3/L20, e3/L21,     c3/L22,     ta3/L23,     L24
+thur,    c1/L25,     a1/L26,      f1/L27,      d1/c2/L28,    tb1/a2/L29,   f2/L30,      d2/c3/L31,  tb2/a3/L32, f3/L33,     d3/L34,     tb3/L35,     L36
+fri,     d1/L37,     b1/L38,      g1/L39,      e1/d2/L40,    tc1/b2/L41,   g2/L42,      e2/d3/L43,  tc2/b4/L44, g3/L45,     e3/L46,     tc3/L47,     L46
+sat,     e1/L49,     c1/L50,      a1/L51,      f1/e2/L52,    td1/c2/L53,   a2/L54,      f2/e3/L55,  td2/c3/L56, a3/L57,     f3/L58,     td3/L59,     L60
+
+
+* theory class if scheduled in a1 for any course it should be then only scheduler a1 + a1 + a1 + ta1 (these are called macroblock)
+    if it is 3 theory hour a1 + a1 + a1 
+    if it is 3 theory hour + 1 tutorial hour a1 + a1 + a1 + ta1
+    this makes it more structure dont have to think about overlapping for theory that much but still there is overlapping
+
+*(1st block)               
+a1 + a1 + a1 + ta1 
+b1 + b1 + b1 + tb1
+....
+so on
+this is completely in shift 1
+if a course is placed a1 then it should be in a1 only
+* (2nd block)
+a2 + a2 + a2 + ta2 
+b2 + b2 + b2 + tb2
+....
+this is completely in shift 2
+if a course is placed a2 then it should be in a2 only
+
+
+* (3nd block)
+a3 + a3 + a3 + ta3 
+b3 + b3 + b3 + tb3
+....
+this is completely in shift 3 
+if a course is placed a3 then it should be in a3 only
+
+
+
+v2
+T,       8:00 - 8:50,9:00 - 9:50,10:00 - 10:50,11:00 - 11:50,12:00 - 12:50,1:00  - 1:50,2:00 - 2:50,3:00 - 3:50,4:00 - 4:50,5:00 - 5:50,6:00 - 6:50
+L,       8:00 - 8:50,8:50 - 9:40, 9:50 - 10:40,10:40 - 11:30,11:50 - 12:40,12:40 - 1:30,1:50 - 2:40,2:40 - 3:30,3:50 - 4:40,4:40 - 5:30,5:30 - 6:20, 6:20 - 7:10
+tuesday, a1/L1,      f1/L2,       e1/L3,       d1/a2/L4,      a2/L5,        f2/L6,       e2/L7,     d2/a3/L8,   f3/L9,      e3/L10,     d3/L11,      L12
+wed,     b1/L12,     a1/L14,      f1/L15,      e1/b2/L24,     b2/L17,       a2/L18,      f2/L19,    e2/b3/L20,  a3/L21,     f3/L22,     e3/L23,      L24
+thur,    c1/L25,     b1/L26,      a1/L27,      f1/c2/L28,     c2/L29,       b2/L30,      a2/L31,    f2/c3/L32,  b3/L33,     a3/L34,     f3/L35,      L36
+fri,     d1/L37,     c1/L38,      b1/L39,      ta1/d2/L40,    d2/L41,       c2/L42,      b2/L43,    ta2/d4/L44, c3/L45,     b3/L46,     ta3/L47,     L46
+sat,     e1/L49,     d1/L50,      c1/L51,      tb1/e2/L52,    e2/L53,       d2/L54,      c2/L55,    tb2/e3/L56, d3/L57,     c3/L58,     tb3/L59,     L60
+
+should tweak the system
+1) optimize the parameter of or tool to get better result
+2) in course grouping give weightage to assign vertical macroblock what i mean is that group them and assign the similar course down the timetable like a1 then b1 then c1 as much as possible rather than going a1, f1, a2, a3

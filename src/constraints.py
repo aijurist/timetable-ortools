@@ -1,886 +1,683 @@
 import logging
+from ortools.sat.python import cp_model
+import random
 
 logger = logging.getLogger(__name__)
 
-class TimetableConstraints:
-    def __init__(self, model, teachers, days, theory_slots, lab_slots, classrooms, labs, teacher_course_assignments):
-        """Initialize the timetable constraints with model and necessary data."""
+class MacroblockTimetableConstraints:
+    def __init__(self, model, teachers, teacher_course_assignments, classrooms, labs):
+        """Initialize the macroblock timetable constraints with model and necessary data."""
         self.model = model
         self.teachers = teachers
-        self.days = days
-        self.theory_slots = theory_slots
-        self.lab_slots = lab_slots
-        self.num_days = len(days)
-        self.num_theory_slots = len(theory_slots)
-        self.num_lab_slots = len(lab_slots)
+        self.teacher_course_assignments = teacher_course_assignments
         self.classrooms = classrooms
         self.labs = labs
-        self.teacher_course_assignments = teacher_course_assignments
+        
+        # Days of the week (excluding Monday which is not in update.txt)
+        self.days = ["tuesday", "wed", "thur", "fri", "sat"]
+        self.num_days = len(self.days)
+        
+        # Time slots based on update.txt structure
+        self.time_slots = [
+            "8:00 - 8:50", "8:50 - 9:40", "9:50 - 10:40", "10:40 - 11:30",
+            "11:50 - 12:40", "12:40 - 1:30", "1:50 - 2:40", "2:40 - 3:30", 
+            "3:50 - 4:40", "4:40 - 5:30", "5:30 - 6:20", "6:20 - 7:10"
+        ]
+        self.num_slots = len(self.time_slots)
+        
+        # Teacher shift definitions (when teachers are available to work)
+        self.teacher_shifts = {
+            'teacher_shift1': {
+                'name': 'Teacher Shift 1',
+                'time_range': '8:00 - 15:00',
+                'start_hour': 8,
+                'end_hour': 15,
+                'time_slots': ["8:00 - 8:50", "8:50 - 9:40", "9:50 - 10:40", "10:40 - 11:30",
+                              "11:50 - 12:40", "12:40 - 1:30", "1:50 - 2:40"]  # 8:00-14:50
+            },
+            'teacher_shift2': {
+                'name': 'Teacher Shift 2', 
+                'time_range': '10:00 - 17:00',
+                'start_hour': 10,
+                'end_hour': 17,
+                'time_slots': ["9:50 - 10:40", "10:40 - 11:30", "11:50 - 12:40", "12:40 - 1:30",
+                              "1:50 - 2:40", "2:40 - 3:30", "3:50 - 4:40"]  # 10:00-16:50
+            },
+            'teacher_shift3': {
+                'name': 'Teacher Shift 3',
+                'time_range': '12:00 - 19:00',
+                'start_hour': 12,
+                'end_hour': 19,
+                'time_slots': ["11:50 - 12:40", "12:40 - 1:30", "1:50 - 2:40", "2:40 - 3:30", 
+                              "3:50 - 4:40", "4:40 - 5:30", "5:30 - 6:20"]  # 12:00-18:50
+            }
+        }
+        
+        # Macroblock shift definitions (scheduling slot groups)
+        self.macroblock_shifts = {
+            'macro_shift1': {
+                'name': 'Macroblock Shift 1',
+                'time_range': '8:00 - 12:50',  # Until 12:50, not 13:00
+                'time_slots': ["8:00 - 8:50", "8:50 - 9:40", "9:50 - 10:40", "10:40 - 11:30",
+                              "11:50 - 12:40"]  # 8:00-12:40 (5 slots)
+            },
+            'macro_shift2': {
+                'name': 'Macroblock Shift 2',
+                'time_range': '10:00 - 16:50',
+                'time_slots': ["9:50 - 10:40", "10:40 - 11:30", "11:50 - 12:40", "12:40 - 1:30",
+                              "1:50 - 2:40", "2:40 - 3:30", "3:50 - 4:40"]  # 10:00-16:50 (7 slots)
+            },
+            'macro_shift3': {
+                'name': 'Macroblock Shift 3',
+                'time_range': '12:00 - 18:50',
+                'time_slots': ["11:50 - 12:40", "12:40 - 1:30", "1:50 - 2:40", "2:40 - 3:30", 
+                              "3:50 - 4:40", "4:40 - 5:30", "5:30 - 6:20"]  # 12:00-18:50 (7 slots)
+            }
+        }
+        
+        # Teacher-to-Macroblock compatibility mapping
+        # This defines which macroblock shifts a teacher can access based on their teacher shift
+        self.teacher_macroblock_compatibility = {
+            'teacher_shift1': {
+                'macro_shift1': True,   # Full access (5 slots available)
+                'macro_shift2': True,   # Partial access (overlapping slots until 14:50)
+                'macro_shift3': False   # No access (starts at 12:00, teacher ends at 15:00, minimal overlap)
+            },
+            'teacher_shift2': {
+                'macro_shift1': True,   # Partial access (overlapping slots from 10:00)
+                'macro_shift2': True,   # Full access (7 slots available)
+                'macro_shift3': True    # Full access (7 slots available)
+            },
+            'teacher_shift3': {
+                'macro_shift1': False,  # No access (ends at 12:50, teacher starts at 12:00, minimal overlap)
+                'macro_shift2': True,   # Partial access (overlapping slots from 12:00)
+                'macro_shift3': True    # Full access (7 slots available)
+            }
+        }
+        
+        # Macroblock structure from update.txt
+        self.daily_schedule_structure = {
+            "tuesday": ["a1/L1", "f1/L2", "d1/L3", "b1/a2/L4", "g1/f2/L5", "d2/L6", 
+                       "b2/a3/L7", "g2/f3/L8", "d3/L9", "b3/L10", "g3/L11", "L12"],
+            "wed": ["b1/L12", "g1/L14", "e1/L15", "c1/b2/L24", "ta1/g2/L17", "e1/L18", 
+                   "c2/b3/L19", "ta2/g3/L20", "e3/L21", "c3/L22", "ta3/L23", "L24"],
+            "thur": ["c1/L25", "a1/L26", "f1/L27", "d1/c2/L28", "tb1/a2/L29", "f2/L30", 
+                    "d2/c3/L31", "tb2/a3/L32", "f3/L33", "d3/L34", "tb3/L35", "L36"],
+            "fri": ["d1/L37", "b1/L38", "g1/L39", "e1/d2/L40", "tc1/b2/L41", "g2/L42", 
+                   "e2/d3/L43", "tc2/b4/L44", "g3/L45", "e3/L46", "tc3/L47", "L46"],
+            "sat": ["e1/L49", "c1/L50", "a1/L51", "f1/e2/L52", "td1/c2/L53", "a2/L54", 
+                   "f2/e3/L55", "td2/c3/L56", "a3/L57", "f3/L58", "td3/L59", "L60"]
+        }
+        
+        # Define macroblock groups with MACROBLOCK shift assignments (not teacher shifts)
+        self.theory_blocks = {
+            'macro_shift1': ['a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1'],
+            'macro_shift2': ['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2'],
+            'macro_shift3': ['a3', 'b3', 'c3', 'd3', 'e3', 'f3', 'g3']
+        }
+        
+        self.tutorial_blocks = {
+            'macro_shift1': ['ta1', 'tb1', 'tc1', 'td1'],
+            'macro_shift2': ['ta2', 'tb2', 'tc2', 'td2'],
+            'macro_shift3': ['ta3', 'tb3', 'tc3', 'td3']
+        }
+        
+        # Parse slot assignments for each day to identify theory and lab slots
+        self.slot_assignments = self._parse_slot_assignments()
         
         # Pre-compute room IDs for efficiency
         self.classroom_ids = self.classrooms['id'].tolist()
         self.lab_ids = self.labs['id'].tolist()
     
-    def _get_teacher_theory_slot_vars(self, teacher, day, slot, teacher_theory_assignments):
-        """Helper method to get all theory slot variables for a teacher in a specific slot."""
-        return [teacher_theory_assignments[teacher][day][slot][room_id] 
-                for room_id in self.classroom_ids]
+        # Group courses by semester and department for better allocation
+        self.semester_course_groups = self._group_courses_by_semester_dept()
+        
+        # Assign teachers to shifts
+        self.teacher_shift_assignments = self._assign_teachers_to_shifts()
     
-    def _get_teacher_lab_slot_vars(self, teacher, day, slot, teacher_lab_assignments):
-        """Helper method to get all lab slot variables for a teacher in a specific slot."""
-        return [teacher_lab_assignments[teacher][day][slot][room_id] 
-                for room_id in self.lab_ids]
-    
-    def _get_room_theory_slot_vars(self, room_id, day, slot, teacher_theory_assignments):
-        """Helper method to get all teacher variables for a specific theory slot in a room."""
-        return [teacher_theory_assignments[teacher][day][slot][room_id] 
-                for teacher in self.teachers]
-    
-    def _get_room_lab_slot_vars(self, room_id, day, slot, teacher_lab_assignments):
-        """Helper method to get all teacher variables for a specific lab slot in a room."""
-        return [teacher_lab_assignments[teacher][day][slot][room_id] 
-                for teacher in self.teachers]
-    
-    def apply_teacher_single_assignment_constraint(self, teacher_theory_assignments, teacher_lab_assignments):
-        """
-        Constraint 1: A teacher cannot be assigned to multiple rooms in the same time slot.
-        This ensures teachers aren't double-booked.
-        """
-        logger.info("Applying teacher single assignment constraint...")
+    def _assign_teachers_to_shifts(self):
+        """Assign teachers to shifts based on 33% distribution per department."""
+        logger.info("Assigning teachers to shifts (33% per department)...")
         
-        for teacher in self.teachers:
-            for d in range(self.num_days):
-                # For each theory slot
-                for s in range(self.num_theory_slots):
-                    # Sum of all room assignments for this teacher in this theory slot must be at most 1
-                    theory_vars = self._get_teacher_theory_slot_vars(teacher, d, s, teacher_theory_assignments)
-                    self.model.Add(sum(theory_vars) <= 1)
-                
-                # For each lab slot
-                for s in range(self.num_lab_slots):
-                    # Sum of all room assignments for this teacher in this lab slot must be at most 1
-                    lab_vars = self._get_teacher_lab_slot_vars(teacher, d, s, teacher_lab_assignments)
-                    self.model.Add(sum(lab_vars) <= 1)
-        
-        return True
-    
-    def apply_no_overlapping_slots_constraint(self, teacher_theory_assignments, teacher_lab_assignments):
-        """
-        Constraint 2: No overlapping theory and lab slots for teachers.
-        Lab slots overlap with theory slots, so teachers can't be scheduled for both.
-        """
-        logger.info("Applying no overlapping slots constraint...")
-        
-        for teacher in self.teachers:
-            for d in range(self.num_days):
-                for lab_slot in range(self.num_lab_slots):
-                    # Each lab slot overlaps with 2 theory slots
-                    first_theory_slot = lab_slot * 2
-                    second_theory_slot = first_theory_slot + 1
-                    
-                    if first_theory_slot < self.num_theory_slots and second_theory_slot < self.num_theory_slots:
-                        # Get all variables for this teacher's lab assignments in this lab slot
-                        lab_vars = self._get_teacher_lab_slot_vars(teacher, d, lab_slot, teacher_lab_assignments)
-                        
-                        # Get all variables for this teacher's theory assignments in the overlapping theory slots
-                        first_theory_vars = self._get_teacher_theory_slot_vars(teacher, d, first_theory_slot, teacher_theory_assignments)
-                        second_theory_vars = self._get_teacher_theory_slot_vars(teacher, d, second_theory_slot, teacher_theory_assignments)
-                        
-                        # If the teacher is assigned to a lab in this lab slot, they cannot be assigned to
-                        # either of the overlapping theory slots
-                        for lab_var in lab_vars:
-                            for theory_var in first_theory_vars + second_theory_vars:
-                                self.model.AddBoolOr([lab_var.Not(), theory_var.Not()])
-        
-        return True
-    
-    def apply_intelligent_lab_capacity_constraint(self, teacher_theory_assignments, teacher_lab_assignments):
-        """
-        Constraint 7: Intelligent lab capacity allocation.
-        For courses with >60 students:
-        - 70-capacity labs: No batching needed (all students in one batch)
-        - 140-capacity labs: No batching needed if students ≤ 140
-        This reduces total lab slots needed compared to always using 35-capacity labs.
-        """
-        logger.info("Applying intelligent lab capacity constraint...")
-        
-        # Categorize labs by capacity
-        labs_35 = self.labs[self.labs['room_max_cap'] <= 35]
-        labs_70 = self.labs[(self.labs['room_max_cap'] >= 70) & (self.labs['room_max_cap'] < 140)]
-        labs_140 = self.labs[self.labs['room_max_cap'] >= 140]
-        
-        # Create decision variables for lab capacity choice per course instance
-        self.lab_capacity_choices = {}
-        
+        # Group teachers by department
+        dept_teachers = {}
         for teacher in self.teachers:
             if teacher in self.teacher_course_assignments:
-                course_instances = self.teacher_course_assignments[teacher]
+                # Get department from first course assignment
+                first_instance = self.teacher_course_assignments[teacher][0]
+                dept = first_instance.get('course_dept', 'Computer Science & Engineering')
                 
-                for instance in course_instances:
-                    if instance['practical_hours'] <= 0:
-                        continue  # Skip courses without lab requirements
-                    
-                    instance_id = instance['id']
-                    student_count = instance['student_count']
-                    practical_hours = instance['practical_hours']
-                    
-                    # Only apply intelligent allocation for courses with >60 students
-                    if student_count > 60:
-                        key = f"{teacher}_{instance_id}"
-                        self.lab_capacity_choices[key] = {}
-                        
-                        # Create choice variables for different lab capacities
-                        if len(labs_35) > 0:
-                            self.lab_capacity_choices[key]['uses_35'] = self.model.NewBoolVar(
-                                f'instance_{key}_uses_35_cap_labs')
-                        
-                        if len(labs_70) > 0:
-                            self.lab_capacity_choices[key]['uses_70'] = self.model.NewBoolVar(
-                                f'instance_{key}_uses_70_cap_labs')
-                        
-                        if len(labs_140) > 0:
-                            self.lab_capacity_choices[key]['uses_140'] = self.model.NewBoolVar(
-                                f'instance_{key}_uses_140_cap_labs')
-                        
-                        # Exactly one capacity type must be chosen
-                        choice_vars = list(self.lab_capacity_choices[key].values())
-                        if len(choice_vars) > 1:
-                            self.model.Add(sum(choice_vars) == 1)
-                        
-                        # Link lab assignments to capacity choices
-                        for d in range(self.num_days):
-                            for s in range(self.num_lab_slots):
-                                
-                                # 35-capacity lab assignments
-                                if 'uses_35' in self.lab_capacity_choices[key]:
-                                    lab_35_assignments = []
-                                    for _, room_row in labs_35.iterrows():
-                                        room_id = room_row['id']
-                                        lab_35_assignments.append(teacher_lab_assignments[teacher][d][s][room_id])
-                                    
-                                    # If using 35-cap labs, can only assign to 35-cap labs in this slot
-                                    if lab_35_assignments:
-                                        uses_35 = self.lab_capacity_choices[key]['uses_35']
-                                        # If not using 35-cap labs, cannot assign to any 35-cap lab
-                                        for var in lab_35_assignments:
-                                            self.model.Add(var == 0).OnlyEnforceIf(uses_35.Not())
-                                
-                                # 70-capacity lab assignments  
-                                if 'uses_70' in self.lab_capacity_choices[key]:
-                                    lab_70_assignments = []
-                                    for _, room_row in labs_70.iterrows():
-                                        room_id = room_row['id']
-                                        lab_70_assignments.append(teacher_lab_assignments[teacher][d][s][room_id])
-                                    
-                                    if lab_70_assignments:
-                                        uses_70 = self.lab_capacity_choices[key]['uses_70']
-                                        for var in lab_70_assignments:
-                                            self.model.Add(var == 0).OnlyEnforceIf(uses_70.Not())
-                                
-                                # 140-capacity lab assignments
-                                if 'uses_140' in self.lab_capacity_choices[key]:
-                                    lab_140_assignments = []
-                                    for _, room_row in labs_140.iterrows():
-                                        room_id = room_row['id']
-                                        lab_140_assignments.append(teacher_lab_assignments[teacher][d][s][room_id])
-                                    
-                                    if lab_140_assignments:
-                                        uses_140 = self.lab_capacity_choices[key]['uses_140']
-                                        for var in lab_140_assignments:
-                                            self.model.Add(var == 0).OnlyEnforceIf(uses_140.Not())
+                if dept not in dept_teachers:
+                    dept_teachers[dept] = []
+                dept_teachers[dept].append(teacher)
         
-        return True
+        teacher_shifts = {}
+        
+        # Assign teachers to shifts for each department
+        for dept, teachers_list in dept_teachers.items():
+            # Shuffle for random distribution
+            shuffled_teachers = teachers_list.copy()
+            random.shuffle(shuffled_teachers)
+            
+            # Calculate distribution (33% each, remainder to shift1)
+            total_teachers = len(teachers_list)
+            shift1_count = total_teachers // 3
+            shift2_count = total_teachers // 3
+            shift3_count = total_teachers - shift1_count - shift2_count  # Remainder goes to shift3
+            
+            # Assign teachers
+            shift_assignments = (
+                ['teacher_shift1'] * shift1_count + 
+                ['teacher_shift2'] * shift2_count + 
+                ['teacher_shift3'] * shift3_count
+            )
+            
+            for teacher, shift in zip(shuffled_teachers, shift_assignments):
+                teacher_shifts[teacher] = shift
+                logger.info(f"Assigned Teacher {teacher} to {shift} (Department: {dept})")
+        
+        return teacher_shifts
     
-    def apply_course_hours_constraint(self, teacher_theory_assignments, teacher_lab_assignments):
-        """
-        Constraint 3: Allocate the correct number of hours for each course instance.
-        Ensures that each course instance gets allocated the required lecture and practical hours.
-        When a teacher has multiple instances of the same course, each instance must receive its 
-        FULL allocation of hours (no sharing of hours between instances).
-        """
-        logger.info("Applying course hours constraint...")
+    def _parse_slot_assignments(self):
+        """Parse the daily schedule structure to identify theory and lab slots with macroblock shift information."""
+        slot_assignments = {}
         
-        # Create variables to track which course instance each time slot is assigned to
-        # We need these to ensure each instance gets its own allocation without sharing
-        course_instance_vars = {}
+        for day, schedule in self.daily_schedule_structure.items():
+            slot_assignments[day] = []
+            for slot_idx, content in enumerate(schedule):
+                theory_blocks = []
+                lab_slots = []
+                macroblock_shift_blocks = {'macro_shift1': [], 'macro_shift2': [], 'macro_shift3': []}
+                
+                # Split content by '/'
+                parts = content.split('/')
+                for part in parts:
+                    if part.startswith('L'):
+                        lab_slots.append(part)
+                    elif part in ['a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 
+                                 'ta1', 'tb1', 'tc1', 'td1']:
+                        theory_blocks.append(part)
+                        macroblock_shift_blocks['macro_shift1'].append(part)
+                    elif part in ['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2',
+                                 'ta2', 'tb2', 'tc2', 'td2']:
+                        theory_blocks.append(part)
+                        macroblock_shift_blocks['macro_shift2'].append(part)
+                    elif part in ['a3', 'b3', 'c3', 'd3', 'e3', 'f3', 'g3',
+                                 'ta3', 'tb3', 'tc3', 'td3']:
+                        theory_blocks.append(part)
+                        macroblock_shift_blocks['macro_shift3'].append(part)
+                
+                # Determine if this is an overlapping slot (multiple macroblock shifts active)
+                active_macro_shifts = [shift for shift, blocks in macroblock_shift_blocks.items() if blocks]
+                is_overlapping = len(active_macro_shifts) > 1
+                
+                slot_assignments[day].append({
+                    'slot_index': slot_idx,
+                    'time_interval': self.time_slots[slot_idx],
+                    'theory_blocks': theory_blocks,
+                    'lab_slots': lab_slots,
+                    'macroblock_shift_blocks': macroblock_shift_blocks,
+                    'active_macro_shifts': active_macro_shifts,
+                    'is_overlapping': is_overlapping
+                })
+        
+        return slot_assignments
+    
+    def _group_courses_by_semester_dept(self):
+        """Group courses by semester and department for better macroblock allocation."""
+        semester_groups = {}
         
         for teacher in self.teachers:
-            if teacher in self.teacher_course_assignments:
-                # Get all course instances for this teacher
-                course_instances = self.teacher_course_assignments[teacher]
+            if teacher not in self.teacher_course_assignments:
+                continue
                 
-                # Skip if teacher has no courses
-                if not course_instances:
+            for instance in self.teacher_course_assignments[teacher]:
+                # Use actual semester and department info from the data
+                semester = instance.get('semester', 3)  # Default to semester 3
+                dept = instance.get('course_dept', 'Computer Science & Engineering')
+                course_code = instance['course_code']
+                
+                key = (semester, dept)
+                if key not in semester_groups:
+                    semester_groups[key] = []
+                
+                semester_groups[key].append({
+                    'teacher': teacher,
+                    'instance': instance,
+                    'course_code': course_code
+                })
+        
+        return semester_groups
+    
+    def apply_course_hours_constraint(self, teacher_theory_assignments, teacher_lab_assignments=None):
+        """
+        Constraint 1: Course Hours Constraint
+        Ensures each course instance receives exactly its required lecture and tutorial hours.
+        Uses macroblock structure where courses must be assigned consistently within blocks.
+        Lab assignments are skipped for now as requested.
+        """
+        logger.info("Applying course hours constraint with macroblock structure (skipping labs)...")
+        
+        # Create macroblock assignment variables
+        self.macroblock_assignments = {}
+        
+        for teacher in self.teachers:
+            if teacher not in self.teacher_course_assignments:
                     continue
                 
-                # Create decision variables for each course instance and time slot combination
-                course_instance_vars[teacher] = {}
+            self.macroblock_assignments[teacher] = {}
+            course_instances = self.teacher_course_assignments[teacher]
                 
-                # Theory slots assignment variables
-                for d in range(self.num_days):
-                    for s in range(self.num_theory_slots):
-                        slot_key = (d, s, 'theory')
-                        course_instance_vars[teacher][slot_key] = {}
-                        for instance in course_instances:
-                            instance_id = instance['id']
-                            if instance['lecture_hours'] > 0:  # Only create vars for courses with theory hours
-                                course_instance_vars[teacher][slot_key][instance_id] = self.model.NewBoolVar(
-                                    f'teacher_{teacher}_day_{d}_theory_{s}_instance_{instance_id}')
+            for instance in course_instances:
+                instance_id = instance['id']
+                lecture_hours = instance['lecture_hours']
+                tutorial_hours = instance['tutorial_hours'] 
+                practical_hours = instance['practical_hours']  # Not used for now
+                        
+                self.macroblock_assignments[teacher][instance_id] = {}
                 
-                # Lab slots assignment variables
-                for d in range(self.num_days):
-                    for s in range(self.num_lab_slots):
-                        slot_key = (d, s, 'lab')
-                        course_instance_vars[teacher][slot_key] = {}
-                        for instance in course_instances:
-                            instance_id = instance['id']
-                            if instance['practical_hours'] > 0:  # Only create vars for courses with lab hours
-                                course_instance_vars[teacher][slot_key][instance_id] = self.model.NewBoolVar(
-                                    f'teacher_{teacher}_day_{d}_lab_{s}_instance_{instance_id}')
+                # Create macroblock choice variables based on teacher-macroblock compatibility
+                teacher_shift = self.teacher_shift_assignments.get(teacher, 'teacher_shift1')
                 
-                # Link course instance vars to teacher assignment vars for theory slots
-                for d in range(self.num_days):
-                    for s in range(self.num_theory_slots):
-                        slot_key = (d, s, 'theory')
-                        
-                        # Sum of all room assignments for this teacher in this theory slot
-                        theory_slot_vars = self._get_teacher_theory_slot_vars(teacher, d, s, teacher_theory_assignments)
-                        
-                        # If any room is assigned to this teacher for this slot, exactly one course instance must be assigned
-                        is_slot_assigned = self.model.NewBoolVar(f'teacher_{teacher}_assigned_theory_{d}_{s}')
-                        self.model.Add(sum(theory_slot_vars) > 0).OnlyEnforceIf(is_slot_assigned)
-                        self.model.Add(sum(theory_slot_vars) == 0).OnlyEnforceIf(is_slot_assigned.Not())
-                        
-                        # Sum of all course instance assignments for this slot
-                        instance_vars = list(course_instance_vars[teacher][slot_key].values())
-                        
-                        # If slot is assigned, exactly one course instance must be assigned
-                        if instance_vars:
-                            self.model.Add(sum(instance_vars) == 1).OnlyEnforceIf(is_slot_assigned)
-                            self.model.Add(sum(instance_vars) == 0).OnlyEnforceIf(is_slot_assigned.Not())
+                for macro_shift in ['macro_shift1', 'macro_shift2', 'macro_shift3']:
+                    # Check if teacher can access this macroblock shift
+                    if self.teacher_macroblock_compatibility[teacher_shift][macro_shift]:
+                        for block in self.theory_blocks[macro_shift]:
+                            self.macroblock_assignments[teacher][instance_id][f'{block}_chosen'] = (
+                                self.model.NewBoolVar(f'teacher_{teacher}_instance_{instance_id}_{block}_chosen'))
                 
-                # Link course instance vars to teacher assignment vars for lab slots
-                for d in range(self.num_days):
-                    for s in range(self.num_lab_slots):
-                        slot_key = (d, s, 'lab')
-                        
-                        # Sum of all room assignments for this teacher in this lab slot
-                        lab_slot_vars = self._get_teacher_lab_slot_vars(teacher, d, s, teacher_lab_assignments)
-                        
-                        # If any room is assigned to this teacher for this slot, exactly one course instance must be assigned
-                        is_slot_assigned = self.model.NewBoolVar(f'teacher_{teacher}_assigned_lab_{d}_{s}')
-                        self.model.Add(sum(lab_slot_vars) > 0).OnlyEnforceIf(is_slot_assigned)
-                        self.model.Add(sum(lab_slot_vars) == 0).OnlyEnforceIf(is_slot_assigned.Not())
-                        
-                        # Sum of all course instance assignments for this slot
-                        instance_vars = list(course_instance_vars[teacher][slot_key].values())
-                        
-                        # If slot is assigned, exactly one course instance must be assigned
-                        if instance_vars:
-                            self.model.Add(sum(instance_vars) == 1).OnlyEnforceIf(is_slot_assigned)
-                            self.model.Add(sum(instance_vars) == 0).OnlyEnforceIf(is_slot_assigned.Not())
+                # Determine if tutorials should be allocated:
+                # If tutorial_hours > 0 OR lecture_hours == 4 (original working logic)
+                should_allocate_tutorials = tutorial_hours > 0 or lecture_hours == 4
                 
-                # Ensure each course instance gets its required number of hours
-                for instance in course_instances:
-                    instance_id = instance['id']
-                    lecture_hours = instance['lecture_hours']
-                    practical_hours = instance['practical_hours']
+                # Ensure exactly one block is chosen per course instance (if it has theory hours)
+                if lecture_hours > 0 or should_allocate_tutorials:
+                    block_choices = []
+                    teacher_shift = self.teacher_shift_assignments.get(teacher, 'teacher_shift1')
                     
-                    # Get all theory slot assignments for this instance
-                    theory_instance_vars = []
-                    for d in range(self.num_days):
-                        for s in range(self.num_theory_slots):
-                            slot_key = (d, s, 'theory')
-                            if instance_id in course_instance_vars[teacher][slot_key]:
-                                theory_instance_vars.append(course_instance_vars[teacher][slot_key][instance_id])
+                    for macro_shift in ['macro_shift1', 'macro_shift2', 'macro_shift3']:
+                        # Only include blocks from accessible macroblock shifts
+                        if self.teacher_macroblock_compatibility[teacher_shift][macro_shift]:
+                            for block in self.theory_blocks[macro_shift]:
+                                if f'{block}_chosen' in self.macroblock_assignments[teacher][instance_id]:
+                                    block_choices.append(
+                                        self.macroblock_assignments[teacher][instance_id][f'{block}_chosen'])
                     
-                    # Ensure the required number of theory slots
-                    if lecture_hours > 0:
-                        self.model.Add(sum(theory_instance_vars) == lecture_hours)
+                    # CRITICAL: Every course instance MUST be assigned to exactly one block
+                    if block_choices:  # Only add constraint if there are valid choices
+                        self.model.Add(sum(block_choices) == 1)
                     
-                    # Get all lab slot assignments for this instance
-                    lab_instance_vars = []
-                    for d in range(self.num_days):
-                        for s in range(self.num_lab_slots):
-                            slot_key = (d, s, 'lab')
-                            if instance_id in course_instance_vars[teacher][slot_key]:
-                                lab_instance_vars.append(course_instance_vars[teacher][slot_key][instance_id])
-                    
-                    # Calculate required lab slots based on practical hours and lab capacity choice
-                    if practical_hours > 0:
-                        base_lab_slots = (practical_hours + 1) // 2  # Ceiling division
-                        
-                        # Check if this instance uses intelligent lab capacity allocation
-                        key = f"{teacher}_{instance_id}"
-                        
-                        if (instance['student_count'] > 60 and 
-                            hasattr(self, 'lab_capacity_choices') and 
-                            key in self.lab_capacity_choices):
-                            
-                            # For courses >60 students with intelligent allocation
-                            choices = self.lab_capacity_choices[key]
-                            
-                            if 'uses_35' in choices:
-                                # Using 35-capacity labs: need batching (2 batches for 70 students)
-                                num_batches_35 = (instance['student_count'] + 34) // 35
-                                required_slots_35 = base_lab_slots * num_batches_35
-                                self.model.Add(sum(lab_instance_vars) == required_slots_35).OnlyEnforceIf(choices['uses_35'])
-                            
-                            if 'uses_70' in choices:
-                                # Using 70-capacity labs: no batching needed (1 batch)
-                                # But still need enough slots to cover all practical hours
-                                required_slots_70 = base_lab_slots  # Respect practical hours!
-                                self.model.Add(sum(lab_instance_vars) == required_slots_70).OnlyEnforceIf(choices['uses_70'])
-                            
-                            if 'uses_140' in choices:
-                                # Using 140-capacity labs: no batching needed if ≤140 students
-                                # But still need enough slots to cover all practical hours
-                                if instance['student_count'] <= 140:
-                                    required_slots_140 = base_lab_slots  # Respect practical hours!
-                                else:
-                                    num_batches_140 = (instance['student_count'] + 139) // 140
-                                    required_slots_140 = base_lab_slots * num_batches_140
-                                self.model.Add(sum(lab_instance_vars) == required_slots_140).OnlyEnforceIf(choices['uses_140'])
-                        
-                        else:
-                            # Standard allocation for courses ≤60 students or without intelligent allocation
-                            required_lab_slots = base_lab_slots
-                            
-                            # For large classes (>35 students), use standard batching
-                            if instance['student_count'] > 35:
-                                num_batches = (instance['student_count'] + 34) // 35
-                                required_lab_slots *= num_batches
-                            
-                            self.model.Add(sum(lab_instance_vars) == required_lab_slots)
+                    # Add a high-priority constraint to ensure this instance gets scheduled
+                    logger.info(f"Ensuring course instance {instance_id} (Teacher {teacher}, {lecture_hours}L+{tutorial_hours}T) gets assigned")
+                
+                # Link macroblock assignments to actual slot assignments (skip labs)
+                self._link_macroblock_to_slots(teacher, instance, teacher_theory_assignments, None)
+        
+        # Apply semester and department grouping constraints
+        self._apply_semester_grouping_constraints()
+        
+        # Apply teacher shift constraints
+        self._apply_teacher_shift_constraints(teacher_theory_assignments)
         
         return True
     
-    def apply_room_single_assignment_constraint(self, teacher_theory_assignments, teacher_lab_assignments):
+    def _apply_semester_grouping_constraints(self):
+        """Apply constraints to group courses by semester and department with teacher diversity."""
+        logger.info("Applying semester and department grouping constraints...")
+        
+        for (semester, dept), course_group in self.semester_course_groups.items():
+            if len(course_group) <= 1:
+                continue  # Skip if only one course in the group
+            
+            # Group by unique course codes to avoid same course repetition
+            course_code_groups = {}
+            for item in course_group:
+                course_code = item['course_code']
+                if course_code not in course_code_groups:
+                    course_code_groups[course_code] = []
+                course_code_groups[course_code].append(item)
+            
+            # For each macroblock, apply diversity constraints
+            for macro_shift in ['macro_shift1', 'macro_shift2', 'macro_shift3']:
+                for block in self.theory_blocks[macro_shift]:
+                    
+                    # Collect all course instances that could be assigned to this block
+                    block_assignments = []
+                    teacher_assignments = {}
+                    
+                    for course_code, course_instances in course_code_groups.items():
+                        for item in course_instances:
+                            teacher = item['teacher']
+                            instance_id = item['instance']['id']
+                            
+                            if teacher in self.macroblock_assignments and instance_id in self.macroblock_assignments[teacher]:
+                                block_var = self.macroblock_assignments[teacher][instance_id].get(f'{block}_chosen')
+                                if block_var is not None:
+                                    block_assignments.append((teacher, instance_id, block_var, course_code))
+                                    
+                                    # Track teacher assignments
+                                    if teacher not in teacher_assignments:
+                                        teacher_assignments[teacher] = []
+                                    teacher_assignments[teacher].append(block_var)
+                    
+                    # Constraint: Prevent same teacher from having multiple DIFFERENT course instances in same block
+                    # but allow same course instance to use multiple slots in the same block
+                    for teacher, teacher_vars in teacher_assignments.items():
+                        if len(teacher_vars) > 1:
+                            # Group by course instance ID to allow same instance, prevent different instances
+                            teacher_instances = {}
+                            for teacher_id, instance_id, block_var, course_code in block_assignments:
+                                if teacher_id == teacher:
+                                    if instance_id not in teacher_instances:
+                                        teacher_instances[instance_id] = []
+                                    teacher_instances[instance_id].append(block_var)
+                            
+                            # If teacher has multiple different instances, only one can be in this block
+                            if len(teacher_instances) > 1:
+                                instance_vars = [teacher_instances[inst][0] for inst in teacher_instances]  # One var per instance
+                                self.model.Add(sum(instance_vars) <= 1)
+                    
+                    # Constraint: Promote diversity by limiting same course code repetition
+                    course_code_vars = {}
+                    for teacher, instance_id, block_var, course_code in block_assignments:
+                        if course_code not in course_code_vars:
+                            course_code_vars[course_code] = []
+                        course_code_vars[course_code].append(block_var)
+                    
+                    # Allow at most one instance per course code per block
+                    for course_code, course_vars in course_code_vars.items():
+                        if len(course_vars) > 1:
+                            self.model.Add(sum(course_vars) <= 1)
+    
+    def _apply_teacher_shift_constraints(self, teacher_theory_assignments):
+        """Apply teacher shift constraints to ensure teachers only work in their assigned shifts."""
+        logger.info("Applying teacher shift constraints...")
+        
+        for teacher in self.teachers:
+            if teacher not in self.teacher_shift_assignments:
+                continue
+                
+            teacher_shift = self.teacher_shift_assignments[teacher]
+            allowed_time_slots = self.teacher_shifts[teacher_shift]['time_slots']
+            
+            # For each day and slot, check if teacher should be allowed to work
+            for day_idx, day in enumerate(self.days):
+                for slot_idx in range(self.num_slots):
+                    current_time_slot = self.time_slots[slot_idx]
+                    
+                    # If this time slot is not in teacher's allowed shift, prevent assignment
+                    if current_time_slot not in allowed_time_slots:
+                        # Teacher cannot be assigned to any room in this slot
+                        for room_id in self.classroom_ids:
+                            assignment_var = teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]
+                            self.model.Add(assignment_var == 0)
+                    else:
+                        # Teacher can work in this slot, but check for overlapping shift conflicts
+                        self._apply_overlapping_slot_constraints(
+                            teacher, day_idx, slot_idx, teacher_shift, teacher_theory_assignments)
+    
+    def _apply_overlapping_slot_constraints(self, teacher, day_idx, slot_idx, teacher_shift, teacher_theory_assignments):
+        """Apply constraints for overlapping slots to prevent conflicts between macroblock shifts."""
+        day = self.days[day_idx]
+        slot_info = self.slot_assignments[day][slot_idx]
+        
+        if not slot_info['is_overlapping']:
+            return  # No overlap, no additional constraints needed
+        
+        # For overlapping slots, ensure teacher only uses blocks from accessible macroblock shifts
+        accessible_blocks = []
+        inaccessible_blocks = []
+        
+        for macro_shift in ['macro_shift1', 'macro_shift2', 'macro_shift3']:
+            shift_blocks = slot_info['macroblock_shift_blocks'].get(macro_shift, [])
+            if self.teacher_macroblock_compatibility[teacher_shift][macro_shift]:
+                accessible_blocks.extend(shift_blocks)
+            else:
+                inaccessible_blocks.extend(shift_blocks)
+        
+        # If teacher has course assignments, ensure they only use accessible blocks
+        if teacher in self.teacher_course_assignments:
+            for instance in self.teacher_course_assignments[teacher]:
+                instance_id = instance['id']
+                
+                if teacher in self.macroblock_assignments and instance_id in self.macroblock_assignments[teacher]:
+                    # Prevent assignment to inaccessible macroblock shift blocks in this overlapping slot
+                    for inaccessible_block in inaccessible_blocks:
+                        if f'{inaccessible_block}_chosen' in self.macroblock_assignments[teacher][instance_id]:
+                            inaccessible_block_var = self.macroblock_assignments[teacher][instance_id][f'{inaccessible_block}_chosen']
+                            
+                            # If inaccessible block is chosen, teacher cannot be in this slot
+                            for room_id in self.classroom_ids:
+                                room_var = teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]
+                                # Prevent both being true simultaneously
+                                self.model.Add(inaccessible_block_var + room_var <= 1)
+    
+    def _link_macroblock_to_slots(self, teacher, instance, teacher_theory_assignments, teacher_lab_assignments):
+        """Link macroblock assignments to actual time slot assignments. Skip lab linking."""
+        instance_id = instance['id']
+        lecture_hours = instance['lecture_hours']
+        tutorial_hours = instance['tutorial_hours']
+        practical_hours = instance['practical_hours']  # Not used for now
+        
+        # Determine if tutorials should be allocated
+        should_allocate_tutorials = tutorial_hours > 0 or lecture_hours == 4
+        
+        # Get teacher's assigned shift
+        teacher_shift = self.teacher_shift_assignments.get(teacher, 'teacher_shift1')
+        
+        # For each day and slot, link to macroblock assignments
+        for day_idx, day in enumerate(self.days):
+            for slot_info in self.slot_assignments[day]:
+                slot_idx = slot_info['slot_index']
+                theory_blocks = slot_info['theory_blocks']
+                macroblock_shift_blocks = slot_info['macroblock_shift_blocks']
+                is_overlapping = slot_info['is_overlapping']
+                # Skip lab_slots as requested
+                
+                # Determine which blocks teacher can access based on compatibility
+                allowed_blocks = []
+                for macro_shift in ['macro_shift1', 'macro_shift2', 'macro_shift3']:
+                    if self.teacher_macroblock_compatibility[teacher_shift][macro_shift]:
+                        # Teacher can access this macroblock shift
+                        allowed_blocks.extend(macroblock_shift_blocks.get(macro_shift, []))
+                
+                # Handle theory assignments
+                for block in allowed_blocks:
+                    if block in ['a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'c1', 'c2', 'c3', 
+                               'd1', 'd2', 'd3', 'e1', 'e2', 'e3', 'f1', 'f2', 'f3', 'g1', 'g2', 'g3']:
+                        # Lecture block - only access if it was created for this teacher
+                        if f'{block}_chosen' in self.macroblock_assignments[teacher][instance_id]:
+                            block_chosen = self.macroblock_assignments[teacher][instance_id][f'{block}_chosen']
+                            
+                            # Link to classroom assignments
+                            for room_id in self.classroom_ids:
+                                room_assignment = teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]
+                                # If block is chosen and room is assigned, this counts as a lecture hour
+                                is_lecture_assignment = self.model.NewBoolVar(
+                                    f'teacher_{teacher}_instance_{instance_id}_day_{day_idx}_slot_{slot_idx}_room_{room_id}_lecture')
+                                
+                                self.model.Add(is_lecture_assignment == 1).OnlyEnforceIf([block_chosen, room_assignment])
+                                self.model.Add(is_lecture_assignment == 0).OnlyEnforceIf([block_chosen.Not()])
+                                self.model.Add(is_lecture_assignment == 0).OnlyEnforceIf([room_assignment.Not()])
+                    
+                    elif block in ['ta1', 'ta2', 'ta3', 'tb1', 'tb2', 'tb3', 'tc1', 'tc2', 'tc3', 'td1', 'td2', 'td3'] and should_allocate_tutorials:
+                        # Tutorial block - determine parent block
+                        parent_block = block[1:]  # Remove 't' prefix: ta1 -> a1
+                        
+                        # Find corresponding parent block choice
+                        if f'{parent_block}_chosen' in self.macroblock_assignments[teacher][instance_id]:
+                            parent_chosen = self.macroblock_assignments[teacher][instance_id][f'{parent_block}_chosen']
+                            
+                            # Link to classroom assignments for tutorial
+                            for room_id in self.classroom_ids:
+                                room_assignment = teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]
+                                is_tutorial_assignment = self.model.NewBoolVar(
+                                    f'teacher_{teacher}_instance_{instance_id}_day_{day_idx}_slot_{slot_idx}_room_{room_id}_tutorial')
+                                
+                                self.model.Add(is_tutorial_assignment == 1).OnlyEnforceIf([parent_chosen, room_assignment])
+                                self.model.Add(is_tutorial_assignment == 0).OnlyEnforceIf([parent_chosen.Not()])
+                                self.model.Add(is_tutorial_assignment == 0).OnlyEnforceIf([room_assignment.Not()])
+        
+        # Ensure exact hour requirements are met (skip labs)
+        self._enforce_exact_hours(teacher, instance, teacher_theory_assignments, None)
+    
+    def _enforce_exact_hours(self, teacher, instance, teacher_theory_assignments, teacher_lab_assignments):
+        """Enforce exact hour requirements for each course instance. Skip lab hours."""
+        instance_id = instance['id']
+        lecture_hours = instance['lecture_hours']
+        tutorial_hours = instance['tutorial_hours']
+        practical_hours = instance['practical_hours']  # Not enforced for now
+        
+        # Determine if tutorials should be allocated
+        should_allocate_tutorials = tutorial_hours > 0 or lecture_hours == 4
+        
+        # Count total lecture hours assigned
+        if lecture_hours > 0:
+            lecture_vars = []
+            teacher_shift = self.teacher_shift_assignments.get(teacher, 'teacher_shift1')
+            
+            for day_idx, day in enumerate(self.days):
+                for slot_info in self.slot_assignments[day]:
+                    slot_idx = slot_info['slot_index']
+                    macroblock_shift_blocks = slot_info['macroblock_shift_blocks']
+                    
+                    # Only check blocks from accessible macroblock shifts
+                    accessible_blocks = []
+                    for macro_shift in ['macro_shift1', 'macro_shift2', 'macro_shift3']:
+                        if self.teacher_macroblock_compatibility[teacher_shift][macro_shift]:
+                            accessible_blocks.extend(macroblock_shift_blocks.get(macro_shift, []))
+                    
+                    for block in accessible_blocks:
+                        if block in ['a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'c1', 'c2', 'c3', 
+                                   'd1', 'd2', 'd3', 'e1', 'e2', 'e3', 'f1', 'f2', 'f3', 'g1', 'g2', 'g3']:
+                            # Only access blocks that were actually created for this teacher
+                            if f'{block}_chosen' in self.macroblock_assignments[teacher][instance_id]:
+                                block_chosen = self.macroblock_assignments[teacher][instance_id][f'{block}_chosen']
+                                
+                                for room_id in self.classroom_ids:
+                                    room_assignment = teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]
+                                    lecture_hour = self.model.NewBoolVar(f'lecture_hour_{teacher}_{instance_id}_{day_idx}_{slot_idx}_{room_id}')
+                                    
+                                    self.model.Add(lecture_hour == 1).OnlyEnforceIf([block_chosen, room_assignment])
+                                    self.model.Add(lecture_hour == 0).OnlyEnforceIf([block_chosen.Not()])
+                                    self.model.Add(lecture_hour == 0).OnlyEnforceIf([room_assignment.Not()])
+                                    
+                                    lecture_vars.append(lecture_hour)
+            
+            # Ensure at least the required lecture hours (allow flexibility for scheduling)
+            self.model.Add(sum(lecture_vars) >= lecture_hours)
+            # But don't allow too many extra hours (max 1 extra)
+            self.model.Add(sum(lecture_vars) <= lecture_hours + 1)
+        
+        # Count total tutorial hours assigned (if tutorials should be allocated)
+        if should_allocate_tutorials:
+            tutorial_vars = []
+            # Calculate expected tutorial hours based on allocation rules
+            if tutorial_hours > 0:
+                # Use the actual tutorial_hours from data
+                expected_tutorial_hours = tutorial_hours
+            elif lecture_hours == 4:
+                # Add 1 tutorial hour for 4-hour lecture courses (original logic)
+                expected_tutorial_hours = 1
+            else:
+                # Should not reach here due to should_allocate_tutorials condition
+                expected_tutorial_hours = 0
+            
+            teacher_shift = self.teacher_shift_assignments.get(teacher, 'teacher_shift1')
+            
+            for day_idx, day in enumerate(self.days):
+                for slot_info in self.slot_assignments[day]:
+                    slot_idx = slot_info['slot_index']
+                    macroblock_shift_blocks = slot_info['macroblock_shift_blocks']
+                    
+                    # Only check blocks from accessible macroblock shifts
+                    accessible_blocks = []
+                    for macro_shift in ['macro_shift1', 'macro_shift2', 'macro_shift3']:
+                        if self.teacher_macroblock_compatibility[teacher_shift][macro_shift]:
+                            accessible_blocks.extend(macroblock_shift_blocks.get(macro_shift, []))
+                    
+                    for block in accessible_blocks:
+                        if block in ['ta1', 'ta2', 'ta3', 'tb1', 'tb2', 'tb3', 'tc1', 'tc2', 'tc3', 'td1', 'td2', 'td3']:
+                            # Find parent block
+                            parent_block = block[1:]  # Remove 't' prefix: ta1 -> a1
+                            
+                            if f'{parent_block}_chosen' in self.macroblock_assignments[teacher][instance_id]:
+                                parent_chosen = self.macroblock_assignments[teacher][instance_id][f'{parent_block}_chosen']
+                                
+                                for room_id in self.classroom_ids:
+                                    room_assignment = teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]
+                                    tutorial_hour = self.model.NewBoolVar(f'tutorial_hour_{teacher}_{instance_id}_{day_idx}_{slot_idx}_{room_id}')
+                                    
+                                    self.model.Add(tutorial_hour == 1).OnlyEnforceIf([parent_chosen, room_assignment])
+                                    self.model.Add(tutorial_hour == 0).OnlyEnforceIf([parent_chosen.Not()])
+                                    self.model.Add(tutorial_hour == 0).OnlyEnforceIf([room_assignment.Not()])
+                                    
+                                    tutorial_vars.append(tutorial_hour)
+            
+            if expected_tutorial_hours > 0:
+                # Allow flexibility in tutorial hours (at least required, max +1 extra)
+                self.model.Add(sum(tutorial_vars) >= expected_tutorial_hours)
+                self.model.Add(sum(tutorial_vars) <= expected_tutorial_hours + 1)
+        
+        # Skip practical hours enforcement as requested
+    
+    def apply_teacher_single_assignment_constraint(self, teacher_theory_assignments, teacher_lab_assignments=None):
         """
-        Constraint 4: A room cannot be assigned to multiple teachers in the same time slot.
-        Ensures rooms aren't double-booked.
+        Constraint 2: Teacher Single Assignment Constraint
+        A teacher cannot be assigned to multiple rooms in the same time slot.
+        Skip lab constraints for now.
         """
-        logger.info("Applying room single assignment constraint...")
+        logger.info("Applying teacher single assignment constraint (theory only)...")
+        
+        for teacher in self.teachers:
+            for day_idx in range(self.num_days):
+                for slot_idx in range(self.num_slots):
+                    # For theory slots - sum of all classroom assignments must be at most 1
+                    theory_vars = [teacher_theory_assignments[teacher][day_idx][slot_idx][room_id] 
+                                 for room_id in self.classroom_ids]
+                    self.model.Add(sum(theory_vars) <= 1)
+                    
+                    # Skip lab constraints for now
+        
+        return True
+    
+    def apply_no_overlapping_slots_constraint(self, teacher_theory_assignments, teacher_lab_assignments=None):
+        """
+        Constraint 3: No Overlapping Slots Constraint
+        Skip this constraint for now since we're not dealing with labs.
+        """
+        logger.info("Skipping overlapping slots constraint (labs not allocated)...")
+        return True
+    
+    def apply_room_single_assignment_constraint(self, teacher_theory_assignments, teacher_lab_assignments=None):
+        """
+        Constraint 4: Room Single Assignment Constraint
+        A room cannot be assigned to multiple teachers in the same time slot.
+        Apply only to classrooms for now.
+        """
+        logger.info("Applying room single assignment constraint (classrooms only)...")
         
         # For classrooms
-        for _, room_row in self.classrooms.iterrows():
-            room_id = room_row['id']
-            for d in range(self.num_days):
-                for s in range(self.num_theory_slots):
-                    room_vars = self._get_room_theory_slot_vars(room_id, d, s, teacher_theory_assignments)
+        for room_id in self.classroom_ids:
+            for day_idx in range(self.num_days):
+                for slot_idx in range(self.num_slots):
+                    room_vars = [teacher_theory_assignments[teacher][day_idx][slot_idx][room_id] 
+                               for teacher in self.teachers]
                     self.model.Add(sum(room_vars) <= 1)
         
-        # For labs
-        for _, room_row in self.labs.iterrows():
-            room_id = room_row['id']
-            for d in range(self.num_days):
-                for s in range(self.num_lab_slots):
-                    room_vars = self._get_room_lab_slot_vars(room_id, d, s, teacher_lab_assignments)
-                    self.model.Add(sum(room_vars) <= 1)
+        # Skip labs for now
         
         return True
     
-    def apply_weekly_working_hour_constraint(self, teacher_theory_assignments, teacher_lab_assignments):
-        """
-        Constraint 5: Weekly working hour limit (21 hours per teacher).
-        Ensures no teacher exceeds 21 hours of teaching per week.
-        Theory slots count as 1 hour each, lab slots count as 2 hours each.
-        """
-        logger.info("Applying weekly working hour constraint...")
-        
-        for teacher in self.teachers:
-            # Collect all theory slot assignments for this teacher (1 hour each)
-            theory_vars = []
-            for d in range(self.num_days):
-                for s in range(self.num_theory_slots):
-                    theory_vars.extend(self._get_teacher_theory_slot_vars(teacher, d, s, teacher_theory_assignments))
-            
-            # Collect all lab slot assignments for this teacher (2 hours each)
-            lab_vars = []
-            for d in range(self.num_days):
-                for s in range(self.num_lab_slots):
-                    lab_vars.extend(self._get_teacher_lab_slot_vars(teacher, d, s, teacher_lab_assignments))
-            
-            # Weekly working hour constraint: theory_hours + 2*lab_hours <= 21
-            # Theory slots are 50 minutes (~1 hour), lab slots are 100 minutes (~2 hours)
-            total_weekly_hours = sum(theory_vars) + 2 * sum(lab_vars)
-            self.model.Add(total_weekly_hours <= 21)
-        
-        return True
-    
-    def apply_no_continuous_lab_slots_constraint(self, teacher_theory_assignments, teacher_lab_assignments):
-        """
-        Constraint 8: Teachers should not be assigned to continuous lab slots unless there's sufficient break.
-        Lab slots timing:
-        - L1: 8:00-9:40
-        - L2: 10:00-11:40 (20 min break from L1) - ALLOWED consecutive assignment
-        - L3: 11:40-1:20 (0 min break from L2) - FORBIDDEN consecutive assignment
-        - L4: 1:20-3:00 (0 min break from L3) - FORBIDDEN consecutive assignment
-        - L5: 3:00-4:40 (0 min break from L4) - FORBIDDEN consecutive assignment
-        - L6: 5:10-6:50 (30 min break from L5) - ALLOWED consecutive assignment
-        
-        Only consecutive lab slot pairs with 20+ minute breaks are allowed:
-        - L1-L2 (20 min break) and L5-L6 (30 min break) are ALLOWED
-        - L2-L3, L3-L4, L4-L5 are FORBIDDEN (continuous)
-        """
-        logger.info("Applying no continuous lab slots constraint...")
-        
-        # Define which consecutive lab slot pairs are forbidden (0 break time)
-        # Lab slots: L1(0), L2(1), L3(2), L4(3), L5(4), L6(5)
-        forbidden_consecutive_pairs = [
-            (1, 2),  # L2-L3: 11:40 to 11:40 (continuous - 0 min break)
-            (2, 3),  # L3-L4: 1:20 to 1:20 (continuous - 0 min break)  
-            (3, 4),  # L4-L5: 3:00 to 3:00 (continuous - 0 min break)
-        ]
-        
-        for teacher in self.teachers:
-            for d in range(self.num_days):
-                for first_slot, second_slot in forbidden_consecutive_pairs:
-                    # Get all lab assignments for the teacher in the first slot
-                    first_slot_vars = self._get_teacher_lab_slot_vars(teacher, d, first_slot, teacher_lab_assignments)
-                    
-                    # Get all lab assignments for the teacher in the second slot
-                    second_slot_vars = self._get_teacher_lab_slot_vars(teacher, d, second_slot, teacher_lab_assignments)
-                    
-                    # Add constraint: teacher cannot be assigned to both consecutive slots
-                    # For each pair of assignments (one in first slot, one in second slot),
-                    # at least one must be false (using Boolean OR with negation)
-                    for first_var in first_slot_vars:
-                        for second_var in second_slot_vars:
-                            # If teacher is assigned to first slot, they cannot be assigned to second slot
-                            self.model.AddBoolOr([first_var.Not(), second_var.Not()])
-        
-        return True
-    
-    def apply_monday_or_saturday_constraint(self, teacher_theory_assignments, teacher_lab_assignments):
-        """
-        Constraint 9: Teachers should work either on Monday OR Saturday, but not both days.
-        This ensures better work-life balance by preventing teachers from working both 
-        the beginning and end of the week.
-        
-        Implementation:
-        - Monday is day 0, Saturday is day 5 in the days array
-        - For each teacher, create boolean variables indicating if they work on each day
-        - Add constraint: if teacher works Monday, they cannot work Saturday (and vice versa)
-        """
-        logger.info("Applying Monday or Saturday constraint...")
-        
-        # Days array: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-        monday_index = 0      # Monday is day 0
-        saturday_index = 5    # Saturday is day 5
-        
-        for teacher in self.teachers:
-            # Create boolean variables to track if teacher works on Monday or Saturday
-            works_monday = self.model.NewBoolVar(f'teacher_{teacher}_works_monday')
-            works_saturday = self.model.NewBoolVar(f'teacher_{teacher}_works_saturday')
-            
-            # Collect all Monday assignments (theory and lab)
-            monday_theory_vars = []
-            for s in range(self.num_theory_slots):
-                monday_theory_vars.extend(self._get_teacher_theory_slot_vars(teacher, monday_index, s, teacher_theory_assignments))
-            
-            monday_lab_vars = []
-            for s in range(self.num_lab_slots):
-                monday_lab_vars.extend(self._get_teacher_lab_slot_vars(teacher, monday_index, s, teacher_lab_assignments))
-            
-            monday_all_vars = monday_theory_vars + monday_lab_vars
-            
-            # Collect all Saturday assignments (theory and lab)
-            saturday_theory_vars = []
-            for s in range(self.num_theory_slots):
-                saturday_theory_vars.extend(self._get_teacher_theory_slot_vars(teacher, saturday_index, s, teacher_theory_assignments))
-            
-            saturday_lab_vars = []
-            for s in range(self.num_lab_slots):
-                saturday_lab_vars.extend(self._get_teacher_lab_slot_vars(teacher, saturday_index, s, teacher_lab_assignments))
-            
-            saturday_all_vars = saturday_theory_vars + saturday_lab_vars
-            
-            # Link boolean variables to actual assignments
-            # If any Monday slot is assigned, works_monday must be true
-            if monday_all_vars:
-                for var in monday_all_vars:
-                    self.model.Add(works_monday >= var)
-                # If works_monday is true, at least one Monday assignment must exist
-                self.model.Add(sum(monday_all_vars) >= works_monday)
-            
-            # If any Saturday slot is assigned, works_saturday must be true
-            if saturday_all_vars:
-                for var in saturday_all_vars:
-                    self.model.Add(works_saturday >= var)
-                # If works_saturday is true, at least one Saturday assignment must exist
-                self.model.Add(sum(saturday_all_vars) >= works_saturday)
-            
-            # Main constraint: teacher cannot work both Monday and Saturday
-            # Either works_monday OR works_saturday, but not both
-            self.model.Add(works_monday + works_saturday <= 1)
-        
-        return True
-    
-    def apply_shift_based_constraint(self, teacher_theory_assignments, teacher_lab_assignments):
-        """
-        Constraint 10: Shift-based system with 3 shifts and balanced distribution.
-        
-        Shift Definitions:
-        - Shift 1: 8:00-15:00 (covers theory slots 0-6, lab slots L1-L3)
-        - Shift 2: 10:00-17:00 (covers theory slots 2-8, lab slots L2-L5) 
-        - Shift 3: 12:00-19:00 (covers theory slots 4-10, lab slots L3-L6)
-        
-        Requirements:
-        1. Each teacher is assigned to exactly one shift per working day
-        2. Teachers can only teach during slots within their assigned shift
-        3. Each teacher follows one of three weekly patterns: (1-2-2), (2-2-1), (2-1-2)
-           representing days spent in (shift1-shift2-shift3)
-        4. Department-level distribution: 33%-33%-33% across shifts
-        5. Teachers are randomly distributed across the three patterns
-        """
-        logger.info("Applying shift-based constraint...")
-        
-        # Define shift coverage for theory slots (0-indexed)
-        shift1_theory_slots = list(range(0, 7))   # 8:00-14:50 (slots 0-6)
-        shift2_theory_slots = list(range(2, 9))   # 10:00-16:50 (slots 2-8)  
-        shift3_theory_slots = list(range(4, 11))  # 12:00-18:50 (slots 4-10)
-        
-        # Define shift coverage for lab slots (0-indexed)
-        shift1_lab_slots = [0, 1, 2]  # L1, L2, L3 (8:00-13:20)
-        shift2_lab_slots = [1, 2, 3, 4]  # L2, L3, L4, L5 (10:00-16:40)
-        shift3_lab_slots = [2, 3, 4, 5]  # L3, L4, L5, L6 (11:40-18:50)
-        
-        # Create shift assignment variables for each teacher and day
-        teacher_shift_assignments = {}
-        for teacher in self.teachers:
-            teacher_shift_assignments[teacher] = {}
-            for d in range(self.num_days):
-                teacher_shift_assignments[teacher][d] = {
-                    'shift1': self.model.NewBoolVar(f'teacher_{teacher}_day_{d}_shift1'),
-                    'shift2': self.model.NewBoolVar(f'teacher_{teacher}_day_{d}_shift2'),
-                    'shift3': self.model.NewBoolVar(f'teacher_{teacher}_day_{d}_shift3'),
-                    'no_shift': self.model.NewBoolVar(f'teacher_{teacher}_day_{d}_no_shift')
-                }
-                
-                # Exactly one shift assignment per day (including no shift for non-working days)
-                shift_vars = [
-                    teacher_shift_assignments[teacher][d]['shift1'],
-                    teacher_shift_assignments[teacher][d]['shift2'], 
-                    teacher_shift_assignments[teacher][d]['shift3'],
-                    teacher_shift_assignments[teacher][d]['no_shift']
-                ]
-                self.model.Add(sum(shift_vars) == 1)
-        
-        # Store shift assignments for later access
-        self.teacher_shift_assignments = teacher_shift_assignments
-        
-        # Link shift assignments to actual teaching assignments
-        for teacher in self.teachers:
-            for d in range(self.num_days):
-                # Collect all teaching assignments for this teacher on this day
-                day_theory_vars = []
-                day_lab_vars = []
-                
-                for s in range(self.num_theory_slots):
-                    day_theory_vars.extend(self._get_teacher_theory_slot_vars(teacher, d, s, teacher_theory_assignments))
-                
-                for s in range(self.num_lab_slots):
-                    day_lab_vars.extend(self._get_teacher_lab_slot_vars(teacher, d, s, teacher_lab_assignments))
-                
-                all_day_vars = day_theory_vars + day_lab_vars
-                
-                # If teacher has any assignments on this day, they must be assigned to a shift
-                has_assignments = self.model.NewBoolVar(f'teacher_{teacher}_day_{d}_has_assignments')
-                if all_day_vars:
-                    self.model.Add(sum(all_day_vars) > 0).OnlyEnforceIf(has_assignments)
-                    self.model.Add(sum(all_day_vars) == 0).OnlyEnforceIf(has_assignments.Not())
-                    
-                    # If has assignments, cannot be in no_shift
-                    self.model.Add(teacher_shift_assignments[teacher][d]['no_shift'] == 0).OnlyEnforceIf(has_assignments)
-                    
-                    # If no assignments, must be in no_shift
-                    shift_working_vars = [
-                        teacher_shift_assignments[teacher][d]['shift1'],
-                        teacher_shift_assignments[teacher][d]['shift2'],
-                        teacher_shift_assignments[teacher][d]['shift3']
-                    ]
-                    self.model.Add(sum(shift_working_vars) == 0).OnlyEnforceIf(has_assignments.Not())
-                
-                # Constraint: can only teach in slots covered by assigned shift
-                # Shift 1 constraints
-                shift1_var = teacher_shift_assignments[teacher][d]['shift1']
-                
-                # Theory slots outside shift1 cannot be used if assigned to shift1
-                for s in range(self.num_theory_slots):
-                    if s not in shift1_theory_slots:
-                        theory_vars_outside_shift1 = self._get_teacher_theory_slot_vars(teacher, d, s, teacher_theory_assignments)
-                        for var in theory_vars_outside_shift1:
-                            self.model.Add(var == 0).OnlyEnforceIf(shift1_var)
-                
-                # Lab slots outside shift1 cannot be used if assigned to shift1
-                for s in range(self.num_lab_slots):
-                    if s not in shift1_lab_slots:
-                        lab_vars_outside_shift1 = self._get_teacher_lab_slot_vars(teacher, d, s, teacher_lab_assignments)
-                        for var in lab_vars_outside_shift1:
-                            self.model.Add(var == 0).OnlyEnforceIf(shift1_var)
-                
-                # Shift 2 constraints  
-                shift2_var = teacher_shift_assignments[teacher][d]['shift2']
-                
-                for s in range(self.num_theory_slots):
-                    if s not in shift2_theory_slots:
-                        theory_vars_outside_shift2 = self._get_teacher_theory_slot_vars(teacher, d, s, teacher_theory_assignments)
-                        for var in theory_vars_outside_shift2:
-                            self.model.Add(var == 0).OnlyEnforceIf(shift2_var)
-                
-                for s in range(self.num_lab_slots):
-                    if s not in shift2_lab_slots:
-                        lab_vars_outside_shift2 = self._get_teacher_lab_slot_vars(teacher, d, s, teacher_lab_assignments)
-                        for var in lab_vars_outside_shift2:
-                            self.model.Add(var == 0).OnlyEnforceIf(shift2_var)
-                
-                # Shift 3 constraints
-                shift3_var = teacher_shift_assignments[teacher][d]['shift3']
-                
-                for s in range(self.num_theory_slots):
-                    if s not in shift3_theory_slots:
-                        theory_vars_outside_shift3 = self._get_teacher_theory_slot_vars(teacher, d, s, teacher_theory_assignments)
-                        for var in theory_vars_outside_shift3:
-                            self.model.Add(var == 0).OnlyEnforceIf(shift3_var)
-                
-                for s in range(self.num_lab_slots):
-                    if s not in shift3_lab_slots:
-                        lab_vars_outside_shift3 = self._get_teacher_lab_slot_vars(teacher, d, s, teacher_lab_assignments)
-                        for var in lab_vars_outside_shift3:
-                            self.model.Add(var == 0).OnlyEnforceIf(shift3_var)
-        
-        # Apply weekly shift patterns for each teacher
-        self._apply_weekly_shift_patterns(teacher_shift_assignments)
-        
-        # Apply department-level shift distribution (33%-33%-33%)
-        self._apply_department_shift_distribution(teacher_shift_assignments)
-        
-        return True
-    
-    def _apply_weekly_shift_patterns(self, teacher_shift_assignments):
-        """Apply weekly shift patterns: each teacher follows one of (1-2-2), (2-2-1), (2-1-2)."""
-        
-        for teacher in self.teachers:
-            # Create pattern selection variables
-            pattern_122 = self.model.NewBoolVar(f'teacher_{teacher}_pattern_122')  # 1 shift1, 2 shift2, 2 shift3
-            pattern_221 = self.model.NewBoolVar(f'teacher_{teacher}_pattern_221')  # 2 shift1, 2 shift2, 1 shift3
-            pattern_212 = self.model.NewBoolVar(f'teacher_{teacher}_pattern_212')  # 2 shift1, 1 shift2, 2 shift3
-            
-            # Each teacher must follow exactly one pattern
-            self.model.Add(pattern_122 + pattern_221 + pattern_212 == 1)
-            
-            # Count shift days for each teacher across the week
-            shift1_days = []
-            shift2_days = []
-            shift3_days = []
-            
-            for d in range(self.num_days):
-                shift1_days.append(teacher_shift_assignments[teacher][d]['shift1'])
-                shift2_days.append(teacher_shift_assignments[teacher][d]['shift2'])
-                shift3_days.append(teacher_shift_assignments[teacher][d]['shift3'])
-            
-            # Pattern 1-2-2: 1 day shift1, 2 days shift2, 2 days shift3
-            self.model.Add(sum(shift1_days) == 1).OnlyEnforceIf(pattern_122)
-            self.model.Add(sum(shift2_days) == 2).OnlyEnforceIf(pattern_122)
-            self.model.Add(sum(shift3_days) == 2).OnlyEnforceIf(pattern_122)
-            
-            # Pattern 2-2-1: 2 days shift1, 2 days shift2, 1 day shift3
-            self.model.Add(sum(shift1_days) == 2).OnlyEnforceIf(pattern_221)
-            self.model.Add(sum(shift2_days) == 2).OnlyEnforceIf(pattern_221)
-            self.model.Add(sum(shift3_days) == 1).OnlyEnforceIf(pattern_221)
-            
-            # Pattern 2-1-2: 2 days shift1, 1 day shift2, 2 days shift3
-            self.model.Add(sum(shift1_days) == 2).OnlyEnforceIf(pattern_212)
-            self.model.Add(sum(shift2_days) == 1).OnlyEnforceIf(pattern_212)
-            self.model.Add(sum(shift3_days) == 2).OnlyEnforceIf(pattern_212)
-    
-    def _apply_department_shift_distribution(self, teacher_shift_assignments):
-        """Apply department-level shift distribution (33%-33%-33%)."""
-        
-        # For simplicity, assume all teachers are in the same department
-        # In a real implementation, you would group by department
-        num_teachers = len(self.teachers)
-        target_per_shift = num_teachers // 3
-        
-        # Count teachers primarily assigned to each shift (based on their weekly pattern)
-        shift1_primary_teachers = []
-        shift2_primary_teachers = []
-        shift3_primary_teachers = []
-        
-        for teacher in self.teachers:
-            # A teacher is "primarily" assigned to the shift they work most days
-            shift1_total = self.model.NewIntVar(0, self.num_days, f'teacher_{teacher}_shift1_total')
-            shift2_total = self.model.NewIntVar(0, self.num_days, f'teacher_{teacher}_shift2_total')
-            shift3_total = self.model.NewIntVar(0, self.num_days, f'teacher_{teacher}_shift3_total')
-            
-            shift1_days = [teacher_shift_assignments[teacher][d]['shift1'] for d in range(self.num_days)]
-            shift2_days = [teacher_shift_assignments[teacher][d]['shift2'] for d in range(self.num_days)]
-            shift3_days = [teacher_shift_assignments[teacher][d]['shift3'] for d in range(self.num_days)]
-            
-            self.model.Add(shift1_total == sum(shift1_days))
-            self.model.Add(shift2_total == sum(shift2_days))
-            self.model.Add(shift3_total == sum(shift3_days))
-            
-            # Determine primary shift assignment
-            primary_shift1 = self.model.NewBoolVar(f'teacher_{teacher}_primary_shift1')
-            primary_shift2 = self.model.NewBoolVar(f'teacher_{teacher}_primary_shift2')
-            primary_shift3 = self.model.NewBoolVar(f'teacher_{teacher}_primary_shift3')
-            
-            # Each teacher has exactly one primary shift
-            self.model.Add(primary_shift1 + primary_shift2 + primary_shift3 == 1)
-            
-            # Link primary shift to actual shift counts (simplified logic)
-            # This could be made more sophisticated with additional constraints
-            shift1_primary_teachers.append(primary_shift1)
-            shift2_primary_teachers.append(primary_shift2)
-            shift3_primary_teachers.append(primary_shift3)
-        
-        # Balance distribution across shifts (allow some flexibility)
-        tolerance = max(1, num_teachers // 10)  # 10% tolerance
-        
-        self.model.Add(sum(shift1_primary_teachers) >= target_per_shift - tolerance)
-        self.model.Add(sum(shift1_primary_teachers) <= target_per_shift + tolerance)
-        self.model.Add(sum(shift2_primary_teachers) >= target_per_shift - tolerance)
-        self.model.Add(sum(shift2_primary_teachers) <= target_per_shift + tolerance)
-        self.model.Add(sum(shift3_primary_teachers) >= target_per_shift - tolerance)
-        self.model.Add(sum(shift3_primary_teachers) <= target_per_shift + tolerance)
-    
-    def apply_all_constraints(self, teacher_theory_assignments, teacher_lab_assignments):
-        """Apply all timetable constraints."""
-        logger.info("Applying all timetable constraints...")
+    def apply_all_constraints(self, teacher_theory_assignments, teacher_lab_assignments=None):
+        """Apply all timetable constraints. Skip lab-related constraints for now."""
+        logger.info("Applying all macroblock timetable constraints (theory only)...")
         
         constraints_applied = [
-            self.apply_teacher_single_assignment_constraint(teacher_theory_assignments, teacher_lab_assignments),
-            self.apply_no_overlapping_slots_constraint(teacher_theory_assignments, teacher_lab_assignments),
-            self.apply_intelligent_lab_capacity_constraint(teacher_theory_assignments, teacher_lab_assignments),
-            self.apply_course_hours_constraint(teacher_theory_assignments, teacher_lab_assignments),
-            self.apply_room_single_assignment_constraint(teacher_theory_assignments, teacher_lab_assignments),
-            self.apply_weekly_working_hour_constraint(teacher_theory_assignments, teacher_lab_assignments),
-            self.apply_no_continuous_lab_slots_constraint(teacher_theory_assignments, teacher_lab_assignments),
-            self.apply_monday_or_saturday_constraint(teacher_theory_assignments, teacher_lab_assignments),
-            self.apply_shift_based_constraint(teacher_theory_assignments, teacher_lab_assignments)
+            self.apply_course_hours_constraint(teacher_theory_assignments, None),
+            self.apply_teacher_single_assignment_constraint(teacher_theory_assignments, None),
+            self.apply_no_overlapping_slots_constraint(teacher_theory_assignments, None),
+            self.apply_room_single_assignment_constraint(teacher_theory_assignments, None)
         ]
         
         return all(constraints_applied)
-    
-    def generate_constraint_summary(self):
-        """Generate a summary of the impact of each constraint."""
-        summary = {
-            "teacher_single_assignment": {
-                "name": "Teacher Single Assignment Constraint",
-                "description": "Prevents teachers from being assigned to multiple rooms in the same time slot",
-                "impact": "Ensures teachers aren't double-booked, which is critical for a valid timetable",
-                "complexity": {
-                    "formula": "O(T × D × (S_theory × R_classroom + S_lab × R_lab))",
-                    "explanation": "T = teachers, D = days, S = slots, R = rooms",
-                    "level": "High",
-                    "notes": "Scales linearly with number of teachers, days, slots, and rooms"
-                }
-            },
-            "no_overlapping_slots": {
-                "name": "No Overlapping Slots Constraint",
-                "description": "Prevents teachers from being assigned to lab and theory slots that overlap in time",
-                "impact": "Ensures teachers can't physically be in two places at once when lab slots overlap with theory slots",
-                "complexity": {
-                    "formula": "O(T × D × S_lab × (R_lab × R_classroom))",
-                    "explanation": "Each lab slot overlaps with two theory slots",
-                    "level": "High",
-                    "notes": "Complex constraint as it must check all possible combinations of lab and theory slots"
-                }
-            },
-            "course_hours": {
-                "name": "Course Hours Constraint",
-                "description": "Ensures each course gets allocated the required lecture and practical hours",
-                "impact": "Critical for educational outcomes - ensures students receive the proper instructional time",
-                "complexity": {
-                    "formula": "O(T × C × (D × S_theory × R_classroom + D × S_lab × R_lab))",
-                    "explanation": "C = courses per teacher",
-                    "level": "Very High",
-                    "notes": "Most complex constraint as it requires tracking hours across all possible assignments"
-                }
-            },
-            "room_single_assignment": {
-                "name": "Room Single Assignment Constraint",
-                "description": "Prevents rooms from being assigned to multiple teachers in the same time slot",
-                "impact": "Ensures rooms aren't double-booked, preventing scheduling conflicts",
-                "complexity": {
-                    "formula": "O((R_classroom × D × S_theory + R_lab × D × S_lab) × T)",
-                    "explanation": "Physical constraint - a room can only host one class at a time",
-                    "level": "Medium",
-                    "notes": "Must be checked for every room, time slot, and teacher combination"
-                }
-            },
-            "lab_batch": {
-                "name": "Lab Batch Constraint",
-                "description": "Handles lab capacity limitations by creating multiple batches for large classes",
-                "impact": "Ensures all students get proper lab time despite lab capacity limits (35 students per lab)",
-                "complexity": {
-                    "formula": "O(T × C × D × S_lab × R_lab)",
-                    "explanation": "Requires calculating batches based on student count and scheduling accordingly",
-                    "level": "High",
-                    "notes": "Classes with 70 students require two separate lab batches, doubling the needed lab slots"
-                },
-                "example": "For a course with 2 practical hours and 70 students:\n- Batch 1 (35 students): 2hrs = 1 lab slot\n- Batch 2 (35 students): 2hrs = 1 lab slot\n- Total: 4hrs = 2 lab slots needed"
-            },
-            "weekly_working_hour": {
-                "name": "Weekly Working Hour Constraint",
-                "description": "Ensures no teacher exceeds 21 hours of teaching per week",
-                "impact": "Critical for teacher well-being and teaching quality",
-                "complexity": {
-                    "formula": "O(T × D × (S_theory + 2 × S_lab))",
-                    "explanation": "T = teachers, D = days, S = slots",
-                    "level": "Medium",
-                    "notes": "Ensures teachers don't work excessive hours"
-                }
-            },
-            "intelligent_lab_capacity": {
-                "name": "Intelligent Lab Capacity Constraint",
-                "description": "Handles different lab capacities (35, 70, 140) to optimize lab usage",
-                "impact": "Ensures proper lab time allocation based on student count and lab capacity",
-                "complexity": {
-                    "formula": "O(T × C × D × S_lab × R_lab)",
-                    "explanation": "T = teachers, C = courses per teacher, D = days, S = slots, R = rooms",
-                    "level": "High",
-                    "notes": "Complex constraint as it requires handling multiple lab capacity scenarios"
-                }
-            },
-            "no_continuous_lab_slots": {
-                "name": "No Continuous Lab Slots Constraint", 
-                "description": "Prevents teachers from being assigned to continuous lab slots unless there's sufficient break time (20+ minutes)",
-                "impact": "Ensures teacher well-being by preventing back-to-back lab sessions without adequate break, while allowing consecutive assignments when sufficient break time exists",
-                "complexity": {
-                    "formula": "O(T × D × 3 × R_lab²)",
-                    "explanation": "T = teachers, D = days, 3 = forbidden consecutive pairs, R_lab = lab rooms",
-                    "level": "Medium",
-                    "notes": "Checks 3 specific consecutive lab slot pairs (L2-L3, L3-L4, L4-L5) for each teacher and day"
-                },
-                "example": "Lab slot timings:\n- L1-L2: 20 min break (ALLOWED)\n- L2-L3: 0 min break (FORBIDDEN)\n- L3-L4: 0 min break (FORBIDDEN)\n- L4-L5: 0 min break (FORBIDDEN)\n- L5-L6: 30 min break (ALLOWED)"
-            },
-            "monday_or_saturday": {
-                "name": "Monday or Saturday Constraint",
-                "description": "Ensures teachers work either on Monday OR Saturday, but not both days",
-                "impact": "Promotes better work-life balance by preventing teachers from working both the beginning and end of the week, while ensuring weekend and week-start coverage",
-                "complexity": {
-                    "formula": "O(T × (S_theory + S_lab) × 2)",
-                    "explanation": "T = teachers, S = slots per day, 2 = Monday and Saturday",
-                    "level": "Medium",
-                    "notes": "Creates boolean variables to track Monday/Saturday work and enforces mutual exclusion"
-                },
-                "example": "Teacher scheduling scenarios:\n- Teacher A: Works Monday (theory + lab) -> Cannot work Saturday\n- Teacher B: Works Saturday (theory + lab) -> Cannot work Monday\n- Teacher C: Works Tuesday-Friday -> Can work either Monday OR Saturday\n- Teacher D: No Monday/Saturday assignments -> Constraint satisfied"
-            },
-            "shift_based": {
-                "name": "Shift-Based System Constraint",
-                "description": "Implements a 3-shift system with balanced teacher distribution and weekly patterns",
-                "impact": "Ensures organized shift coverage, balanced teacher workload across time periods, and departmental equity in shift distribution",
-                "complexity": {
-                    "formula": "O(T × D × (S_theory + S_lab) × 3)",
-                    "explanation": "T = teachers, D = days, S = slots per type, 3 = number of shifts",
-                    "level": "Very High",
-                    "notes": "Most complex constraint involving shift assignments, pattern matching, and distribution balancing"
-                },
-                "example": "Shift System:\n- Shift 1 (8:00-15:00): Early shift covering morning slots\n- Shift 2 (10:00-17:00): Day shift with overlap coverage\n- Shift 3 (12:00-19:00): Late shift covering afternoon/evening\n\nWeekly Patterns:\n- Pattern A (1-2-2): 1 day shift1, 2 days shift2, 2 days shift3\n- Pattern B (2-2-1): 2 days shift1, 2 days shift2, 1 day shift3\n- Pattern C (2-1-2): 2 days shift1, 1 day shift2, 2 days shift3\n\nDepartment Distribution: 33%-33%-33% across all shifts"
-            }
-        }
-        
-        return summary 

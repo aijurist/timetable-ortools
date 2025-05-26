@@ -1,6 +1,6 @@
 import os
 import logging
-from src.scheduler import TimetableScheduler
+from src.scheduler import MacroblockTimetableScheduler
 
 # Configure basic logging
 logging.basicConfig(
@@ -19,7 +19,7 @@ def main():
         base_dir = os.path.dirname(os.path.abspath(__file__))
         
         # Path to data files
-        course_file = os.path.join(base_dir, 'data/mapped_data/computer_dept_teacher_courses.csv')
+        course_file = os.path.join(base_dir, 'data/mapped_data/cs_teacher_courses.csv')
         if not os.path.exists(course_file):
             print(f"Error: Course file not found at {course_file}")
             return
@@ -31,44 +31,46 @@ def main():
             return
         
         print("*" * 80)
-        print("Timetable Scheduler – Computer Science Department")
+        print("Macroblock Timetable Scheduler – Computer Science Department")
         print("*" * 80)
-        print("Key constraint highlights:")
-        print("• 11 theory slots per day (50 min with 10 min break)")
-        print("• 5 lab slots per day (1hr:50min with 10 min break)")
-        print("• Courses allocated according to LTP hours (Lecture, Tutorial, Practical)")
-        print("• No teacher assigned to overlapping slots")
-        print("• Labs scheduled only in computer labs")
-        print("• Theory classes scheduled only in classrooms (not labs)")
-        print("• Lab batches created for classes exceeding lab capacity (35 students)")
-        print("• Weekly working hour limit: 21 hours per teacher")
-        print("• No continuous lab slots unless 20+ minute break (L1-L2 and L5-L6 allowed)")
-        print("• Teachers work either Monday OR Saturday, not both days")
-        print("• 3-shift system: Shift1(8:00-15:00), Shift2(10:00-17:00), Shift3(12:00-19:00)")
-        print("• Teachers follow weekly patterns: (1-2-2), (2-2-1), or (2-1-2) shift distribution")
-        print("• Department-level balance: 33%-33%-33% across all shifts")
+        print("Key macroblock constraints:")
+        print("• 12 time slots per day (Tuesday-Saturday)")
+        print("• Macroblock structure: a1/a2/a3, b1/b2/b3, c1/c2/c3, d1/d2/d3, e1/e2/e3, f1/f2/f3, g1/g2/g3")
+        print("• Tutorial blocks: ta1/ta2/ta3, tb1/tb2/tb3, tc1/tc2/tc3, td1/td2/td3")
+        print("• 3-shift system: Shift1(blocks x1), Shift2(blocks x2), Shift3(blocks x3)")
+        print("• Course consistency: If assigned to a1, all lecture slots must be a1")
+        print("• Tutorial allocation: If tutorial_hours > 0 OR lecture_hours == 4")
+        print("• Semester & Department grouping: Courses grouped by semester with teacher diversity")
+        print("• Teacher Shift System: 3 shifts (8:00-15:00, 10:00-17:00, 12:00-19:00)")
+        print("• Shift Distribution: 33% teachers per department per shift")
+        print("• Overlapping Slot Management: Separate macro blocks for overlapping time slots")
+        print("• No teacher double-booking across slots or rooms")
+        print("• Lab allocation temporarily disabled")
+        print("• Theory-only scheduling with classroom assignments")
         print("*" * 80)
         
         # Create and run the scheduler
-        print("Creating timetable scheduler...")
-        scheduler = TimetableScheduler(course_file, room_file)
+        print("Creating macroblock timetable scheduler...")
+        scheduler = MacroblockTimetableScheduler(course_file, room_file)
         
         print("Generating timetable...")
         solution = scheduler.generate_timetable()
         
         if solution:
-            print("Timetable generated successfully!")
+            print("Macroblock timetable generated successfully!")
             print(f"Timetable outputs saved to: {scheduler.output_dir}")
             print("\nThe following files have been generated:")
-            print("  - schedule.csv: Master schedule with all assignments")
+            print("  - macroblock_schedule.csv: Master schedule with macroblock assignments (theory only)")
+            print("  - macroblock_schedule.json: Structured schedule in JSON format")
             print("  - teacher_*_schedule.csv: Individual teacher schedules")
-            print("  - room_*_schedule.csv: Individual room schedules")
-            print("  - constraint_summary.txt: Detailed impact analysis of each constraint")
-            print("  - constraint_summary.json: Machine-readable constraint analysis")
-            print("  - summary.txt: Overview of the generated schedule")
-            print("  - *.png: Visualizations of the timetable")
+            print("  - room_*_schedule.csv: Individual room schedules (classrooms only)")
+            print("  - macroblock_summary.txt: Overview of the generated macroblock schedule")
+            print("  - macroblock_master_schedule.png: Visual master schedule")
+            print("  - teacher_*_macroblock_schedule.png: Individual teacher visualizations")
+            print("  - room_*_macroblock_schedule.png: Individual room visualizations")
+            print("  - macroblock_analysis.png: Macroblock distribution analysis")
         else:
-            print("Failed to generate a feasible timetable.")
+            print("Failed to generate a feasible macroblock timetable.")
     except Exception as e:
         print(f"Error in timetable generation: {str(e)}")
         logger.exception("Unhandled exception in main function")
