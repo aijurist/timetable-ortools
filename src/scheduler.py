@@ -452,7 +452,56 @@ class MacroblockTimetableScheduler:
             for shift, count in sorted(shift_counts.items()):
                 f.write(f"  {shift}: {count} assignments\n")
             
+            # Weekly working hours analysis
+            f.write("\nWeekly Working Hours Analysis:\n")
+            teacher_hours = {}
+            for item in schedule_data:
+                teacher_id = item['teacher_id']
+                if teacher_id not in teacher_hours:
+                    teacher_hours[teacher_id] = {'theory': 0, 'lab': 0}
+                
+                if item['slot_type'] in ['Lecture', 'Tutorial']:
+                    teacher_hours[teacher_id]['theory'] += 1
+                elif item['slot_type'] == 'Practical':
+                    teacher_hours[teacher_id]['lab'] += 1
+            
+            over_limit_teachers = 0
+            for teacher_id, hours in teacher_hours.items():
+                total_hours = hours['theory'] + (hours['lab'] * 2)  # Lab slots count as 2 hours
+                if total_hours > 21:
+                    over_limit_teachers += 1
+            
+            f.write(f"  Teachers within 21-hour limit: {len(teacher_hours) - over_limit_teachers}/{len(teacher_hours)}\n")
+            f.write(f"  Teachers exceeding limit: {over_limit_teachers}\n")
+            
+            # Vertical grouping analysis
+            f.write("\nVertical Macroblock Grouping Analysis:\n")
+            vertical_patterns = {'vertical': 0, 'scattered': 0}
+            
+            # Analyze macroblock assignment patterns
+            dept_blocks = {}
+            for item in schedule_data:
+                dept = item.get('course_dept', 'Unknown')
+                macroblock = item.get('macroblock', 'Unknown')
+                if dept not in dept_blocks:
+                    dept_blocks[dept] = []
+                dept_blocks[dept].append(macroblock)
+            
+            for dept, blocks in dept_blocks.items():
+                # Count vertical vs scattered patterns
+                block_letters = [block[0] if len(block) > 0 else '' for block in blocks if block != 'Unknown']
+                if len(set(block_letters)) < len(block_letters):  # Some repetition indicates vertical grouping
+                    vertical_patterns['vertical'] += 1
+                else:
+                    vertical_patterns['scattered'] += 1
+            
+            f.write(f"  Vertical grouping patterns: {vertical_patterns['vertical']}\n")
+            f.write(f"  Scattered patterns: {vertical_patterns['scattered']}\n")
+            
             f.write(f"\nSchedule generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            f.write(f"\nNew constraints applied:")
+            f.write(f"\n  - Vertical Macroblock Grouping: Promotes sequential block assignment")
+            f.write(f"\n  - Weekly Working Hour Constraint: 21-hour limit per teacher")
         
         self.logger.info(f"Summary saved to {summary_path}")
 

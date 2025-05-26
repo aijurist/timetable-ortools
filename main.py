@@ -41,6 +41,8 @@ def main():
         print("• Course consistency: If assigned to a1, all lecture slots must be a1")
         print("• Tutorial allocation: If tutorial_hours > 0 OR lecture_hours == 4")
         print("• Semester & Department grouping: Courses grouped by semester with teacher diversity")
+        print("• Vertical Macroblock Grouping: Promotes a1→b1→c1 over a1→f1→a2 patterns")
+        print("• Weekly Working Hour Constraint: Max 21 hours per teacher (theory: 1hr, lab: 2hr)")
         print("• Teacher Shift System: 3 shifts (8:00-15:00, 10:00-17:00, 12:00-19:00)")
         print("• Shift Distribution: 33% teachers per department per shift")
         print("• Overlapping Slot Management: Separate macro blocks for overlapping time slots")

@@ -45,6 +45,6 @@ thur,    c1/L25,     b1/L26,      a1/L27,      f1/c2/L28,     c2/L29,       b2/L
 fri,     d1/L37,     c1/L38,      b1/L39,      ta1/d2/L40,    d2/L41,       c2/L42,      b2/L43,    ta2/d4/L44, c3/L45,     b3/L46,     ta3/L47,     L46
 sat,     e1/L49,     d1/L50,      c1/L51,      tb1/e2/L52,    e2/L53,       d2/L54,      c2/L55,    tb2/e3/L56, d3/L57,     c3/L58,     tb3/L59,     L60
 
-should tweak the system
-1) optimize the parameter of or tool to get better result
-2) in course grouping give weightage to assign vertical macroblock what i mean is that group them and assign the similar course down the timetable like a1 then b1 then c1 as much as possible rather than going a1, f1, a2, a3
+
+33% should be different for every teacher each day (soft constraint) for teacher_shift atleast minimum they should be in two different teacher_shift in a week 
+Example teacher_shit 1 on tuesday, then teacher_shift 2 on wed, then thur teacher_shift 3

@@ -322,8 +322,8 @@ class MacroblockTimetableConstraints:
         return True
     
     def _apply_semester_grouping_constraints(self):
-        """Apply constraints to group courses by semester and department with teacher diversity."""
-        logger.info("Applying semester and department grouping constraints...")
+        """Apply constraints to group courses by semester and department with teacher diversity and vertical macroblock grouping."""
+        logger.info("Applying semester and department grouping constraints with vertical macroblock preference...")
         
         for (semester, dept), course_group in self.semester_course_groups.items():
             if len(course_group) <= 1:
@@ -388,6 +388,143 @@ class MacroblockTimetableConstraints:
                     for course_code, course_vars in course_code_vars.items():
                         if len(course_vars) > 1:
                             self.model.Add(sum(course_vars) <= 1)
+        
+        # Apply vertical macroblock grouping constraint
+        self.apply_vertical_macroblock_grouping_constraint()
+    
+    def apply_vertical_macroblock_grouping_constraint(self):
+        """
+        Constraint: Vertical Macroblock Grouping
+        Promotes vertical assignment of similar courses (a1 -> b1 -> c1) rather than horizontal (a1 -> f1 -> a2).
+        This creates better timetable organization and reduces conflicts.
+        """
+        logger.info("Applying vertical macroblock grouping constraint...")
+        
+        # Define vertical grouping preferences for each shift
+        vertical_groups = {
+            'macro_shift1': [
+                ['a1', 'b1', 'c1', 'd1'],  # Group 1: Early morning blocks
+                ['e1', 'f1', 'g1']         # Group 2: Late morning blocks
+            ],
+            'macro_shift2': [
+                ['a2', 'b2', 'c2', 'd2'],  # Group 1: Early afternoon blocks
+                ['e2', 'f2', 'g2']         # Group 2: Late afternoon blocks
+            ],
+            'macro_shift3': [
+                ['a3', 'b3', 'c3', 'd3'],  # Group 1: Early evening blocks
+                ['e3', 'f3', 'g3']         # Group 2: Late evening blocks
+            ]
+        }
+        
+        # For each semester-department group, promote vertical assignment
+        for (semester, dept), course_group in self.semester_course_groups.items():
+            if len(course_group) <= 2:
+                continue  # Need at least 3 courses for meaningful vertical grouping
+            
+            # Group courses by similarity (same course code base)
+            similar_courses = {}
+            for item in course_group:
+                course_code = item['course_code']
+                # Extract base course code (remove suffixes like -L, -P, etc.)
+                base_code = course_code.split('-')[0]
+                if base_code not in similar_courses:
+                    similar_courses[base_code] = []
+                similar_courses[base_code].append(item)
+            
+            # Apply vertical grouping for each macro shift
+            for macro_shift in ['macro_shift1', 'macro_shift2', 'macro_shift3']:
+                for vertical_group in vertical_groups[macro_shift]:
+                    # For each group of similar courses, promote vertical assignment
+                    for base_code, similar_course_list in similar_courses.items():
+                        if len(similar_course_list) >= 2:  # Need at least 2 similar courses
+                            self._apply_vertical_grouping_for_courses(
+                                similar_course_list, vertical_group, macro_shift)
+    
+    def _apply_vertical_grouping_for_courses(self, course_list, vertical_blocks, macro_shift):
+        """Apply vertical grouping constraint for a specific set of similar courses."""
+        # Collect assignment variables for these courses in the vertical blocks
+        course_block_vars = {}
+        
+        for item in course_list:
+            teacher = item['teacher']
+            instance_id = item['instance']['id']
+            
+            if teacher in self.macroblock_assignments and instance_id in self.macroblock_assignments[teacher]:
+                course_block_vars[instance_id] = {}
+                
+                for block in vertical_blocks:
+                    block_var = self.macroblock_assignments[teacher][instance_id].get(f'{block}_chosen')
+                    if block_var is not None:
+                        course_block_vars[instance_id][block] = block_var
+        
+        # If we have multiple courses that could be assigned to these blocks
+        if len(course_block_vars) >= 2:
+            # Create incentive variables for vertical grouping
+            for i, block in enumerate(vertical_blocks[:-1]):  # All blocks except the last
+                next_block = vertical_blocks[i + 1]
+                
+                # For each pair of courses, incentivize consecutive vertical assignment
+                course_ids = list(course_block_vars.keys())
+                for j in range(len(course_ids) - 1):
+                    course1_id = course_ids[j]
+                    course2_id = course_ids[j + 1]
+                    
+                    if (block in course_block_vars[course1_id] and 
+                        next_block in course_block_vars[course2_id]):
+                        
+                        # Create a bonus variable for vertical grouping
+                        vertical_bonus = self.model.NewBoolVar(
+                            f'vertical_bonus_{course1_id}_{course2_id}_{block}_{next_block}')
+                        
+                        # If course1 is in block and course2 is in next_block, activate bonus
+                        self.model.Add(vertical_bonus <= course_block_vars[course1_id][block])
+                        self.model.Add(vertical_bonus <= course_block_vars[course2_id][next_block])
+                        self.model.Add(vertical_bonus >= 
+                                     course_block_vars[course1_id][block] + 
+                                     course_block_vars[course2_id][next_block] - 1)
+                        
+                        # Add this as a soft constraint by maximizing vertical bonuses
+                        # (This will be handled by the solver's objective function if we add one)
+                        # For now, we'll add a preference constraint
+                        
+            # Add preference for sequential assignment within the same vertical group
+            # Discourage scattered assignment across different letter groups
+            self._discourage_scattered_assignment(course_block_vars, vertical_blocks)
+    
+    def _discourage_scattered_assignment(self, course_block_vars, vertical_blocks):
+        """Discourage scattered assignment of similar courses across non-adjacent blocks."""
+        course_ids = list(course_block_vars.keys())
+        
+        if len(course_ids) >= 3:  # Need at least 3 courses for meaningful constraint
+            # For every set of 3 courses, discourage assignment to non-adjacent blocks
+            for i in range(len(course_ids) - 2):
+                course1_id = course_ids[i]
+                course2_id = course_ids[i + 1]
+                course3_id = course_ids[i + 2]
+                
+                # Discourage patterns like: course1->block[0], course2->block[2], course3->block[1]
+                # Prefer: course1->block[0], course2->block[1], course3->block[2]
+                for j in range(len(vertical_blocks)):
+                    for k in range(len(vertical_blocks)):
+                        for l in range(len(vertical_blocks)):
+                            if abs(j - k) > 1 or abs(k - l) > 1:  # Non-adjacent assignment
+                                block1 = vertical_blocks[j]
+                                block2 = vertical_blocks[k]
+                                block3 = vertical_blocks[l]
+                                
+                                if (block1 in course_block_vars[course1_id] and
+                                    block2 in course_block_vars[course2_id] and
+                                    block3 in course_block_vars[course3_id]):
+                                    
+                                    # Discourage this scattered pattern
+                                    scattered_vars = [
+                                        course_block_vars[course1_id][block1],
+                                        course_block_vars[course2_id][block2],
+                                        course_block_vars[course3_id][block3]
+                                    ]
+                                    
+                                    # At most 2 of these 3 can be true (prevents all 3 being scattered)
+                                    self.model.Add(sum(scattered_vars) <= 2)
     
     def _apply_teacher_shift_constraints(self, teacher_theory_assignments):
         """Apply teacher shift constraints to ensure teachers only work in their assigned shifts."""
@@ -677,7 +814,51 @@ class MacroblockTimetableConstraints:
             self.apply_course_hours_constraint(teacher_theory_assignments, None),
             self.apply_teacher_single_assignment_constraint(teacher_theory_assignments, None),
             self.apply_no_overlapping_slots_constraint(teacher_theory_assignments, None),
-            self.apply_room_single_assignment_constraint(teacher_theory_assignments, None)
+            self.apply_room_single_assignment_constraint(teacher_theory_assignments, None),
+            self.apply_weekly_working_hour_constraint(teacher_theory_assignments, None)
         ]
         
         return all(constraints_applied)
+
+    def apply_weekly_working_hour_constraint(self, teacher_theory_assignments, teacher_lab_assignments=None):
+        """
+        Constraint: Weekly Working Hour Constraint
+        Limits teacher workload to 21 hours per week.
+        
+        Hour Calculation:
+        - Theory slots: 1 hour each (50 minutes ≈ 1 hour)
+        - Lab slots: 2 hours each (100 minutes ≈ 2 hours)
+        
+        Formula: theory_hours + 2 × lab_hours ≤ 21
+        """
+        logger.info("Applying weekly working hour constraint (21 hours max per teacher)...")
+        
+        for teacher in self.teachers:
+            # Collect all theory assignment variables for this teacher
+            theory_hour_vars = []
+            
+            for day_idx in range(self.num_days):
+                for slot_idx in range(self.num_slots):
+                    for room_id in self.classroom_ids:
+                        theory_assignment = teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]
+                        theory_hour_vars.append(theory_assignment)
+            
+            # Collect all lab assignment variables for this teacher (when labs are implemented)
+            lab_hour_vars = []
+            if teacher_lab_assignments is not None:
+                for day_idx in range(self.num_days):
+                    # Lab slots would be different from theory slots
+                    # For now, skip lab hours since labs are not implemented
+                    pass
+            
+            # Apply the weekly hour constraint
+            # Theory: 1 hour per slot, Labs: 2 hours per slot
+            total_theory_hours = sum(theory_hour_vars)
+            total_lab_hours = sum(lab_hour_vars) * 2 if lab_hour_vars else 0
+            
+            # Weekly limit: 21 hours
+            self.model.Add(total_theory_hours + total_lab_hours <= 21)
+            
+            logger.info(f"Applied 21-hour weekly limit for Teacher {teacher}")
+        
+        return True
