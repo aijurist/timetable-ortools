@@ -21,11 +21,11 @@ class MacroblockTimetableScheduler:
         self.days = ["tuesday", "wed", "thur", "fri", "sat"]  # Excluding Monday
         self.num_days = len(self.days)
         
-        # Time slots (12 slots per day based on update.txt)
+        # Time slots (12 slots per day - Theory timing with proper breaks)
         self.time_slots = [
-            "8:00 - 8:50", "8:50 - 9:40", "9:50 - 10:40", "10:40 - 11:30",
-            "11:50 - 12:40", "12:40 - 1:30", "1:50 - 2:40", "2:40 - 3:30", 
-            "3:50 - 4:40", "4:40 - 5:30", "5:30 - 6:20", "6:20 - 7:10"
+            "8:00 - 8:50", "9:00 - 9:50", "10:00 - 10:50", "11:00 - 11:50",
+            "12:00 - 12:50", "1:00 - 1:50", "2:00 - 2:50", "3:00 - 3:50", 
+            "4:00 - 4:50", "5:00 - 5:50", "6:00 - 6:50", "7:00 - 7:50"
         ]
         self.num_slots = len(self.time_slots)
         
@@ -229,7 +229,8 @@ class MacroblockTimetableScheduler:
                                     'academic_year': course_info.get('academic_year', ''),
                                     'semester': course_info.get('semester', ''),
                                     'course_dept': course_info.get('course_dept', ''),
-                                    'teacher_shift': constraints.teacher_shift_assignments.get(teacher, 'shift1')
+                                    'teacher_shift': self._determine_daily_shift(teacher, day_idx, constraints, solver),
+                                    'daily_shift_pattern': self._get_teacher_weekly_shift_pattern(teacher, constraints, solver)
                                 })
                     
                     # Skip lab assignments processing as requested
@@ -321,6 +322,40 @@ class MacroblockTimetableScheduler:
                 }
         
         return None
+    
+    def _determine_daily_shift(self, teacher, day_idx, constraints, solver):
+        """Determine which shift a teacher is assigned to on a specific day."""
+        if not hasattr(constraints, 'teacher_daily_shift_vars') or teacher not in constraints.teacher_daily_shift_vars:
+            return 'teacher_shift1'  # Default fallback
+        
+        if day_idx not in constraints.teacher_daily_shift_vars[teacher]:
+            return 'teacher_shift1'  # Default fallback
+        
+        # Check which shift variable is active for this teacher on this day
+        for shift_name in ['teacher_shift1', 'teacher_shift2', 'teacher_shift3']:
+            if shift_name in constraints.teacher_daily_shift_vars[teacher][day_idx]:
+                shift_var = constraints.teacher_daily_shift_vars[teacher][day_idx][shift_name]
+                if solver.Value(shift_var) == 1:
+                    return shift_name
+        
+        return 'teacher_shift1'  # Default fallback
+    
+    def _get_teacher_weekly_shift_pattern(self, teacher, constraints, solver):
+        """Get the complete weekly shift pattern for a teacher."""
+        if not hasattr(constraints, 'teacher_daily_shift_vars') or teacher not in constraints.teacher_daily_shift_vars:
+            return 'Static'  # Fallback for old system
+        
+        pattern = []
+        for day_idx in range(len(self.days)):
+            if day_idx in constraints.teacher_daily_shift_vars[teacher]:
+                daily_shift = self._determine_daily_shift(teacher, day_idx, constraints, solver)
+                # Convert to short form: teacher_shift1 -> S1, teacher_shift2 -> S2, etc.
+                short_shift = daily_shift.replace('teacher_shift', 'S')
+                pattern.append(short_shift)
+            else:
+                pattern.append('S1')  # Default
+        
+        return '→'.join(pattern)  # e.g., "S1→S2→S2→S3→S1"
     
     def _create_daily_schedule_structure(self, schedule_data):
         """Create the daily schedule structure matching the required format."""
@@ -442,8 +477,8 @@ class MacroblockTimetableScheduler:
             for macroblock, count in sorted(macroblock_counts.items()):
                 f.write(f"  {macroblock}: {count} assignments\n")
             
-            # Shift distribution
-            f.write("\nTeacher Shift Distribution:\n")
+            # Daily shift distribution
+            f.write("\nDaily Shift Distribution:\n")
             shift_counts = {}
             for item in schedule_data:
                 shift = item.get('teacher_shift', 'Unknown')
@@ -451,6 +486,49 @@ class MacroblockTimetableScheduler:
             
             for shift, count in sorted(shift_counts.items()):
                 f.write(f"  {shift}: {count} assignments\n")
+            
+            # Shift rotation patterns
+            f.write("\nTeacher Shift Rotation Patterns:\n")
+            shift_patterns = {}
+            teacher_patterns = {}
+            for item in schedule_data:
+                teacher_id = item['teacher_id']
+                pattern = item.get('daily_shift_pattern', 'Static')
+                teacher_patterns[teacher_id] = pattern
+                if pattern not in shift_patterns:
+                    shift_patterns[pattern] = 0
+                shift_patterns[pattern] += 1
+            
+            # Count unique patterns
+            unique_patterns = len(set(teacher_patterns.values()))
+            f.write(f"  Unique shift patterns: {unique_patterns}\n")
+            
+            # Show most common patterns
+            sorted_patterns = sorted(shift_patterns.items(), key=lambda x: x[1], reverse=True)
+            f.write("  Most common patterns:\n")
+            for pattern, count in sorted_patterns[:5]:  # Top 5 patterns
+                if pattern != 'Static':
+                    f.write(f"    {pattern}: {count} assignments\n")
+            
+            # Analyze rotation quality
+            adjacent_transitions = 0
+            non_adjacent_transitions = 0
+            for teacher_id, pattern in teacher_patterns.items():
+                if pattern != 'Static' and '→' in pattern:
+                    shifts = pattern.split('→')
+                    for i in range(len(shifts) - 1):
+                        curr_shift = int(shifts[i][1:])  # Extract number from S1, S2, S3
+                        next_shift = int(shifts[i + 1][1:])
+                        
+                        if abs(curr_shift - next_shift) == 1:  # Adjacent transition
+                            adjacent_transitions += 1
+                        elif abs(curr_shift - next_shift) == 2:  # Non-adjacent transition
+                            non_adjacent_transitions += 1
+            
+            total_transitions = adjacent_transitions + non_adjacent_transitions
+            if total_transitions > 0:
+                f.write(f"  Adjacent transitions: {adjacent_transitions}/{total_transitions} ({100*adjacent_transitions/total_transitions:.1f}%)\n")
+                f.write(f"  Non-adjacent transitions: {non_adjacent_transitions}/{total_transitions} ({100*non_adjacent_transitions/total_transitions:.1f}%)\n")
             
             # Weekly working hours analysis
             f.write("\nWeekly Working Hours Analysis:\n")
@@ -502,6 +580,9 @@ class MacroblockTimetableScheduler:
             f.write(f"\nNew constraints applied:")
             f.write(f"\n  - Vertical Macroblock Grouping: Promotes sequential block assignment")
             f.write(f"\n  - Weekly Working Hour Constraint: 21-hour limit per teacher")
+            f.write(f"\n  - Daily Shift Rotation: Teachers work different shifts on different days")
+            f.write(f"\n  - Shift Distribution: 33% weekly distribution per department (soft)")
+            f.write(f"\n  - Adjacent Shift Transitions: Encourages S1↔S2, S2↔S3 over S1↔S3")
         
         self.logger.info(f"Summary saved to {summary_path}")
 

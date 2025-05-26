@@ -14,11 +14,11 @@ class MacroblockTimetableVisualizer:
         # Macroblock days structure
         self.days = ["tuesday", "wed", "thur", "fri", "sat"]
         
-        # Time slots (12 slots per day based on macroblock structure)
+        # Time slots (12 slots per day - Theory timing with proper breaks)
         self.time_slots = [
-            "8:00 - 8:50", "8:50 - 9:40", "9:50 - 10:40", "10:40 - 11:30",
-            "11:50 - 12:40", "12:40 - 1:30", "1:50 - 2:40", "2:40 - 3:30", 
-            "3:50 - 4:40", "4:40 - 5:30", "5:30 - 6:20", "6:20 - 7:10"
+            "8:00 - 8:50", "9:00 - 9:50", "10:00 - 10:50", "11:00 - 11:50",
+            "12:00 - 12:50", "1:00 - 1:50", "2:00 - 2:50", "3:00 - 3:50", 
+            "4:00 - 4:50", "5:00 - 5:50", "6:00 - 6:50", "7:00 - 7:50"
         ]
         
         # Define macroblock groups
@@ -79,19 +79,29 @@ class MacroblockTimetableVisualizer:
     
     def generate_master_schedule(self):
         """Generate a master schedule visualization."""
-        # Create a figure with subplots for theory and lab schedules
-        fig = plt.figure(figsize=(24, 16))
-        gs = GridSpec(2, 1, height_ratios=[3, 2], figure=fig)
+        # Create a figure focusing on theory/tutorial schedule only
+        fig = plt.figure(figsize=(24, 12))
         
-        # Theory/Tutorial schedule
-        ax_theory = fig.add_subplot(gs[0])
+        # Theory/Tutorial schedule (main focus)
+        ax_theory = fig.add_subplot(111)
         self._plot_macroblock_schedule(ax_theory, 'Theory/Tutorial', self.theory_data)
-        ax_theory.set_title('Master Theory/Tutorial Schedule with Macroblocks', fontsize=16)
+        ax_theory.set_title('Master Theory/Tutorial Schedule with Macroblocks\n(Theory Time Slots: 8:00-8:50, 9:00-9:50, 10:00-10:50, etc.)', fontsize=16)
         
-        # Lab schedule
-        ax_lab = fig.add_subplot(gs[1])
-        self._plot_macroblock_schedule(ax_lab, 'Practical', self.lab_data)
-        ax_lab.set_title('Master Practical Schedule', fontsize=16)
+        # Only show practical schedule if there's actual practical data
+        if not self.lab_data.empty:
+            # If there are labs, create a subplot layout
+            fig.clear()
+            gs = GridSpec(2, 1, height_ratios=[3, 2], figure=fig)
+            
+            # Theory/Tutorial schedule
+            ax_theory = fig.add_subplot(gs[0])
+            self._plot_macroblock_schedule(ax_theory, 'Theory/Tutorial', self.theory_data)
+            ax_theory.set_title('Master Theory/Tutorial Schedule with Macroblocks\n(Theory Time Slots)', fontsize=16)
+            
+            # Lab schedule
+            ax_lab = fig.add_subplot(gs[1])
+            self._plot_macroblock_schedule(ax_lab, 'Practical', self.lab_data)
+            ax_lab.set_title('Master Practical Schedule\n(Lab Time Slots)', fontsize=16)
         
         plt.tight_layout()
         fig.savefig(os.path.join(self.output_dir, 'macroblock_master_schedule.png'), 
@@ -196,7 +206,10 @@ class MacroblockTimetableVisualizer:
         ax.set_xlim(0, len(self.time_slots))
         ax.set_ylim(0, len(self.days))
         ax.set_xticks(range(len(self.time_slots)))
-        ax.set_xticklabels([f"Slot {i}\n{slot}" for i, slot in enumerate(self.time_slots)], 
+        
+        # Show timing clearly as theory slots
+        timing_label = "Theory" if schedule_type == 'Theory/Tutorial' else "Lab"
+        ax.set_xticklabels([f"{timing_label} Slot {i}\n{slot}" for i, slot in enumerate(self.time_slots)], 
                           rotation=45, ha='right')
         ax.set_yticks(range(len(self.days)))
         ax.set_yticklabels([day.capitalize() for day in reversed(self.days)])
@@ -222,7 +235,7 @@ class MacroblockTimetableVisualizer:
         # Plot schedule
         ax = fig.add_subplot(111)
         self._plot_teacher_macroblock_schedule(ax, teacher_id, teacher_df)
-        ax.set_title(f'Macroblock Schedule for {teacher_name} (ID: {teacher_id}) - {shift_display}', fontsize=16)
+        ax.set_title(f'Macroblock Schedule for {teacher_name} (ID: {teacher_id}) - {shift_display}\n(Theory Time Slots)', fontsize=16)
         
         plt.tight_layout()
         fig.savefig(os.path.join(self.output_dir, f'teacher_{teacher_id}_{teacher_name.replace(" ", "_")}_macroblock_schedule.png'), 
@@ -244,7 +257,7 @@ class MacroblockTimetableVisualizer:
         ax = fig.add_subplot(111)
         
         self._plot_room_macroblock_schedule(ax, room_id, room_df)
-        ax.set_title(f'Macroblock Schedule for {room_title}', fontsize=16)
+        ax.set_title(f'Macroblock Schedule for {room_title}\n(Theory Time Slots)', fontsize=16)
         
         plt.tight_layout()
         fig.savefig(os.path.join(self.output_dir, f'room_{room_number.replace("/", "_")}_{room_id}_macroblock_schedule.png'), 
@@ -324,7 +337,7 @@ class MacroblockTimetableVisualizer:
         ax.set_xlim(0, len(self.time_slots))
         ax.set_ylim(0, len(self.days))
         ax.set_xticks(range(len(self.time_slots)))
-        ax.set_xticklabels([f"Slot {i}\n{slot}" for i, slot in enumerate(self.time_slots)], 
+        ax.set_xticklabels([f"Theory Slot {i}\n{slot}" for i, slot in enumerate(self.time_slots)], 
                           rotation=45, ha='right')
         ax.set_yticks(range(len(self.days)))
         ax.set_yticklabels([day.capitalize() for day in reversed(self.days)])
@@ -396,7 +409,7 @@ class MacroblockTimetableVisualizer:
         ax.set_xlim(0, len(self.time_slots))
         ax.set_ylim(0, len(self.days))
         ax.set_xticks(range(len(self.time_slots)))
-        ax.set_xticklabels([f"Slot {i}\n{slot}" for i, slot in enumerate(self.time_slots)], 
+        ax.set_xticklabels([f"Theory Slot {i}\n{slot}" for i, slot in enumerate(self.time_slots)], 
                           rotation=45, ha='right')
         ax.set_yticks(range(len(self.days)))
         ax.set_yticklabels([day.capitalize() for day in reversed(self.days)])

@@ -17,11 +17,11 @@ class MacroblockTimetableConstraints:
         self.days = ["tuesday", "wed", "thur", "fri", "sat"]
         self.num_days = len(self.days)
         
-        # Time slots based on update.txt structure
+        # Time slots based on theory class structure (proper hourly timing)
         self.time_slots = [
-            "8:00 - 8:50", "8:50 - 9:40", "9:50 - 10:40", "10:40 - 11:30",
-            "11:50 - 12:40", "12:40 - 1:30", "1:50 - 2:40", "2:40 - 3:30", 
-            "3:50 - 4:40", "4:40 - 5:30", "5:30 - 6:20", "6:20 - 7:10"
+            "8:00 - 8:50", "9:00 - 9:50", "10:00 - 10:50", "11:00 - 11:50",
+            "12:00 - 12:50", "1:00 - 1:50", "2:00 - 2:50", "3:00 - 3:50", 
+            "4:00 - 4:50", "5:00 - 5:50", "6:00 - 6:50", "7:00 - 7:50"
         ]
         self.num_slots = len(self.time_slots)
         
@@ -32,24 +32,24 @@ class MacroblockTimetableConstraints:
                 'time_range': '8:00 - 15:00',
                 'start_hour': 8,
                 'end_hour': 15,
-                'time_slots': ["8:00 - 8:50", "8:50 - 9:40", "9:50 - 10:40", "10:40 - 11:30",
-                              "11:50 - 12:40", "12:40 - 1:30", "1:50 - 2:40"]  # 8:00-14:50
+                'time_slots': ["8:00 - 8:50", "9:00 - 9:50", "10:00 - 10:50", "11:00 - 11:50",
+                              "12:00 - 12:50", "1:00 - 1:50", "2:00 - 2:50"]  # 8:00-14:50
             },
             'teacher_shift2': {
                 'name': 'Teacher Shift 2', 
                 'time_range': '10:00 - 17:00',
                 'start_hour': 10,
                 'end_hour': 17,
-                'time_slots': ["9:50 - 10:40", "10:40 - 11:30", "11:50 - 12:40", "12:40 - 1:30",
-                              "1:50 - 2:40", "2:40 - 3:30", "3:50 - 4:40"]  # 10:00-16:50
+                'time_slots': ["10:00 - 10:50", "11:00 - 11:50", "12:00 - 12:50", "1:00 - 1:50",
+                              "2:00 - 2:50", "3:00 - 3:50", "4:00 - 4:50"]  # 10:00-16:50
             },
             'teacher_shift3': {
                 'name': 'Teacher Shift 3',
                 'time_range': '12:00 - 19:00',
                 'start_hour': 12,
                 'end_hour': 19,
-                'time_slots': ["11:50 - 12:40", "12:40 - 1:30", "1:50 - 2:40", "2:40 - 3:30", 
-                              "3:50 - 4:40", "4:40 - 5:30", "5:30 - 6:20"]  # 12:00-18:50
+                'time_slots': ["12:00 - 12:50", "1:00 - 1:50", "2:00 - 2:50", "3:00 - 3:50", 
+                              "4:00 - 4:50", "5:00 - 5:50", "6:00 - 6:50"]  # 12:00-18:50
             }
         }
         
@@ -57,21 +57,21 @@ class MacroblockTimetableConstraints:
         self.macroblock_shifts = {
             'macro_shift1': {
                 'name': 'Macroblock Shift 1',
-                'time_range': '8:00 - 12:50',  # Until 12:50, not 13:00
-                'time_slots': ["8:00 - 8:50", "8:50 - 9:40", "9:50 - 10:40", "10:40 - 11:30",
-                              "11:50 - 12:40"]  # 8:00-12:40 (5 slots)
+                'time_range': '8:00 - 12:50',  # Morning shift
+                'time_slots': ["8:00 - 8:50", "9:00 - 9:50", "10:00 - 10:50", "11:00 - 11:50",
+                              "12:00 - 12:50"]  # 8:00-12:50 (5 slots)
             },
             'macro_shift2': {
                 'name': 'Macroblock Shift 2',
-                'time_range': '10:00 - 16:50',
-                'time_slots': ["9:50 - 10:40", "10:40 - 11:30", "11:50 - 12:40", "12:40 - 1:30",
-                              "1:50 - 2:40", "2:40 - 3:30", "3:50 - 4:40"]  # 10:00-16:50 (7 slots)
+                'time_range': '10:00 - 16:50',  # Afternoon shift
+                'time_slots': ["10:00 - 10:50", "11:00 - 11:50", "12:00 - 12:50", "1:00 - 1:50",
+                              "2:00 - 2:50", "3:00 - 3:50", "4:00 - 4:50"]  # 10:00-16:50 (7 slots)
             },
             'macro_shift3': {
                 'name': 'Macroblock Shift 3',
-                'time_range': '12:00 - 18:50',
-                'time_slots': ["11:50 - 12:40", "12:40 - 1:30", "1:50 - 2:40", "2:40 - 3:30", 
-                              "3:50 - 4:40", "4:40 - 5:30", "5:30 - 6:20"]  # 12:00-18:50 (7 slots)
+                'time_range': '12:00 - 18:50',  # Evening shift
+                'time_slots': ["12:00 - 12:50", "1:00 - 1:50", "2:00 - 2:50", "3:00 - 3:50", 
+                              "4:00 - 4:50", "5:00 - 5:50", "6:00 - 6:50"]  # 12:00-18:50 (7 slots)
             }
         }
         
@@ -136,8 +136,8 @@ class MacroblockTimetableConstraints:
         self.teacher_shift_assignments = self._assign_teachers_to_shifts()
     
     def _assign_teachers_to_shifts(self):
-        """Assign teachers to shifts based on 33% distribution per department."""
-        logger.info("Assigning teachers to shifts (33% per department)...")
+        """Create daily shift assignment variables with 33% distribution and rotation constraints."""
+        logger.info("Creating daily shift assignment variables with rotation constraints...")
         
         # Group teachers by department
         dept_teachers = {}
@@ -151,32 +151,161 @@ class MacroblockTimetableConstraints:
                     dept_teachers[dept] = []
                 dept_teachers[dept].append(teacher)
         
-        teacher_shifts = {}
+        # Create daily shift assignment variables
+        self.teacher_daily_shift_vars = {}
+        for teacher in self.teachers:
+            if teacher not in self.teacher_course_assignments:
+                continue
+                
+            self.teacher_daily_shift_vars[teacher] = {}
+            for day_idx, day in enumerate(self.days):
+                self.teacher_daily_shift_vars[teacher][day_idx] = {}
+                for shift in ['teacher_shift1', 'teacher_shift2', 'teacher_shift3']:
+                    self.teacher_daily_shift_vars[teacher][day_idx][shift] = (
+                        self.model.NewBoolVar(f'teacher_{teacher}_day_{day_idx}_{shift}'))
+                
+                # Each teacher must be assigned to exactly one shift per day
+                shift_vars = list(self.teacher_daily_shift_vars[teacher][day_idx].values())
+                self.model.Add(sum(shift_vars) == 1)
         
-        # Assign teachers to shifts for each department
-        for dept, teachers_list in dept_teachers.items():
-            # Shuffle for random distribution
-            shuffled_teachers = teachers_list.copy()
-            random.shuffle(shuffled_teachers)
-            
-            # Calculate distribution (33% each, remainder to shift1)
-            total_teachers = len(teachers_list)
-            shift1_count = total_teachers // 3
-            shift2_count = total_teachers // 3
-            shift3_count = total_teachers - shift1_count - shift2_count  # Remainder goes to shift3
-            
-            # Assign teachers
-            shift_assignments = (
-                ['teacher_shift1'] * shift1_count + 
-                ['teacher_shift2'] * shift2_count + 
-                ['teacher_shift3'] * shift3_count
-            )
-            
-            for teacher, shift in zip(shuffled_teachers, shift_assignments):
-                teacher_shifts[teacher] = shift
-                logger.info(f"Assigned Teacher {teacher} to {shift} (Department: {dept})")
+        # Apply daily shift constraints
+        self.apply_daily_shift_constraints(dept_teachers)
+        
+        # For backward compatibility, create a simplified teacher_shift_assignments
+        # This will be used by other methods that expect the old format
+        teacher_shifts = {}
+        for teacher in self.teachers:
+            if teacher in self.teacher_course_assignments:
+                # Default to shift1 for compatibility (actual shifts are determined by daily variables)
+                teacher_shifts[teacher] = 'teacher_shift1'
         
         return teacher_shifts
+    
+    def apply_daily_shift_constraints(self, dept_teachers):
+        """
+        Apply daily shift rotation constraints with 33% distribution.
+        
+        Constraints:
+        1. 33% weekly distribution across all shifts for each department
+        2. Soft constraint: Encourage rotation between adjacent shifts (1↔2, 2↔3)
+        3. Discourage non-adjacent transitions (1↔3)
+        """
+        logger.info("Applying daily shift rotation constraints...")
+        
+        for dept, teachers_list in dept_teachers.items():
+            total_teacher_days = len(teachers_list) * self.num_days
+            
+            # 33% distribution constraint (soft)
+            # Total shift assignments per department should be roughly 33% each
+            dept_shift1_vars = []
+            dept_shift2_vars = []
+            dept_shift3_vars = []
+            
+            for teacher in teachers_list:
+                if teacher in self.teacher_daily_shift_vars:
+                    for day_idx in range(self.num_days):
+                        dept_shift1_vars.append(self.teacher_daily_shift_vars[teacher][day_idx]['teacher_shift1'])
+                        dept_shift2_vars.append(self.teacher_daily_shift_vars[teacher][day_idx]['teacher_shift2'])
+                        dept_shift3_vars.append(self.teacher_daily_shift_vars[teacher][day_idx]['teacher_shift3'])
+            
+            # Soft constraint: Aim for 33% distribution (allow ±20% flexibility)
+            target_per_shift = total_teacher_days // 3
+            flexibility = max(1, target_per_shift // 5)  # 20% flexibility
+            
+            self.model.Add(sum(dept_shift1_vars) >= target_per_shift - flexibility)
+            self.model.Add(sum(dept_shift1_vars) <= target_per_shift + flexibility)
+            self.model.Add(sum(dept_shift2_vars) >= target_per_shift - flexibility)
+            self.model.Add(sum(dept_shift2_vars) <= target_per_shift + flexibility)
+            self.model.Add(sum(dept_shift3_vars) >= target_per_shift - flexibility)
+            self.model.Add(sum(dept_shift3_vars) <= target_per_shift + flexibility)
+            
+            logger.info(f"Department {dept}: Target {target_per_shift}±{flexibility} assignments per shift")
+        
+        # Apply rotation constraints for each teacher
+        for teacher in self.teachers:
+            if teacher in self.teacher_daily_shift_vars:
+                self._apply_teacher_rotation_constraints(teacher)
+    
+    def _apply_teacher_rotation_constraints(self, teacher):
+        """Apply rotation constraints for a specific teacher."""
+        # Encourage adjacent shift transitions (soft constraint)
+        rotation_bonus_vars = []
+        
+        for day_idx in range(self.num_days - 1):  # Compare consecutive days
+            curr_day = day_idx
+            next_day = day_idx + 1
+            
+            # Create bonus variables for good transitions
+            # Shift1 → Shift2 transition bonus
+            bonus_1_2 = self.model.NewBoolVar(f'teacher_{teacher}_bonus_1_2_day_{curr_day}_{next_day}')
+            self.model.Add(bonus_1_2 <= self.teacher_daily_shift_vars[teacher][curr_day]['teacher_shift1'])
+            self.model.Add(bonus_1_2 <= self.teacher_daily_shift_vars[teacher][next_day]['teacher_shift2'])
+            self.model.Add(bonus_1_2 >= 
+                         self.teacher_daily_shift_vars[teacher][curr_day]['teacher_shift1'] + 
+                         self.teacher_daily_shift_vars[teacher][next_day]['teacher_shift2'] - 1)
+            rotation_bonus_vars.append(bonus_1_2)
+            
+            # Shift2 → Shift1 transition bonus
+            bonus_2_1 = self.model.NewBoolVar(f'teacher_{teacher}_bonus_2_1_day_{curr_day}_{next_day}')
+            self.model.Add(bonus_2_1 <= self.teacher_daily_shift_vars[teacher][curr_day]['teacher_shift2'])
+            self.model.Add(bonus_2_1 <= self.teacher_daily_shift_vars[teacher][next_day]['teacher_shift1'])
+            self.model.Add(bonus_2_1 >= 
+                         self.teacher_daily_shift_vars[teacher][curr_day]['teacher_shift2'] + 
+                         self.teacher_daily_shift_vars[teacher][next_day]['teacher_shift1'] - 1)
+            rotation_bonus_vars.append(bonus_2_1)
+            
+            # Shift2 → Shift3 transition bonus
+            bonus_2_3 = self.model.NewBoolVar(f'teacher_{teacher}_bonus_2_3_day_{curr_day}_{next_day}')
+            self.model.Add(bonus_2_3 <= self.teacher_daily_shift_vars[teacher][curr_day]['teacher_shift2'])
+            self.model.Add(bonus_2_3 <= self.teacher_daily_shift_vars[teacher][next_day]['teacher_shift3'])
+            self.model.Add(bonus_2_3 >= 
+                         self.teacher_daily_shift_vars[teacher][curr_day]['teacher_shift2'] + 
+                         self.teacher_daily_shift_vars[teacher][next_day]['teacher_shift3'] - 1)
+            rotation_bonus_vars.append(bonus_2_3)
+            
+            # Shift3 → Shift2 transition bonus
+            bonus_3_2 = self.model.NewBoolVar(f'teacher_{teacher}_bonus_3_2_day_{curr_day}_{next_day}')
+            self.model.Add(bonus_3_2 <= self.teacher_daily_shift_vars[teacher][curr_day]['teacher_shift3'])
+            self.model.Add(bonus_3_2 <= self.teacher_daily_shift_vars[teacher][next_day]['teacher_shift2'])
+            self.model.Add(bonus_3_2 >= 
+                         self.teacher_daily_shift_vars[teacher][curr_day]['teacher_shift3'] + 
+                         self.teacher_daily_shift_vars[teacher][next_day]['teacher_shift2'] - 1)
+            rotation_bonus_vars.append(bonus_3_2)
+            
+            # Discourage Shift1 ↔ Shift3 transitions (penalty)
+            penalty_1_3 = self.model.NewBoolVar(f'teacher_{teacher}_penalty_1_3_day_{curr_day}_{next_day}')
+            self.model.Add(penalty_1_3 <= self.teacher_daily_shift_vars[teacher][curr_day]['teacher_shift1'])
+            self.model.Add(penalty_1_3 <= self.teacher_daily_shift_vars[teacher][next_day]['teacher_shift3'])
+            self.model.Add(penalty_1_3 >= 
+                         self.teacher_daily_shift_vars[teacher][curr_day]['teacher_shift1'] + 
+                         self.teacher_daily_shift_vars[teacher][next_day]['teacher_shift3'] - 1)
+            
+            penalty_3_1 = self.model.NewBoolVar(f'teacher_{teacher}_penalty_3_1_day_{curr_day}_{next_day}')
+            self.model.Add(penalty_3_1 <= self.teacher_daily_shift_vars[teacher][curr_day]['teacher_shift3'])
+            self.model.Add(penalty_3_1 <= self.teacher_daily_shift_vars[teacher][next_day]['teacher_shift1'])
+            self.model.Add(penalty_3_1 >= 
+                         self.teacher_daily_shift_vars[teacher][curr_day]['teacher_shift3'] + 
+                         self.teacher_daily_shift_vars[teacher][next_day]['teacher_shift1'] - 1)
+            
+            # Soft constraint: Discourage non-adjacent transitions
+            self.model.Add(penalty_1_3 + penalty_3_1 <= 1)  # At most one non-adjacent transition per week
+        
+        # Encourage some variation (prevent teacher from being in same shift all week)
+        total_same_shift = []
+        for shift in ['teacher_shift1', 'teacher_shift2', 'teacher_shift3']:
+            shift_vars = [self.teacher_daily_shift_vars[teacher][day_idx][shift] 
+                         for day_idx in range(self.num_days)]
+            same_shift_all_week = self.model.NewBoolVar(f'teacher_{teacher}_same_{shift}_all_week')
+            
+            # If all days are the same shift, activate this variable
+            for var in shift_vars:
+                self.model.Add(same_shift_all_week <= var)
+            self.model.Add(same_shift_all_week >= sum(shift_vars) - self.num_days + 1)
+            
+            total_same_shift.append(same_shift_all_week)
+        
+        # Soft constraint: Encourage some variation (at most 1 teacher can have same shift all week)
+        self.model.Add(sum(total_same_shift) <= 1)
     
     def _parse_slot_assignments(self):
         """Parse the daily schedule structure to identify theory and lab slots with macroblock shift information."""
@@ -276,15 +405,12 @@ class MacroblockTimetableConstraints:
                         
                 self.macroblock_assignments[teacher][instance_id] = {}
                 
-                # Create macroblock choice variables based on teacher-macroblock compatibility
-                teacher_shift = self.teacher_shift_assignments.get(teacher, 'teacher_shift1')
-                
+                # Create macroblock choice variables based on daily teacher-macroblock compatibility
+                # With daily shifts, teacher can potentially access any macroblock depending on their daily assignment
                 for macro_shift in ['macro_shift1', 'macro_shift2', 'macro_shift3']:
-                    # Check if teacher can access this macroblock shift
-                    if self.teacher_macroblock_compatibility[teacher_shift][macro_shift]:
-                        for block in self.theory_blocks[macro_shift]:
-                            self.macroblock_assignments[teacher][instance_id][f'{block}_chosen'] = (
-                                self.model.NewBoolVar(f'teacher_{teacher}_instance_{instance_id}_{block}_chosen'))
+                    for block in self.theory_blocks[macro_shift]:
+                        self.macroblock_assignments[teacher][instance_id][f'{block}_chosen'] = (
+                            self.model.NewBoolVar(f'teacher_{teacher}_instance_{instance_id}_{block}_chosen'))
                 
                 # Determine if tutorials should be allocated:
                 # If tutorial_hours > 0 OR lecture_hours == 4 (original working logic)
@@ -293,19 +419,20 @@ class MacroblockTimetableConstraints:
                 # Ensure exactly one block is chosen per course instance (if it has theory hours)
                 if lecture_hours > 0 or should_allocate_tutorials:
                     block_choices = []
-                    teacher_shift = self.teacher_shift_assignments.get(teacher, 'teacher_shift1')
                     
+                    # With daily shifts, collect all possible block choices
                     for macro_shift in ['macro_shift1', 'macro_shift2', 'macro_shift3']:
-                        # Only include blocks from accessible macroblock shifts
-                        if self.teacher_macroblock_compatibility[teacher_shift][macro_shift]:
-                            for block in self.theory_blocks[macro_shift]:
-                                if f'{block}_chosen' in self.macroblock_assignments[teacher][instance_id]:
-                                    block_choices.append(
-                                        self.macroblock_assignments[teacher][instance_id][f'{block}_chosen'])
+                        for block in self.theory_blocks[macro_shift]:
+                            if f'{block}_chosen' in self.macroblock_assignments[teacher][instance_id]:
+                                block_choices.append(
+                                    self.macroblock_assignments[teacher][instance_id][f'{block}_chosen'])
                     
                     # CRITICAL: Every course instance MUST be assigned to exactly one block
                     if block_choices:  # Only add constraint if there are valid choices
                         self.model.Add(sum(block_choices) == 1)
+                    
+                    # Add daily shift compatibility constraints for chosen blocks
+                    self._add_daily_shift_block_compatibility(teacher, instance_id)
                     
                     # Add a high-priority constraint to ensure this instance gets scheduled
                     logger.info(f"Ensuring course instance {instance_id} (Teacher {teacher}, {lecture_hours}L+{tutorial_hours}T) gets assigned")
@@ -320,6 +447,35 @@ class MacroblockTimetableConstraints:
         self._apply_teacher_shift_constraints(teacher_theory_assignments)
         
         return True
+    
+    def _add_daily_shift_block_compatibility(self, teacher, instance_id):
+        """Add constraints to ensure chosen blocks are compatible with daily shift assignments."""
+        if teacher not in self.teacher_daily_shift_vars or teacher not in self.macroblock_assignments:
+            return
+        
+        if instance_id not in self.macroblock_assignments[teacher]:
+            return
+        
+        # For each day, ensure that if a teacher is assigned to a shift,
+        # they can only use macroblock that are compatible with that shift
+        for day_idx in range(self.num_days):
+            for shift_name in ['teacher_shift1', 'teacher_shift2', 'teacher_shift3']:
+                teacher_shift_var = self.teacher_daily_shift_vars[teacher][day_idx][shift_name]
+                
+                # Check each macroblock choice
+                for macro_shift in ['macro_shift1', 'macro_shift2', 'macro_shift3']:
+                    # Check if this teacher shift is compatible with this macroblock shift
+                    is_compatible = self.teacher_macroblock_compatibility[shift_name][macro_shift]
+                    
+                    if not is_compatible:
+                        # If teacher is assigned to this shift, prevent incompatible macroblock choices
+                        for block in self.theory_blocks[macro_shift]:
+                            if f'{block}_chosen' in self.macroblock_assignments[teacher][instance_id]:
+                                block_var = self.macroblock_assignments[teacher][instance_id][f'{block}_chosen']
+                                # If teacher is in incompatible shift, they cannot choose this block
+                                self.model.Add(teacher_shift_var + block_var <= 1)
+        
+        logger.info(f"Added daily shift compatibility constraints for Teacher {teacher}, Instance {instance_id}")
     
     def _apply_semester_grouping_constraints(self):
         """Apply constraints to group courses by semester and department with teacher diversity and vertical macroblock grouping."""
@@ -527,34 +683,38 @@ class MacroblockTimetableConstraints:
                                     self.model.Add(sum(scattered_vars) <= 2)
     
     def _apply_teacher_shift_constraints(self, teacher_theory_assignments):
-        """Apply teacher shift constraints to ensure teachers only work in their assigned shifts."""
-        logger.info("Applying teacher shift constraints...")
+        """Apply daily teacher shift constraints to ensure teachers only work in their assigned daily shifts."""
+        logger.info("Applying daily teacher shift constraints...")
         
         for teacher in self.teachers:
-            if teacher not in self.teacher_shift_assignments:
+            if teacher not in self.teacher_daily_shift_vars:
                 continue
-                
-            teacher_shift = self.teacher_shift_assignments[teacher]
-            allowed_time_slots = self.teacher_shifts[teacher_shift]['time_slots']
             
-            # For each day and slot, check if teacher should be allowed to work
+            # For each day and slot, check if teacher should be allowed to work based on daily shift
             for day_idx, day in enumerate(self.days):
                 for slot_idx in range(self.num_slots):
                     current_time_slot = self.time_slots[slot_idx]
                     
-                    # If this time slot is not in teacher's allowed shift, prevent assignment
-                    if current_time_slot not in allowed_time_slots:
-                        # Teacher cannot be assigned to any room in this slot
-                        for room_id in self.classroom_ids:
-                            assignment_var = teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]
-                            self.model.Add(assignment_var == 0)
-                    else:
-                        # Teacher can work in this slot, but check for overlapping shift conflicts
-                        self._apply_overlapping_slot_constraints(
-                            teacher, day_idx, slot_idx, teacher_shift, teacher_theory_assignments)
+                    # For each possible shift, check if teacher is assigned to work in this slot
+                    for shift_name in ['teacher_shift1', 'teacher_shift2', 'teacher_shift3']:
+                        allowed_time_slots = self.teacher_shifts[shift_name]['time_slots']
+                        teacher_shift_var = self.teacher_daily_shift_vars[teacher][day_idx][shift_name]
+                        
+                        # If this time slot is not allowed for this shift
+                        if current_time_slot not in allowed_time_slots:
+                            # If teacher is assigned to this shift, they cannot work in this slot
+                            for room_id in self.classroom_ids:
+                                assignment_var = teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]
+                                # If teacher is in this shift AND assigned to this room, create conflict
+                                self.model.Add(teacher_shift_var + assignment_var <= 1)
+                        else:
+                            # Teacher can work in this slot if assigned to this shift
+                            # Check for overlapping shift conflicts
+                            self._apply_overlapping_slot_constraints_daily(
+                                teacher, day_idx, slot_idx, shift_name, teacher_theory_assignments)
     
-    def _apply_overlapping_slot_constraints(self, teacher, day_idx, slot_idx, teacher_shift, teacher_theory_assignments):
-        """Apply constraints for overlapping slots to prevent conflicts between macroblock shifts."""
+    def _apply_overlapping_slot_constraints_daily(self, teacher, day_idx, slot_idx, teacher_shift, teacher_theory_assignments):
+        """Apply constraints for overlapping slots to prevent conflicts between macroblock shifts with daily shift system."""
         day = self.days[day_idx]
         slot_info = self.slot_assignments[day][slot_idx]
         
@@ -572,6 +732,9 @@ class MacroblockTimetableConstraints:
             else:
                 inaccessible_blocks.extend(shift_blocks)
         
+        # Get the daily shift variable for this teacher
+        teacher_shift_var = self.teacher_daily_shift_vars[teacher][day_idx][teacher_shift]
+        
         # If teacher has course assignments, ensure they only use accessible blocks
         if teacher in self.teacher_course_assignments:
             for instance in self.teacher_course_assignments[teacher]:
@@ -583,11 +746,16 @@ class MacroblockTimetableConstraints:
                         if f'{inaccessible_block}_chosen' in self.macroblock_assignments[teacher][instance_id]:
                             inaccessible_block_var = self.macroblock_assignments[teacher][instance_id][f'{inaccessible_block}_chosen']
                             
-                            # If inaccessible block is chosen, teacher cannot be in this slot
+                            # If teacher is in this shift AND inaccessible block is chosen, prevent room assignment
                             for room_id in self.classroom_ids:
                                 room_var = teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]
-                                # Prevent both being true simultaneously
-                                self.model.Add(inaccessible_block_var + room_var <= 1)
+                                # Prevent all three being true simultaneously
+                                self.model.Add(teacher_shift_var + inaccessible_block_var + room_var <= 2)
+    
+    def _apply_overlapping_slot_constraints(self, teacher, day_idx, slot_idx, teacher_shift, teacher_theory_assignments):
+        """Legacy method - kept for backward compatibility."""
+        # This method is now replaced by _apply_overlapping_slot_constraints_daily
+        pass
     
     def _link_macroblock_to_slots(self, teacher, instance, teacher_theory_assignments, teacher_lab_assignments):
         """Link macroblock assignments to actual time slot assignments. Skip lab linking."""
