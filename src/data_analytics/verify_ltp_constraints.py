@@ -7,8 +7,8 @@ def verify_ltp_constraints():
     
     # Load course requirements - try both possible file names
     course_files = [
-        # "data/mapped_data/computer_dept_teacher_courses.csv",
-        "data/mapped_data/cs_teacher_courses.csv"
+        "data/mapped_data/computer_dept_teacher_courses.csv",
+        # "data/mapped_data/cs_teacher_courses.csv"
     ]
     
     course_file = None
@@ -125,22 +125,40 @@ def verify_ltp_constraints():
             status = "❌ NOT SCHEDULED"
             not_scheduled += 1
         else:
-            # Determine expected tutorial hours based on the current system rules
-            # For 3-lecture courses: expect exactly 1 tutorial (3rd hour)
-            # For other courses with tutorials: expect tutorial_hours
-            # For 4-lecture courses: expect 1 tutorial
-            if lecture_required == 3:
-                expected_tutorial = 1  # 3rd hour as tutorial
-                expected_lecture = 2   # Only 2 actual lecture hours
+            # Determine expected tutorial hours based on the specific allocation rules
+            # Case 1: 3L+0T -> a1 + a1 + ta1 (ta1 as 3rd lecture) = 3 lecture + 0 tutorial
+            # Case 2: 3L+1T -> a1 + a1 + ta1 + taa1 (ta1 as 3rd lecture, taa1 as tutorial) = 3 lecture + 1 tutorial  
+            # Case 3: 2L+1T -> a1 + a1 + ta1 (ta1 as tutorial) = 2 lecture + 1 tutorial
+            # Case 4: 1L+1T -> a1 + ta1 (ta1 as tutorial) = 1 lecture + 1 tutorial
+            # Case 5: 2L+0T -> a1 + a1 = 2 lecture + 0 tutorial
+            # Case 6: 1L+0T -> a1 = 1 lecture + 0 tutorial
+            if lecture_required == 3 and tutorial_required == 0:
+                expected_lecture = 3  # 2 from a1 + 1 from ta1 (as lecture)
+                expected_tutorial = 0  # No tutorials
+            elif lecture_required == 3 and tutorial_required == 1:
+                expected_lecture = 3  # 2 from a1 + 1 from ta1 (as lecture)
+                expected_tutorial = 1  # 1 from taa1 (as tutorial)
+            elif lecture_required == 2 and tutorial_required == 1:
+                expected_lecture = 2  # 2 from a1 slots
+                expected_tutorial = 1  # 1 from ta1 (as tutorial)
+            elif lecture_required == 1 and tutorial_required == 1:
+                expected_lecture = 1  # 1 from a1 slot
+                expected_tutorial = 1  # 1 from ta1 (as tutorial)
+            elif lecture_required == 2 and tutorial_required == 0:
+                expected_lecture = 2  # 2 from a1 slots
+                expected_tutorial = 0  # No tutorials
+            elif lecture_required == 1 and tutorial_required == 0:
+                expected_lecture = 1  # 1 from a1 slot
+                expected_tutorial = 0  # No tutorials
             elif lecture_required == 4:
-                expected_tutorial = 1  # 4-lecture courses get 1 tutorial
-                expected_lecture = lecture_required
+                expected_lecture = 4  # 4-lecture courses get all lecture hours
+                expected_tutorial = 1  # Plus 1 tutorial
             elif tutorial_required > 0:
+                expected_lecture = lecture_required
                 expected_tutorial = tutorial_required
-                expected_lecture = lecture_required
             else:
-                expected_tutorial = 0
                 expected_lecture = lecture_required
+                expected_tutorial = 0
             
             # Check compliance - strict for theory, skip practicals
             lecture_ok = lecture_scheduled == expected_lecture
@@ -166,21 +184,37 @@ def verify_ltp_constraints():
             tut_display = f"0/{tutorial_required if tutorial_required > 0 else '0'}"
             prac_display = f"0/Skip" if practical_required > 0 else "0/0"
         else:
-            if lecture_required == 3:
-                expected_lecture = 2
-                expected_tutorial = 1
+            # Use the same logic as above for display consistency
+            if lecture_required == 3 and tutorial_required == 0:
+                display_expected_lecture = 3  # 2 from a1 + 1 from ta1 (as lecture)
+                display_expected_tutorial = 0  # No tutorials
+            elif lecture_required == 3 and tutorial_required == 1:
+                display_expected_lecture = 3  # 2 from a1 + 1 from ta1 (as lecture)
+                display_expected_tutorial = 1  # 1 from taa1 (as tutorial)
+            elif lecture_required == 2 and tutorial_required == 1:
+                display_expected_lecture = 2  # 2 from a1 slots
+                display_expected_tutorial = 1  # 1 from ta1 (as tutorial)
+            elif lecture_required == 1 and tutorial_required == 1:
+                display_expected_lecture = 1  # 1 from a1 slot
+                display_expected_tutorial = 1  # 1 from ta1 (as tutorial)
+            elif lecture_required == 2 and tutorial_required == 0:
+                display_expected_lecture = 2  # 2 from a1 slots
+                display_expected_tutorial = 0  # No tutorials
+            elif lecture_required == 1 and tutorial_required == 0:
+                display_expected_lecture = 1  # 1 from a1 slot
+                display_expected_tutorial = 0  # No tutorials
             elif lecture_required == 4:
-                expected_lecture = lecture_required
-                expected_tutorial = 1
+                display_expected_lecture = 4  # 4-lecture courses get all lecture hours
+                display_expected_tutorial = 1  # Plus 1 tutorial
             elif tutorial_required > 0:
-                expected_lecture = lecture_required
-                expected_tutorial = tutorial_required
+                display_expected_lecture = lecture_required
+                display_expected_tutorial = tutorial_required
             else:
-                expected_lecture = lecture_required
-                expected_tutorial = 0
+                display_expected_lecture = lecture_required
+                display_expected_tutorial = 0
             
-            lec_display = f"{lecture_scheduled}/{expected_lecture}"
-            tut_display = f"{tutorial_scheduled}/{expected_tutorial}"
+            lec_display = f"{lecture_scheduled}/{display_expected_lecture}"
+            tut_display = f"{tutorial_scheduled}/{display_expected_tutorial}"
             prac_display = f"{practical_scheduled}/Skip" if practical_required > 0 else f"{practical_scheduled}/0"
         
         print(f"{instance_id:<6} {course_code:<12} {teacher_name[:19]:<20} {semester:<4} {lecture_required:<6} {lec_display:<6} {tutorial_required:<6} {tut_display:<6} {practical_required:<6} {prac_display:<6} {status:<20}")
@@ -228,9 +262,19 @@ def verify_ltp_constraints():
         if total_scheduled > 0:
             course_type_analysis[course_type]['scheduled'] += 1
             
-            # Check compliance
-            if lecture_hours == 3:
+            # Check compliance using the new allocation logic
+            if lecture_hours == 3 and tutorial_hours == 0:
+                expected_lecture, expected_tutorial = 3, 0
+            elif lecture_hours == 3 and tutorial_hours == 1:
+                expected_lecture, expected_tutorial = 3, 1
+            elif lecture_hours == 2 and tutorial_hours == 1:
                 expected_lecture, expected_tutorial = 2, 1
+            elif lecture_hours == 1 and tutorial_hours == 1:
+                expected_lecture, expected_tutorial = 1, 1
+            elif lecture_hours == 2 and tutorial_hours == 0:
+                expected_lecture, expected_tutorial = 2, 0
+            elif lecture_hours == 1 and tutorial_hours == 0:
+                expected_lecture, expected_tutorial = 1, 0
             elif lecture_hours == 4:
                 expected_lecture, expected_tutorial = lecture_hours, 1
             elif tutorial_hours > 0:
@@ -266,16 +310,34 @@ def verify_ltp_constraints():
             total_scheduled = lec_scheduled + tut_scheduled + scheduled_hours[instance_id]['practical']
             
             teacher_name = f"{req['first_name']} {req['last_name']}".strip() or f"T{req['teacher_id']}"
+            tutorial_required = req['tutorial_hours']
             
             if total_scheduled == 0:
                 compliance = "❌ Not Scheduled"
-            elif lec_scheduled == 2 and tut_scheduled == 1:
-                three_lec_compliant += 1
-                three_lec_scheduled += 1
-                compliance = "✅ Perfect"
             else:
                 three_lec_scheduled += 1
-                compliance = "❌ Wrong Hours"
+                # Check based on new allocation logic
+                if tutorial_required == 0:
+                    # Case 1: 3L+0T should get 3L+0T
+                    if lec_scheduled == 3 and tut_scheduled == 0:
+                        three_lec_compliant += 1
+                        compliance = "✅ Perfect"
+                    else:
+                        compliance = "❌ Wrong Hours"
+                elif tutorial_required == 1:
+                    # Case 2: 3L+1T should get 3L+1T
+                    if lec_scheduled == 3 and tut_scheduled == 1:
+                        three_lec_compliant += 1
+                        compliance = "✅ Perfect"
+                    else:
+                        compliance = "❌ Wrong Hours"
+                else:
+                    # Other cases - use general logic
+                    if lec_scheduled == 3 and tut_scheduled == tutorial_required:
+                        three_lec_compliant += 1
+                        compliance = "✅ Perfect"
+                    else:
+                        compliance = "❌ Wrong Hours"
             
             print(f"{instance_id:<6} {req['course_code']:<12} {teacher_name[:14]:<15} {lec_scheduled:<6} {tut_scheduled:<6} {compliance:<15}")
         
@@ -287,8 +349,13 @@ def verify_ltp_constraints():
         print(f"\n🎉 ALL THEORY CONSTRAINTS SATISFIED!")
         print(f"   ✅ All course instances scheduled and compliant")
         print(f"   ✅ Lecture hours properly allocated")
-        print(f"   ✅ Tutorial hours allocated according to rules:")
-        print(f"      - 3-lecture courses: 2 lectures + 1 tutorial (3rd hour)")
+        print(f"   ✅ Tutorial hours allocated according to NEW rules:")
+        print(f"      - 3L+0T courses: 3 lectures (ta1 as 3rd lecture) + 0 tutorials")
+        print(f"      - 3L+1T courses: 3 lectures (ta1 as 3rd lecture) + 1 tutorial (taa1)")
+        print(f"      - 2L+1T courses: 2 lectures + 1 tutorial (ta1 as tutorial)")
+        print(f"      - 1L+1T courses: 1 lecture + 1 tutorial (ta1 as tutorial)")
+        print(f"      - 2L+0T courses: 2 lectures + 0 tutorials")
+        print(f"      - 1L+0T courses: 1 lecture + 0 tutorials")
         print(f"      - 4-lecture courses: 4 lectures + 1 tutorial")
         print(f"      - Other courses: as specified in tutorial_hours")
         print(f"   ⏭️  Practical hours validation skipped (labs not allocated)")

@@ -49,14 +49,12 @@ sat,     e1/L49,     d1/L50,      c1/L51,      tb1/e2/L52,    e2/L53,       d2/L
 33% should be different for every teacher each day (soft constraint) for teacher_shift atleast minimum they should be in two different teacher_shift in a week 
 Example teacher_shit 1 on tuesday, then teacher_shift 2 on wed, then thur teacher_shift 3
 
-now add lab slot and constraints
-1)first add slot L,       8:00 - 8:50,8:50 - 9:40, 9:50 - 10:40,10:40 - 11:30,11:50 - 12:40,12:40 - 1:30,1:50 - 2:40,2:40 - 3:30,3:50 - 4:40,4:40 - 5:30,5:30 - 6:20, 6:20 - 7:10
-L1 8:00 - 9:40, L2: 9:50 - 11:30, 11:50 - 12:40, ..... SO on each and every day
-should be allocated according to the number of practical hour given
-2pr hour  = 1 lab slot = L1 8:00 - 9:40
+
 2) No Overlapping Slots Constraint (`apply_no_overlapping_slots_constraint`)
 3) Room Single Assignment Constraint (`apply_room_single_assignment_constraint`)
 4)   Intelligent Lab Capacity Constraint (`apply_intelligent_lab_capacity_constraint`)
 
 121    EC23511      Dr. Sathiyavathi S   5    2      2/2    1      0/1    0      0/0    ❌ Violation
 why did not assign a tutorial hour the data is attached check it
+
+

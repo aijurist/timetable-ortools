@@ -134,7 +134,7 @@ class MacroblockTimetableScheduler:
         
         # Create the solver and solve the model
         solver = cp_model.CpSolver()
-        solver.parameters.max_time_in_seconds = 300  # 5 minutes time limit
+        solver.parameters.max_time_in_seconds = 600  # 5 minutes time limit
         solver.parameters.max_memory_in_mb = 30000  # 16GB memory limit
         solver.parameters.log_search_progress = True
         solver.parameters.num_search_workers = 12  # 8 threads for parallel search
@@ -145,8 +145,11 @@ class MacroblockTimetableScheduler:
         if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
             self.logger.info(f"Solution found with status {status}!")
             
-            # Process the solution (skip lab assignments)
-            schedule_result = self.process_solution(solver, teacher_theory_assignments, None, constraints)
+            # First extract base macroblock assignments from CP-SAT solution
+            base_assignments = self.extract_base_macroblock_assignments(solver, constraints)
+            
+            # Post-process to create detailed lecture/tutorial schedule
+            schedule_result = self.post_process_detailed_schedule(base_assignments, constraints)
             
             # Save schedule results
             self.save_schedule_results(schedule_result)
@@ -158,6 +161,280 @@ class MacroblockTimetableScheduler:
         else:
             self.logger.warning(f"No solution found. Status: {status}")
             return False
+    
+    def extract_base_macroblock_assignments(self, solver, constraints):
+        """Extract base macroblock assignments from CP-SAT solution (SIMPLIFIED APPROACH)."""
+        self.logger.info("Extracting base macroblock assignments from CP-SAT solution...")
+        
+        base_assignments = {}
+        
+        # Extract which base macroblock each course instance is assigned to
+        for teacher in self.teachers:
+            if teacher in constraints.macroblock_assignments:
+                base_assignments[teacher] = {}
+                
+                for instance_id, macroblock_vars in constraints.macroblock_assignments[teacher].items():
+                    for block_var_name, block_var in macroblock_vars.items():
+                        if block_var_name.endswith('_chosen') and solver.Value(block_var) == 1:
+                            base_block = block_var_name.replace('_chosen', '')
+                            base_assignments[teacher][instance_id] = {
+                                'base_macroblock': base_block,
+                                'instance_data': constraints.course_instance_mappings[instance_id]
+                            }
+                            self.logger.info(f"Instance {instance_id} (Teacher {teacher}) -> {base_block}")
+                            break
+        
+        return base_assignments
+    
+    def post_process_detailed_schedule(self, base_assignments, constraints):
+        """Post-process base assignments to create detailed lecture/tutorial schedule."""
+        self.logger.info("Post-processing base assignments into detailed schedule...")
+        
+        schedule_data = []
+        
+        # Pre-compute teacher and room information (same as before)
+        teacher_info_cache = {}
+        for teacher in self.teachers:
+            teacher_rows = self.courses_df[self.courses_df['teacher_id'] == teacher]
+            if not teacher_rows.empty:
+                first_row = teacher_rows.iloc[0]
+                teacher_info_cache[teacher] = {
+                    'first_name': first_row.get('first_name', ''),
+                    'last_name': first_row.get('last_name', ''),
+                    'staff_code': first_row.get('staff_code', '')
+                }
+            else:
+                teacher_info_cache[teacher] = {
+                    'first_name': '',
+                    'last_name': '',
+                    'staff_code': ''
+                }
+        
+        classroom_info = {}
+        for _, room_row in self.classrooms.iterrows():
+            room_id = room_row['id']
+            classroom_info[room_id] = {
+                'room_number': room_row['room_number'],
+                'block': room_row.get('block', ''),
+                'description': room_row.get('description', ''),
+                'capacity': room_row.get('room_max_cap', 0)
+            }
+        
+        # Map base assignments to specific time slots using the 6-case logic
+        room_counter = 0  # Simple room assignment strategy
+        
+        for teacher, teacher_assignments in base_assignments.items():
+            for instance_id, assignment_info in teacher_assignments.items():
+                base_block = assignment_info['base_macroblock']
+                instance_data = assignment_info['instance_data']['instance']
+                
+                lecture_hours = instance_data['lecture_hours']
+                tutorial_hours = instance_data['tutorial_hours']
+                
+                # Apply the 6-case logic to determine specific slot allocations
+                slot_assignments = self._apply_case_logic(
+                    base_block, lecture_hours, tutorial_hours, instance_data, teacher)
+                
+                # Convert slot assignments to schedule entries
+                for slot_assignment in slot_assignments:
+                    # Assign room (simple round-robin for now)
+                    room_id = list(classroom_info.keys())[room_counter % len(classroom_info)]
+                    room_counter += 1
+                    
+                    teacher_info = teacher_info_cache[teacher]
+                    room_details = classroom_info[room_id]
+                    
+                    schedule_data.append({
+                        'day': slot_assignment['day'],
+                        'slot_index': slot_assignment['slot_index'],
+                        'time_interval': slot_assignment['time_interval'],
+                        'slot_type': slot_assignment['slot_type'],
+                        'macroblock': slot_assignment['macroblock'],
+                        'teacher_id': teacher,
+                        'first_name': teacher_info['first_name'],
+                        'last_name': teacher_info['last_name'],
+                        'staff_code': teacher_info['staff_code'],
+                        'room_id': room_id,
+                        'room_number': room_details['room_number'],
+                        'block': room_details['block'],
+                        'room_type': 'Classroom',
+                        'capacity': room_details['capacity'],
+                        'course_id': instance_data['course_id'],
+                        'course_code': instance_data['course_code'],
+                        'course_name': instance_data['course_name'],
+                        'course_instance_id': instance_id,
+                        'student_count': instance_data['student_count'],
+                        'academic_year': instance_data.get('academic_year', ''),
+                        'semester': instance_data.get('semester', ''),
+                        'course_dept': instance_data.get('course_dept', ''),
+                        'teacher_shift': 'combined_shift',
+                        'daily_shift_pattern': 'Combined→Combined→Combined→Combined→Combined'
+                    })
+        
+        return {
+            'schedule_data': schedule_data,
+            'daily_schedules': self._create_daily_schedule_structure(schedule_data),
+            'time_slot_definitions': {
+                'T': self.time_slots,
+            }
+        }
+    
+    def _apply_case_logic(self, base_block, lecture_hours, tutorial_hours, instance_data, teacher):
+        """Apply the 6-case logic to determine specific slot allocations."""
+        slot_assignments = []
+        
+        # Find all slots for this base block across the week
+        base_slots = []
+        tutorial_slots = []
+        extended_tutorial_slots = []
+        
+        block_letter = base_block[0]  # 'a', 'b', 'c', etc.
+        block_number = base_block[1]  # '1' or '2'
+        
+        for day_idx, day in enumerate(self.days):
+            day_schedule = self.daily_schedule_structure[day]
+            for slot_idx, slot_content in enumerate(day_schedule):
+                theory_blocks = []
+                parts = slot_content.split('/')
+                for part in parts:
+                    if part in ['a1', 'a2', 'b1', 'b2', 'c1', 'c2', 'd1', 'd2', 'e1', 'e2', 'f1', 'f2', 'g1', 'g2',
+                               'ta1', 'ta2', 'tb1', 'tb2', 'tc1', 'tc2', 'td1', 'td2', 'te1', 'te2', 'tf1', 'tf2', 'tg1', 'tg2',
+                               'taa1', 'taa2', 'tbb1', 'tbb2', 'tcc1', 'tcc2', 'v1', 'v2']:
+                        theory_blocks.append(part)
+                
+                # Collect slots for base block
+                if base_block in theory_blocks:
+                    base_slots.append({
+                        'day': day, 'day_idx': day_idx, 'slot_idx': slot_idx,
+                        'time_interval': self.time_slots[slot_idx]
+                    })
+                
+                # Collect tutorial slots
+                tutorial_block = f't{block_letter}{block_number}'
+                if tutorial_block in theory_blocks:
+                    tutorial_slots.append({
+                        'day': day, 'day_idx': day_idx, 'slot_idx': slot_idx,
+                        'time_interval': self.time_slots[slot_idx], 'block': tutorial_block
+                    })
+                
+                # Collect extended tutorial slots
+                extended_tutorial_block = f't{block_letter}{block_letter}{block_number}'
+                if extended_tutorial_block in theory_blocks:
+                    extended_tutorial_slots.append({
+                        'day': day, 'day_idx': day_idx, 'slot_idx': slot_idx,
+                        'time_interval': self.time_slots[slot_idx], 'block': extended_tutorial_block
+                    })
+        
+        # Apply case-specific logic
+        self.logger.info(f"Applying case logic: {lecture_hours}L+{tutorial_hours}T for instance {instance_data['id']}")
+        
+        if lecture_hours == 3 and tutorial_hours == 0:
+            # Case 1: 3L+0T → a1 + a1 + ta1 (ta1 as 3rd lecture)
+            for i, slot in enumerate(base_slots[:2]):  # Take first 2 base slots as lectures
+                slot_assignments.append({
+                    'day': slot['day'], 'slot_index': slot['slot_idx'],
+                    'time_interval': slot['time_interval'],
+                    'slot_type': 'Lecture', 'macroblock': base_block
+                })
+            
+            for slot in tutorial_slots[:1]:  # Take first tutorial slot as 3rd lecture
+                slot_assignments.append({
+                    'day': slot['day'], 'slot_index': slot['slot_idx'],
+                    'time_interval': slot['time_interval'],
+                    'slot_type': 'Lecture', 'macroblock': slot['block']
+                })
+            
+        elif lecture_hours == 3 and tutorial_hours == 1:
+            # Case 2: 3L+1T → a1 + a1 + ta1 + taa1 (ta1 as 3rd lecture, taa1 as tutorial)
+            for i, slot in enumerate(base_slots[:2]):  # Take first 2 base slots as lectures
+                slot_assignments.append({
+                    'day': slot['day'], 'slot_index': slot['slot_idx'],
+                    'time_interval': slot['time_interval'],
+                    'slot_type': 'Lecture', 'macroblock': base_block
+                })
+            
+            for slot in tutorial_slots[:1]:  # Take first tutorial slot as 3rd lecture
+                slot_assignments.append({
+                    'day': slot['day'], 'slot_index': slot['slot_idx'],
+                    'time_interval': slot['time_interval'],
+                    'slot_type': 'Lecture', 'macroblock': slot['block']
+                })
+            
+            for slot in extended_tutorial_slots[:1]:  # Take first extended tutorial as tutorial
+                slot_assignments.append({
+                    'day': slot['day'], 'slot_index': slot['slot_idx'],
+                    'time_interval': slot['time_interval'],
+                    'slot_type': 'Tutorial', 'macroblock': slot['block']
+                })
+        
+        elif lecture_hours == 2 and tutorial_hours == 1:
+            # Case 3: 2L+1T → a1 + a1 + ta1 (ta1 as tutorial)
+            for i, slot in enumerate(base_slots[:2]):  # Take first 2 base slots as lectures
+                slot_assignments.append({
+                    'day': slot['day'], 'slot_index': slot['slot_idx'],
+                    'time_interval': slot['time_interval'],
+                    'slot_type': 'Lecture', 'macroblock': base_block
+                })
+            
+            for slot in tutorial_slots[:1]:  # Take first tutorial slot as tutorial
+                slot_assignments.append({
+                    'day': slot['day'], 'slot_index': slot['slot_idx'],
+                    'time_interval': slot['time_interval'],
+                    'slot_type': 'Tutorial', 'macroblock': slot['block']
+                })
+        
+        elif lecture_hours == 1 and tutorial_hours == 1:
+            # Case 4: 1L+1T → a1 + ta1 (ta1 as tutorial)
+            for slot in base_slots[:1]:  # Take first base slot as lecture
+                slot_assignments.append({
+                    'day': slot['day'], 'slot_index': slot['slot_idx'],
+                    'time_interval': slot['time_interval'],
+                    'slot_type': 'Lecture', 'macroblock': base_block
+                })
+            
+            for slot in tutorial_slots[:1]:  # Take first tutorial slot as tutorial
+                slot_assignments.append({
+                    'day': slot['day'], 'slot_index': slot['slot_idx'],
+                    'time_interval': slot['time_interval'],
+                    'slot_type': 'Tutorial', 'macroblock': slot['block']
+                })
+        
+        elif lecture_hours == 2 and tutorial_hours == 0:
+            # Case 5: 2L+0T → a1 + a1 (2 lectures only)
+            for i, slot in enumerate(base_slots[:2]):  # Take first 2 base slots as lectures
+                slot_assignments.append({
+                    'day': slot['day'], 'slot_index': slot['slot_idx'],
+                    'time_interval': slot['time_interval'],
+                    'slot_type': 'Lecture', 'macroblock': base_block
+                })
+        
+        elif lecture_hours == 1 and tutorial_hours == 0:
+            # Case 6: 1L+0T → a1 (1 lecture only)
+            for slot in base_slots[:1]:  # Take first base slot as lecture
+                slot_assignments.append({
+                    'day': slot['day'], 'slot_index': slot['slot_idx'],
+                    'time_interval': slot['time_interval'],
+                    'slot_type': 'Lecture', 'macroblock': base_block
+                })
+        
+        else:
+            # General case - allocate flexibly
+            for i, slot in enumerate(base_slots[:lecture_hours]):
+                slot_assignments.append({
+                    'day': slot['day'], 'slot_index': slot['slot_idx'],
+                    'time_interval': slot['time_interval'],
+                    'slot_type': 'Lecture', 'macroblock': base_block
+                })
+            
+            for i, slot in enumerate(tutorial_slots[:tutorial_hours]):
+                slot_assignments.append({
+                    'day': slot['day'], 'slot_index': slot['slot_idx'],
+                    'time_interval': slot['time_interval'],
+                    'slot_type': 'Tutorial', 'macroblock': slot['block']
+                })
+        
+        self.logger.info(f"Case result: {len(slot_assignments)} slot assignments for instance {instance_data['id']}")
+        return slot_assignments
     
     def process_solution(self, solver, teacher_theory_assignments, teacher_lab_assignments, constraints):
         """Process the solution and extract the schedule. Skip lab processing."""
@@ -301,11 +578,11 @@ class MacroblockTimetableScheduler:
                                           'tcc1', 'tcc2', 'v1', 'v2']:
                                 # Tutorial block - find parent block
                                 if block.startswith('taa'):
-                                    parent_block = 'aa' + block[3:]  # taa1 -> aa1
+                                    parent_block = 'a' + block[3:]  # taa1 -> a1, taa2 -> a2
                                 elif block.startswith('tbb'):
-                                    parent_block = 'bb' + block[3:]  # tbb1 -> bb1
+                                    parent_block = 'b' + block[3:]  # tbb1 -> b1, tbb2 -> b2
                                 elif block.startswith('tcc'):
-                                    parent_block = 'cc' + block[3:]  # tcc1 -> cc1
+                                    parent_block = 'c' + block[3:]  # tcc1 -> c1, tcc2 -> c2
                                 elif block.startswith('v'):
                                     parent_block = block  # v1 -> v1 (standalone tutorial block)
                                 else:
@@ -313,6 +590,29 @@ class MacroblockTimetableScheduler:
                                 
                                 if f'{parent_block}_chosen' in macroblock_vars:
                                     if solver.Value(macroblock_vars[f'{parent_block}_chosen']) == 1:
+                                        # Determine slot type based on the specific allocation logic
+                                        lecture_hours = instance['lecture_hours']
+                                        tutorial_hours = instance['tutorial_hours']
+                                        
+                                        # Determine if this ta block is used as lecture or tutorial
+                                        if block in ['ta1', 'ta2', 'tb1', 'tb2', 'tc1', 'tc2', 'td1', 'td2', 'te1', 'te2', 'tf1', 'tf2', 'tg1', 'tg2']:
+                                            # ta1 blocks - usage depends on case
+                                            if lecture_hours == 3 and tutorial_hours == 0:
+                                                # Case 1: ta1 used as 3rd lecture hour
+                                                slot_type = 'Lecture'
+                                            elif lecture_hours == 3 and tutorial_hours == 1:
+                                                # Case 2: ta1 used as 3rd lecture hour (taa1 will be tutorial)
+                                                slot_type = 'Lecture'
+                                            elif tutorial_hours > 0:
+                                                # Cases 3 & 4: ta1 used as tutorial hour
+                                                slot_type = 'Tutorial'
+                                            else:
+                                                # General case - assume tutorial for ta1 blocks
+                                                slot_type = 'Tutorial'
+                                        else:
+                                            # Extended tutorial blocks (taa1, tbb1, etc.) - always tutorials
+                                            slot_type = 'Tutorial'
+                                        
                                         return {
                                             'instance_id': instance_id,
                                             'course_id': instance['course_id'],
@@ -323,7 +623,7 @@ class MacroblockTimetableScheduler:
                                             'semester': instance.get('semester', ''),
                                             'course_dept': instance.get('course_dept', ''),
                                             'macroblock': block,
-                                            'slot_type': 'Tutorial'
+                                            'slot_type': slot_type
                                         }
             
             elif assignment_type == 'lab' and instance['practical_hours'] > 0:

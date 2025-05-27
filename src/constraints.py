@@ -119,20 +119,19 @@ class MacroblockTimetableConstraints:
     
     def apply_course_hours_constraint(self, teacher_theory_assignments, teacher_lab_assignments=None):
         """
-        Constraint 1: Course Hours Constraint
-        Ensures each course instance receives exactly its required lecture and tutorial hours.
-        Uses macroblock structure where courses must be assigned consistently within blocks.
-        OPTIMIZATION: When a macroblock is chosen, allocate the entire span needed for that course.
-        Lab assignments are skipped for now as requested.
+        Constraint 1: Course Hours Constraint (SIMPLIFIED APPROACH)
+        Only assigns base macroblocks (a1, b1, c1, etc.) to course instances.
+        Detailed lecture/tutorial mapping will be done in post-processing.
+        This dramatically reduces model complexity from 1.6M+ variables to manageable size.
         """
-        logger.info("Applying course hours constraint with macroblock span optimization (skipping labs)...")
+        logger.info("Applying simplified course hours constraint (base macroblock assignment only)...")
         
-        # Create macroblock assignment variables
+        # Create simplified macroblock assignment variables - ONLY for base blocks
         self.macroblock_assignments = {}
         
         for teacher in self.teachers:
             if teacher not in self.teacher_course_assignments:
-                    continue
+                continue
                 
             self.macroblock_assignments[teacher] = {}
             course_instances = self.teacher_course_assignments[teacher]
@@ -146,206 +145,72 @@ class MacroblockTimetableConstraints:
                 self.macroblock_assignments[teacher][instance_id] = {}
                 
                 # Create macroblock choice variables for base blocks only (a1, a2, b1, b2, etc.)
+                # NO detailed slot allocation - just block assignment
                 for block in self.theory_blocks:
                     self.macroblock_assignments[teacher][instance_id][f'{block}_chosen'] = (
                         self.model.NewBoolVar(f'teacher_{teacher}_instance_{instance_id}_{block}_chosen'))
                 
-                # Determine if tutorials should be allocated:
-                should_allocate_tutorials = tutorial_hours > 0 or lecture_hours == 4
+                # Apply simple constraint: 3L+1T courses can only use blocks with extended tutorial support
+                if lecture_hours == 3 and tutorial_hours == 1:
+                    # Only allow assignment to blocks that have extended tutorial support (a1, a2, b1, b2, c1, c2)
+                    blocks_with_extended_tutorials = ['a1', 'a2', 'b1', 'b2', 'c1', 'c2']
+                    blocks_without_extended_tutorials = [block for block in self.theory_blocks 
+                                                       if block not in blocks_with_extended_tutorials]
+                    
+                    # Prohibit assignment to blocks without extended tutorial support
+                    for block in blocks_without_extended_tutorials:
+                        self.model.Add(
+                            self.macroblock_assignments[teacher][instance_id][f'{block}_chosen'] == 0)
+                    
+                    logger.info(f"3L+1T course {instance_id} restricted to blocks with extended tutorial support: {blocks_with_extended_tutorials}")
                 
                 # Ensure exactly one block is chosen per course instance (if it has theory hours)
-                if lecture_hours > 0 or should_allocate_tutorials:
+                if lecture_hours > 0 or tutorial_hours > 0:
                     block_choices = []
                     
                     # Collect all possible block choices
                     for block in self.theory_blocks:
-                        if f'{block}_chosen' in self.macroblock_assignments[teacher][instance_id]:
-                            block_choices.append(
-                                self.macroblock_assignments[teacher][instance_id][f'{block}_chosen'])
+                        block_choices.append(
+                            self.macroblock_assignments[teacher][instance_id][f'{block}_chosen'])
                     
-                    # Must assign exactly one macroblock for significant courses
-                    if block_choices and (lecture_hours >= 2 or tutorial_hours >= 1):
-                        self.model.Add(sum(block_choices) == 1)  # Exactly one block
-                    elif block_choices:
-                        self.model.Add(sum(block_choices) <= 1)  # At most one block for small courses
+                    # Must assign exactly one macroblock for courses with theory hours
+                    self.model.Add(sum(block_choices) == 1)  # Exactly one block
                     
-                    # Apply macroblock span allocation constraints
-                    self._apply_macroblock_span_constraints(teacher, instance, teacher_theory_assignments)
-                    
-                    logger.info(f"Course instance {instance_id} (Teacher {teacher}, {lecture_hours}L+{tutorial_hours}T) - macroblock span allocation")
-                
-                # Link macroblock assignments to actual slot assignments (skip labs)
-                self._link_macroblock_to_slots(teacher, instance, teacher_theory_assignments, None)
+                    logger.info(f"Course instance {instance_id} (Teacher {teacher}, {lecture_hours}L+{tutorial_hours}T) - simplified macroblock assignment")
         
-        # Apply semester and department grouping constraints
+        # Apply semester and department grouping constraints (simplified)
         self._apply_semester_grouping_constraints()
+        
+        # Store assignment mapping for post-processing
+        self.course_instance_mappings = {}
+        for teacher in self.teachers:
+            if teacher in self.teacher_course_assignments:
+                for instance in self.teacher_course_assignments[teacher]:
+                    instance_id = instance['id']
+                    self.course_instance_mappings[instance_id] = {
+                        'teacher': teacher,
+                        'instance': instance
+                    }
         
         return True
     
     def _apply_macroblock_span_constraints(self, teacher, instance, teacher_theory_assignments):
-        """Apply constraints to ensure that when a macroblock is chosen, the appropriate span is allocated."""
-        instance_id = instance['id']
-        lecture_hours = instance['lecture_hours']
-        tutorial_hours = instance['tutorial_hours']
-        
-        # For each chosen macroblock, ensure proper span allocation
-        for block in self.theory_blocks:
-            if f'{block}_chosen' in self.macroblock_assignments[teacher][instance_id]:
-                block_chosen = self.macroblock_assignments[teacher][instance_id][f'{block}_chosen']
-                
-                # When this block is chosen, allocate required hours within the span
-                self._allocate_macroblock_span(teacher, instance_id, block, block_chosen, 
-                                             lecture_hours, tutorial_hours, teacher_theory_assignments)
+        """SIMPLIFIED: No detailed span constraints - handled in post-processing."""
+        # This function is now simplified - detailed allocation moved to post-processing
+        pass
     
     def _allocate_macroblock_span(self, teacher, instance_id, chosen_block, block_chosen_var, 
                                 lecture_hours, tutorial_hours, teacher_theory_assignments):
-        """Allocate the required hours within a macroblock span when that block is chosen."""
-        
-        # Get all slots that belong to this macroblock across all days
-        lecture_slots = []  # For main block (a1, b1, etc.)
-        tutorial_slots = []  # For tutorial block (ta1, tb1, etc.)
-        extended_tutorial_slots = []  # For extended tutorial (taa1, tbb1, etc.)
-        
-        block_letter = chosen_block[0]  # 'a', 'b', 'c', etc.
-        block_number = chosen_block[1]  # '1' or '2'
-        
-        for day_idx, day in enumerate(self.days):
-            for slot_info in self.slot_assignments[day]:
-                slot_idx = slot_info['slot_index']
-                theory_blocks = slot_info['theory_blocks']
-                
-                # Check if this slot contains our chosen block
-                if chosen_block in theory_blocks:
-                    lecture_slots.append((day_idx, slot_idx))
-                
-                # Check for tutorial blocks related to our chosen block
-                tutorial_block = f't{block_letter}{block_number}'  # ta1, tb1, etc.
-                if tutorial_block in theory_blocks:
-                    tutorial_slots.append((day_idx, slot_idx))
-                
-                # Check for extended tutorial blocks
-                extended_tutorial_block = f't{block_letter}{block_letter}{block_number}'  # taa1, tbb1, etc.
-                if extended_tutorial_block in theory_blocks:
-                    extended_tutorial_slots.append((day_idx, slot_idx))
-        
-        # For 3-lecture courses: allocate exactly 2 lecture slots + 1 tutorial slot
-        if lecture_hours == 3:
-            # Ensure we have enough slots available
-            total_available_slots = len(lecture_slots) + len(tutorial_slots) + len(extended_tutorial_slots)
-            if total_available_slots < 3:
-                logger.warning(f"Not enough slots available for 3-hour course {instance_id} in block {chosen_block}")
-                return
-            
-            # Allocate exactly 2 lecture slots
-            lecture_assignments = []
-            for i, (day_idx, slot_idx) in enumerate(lecture_slots[:2]):  # Take first 2 lecture slots
-                for room_id in self.classroom_ids:
-                    room_assignment = teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]
-                    lecture_assignment = self.model.NewBoolVar(
-                        f'span_lecture_{teacher}_{instance_id}_{chosen_block}_{day_idx}_{slot_idx}_{room_id}')
-                    
-                    # If block is chosen and room is assigned, this is a lecture assignment
-                    self.model.Add(lecture_assignment == 1).OnlyEnforceIf([block_chosen_var, room_assignment])
-                    self.model.Add(lecture_assignment == 0).OnlyEnforceIf([block_chosen_var.Not()])
-                    self.model.Add(lecture_assignment == 0).OnlyEnforceIf([room_assignment.Not()])
-                    
-                    lecture_assignments.append(lecture_assignment)
-            
-            # Allocate exactly 1 tutorial slot (for the 3rd hour)
-            tutorial_assignments = []
-            all_tutorial_slots = tutorial_slots + extended_tutorial_slots
-            if all_tutorial_slots:
-                # Take first tutorial slot available
-                day_idx, slot_idx = all_tutorial_slots[0]
-                for room_id in self.classroom_ids:
-                    room_assignment = teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]
-                    tutorial_assignment = self.model.NewBoolVar(
-                        f'span_tutorial_{teacher}_{instance_id}_{chosen_block}_{day_idx}_{slot_idx}_{room_id}')
-                    
-                    self.model.Add(tutorial_assignment == 1).OnlyEnforceIf([block_chosen_var, room_assignment])
-                    self.model.Add(tutorial_assignment == 0).OnlyEnforceIf([block_chosen_var.Not()])
-                    self.model.Add(tutorial_assignment == 0).OnlyEnforceIf([room_assignment.Not()])
-                    
-                    tutorial_assignments.append(tutorial_assignment)
-            
-            # Enforce exactly 2 lecture hours + 1 tutorial hour when block is chosen
-            if lecture_assignments:
-                total_lecture_hours = sum(lecture_assignments)
-                self.model.Add(total_lecture_hours == 2).OnlyEnforceIf([block_chosen_var])  # Exactly 2 lectures
-            
-            if tutorial_assignments:
-                total_tutorial_hours = sum(tutorial_assignments)
-                self.model.Add(total_tutorial_hours == 1).OnlyEnforceIf([block_chosen_var])  # Exactly 1 tutorial
-                
-            logger.info(f"Configured 3-hour course {instance_id}: 2 lectures + 1 tutorial in block {chosen_block}")
-            
-        # For other lecture hour counts, use flexible allocation
-        else:
-            # Allocate lecture hours: when block is chosen, use required number of lecture slots
-            if lecture_hours > 0 and lecture_slots:
-                lecture_assignments = []
-                for day_idx, slot_idx in lecture_slots:
-                    for room_id in self.classroom_ids:
-                        room_assignment = teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]
-                        lecture_assignment = self.model.NewBoolVar(
-                            f'span_lecture_{teacher}_{instance_id}_{chosen_block}_{day_idx}_{slot_idx}_{room_id}')
-                        
-                        # If block is chosen and room is assigned, this is a lecture assignment
-                        self.model.Add(lecture_assignment == 1).OnlyEnforceIf([block_chosen_var, room_assignment])
-                        self.model.Add(lecture_assignment == 0).OnlyEnforceIf([block_chosen_var.Not()])
-                        self.model.Add(lecture_assignment == 0).OnlyEnforceIf([room_assignment.Not()])
-                        
-                        lecture_assignments.append(lecture_assignment)
-                
-                # Ensure we allocate the right number of lecture hours when block is chosen
-                if lecture_assignments:
-                    # When block is chosen, must allocate at least the required lecture hours
-                    total_lecture_hours = sum(lecture_assignments)
-                    min_required = min(lecture_hours, len(lecture_slots))  # Can't exceed available slots
-                    
-                    # Conditional constraint: IF block is chosen, THEN allocate required hours
-                    self.model.Add(total_lecture_hours >= min_required).OnlyEnforceIf([block_chosen_var])
-                    self.model.Add(total_lecture_hours <= lecture_hours + 1).OnlyEnforceIf([block_chosen_var])  # Allow 1 extra
-            
-            # Allocate tutorial hours: use tutorial and extended tutorial slots as needed
-            should_allocate_tutorials = tutorial_hours > 0 or lecture_hours == 4
-            if should_allocate_tutorials:
-                all_tutorial_assignments = []
-                
-                # Regular tutorial slots (ta1, tb1, etc.)
-                for day_idx, slot_idx in tutorial_slots:
-                    for room_id in self.classroom_ids:
-                        room_assignment = teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]
-                        tutorial_assignment = self.model.NewBoolVar(
-                            f'span_tutorial_{teacher}_{instance_id}_{chosen_block}_{day_idx}_{slot_idx}_{room_id}')
-                        
-                        self.model.Add(tutorial_assignment == 1).OnlyEnforceIf([block_chosen_var, room_assignment])
-                        self.model.Add(tutorial_assignment == 0).OnlyEnforceIf([block_chosen_var.Not()])
-                        self.model.Add(tutorial_assignment == 0).OnlyEnforceIf([room_assignment.Not()])
-                        
-                        all_tutorial_assignments.append(tutorial_assignment)
-                
-                # Extended tutorial slots (taa1, tbb1, etc.)
-                for day_idx, slot_idx in extended_tutorial_slots:
-                    for room_id in self.classroom_ids:
-                        room_assignment = teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]
-                        ext_tutorial_assignment = self.model.NewBoolVar(
-                            f'span_ext_tutorial_{teacher}_{instance_id}_{chosen_block}_{day_idx}_{slot_idx}_{room_id}')
-                        
-                        self.model.Add(ext_tutorial_assignment == 1).OnlyEnforceIf([block_chosen_var, room_assignment])
-                        self.model.Add(ext_tutorial_assignment == 0).OnlyEnforceIf([block_chosen_var.Not()])
-                        self.model.Add(ext_tutorial_assignment == 0).OnlyEnforceIf([room_assignment.Not()])
-                        
-                        all_tutorial_assignments.append(ext_tutorial_assignment)
-                
-                # Ensure appropriate tutorial allocation when block is chosen
-                if all_tutorial_assignments and tutorial_hours > 0:
-                    total_tutorial_hours = sum(all_tutorial_assignments)
-                    min_tutorial_required = min(tutorial_hours, len(tutorial_slots) + len(extended_tutorial_slots))
-                    
-                    # Conditional constraint: IF block is chosen AND tutorials needed, THEN allocate
-                    self.model.Add(total_tutorial_hours >= min_tutorial_required).OnlyEnforceIf([block_chosen_var])
-                    self.model.Add(total_tutorial_hours <= tutorial_hours * 2).OnlyEnforceIf([block_chosen_var])  # Allow flexibility
+        """SIMPLIFIED: Detailed allocation logic moved to post-processing for efficiency."""
+        # All detailed allocation logic has been moved to post-processing
+        # This dramatically reduces CP-SAT model complexity
+        pass
+    
+    # REMOVED: All detailed case allocation functions moved to post-processing
+    
+
+    
+
     
     def _apply_semester_grouping_constraints(self):
         """Apply constraints to group courses by semester and department with teacher diversity."""
@@ -414,187 +279,14 @@ class MacroblockTimetableConstraints:
                         self.model.Add(sum(course_vars) <= 1)
     
     def _link_macroblock_to_slots(self, teacher, instance, teacher_theory_assignments, teacher_lab_assignments):
-        """Link macroblock assignments to actual time slot assignments. Skip lab linking."""
-        instance_id = instance['id']
-        lecture_hours = instance['lecture_hours']
-        tutorial_hours = instance['tutorial_hours']
-        practical_hours = instance['practical_hours']  # Not used for now
-        
-        # Determine if tutorials should be allocated
-        should_allocate_tutorials = tutorial_hours > 0 or lecture_hours == 4
-        
-        # For each day and slot, link to macroblock assignments
-        for day_idx, day in enumerate(self.days):
-            for slot_info in self.slot_assignments[day]:
-                slot_idx = slot_info['slot_index']
-                theory_blocks = slot_info['theory_blocks']
-                lab_slots = slot_info['lab_slots']
-                
-                # Handle theory assignments
-                for block in theory_blocks:
-                    if block in ['a1', 'a2', 'b1', 'b2', 'c1', 'c2', 'd1', 'd2', 'e1', 'e2', 'f1', 'f2', 'g1', 'g2']:
-                        # Lecture block - only access if it was created for this teacher
-                        if f'{block}_chosen' in self.macroblock_assignments[teacher][instance_id]:
-                            block_chosen = self.macroblock_assignments[teacher][instance_id][f'{block}_chosen']
-                            
-                            # Link to classroom assignments
-                            for room_id in self.classroom_ids:
-                                room_assignment = teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]
-                                # If block is chosen and room is assigned, this counts as a lecture hour
-                                is_lecture_assignment = self.model.NewBoolVar(
-                                    f'teacher_{teacher}_instance_{instance_id}_day_{day_idx}_slot_{slot_idx}_room_{room_id}_lecture')
-                                
-                                self.model.Add(is_lecture_assignment == 1).OnlyEnforceIf([block_chosen, room_assignment])
-                                self.model.Add(is_lecture_assignment == 0).OnlyEnforceIf([block_chosen.Not()])
-                                self.model.Add(is_lecture_assignment == 0).OnlyEnforceIf([room_assignment.Not()])
-                    
-                    elif block in ['ta1', 'ta2', 'tb1', 'tb2', 'tc1', 'tc2', 'td1', 'td2', 'te1', 'te2', 'tf1', 'tf2', 'tg1', 'tg2', 'taa1', 'taa2', 'tbb1', 'tbb2', 'tcc1', 'tcc2', 'v1', 'v2']:
-                        # Tutorial block - determine parent block
-                        if block.startswith('taa'):
-                            parent_block = 'aa' + block[3:]  # taa1 -> aa1
-                        elif block.startswith('tbb'):
-                            parent_block = 'bb' + block[3:]  # tbb1 -> bb1
-                        elif block.startswith('tcc'):
-                            parent_block = 'cc' + block[3:]  # tcc1 -> cc1
-                        elif block.startswith('v'):
-                            parent_block = block  # v1 -> v1 (standalone tutorial block)
-                        else:
-                            parent_block = block[1:]  # Remove 't' prefix: ta1 -> a1
-                        
-                        # Find corresponding parent block choice
-                        if f'{parent_block}_chosen' in self.macroblock_assignments[teacher][instance_id]:
-                            parent_chosen = self.macroblock_assignments[teacher][instance_id][f'{parent_block}_chosen']
-                            
-                            # Link to classroom assignments for tutorial
-                            for room_id in self.classroom_ids:
-                                room_assignment = teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]
-                                is_tutorial_assignment = self.model.NewBoolVar(
-                                    f'teacher_{teacher}_instance_{instance_id}_day_{day_idx}_slot_{slot_idx}_room_{room_id}_tutorial')
-                                
-                                self.model.Add(is_tutorial_assignment == 1).OnlyEnforceIf([parent_chosen, room_assignment])
-                                self.model.Add(is_tutorial_assignment == 0).OnlyEnforceIf([parent_chosen.Not()])
-                                self.model.Add(is_tutorial_assignment == 0).OnlyEnforceIf([room_assignment.Not()])
-        
-        # Ensure exact hour requirements are met (skip labs)
-        self._enforce_flexible_hours(teacher, instance, teacher_theory_assignments, None)
+        """SIMPLIFIED: No detailed slot linking - handled in post-processing."""
+        # All detailed slot linking moved to post-processing for efficiency
+        pass
     
     def _enforce_flexible_hours(self, teacher, instance, teacher_theory_assignments, teacher_lab_assignments):
-        """Enforce flexible hour requirements for each course instance. Skip lab hours."""
-        instance_id = instance['id']
-        lecture_hours = instance['lecture_hours']
-        tutorial_hours = instance['tutorial_hours']
-        practical_hours = instance['practical_hours']  # Not enforced for now
-        
-        # Determine if tutorials should be allocated
-        should_allocate_tutorials = tutorial_hours > 0 or lecture_hours == 4
-        
-        # Count total lecture hours assigned - stricter for 3-lecture courses
-        if lecture_hours > 0:
-            lecture_vars = []
-            
-            for day_idx, day in enumerate(self.days):
-                for slot_info in self.slot_assignments[day]:
-                    slot_idx = slot_info['slot_index']
-                    theory_blocks = slot_info['theory_blocks']
-                    
-                    # Only check blocks from accessible macroblock shifts
-                    accessible_blocks = []
-                    for block in self.theory_blocks:
-                        if block in theory_blocks:
-                            accessible_blocks.append(block)
-                    
-                    for block in accessible_blocks:
-                        if block in ['a1', 'a2', 'b1', 'b2', 'c1', 'c2', 'd1', 'd2', 'e1', 'e2', 'f1', 'f2', 'g1', 'g2']:
-                            # Only access blocks that were actually created for this teacher
-                            if f'{block}_chosen' in self.macroblock_assignments[teacher][instance_id]:
-                                block_chosen = self.macroblock_assignments[teacher][instance_id][f'{block}_chosen']
-                                
-                                for room_id in self.classroom_ids:
-                                    room_assignment = teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]
-                                    lecture_hour = self.model.NewBoolVar(f'lecture_hour_{teacher}_{instance_id}_{day_idx}_{slot_idx}_{room_id}')
-                                    
-                                    self.model.Add(lecture_hour == 1).OnlyEnforceIf([block_chosen, room_assignment])
-                                    self.model.Add(lecture_hour == 0).OnlyEnforceIf([block_chosen.Not()])
-                                    self.model.Add(lecture_hour == 0).OnlyEnforceIf([room_assignment.Not()])
-                                    
-                                    lecture_vars.append(lecture_hour)
-            
-            # More flexible hour requirements for non-3-lecture courses, stricter for 3-lecture courses
-            if lecture_vars:
-                if lecture_hours == 3:
-                    # For 3-lecture courses, enforce exactly 2 lecture hours (the 3rd is tutorial)
-                    self.model.Add(sum(lecture_vars) == 2)
-                    logger.info(f"Enforcing exactly 2 lecture hours for 3-lecture course {instance_id}")
-                else:
-                    # Allow 50% flexibility for other courses: can be 50% to 150% of required hours
-                    min_hours = max(1, lecture_hours // 2)  # At least half, minimum 1
-                    max_hours = lecture_hours * 2  # Up to double
-                    self.model.Add(sum(lecture_vars) >= min_hours)
-                    self.model.Add(sum(lecture_vars) <= max_hours)
-        
-        # Count total tutorial hours assigned - stricter for 3-lecture courses
-        if should_allocate_tutorials or lecture_hours == 3:  # Include 3-lecture courses
-            tutorial_vars = []
-            # Calculate expected tutorial hours based on allocation rules
-            if tutorial_hours > 0:
-                expected_tutorial_hours = tutorial_hours
-            elif lecture_hours == 4:
-                expected_tutorial_hours = 1
-            elif lecture_hours == 3:
-                expected_tutorial_hours = 1  # 3rd hour for 3-lecture courses
-            else:
-                expected_tutorial_hours = 0
-            
-            for day_idx, day in enumerate(self.days):
-                for slot_info in self.slot_assignments[day]:
-                    slot_idx = slot_info['slot_index']
-                    theory_blocks = slot_info['theory_blocks']
-                    
-                    # Only check blocks from accessible macroblock shifts
-                    accessible_blocks = []
-                    for block in self.theory_blocks:
-                        if block in theory_blocks:
-                            accessible_blocks.append(block)
-                    
-                    for block in accessible_blocks:
-                        if block in ['ta1', 'ta2', 'tb1', 'tb2', 'tc1', 'tc2', 'td1', 'td2', 'te1', 'te2', 'tf1', 'tf2', 'tg1', 'tg2', 'taa1', 'taa2', 'tbb1', 'tbb2', 'tcc1', 'tcc2', 'v1', 'v2']:
-                            # Find parent block
-                            if block.startswith('taa'):
-                                parent_block = 'aa' + block[3:]  # taa1 -> aa1
-                            elif block.startswith('tbb'):
-                                parent_block = 'bb' + block[3:]  # tbb1 -> bb1
-                            elif block.startswith('tcc'):
-                                parent_block = 'cc' + block[3:]  # tcc1 -> cc1
-                            elif block.startswith('v'):
-                                parent_block = block  # v1 -> v1 (standalone tutorial block)
-                            else:
-                                parent_block = block[1:]  # Remove 't' prefix: ta1 -> a1
-                            
-                            if f'{parent_block}_chosen' in self.macroblock_assignments[teacher][instance_id]:
-                                parent_chosen = self.macroblock_assignments[teacher][instance_id][f'{parent_block}_chosen']
-                                
-                                for room_id in self.classroom_ids:
-                                    room_assignment = teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]
-                                    tutorial_hour = self.model.NewBoolVar(f'tutorial_hour_{teacher}_{instance_id}_{day_idx}_{slot_idx}_{room_id}')
-                                    
-                                    self.model.Add(tutorial_hour == 1).OnlyEnforceIf([parent_chosen, room_assignment])
-                                    self.model.Add(tutorial_hour == 0).OnlyEnforceIf([parent_chosen.Not()])
-                                    self.model.Add(tutorial_hour == 0).OnlyEnforceIf([room_assignment.Not()])
-                                    
-                                    tutorial_vars.append(tutorial_hour)
-            
-            if expected_tutorial_hours > 0 and tutorial_vars:
-                if lecture_hours == 3:
-                    # For 3-lecture courses, enforce exactly 1 tutorial hour (the 3rd hour)
-                    self.model.Add(sum(tutorial_vars) == 1)
-                    logger.info(f"Enforcing exactly 1 tutorial hour for 3-lecture course {instance_id}")
-                else:
-                    # Very flexible tutorial requirements for other courses - can be 0 to 3x expected
-                    max_tutorial_hours = max(3, expected_tutorial_hours * 3)
-                    self.model.Add(sum(tutorial_vars) <= max_tutorial_hours)
-                    # Don't enforce minimum tutorial hours for non-3-lecture courses - make it optional
-        
-        # Skip practical hours enforcement as requested
+        """SIMPLIFIED: No detailed hour enforcement - handled in post-processing."""
+        # All detailed hour validation moved to post-processing for efficiency
+        pass
     
     def apply_teacher_single_assignment_constraint(self, teacher_theory_assignments, teacher_lab_assignments=None):
         """
