@@ -19,7 +19,7 @@ def main():
         base_dir = os.path.dirname(os.path.abspath(__file__))
         
         # Path to data files
-        course_file = os.path.join(base_dir, 'data/mapped_data/cs_teacher_courses.csv')
+        course_file = os.path.join(base_dir, 'data/mapped_data/computer_dept_teacher_courses.csv')
         if not os.path.exists(course_file):
             print(f"Error: Course file not found at {course_file}")
             return
@@ -36,21 +36,17 @@ def main():
         print("Key macroblock constraints:")
         print("• 12 theory time slots per day (Tuesday-Saturday): 8:00-8:50, 9:00-9:50, etc.")
         print("• Proper theory timing: 50-minute classes with 10-minute breaks")
-        print("• Macroblock structure: a1/a2/a3, b1/b2/b3, c1/c2/c3, d1/d2/d3, e1/e2/e3, f1/f2/f3, g1/g2/g3")
-        print("• Tutorial blocks: ta1/ta2/ta3, tb1/tb2/tb3, tc1/tc2/tc3, td1/td2/td3")
-        print("• 3-shift system: Shift1(blocks x1), Shift2(blocks x2), Shift3(blocks x3)")
+        print("• Macroblock structure: a1/a2, b1/b2, c1/c2, d1/d2, e1/e2, f1/f2, g1/g2")
+        print("• Tutorial blocks: ta1/ta2, tb1/tb2, tc1/tc2, td1/td2, te1/te2, tf1/tf2, tg1/tg2")
+        print("• Extended tutorial blocks: taa1/taa2, tbb1/tbb2, tcc1/tcc2, v1/v2")
+        print("• Combined shift system: All shifts merged for simplified scheduling")
         print("• Course consistency: If assigned to a1, all lecture slots must be a1")
+        print("• Tutorial as 3rd hour: ta1/tb1/tc1 used as 3rd lecture hour for 3-lecture courses")
         print("• Tutorial allocation: If tutorial_hours > 0 OR lecture_hours == 4")
         print("• Semester & Department grouping: Courses grouped by semester with teacher diversity")
-        print("• Vertical Macroblock Grouping: Promotes a1→b1→c1 over a1→f1→a2 patterns")
         print("• Weekly Working Hour Constraint: Max 21 hours per teacher (theory: 1hr, lab: 2hr)")
-        print("• Teacher Shift System: 3 shifts (8:00-15:00, 10:00-17:00, 12:00-19:00)")
-        print("• Daily Shift Rotation: Teachers can work different shifts on different days")
-        print("• Shift Distribution: 33% weekly distribution per department (soft constraint)")
-        print("• Shift Rotation: Encourages adjacent shift transitions (1↔2, 2↔3)")
-        print("• Overlapping Slot Management: Separate macro blocks for overlapping time slots")
         print("• No teacher double-booking across slots or rooms")
-        print("• Lab allocation temporarily disabled")
+        print("• Lab allocation completely skipped as requested")
         print("• Theory-only scheduling with classroom assignments")
         print("*" * 80)
         

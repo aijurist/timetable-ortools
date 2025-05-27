@@ -29,18 +29,18 @@ class MacroblockTimetableScheduler:
         ]
         self.num_slots = len(self.time_slots)
         
-        # Macroblock structure from update.txt
+        # Macroblock structure from new format - 12 slots per day
         self.daily_schedule_structure = {
-            "tuesday": ["a1/L1", "f1/L2", "d1/L3", "b1/a2/L4", "g1/f2/L5", "d2/L6", 
-                       "b2/a3/L7", "g2/f3/L8", "d3/L9", "b3/L10", "g3/L11", "L12"],
-            "wed": ["b1/L12", "g1/L14", "e1/L15", "c1/b2/L24", "ta1/g2/L17", "e1/L18", 
-                   "c2/b3/L19", "ta2/g3/L20", "e3/L21", "c3/L22", "ta3/L23", "L24"],
-            "thur": ["c1/L25", "a1/L26", "f1/L27", "d1/c2/L28", "tb1/a2/L29", "f2/L30", 
-                    "d2/c3/L31", "tb2/a3/L32", "f3/L33", "d3/L34", "tb3/L35", "L36"],
-            "fri": ["d1/L37", "b1/L38", "g1/L39", "e1/d2/L40", "tc1/b2/L41", "g2/L42", 
-                   "e2/d3/L43", "tc2/b4/L44", "g3/L45", "e3/L46", "tc3/L47", "L46"],
-            "sat": ["e1/L49", "c1/L50", "a1/L51", "f1/e2/L52", "td1/c2/L53", "a2/L54", 
-                   "f2/e3/L55", "td2/c3/L56", "a3/L57", "f3/L58", "td3/L59", "L60"]
+            "tuesday": ["a1/L1", "b1/L2", "c1/L3", "d1/L4", "e1/L5", "f1/L6", 
+                       "g1/L7", "a2/L8", "b2/L9", "c2/L10", "L11", 'L12'],
+            "wed": ["d2/L12", "e2/L14", "f2/L15", "g2/L16", "ta1/L17", "tb1/L18", 
+                   "tc1/L19", "td1/L20", "te1/L21", "tf1/L22", "L23", "L24"],
+            "thur": ["tg1/L25", "taa2/L26", "tbb2/L27", "tcc2/L28", "v1/L29", "v2/L30", 
+                    "a1/L31", "b1/L32", "c1/L33", "d1/L34", "L35", "L36"],
+            "fri": ["e1/L37", "f1/L38", "g1/L39", "ta2/L40", "tb2/L41", "tc2/L42", 
+                   "td2/L43", "te2/L44", "tf2/L45", "tg2/L46", "L47", "L48"],
+            "sat": ["a2/L49", "b2/L50", "c2/L51", "taa1/L52", "tbb1/L53", "tcc1/L54", 
+                   "d2/L55", "e2/L56", "f2/L57", "g2/L58", "L59", "L60"]
         }
         
         # Process rooms - separate classrooms and labs
@@ -135,6 +135,8 @@ class MacroblockTimetableScheduler:
         # Create the solver and solve the model
         solver = cp_model.CpSolver()
         solver.parameters.max_time_in_seconds = 300  # 5 minutes time limit
+        solver.parameters.log_search_progress = True
+        solver.parameters.num_search_workers = 12  # 8 threads for parallel search
         
         self.logger.info("Solving the macroblock model...")
         status = solver.Solve(model)
@@ -257,10 +259,12 @@ class MacroblockTimetableScheduler:
         parts = slot_content.split('/')
         theory_blocks = []
         for part in parts:
-            if part in ['a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'c1', 'c2', 'c3', 
-                       'd1', 'd2', 'd3', 'e1', 'e2', 'e3', 'f1', 'f2', 'f3', 
-                       'g1', 'g2', 'g3', 'ta1', 'ta2', 'ta3', 'tb1', 'tb2', 'tb3',
-                       'tc1', 'tc2', 'tc3', 'td1', 'td2', 'td3']:
+            if part in ['a1', 'a2', 'b1', 'b2', 'c1', 'c2', 
+                       'd1', 'd2', 'e1', 'e2', 'f1', 'f2', 
+                       'g1', 'g2', 'ta1', 'ta2', 'tb1', 'tb2',
+                       'tc1', 'tc2', 'td1', 'td2', 'te1', 'te2',
+                       'tf1', 'tf2', 'tg1', 'tg2', 'taa1', 'taa2',
+                       'tbb1', 'tbb2', 'tcc1', 'tcc2', 'v1', 'v2']:
                 theory_blocks.append(part)
         
         # Check each course instance for this teacher
@@ -274,8 +278,7 @@ class MacroblockTimetableScheduler:
                         macroblock_vars = constraints.macroblock_assignments[teacher][instance_id]
                         
                         for block in theory_blocks:
-                            if block in ['a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'c1', 'c2', 'c3', 
-                                       'd1', 'd2', 'd3', 'e1', 'e2', 'e3', 'f1', 'f2', 'f3', 'g1', 'g2', 'g3']:
+                            if block in ['a1', 'a2', 'b1', 'b2', 'c1', 'c2', 'd1', 'd2', 'e1', 'e2', 'f1', 'f2', 'g1', 'g2']:
                                 if f'{block}_chosen' in macroblock_vars:
                                     if solver.Value(macroblock_vars[f'{block}_chosen']) == 1:
                                         return {
@@ -291,9 +294,22 @@ class MacroblockTimetableScheduler:
                                             'slot_type': 'Lecture'
                                         }
                             
-                            elif block in ['ta1', 'ta2', 'ta3', 'tb1', 'tb2', 'tb3', 'tc1', 'tc2', 'tc3', 'td1', 'td2', 'td3']:
+                            elif block in ['ta1', 'ta2', 'tb1', 'tb2', 'tc1', 'tc2', 
+                                          'td1', 'td2', 'te1', 'te2', 'tf1', 'tf2',
+                                          'tg1', 'tg2', 'taa1', 'taa2', 'tbb1', 'tbb2',
+                                          'tcc1', 'tcc2', 'v1', 'v2']:
                                 # Tutorial block - find parent block
-                                parent_block = block[1:]  # Remove 't' prefix
+                                if block.startswith('taa'):
+                                    parent_block = 'aa' + block[3:]  # taa1 -> aa1
+                                elif block.startswith('tbb'):
+                                    parent_block = 'bb' + block[3:]  # tbb1 -> bb1
+                                elif block.startswith('tcc'):
+                                    parent_block = 'cc' + block[3:]  # tcc1 -> cc1
+                                elif block.startswith('v'):
+                                    parent_block = block  # v1 -> v1 (standalone tutorial block)
+                                else:
+                                    parent_block = block[1:]  # Remove 't' prefix: ta1 -> a1
+                                
                                 if f'{parent_block}_chosen' in macroblock_vars:
                                     if solver.Value(macroblock_vars[f'{parent_block}_chosen']) == 1:
                                         return {
@@ -324,38 +340,12 @@ class MacroblockTimetableScheduler:
         return None
     
     def _determine_daily_shift(self, teacher, day_idx, constraints, solver):
-        """Determine which shift a teacher is assigned to on a specific day."""
-        if not hasattr(constraints, 'teacher_daily_shift_vars') or teacher not in constraints.teacher_daily_shift_vars:
-            return 'teacher_shift1'  # Default fallback
-        
-        if day_idx not in constraints.teacher_daily_shift_vars[teacher]:
-            return 'teacher_shift1'  # Default fallback
-        
-        # Check which shift variable is active for this teacher on this day
-        for shift_name in ['teacher_shift1', 'teacher_shift2', 'teacher_shift3']:
-            if shift_name in constraints.teacher_daily_shift_vars[teacher][day_idx]:
-                shift_var = constraints.teacher_daily_shift_vars[teacher][day_idx][shift_name]
-                if solver.Value(shift_var) == 1:
-                    return shift_name
-        
-        return 'teacher_shift1'  # Default fallback
+        """Determine which shift a teacher is assigned to - simplified since shifts are merged."""
+        return 'combined_shift'  # All teachers use combined shift now
     
     def _get_teacher_weekly_shift_pattern(self, teacher, constraints, solver):
-        """Get the complete weekly shift pattern for a teacher."""
-        if not hasattr(constraints, 'teacher_daily_shift_vars') or teacher not in constraints.teacher_daily_shift_vars:
-            return 'Static'  # Fallback for old system
-        
-        pattern = []
-        for day_idx in range(len(self.days)):
-            if day_idx in constraints.teacher_daily_shift_vars[teacher]:
-                daily_shift = self._determine_daily_shift(teacher, day_idx, constraints, solver)
-                # Convert to short form: teacher_shift1 -> S1, teacher_shift2 -> S2, etc.
-                short_shift = daily_shift.replace('teacher_shift', 'S')
-                pattern.append(short_shift)
-            else:
-                pattern.append('S1')  # Default
-        
-        return '→'.join(pattern)  # e.g., "S1→S2→S2→S3→S1"
+        """Get the weekly shift pattern for a teacher - simplified since shifts are merged."""
+        return 'Combined→Combined→Combined→Combined→Combined'  # All days use combined shift
     
     def _create_daily_schedule_structure(self, schedule_data):
         """Create the daily schedule structure matching the required format."""
@@ -487,48 +477,13 @@ class MacroblockTimetableScheduler:
             for shift, count in sorted(shift_counts.items()):
                 f.write(f"  {shift}: {count} assignments\n")
             
+            # Analyze rotation quality - skip since we use combined shifts now
+            self.logger.info("Skipping shift rotation analysis since we use combined shifts")
+            
             # Shift rotation patterns
             f.write("\nTeacher Shift Rotation Patterns:\n")
-            shift_patterns = {}
-            teacher_patterns = {}
-            for item in schedule_data:
-                teacher_id = item['teacher_id']
-                pattern = item.get('daily_shift_pattern', 'Static')
-                teacher_patterns[teacher_id] = pattern
-                if pattern not in shift_patterns:
-                    shift_patterns[pattern] = 0
-                shift_patterns[pattern] += 1
-            
-            # Count unique patterns
-            unique_patterns = len(set(teacher_patterns.values()))
-            f.write(f"  Unique shift patterns: {unique_patterns}\n")
-            
-            # Show most common patterns
-            sorted_patterns = sorted(shift_patterns.items(), key=lambda x: x[1], reverse=True)
-            f.write("  Most common patterns:\n")
-            for pattern, count in sorted_patterns[:5]:  # Top 5 patterns
-                if pattern != 'Static':
-                    f.write(f"    {pattern}: {count} assignments\n")
-            
-            # Analyze rotation quality
-            adjacent_transitions = 0
-            non_adjacent_transitions = 0
-            for teacher_id, pattern in teacher_patterns.items():
-                if pattern != 'Static' and '→' in pattern:
-                    shifts = pattern.split('→')
-                    for i in range(len(shifts) - 1):
-                        curr_shift = int(shifts[i][1:])  # Extract number from S1, S2, S3
-                        next_shift = int(shifts[i + 1][1:])
-                        
-                        if abs(curr_shift - next_shift) == 1:  # Adjacent transition
-                            adjacent_transitions += 1
-                        elif abs(curr_shift - next_shift) == 2:  # Non-adjacent transition
-                            non_adjacent_transitions += 1
-            
-            total_transitions = adjacent_transitions + non_adjacent_transitions
-            if total_transitions > 0:
-                f.write(f"  Adjacent transitions: {adjacent_transitions}/{total_transitions} ({100*adjacent_transitions/total_transitions:.1f}%)\n")
-                f.write(f"  Non-adjacent transitions: {non_adjacent_transitions}/{total_transitions} ({100*non_adjacent_transitions/total_transitions:.1f}%)\n")
+            f.write("  Using combined shift system - no rotation needed\n")
+            f.write("  All teachers use unified combined shift\n")
             
             # Weekly working hours analysis
             f.write("\nWeekly Working Hours Analysis:\n")

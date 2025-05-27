@@ -1,0 +1,231 @@
+Computer Department Course Assignment Summary
+===========================================
+
+Total departments: 10
+- Computer Science & Business Systems
+- Computer Science & Design
+- Computer Science & Engineering
+- Computer Science & Engineering (Cyber Security)
+- Electrical & Electronics Engineering
+- Electronics & Communication Engineering
+- Humanities & Sciences
+- Information Technology
+- Mechatronics Engineering
+- Robotics & Automation
+
+Total teachers: 270
+Total courses: 118
+Total assignments: 293
+Teachers with multiple instances of the same course: 19
+
+Multiple Course Instances Details:
+--------------------------------
+
+Teacher: None None (ID: 187, Staff Code: IT03)
+  Course: CS23533 - Foundations of Artificial Intelligence
+    Instance 1 (ID: 95)
+      Semester: 5, Year: 3
+      Students: 70
+      Hours: 3 lecture, 2 practical
+    Instance 2 (ID: 109)
+      Semester: 5, Year: 3
+      Students: 70
+      Hours: 3 lecture, 2 practical
+
+Teacher: None None (ID: 191, Staff Code: CS218)
+  Course: CS23311 - Computer Architecture
+    Instance 1 (ID: 207)
+      Semester: 3, Year: 2
+      Students: 70
+      Hours: 3 lecture, 0 practical
+    Instance 2 (ID: 208)
+      Semester: 3, Year: 2
+      Students: 70
+      Hours: 3 lecture, 0 practical
+
+Teacher: None None (ID: 195, Staff Code: CS203)
+  Course: CS23533 - Foundations of Artificial Intelligence
+    Instance 1 (ID: 274)
+      Semester: 5, Year: 3
+      Students: 70
+      Hours: 3 lecture, 2 practical
+    Instance 2 (ID: 275)
+      Semester: 5, Year: 3
+      Students: 70
+      Hours: 3 lecture, 2 practical
+
+Teacher: None None (ID: 212, Staff Code: CS284)
+  Course: CS23334 - Fundamentals of Data Science
+    Instance 1 (ID: 246)
+      Semester: 3, Year: 2
+      Students: 70
+      Hours: 3 lecture, 2 practical
+    Instance 2 (ID: 247)
+      Semester: 3, Year: 2
+      Students: 70
+      Hours: 3 lecture, 2 practical
+
+Teacher: None None (ID: 217, Staff Code: CS256)
+  Course: CS23532 - Computer Networks
+    Instance 1 (ID: 244)
+      Semester: 5, Year: 3
+      Students: 70
+      Hours: 3 lecture, 2 practical
+    Instance 2 (ID: 581)
+      Semester: 5, Year: 3
+      Students: 65
+      Hours: 3 lecture, 2 practical
+
+Teacher: None None (ID: 220, Staff Code: CS282)
+  Course: CS23331 - Design and Analysis of Algorithms
+    Instance 1 (ID: 216)
+      Semester: 3, Year: 2
+      Students: 70
+      Hours: 3 lecture, 2 practical
+    Instance 2 (ID: 217)
+      Semester: 3, Year: 2
+      Students: 70
+      Hours: 3 lecture, 2 practical
+
+Teacher: None None (ID: 222, Staff Code: CS255)
+  Course: CS23511 - Theory of Computation
+    Instance 1 (ID: 253)
+      Semester: 5, Year: 3
+      Students: 70
+      Hours: 3 lecture, 0 practical
+    Instance 2 (ID: 254)
+      Semester: 5, Year: 3
+      Students: 70
+      Hours: 3 lecture, 0 practical
+
+Teacher: None None (ID: 223, Staff Code: CS272)
+  Course: CS23511 - Theory of Computation
+    Instance 1 (ID: 277)
+      Semester: 5, Year: 3
+      Students: 70
+      Hours: 3 lecture, 0 practical
+    Instance 2 (ID: 278)
+      Semester: 5, Year: 3
+      Students: 70
+      Hours: 3 lecture, 0 practical
+
+Teacher: None None (ID: 234, Staff Code: IT210)
+  Course: CS23511 - Theory of Computation
+    Instance 1 (ID: 281)
+      Semester: 5, Year: 3
+      Students: 70
+      Hours: 3 lecture, 0 practical
+    Instance 2 (ID: 282)
+      Semester: 5, Year: 3
+      Students: 70
+      Hours: 3 lecture, 0 practical
+
+Teacher: None None (ID: 268, Staff Code: CS334)
+  Course: CS23531 - Web Programming
+    Instance 1 (ID: 295)
+      Semester: 5, Year: 3
+      Students: 70
+      Hours: 1 lecture, 4 practical
+    Instance 2 (ID: 296)
+      Semester: 5, Year: 3
+      Students: 70
+      Hours: 1 lecture, 4 practical
+
+Teacher: None None (ID: 298, Staff Code: EE43)
+  Course: EE19741 - Renewable Energy Systems
+    Instance 1 (ID: 753)
+      Semester: 7, Year: 4
+      Students: 64
+      Hours: 3 lecture, 2 practical
+    Instance 2 (ID: 755)
+      Semester: 7, Year: 4
+      Students: 32
+      Hours: 3 lecture, 2 practical
+
+Teacher: None None (ID: 303, Staff Code: EE48)
+  Course: EE23521 - Control and Instrumentation Laboratory
+    Instance 1 (ID: 627)
+      Semester: 5, Year: 3
+      Students: 34
+      Hours: 0 lecture, 2 practical
+    Instance 2 (ID: 628)
+      Semester: 5, Year: 3
+      Students: 34
+      Hours: 0 lecture, 2 practical
+
+Teacher: None None (ID: 1753, Staff Code: New Staff-1)
+  Course: CS23311 - Computer Architecture
+    Instance 1 (ID: 304)
+      Semester: 3, Year: 2
+      Students: 70
+      Hours: 3 lecture, 0 practical
+    Instance 2 (ID: 305)
+      Semester: 3, Year: 2
+      Students: 70
+      Hours: 3 lecture, 0 practical
+
+Teacher: None None (ID: 1754, Staff Code: New Staff-2)
+  Course: CS23311 - Computer Architecture
+    Instance 1 (ID: 306)
+      Semester: 3, Year: 2
+      Students: 70
+      Hours: 3 lecture, 0 practical
+    Instance 2 (ID: 307)
+      Semester: 3, Year: 2
+      Students: 70
+      Hours: 3 lecture, 0 practical
+
+Teacher: None None (ID: 1755, Staff Code: New Staff-3)
+  Course: CS23331 - Design and Analysis of Algorithms
+    Instance 1 (ID: 308)
+      Semester: 3, Year: 2
+      Students: 70
+      Hours: 3 lecture, 2 practical
+    Instance 2 (ID: 310)
+      Semester: 3, Year: 2
+      Students: 70
+      Hours: 3 lecture, 2 practical
+
+Teacher: None None (ID: 1756, Staff Code: New Staff-4)
+  Course: CS23331 - Design and Analysis of Algorithms
+    Instance 1 (ID: 311)
+      Semester: 3, Year: 2
+      Students: 70
+      Hours: 3 lecture, 2 practical
+    Instance 2 (ID: 312)
+      Semester: 3, Year: 2
+      Students: 70
+      Hours: 3 lecture, 2 practical
+
+Teacher: None None (ID: 1757, Staff Code: New Staff-5)
+  Course: CS23331 - Design and Analysis of Algorithms
+    Instance 1 (ID: 313)
+      Semester: 3, Year: 2
+      Students: 70
+      Hours: 3 lecture, 2 practical
+    Instance 2 (ID: 315)
+      Semester: 3, Year: 2
+      Students: 70
+      Hours: 3 lecture, 2 practical
+
+Teacher: None None (ID: 1758, Staff Code: New Staff-6)
+  Course: CS23331 - Design and Analysis of Algorithms
+    Instance 1 (ID: 316)
+      Semester: 3, Year: 2
+      Students: 70
+      Hours: 3 lecture, 2 practical
+    Instance 2 (ID: 318)
+      Semester: 3, Year: 2
+      Students: 70
+      Hours: 3 lecture, 2 practical
+
+Teacher: None None (ID: 1763, Staff Code: New Staff-11)
+  Course: CS23334 - Fundamentals of Data Science
+    Instance 1 (ID: 344)
+      Semester: 3, Year: 2
+      Students: 70
+      Hours: 3 lecture, 2 practical
+    Instance 2 (ID: 345)
+      Semester: 3, Year: 2
+      Students: 70
+      Hours: 3 lecture, 2 practical

@@ -21,18 +21,13 @@ class MacroblockTimetableVisualizer:
             "4:00 - 4:50", "5:00 - 5:50", "6:00 - 6:50", "7:00 - 7:50"
         ]
         
-        # Define macroblock groups
-        self.theory_blocks = {
-            'shift1': ['a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1'],
-            'shift2': ['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2'],
-            'shift3': ['a3', 'b3', 'c3', 'd3', 'e3', 'f3', 'g3']
-        }
+        # Define macroblock groups (no shift separation since they are merged)
+        self.theory_blocks = ['a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2']
         
-        self.tutorial_blocks = {
-            'shift1': ['ta1', 'tb1', 'tc1', 'td1'],
-            'shift2': ['ta2', 'tb2', 'tc2', 'td2'],
-            'shift3': ['ta3', 'tb3', 'tc3', 'td3']
-        }
+        # Tutorial blocks for 3rd lecture hour (ta1, tb1, tc1 etc. are used as 3rd hour for 3-lecture courses)
+        self.tutorial_blocks = ['ta1', 'tb1', 'tc1', 'td1', 'te1', 'tf1', 'tg1', 
+                               'ta2', 'tb2', 'tc2', 'td2', 'te2', 'tf2', 'tg2',
+                               'taa1', 'taa2', 'tbb1', 'tbb2', 'tcc1', 'tcc2', 'v1', 'v2']
         
         if not self.schedule_df.empty:
             # Create color map for courses
@@ -41,11 +36,7 @@ class MacroblockTimetableVisualizer:
             self.course_colors = {course: mcolors.rgb2hex(color) for course, color in zip(self.courses, colors)}
             
             # Create color map for macroblocks
-            all_blocks = []
-            for blocks in self.theory_blocks.values():
-                all_blocks.extend(blocks)
-            for blocks in self.tutorial_blocks.values():
-                all_blocks.extend(blocks)
+            all_blocks = self.theory_blocks + self.tutorial_blocks
             
             block_colors = plt.cm.Set3(np.linspace(0, 1, len(all_blocks)))
             self.block_colors = {block: mcolors.rgb2hex(color) for block, color in zip(all_blocks, block_colors)}
@@ -136,17 +127,13 @@ class MacroblockTimetableVisualizer:
         ax1 = fig.add_subplot(gs[0, 0])
         self._plot_macroblock_distribution(ax1)
         
-        # Shift distribution
-        ax2 = fig.add_subplot(gs[0, 1])
-        self._plot_shift_distribution(ax2)
-        
         # Daily usage pattern
-        ax3 = fig.add_subplot(gs[1, 0])
-        self._plot_daily_usage(ax3)
+        ax2 = fig.add_subplot(gs[0, 1])
+        self._plot_daily_usage(ax2)
         
         # Course distribution across macroblocks
-        ax4 = fig.add_subplot(gs[1, 1])
-        self._plot_course_macroblock_distribution(ax4)
+        ax3 = fig.add_subplot(gs[1, 0])
+        self._plot_course_macroblock_distribution(ax3)
         
         plt.suptitle('Macroblock Timetable Analysis', fontsize=16)
         plt.tight_layout()
@@ -269,12 +256,6 @@ class MacroblockTimetableVisualizer:
         # Create a grid for days and time slots
         grid = np.empty((len(self.days), len(self.time_slots)), dtype=object)
         macroblock_grid = np.empty((len(self.days), len(self.time_slots)), dtype=object)
-        shift_grid = np.empty((len(self.days), len(self.time_slots)), dtype=object)
-        
-        # Get teacher shift information
-        teacher_shift = 'Unknown'
-        if not teacher_df.empty:
-            teacher_shift = teacher_df.iloc[0].get('teacher_shift', 'Unknown')
         
         for _, row in teacher_df.iterrows():
             day = row['day']
@@ -286,42 +267,22 @@ class MacroblockTimetableVisualizer:
                 macroblock = row.get('macroblock', 'Unknown')
                 room_number = row['room_number']
                 slot_type = row['slot_type']
-                shift = row.get('teacher_shift', 'Unknown')
                 
-                # Create display text with shift information
-                display_text = f"{course_code}\n{slot_type}\n{room_number}\n[{shift}]"
+                # Create display text
+                display_text = f"{course_code}\n{slot_type}\n{room_number}"
                 grid[day_idx, slot_index] = display_text
                 macroblock_grid[day_idx, slot_index] = macroblock
-                shift_grid[day_idx, slot_index] = shift
         
         # Plot the grid
         for i, day in enumerate(self.days):
             for j, time_slot in enumerate(self.time_slots):
                 if grid[i, j] is not None:
                     macroblock = macroblock_grid[i, j]
-                    shift = shift_grid[i, j]
                     color = self.block_colors.get(macroblock, '#FFFFFF')
                     
-                    # Create rectangle with shift-based background
-                    shift_alpha = 0.3
-                    shift_color = '#FFFFFF'  # Default
-                    if 'shift1' in str(shift):
-                        shift_color = '#E8F4FD'  # Light blue
-                    elif 'shift2' in str(shift):
-                        shift_color = '#FFF2CC'  # Light yellow  
-                    elif 'shift3' in str(shift):
-                        shift_color = '#E1D5E7'  # Light purple
-                        
-                    # Add shift background
-                    shift_rect = plt.Rectangle((j, len(self.days) - i - 1), 1, 1, 
-                                             facecolor=shift_color, alpha=shift_alpha, 
-                                             edgecolor='none')
-                    ax.add_patch(shift_rect)
-                    
-                    # Add macroblock color overlay
+                    # Create rectangle
                     rect = plt.Rectangle((j, len(self.days) - i - 1), 1, 1, 
-                                       facecolor=color, alpha=0.7, 
-                                       edgecolor='black', linewidth=0.5)
+                                       facecolor=color, edgecolor='black', linewidth=0.5)
                     ax.add_patch(rect)
                     
                     # Add text
@@ -348,7 +309,6 @@ class MacroblockTimetableVisualizer:
         # Similar implementation to teacher schedule but focused on room utilization
         grid = np.empty((len(self.days), len(self.time_slots)), dtype=object)
         macroblock_grid = np.empty((len(self.days), len(self.time_slots)), dtype=object)
-        shift_grid = np.empty((len(self.days), len(self.time_slots)), dtype=object)
         
         for _, row in room_df.iterrows():
             day = row['day']
@@ -360,42 +320,22 @@ class MacroblockTimetableVisualizer:
                 macroblock = row.get('macroblock', 'Unknown')
                 teacher_id = row['teacher_id']
                 slot_type = row['slot_type']
-                shift = row.get('teacher_shift', 'Unknown')
                 
-                # Create display text with shift information
-                display_text = f"{course_code}\n{slot_type}\nT:{teacher_id}\n[{shift}]"
+                # Create display text
+                display_text = f"{course_code}\n{slot_type}\nT:{teacher_id}"
                 grid[day_idx, slot_index] = display_text
                 macroblock_grid[day_idx, slot_index] = macroblock
-                shift_grid[day_idx, slot_index] = shift
         
         # Plot the grid (similar to teacher schedule)
         for i, day in enumerate(self.days):
             for j, time_slot in enumerate(self.time_slots):
                 if grid[i, j] is not None:
                     macroblock = macroblock_grid[i, j]
-                    shift = shift_grid[i, j]
                     color = self.block_colors.get(macroblock, '#FFFFFF')
                     
-                    # Create rectangle with shift-based background
-                    shift_alpha = 0.3
-                    shift_color = '#FFFFFF'  # Default
-                    if 'shift1' in str(shift):
-                        shift_color = '#E8F4FD'  # Light blue
-                    elif 'shift2' in str(shift):
-                        shift_color = '#FFF2CC'  # Light yellow  
-                    elif 'shift3' in str(shift):
-                        shift_color = '#E1D5E7'  # Light purple
-                        
-                    # Add shift background
-                    shift_rect = plt.Rectangle((j, len(self.days) - i - 1), 1, 1, 
-                                             facecolor=shift_color, alpha=shift_alpha, 
-                                             edgecolor='none')
-                    ax.add_patch(shift_rect)
-                    
-                    # Add macroblock color overlay
+                    # Create rectangle
                     rect = plt.Rectangle((j, len(self.days) - i - 1), 1, 1, 
-                                       facecolor=color, alpha=0.7, 
-                                       edgecolor='black', linewidth=0.5)
+                                       facecolor=color, edgecolor='black', linewidth=0.5)
                     ax.add_patch(rect)
                     
                     ax.text(j + 0.5, len(self.days) - i - 0.5, grid[i, j],
@@ -432,34 +372,6 @@ class MacroblockTimetableVisualizer:
         # Color bars according to macroblock colors
         for i, (macroblock, bar) in enumerate(zip(macroblock_counts.index, bars)):
             bar.set_color(self.block_colors.get(macroblock, '#CCCCCC'))
-    
-    def _plot_shift_distribution(self, ax):
-        """Plot distribution across shifts."""
-        if self.theory_data.empty:
-            ax.text(0.5, 0.5, 'No theory data available', ha='center', va='center', transform=ax.transAxes)
-            return
-        
-        shift_counts = {'Shift 1': 0, 'Shift 2': 0, 'Shift 3': 0}
-        
-        for _, row in self.theory_data.iterrows():
-            macroblock = row.get('macroblock', '')
-            if macroblock in self.theory_blocks['shift1'] or macroblock in self.tutorial_blocks['shift1']:
-                shift_counts['Shift 1'] += 1
-            elif macroblock in self.theory_blocks['shift2'] or macroblock in self.tutorial_blocks['shift2']:
-                shift_counts['Shift 2'] += 1
-            elif macroblock in self.theory_blocks['shift3'] or macroblock in self.tutorial_blocks['shift3']:
-                shift_counts['Shift 3'] += 1
-        
-        bars = ax.bar(shift_counts.keys(), shift_counts.values(), 
-                     color=['#E8F4FD', '#FFF2CC', '#E1D5E7'])
-        ax.set_ylabel('Number of Assignments')
-        ax.set_title('Shift Distribution')
-        
-        # Add value labels on bars
-        for bar in bars:
-            height = bar.get_height()
-            ax.text(bar.get_x() + bar.get_width()/2., height,
-                   f'{int(height)}', ha='center', va='bottom')
     
     def _plot_daily_usage(self, ax):
         """Plot daily usage pattern."""

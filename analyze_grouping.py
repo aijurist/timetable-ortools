@@ -15,8 +15,14 @@ class SemesterGroupingAnalyzer:
         # Filter only lecture and tutorial slots (not labs)
         self.schedule_df = self.schedule_df[self.schedule_df['slot_type'].isin(['Lecture', 'Tutorial'])]
         
-        # Add shift analysis if teacher_shift column exists
-        self.has_shift_data = 'teacher_shift' in self.schedule_df.columns
+        # Check if teacher_shift column exists and is meaningful (not all same value)
+        self.has_shift_data = False
+        if 'teacher_shift' in self.schedule_df.columns:
+            unique_shifts = self.schedule_df['teacher_shift'].nunique()
+            if unique_shifts > 1:  # Only consider meaningful if there are multiple shifts
+                self.has_shift_data = True
+            else:
+                print("Note: Teacher shift data found but all teachers use the same combined shift")
         
         # Create output directory for analysis
         self.output_dir = os.path.join(os.path.dirname(schedule_csv_path), 'grouping_analysis')
@@ -49,9 +55,14 @@ class SemesterGroupingAnalyzer:
             dept_info = {}
             
             for course in courses_in_block:
-                course_info = self.courses_df[self.courses_df['course_code'] == course].iloc[0]
-                semester_info[course] = course_info['semester']
-                dept_info[course] = course_info['course_dept']
+                course_matches = self.courses_df[self.courses_df['course_code'] == course]
+                if not course_matches.empty:
+                    course_info = course_matches.iloc[0]
+                    semester_info[course] = course_info['semester']
+                    dept_info[course] = course_info['course_dept']
+                else:
+                    semester_info[course] = "Unknown"
+                    dept_info[course] = "Unknown Department"
             
             # Check for violations
             teacher_course_pairs = block_data[['teacher_id', 'course_code']].drop_duplicates()
@@ -367,8 +378,13 @@ class SemesterGroupingAnalyzer:
         semester_stats = []
         for semester in semesters:
             total_courses = sum(1 for _, row in self.courses_df.iterrows() if row['semester'] == semester)
-            scheduled_courses = sum(1 for _, row in self.schedule_df.iterrows() 
-                                  if row['semester'] == semester)
+            scheduled_courses = 0
+            for _, row in self.schedule_df.iterrows():
+                # Need to get semester info from courses_df
+                course_matches = self.courses_df[self.courses_df['course_code'] == row['course_code']]
+                if not course_matches.empty and course_matches.iloc[0]['semester'] == semester:
+                    scheduled_courses += 1
+            
             macroblocks_used = len([mb for mb in semester_distribution[semester]])
             
             semester_stats.append({
@@ -529,6 +545,7 @@ With Violations: {total_macroblocks - clean_macroblocks}
 Course Diversity: ✅
 Teacher Diversity: ✅
 Semester Grouping: ✅
+Combined Shift System: ✅
         """
         
         ax4.text(0.1, 0.5, stats_text, transform=ax4.transAxes, fontsize=12, verticalalignment='center')
@@ -604,154 +621,7 @@ Semester Grouping: ✅
         plt.savefig(os.path.join(self.output_dir, 'macroblock_grid_overview.png'), dpi=300, bbox_inches='tight')
         plt.close()
 
-    def analyze_shift_distribution(self):
-        """Analyze teacher shift distribution and effectiveness."""
-        print("Analyzing teacher shift distribution...")
-        
-        if not self.has_shift_data:
-            return None
-            
-        shift_analysis = {
-            'teacher_distribution': {},
-            'macroblock_distribution': {},
-            'overlap_analysis': {},
-            'department_distribution': {}
-        }
-        
-        # Analyze teacher distribution across shifts
-        teacher_shifts = self.schedule_df.groupby('teacher_id')['teacher_shift'].first()
-        shift_counts = teacher_shifts.value_counts()
-        
-        shift_analysis['teacher_distribution'] = {
-            'total_teachers': len(teacher_shifts),
-            'shift_counts': shift_counts.to_dict(),
-            'shift_percentages': (shift_counts / len(teacher_shifts) * 100).to_dict()
-        }
-        
-        # Analyze macroblock distribution by shift
-        macroblock_shifts = self.schedule_df.groupby(['macroblock', 'teacher_shift']).size().unstack(fill_value=0)
-        shift_analysis['macroblock_distribution'] = macroblock_shifts.to_dict()
-        
-        # Analyze department distribution across shifts
-        dept_shifts = self.schedule_df.groupby(['course_dept', 'teacher_shift']).agg({
-            'teacher_id': 'nunique'
-        }).unstack(fill_value=0)
-        
-        shift_analysis['department_distribution'] = dept_shifts.to_dict()
-        
-        # Analyze overlapping time slots
-        overlapping_slots = self._identify_overlapping_slots()
-        shift_analysis['overlap_analysis'] = overlapping_slots
-        
-        return shift_analysis
-    
-    def _identify_overlapping_slots(self):
-        """Identify and analyze overlapping time slots between shifts."""
-        # Define shift time ranges (simplified)
-        shift_times = {
-            'shift1': list(range(8, 15)),  # 8:00-14:50
-            'shift2': list(range(10, 17)), # 10:00-16:50  
-            'shift3': list(range(12, 19))  # 12:00-18:50
-        }
-        
-        overlaps = {
-            'shift1_shift2': set(shift_times['shift1']) & set(shift_times['shift2']),
-            'shift2_shift3': set(shift_times['shift2']) & set(shift_times['shift3']),
-            'all_shifts': set(shift_times['shift1']) & set(shift_times['shift2']) & set(shift_times['shift3'])
-        }
-        
-        overlap_analysis = {}
-        for overlap_name, overlap_hours in overlaps.items():
-            if overlap_hours:
-                overlap_analysis[overlap_name] = {
-                    'hours': sorted(list(overlap_hours)),
-                    'duration': len(overlap_hours)
-                }
-        
-        return overlap_analysis
-    
-    def create_shift_visualizations(self, shift_analysis):
-        """Create visualizations for shift analysis."""
-        print("Creating shift distribution visualizations...")
-        
-        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
-        fig.suptitle('Teacher Shift Distribution Analysis', fontsize=16, fontweight='bold')
-        
-        # Teacher distribution pie chart
-        shift_counts = shift_analysis['teacher_distribution']['shift_counts']
-        ax1.pie(shift_counts.values(), labels=shift_counts.keys(), autopct='%1.1f%%', startangle=90)
-        ax1.set_title('Teacher Distribution Across Shifts')
-        
-        # Macroblock usage by shift
-        mb_data = shift_analysis['macroblock_distribution']
-        if mb_data:
-            shifts = list(next(iter(mb_data.values())).keys())
-            macroblocks = list(mb_data.keys())[:10]  # Show top 10 macroblocks
-            
-            shift_totals = {shift: [] for shift in shifts}
-            for mb in macroblocks:
-                for shift in shifts:
-                    shift_totals[shift].append(mb_data.get(mb, {}).get(shift, 0))
-            
-            x = np.arange(len(macroblocks))
-            width = 0.25
-            
-            for i, (shift, values) in enumerate(shift_totals.items()):
-                ax2.bar(x + i * width, values, width, label=shift)
-            
-            ax2.set_xlabel('Macroblocks')
-            ax2.set_ylabel('Number of Assignments')
-            ax2.set_title('Macroblock Usage by Shift')
-            ax2.set_xticks(x + width)
-            ax2.set_xticklabels(macroblocks, rotation=45)
-            ax2.legend()
-        
-        # Department distribution
-        dept_data = shift_analysis['department_distribution']
-        if dept_data and 'teacher_id' in dept_data:
-            depts = list(dept_data['teacher_id'].keys())[:5]  # Show top 5 departments
-            shifts = list(next(iter(dept_data['teacher_id'].values())).keys())
-            
-            dept_shift_data = []
-            for dept in depts:
-                dept_values = []
-                for shift in shifts:
-                    dept_values.append(dept_data['teacher_id'].get(dept, {}).get(shift, 0))
-                dept_shift_data.append(dept_values)
-            
-            x = np.arange(len(shifts))
-            width = 0.15
-            
-            for i, (dept, values) in enumerate(zip(depts, dept_shift_data)):
-                ax3.bar(x + i * width, values, width, label=dept[:20])  # Truncate long dept names
-            
-            ax3.set_xlabel('Shifts')
-            ax3.set_ylabel('Number of Teachers')
-            ax3.set_title('Teacher Distribution by Department')
-            ax3.set_xticks(x + width * 2)
-            ax3.set_xticklabels(shifts)
-            ax3.legend()
-        
-        # Overlap analysis
-        overlap_data = shift_analysis['overlap_analysis']
-        if overlap_data:
-            overlap_names = list(overlap_data.keys())
-            overlap_durations = [overlap_data[name]['duration'] for name in overlap_names]
-            
-            ax4.bar(overlap_names, overlap_durations, color=['lightblue', 'lightgreen', 'lightcoral'])
-            ax4.set_ylabel('Hours of Overlap')
-            ax4.set_title('Shift Overlap Analysis')
-            ax4.tick_params(axis='x', rotation=45)
-            
-            # Add duration labels on bars
-            for i, (name, duration) in enumerate(zip(overlap_names, overlap_durations)):
-                ax4.text(i, duration + 0.1, f'{duration}h', ha='center', va='bottom')
-        
-        plt.tight_layout()
-        plt.savefig(os.path.join(self.output_dir, 'shift_distribution_analysis.png'), dpi=300, bbox_inches='tight')
-        plt.close()
-
-    def generate_detailed_report(self, macroblock_analysis, choice_analysis, shift_analysis=None):
+    def generate_detailed_report(self, macroblock_analysis, choice_analysis):
         """Generate a detailed text report of the analysis."""
         report_path = os.path.join(self.output_dir, 'grouping_constraint_report.txt')
         
@@ -769,7 +639,8 @@ Semester Grouping: ✅
             
             f.write(f"Total Macroblocks Analyzed: {total_macroblocks}\n")
             f.write(f"Macroblocks without violations: {clean_macroblocks}\n")
-            f.write(f"Constraint Effectiveness: {(clean_macroblocks/total_macroblocks)*100:.1f}%\n\n")
+            f.write(f"Constraint Effectiveness: {(clean_macroblocks/total_macroblocks)*100:.1f}%\n")
+            f.write(f"System Type: Combined Shift System (Simplified)\n\n")
             
             f.write("DETAILED MACROBLOCK ANALYSIS\n")
             f.write("-" * 30 + "\n\n")
@@ -817,33 +688,13 @@ Semester Grouping: ✅
                         f.write(f"    - {mb}: {', '.join(teacher_names)}\n")
                 f.write("\n")
             
-            # Add shift analysis if available
-            if shift_analysis:
-                f.write("TEACHER SHIFT DISTRIBUTION ANALYSIS\n")
-                f.write("-" * 35 + "\n\n")
-                
-                teacher_dist = shift_analysis['teacher_distribution']
-                f.write(f"Total Teachers: {teacher_dist['total_teachers']}\n\n")
-                
-                f.write("Shift Distribution:\n")
-                for shift, count in teacher_dist['shift_counts'].items():
-                    percentage = teacher_dist['shift_percentages'][shift]
-                    f.write(f"  {shift}: {count} teachers ({percentage:.1f}%)\n")
-                
-                f.write("\nShift Overlap Analysis:\n")
-                for overlap_name, overlap_info in shift_analysis['overlap_analysis'].items():
-                    f.write(f"  {overlap_name}: {overlap_info['duration']} hours overlap\n")
-                    f.write(f"    Hours: {overlap_info['hours']}\n")
-                
-                f.write("\nDepartment Distribution:\n")
-                dept_dist = shift_analysis['department_distribution']
-                if dept_dist and 'teacher_id' in dept_dist:
-                    for dept, shift_counts in dept_dist['teacher_id'].items():
-                        f.write(f"  {dept}:\n")
-                        for shift, count in shift_counts.items():
-                            f.write(f"    - {shift}: {count} teachers\n")
-                
-                f.write("\n")
+            f.write("SYSTEM NOTES\n")
+            f.write("-" * 12 + "\n")
+            f.write("• Combined shift system: All teachers use unified shift\n")
+            f.write("• 3-lecture courses: 2 lectures + 1 tutorial (3rd hour)\n")
+            f.write("• Tutorial blocks (ta1/tb1/tc1 etc.) used as 3rd lecture hour\n")
+            f.write("• Lab allocation skipped in current implementation\n")
+            f.write("• Theory-only scheduling with classroom assignments\n\n")
         
         print(f"\nDetailed report saved to: {report_path}")
 
@@ -880,14 +731,8 @@ def main():
     # Create visualizations
     analyzer.create_visualizations(macroblock_analysis, choice_analysis)
     
-    # Analyze shift distribution if data is available
-    shift_analysis = None
-    if analyzer.has_shift_data:
-        shift_analysis = analyzer.analyze_shift_distribution()
-        analyzer.create_shift_visualizations(shift_analysis)
-    
     # Generate detailed report
-    analyzer.generate_detailed_report(macroblock_analysis, choice_analysis, shift_analysis)
+    analyzer.generate_detailed_report(macroblock_analysis, choice_analysis)
     
     print(f"\nAnalysis complete! Results saved to: {analyzer.output_dir}")
     print("\nGenerated files:")
@@ -898,8 +743,6 @@ def main():
     print("- violations_summary.png")
     print("- macroblock_grid_overview.png")
     print("- grouping_constraint_report.txt")
-    if analyzer.has_shift_data:
-        print("- shift_distribution_analysis.png")
 
 if __name__ == "__main__":
     main() 
