@@ -58,8 +58,8 @@ class SemesterGroupingAnalyzer:
                 course_matches = self.courses_df[self.courses_df['course_code'] == course]
                 if not course_matches.empty:
                     course_info = course_matches.iloc[0]
-                    semester_info[course] = course_info['semester']
-                    dept_info[course] = course_info['course_dept']
+                semester_info[course] = course_info['semester']
+                dept_info[course] = course_info['course_dept']
                 else:
                     semester_info[course] = "Unknown"
                     dept_info[course] = "Unknown Department"

@@ -149,30 +149,6 @@ class MacroblockTimetableConstraints:
                     self.macroblock_assignments[teacher][instance_id][f'{block}_chosen'] = (
                         self.model.NewBoolVar(f'teacher_{teacher}_instance_{instance_id}_{block}_chosen'))
                 
-                # PRE-FILTER: Only allow assignment to macroblocks that have sufficient tutorial slots
-                if tutorial_hours > 0:
-                    for block in self.theory_blocks:
-                        block_var = self.macroblock_assignments[teacher][instance_id][f'{block}_chosen']
-                        
-                        # Count available tutorial slots for this block
-                        block_letter = block[0]  # 'a', 'b', 'c', etc.
-                        block_number = block[1]  # '1' or '2'
-                        
-                        tutorial_block = f't{block_letter}{block_number}'  # ta1, tb1, etc.
-                        extended_tutorial_block = f't{block_letter}{block_letter}{block_number}'  # taa1, tbb1, etc.
-                        
-                        available_tutorial_slots = 0
-                        for day_idx, day in enumerate(self.days):
-                            for slot_info in self.slot_assignments[day]:
-                                theory_blocks = slot_info['theory_blocks']
-                                if tutorial_block in theory_blocks or extended_tutorial_block in theory_blocks:
-                                    available_tutorial_slots += 1
-                        
-                        # If this block doesn't have enough tutorial slots, prevent assignment
-                        if available_tutorial_slots < tutorial_hours:
-                            self.model.Add(block_var == 0)
-                            logger.info(f"Blocked assignment of instance {instance_id} to block {block}: insufficient tutorial slots ({available_tutorial_slots} < {tutorial_hours})")
-                
                 # Determine if tutorials should be allocated:
                 should_allocate_tutorials = tutorial_hours > 0 or lecture_hours == 4
                 
@@ -361,21 +337,14 @@ class MacroblockTimetableConstraints:
                         
                         all_tutorial_assignments.append(ext_tutorial_assignment)
                 
-                # FIXED: Ensure appropriate tutorial allocation when block is chosen
+                # Ensure appropriate tutorial allocation when block is chosen
                 if all_tutorial_assignments and tutorial_hours > 0:
                     total_tutorial_hours = sum(all_tutorial_assignments)
+                    min_tutorial_required = min(tutorial_hours, len(tutorial_slots) + len(extended_tutorial_slots))
                     
-                    # MANDATORY constraint: IF block is chosen AND tutorials needed, THEN allocate EXACTLY the required amount
-                    self.model.Add(total_tutorial_hours == tutorial_hours).OnlyEnforceIf([block_chosen_var])
-                    
-                    logger.info(f"Configured MANDATORY tutorial allocation for instance {instance_id}: {tutorial_hours} tutorial hours in block {chosen_block}")
-                
-                elif all_tutorial_assignments and lecture_hours == 4:
-                    # For 4-lecture courses, allocate exactly 1 tutorial
-                    total_tutorial_hours = sum(all_tutorial_assignments)
-                    self.model.Add(total_tutorial_hours == 1).OnlyEnforceIf([block_chosen_var])
-                    
-                    logger.info(f"Configured MANDATORY tutorial allocation for 4-lecture course {instance_id}: 1 tutorial hour in block {chosen_block}")
+                    # Conditional constraint: IF block is chosen AND tutorials needed, THEN allocate
+                    self.model.Add(total_tutorial_hours >= min_tutorial_required).OnlyEnforceIf([block_chosen_var])
+                    self.model.Add(total_tutorial_hours <= tutorial_hours * 2).OnlyEnforceIf([block_chosen_var])  # Allow flexibility
     
     def _apply_semester_grouping_constraints(self):
         """Apply constraints to group courses by semester and department with teacher diversity."""

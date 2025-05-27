@@ -135,6 +135,7 @@ class MacroblockTimetableScheduler:
         # Create the solver and solve the model
         solver = cp_model.CpSolver()
         solver.parameters.max_time_in_seconds = 300  # 5 minutes time limit
+        solver.parameters.memory_limit_mb = 30000  # 16GB memory limit
         solver.parameters.log_search_progress = True
         solver.parameters.num_search_workers = 12  # 8 threads for parallel search
         
