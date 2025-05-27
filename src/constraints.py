@@ -101,13 +101,14 @@ class MacroblockTimetableConstraints:
             for instance in self.teacher_course_assignments[teacher]:
                 # Use actual semester and department info from the data
                 semester = instance.get('semester', 3)  # Default to semester 3
+                
                 dept = instance.get('course_dept', 'Computer Science & Engineering')
                 course_code = instance['course_code']
                 
                 key = (semester, dept)
                 if key not in semester_groups:
                     semester_groups[key] = []
-                
+                print(key, semester, dept)
                 semester_groups[key].append({
                     'teacher': teacher,
                     'instance': instance,

@@ -58,8 +58,8 @@ class SemesterGroupingAnalyzer:
                 course_matches = self.courses_df[self.courses_df['course_code'] == course]
                 if not course_matches.empty:
                     course_info = course_matches.iloc[0]
-                semester_info[course] = course_info['semester']
-                dept_info[course] = course_info['course_dept']
+                    semester_info[course] = course_info['semester']
+                    dept_info[course] = course_info['course_dept']
                 else:
                     semester_info[course] = "Unknown"
                     dept_info[course] = "Unknown Department"
@@ -87,7 +87,7 @@ class SemesterGroupingAnalyzer:
             print(f"\nMacroblock {macroblock}:")
             print(f"  Courses: {len(courses_in_block)} unique")
             print(f"  Teachers: {len(teachers_in_block)} unique")
-            print(f"  Semesters: {sorted(set(semester_info.values()))}")
+            print(f"  Semesters: {sorted([str(s) for s in set(semester_info.values())])}")
             print(f"  Departments: {list(set(dept_info.values()))}")
             
             # Check for violations
@@ -342,18 +342,30 @@ class SemesterGroupingAnalyzer:
                 semester_distribution[semester].append(mb)
         
         # Create heatmap data
-        semesters = sorted(semester_distribution.keys())
+        # Fix semester sorting to handle mixed types
+        semester_keys = list(semester_distribution.keys())
+        semester_str_values = [str(s) for s in semester_keys if s != "Unknown"]
+        semesters = sorted(semester_str_values, key=lambda x: int(x) if x.isdigit() else float('inf'))
+        if "Unknown" in semester_keys:
+            semesters.append("Unknown")
         macroblocks = sorted(macroblock_analysis.keys())
         
         heatmap_data = np.zeros((len(semesters), len(macroblocks)))
         
         for i, semester in enumerate(semesters):
             for j, mb in enumerate(macroblocks):
-                if mb in semester_distribution[semester]:
+                # Find the original semester key
+                original_semester = None
+                for orig_key in semester_keys:
+                    if str(orig_key) == semester:
+                        original_semester = orig_key
+                        break
+                
+                if original_semester is not None and mb in semester_distribution[original_semester]:
                     # Count courses from this semester in this macroblock
                     mb_analysis = macroblock_analysis[mb]
                     courses_in_semester = sum(1 for course in mb_analysis['courses'] 
-                                            if mb_analysis['semester_info'].get(course) == semester)
+                                            if str(mb_analysis['semester_info'].get(course, "")) == semester)
                     heatmap_data[i, j] = courses_in_semester
         
         im1 = ax1.imshow(heatmap_data, cmap='YlOrRd', aspect='auto')
@@ -377,15 +389,25 @@ class SemesterGroupingAnalyzer:
         # Semester grouping effectiveness
         semester_stats = []
         for semester in semesters:
-            total_courses = sum(1 for _, row in self.courses_df.iterrows() if row['semester'] == semester)
+            # Convert semester back to original type for comparison
+            original_semester = None
+            for orig_key in semester_keys:
+                if str(orig_key) == semester:
+                    original_semester = orig_key
+                    break
+            
+            if original_semester is None:
+                continue
+                
+            total_courses = sum(1 for _, row in self.courses_df.iterrows() if str(row['semester']) == semester)
             scheduled_courses = 0
             for _, row in self.schedule_df.iterrows():
                 # Need to get semester info from courses_df
                 course_matches = self.courses_df[self.courses_df['course_code'] == row['course_code']]
-                if not course_matches.empty and course_matches.iloc[0]['semester'] == semester:
+                if not course_matches.empty and str(course_matches.iloc[0]['semester']) == semester:
                     scheduled_courses += 1
             
-            macroblocks_used = len([mb for mb in semester_distribution[semester]])
+            macroblocks_used = len(semester_distribution.get(original_semester, []))
             
             semester_stats.append({
                 'Semester': semester,
@@ -597,8 +619,11 @@ Combined Shift System: ✅
                    ha='center', va='center', fontsize=10)
             
             # Add semester info
-            semesters = sorted(set(analysis['semesters']))
-            sem_text = f"Sem: {', '.join(map(str, semesters))}"
+            semester_values = [str(s) for s in set(analysis['semesters']) if s != "Unknown"]
+            sorted_semesters = sorted(semester_values, key=lambda x: int(x) if x.isdigit() else float('inf'))
+            if "Unknown" in analysis['semesters']:
+                sorted_semesters.append("Unknown")
+            sem_text = f"Sem: {', '.join(sorted_semesters)}"
             ax.text(rect_x + rect_width/2, rect_y + 0.02, sem_text, 
                    ha='center', va='bottom', fontsize=8, style='italic')
             
@@ -649,7 +674,15 @@ Combined Shift System: ✅
                 f.write(f"Macroblock {mb}:\n")
                 f.write(f"  Courses ({analysis['num_courses']}): {', '.join(analysis['courses'])}\n")
                 f.write(f"  Teachers ({analysis['num_teachers']}): {', '.join(map(str, analysis['teachers']))}\n")
-                f.write(f"  Semesters: {', '.join(map(str, sorted(set(analysis['semesters']))))}\n")
+                
+                # Fix the sorting issue by converting all semester values to strings first
+                semester_values = [str(s) for s in set(analysis['semesters']) if s != "Unknown"]
+                # Sort as strings, then convert back to display format
+                sorted_semesters = sorted(semester_values, key=lambda x: int(x) if x.isdigit() else float('inf'))
+                if "Unknown" in analysis['semesters']:
+                    sorted_semesters.append("Unknown")
+                
+                f.write(f"  Semesters: {', '.join(sorted_semesters)}\n")
                 f.write(f"  Departments: {', '.join(analysis['departments'])}\n")
                 
                 # Check violations
@@ -663,7 +696,7 @@ Combined Shift System: ✅
                     if teacher_violations:
                         f.write(f"    - Repeated teachers: {teacher_violations}\n")
                 else:
-                    f.write(f"  ✅ No constraint violations\n")
+                    f.write(f"  No constraint violations\n")
                 
                 f.write(f"  Teacher-Course pairs:\n")
                 for pair in analysis['teacher_course_pairs']:
@@ -709,7 +742,9 @@ def main():
     
     latest_dir = max(output_dirs, key=os.path.getmtime)
     schedule_file = os.path.join(latest_dir, 'macroblock_schedule.csv')
-    courses_file = 'data/mapped_data/cs_teacher_courses.csv'
+    
+    # Use the correct course file name
+    courses_file = 'data/mapped_data/computer_dept_teacher_courses.csv'
     
     if not os.path.exists(schedule_file):
         print(f"Schedule file not found: {schedule_file}")
@@ -717,9 +752,14 @@ def main():
     
     if not os.path.exists(courses_file):
         print(f"Courses file not found: {courses_file}")
-        return
+        # Try alternative file name as fallback
+        courses_file = 'data/mapped_data/cs_teacher_courses.csv'
+        if not os.path.exists(courses_file):
+            print(f"Alternative courses file also not found: {courses_file}")
+            return
     
     print(f"Analyzing schedule from: {schedule_file}")
+    print(f"Using course data from: {courses_file}")
     
     # Create analyzer
     analyzer = SemesterGroupingAnalyzer(schedule_file, courses_file)

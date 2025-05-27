@@ -57,3 +57,6 @@ should be allocated according to the number of practical hour given
 2) No Overlapping Slots Constraint (`apply_no_overlapping_slots_constraint`)
 3) Room Single Assignment Constraint (`apply_room_single_assignment_constraint`)
 4)   Intelligent Lab Capacity Constraint (`apply_intelligent_lab_capacity_constraint`)
+
+121    EC23511      Dr. Sathiyavathi S   5    2      2/2    1      0/1    0      0/0    ❌ Violation
+why did not assign a tutorial hour the data is attached check it
