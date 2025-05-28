@@ -24,6 +24,16 @@ class MacroblockTimetableConstraints:
         ]
         self.num_slots = len(self.time_slots)
         
+        # NEW: Teacher shift definitions
+        # Shift 1: 8:00 - 3:00 PM (slots 0-6: 8:00-8:50 to 2:00-2:50)
+        # Shift 2: 10:00 - 5:00 PM (slots 2-8: 10:00-10:50 to 4:00-4:50) 
+        # Shift 3: 12:00 - 7:00 PM (slots 4-10: 12:00-12:50 to 6:00-6:50)
+        self.teacher_shifts = {
+            'shift1': {'name': 'Shift 1 (8:00-3:00)', 'start_slot': 0, 'end_slot': 6},   # slots 0-6
+            'shift2': {'name': 'Shift 2 (10:00-5:00)', 'start_slot': 2, 'end_slot': 8},  # slots 2-8
+            'shift3': {'name': 'Shift 3 (12:00-7:00)', 'start_slot': 4, 'end_slot': 10}  # slots 4-10
+        }
+        
         # Lab time slots (L slots - different timing structure)
         self.lab_time_slots = [
             "8:00 - 8:50", "8:50 - 9:40", "9:50 - 10:40", "10:40 - 11:30",
@@ -198,6 +208,9 @@ class MacroblockTimetableConstraints:
         
         # Apply semester and department grouping constraints (simplified)
         self._apply_semester_grouping_constraints()
+        
+        # NEW: Apply teacher shift constraints to prevent cross-shift violations
+        self._apply_teacher_shift_constraints()
         
         # Store assignment mapping for post-processing
         self.course_instance_mappings = {}
@@ -410,6 +423,9 @@ class MacroblockTimetableConstraints:
             self.apply_weekly_working_hour_constraint(teacher_theory_assignments, None),
         ]
         
+        # Apply teacher shift constraints (this method doesn't return a boolean)
+        self._apply_teacher_shift_constraints()
+        
         return all(constraints_applied)
 
     def apply_weekly_working_hour_constraint(self, teacher_theory_assignments, teacher_lab_assignments=None):
@@ -454,3 +470,291 @@ class MacroblockTimetableConstraints:
             logger.info(f"Applied 21-hour weekly limit for Teacher {teacher}")
         
         return True
+
+    def _apply_teacher_shift_constraints(self):
+        """
+        ENHANCED Day-Aware Teacher Shift Constraints
+        
+        Ensures that when multiple macroblocks are assigned to the same teacher,
+        they stay within the same shift on each day. This prevents cross-shift violations
+        by analyzing day-specific shift requirements.
+        
+        Approach:
+        1. For each teacher, determine the shift requirements for each day
+        2. Create constraints that ensure all macroblocks assigned to a teacher 
+           use compatible shifts on each day
+        3. Use cumulative shift analysis to prevent conflicts
+        """
+        logger.info("Applying enhanced day-aware teacher shift constraints...")
+        
+        # First, analyze which time slots each base macroblock spans for each day
+        macroblock_slot_mapping = self._analyze_macroblock_time_slots()
+        
+        # For each teacher, apply day-aware shift constraints
+        for teacher in self.teachers:
+            if teacher not in self.teacher_course_assignments:
+                continue
+            
+            course_instances = self.teacher_course_assignments[teacher]
+            if len(course_instances) <= 1:
+                continue  # Skip if teacher has only one course (no conflicts possible)
+            
+            logger.info(f"Applying day-aware shift constraints for Teacher {teacher} with {len(course_instances)} courses")
+            
+            # Analyze shift requirements for each course on each day
+            course_day_shift_requirements = self._analyze_course_day_shift_requirements(
+                teacher, course_instances, macroblock_slot_mapping)
+            
+            # Apply cross-course shift consistency constraints
+            self._apply_cross_course_shift_consistency(teacher, course_instances, course_day_shift_requirements)
+        
+        logger.info("Enhanced day-aware teacher shift constraints applied successfully")
+    
+    def _analyze_course_day_shift_requirements(self, teacher, course_instances, macroblock_slot_mapping):
+        """
+        Analyze shift requirements for each course on each day.
+        Returns a mapping of which shifts each course would require on each day for each possible base macroblock.
+        """
+        course_day_shift_requirements = {}
+        
+        for instance in course_instances:
+            instance_id = instance['id']
+            lecture_hours = instance['lecture_hours']
+            tutorial_hours = instance['tutorial_hours']
+            
+            if teacher not in self.macroblock_assignments or instance_id not in self.macroblock_assignments[teacher]:
+                continue
+            
+            course_day_shift_requirements[instance_id] = {}
+            
+            # Analyze each possible base macroblock for this course
+            allowed_theory_blocks = [block for block in self.theory_blocks if block not in ['v1', 'v2']]
+            
+            for base_block in allowed_theory_blocks:
+                course_day_shift_requirements[instance_id][base_block] = {}
+                
+                # For each day, determine which shift this base block would require
+                for day in self.days:
+                    predicted_slots = self._predict_time_slots_for_assignment(
+                        base_block, day, lecture_hours, tutorial_hours, macroblock_slot_mapping)
+                    
+                    if predicted_slots:
+                        required_shift = self._determine_required_shift(predicted_slots)
+                        course_day_shift_requirements[instance_id][base_block][day] = {
+                            'slots': predicted_slots,
+                            'shift': required_shift
+                        }
+                    else:
+                        course_day_shift_requirements[instance_id][base_block][day] = {
+                            'slots': [],
+                            'shift': None
+                        }
+        
+        return course_day_shift_requirements
+    
+    def _determine_required_shift(self, slot_indices):
+        """
+        Determine which shift is required for a given set of time slots.
+        Returns the shift name if all slots fit within one shift, 'invalid' if they span multiple shifts.
+        """
+        if not slot_indices:
+            return None
+        
+        min_slot = min(slot_indices)
+        max_slot = max(slot_indices)
+        
+        # Check which shifts can accommodate all slots
+        compatible_shifts = []
+        for shift_name, shift_info in self.teacher_shifts.items():
+            start_slot = shift_info['start_slot']
+            end_slot = shift_info['end_slot']
+            
+            if min_slot >= start_slot and max_slot <= end_slot:
+                compatible_shifts.append(shift_name)
+        
+        if len(compatible_shifts) == 1:
+            return compatible_shifts[0]
+        elif len(compatible_shifts) > 1:
+            # If multiple shifts are compatible, prefer the most restrictive one
+            shift_sizes = {shift: self.teacher_shifts[shift]['end_slot'] - self.teacher_shifts[shift]['start_slot'] 
+                          for shift in compatible_shifts}
+            return min(shift_sizes.keys(), key=lambda x: shift_sizes[x])
+        else:
+            return 'invalid'
+    
+    def _apply_cross_course_shift_consistency(self, teacher, course_instances, course_day_shift_requirements):
+        """
+        Apply constraints to ensure all courses assigned to a teacher use compatible shifts on each day.
+        """
+        # For each day, ensure shift consistency across all courses
+        for day in self.days:
+            # For each pair of courses, ensure they can be assigned to compatible shifts on this day
+            for i in range(len(course_instances)):
+                for j in range(i + 1, len(course_instances)):
+                    instance1 = course_instances[i]
+                    instance2 = course_instances[j]
+                    instance1_id = instance1['id']
+                    instance2_id = instance2['id']
+                    
+                    if (instance1_id not in course_day_shift_requirements or 
+                        instance2_id not in course_day_shift_requirements):
+                        continue
+                    
+                    # Create constraints for this day and pair of courses
+                    self._create_day_shift_consistency_constraints(
+                        teacher, day, instance1_id, instance2_id, course_day_shift_requirements)
+    
+    def _create_day_shift_consistency_constraints(self, teacher, day, instance1_id, instance2_id, 
+                                                 course_day_shift_requirements):
+        """
+        Create specific constraints to ensure two courses use compatible shifts on a given day.
+        """
+        req1 = course_day_shift_requirements[instance1_id]
+        req2 = course_day_shift_requirements[instance2_id]
+        
+        allowed_theory_blocks = [block for block in self.theory_blocks if block not in ['v1', 'v2']]
+        
+        # For each combination of base macroblocks for the two courses
+        for block1 in allowed_theory_blocks:
+            for block2 in allowed_theory_blocks:
+                if (block1 not in req1 or block2 not in req2 or 
+                    day not in req1[block1] or day not in req2[block2]):
+                    continue
+                
+                shift1 = req1[block1][day]['shift']
+                shift2 = req2[block2][day]['shift']
+                
+                # If either shift is invalid or they're incompatible, prevent this combination
+                if (shift1 == 'invalid' or shift2 == 'invalid' or 
+                    (shift1 is not None and shift2 is not None and shift1 != shift2)):
+                    
+                    # Get the boolean variables for these macroblock choices
+                    if (teacher in self.macroblock_assignments and
+                        instance1_id in self.macroblock_assignments[teacher] and
+                        instance2_id in self.macroblock_assignments[teacher]):
+                        
+                        block1_var = self.macroblock_assignments[teacher][instance1_id].get(f'{block1}_chosen')
+                        block2_var = self.macroblock_assignments[teacher][instance2_id].get(f'{block2}_chosen')
+                        
+                        if block1_var is not None and block2_var is not None:
+                            # Constraint: Cannot have both blocks chosen simultaneously
+                            self.model.Add(block1_var + block2_var <= 1)
+                            
+                            logger.info(f"SHIFT CONSTRAINT: Teacher {teacher} on {day}: "
+                                      f"blocks {block1}(course {instance1_id}) and {block2}(course {instance2_id}) "
+                                      f"incompatible - shifts {shift1} vs {shift2}")
+        
+        # Also apply individual block constraints for invalid shifts
+        for instance_id in [instance1_id, instance2_id]:
+            req = course_day_shift_requirements[instance_id]
+            for block in allowed_theory_blocks:
+                if block in req and day in req[block] and req[block][day]['shift'] == 'invalid':
+                    if (teacher in self.macroblock_assignments and
+                        instance_id in self.macroblock_assignments[teacher]):
+                        
+                        block_var = self.macroblock_assignments[teacher][instance_id].get(f'{block}_chosen')
+                        if block_var is not None:
+                            # Hard constraint: Cannot use this block due to invalid shift
+                            self.model.Add(block_var == 0)
+                            
+                            logger.info(f"INVALID SHIFT: Teacher {teacher} course {instance_id} "
+                                      f"cannot use block {block} on {day} - spans multiple shifts")
+    
+    def _analyze_macroblock_time_slots(self):
+        """Analyze which time slots each macroblock appears in for each day."""
+        macroblock_slot_mapping = {}
+        
+        for day, schedule in self.daily_schedule_structure.items():
+            macroblock_slot_mapping[day] = {}
+            
+            for slot_idx, content in enumerate(schedule):
+                # Parse content to find theory blocks
+                parts = content.split('/')
+                for part in parts:
+                    if part in self.theory_blocks + self.tutorial_blocks:
+                        if part not in macroblock_slot_mapping[day]:
+                            macroblock_slot_mapping[day][part] = []
+                        macroblock_slot_mapping[day][part].append(slot_idx)
+        
+        return macroblock_slot_mapping
+    
+    def _predict_time_slots_for_assignment(self, base_block, day, lecture_hours, tutorial_hours, macroblock_slot_mapping):
+        """
+        Predict which time slots will be used if a course instance is assigned to a base macroblock.
+        This uses the same logic as the post-processing case logic.
+        """
+        predicted_slots = []
+        
+        # Get base slots for this block on this day
+        base_slots = macroblock_slot_mapping[day].get(base_block, [])
+        
+        # Get tutorial slots
+        block_letter = base_block[0]  # 'a', 'b', 'c', etc.
+        block_number = base_block[1]  # '1' or '2'
+        tutorial_block = f't{block_letter}{block_number}'
+        tutorial_slots = macroblock_slot_mapping[day].get(tutorial_block, [])
+        
+        # Get extended tutorial slots
+        extended_tutorial_block = f't{block_letter}{block_letter}{block_number}'
+        extended_tutorial_slots = macroblock_slot_mapping[day].get(extended_tutorial_block, [])
+        
+        # Apply the same case logic as in post-processing
+        if lecture_hours == 3 and tutorial_hours == 0:
+            # Case 1: 3L+0T → base_slots[:2] + tutorial_slots[:1]
+            predicted_slots.extend(base_slots[:2])
+            predicted_slots.extend(tutorial_slots[:1])
+            
+        elif lecture_hours == 3 and tutorial_hours == 1:
+            # Case 2: 3L+1T → base_slots[:2] + tutorial_slots[:1] + extended_tutorial_slots[:1]
+            predicted_slots.extend(base_slots[:2])
+            predicted_slots.extend(tutorial_slots[:1])
+            predicted_slots.extend(extended_tutorial_slots[:1])
+            
+        elif lecture_hours == 2 and tutorial_hours == 1:
+            # Case 3: 2L+1T → base_slots[:2] + tutorial_slots[:1]
+            predicted_slots.extend(base_slots[:2])
+            predicted_slots.extend(tutorial_slots[:1])
+            
+        elif lecture_hours == 1 and tutorial_hours == 1:
+            # Case 4: 1L+1T → base_slots[:1] + tutorial_slots[:1]
+            predicted_slots.extend(base_slots[:1])
+            predicted_slots.extend(tutorial_slots[:1])
+            
+        elif lecture_hours == 2 and tutorial_hours == 0:
+            # Case 5: 2L+0T → base_slots[:2]
+            predicted_slots.extend(base_slots[:2])
+            
+        elif lecture_hours == 1 and tutorial_hours == 0:
+            # Case 6: 1L+0T → base_slots[:1]
+            predicted_slots.extend(base_slots[:1])
+            
+        elif lecture_hours == 4 and tutorial_hours >= 1:
+            # Case 7: 4L+1T or 4L+2T → base_slots[:2] + tutorial_slots[:(lecture_hours-2)] + remaining tutorial slots
+            predicted_slots.extend(base_slots[:2])
+            tutorial_slots_for_lectures = lecture_hours - 2
+            predicted_slots.extend(tutorial_slots[:tutorial_slots_for_lectures])
+            remaining_tutorial_slots = tutorial_slots[tutorial_slots_for_lectures:] + extended_tutorial_slots
+            predicted_slots.extend(remaining_tutorial_slots[:tutorial_hours])
+            
+        elif lecture_hours == 5 and tutorial_hours >= 1:
+            # Case 8: 5L+1T or 5L+2T → all base slots + additional tutorial slots
+            predicted_slots.extend(base_slots)
+            tutorial_slots_for_lectures = lecture_hours - len(base_slots)
+            predicted_slots.extend(tutorial_slots[:tutorial_slots_for_lectures])
+            remaining_tutorial_slots = tutorial_slots[tutorial_slots_for_lectures:] + extended_tutorial_slots
+            predicted_slots.extend(remaining_tutorial_slots[:tutorial_hours])
+            
+        elif lecture_hours == 2 and tutorial_hours == 2:
+            # Case 9: 2L+2T → base_slots[:2] + tutorial_slots[:1] + extended_tutorial_slots[:1]
+            predicted_slots.extend(base_slots[:2])
+            predicted_slots.extend(tutorial_slots[:1])
+            predicted_slots.extend(extended_tutorial_slots[:1])
+            
+        else:
+            # General case
+            predicted_slots.extend(base_slots[:lecture_hours])
+            predicted_slots.extend(tutorial_slots[:tutorial_hours])
+        
+        # Remove duplicates and sort
+        predicted_slots = sorted(list(set(predicted_slots)))
+        return predicted_slots

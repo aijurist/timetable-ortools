@@ -7,8 +7,8 @@ def verify_ltp_constraints():
     
     # Load course requirements - try both possible file names
     course_files = [
-        # "data/mapped_data/computer_dept_teacher_courses.csv",
-        "data/mapped_data/cs_teacher_courses.csv"
+        "data/mapped_data/computer_dept_teacher_courses.csv",
+        # "data/mapped_data/cs_teacher_courses.csv"
     ]
     
     course_file = None
@@ -121,20 +121,24 @@ def verify_ltp_constraints():
     course_requirements = {}
     for _, row in courses_df.iterrows():
         instance_id = str(row['id'])
-        course_requirements[instance_id] = {
-            'lecture_hours': row['lecture_hours'],
-            'practical_hours': row['practical_hours'],
-            'tutorial_hours': row['tutorial_hours'],
-            'course_code': row['course_code'],
-            'course_name': row['course_name'],
-            'teacher_id': row['teacher_id'],
-            'student_count': row['student_count'],
-            'first_name': row.get('first_name', ''),
-            'last_name': row.get('last_name', ''),
-            'semester': row.get('semester', 'Unknown'),
-            'course_dept': row.get('course_dept', 'Unknown'),
-            'academic_year': row.get('academic_year', 'Unknown')
-        }
+        course_dept = row.get('course_dept', 'Unknown')
+        
+        # Filter to only include Computer Science courses
+        if 'Computer Science' in course_dept:
+            course_requirements[instance_id] = {
+                'lecture_hours': row['lecture_hours'],
+                'practical_hours': row['practical_hours'],
+                'tutorial_hours': row['tutorial_hours'],
+                'course_code': row['course_code'],
+                'course_name': row['course_name'],
+                'teacher_id': row['teacher_id'],
+                'student_count': row['student_count'],
+                'first_name': row.get('first_name', ''),
+                'last_name': row.get('last_name', ''),
+                'semester': row.get('semester', 'Unknown'),
+                'course_dept': course_dept,
+                'academic_year': row.get('academic_year', 'Unknown')
+            }
     
     # Count scheduled hours per course instance - Enhanced for batching
     scheduled_hours = defaultdict(lambda: {'lecture': 0, 'tutorial': 0, 'practical': 0, 'batches': set()})

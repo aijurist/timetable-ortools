@@ -9,6 +9,7 @@ from src.constraints import MacroblockTimetableConstraints
 from src.utils.macroblock_visualizer import MacroblockTimetableVisualizer
 from src.utils.room_verifier import RoomVerifier
 from src.utils.room_visualizer import RoomVisualizer
+from src.utils.shift_verifier import ShiftVerifier
 
 class MacroblockTimetableScheduler:
     def __init__(self, course_file, room_file):
@@ -172,6 +173,9 @@ class MacroblockTimetableScheduler:
             verification_report_path = os.path.join(self.output_dir, 'room_verification_report.txt')
             room_verifier.generate_room_verification_report(schedule_result, verification_report_path)
             
+            # The shift verification is already handled in post_process_detailed_schedule
+            # So we don't need to repeat it here
+            
             return True
         else:
             self.logger.warning(f"No solution found. Status: {status}")
@@ -290,16 +294,38 @@ class MacroblockTimetableScheduler:
                         'academic_year': instance_data.get('academic_year', ''),
                         'semester': instance_data.get('semester', ''),
                         'course_dept': instance_data.get('course_dept', ''),
-                        'teacher_shift': 'combined_shift',
-                        'daily_shift_pattern': 'Combined→Combined→Combined→Combined→Combined'
+                        'teacher_shift': 'processing',  # Will be determined after all assignments
+                        'daily_shift_pattern': 'processing'  # Will be determined after all assignments
                     })
+        
+        # Now determine teacher shifts based on actual slot assignments
+        schedule_data = self._finalize_teacher_shifts(schedule_data)
+        
+        # Use ShiftVerifier to add comprehensive shift information and verify constraints
+        shift_verifier = ShiftVerifier(self.logger)
+        schedule_data = shift_verifier.add_shift_info_to_schedule(schedule_data)
+        
+        # Use ENHANCED verification with weekly distribution patterns
+        verification_result = shift_verifier.verify_shift_constraints_with_distribution(schedule_data)
+        shift_verifier.print_distribution_verification_report(verification_result)
+        
+        # Save enhanced shift verification report
+        shift_report_path = os.path.join(self.output_dir, 'enhanced_shift_verification_report.txt')
+        shift_verifier.save_distribution_verification_report(verification_result, shift_report_path)
+        self.logger.info(f"Enhanced shift verification report saved to: {shift_report_path}")
+        
+        # NEW: Save detailed teacher shift data for visualizer
+        shift_data_files = shift_verifier.save_teacher_shift_data(verification_result, self.output_dir)
+        self.logger.info(f"Teacher shift data files created for visualizer access")
+        self.logger.info(f"Comprehensive teacher shift summary saved to: {shift_data_files.get('teacher_shifts_file', 'N/A')}")
         
         return {
             'schedule_data': schedule_data,
             'daily_schedules': self._create_daily_schedule_structure(schedule_data),
             'time_slot_definitions': {
                 'T': self.time_slots,
-            }
+            },
+            'shift_verification': verification_result
         }
     
     def _apply_case_logic(self, base_block, lecture_hours, tutorial_hours, instance_data, teacher):
@@ -1010,6 +1036,110 @@ class MacroblockTimetableScheduler:
         
         self.logger.debug(f"Assigned room {selected_room} to teacher {teacher} for {day} slot {slot_index}")
         return selected_room
+    
+    def _determine_daily_shift_from_slots(self, teacher, day, schedule_data):
+        """Determine the daily shift for a teacher based on the assigned slots."""
+        # Get all slots for this teacher on this specific day
+        teacher_slots_on_day = [
+            item['slot_index'] for item in schedule_data 
+            if item['teacher_id'] == teacher and item['day'] == day
+        ]
+        
+        if not teacher_slots_on_day:
+            return 'no_shift'
+        
+        min_slot = min(teacher_slots_on_day)
+        max_slot = max(teacher_slots_on_day)
+        
+        # Define shift boundaries (same as in constraints.py)
+        # Shift 1: slots 0-6 (8:00-3:00)
+        # Shift 2: slots 2-8 (10:00-5:00) 
+        # Shift 3: slots 4-10 (12:00-7:00)
+        
+        if min_slot >= 0 and max_slot <= 6:
+            return 'shift1'
+        elif min_slot >= 2 and max_slot <= 8:
+            return 'shift2'
+        elif min_slot >= 4 and max_slot <= 10:
+            return 'shift3'
+        else:
+            return 'invalid_shift'  # This should not happen with proper constraints
+        
+    def _update_teacher_shift_patterns(self, schedule_data):
+        """Update the daily shift patterns for all teachers after processing."""
+        # Group by teacher
+        teacher_daily_shifts = {}
+        
+        for item in schedule_data:
+            teacher_id = item['teacher_id']
+            day = item['day']
+            teacher_shift = item['teacher_shift']
+            
+            if teacher_id not in teacher_daily_shifts:
+                teacher_daily_shifts[teacher_id] = {}
+            
+            # Only record one shift per teacher per day
+            if day not in teacher_daily_shifts[teacher_id]:
+                teacher_daily_shifts[teacher_id][day] = teacher_shift
+        
+        # Create shift patterns
+        teacher_shift_patterns = {}
+        for teacher_id, daily_shifts in teacher_daily_shifts.items():
+            pattern_parts = []
+            for day in self.days:  # tuesday, wed, thur, fri, sat
+                shift = daily_shifts.get(day, 'no_shift')
+                shift_display = {
+                    'shift1': 'S1',
+                    'shift2': 'S2', 
+                    'shift3': 'S3',
+                    'no_shift': '--',
+                    'combined_shift': 'CS',
+                    'invalid_shift': 'XX'
+                }.get(shift, shift)
+                pattern_parts.append(shift_display)
+            
+            teacher_shift_patterns[teacher_id] = '→'.join(pattern_parts)
+        
+        # Update schedule data with proper shift patterns
+        for item in schedule_data:
+            teacher_id = item['teacher_id']
+            item['daily_shift_pattern'] = teacher_shift_patterns.get(teacher_id, 'Unknown')
+        
+        return schedule_data
+    
+    def _finalize_teacher_shifts(self, schedule_data):
+        """Determine final teacher shifts based on actual slot assignments."""
+        # First pass: determine daily shifts for each teacher
+        for item in schedule_data:
+            teacher_id = item['teacher_id']
+            day = item['day']
+            
+            # Get all slots for this teacher on this day
+            teacher_slots_on_day = [
+                x['slot_index'] for x in schedule_data 
+                if x['teacher_id'] == teacher_id and x['day'] == day
+            ]
+            
+            if teacher_slots_on_day:
+                min_slot = min(teacher_slots_on_day)
+                max_slot = max(teacher_slots_on_day)
+                
+                # Determine shift based on slot range
+                if min_slot >= 0 and max_slot <= 6:
+                    daily_shift = 'shift1'
+                elif min_slot >= 2 and max_slot <= 8:
+                    daily_shift = 'shift2'
+                elif min_slot >= 4 and max_slot <= 10:
+                    daily_shift = 'shift3'
+                else:
+                    daily_shift = 'invalid_shift'
+                
+                item['teacher_shift'] = daily_shift
+        
+        # Second pass: create weekly shift patterns
+        schedule_data = self._update_teacher_shift_patterns(schedule_data)
+        
+        return schedule_data
     
     # NOTE: verify_room_distribution_and_overlaps() function has been moved to 
     # src/utils/room_verifier.py for better modularity and reusability 

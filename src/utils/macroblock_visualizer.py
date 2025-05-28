@@ -11,6 +11,9 @@ class MacroblockTimetableVisualizer:
         self.schedule_df = pd.DataFrame(schedule_data) if schedule_data else pd.DataFrame()
         self.output_dir = output_dir
         
+        # Load teacher shift distribution data if available
+        self.teacher_shift_data = self._load_teacher_shift_data()
+        
         # Macroblock days structure
         self.days = ["tuesday", "wed", "thur", "fri", "sat"]
         
@@ -64,6 +67,36 @@ class MacroblockTimetableVisualizer:
             self.lab_data = pd.DataFrame()
             self.teachers = []
             self.rooms = []
+    
+    def _load_teacher_shift_data(self):
+        """Load teacher shift distribution data from saved files."""
+        import json
+        import os
+        
+        shift_data = {
+            'distributions': {},
+            'daily_shifts': {},
+            'available': False
+        }
+        
+        try:
+            # Load distribution data
+            distribution_file = os.path.join(self.output_dir, 'teacher_shift_distributions.json')
+            if os.path.exists(distribution_file):
+                with open(distribution_file, 'r', encoding='utf-8') as f:
+                    shift_data['distributions'] = json.load(f)
+                shift_data['available'] = True
+            
+            # Load daily shifts data
+            daily_shifts_file = os.path.join(self.output_dir, 'teacher_daily_shifts.csv')
+            if os.path.exists(daily_shifts_file):
+                daily_shifts_df = pd.read_csv(daily_shifts_file)
+                shift_data['daily_shifts'] = daily_shifts_df
+                
+        except Exception as e:
+            print(f"Warning: Could not load teacher shift data: {e}")
+        
+        return shift_data
     
     def _analyze_building_blocks(self):
         """Analyze and categorize rooms by building blocks."""
@@ -306,7 +339,7 @@ class MacroblockTimetableVisualizer:
                 if grid[i, j] is not None:
                     macroblock = macroblock_grid[i, j]
                     room_block = block_grid[i, j]
-                    room_type = 'Lab' if 'Lab' in str(grid[i, j]) else 'Room'
+                    room_type = 'Lab' if 'Practical' in str(grid[i, j]) else 'Room'
                     
                     # Use block-based background color with macroblock border
                     bg_color = self._get_room_block_color('', room_type) if room_block == 'Unknown' else self.block_room_colors.get(room_block, '#FFFFFF')
@@ -348,9 +381,9 @@ class MacroblockTimetableVisualizer:
         ax.grid(True, alpha=0.3)
     
     def _create_teacher_schedule(self, teacher_id, teacher_df):
-        """Create a schedule visualization for a specific teacher."""
-        # Create a figure
-        fig = plt.figure(figsize=(20, 10))
+        """Create a schedule visualization for a specific teacher with shift information."""
+        # Create a figure with more space for shift information
+        fig = plt.figure(figsize=(26, 14))  # Increased size for distribution info
         
         # Get teacher information
         teacher_info = teacher_df.iloc[0]
@@ -360,48 +393,159 @@ class MacroblockTimetableVisualizer:
         if not teacher_name:
             teacher_name = teacher_info.get('staff_code', f'Teacher {teacher_id}')
         
-        # Get teacher shift information
-        teacher_shift = teacher_info.get('teacher_shift', 'Unknown')
-        shift_display = teacher_shift.replace('shift', 'Shift ') if teacher_shift != 'Unknown' else 'Unknown Shift'
+        # Get shift distribution information
+        distribution_info = self._get_teacher_distribution_info(teacher_id)
         
-        # Plot schedule
-        ax = fig.add_subplot(111)
-        self._plot_teacher_macroblock_schedule(ax, teacher_id, teacher_df)
-        ax.set_title(f'Macroblock Schedule for {teacher_name} (ID: {teacher_id}) - {shift_display}\n(Theory Time Slots)', fontsize=16)
+        # Get comprehensive shift information
+        teacher_shift = teacher_info.get('teacher_shift', 'Unknown')
+        daily_shift_pattern = teacher_info.get('daily_shift_pattern', 'Unknown')
+        shift_status = teacher_info.get('shift_status', 'Unknown')
+        
+        # Format shift display
+        if teacher_shift == 'invalid_shift':
+            shift_display = 'INVALID SHIFT (Cross-shift violation)'
+        elif teacher_shift.startswith('shift'):
+            shift_num = teacher_shift.replace('shift', '')
+            shift_display = f'Shift {shift_num}'
+        else:
+            shift_display = teacher_shift.replace('_', ' ').title()
+        
+        # Analyze daily shift usage for this teacher
+        daily_shifts = self._analyze_teacher_daily_shifts(teacher_df)
+        
+        # Create main schedule plot
+        ax_main = fig.add_subplot(111)
+        self._plot_teacher_macroblock_schedule_with_shifts(ax_main, teacher_id, teacher_df, daily_shifts)
+        
+        # Enhanced title with shift distribution information
+        title_parts = [
+            f'Macroblock Schedule for {teacher_name} (ID: {teacher_id})',
+            f'Weekly Pattern: {daily_shift_pattern}',
+            f'Distribution: {distribution_info["distribution_text"]}',
+            f'Compliance: {distribution_info["compliance"]:.1f}%'
+        ]
+        
+        ax_main.set_title('\n'.join(title_parts), fontsize=14, pad=20)
+        
+        # Add shift legend
+        self._add_shift_legend_to_teacher_schedule(ax_main, daily_shifts)
+        
+        # Add enhanced shift analysis text box with distribution info
+        self._add_enhanced_shift_analysis_textbox(fig, teacher_id, daily_shifts, daily_shift_pattern, distribution_info)
         
         plt.tight_layout()
         fig.savefig(os.path.join(self.output_dir, f'teacher_{teacher_id}_{teacher_name.replace(" ", "_")}_macroblock_schedule.png'), 
                    dpi=300, bbox_inches='tight')
         plt.close(fig)
     
-    def _create_room_schedule(self, room_id, room_number, room_df):
-        """Create a schedule visualization for a specific room."""
-        # Get room information
-        room_info = room_df.iloc[0]
-        room_type = room_info.get('room_type', 'Room')
-        block = room_info.get('block', '')
+    def _analyze_teacher_daily_shifts(self, teacher_df):
+        """Analyze shift usage for a teacher across different days."""
+        # Define shift boundaries (same as in constraints.py)
+        shift_definitions = {
+            'shift1': {'name': 'Shift 1 (8:00-3:00)', 'start_slot': 0, 'end_slot': 6, 'color': '#FF6B6B'},
+            'shift2': {'name': 'Shift 2 (10:00-5:00)', 'start_slot': 2, 'end_slot': 8, 'color': '#4ECDC4'},
+            'shift3': {'name': 'Shift 3 (12:00-7:00)', 'start_slot': 4, 'end_slot': 10, 'color': '#45B7D1'}
+        }
         
-        room_title = f"{room_type} {room_number}"
-        if block:
-            room_title += f" ({block})"
+        daily_shifts = {}
         
-        fig = plt.figure(figsize=(20, 10))
-        ax = fig.add_subplot(111)
+        # Get teacher_id for checking shift data recommendations
+        teacher_id = None
+        if not teacher_df.empty:
+            teacher_id = teacher_df.iloc[0]['teacher_id']
         
-        self._plot_room_macroblock_schedule(ax, room_id, room_df)
-        ax.set_title(f'Macroblock Schedule for {room_title}\n(Theory Time Slots)', fontsize=16)
+        # Get recommended shifts from shift verifier data if available
+        recommended_shifts = {}
+        if (self.teacher_shift_data['available'] and teacher_id is not None and 
+            str(teacher_id) in self.teacher_shift_data['distributions']):
+            teacher_data = self.teacher_shift_data['distributions'][str(teacher_id)]
+            if 'daily_shifts' in teacher_data:
+                for day, shift_info in teacher_data['daily_shifts'].items():
+                    if shift_info.get('shift') == 'no_classes' and 'recommended_shift' in shift_info:
+                        recommended_shifts[day] = shift_info['recommended_shift']
         
-        plt.tight_layout()
-        fig.savefig(os.path.join(self.output_dir, f'room_{room_number.replace("/", "_")}_{room_id}_macroblock_schedule.png'), 
-                   dpi=300, bbox_inches='tight')
-        plt.close(fig)
+        for day in self.days:
+            day_assignments = teacher_df[teacher_df['day'] == day]
+            if not day_assignments.empty:
+                slots_used = day_assignments['slot_index'].tolist()
+                min_slot = min(slots_used)
+                max_slot = max(slots_used)
+                
+                # Determine compatible shifts
+                compatible_shifts = []
+                for shift_name, shift_info in shift_definitions.items():
+                    if min_slot >= shift_info['start_slot'] and max_slot <= shift_info['end_slot']:
+                        compatible_shifts.append(shift_name)
+                
+                # Determine actual shift used
+                if len(compatible_shifts) == 0:
+                    shift_used = 'invalid_shift'
+                    shift_color = '#FF0000'  # Red for invalid
+                    shift_name_display = 'INVALID'
+                elif len(compatible_shifts) == 1:
+                    shift_used = compatible_shifts[0]
+                    shift_color = shift_definitions[shift_used]['color']
+                    shift_name_display = shift_definitions[shift_used]['name']
+                else:
+                    # Multiple compatible - choose most restrictive
+                    shift_sizes = {shift: shift_definitions[shift]['end_slot'] - shift_definitions[shift]['start_slot'] 
+                                  for shift in compatible_shifts}
+                    shift_used = min(shift_sizes.keys(), key=lambda x: shift_sizes[x])
+                    shift_color = shift_definitions[shift_used]['color']
+                    shift_name_display = shift_definitions[shift_used]['name']
+                
+                daily_shifts[day] = {
+                    'shift': shift_used,
+                    'shift_name': shift_name_display,
+                    'shift_color': shift_color,
+                    'slots_used': slots_used,
+                    'slot_range': f"{min_slot}-{max_slot}",
+                    'compatible_shifts': compatible_shifts,
+                    'assignments': day_assignments.to_dict('records')
+                }
+            else:
+                # Check if we have a recommended shift for days with no classes
+                if day in recommended_shifts:
+                    rec_shift = recommended_shifts[day]
+                    rec_color = '#CCCCCC'
+                    if rec_shift == 'shift1':
+                        rec_color = '#FFCCCC'  # Light red for Shift 1
+                    elif rec_shift == 'shift2':
+                        rec_color = '#CCF0EC'  # Light teal for Shift 2
+                    elif rec_shift == 'shift3':
+                        rec_color = '#CCE8F4'  # Light blue for Shift 3
+                    
+                    daily_shifts[day] = {
+                        'shift': 'no_classes',
+                        'shift_name': 'No Classes',
+                        'shift_color': '#CCCCCC',
+                        'slots_used': [],
+                        'slot_range': 'None',
+                        'compatible_shifts': [],
+                        'assignments': [],
+                        'recommended_shift': rec_shift,
+                        'recommended_color': rec_color
+                    }
+                else:
+                    daily_shifts[day] = {
+                        'shift': 'no_classes',
+                        'shift_name': 'No Classes',
+                        'shift_color': '#CCCCCC',
+                        'slots_used': [],
+                        'slot_range': 'None',
+                        'compatible_shifts': [],
+                        'assignments': []
+                    }
+        
+        return daily_shifts
     
-    def _plot_teacher_macroblock_schedule(self, ax, teacher_id, teacher_df):
-        """Plot the macroblock schedule for a specific teacher with block identification."""
+    def _plot_teacher_macroblock_schedule_with_shifts(self, ax, teacher_id, teacher_df, daily_shifts):
+        """Plot the macroblock schedule for a specific teacher with enhanced shift visualization."""
         # Create a grid for days and time slots
         grid = np.empty((len(self.days), len(self.time_slots)), dtype=object)
         macroblock_grid = np.empty((len(self.days), len(self.time_slots)), dtype=object)
         block_grid = np.empty((len(self.days), len(self.time_slots)), dtype=object)
+        shift_grid = np.empty((len(self.days), len(self.time_slots)), dtype=object)
         
         for _, row in teacher_df.iterrows():
             day = row['day']
@@ -425,7 +569,11 @@ class MacroblockTimetableVisualizer:
                     if room_block != 'Unknown':
                         break
                 
-                # Create display text with block and type information
+                # Get shift information for this day
+                day_shift_info = daily_shifts.get(day, {})
+                shift_color = day_shift_info.get('shift_color', '#CCCCCC')
+                
+                # Create display text with enhanced information
                 block_prefix = ""
                 if room_block != 'Unknown':
                     block_prefix = f"[{room_block.replace(' ', '')}] "
@@ -434,50 +582,252 @@ class MacroblockTimetableVisualizer:
                 grid[day_idx, slot_index] = display_text
                 macroblock_grid[day_idx, slot_index] = macroblock
                 block_grid[day_idx, slot_index] = room_block
+                shift_grid[day_idx, slot_index] = shift_color
         
-        # Plot the grid
+        # Plot the grid with shift-aware coloring
         for i, day in enumerate(self.days):
+            day_shift_info = daily_shifts.get(day, {})
+            day_shift_color = day_shift_info.get('shift_color', '#CCCCCC')
+            
+            # Check if this day has a recommended shift
+            has_recommendation = day_shift_info.get('shift') == 'no_classes' and 'recommended_shift' in day_shift_info
+            if has_recommendation:
+                recommended_shift = day_shift_info['recommended_shift']
+                
+                # Use recommended color (already properly set in _analyze_teacher_daily_shifts)
+                rec_color = day_shift_info.get('recommended_color', '#EEEEEE')
+                
+                # Create rectangle for entire day with recommended shift color
+                rect = plt.Rectangle((0, len(self.days) - i - 1), len(self.time_slots), 1, 
+                                   facecolor=rec_color, edgecolor='gray', 
+                                   linewidth=1, alpha=0.3)
+                ax.add_patch(rect)
+                
+                # Add recommended shift indicator in the middle of the day
+                shift_abbr = recommended_shift.replace('shift', 'S')
+                shift_text = f"NO THEORY CLASSES - RECOMMENDED SHIFT: {shift_abbr}"
+                
+                # Center point of the day row
+                center_x = len(self.time_slots) / 2
+                center_y = len(self.days) - i - 0.5
+                
+                # Add central text for recommended shift
+                ax.text(center_x, center_y, shift_text, 
+                       ha='center', va='center', fontsize=10, weight='bold',
+                       bbox=dict(boxstyle="round,pad=0.3", facecolor=rec_color, alpha=0.7))
+                
+                # Add recommended shift indicator
+                ax.text(-0.1, len(self.days) - i - 0.5, f"[{shift_abbr}]", 
+                       ha='right', va='center', fontsize=10, weight='bold',
+                       bbox=dict(boxstyle="round,pad=0.3", facecolor=rec_color, alpha=0.8))
+            
             for j, time_slot in enumerate(self.time_slots):
                 if grid[i, j] is not None:
                     macroblock = macroblock_grid[i, j]
                     room_block = block_grid[i, j]
                     room_type = 'Lab' if 'Practical' in str(grid[i, j]) else 'Room'
                     
-                    # Use block-based background color
-                    bg_color = self._get_room_block_color('', room_type) if room_block == 'Unknown' else self.block_room_colors.get(room_block, '#FFFFFF')
+                    # Use shift color as background with slight transparency for room block info
+                    bg_color = day_shift_color
                     border_color = self.block_colors.get(macroblock, 'black')
                     
-                    # Create rectangle
+                    # Create rectangle with shift-based background
                     rect = plt.Rectangle((j, len(self.days) - i - 1), 1, 1, 
-                                       facecolor=bg_color, edgecolor=border_color, linewidth=2)
+                                       facecolor=bg_color, edgecolor=border_color, 
+                                       linewidth=3, alpha=0.7)
                     ax.add_patch(rect)
                     
-                    # Add text
+                    # Add text with white background for readability
                     ax.text(j + 0.5, len(self.days) - i - 0.5, grid[i, j],
                            ha='center', va='center', fontsize=7, weight='bold',
-                           bbox=dict(boxstyle="round,pad=0.1", facecolor='white', alpha=0.8))
+                           bbox=dict(boxstyle="round,pad=0.1", facecolor='white', alpha=0.9))
                     
                     # Add macroblock label
                     ax.text(j + 0.9, len(self.days) - i - 0.1, macroblock,
-                           ha='right', va='top', fontsize=6, 
-                           bbox=dict(boxstyle="round,pad=0.05", facecolor=border_color, alpha=0.7))
+                           ha='right', va='top', fontsize=6, weight='bold',
+                           bbox=dict(boxstyle="round,pad=0.05", facecolor=border_color, alpha=0.8))
                     
-                    # Add block indicator
+                    # Add building block indicator
                     if room_block != 'Unknown':
-                        block_short = room_block.replace('Block ', 'B')
+                        block_short = room_block.replace('Block ', 'B').replace('Techlounge', 'TL')
                         ax.text(j + 0.1, len(self.days) - i - 0.9, block_short,
-                               ha='left', va='bottom', fontsize=8, weight='bold',
-                               bbox=dict(boxstyle="round,pad=0.05", facecolor=bg_color, alpha=0.9))
+                               ha='left', va='bottom', fontsize=6, weight='bold',
+                               bbox=dict(boxstyle="round,pad=0.05", facecolor='white', alpha=0.8))
+                elif day_shift_info.get('shift') not in ['no_classes', None]:
+                    # Empty slot - show shift background if day has classes
+                    rect = plt.Rectangle((j, len(self.days) - i - 1), 1, 1, 
+                                       facecolor=day_shift_color, edgecolor='gray', 
+                                       linewidth=1, alpha=0.2)
+                    ax.add_patch(rect)
+            
+            # Add shift indicator on the left side of each day
+            if not has_recommendation:  # Only add if not already added for recommendation
+                shift_name = day_shift_info.get('shift_name', 'Unknown')
+                shift_short = self._get_shift_short_name(shift_name)
+                ax.text(-0.1, len(self.days) - i - 0.5, shift_short, 
+                       ha='right', va='center', fontsize=10, weight='bold',
+                       bbox=dict(boxstyle="round,pad=0.3", facecolor=day_shift_color, alpha=0.8))
         
         # Set axes properties
-        ax.set_xlim(0, len(self.time_slots))
+        ax.set_xlim(-0.5, len(self.time_slots))
         ax.set_ylim(0, len(self.days))
         ax.set_xticks(range(len(self.time_slots)))
-        ax.set_xticklabels([f"Theory Slot {i}\n{slot}" for i, slot in enumerate(self.time_slots)], 
-                          rotation=45, ha='right')
+        ax.set_xticklabels([f"Slot {i}\n{slot}" for i, slot in enumerate(self.time_slots)], 
+                          rotation=45, ha='right', fontsize=9)
         ax.set_yticks(range(len(self.days)))
-        ax.set_yticklabels([day.capitalize() for day in reversed(self.days)])
+        ax.set_yticklabels([day.capitalize() for day in reversed(self.days)], fontsize=10)
         ax.grid(True, alpha=0.3)
+    
+    def _get_shift_short_name(self, shift_name):
+        """Convert shift name to short abbreviation."""
+        if 'Shift 1' in shift_name:
+            return 'S1'
+        elif 'Shift 2' in shift_name:
+            return 'S2'
+        elif 'Shift 3' in shift_name:
+            return 'S3'
+        elif 'INVALID' in shift_name:
+            return 'XX'
+        elif 'No Classes' in shift_name:
+            return '--'
+        else:
+            return '??'
+    
+    def _add_shift_legend_to_teacher_schedule(self, ax, daily_shifts):
+        """Add a shift legend to the teacher schedule."""
+        from matplotlib.patches import Patch
+        
+        # Get unique shifts used by this teacher
+        shifts_used = {}
+        recommended_shifts = {}
+        
+        for day, shift_info in daily_shifts.items():
+            shift_name = shift_info.get('shift_name', 'Unknown')
+            shift_color = shift_info.get('shift_color', '#CCCCCC')
+            
+            # Add to regular shifts
+            if shift_name not in shifts_used and shift_name != 'No Classes':
+                shifts_used[shift_name] = shift_color
+            
+            # Check for recommended shifts
+            if shift_info.get('shift') == 'no_classes' and 'recommended_shift' in shift_info:
+                recommended_shift = shift_info['recommended_shift']
+                rec_name = f"Recommended {recommended_shift.replace('shift', 'Shift ')}"
+                
+                # Use the color already defined in _analyze_teacher_daily_shifts
+                rec_color = shift_info.get('recommended_color', '#EEEEEE')
+                if rec_name not in recommended_shifts:
+                    recommended_shifts[rec_name] = rec_color
+        
+        # Create legend elements
+        legend_elements = []
+        
+        # Add actual shift legends
+        for shift_name, color in shifts_used.items():
+            if shift_name != 'No Classes':  # Skip "No Classes" as we'll show recommendations instead
+                legend_elements.append(Patch(facecolor=color, edgecolor='black', label=shift_name, alpha=0.7))
+        
+        # Add recommended shift legends
+        for rec_name, color in recommended_shifts.items():
+            legend_elements.append(Patch(facecolor=color, edgecolor='gray', label=rec_name, alpha=0.5))
+        
+        # Add a legend for days with no classes if any
+        if any(shift_info.get('shift') == 'no_classes' for _, shift_info in daily_shifts.items()):
+            legend_elements.append(Patch(facecolor='#CCCCCC', edgecolor='gray', label='No Classes', alpha=0.3))
+        
+        if legend_elements:
+            ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1.02, 1), 
+                     title='Shifts Used / Recommended', fontsize=10, title_fontsize=11)
+    
+    def _add_enhanced_shift_analysis_textbox(self, fig, teacher_id, daily_shifts, daily_shift_pattern, distribution_info):
+        """Add a text box with enhanced shift analysis and distribution information."""
+        analysis_text = []
+        analysis_text.append(f"SHIFT ANALYSIS FOR TEACHER {teacher_id}")
+        analysis_text.append("-" * 40)
+        analysis_text.append(f"Weekly Pattern: {daily_shift_pattern}")
+        analysis_text.append(f"Distribution: {distribution_info['distribution_text']}")
+        analysis_text.append(f"Compliance: {distribution_info['compliance']:.1f}%")
+        analysis_text.append(f"Target Pattern: {distribution_info['target_distribution'][0]},{distribution_info['target_distribution'][1]},{distribution_info['target_distribution'][2]} (Randomized)")
+        analysis_text.append("")
+        
+        # DISTRIBUTION ANALYSIS
+        analysis_text.append("DISTRIBUTION BREAKDOWN:")
+        target = distribution_info['target_distribution']
+        actual = distribution_info['actual_distribution']
+        analysis_text.append(f"Target Pattern:  S1:{target[0]} S2:{target[1]} S3:{target[2]} (Randomized)")
+        analysis_text.append(f"Actual Pattern:  S1:{actual.get('shift1', 0)} S2:{actual.get('shift2', 0)} S3:{actual.get('shift3', 0)}")
+        
+        if actual.get('invalid', 0) > 0:
+            analysis_text.append(f"Invalid Shifts:  {actual.get('invalid', 0)} day(s)")
+        if actual.get('no_classes', 0) > 0:
+            analysis_text.append(f"No Classes:      {actual.get('no_classes', 0)} day(s)")
+        
+        analysis_text.append("")
+        
+        # Daily breakdown
+        analysis_text.append("DAILY BREAKDOWN:")
+        violations = 0
+        for day in self.days:
+            day_info = daily_shifts.get(day, {})
+            shift_name = day_info.get('shift_name', 'Unknown')
+            slot_range = day_info.get('slot_range', 'None')
+            
+            if day_info.get('shift') == 'invalid_shift':
+                violations += 1
+                analysis_text.append(f"{day.capitalize():>9}: {shift_name} (VIOLATION)")
+                analysis_text.append(f"           Slots: {slot_range}")
+            elif day_info.get('shift') == 'no_classes':
+                analysis_text.append(f"{day.capitalize():>9}: No Classes")
+            else:
+                analysis_text.append(f"{day.capitalize():>9}: {shift_name}")
+                analysis_text.append(f"           Slots: {slot_range}")
+        
+        analysis_text.append("")
+        
+        # Status summary
+        if violations > 0:
+            analysis_text.append(f"VIOLATIONS: {violations} day(s) with invalid shifts")
+        else:
+            analysis_text.append("STATUS: All shift constraints satisfied")
+        
+        # Distribution compliance assessment
+        compliance = distribution_info['compliance']
+        if compliance >= 90:
+            analysis_text.append("DISTRIBUTION: Excellent compliance")
+        elif compliance >= 70:
+            analysis_text.append("DISTRIBUTION: Good compliance")
+        elif compliance >= 50:
+            analysis_text.append("DISTRIBUTION: Fair compliance")
+        else:
+            analysis_text.append("DISTRIBUTION: Poor compliance")
+        
+        # Add text box to figure
+        textstr = '\n'.join(analysis_text)
+        props = dict(boxstyle='round', facecolor='lightblue', alpha=0.8)
+        fig.text(0.02, 0.98, textstr, transform=fig.transFigure, fontsize=8,
+                verticalalignment='top', bbox=props, fontfamily='monospace')
+    
+    def _create_room_schedule(self, room_id, room_number, room_df):
+        """Create a schedule visualization for a specific room."""
+        # Get room information
+        room_info = room_df.iloc[0]
+        room_type = room_info.get('room_type', 'Room')
+        block = room_info.get('block', '')
+        
+        room_title = f"{room_type} {room_number}"
+        if block:
+            room_title += f" ({block})"
+        
+        fig = plt.figure(figsize=(20, 10))
+        ax = fig.add_subplot(111)
+        
+        self._plot_room_macroblock_schedule(ax, room_id, room_df)
+        ax.set_title(f'Macroblock Schedule for {room_title}\n(Theory Time Slots)', fontsize=16)
+        
+        plt.tight_layout()
+        fig.savefig(os.path.join(self.output_dir, f'room_{room_number.replace("/", "_")}_{room_id}_macroblock_schedule.png'), 
+                   dpi=300, bbox_inches='tight')
+        plt.close(fig)
     
     def _plot_room_macroblock_schedule(self, ax, room_id, room_df):
         """Plot the macroblock schedule for a specific room with block identification."""
@@ -919,4 +1269,40 @@ class MacroblockTimetableVisualizer:
                 table[(i + 1, j)].set_facecolor(color)
                 table[(i + 1, j)].set_alpha(0.3)
         
-        ax.set_title('Block Capacity and Utilization Analysis', fontsize=14, pad=20) 
+        ax.set_title('Block Capacity and Utilization Analysis', fontsize=14, pad=20)
+    
+    def _plot_teacher_macroblock_schedule(self, ax, teacher_id, teacher_df):
+        """Legacy method for backward compatibility - now delegates to enhanced version."""
+        daily_shifts = self._analyze_teacher_daily_shifts(teacher_df)
+        self._plot_teacher_macroblock_schedule_with_shifts(ax, teacher_id, teacher_df, daily_shifts)
+    
+    def _get_teacher_distribution_info(self, teacher_id):
+        """Get distribution information for a specific teacher."""
+        distribution_info = {
+            'target_distribution': [2, 2, 1],  # Default 2,2,1 pattern
+            'actual_distribution': {'shift1': 0, 'shift2': 0, 'shift3': 0, 'invalid': 0, 'no_classes': 0},
+            'compliance': 0.0,
+            'distribution_text': 'Target: 2,2,1 | Actual: Unknown'
+        }
+        
+        if self.teacher_shift_data['available'] and str(teacher_id) in self.teacher_shift_data['distributions']:
+            teacher_data = self.teacher_shift_data['distributions'][str(teacher_id)]
+            distribution_info.update({
+                'target_distribution': teacher_data.get('target_distribution', [2, 2, 1]),
+                'actual_distribution': teacher_data.get('actual_distribution', {}),
+                'compliance': teacher_data.get('distribution_compliance', 0.0)
+            })
+            
+            # Create distribution text
+            target = distribution_info['target_distribution']
+            actual = distribution_info['actual_distribution']
+            distribution_info['distribution_text'] = (
+                f"Target: {target[0]},{target[1]},{target[2]} | "
+                f"Actual: {actual.get('shift1', 0)},{actual.get('shift2', 0)},{actual.get('shift3', 0)}"
+            )
+            
+            # Add invalid/no-class info if present
+            if actual.get('invalid', 0) > 0 or actual.get('no_classes', 0) > 0:
+                distribution_info['distribution_text'] += f" | Invalid: {actual.get('invalid', 0)} | No Classes: {actual.get('no_classes', 0)}"
+        
+        return distribution_info 
