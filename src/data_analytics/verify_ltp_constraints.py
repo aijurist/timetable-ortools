@@ -364,10 +364,10 @@ def verify_ltp_constraints():
                 if has_lab_schedule:
                     status = "⚠️ PRACTICAL ISSUE"
                     practical_violations += 1
-                else:
+            else:
                     status = "⚠️ PRACTICAL MISSING"
                     # Don't count as violation if lab schedule not available
-            elif not theory_ok and practical_ok:
+            if not theory_ok and practical_ok:
                 status = "⚠️ THEORY ISSUE"
                 theory_only_violations += 1
             elif not theory_ok and not practical_ok:
