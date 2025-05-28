@@ -326,17 +326,19 @@ class MacroblockTimetableConstraints:
                             instance_vars = [teacher_instances[inst][0] for inst in teacher_instances]  # One var per instance
                             self.model.Add(sum(instance_vars) <= 1)
                 
-                # Constraint: Promote diversity by limiting same course code repetition
+                # Constraint: Allow up to 2 instances per course code per block (enabling same course with different teachers)
                 course_code_vars = {}
                 for teacher, instance_id, block_var, course_code in block_assignments:
                     if course_code not in course_code_vars:
                         course_code_vars[course_code] = []
                     course_code_vars[course_code].append(block_var)
                 
-                # Allow at most one instance per course code per block
+                # MODIFIED: Allow at most 2 instances per course code per block (instead of 2)
+                # This enables same course instance with different teachers to be grouped in same macroblock
                 for course_code, course_vars in course_code_vars.items():
                     if len(course_vars) > 1:
-                        self.model.Add(sum(course_vars) <= 1)
+                        self.model.Add(sum(course_vars) <= 2)  
+                        logger.info(f"Course {course_code} in block {block}: allowing up to 3 instances (different teachers)")
     
     def _link_macroblock_to_slots(self, teacher, instance, teacher_theory_assignments, teacher_lab_assignments):
         """SIMPLIFIED: No detailed slot linking - handled in post-processing."""

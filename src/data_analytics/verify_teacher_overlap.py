@@ -30,13 +30,42 @@ def time_ranges_overlap(range1, range2):
     except (ValueError, AttributeError):
         return False
 
+def find_latest_schedules():
+    """Find the most recent lab and theory schedule files."""
+    output_dir = "output"
+    if not os.path.exists(output_dir):
+        return None, None, None, None
+    
+    # Find latest lab schedule
+    lab_file = None
+    lab_type = None
+    lab_folders = [f for f in os.listdir(output_dir) if f.startswith("lab_schedule_")]
+    if lab_folders:
+        latest_lab_folder = max(lab_folders)
+        combined_file = os.path.join(output_dir, latest_lab_folder, "combined_theory_lab_schedule.csv")
+        if os.path.exists(combined_file):
+            lab_file = combined_file
+            lab_type = "combined"
+    
+    # Find latest theory schedule
+    theory_file = None
+    theory_type = None
+    theory_folders = [f for f in os.listdir(output_dir) if f.startswith("macroblock_schedule_")]
+    if theory_folders:
+        latest_theory_folder = max(theory_folders)
+        theory_file = os.path.join(output_dir, latest_theory_folder, "macroblock_schedule.csv")
+        if os.path.exists(theory_file):
+            theory_type = "theory_only"
+    
+    return lab_file, lab_type, theory_file, theory_type
+
 def find_latest_schedule():
-    """Find the most recent schedule file (theory or combined)."""
+    """Find the most recent schedule file (prioritizing lab schedules for lab analysis)."""
     output_dir = "output"
     if not os.path.exists(output_dir):
         return None, None
     
-    # Look for lab schedules first (combined theory + lab)
+    # MODIFIED: Prioritize lab schedules first for lab assignment analysis
     lab_folders = [f for f in os.listdir(output_dir) if f.startswith("lab_schedule_")]
     if lab_folders:
         latest_lab_folder = max(lab_folders)
@@ -44,7 +73,7 @@ def find_latest_schedule():
         if os.path.exists(combined_file):
             return combined_file, "combined"
     
-    # Fall back to theory-only schedules
+    # Fall back to theory-only schedules if no lab schedules exist
     theory_folders = [f for f in os.listdir(output_dir) if f.startswith("macroblock_schedule_")]
     if theory_folders:
         latest_theory_folder = max(theory_folders)
@@ -53,6 +82,138 @@ def find_latest_schedule():
             return theory_file, "theory_only"
     
     return None, None
+
+def verify_cross_schedule_overlaps():
+    """Verify that teachers don't have overlapping assignments between lab and theory schedules."""
+    print("\n🔄 CROSS-SCHEDULE OVERLAP VERIFICATION (Lab vs Theory)")
+    print("=" * 80)
+    print("Checking for teacher conflicts between lab_schedule and macroblock_schedule")
+    print("=" * 80)
+    
+    # Find both schedule files
+    lab_file, lab_type, theory_file, theory_type = find_latest_schedules()
+    
+    if lab_file is None or theory_file is None:
+        if lab_file is None:
+            print("❌ No lab schedule file found!")
+        if theory_file is None:
+            print("❌ No theory schedule file found!")
+        print("⚠️  Cannot perform cross-schedule verification without both files.")
+        return []
+    
+    print(f"📁 Lab schedule file: {lab_file}")
+    print(f"📁 Theory schedule file: {theory_file}")
+    
+    try:
+        # Load lab schedule and filter for lab assignments only
+        lab_df = pd.read_csv(lab_file)
+        lab_assignments = lab_df[lab_df['slot_type'] == 'Practical'].copy()
+        print(f"✅ Loaded {len(lab_assignments)} lab assignments from {lab_file}")
+        
+        # Load theory schedule and filter for theory assignments only
+        theory_df = pd.read_csv(theory_file)
+        theory_assignments = theory_df[theory_df['slot_type'].isin(['Lecture', 'Tutorial'])].copy()
+        print(f"✅ Loaded {len(theory_assignments)} theory assignments from {theory_file}")
+        
+    except Exception as e:
+        print(f"❌ Error loading schedule files: {e}")
+        return []
+    
+    if lab_assignments.empty and theory_assignments.empty:
+        print("❌ Both schedules are empty!")
+        return []
+    
+    if lab_assignments.empty:
+        print("⚠️  No lab assignments found - skipping cross-schedule verification")
+        return []
+    
+    if theory_assignments.empty:
+        print("⚠️  No theory assignments found - skipping cross-schedule verification")
+        return []
+    
+    # Find common teachers between both schedules
+    lab_teachers = set(lab_assignments['teacher_id'].unique())
+    theory_teachers = set(theory_assignments['teacher_id'].unique())
+    common_teachers = lab_teachers.intersection(theory_teachers)
+    
+    print(f"\n📊 TEACHER ANALYSIS:")
+    print(f"Teachers with lab assignments: {len(lab_teachers)}")
+    print(f"Teachers with theory assignments: {len(theory_teachers)}")
+    print(f"Teachers with both lab and theory: {len(common_teachers)}")
+    
+    if not common_teachers:
+        print("✅ No teachers have both lab and theory assignments - no cross-schedule conflicts possible")
+        return []
+    
+    # Check for overlaps between lab and theory for each common teacher
+    cross_schedule_conflicts = []
+    
+    print(f"\n🔍 CHECKING CROSS-SCHEDULE CONFLICTS FOR {len(common_teachers)} TEACHERS...")
+    print("-" * 80)
+    
+    for teacher_id in common_teachers:
+        teacher_lab_assignments = lab_assignments[lab_assignments['teacher_id'] == teacher_id]
+        teacher_theory_assignments = theory_assignments[theory_assignments['teacher_id'] == teacher_id]
+        
+        teacher_conflicts = 0
+        
+        # Check each lab assignment against each theory assignment for the same teacher
+        for _, lab_row in teacher_lab_assignments.iterrows():
+            for _, theory_row in teacher_theory_assignments.iterrows():
+                # Check if they're on the same day
+                if lab_row['day'] == theory_row['day']:
+                    lab_time = lab_row['time_interval']
+                    theory_time = theory_row['time_interval']
+                    
+                    # Check for time overlap
+                    if time_ranges_overlap(lab_time, theory_time):
+                        conflict_info = {
+                            'teacher_id': teacher_id,
+                            'day': lab_row['day'],
+                            'lab_course': lab_row.get('display_course_code', lab_row.get('course_code', 'Unknown')),
+                            'lab_time': lab_time,
+                            'lab_room': lab_row['room_number'],
+                            'lab_session': lab_row.get('lab_session', 'Unknown'),
+                            'theory_course': theory_row['course_code'],
+                            'theory_time': theory_time,
+                            'theory_room': theory_row['room_number'],
+                            'theory_macroblock': theory_row.get('macroblock', 'Unknown'),
+                            'conflict_type': 'cross_schedule_overlap'
+                        }
+                        cross_schedule_conflicts.append(conflict_info)
+                        teacher_conflicts += 1
+        
+        if teacher_conflicts > 0:
+            print(f"⚠️  Teacher {teacher_id}: {teacher_conflicts} cross-schedule conflict(s)")
+    
+    print(f"\n📈 CROSS-SCHEDULE OVERLAP ANALYSIS RESULTS:")
+    print(f"Total cross-schedule conflicts found: {len(cross_schedule_conflicts)}")
+    print(f"Teachers with cross-schedule conflicts: {len(set(c['teacher_id'] for c in cross_schedule_conflicts))}")
+    
+    if not cross_schedule_conflicts:
+        print("✅ NO CROSS-SCHEDULE OVERLAPS DETECTED - Lab and theory schedules are compatible!")
+    else:
+        print(f"❌ {len(cross_schedule_conflicts)} CROSS-SCHEDULE CONFLICTS DETECTED!")
+        print("\n📋 DETAILED CROSS-SCHEDULE CONFLICT REPORT:")
+        print("=" * 120)
+        print(f"{'Teacher':<10} {'Day':<10} {'Lab Course':<15} {'Lab Time':<15} {'Lab Room':<12} {'Theory Course':<15} {'Theory Time':<15} {'Theory Room':<12}")
+        print("-" * 120)
+        
+        for conflict in cross_schedule_conflicts:
+            print(f"{conflict['teacher_id']:<10} "
+                 f"{conflict['day'].capitalize():<10} "
+                 f"{conflict['lab_course']:<15} "
+                 f"{conflict['lab_time']:<15} "
+                 f"{conflict['lab_room']:<12} "
+                 f"{conflict['theory_course']:<15} "
+                 f"{conflict['theory_time']:<15} "
+                 f"{conflict['theory_room']:<12}")
+        
+        print(f"\n⚠️  CRITICAL: These teachers are double-booked between lab and theory schedules!")
+        print(f"   - Lab assignments are from: {lab_file}")
+        print(f"   - Theory assignments are from: {theory_file}")
+    
+    return cross_schedule_conflicts
 
 def verify_lab_overlaps(schedule_df):
     """Verify lab assignments for overlaps and capacity constraint violations."""
@@ -417,6 +578,9 @@ def verify_teacher_overlap():
     # Lab overlap verification (if we have lab data)
     all_lab_violations, lab_schedule = verify_lab_overlaps(schedule_df)
     
+    # Cross-schedule verification
+    cross_schedule_conflicts = verify_cross_schedule_overlaps()
+    
     # Summary report
     print("\n" + "=" * 80)
     print("📊 FINAL VERIFICATION SUMMARY")
@@ -432,9 +596,10 @@ def verify_teacher_overlap():
     print(f"   Teacher time slot conflicts: {total_conflicts}")
     print(f"   Room double-booking conflicts: {room_conflict_count}")
     print(f"   Teacher lab overlaps: {len(all_lab_violations)}")
+    print(f"   Cross-schedule conflicts: {len(cross_schedule_conflicts)}")
     print()
     
-    total_issues = total_conflicts + room_conflict_count + len(all_lab_violations)
+    total_issues = total_conflicts + room_conflict_count + len(all_lab_violations) + len(cross_schedule_conflicts)
     
     if total_issues == 0:
         print("🎉 VERIFICATION PASSED: No overlapping conflicts detected!")

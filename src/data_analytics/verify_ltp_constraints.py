@@ -7,8 +7,8 @@ def verify_ltp_constraints():
     
     # Load course requirements - try both possible file names
     course_files = [
-        "data/mapped_data/computer_dept_teacher_courses.csv",
-        # "data/mapped_data/cs_teacher_courses.csv"
+        # "data/mapped_data/computer_dept_teacher_courses.csv",
+        "data/mapped_data/cs_teacher_courses.csv"
     ]
     
     course_file = None
