@@ -10,10 +10,14 @@ class LabConstraints:
         self.logger = logging.getLogger(__name__)
     
     def apply_all_constraints(self, model, lab_assignments, lab_room_ids, lab_sessions, course_to_teacher):
-        """Apply all lab scheduling constraints."""
+        """Apply all lab scheduling constraints including the new practical hours capacity constraint."""
         self.logger.info("Applying lab scheduling constraints...")
+        self.lab_sessions = lab_sessions
         
-        # Apply individual constraints
+        # Store lab room IDs for constraint methods
+        self.lab_room_ids = lab_room_ids
+        
+        # Apply individual constraints (using existing method names)
         self.apply_course_lab_requirements_constraint(model, lab_assignments, course_to_teacher)
         self.apply_teacher_single_lab_assignment_constraint(model, lab_assignments, lab_room_ids, lab_sessions, course_to_teacher)
         self.apply_lab_room_single_assignment_constraint(model, lab_assignments, lab_sessions)
@@ -21,8 +25,14 @@ class LabConstraints:
         self.apply_weekly_working_hour_constraint(model, lab_assignments, lab_sessions, course_to_teacher)
         self.apply_continuous_lab_room_constraint(model, lab_assignments, lab_room_ids, lab_sessions)
         
+        # Apply the new hard constraint for practical hours and lab capacity
+        self.apply_practical_hours_capacity_constraint(model, lab_assignments)
+        
         # Apply new capacity-based constraints
         self.apply_capacity_based_room_assignment_constraint(model, lab_assignments)
+        
+        # Apply capacity preference constraints for 70-student courses
+        self.apply_capacity_preference_constraints(model, lab_assignments, lab_room_ids, lab_sessions)
         
         self.logger.info("All lab constraints applied successfully")
     
@@ -68,9 +78,11 @@ class LabConstraints:
                 model.Add(sum(session_assignments) <= 1)
     
     def _add_capacity_consistency_constraint(self, model, lab_assignments, course_instance_id, course):
-        """Ensure room capacity is appropriate for the allocation strategy."""
+        """Ensure room capacity is appropriate for the allocation strategy with 70-capacity lab preferences."""
         preferred_capacities = course['preferred_lab_capacities']
         students_per_batch = course['students_per_batch']
+        practical_hours = course['practical_hours']
+        students_per_instance = course['students_per_instance']
         
         # Get lab rooms categorized by capacity
         labs_by_capacity = {
@@ -79,13 +91,13 @@ class LabConstraints:
             140: [lab['id'] for lab in self.scheduler.lab_capacity_analysis['labs_140']]
         }
         
-        # Create capacity preference constraints
+        # NEW LOGIC: Handle both 35 and 70 capacity labs with preferences
         for day_idx in range(self.scheduler.num_days):
             for session_idx in range(len(list(self.scheduler.lab_sessions.keys()))):
                 capacity_assignments = {}
                 
                 # Group assignments by capacity
-                for capacity in [35, 70, 140]:
+                for capacity in [35, 70]:
                     capacity_assignments[capacity] = []
                     if capacity in labs_by_capacity:
                         for room_id in labs_by_capacity[capacity]:
@@ -93,25 +105,23 @@ class LabConstraints:
                                 capacity_assignments[capacity].append(
                                     lab_assignments[course_instance_id][day_idx][session_idx][room_id])
                 
-                # Apply capacity preference logic
-                if students_per_batch <= 35:
-                    # Can use any capacity, but prefer higher capacities first if available
-                    if preferred_capacities:
-                        # Prefer rooms in order of preference
-                        for i, preferred_cap in enumerate(preferred_capacities):
-                            if preferred_cap in capacity_assignments and capacity_assignments[preferred_cap]:
-                                # This is handled by the solver optimization
-                                pass
-                elif students_per_batch <= 70:
-                    # Cannot use 35-capacity rooms
-                    if 35 in capacity_assignments:
-                        model.Add(sum(capacity_assignments[35]) == 0)
-                else:
-                    # Can only use 140-capacity rooms
-                    if 35 in capacity_assignments:
-                        model.Add(sum(capacity_assignments[35]) == 0)
-                    if 70 in capacity_assignments:
-                        model.Add(sum(capacity_assignments[70]) == 0)
+                # Apply capacity-based constraints for 70-student courses
+                if students_per_instance == 70:
+                    # 70-student courses can use either 35 or 70 capacity labs
+                    # No hard constraints needed - preference handled in objective function
+                    
+                    # For courses with >2 practical hours, strongly discourage 35-capacity labs
+                    # unless no 70-capacity labs are available
+                    if practical_hours > 2 and 35 in capacity_assignments and 70 in capacity_assignments:
+                        # Add soft constraint to prefer 70-capacity labs
+                        # This will be handled through objective function weighting
+                        pass
+                elif students_per_instance > 70:
+                    # >70 students: prefer 70-capacity labs, allow 35 with batching
+                    pass
+                elif students_per_instance <= 35:
+                    # ≤35 students: can use any capacity, prefer 35 for efficiency
+                    pass
     
     def apply_teacher_single_lab_assignment_constraint(self, model, lab_assignments, lab_room_ids, lab_sessions, course_to_teacher):
         """Prevent teacher from being in multiple labs at the same time."""
@@ -301,12 +311,12 @@ class LabConstraints:
                     # Apply preference weighting (this will be used in the objective function)
                     # For practical hours > 3, strongly prefer 70+ capacity labs
                     if practical_hours > 3:
-                        self._apply_capacity_preference_weights(model, lab_assignments, course_instance_id, preferred_capacities)
+                        self._apply_capacity_preference_weights(model, lab_assignments, course_instance_id, course)
         
         self.logger.info("Capacity-based room assignment constraint applied successfully")
     
-    def _apply_capacity_preference_weights(self, model, lab_assignments, course_instance_id, preferred_capacities):
-        """Apply capacity preference weights to encourage optimal room allocation."""
+    def _apply_capacity_preference_weights(self, model, lab_assignments, course_instance_id, course):
+        """Apply capacity preference weights to encourage 70-capacity labs for high practical hour courses."""
         # Get lab rooms categorized by capacity
         labs_by_capacity = {
             35: [lab['id'] for lab in self.scheduler.lab_capacity_analysis['labs_35']],
@@ -314,23 +324,67 @@ class LabConstraints:
             140: [lab['id'] for lab in self.scheduler.lab_capacity_analysis['labs_140']]
         }
         
-        # Create soft constraints for capacity preferences
-        # This can be implemented as penalty terms in the objective function
-        # For now, we'll enforce hard constraints to avoid 35-capacity rooms for high practical hours
+        practical_hours = course['practical_hours']
+        students_per_instance = course['students_per_instance']
         
-        for day_idx in range(self.scheduler.num_days):
-            for session_idx in range(len(list(self.scheduler.lab_sessions.keys()))):
-                # For courses with practical_hours > 3, avoid 35-capacity rooms if possible
-                if 35 in labs_by_capacity:
-                    small_room_assignments = []
-                    for room_id in labs_by_capacity[35]:
-                        if room_id in self.scheduler.labs['id'].tolist():
-                            small_room_assignments.append(
-                                lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+        # For courses with >2 practical hours, strongly prefer 70-capacity labs
+        if practical_hours > 2 and students_per_instance > 60:
+            self.scheduler.logger.info(f"Applying 70-capacity lab preference for course {course['display_course_code']} "
+                                     f"with {practical_hours} practical hours")
+            
+            # Create preference variables to encourage 70-capacity lab usage
+            # This is implemented through the objective function optimization
+            # The solver will naturally prefer assignments that minimize the objective
+            
+            for day_idx in range(self.scheduler.num_days):
+                for session_idx in range(len(list(self.scheduler.lab_sessions.keys()))):
+                    # Track assignments to different capacity labs
+                    assignments_35 = []
+                    assignments_70 = []
                     
-                    # Add soft constraint to minimize use of 35-capacity rooms for high practical hours
-                    # This will be enforced through the objective function in the main solver
+                    if 35 in labs_by_capacity:
+                        for room_id in labs_by_capacity[35]:
+                            if room_id in self.scheduler.labs['id'].tolist():
+                                assignments_35.append(
+                                    lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+                    
+                    if 70 in labs_by_capacity:
+                        for room_id in labs_by_capacity[70]:
+                            if room_id in self.scheduler.labs['id'].tolist():
+                                assignments_70.append(
+                                    lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+                    
+                    # Add soft preference for 70-capacity labs
+                    # This will be handled in the objective function
+                    # For now, we trust the solver to find optimal allocation
+        
+        # For courses with ≤2 practical hours, no strong preference needed
+        elif practical_hours <= 2 and students_per_instance == 70:
+            self.scheduler.logger.info(f"No strong capacity preference for course {course['display_course_code']} "
+                                     f"with {practical_hours} practical hours - any capacity acceptable")
     
+    def apply_capacity_preference_constraints(self, model, lab_assignments, lab_room_ids, lab_sessions):
+        """Apply capacity preference constraints for 70-student courses."""
+        self.logger.info("Applying capacity preference constraints for 70-student courses...")
+        
+        for teacher, courses in self.scheduler.lab_requirements.items():
+            for course in courses:
+                course_instance_id = course['course_instance_id']
+                practical_hours = course['practical_hours']
+                
+                if course_instance_id in lab_assignments and practical_hours > 3:
+                    # Get lab rooms categorized by capacity
+                    labs_by_capacity = {
+                        35: [lab['id'] for lab in self.scheduler.lab_capacity_analysis['labs_35']],
+                        70: [lab['id'] for lab in self.scheduler.lab_capacity_analysis['labs_70']],
+                        140: [lab['id'] for lab in self.scheduler.lab_capacity_analysis['labs_140']]
+                    }
+                    
+                    # Apply capacity preference weights
+                    self._apply_capacity_preference_weights(model, lab_assignments, course_instance_id, course)
+        
+        self.logger.info("Capacity preference constraints applied successfully")
+
     def apply_relaxed_constraints(self, model, lab_assignments, lab_room_ids, lab_sessions, course_to_teacher):
         """Apply relaxed constraints for when normal constraints are too restrictive."""
         self.logger.info("Applying relaxed lab constraints...")
@@ -417,6 +471,44 @@ class LabConstraints:
                     # If assigned to 35-capacity labs, should get 2x the base sessions
                     # If assigned to 70+ capacity labs, should get 1x the base sessions
                     self._add_dynamic_batching_constraint(model, lab_assignments, course_instance_id, course)
+
+    def apply_practical_hours_capacity_constraint(self, model, lab_assignments):
+        """HARD CONSTRAINT: Only courses with practical_hours >= 3 can use 70-capacity labs."""
+        
+        # Get lab rooms categorized by capacity
+        labs_by_capacity = {
+            35: [lab['id'] for lab in self.scheduler.lab_capacity_analysis['labs_35']],
+            70: [lab['id'] for lab in self.scheduler.lab_capacity_analysis['labs_70']],
+            140: [lab['id'] for lab in self.scheduler.lab_capacity_analysis['labs_140']]
+        }
+        
+        # Get all 70+ capacity labs (including 140 treated as 70)
+        high_capacity_labs = labs_by_capacity[70] + labs_by_capacity[140]
+        
+        if not high_capacity_labs:
+            self.logger.info("No high-capacity labs available - constraint not needed")
+            return
+        
+        for teacher_id, courses in self.scheduler.lab_requirements.items():
+            for course in courses:
+                course_instance_id = course['course_instance_id']
+                practical_hours = course['practical_hours']
+                
+                # HARD CONSTRAINT: If practical_hours < 3, cannot use 70+ capacity labs
+                if practical_hours < 3:
+                    self.logger.info(f"Applying hard constraint: Course {course['display_course_code']} "
+                                   f"({practical_hours} practical hours) cannot use 70+ capacity labs")
+                    
+                    # Prevent assignment to any 70+ capacity lab
+                    for day_idx in range(self.scheduler.num_days):
+                        for session_idx in range(len(self.lab_sessions)):
+                            for room_id in high_capacity_labs:
+                                if course_instance_id in lab_assignments:
+                                    assignment_var = lab_assignments[course_instance_id][day_idx][session_idx][room_id]
+                                    # Force this assignment to be 0 (cannot be assigned)
+                                    model.Add(assignment_var == 0)
+        
+        self.logger.info("Hard constraint applied: Courses with <3 practical hours blocked from 70+ capacity labs")
 
 
 # Utility functions for constraint validation and debugging

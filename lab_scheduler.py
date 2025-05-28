@@ -190,7 +190,7 @@ class LabScheduler:
                                f"{course['total_lab_slots_needed']} total lab slots{batching_info}")
     
     def _analyze_lab_capacities(self):
-        """Analyze available lab capacities and categorize them - FORCE ALL LABS TO 35 CAPACITY FOR TESTING."""
+        """Analyze available lab capacities and categorize them - USE ACTUAL CAPACITIES WITH 140->70 MAPPING."""
         lab_capacity_analysis = {
             'labs_35': [],
             'labs_70': [],
@@ -205,27 +205,45 @@ class LabScheduler:
             lab_id = lab_row['id']
             original_capacity = lab_row.get('room_max_cap', 0)
             
-            # CONSTRAINT CHANGE: Force all labs to 35 capacity for batching testing
-            forced_capacity = 35
+            # UPDATED CONSTRAINT: Use actual capacities, but treat 140 as 70
+            if original_capacity >= 140:
+                effective_capacity = 70  # Treat 140-capacity labs as 70
+                category = 'labs_70'
+                count_key = '70'
+                total_key = 'total_capacity_70'
+            elif original_capacity >= 70:
+                effective_capacity = 70
+                category = 'labs_70'
+                count_key = '70'
+                total_key = 'total_capacity_70'
+            elif original_capacity >= 35:
+                effective_capacity = 35
+                category = 'labs_35'
+                count_key = '35'
+                total_key = 'total_capacity_35'
+            else:
+                effective_capacity = 35  # Default small labs to 35
+                category = 'labs_35'
+                count_key = '35'
+                total_key = 'total_capacity_35'
             
             lab_info = {
                 'id': lab_id,
                 'room_number': lab_row['room_number'],
-                'capacity': forced_capacity,  # Use forced capacity instead of original
-                'original_capacity': original_capacity,  # Keep track of original for reference
+                'capacity': effective_capacity,
+                'original_capacity': original_capacity,
                 'block': lab_row.get('block', ''),
                 'description': lab_row.get('description', '')
             }
             
-            # All labs are now categorized as 35-capacity
-            lab_capacity_analysis['labs_35'].append(lab_info)
-            lab_capacity_analysis['capacity_counts']['35'] += 1
-            lab_capacity_analysis['total_capacity_35'] += forced_capacity
+            lab_capacity_analysis[category].append(lab_info)
+            lab_capacity_analysis['capacity_counts'][count_key] += 1
+            lab_capacity_analysis[total_key] += effective_capacity
         
         return lab_capacity_analysis
     
     def _determine_lab_allocation_strategy(self, practical_hours, students_per_instance):
-        """Determine the optimal lab allocation strategy - ALL COURSES REQUIRE BATCHING DUE TO 35-CAPACITY CONSTRAINT."""
+        """Determine the optimal lab allocation strategy - HARD CONSTRAINT: Only >=3 practical hours can use 70-capacity labs."""
         base_sessions = max(1, (practical_hours + 1) // 2)  # Base lab sessions needed
         
         strategy = {
@@ -240,53 +258,92 @@ class LabScheduler:
             'preferred_lab_capacities': []
         }
         
-        # CONSTRAINT CHANGE: Since all labs are 35-capacity, all 70-student courses MUST be batched
+        # HARD CONSTRAINT: Only courses with practical_hours >= 3 can use 70-capacity labs
         if students_per_instance == 70:
-            # FORCE batching for all 70-student courses
-            strategy['batching_required'] = True
-            strategy['potential_batching_needed'] = True
-            strategy['num_batches'] = 2  # Always 2 batches for 70 students in 35-capacity labs
-            strategy['students_per_batch'] = 35  # Each batch = 35 students
-            strategy['max_possible_batches'] = 2
-            # Each batch needs the base sessions, so total = base_sessions * 2
-            strategy['total_lab_slots_needed'] = base_sessions * 2
-            strategy['preferred_lab_capacities'] = [35]  # Only 35-capacity labs available
+            if practical_hours >= 3:
+                # Courses with >=3 practical hours: can use 70-capacity labs (preferred) or 35-capacity labs (with batching)
+                strategy['preferred_lab_capacities'] = [70, 35]  # Prefer 70, allow 35 as fallback
+                strategy['can_use_70_capacity'] = True
+                
+                self.logger.info(f"70-student course with {practical_hours} practical hours -> "
+                               f"CAN use 70-capacity labs (>=3 practical hours), prefer {strategy['preferred_lab_capacities']}")
+            else:
+                # Courses with <3 practical hours: MUST use 35-capacity labs only (forced batching)
+                strategy['preferred_lab_capacities'] = [35]  # Only 35-capacity labs allowed
+                strategy['can_use_70_capacity'] = False
+                strategy['batching_required'] = True  # Force batching since only 35-capacity allowed
+                strategy['num_batches'] = 2
+                strategy['students_per_batch'] = 35
+                strategy['total_lab_slots_needed'] = base_sessions * 2  # Double slots for batching
+                
+                self.logger.info(f"70-student course with {practical_hours} practical hours -> "
+                               f"CANNOT use 70-capacity labs (<3 practical hours), forced to 35-capacity with batching")
             
-            self.logger.info(f"FORCED BATCHING: 70-student course with {practical_hours} practical hours -> "
-                           f"{base_sessions} sessions per batch × 2 batches = {strategy['total_lab_slots_needed']} total lab slots")
+            # Prepare for potential batching if 35-capacity labs are assigned
+            strategy['potential_batching_needed'] = True
+            strategy['max_possible_batches'] = 2
+            
         elif students_per_instance > 70:
-            # For >70 students, calculate required batches
-            strategy['batching_required'] = True
-            strategy['num_batches'] = (students_per_instance + 34) // 35  # Round up to fit in 35-capacity labs
-            strategy['students_per_batch'] = min(35, students_per_instance // strategy['num_batches'])
-            strategy['total_lab_slots_needed'] = base_sessions * strategy['num_batches']
-            strategy['preferred_lab_capacities'] = [35]
+            # For >70 students, always prefer 70-capacity but check practical hours constraint
+            if practical_hours >= 3:
+                strategy['preferred_lab_capacities'] = [70, 35]
+                strategy['can_use_70_capacity'] = True
+            else:
+                strategy['preferred_lab_capacities'] = [35]  # Only 35-capacity allowed
+                strategy['can_use_70_capacity'] = False
+            
+            strategy['potential_batching_needed'] = True
+            strategy['max_possible_batches'] = (students_per_instance + 69) // 70  # Round up
         else:
-            # ≤35 students - no batching needed, can fit in single 35-capacity lab
-            strategy['preferred_lab_capacities'] = [35]
+            # ≤35 students - can use any capacity, prefer 35 for efficiency
+            # But still respect the practical hours constraint for 70-capacity labs
+            if practical_hours >= 3:
+                strategy['preferred_lab_capacities'] = [35, 70]
+                strategy['can_use_70_capacity'] = True
+            else:
+                strategy['preferred_lab_capacities'] = [35]  # Only 35-capacity allowed
+                strategy['can_use_70_capacity'] = False
         
         return strategy
     
     def _log_capacity_analysis(self):
-        """Log detailed capacity analysis for debugging - ALL LABS FORCED TO 35 CAPACITY."""
+        """Log detailed capacity analysis for debugging - HARD CONSTRAINT: >=3 practical hours for 70-capacity labs."""
         analysis = self.lab_capacity_analysis
         
         self.logger.info("=" * 60)
-        self.logger.info("LAB CAPACITY ANALYSIS (FORCED 35-CAPACITY FOR BATCHING TEST)")
+        self.logger.info("LAB CAPACITY ANALYSIS (HARD CONSTRAINT: >=3 PRACTICAL HOURS FOR 70-CAPACITY)")
         self.logger.info("=" * 60)
         
-        self.logger.info(f"ALL LABS SET TO 35-CAPACITY: {analysis['capacity_counts']['35']} labs")
+        self.logger.info(f"35-capacity labs: {analysis['capacity_counts']['35']} labs")
         for lab in analysis['labs_35']:
             original_cap = lab.get('original_capacity', 'Unknown')
-            self.logger.info(f"  - {lab['room_number']} (ID: {lab['id']}, Forced: 35, Original: {original_cap})")
+            effective_cap = lab['capacity']
+            if original_cap != effective_cap:
+                self.logger.info(f"  - {lab['room_number']} (ID: {lab['id']}, Effective: {effective_cap}, Original: {original_cap})")
+            else:
+                self.logger.info(f"  - {lab['room_number']} (ID: {lab['id']}, Capacity: {effective_cap})")
         
-        self.logger.info(f"70-capacity labs: {analysis['capacity_counts']['70']} labs (DISABLED)")
-        self.logger.info(f"140-capacity labs: {analysis['capacity_counts']['140']} labs (DISABLED)")
+        self.logger.info(f"70-capacity labs: {analysis['capacity_counts']['70']} labs")
+        for lab in analysis['labs_70']:
+            original_cap = lab.get('original_capacity', 'Unknown')
+            effective_cap = lab['capacity']
+            if original_cap != effective_cap:
+                self.logger.info(f"  - {lab['room_number']} (ID: {lab['id']}, Effective: {effective_cap}, Original: {original_cap})")
+            else:
+                self.logger.info(f"  - {lab['room_number']} (ID: {lab['id']}, Capacity: {effective_cap})")
         
-        total_lab_capacity = analysis['total_capacity_35']
+        if analysis['capacity_counts']['140'] > 0:
+            self.logger.info(f"140-capacity labs (treated as 70): {analysis['capacity_counts']['140']} labs")
         
-        self.logger.info(f"Total effective lab capacity: {total_lab_capacity} students (35 per lab)")
-        self.logger.info(f"BATCHING REQUIREMENT: All 70-student courses MUST be split into 2×35-student batches")
+        total_lab_capacity = analysis['total_capacity_35'] + analysis['total_capacity_70']
+        
+        self.logger.info(f"Total lab capacity: {total_lab_capacity} students")
+        self.logger.info(f"  - 35-capacity: {analysis['total_capacity_35']} students")
+        self.logger.info(f"  - 70-capacity: {analysis['total_capacity_70']} students")
+        self.logger.info("HARD CONSTRAINT RULES:")
+        self.logger.info("  - Courses with practical_hours >= 3: CAN use 70-capacity labs")
+        self.logger.info("  - Courses with practical_hours < 3: MUST use 35-capacity labs only")
+        self.logger.info("  - 70-student courses in 35-capacity labs: automatic batching (B1, B2)")
         self.logger.info("=" * 60)
     
     def generate_lab_schedule(self):
@@ -329,15 +386,55 @@ class LabScheduler:
         # Apply constraints
         self.lab_constraints.apply_all_constraints(model, lab_assignments, lab_room_ids, lab_sessions, course_to_teacher)
         
-        # Add optimization objective - minimize total lab usage (more efficient allocation)
+        # Add optimization objective - minimize total lab usage with capacity preferences
         total_lab_usage = []
+        capacity_preference_penalties = []
+        
+        # Get lab rooms categorized by capacity for preference weighting
+        labs_by_capacity = {
+            35: [lab['id'] for lab in self.lab_capacity_analysis['labs_35']],
+            70: [lab['id'] for lab in self.lab_capacity_analysis['labs_70']],
+            140: [lab['id'] for lab in self.lab_capacity_analysis['labs_140']]
+        }
+        
         for course_instance_id in all_course_instances:
+            # Get course information for preference weighting
+            teacher = course_to_teacher[course_instance_id]
+            course_info = None
+            for course in self.lab_requirements[teacher]:
+                if course['course_instance_id'] == course_instance_id:
+                    course_info = course
+                    break
+            
             for day_idx in range(self.num_days):
                 for session_idx in range(len(lab_sessions)):
                     for room_id in lab_room_ids:
-                        total_lab_usage.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+                        assignment_var = lab_assignments[course_instance_id][day_idx][session_idx][room_id]
+                        total_lab_usage.append(assignment_var)
+                        
+                        # Add capacity preference penalties for 70-student courses
+                        if course_info and course_info['students_per_instance'] == 70:
+                            practical_hours = course_info['practical_hours']
+                            
+                            # Strong preference for 70-capacity labs for courses with >2 practical hours
+                            if practical_hours > 2:
+                                if room_id in labs_by_capacity.get(35, []):
+                                    # Heavy penalty for using 35-capacity labs for high practical hour courses
+                                    capacity_preference_penalties.extend([assignment_var] * 10)
+                                elif room_id in labs_by_capacity.get(70, []):
+                                    # Light penalty for 70-capacity labs (preferred)
+                                    capacity_preference_penalties.extend([assignment_var] * 1)
+                            else:
+                                # Light preference for 70-capacity labs for ≤2 practical hour courses
+                                if room_id in labs_by_capacity.get(35, []):
+                                    # Light penalty for 35-capacity labs
+                                    capacity_preference_penalties.extend([assignment_var] * 3)
+                                elif room_id in labs_by_capacity.get(70, []):
+                                    # Very light penalty for 70-capacity labs
+                                    capacity_preference_penalties.extend([assignment_var] * 1)
         
-        model.Minimize(sum(total_lab_usage))
+        # Objective: Minimize total usage + capacity preference penalties
+        model.Minimize(sum(total_lab_usage) + sum(capacity_preference_penalties))
         
         # Create solver and solve
         solver = cp_model.CpSolver()
@@ -452,7 +549,7 @@ class LabScheduler:
                             room_capacity = room_details['capacity']
                             original_student_count = course_info['students_per_instance']
                             
-                            # Check if this assignment requires batching due to capacity mismatch
+                            # NEW LOGIC: Check if this assignment requires batching based on capacity match
                             needs_batching = (original_student_count > room_capacity)
                             
                             if needs_batching:
@@ -469,6 +566,9 @@ class LabScheduler:
                                 batch_info = f"Batch {batch_number}"
                                 display_course_code = f"{course_info.get('display_course_code', course_info['course_code'])} B{batch_number}"
                                 student_count_for_assignment = students_per_batch
+                                
+                                self.logger.info(f"BATCHING: 70-student course assigned to {room_capacity}-capacity lab -> "
+                                               f"Creating batch {batch_number} with {student_count_for_assignment} students")
                             else:
                                 # No batching needed - lab capacity can handle full course
                                 student_count_for_assignment = min(room_capacity, original_student_count)
@@ -476,6 +576,8 @@ class LabScheduler:
                                 batch_number = None
                                 batch_info = ""
                                 display_course_code = course_info.get('display_course_code', course_info['course_code'])
+                                
+                                self.logger.info(f"NO BATCHING: {original_student_count}-student course fits in {room_capacity}-capacity lab")
                             
                             # Create entries for each time slot in the session
                             for slot_idx, time_slot in enumerate(session_time_slots):

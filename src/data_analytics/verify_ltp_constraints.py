@@ -7,8 +7,8 @@ def verify_ltp_constraints():
     
     # Load course requirements - try both possible file names
     course_files = [
-        # "data/mapped_data/computer_dept_teacher_courses.csv",
-        "data/mapped_data/cs_teacher_courses.csv"
+        "data/mapped_data/computer_dept_teacher_courses.csv",
+        # "data/mapped_data/cs_teacher_courses.csv"
     ]
     
     course_file = None
@@ -232,56 +232,115 @@ def verify_ltp_constraints():
             lecture_ok = lecture_scheduled == expected_lecture
             tutorial_ok = tutorial_scheduled == expected_tutorial
             
-            # Enhanced practical hours validation with batching support
+            # Enhanced practical hours validation with HARD CONSTRAINT support
             if practical_required > 0 and has_lab_schedule:
                 # Calculate expected lab sessions considering potential batching
                 # Each lab session = 2 practical hours, so required sessions = practical_required / 2
                 expected_lab_sessions = (practical_required + 1) // 2  # Round up for odd numbers
                 
-                # UPDATED BATCHING LOGIC:
-                # For 70-student courses with 2 practical hours:
-                # - If assigned to 35-capacity labs: 2 batches × 1 session each = 2 total sessions (4 practical hours)
-                # - If assigned to 70-capacity labs: 1 batch × 1 session = 1 session (2 practical hours)
+                # HARD CONSTRAINT VALIDATION LOGIC:
+                # For 70-student courses: practical_hours >= 3 can use 70-capacity labs, < 3 must use 35-capacity labs
                 student_count = requirements.get('student_count', 70)
                 
-                if student_count == 70 and practical_required == 2:
-                    # Check if this course was dynamically batched based on lab capacity
-                    if len(batches_found) >= 2:  # Found B1, B2 batches
-                        # Course was batched - expect double the lab sessions
-                        expected_practical_hours = expected_lab_sessions * 2 * 2  # 2 batches × sessions × 2 hours
-                        practical_ok = practical_scheduled >= expected_practical_hours
-                        if practical_scheduled == expected_practical_hours:
-                            batch_status = "✅ Batched"
-                        elif practical_scheduled < expected_practical_hours:
-                            batch_status = "⚠️ Under-batched"
-                            batching_issues += 1
+                if student_count == 70:
+                    if practical_required >= 3:
+                        # Courses with >=3 practical hours: CAN use 70-capacity labs (no batching) OR 35-capacity labs (with batching)
+                        if len(batches_found) >= 2:  # Found B1, B2 batches - assigned to 35-capacity labs
+                            # Course was batched due to 35-capacity lab assignment
+                            expected_practical_hours = expected_lab_sessions * 2 * 2  # 2 batches × sessions × 2 hours
+                            practical_ok = practical_scheduled >= expected_practical_hours
+                            if practical_scheduled == expected_practical_hours:
+                                batch_status = "✅ Batched (35-cap)"
+                            elif practical_scheduled < expected_practical_hours:
+                                batch_status = "⚠️ Under-batched"
+                                batching_issues += 1
+                            else:
+                                batch_status = "⚠️ Over-batched"
+                        elif len(batches_found) == 1:
+                            # Single batch - could be 35-capacity or 70-capacity lab
+                            # Check room capacity if available
+                            room_capacity_info = ""
+                            if 'room_capacity' in schedule_df.columns:
+                                instance_labs = schedule_df[(schedule_df['course_instance_id'].astype(str) == instance_id) & 
+                                                          (schedule_df['slot_type'] == 'Practical')]
+                                if len(instance_labs) > 0:
+                                    room_cap = instance_labs.iloc[0].get('room_capacity', 0)
+                                    if room_cap <= 35:
+                                        # 35-capacity lab - should have 2 batches for 70 students
+                                        expected_practical_hours = practical_required * 2  # Single batch gets double sessions
+                                        room_capacity_info = " (35-cap)"
+                                    else:
+                                        # 70+ capacity lab - no batching needed
+                                        expected_practical_hours = practical_required
+                                        room_capacity_info = " (70-cap)"
+                                else:
+                                    expected_practical_hours = practical_required
+                            
+                            practical_ok = practical_scheduled >= expected_practical_hours
+                            if practical_scheduled == expected_practical_hours:
+                                batch_status = f"✅ Single batch{room_capacity_info}"
+                            else:
+                                batch_status = f"Standard single{room_capacity_info}"
                         else:
-                            batch_status = "⚠️ Over-batched"
-                    elif len(batches_found) == 1:
-                        # Single batch found - this is valid since all labs are 35-capacity
-                        # Each batch should get the full required practical hours
-                        expected_practical_hours = practical_required * 2  # Single batch gets double allocation
-                        practical_ok = practical_scheduled >= expected_practical_hours
-                        if practical_scheduled == expected_practical_hours:
-                            batch_status = "✅ Single batch"
-                        else:
-                            batch_status = "Standard single"
-                    elif len(batches_found) == 0:
-                        # No batching - this shouldn't happen with 35-capacity constraint, but handle gracefully
-                        expected_practical_hours = practical_required
-                        practical_ok = practical_scheduled >= expected_practical_hours
-                        batch_status = "No batching"
+                            # No batching - should be in 70-capacity lab
+                            expected_practical_hours = practical_required
+                            practical_ok = practical_scheduled >= expected_practical_hours
+                            batch_status = "✅ No batching (70-cap)"
                     else:
-                        # This case should not occur anymore
-                        expected_practical_hours = practical_required
-                        practical_ok = practical_scheduled >= expected_practical_hours
-                        batch_status = "Standard"
+                        # Courses with <3 practical hours: MUST use 35-capacity labs only (HARD CONSTRAINT)
+                        # These courses should ALWAYS be batched
+                        if len(batches_found) >= 2:  # Found B1, B2 batches - correct!
+                            expected_practical_hours = expected_lab_sessions * 2 * 2  # 2 batches × sessions × 2 hours
+                            practical_ok = practical_scheduled >= expected_practical_hours
+                            if practical_scheduled == expected_practical_hours:
+                                batch_status = "✅ Forced batch (<3P)"
+                            elif practical_scheduled < expected_practical_hours:
+                                batch_status = "⚠️ Under-forced-batch"
+                                batching_issues += 1
+                            else:
+                                batch_status = "⚠️ Over-forced-batch"
+                        elif len(batches_found) == 1:
+                            # Single batch for <3 practical hours course - this violates the hard constraint
+                            # Check if it's incorrectly assigned to 70-capacity lab
+                            room_capacity_violation = False
+                            if 'room_capacity' in schedule_df.columns:
+                                instance_labs = schedule_df[(schedule_df['course_instance_id'].astype(str) == instance_id) & 
+                                                          (schedule_df['slot_type'] == 'Practical')]
+                                if len(instance_labs) > 0:
+                                    room_cap = instance_labs.iloc[0].get('room_capacity', 0)
+                                    if room_cap > 35:
+                                        room_capacity_violation = True
+                                        batch_status = "❌ CONSTRAINT VIOLATION (70-cap for <3P)"
+                                        batching_issues += 1
+                                    else:
+                                        # In 35-capacity lab but only 1 batch - missing the second batch
+                                        expected_practical_hours = practical_required * 2
+                                        batch_status = "⚠️ Missing 2nd batch"
+                                        batching_issues += 1
+                                else:
+                                    expected_practical_hours = practical_required * 2
+                                    batch_status = "⚠️ Single batch (<3P)"
+                                    batching_issues += 1
+                            
+                            if not room_capacity_violation:
+                                practical_ok = practical_scheduled >= expected_practical_hours
+                            else:
+                                practical_ok = False  # Hard constraint violation
+                        else:
+                            # No batching for <3 practical hours course - HARD CONSTRAINT VIOLATION
+                            expected_practical_hours = practical_required * 2  # Should be doubled due to forced batching
+                            practical_ok = False  # Hard constraint violation
+                            batch_status = "❌ CONSTRAINT VIOLATION (No batch for <3P)"
+                            batching_issues += 1
                 else:
-                    # Normal courses or non-standard student counts
+                    # Non-70 student courses or other student counts
                     expected_practical_hours = practical_required
                     practical_ok = practical_scheduled >= expected_practical_hours
-                    batch_status = "Standard"
-                
+                    if len(batches_found) > 0:
+                        batch_status = "✅ Batched (other)"
+                    else:
+                        batch_status = "Standard"
+            
             elif practical_required > 0 and not has_lab_schedule:
                 # Lab schedule not available, mark as missing
                 practical_ok = False
@@ -455,7 +514,7 @@ def verify_ltp_constraints():
             
             print(f"Courses with S1 B1/B2 pattern: {s1_b1_b2_pattern}")
             
-            # Check for capacity-based batching efficiency
+            # HARD CONSTRAINT VALIDATION: Check capacity assignments
             if 'room_capacity' in schedule_df.columns:
                 capacity_35_assignments = len(schedule_df[(schedule_df['slot_type'] == 'Practical') & 
                                                         (schedule_df.get('room_capacity', 0) <= 35)])
@@ -464,7 +523,45 @@ def verify_ltp_constraints():
                                                         (schedule_df.get('room_capacity', 0) <= 70)])
                 print(f"Lab assignments to 35-capacity labs: {capacity_35_assignments}")
                 print(f"Lab assignments to 70+ capacity labs: {capacity_70_assignments}")
-        
+                
+                # Validate hard constraint: courses with <3 practical hours should not be in 70+ capacity labs
+                constraint_violations = 0
+                courses_under_3_practical = 0
+                courses_3_plus_practical = 0
+                
+                for instance_id, req in courses_with_practicals.items():
+                    practical_hours = req['practical_hours']
+                    student_count = req.get('student_count', 70)
+                    
+                    if student_count == 70:  # Only check 70-student courses
+                        instance_labs = schedule_df[(schedule_df['course_instance_id'].astype(str) == instance_id) & 
+                                                   (schedule_df['slot_type'] == 'Practical')]
+                        
+                        if len(instance_labs) > 0:
+                            room_cap = instance_labs.iloc[0].get('room_capacity', 0)
+                            
+                            if practical_hours < 3:
+                                courses_under_3_practical += 1
+                                if room_cap > 35:
+                                    constraint_violations += 1
+                                    print(f"❌ HARD CONSTRAINT VIOLATION: Course {req['course_code']} "
+                                         f"({practical_hours} practical hours) assigned to {room_cap}-capacity lab")
+                            else:
+                                courses_3_plus_practical += 1
+                
+                print(f"\n🚨 HARD CONSTRAINT VALIDATION:")
+                print(f"70-student courses with <3 practical hours: {courses_under_3_practical}")
+                print(f"70-student courses with >=3 practical hours: {courses_3_plus_practical}")
+                print(f"Hard constraint violations: {constraint_violations}")
+                
+                if constraint_violations == 0:
+                    print(f"✅ All courses respect the hard constraint!")
+                    print(f"   - Courses with <3 practical hours → 35-capacity labs only")
+                    print(f"   - Courses with >=3 practical hours → can use 70-capacity labs")
+                else:
+                    print(f"❌ Found {constraint_violations} hard constraint violations!")
+                    print(f"   - Some courses with <3 practical hours incorrectly assigned to 70+ capacity labs")
+            
         # Check for teacher workload in labs
         teacher_lab_hours = defaultdict(int)
         for _, row in schedule_df.iterrows():
@@ -621,7 +718,11 @@ def verify_ltp_constraints():
         if has_lab_schedule:
             print(f"   ✅ Practical hours properly allocated in lab sessions")
             print(f"      - Each lab session = 2 practical hours (L1, L2, L3, L4, L5, L6)")
+            print(f"      - HARD CONSTRAINT: Only courses with practical_hours >= 3 can use 70-capacity labs")
+            print(f"      - Courses with practical_hours < 3 MUST use 35-capacity labs (forced batching)")
             print(f"      - Dynamic batching: S1 B1/S1 B2 for 70-student courses in 35-capacity labs")
+            print(f"      - 70-student courses with >=3 practical hours: prefer 70-capacity labs")
+            print(f"      - 70-student courses with <3 practical hours: forced to 35-capacity labs")
             print(f"      - Continuous room assignment for multi-slot sessions")
             print(f"      - No conflicts between theory and lab schedules")
             print(f"      - All batching requirements properly satisfied")
@@ -642,7 +743,10 @@ def verify_ltp_constraints():
         if has_lab_schedule and practical_violations > 0:
             print(f"   ⚠️  {practical_violations} practical-only issues")
         if has_lab_schedule and batching_issues > 0:
-            print(f"   ⚠️  {batching_issues} batching issues (courses not properly split into batches)")
+            print(f"   ⚠️  {batching_issues} batching/capacity constraint violations")
+            print(f"       - Check for courses with <3 practical hours incorrectly assigned to 70-capacity labs")
+            print(f"       - Verify forced batching for courses with <3 practical hours")
+            print(f"       - Ensure courses with >=3 practical hours can access 70-capacity labs")
         if not has_lab_schedule:
             courses_needing_labs = len([req for req in course_requirements.values() if req['practical_hours'] > 0])
             if courses_needing_labs > 0:
