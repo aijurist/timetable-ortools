@@ -29,7 +29,6 @@ class LabScheduleVisualizer:
             # Filter for only lab/practical assignments
             self.lab_data = self.schedule_df[self.schedule_df['slot_type'] == 'Practical'].copy()
             
-            # Create color map for courses (use display_course_code if available)
             if not self.lab_data.empty:
                 # Use display_course_code for differentiation, fallback to course_code
                 self.lab_data['display_code'] = self.lab_data.apply(

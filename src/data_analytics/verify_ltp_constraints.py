@@ -3,12 +3,12 @@ import os
 from collections import defaultdict
 
 def verify_ltp_constraints():
-    """Verify that LTP constraints are satisfied for all courses."""
+    """Verify that LTP constraints are satisfied for all courses with updated batching logic."""
     
     # Load course requirements - try both possible file names
     course_files = [
-        "data/mapped_data/computer_dept_teacher_courses.csv",
-        # "data/mapped_data/cs_teacher_courses.csv"
+        # "data/mapped_data/computer_dept_teacher_courses.csv",
+        "data/mapped_data/cs_teacher_courses.csv"
     ]
     
     course_file = None
@@ -86,13 +86,14 @@ def verify_ltp_constraints():
         schedule_df = theory_schedule_df
         print(f"Using theory schedule only ({len(schedule_df)} assignments)")
     
-    print("🔍 LTP CONSTRAINT VERIFICATION (WITH LAB EVALUATION)")
-    print("=" * 80)
+    print("🔍 LTP CONSTRAINT VERIFICATION (WITH ENHANCED BATCHING ANALYSIS)")
+    print("=" * 85)
     if has_lab_schedule:
-        print("✅ Lab allocation found - evaluating practical hours")
+        print("✅ Lab allocation found - evaluating practical hours with batching support")
+        print("📊 Batching Logic: S1 B1/S1 B2 for courses split across multiple labs")
     else:
         print("⚠️  Lab allocation not found - practical hours will be marked as missing")
-    print("=" * 80)
+    print("=" * 85)
     
     print(f"📊 SUMMARY:")
     print(f"Total course instances in dataset: {len(courses_df)}")
@@ -102,7 +103,19 @@ def verify_ltp_constraints():
     if has_lab_schedule:
         lab_assignments = len(schedule_df[schedule_df['slot_type'] == 'Practical'])
         print(f"Lab assignments found: {lab_assignments}")
-    print("=" * 80)
+        
+        # Analyze batching in lab assignments
+        if 'display_course_code' in schedule_df.columns:
+            batched_assignments = len(schedule_df[(schedule_df['slot_type'] == 'Practical') & 
+                                                (schedule_df['display_course_code'].str.contains(' B', na=False))])
+            print(f"Batched lab assignments (with B1/B2): {batched_assignments}")
+        
+        # Check for capacity information in lab assignments
+        if 'is_batched' in schedule_df.columns:
+            batched_courses = len(schedule_df[(schedule_df['slot_type'] == 'Practical') & 
+                                            (schedule_df['is_batched'] == True)])
+            print(f"Courses using dynamic batching: {batched_courses}")
+    print("=" * 85)
     
     # Create mapping of course requirements - SHOW ALL INSTANCES
     course_requirements = {}
@@ -123,8 +136,8 @@ def verify_ltp_constraints():
             'academic_year': row.get('academic_year', 'Unknown')
         }
     
-    # Count scheduled hours per course instance
-    scheduled_hours = defaultdict(lambda: {'lecture': 0, 'tutorial': 0, 'practical': 0})
+    # Count scheduled hours per course instance - Enhanced for batching
+    scheduled_hours = defaultdict(lambda: {'lecture': 0, 'tutorial': 0, 'practical': 0, 'batches': set()})
     
     for _, row in schedule_df.iterrows():
         try:
@@ -133,6 +146,13 @@ def verify_ltp_constraints():
             instance_id = str(row['course_instance_id'])  # Fallback
         slot_type = row['slot_type']
         
+        # Track batches if available
+        if 'display_course_code' in row and pd.notna(row['display_course_code']):
+            display_code = row['display_course_code']
+            if ' B' in display_code:  # This is a batched assignment
+                batch_info = display_code.split(' B')[-1]  # Extract batch number
+                scheduled_hours[instance_id]['batches'].add(batch_info)
+        
         if slot_type == 'Lecture':
             scheduled_hours[instance_id]['lecture'] += 1
         elif slot_type == 'Tutorial':
@@ -140,14 +160,15 @@ def verify_ltp_constraints():
         elif slot_type == 'Practical':
             scheduled_hours[instance_id]['practical'] += 1
     
-    print(f"{'ID':<6} {'Course':<12} {'Teacher':<20} {'Sem':<4} {'L Req':<6} {'L Sch':<6} {'T Req':<6} {'T Sch':<6} {'P Req':<6} {'P Sch':<6} {'Status':<25}")
-    print("-" * 135)
+    print(f"{'ID':<6} {'Course':<12} {'Teacher':<20} {'Sem':<4} {'L Req':<6} {'L Sch':<6} {'T Req':<6} {'T Sch':<6} {'P Req':<6} {'P Sch':<10} {'Batches':<10} {'Status':<25}")
+    print("-" * 150)
     
     violations = 0
     total_instances = 0
     theory_only_violations = 0
     not_scheduled = 0
     practical_violations = 0
+    batching_issues = 0
     
     # Process ALL instances from the course file
     for instance_id, requirements in sorted(course_requirements.items(), key=lambda x: int(x[0])):
@@ -165,6 +186,12 @@ def verify_ltp_constraints():
         lecture_scheduled = scheduled_hours[instance_id]['lecture']
         tutorial_scheduled = scheduled_hours[instance_id]['tutorial']
         practical_scheduled = scheduled_hours[instance_id]['practical']
+        batches_found = scheduled_hours[instance_id]['batches']
+        
+        # Format batch information
+        batch_info_display = ""
+        if batches_found:
+            batch_info_display = "B" + ",B".join(sorted(batches_found))
         
         # Check if this instance was scheduled at all
         total_scheduled = lecture_scheduled + tutorial_scheduled + practical_scheduled
@@ -205,26 +232,75 @@ def verify_ltp_constraints():
             lecture_ok = lecture_scheduled == expected_lecture
             tutorial_ok = tutorial_scheduled == expected_tutorial
             
-            # Check practical hours based on lab session structure
+            # Enhanced practical hours validation with batching support
             if practical_required > 0 and has_lab_schedule:
+                # Calculate expected lab sessions considering potential batching
                 # Each lab session = 2 practical hours, so required sessions = practical_required / 2
                 expected_lab_sessions = (practical_required + 1) // 2  # Round up for odd numbers
-                expected_practical_hours = expected_lab_sessions * 2
-                practical_ok = practical_scheduled >= practical_required  # Allow scheduling more than required
+                
+                # UPDATED BATCHING LOGIC:
+                # For 70-student courses with 2 practical hours:
+                # - If assigned to 35-capacity labs: 2 batches × 1 session each = 2 total sessions (4 practical hours)
+                # - If assigned to 70-capacity labs: 1 batch × 1 session = 1 session (2 practical hours)
+                student_count = requirements.get('student_count', 70)
+                
+                if student_count == 70 and practical_required == 2:
+                    # Check if this course was dynamically batched based on lab capacity
+                    if len(batches_found) >= 2:  # Found B1, B2 batches
+                        # Course was batched - expect double the lab sessions
+                        expected_practical_hours = expected_lab_sessions * 2 * 2  # 2 batches × sessions × 2 hours
+                        practical_ok = practical_scheduled >= expected_practical_hours
+                        if practical_scheduled == expected_practical_hours:
+                            batch_status = "✅ Batched"
+                        elif practical_scheduled < expected_practical_hours:
+                            batch_status = "⚠️ Under-batched"
+                            batching_issues += 1
+                        else:
+                            batch_status = "⚠️ Over-batched"
+                    elif len(batches_found) == 1:
+                        # Single batch found - this is valid since all labs are 35-capacity
+                        # Each batch should get the full required practical hours
+                        expected_practical_hours = practical_required * 2  # Single batch gets double allocation
+                        practical_ok = practical_scheduled >= expected_practical_hours
+                        if practical_scheduled == expected_practical_hours:
+                            batch_status = "✅ Single batch"
+                        else:
+                            batch_status = "Standard single"
+                    elif len(batches_found) == 0:
+                        # No batching - this shouldn't happen with 35-capacity constraint, but handle gracefully
+                        expected_practical_hours = practical_required
+                        practical_ok = practical_scheduled >= expected_practical_hours
+                        batch_status = "No batching"
+                    else:
+                        # This case should not occur anymore
+                        expected_practical_hours = practical_required
+                        practical_ok = practical_scheduled >= expected_practical_hours
+                        batch_status = "Standard"
+                else:
+                    # Normal courses or non-standard student counts
+                    expected_practical_hours = practical_required
+                    practical_ok = practical_scheduled >= expected_practical_hours
+                    batch_status = "Standard"
+                
             elif practical_required > 0 and not has_lab_schedule:
                 # Lab schedule not available, mark as missing
                 practical_ok = False
                 expected_practical_hours = practical_required
+                batch_status = "No lab sched"
             else:
                 # No practical hours required
                 practical_ok = practical_scheduled == 0
                 expected_practical_hours = 0
+                batch_status = "N/A"
             
             # Overall status
             theory_ok = lecture_ok and tutorial_ok
             
             if theory_ok and practical_ok:
-                status = "✅ FULLY COMPLIANT"
+                if batches_found and "⚠️" not in batch_status:
+                    status = "✅ FULLY COMPLIANT (BATCHED)"
+                else:
+                    status = "✅ FULLY COMPLIANT"
             elif theory_ok and not practical_ok and practical_required > 0:
                 if has_lab_schedule:
                     status = "⚠️ PRACTICAL ISSUE"
@@ -245,7 +321,7 @@ def verify_ltp_constraints():
             else:
                 status = "✅ COMPLIANT"
         
-        # Show actual vs expected for clarity
+        # Enhanced display showing actual vs expected for clarity
         if total_scheduled == 0:
             lec_display = f"0/{lecture_required}"
             tut_display = f"0/{tutorial_required if tutorial_required > 0 else '0'}"
@@ -288,21 +364,25 @@ def verify_ltp_constraints():
             
             if practical_required > 0:
                 if has_lab_schedule:
-                    prac_display = f"{practical_scheduled}/{practical_required}"
+                    if 'expected_practical_hours' in locals():
+                        prac_display = f"{practical_scheduled}/{expected_practical_hours}"
+                    else:
+                        prac_display = f"{practical_scheduled}/{practical_required}"
                 else:
                     prac_display = f"{practical_scheduled}/Missing"
             else:
                 prac_display = f"{practical_scheduled}/0"
         
-        print(f"{instance_id:<6} {course_code:<12} {teacher_name[:19]:<20} {semester:<4} {lecture_required:<6} {lec_display:<6} {tutorial_required:<6} {tut_display:<6} {practical_required:<6} {prac_display:<6} {status:<25}")
+        print(f"{instance_id:<6} {course_code:<12} {teacher_name[:19]:<20} {semester:<4} {lecture_required:<6} {lec_display:<6} {tutorial_required:<6} {tut_display:<6} {practical_required:<6} {prac_display:<10} {batch_info_display:<10} {status:<25}")
     
-    print("-" * 135)
-    print(f"\n📊 COMPREHENSIVE LTP CONSTRAINT RESULTS:")
+    print("-" * 150)
+    print(f"\n📊 COMPREHENSIVE LTP CONSTRAINT RESULTS (WITH BATCHING ANALYSIS):")
     print(f"Total instances in dataset: {total_instances}")
     print(f"✅ Fully compliant instances: {total_instances - violations - theory_only_violations - not_scheduled - practical_violations}")
     print(f"⚠️  Theory issues only: {theory_only_violations}")
     if has_lab_schedule:
         print(f"⚠️  Practical issues only: {practical_violations}")
+        print(f"⚠️  Batching issues: {batching_issues}")
         print(f"❌ Theory+Practical violations: {violations}")
     else:
         print(f"⚠️  Practical missing (no lab schedule): {len([req for req in course_requirements.values() if req['practical_hours'] > 0])}")
@@ -314,13 +394,19 @@ def verify_ltp_constraints():
         print(f"📈 Overall success rate: {((total_instances - total_with_issues)/total_instances)*100:.1f}%")
         print(f"📈 Theory compliance rate: {((total_instances - violations - theory_only_violations - not_scheduled)/max(total_instances - not_scheduled, 1))*100:.1f}%")
         print(f"📈 Practical compliance rate: {((total_instances - violations - practical_violations)/max(sum(1 for req in course_requirements.values() if req['practical_hours'] > 0), 1))*100:.1f}%")
+        if batching_issues == 0:
+            print(f"📈 Batching success rate: 100.0% (All batching requirements met)")
+        else:
+            batched_courses = len([id for id, hours in scheduled_hours.items() if len(hours['batches']) > 0])
+            if batched_courses > 0:
+                print(f"📈 Batching success rate: {((batched_courses - batching_issues)/batched_courses)*100:.1f}%")
     else:
         print(f"📈 Overall success rate (theory only): {((total_instances - violations - theory_only_violations - not_scheduled)/total_instances)*100:.1f}%")
         print(f"📈 Theory compliance rate: {((total_instances - violations - theory_only_violations - not_scheduled)/max(total_instances - not_scheduled, 1))*100:.1f}%")
     
-    # Lab-specific analysis if lab schedule exists
+    # Enhanced lab-specific analysis if lab schedule exists
     if has_lab_schedule:
-        print(f"\n🧪 LAB SCHEDULING ANALYSIS:")
+        print(f"\n🧪 ENHANCED LAB SCHEDULING ANALYSIS:")
         courses_with_practicals = {id: req for id, req in course_requirements.items() if req['practical_hours'] > 0}
         print(f"Courses requiring practicals: {len(courses_with_practicals)}")
         
@@ -328,10 +414,13 @@ def verify_ltp_constraints():
         lab_compliant = 0
         total_practical_hours_required = 0
         total_practical_hours_scheduled = 0
+        courses_with_batching = 0
         
         for instance_id, req in courses_with_practicals.items():
             practical_required = req['practical_hours']
             practical_scheduled = scheduled_hours[instance_id]['practical']
+            batches_found = scheduled_hours[instance_id]['batches']
+            
             total_practical_hours_required += practical_required
             total_practical_hours_scheduled += practical_scheduled
             
@@ -339,14 +428,42 @@ def verify_ltp_constraints():
                 lab_scheduled += 1
                 if practical_scheduled >= practical_required:
                     lab_compliant += 1
+            
+            if len(batches_found) > 1:  # Multiple batches found
+                courses_with_batching += 1
         
         print(f"Courses with lab sessions scheduled: {lab_scheduled}/{len(courses_with_practicals)} ({(lab_scheduled/max(len(courses_with_practicals), 1))*100:.1f}%)")
         print(f"Courses with sufficient practical hours: {lab_compliant}/{len(courses_with_practicals)} ({(lab_compliant/max(len(courses_with_practicals), 1))*100:.1f}%)")
+        print(f"Courses using dynamic batching: {courses_with_batching}")
         print(f"Total practical hours: {total_practical_hours_scheduled}/{total_practical_hours_required} scheduled")
         
         # Analyze lab session efficiency
         lab_sessions_used = total_practical_hours_scheduled // 2  # Each lab session = 2 hours
         print(f"Lab sessions utilized: {lab_sessions_used} (each session = 2 practical hours)")
+        
+        # Enhanced batching analysis
+        if courses_with_batching > 0:
+            print(f"\n🔄 BATCHING EFFICIENCY ANALYSIS:")
+            print(f"Courses successfully batched: {courses_with_batching}")
+            
+            # Analyze specific batching patterns
+            s1_b1_b2_pattern = 0
+            for instance_id in scheduled_hours.keys():
+                batches = scheduled_hours[instance_id]['batches']
+                if '1' in batches and '2' in batches:  # Found B1 and B2
+                    s1_b1_b2_pattern += 1
+            
+            print(f"Courses with S1 B1/B2 pattern: {s1_b1_b2_pattern}")
+            
+            # Check for capacity-based batching efficiency
+            if 'room_capacity' in schedule_df.columns:
+                capacity_35_assignments = len(schedule_df[(schedule_df['slot_type'] == 'Practical') & 
+                                                        (schedule_df.get('room_capacity', 0) <= 35)])
+                capacity_70_assignments = len(schedule_df[(schedule_df['slot_type'] == 'Practical') & 
+                                                        (schedule_df.get('room_capacity', 0) > 35) &
+                                                        (schedule_df.get('room_capacity', 0) <= 70)])
+                print(f"Lab assignments to 35-capacity labs: {capacity_35_assignments}")
+                print(f"Lab assignments to 70+ capacity labs: {capacity_70_assignments}")
         
         # Check for teacher workload in labs
         teacher_lab_hours = defaultdict(int)
@@ -358,6 +475,11 @@ def verify_ltp_constraints():
             max_lab_hours = max(teacher_lab_hours.values())
             avg_lab_hours = sum(teacher_lab_hours.values()) / len(teacher_lab_hours)
             print(f"Teacher lab workload: Max {max_lab_hours}h, Avg {avg_lab_hours:.1f}h per teacher")
+            
+            # Identify teachers with high lab workload
+            high_workload_teachers = [t for t, h in teacher_lab_hours.items() if h > 16]  # More than 8 lab sessions
+            if high_workload_teachers:
+                print(f"Teachers with high lab workload (>16h): {len(high_workload_teachers)}")
     
     else:
         print(f"\n🧪 LAB SCHEDULING ANALYSIS:")
@@ -483,7 +605,7 @@ def verify_ltp_constraints():
         print(f"3-lecture scheduling rate: {three_lec_scheduled}/{len(three_lecture_courses)} ({(three_lec_scheduled/len(three_lecture_courses))*100:.1f}%)")
         print(f"3-lecture compliance rate: {three_lec_compliant}/{three_lec_scheduled if three_lec_scheduled > 0 else 1} ({(three_lec_compliant/max(three_lec_scheduled, 1))*100:.1f}%)")
     
-    if violations == 0 and theory_only_violations == 0 and not_scheduled == 0 and (not has_lab_schedule or practical_violations == 0):
+    if violations == 0 and theory_only_violations == 0 and not_scheduled == 0 and (not has_lab_schedule or (practical_violations == 0 and batching_issues == 0)):
         print(f"\n🎉 ALL LTP CONSTRAINTS SATISFIED!")
         print(f"   ✅ All course instances scheduled and compliant")
         print(f"   ✅ Lecture hours properly allocated")
@@ -499,8 +621,10 @@ def verify_ltp_constraints():
         if has_lab_schedule:
             print(f"   ✅ Practical hours properly allocated in lab sessions")
             print(f"      - Each lab session = 2 practical hours (L1, L2, L3, L4, L5, L6)")
+            print(f"      - Dynamic batching: S1 B1/S1 B2 for 70-student courses in 35-capacity labs")
             print(f"      - Continuous room assignment for multi-slot sessions")
             print(f"      - No conflicts between theory and lab schedules")
+            print(f"      - All batching requirements properly satisfied")
         else:
             print(f"   ⚠️  Practical hours not evaluated (lab schedule not found)")
         return True
@@ -517,6 +641,8 @@ def verify_ltp_constraints():
             print(f"   ⚠️  {theory_only_violations} theory-only issues")
         if has_lab_schedule and practical_violations > 0:
             print(f"   ⚠️  {practical_violations} practical-only issues")
+        if has_lab_schedule and batching_issues > 0:
+            print(f"   ⚠️  {batching_issues} batching issues (courses not properly split into batches)")
         if not has_lab_schedule:
             courses_needing_labs = len([req for req in course_requirements.values() if req['practical_hours'] > 0])
             if courses_needing_labs > 0:
@@ -524,7 +650,7 @@ def verify_ltp_constraints():
         
         # Return success if only missing lab schedule but theory is good
         if has_lab_schedule:
-            return violations == 0 and not_scheduled == 0
+            return violations == 0 and not_scheduled == 0 and batching_issues == 0
         else:
             return violations == 0 and not_scheduled == 0 and theory_only_violations == 0
 

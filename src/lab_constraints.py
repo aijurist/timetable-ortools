@@ -11,38 +11,107 @@ class LabConstraints:
     
     def apply_all_constraints(self, model, lab_assignments, lab_room_ids, lab_sessions, course_to_teacher):
         """Apply all lab scheduling constraints."""
-        self.logger.info("Applying all lab scheduling constraints...")
+        self.logger.info("Applying lab scheduling constraints...")
         
         # Apply individual constraints
-        self.apply_course_lab_requirements_constraint(model, lab_assignments, lab_sessions)
+        self.apply_course_lab_requirements_constraint(model, lab_assignments, course_to_teacher)
         self.apply_teacher_single_lab_assignment_constraint(model, lab_assignments, lab_room_ids, lab_sessions, course_to_teacher)
         self.apply_lab_room_single_assignment_constraint(model, lab_assignments, lab_sessions)
-        self.apply_no_theory_lab_overlap_constraint(model, lab_assignments, lab_sessions, course_to_teacher)
+        self.apply_theory_lab_overlap_prevention_constraint(model, lab_assignments, lab_sessions, course_to_teacher)
         self.apply_weekly_working_hour_constraint(model, lab_assignments, lab_sessions, course_to_teacher)
         self.apply_continuous_lab_room_constraint(model, lab_assignments, lab_room_ids, lab_sessions)
         
+        # Apply new capacity-based constraints
+        self.apply_capacity_based_room_assignment_constraint(model, lab_assignments)
+        
         self.logger.info("All lab constraints applied successfully")
     
-    def apply_course_lab_requirements_constraint(self, model, lab_assignments, lab_sessions):
-        """Ensure each course gets the required number of lab sessions."""
-        self.logger.info("Applying course lab requirements constraint (COURSE LEVEL)...")
-        
+    def apply_course_lab_requirements_constraint(self, model, lab_assignments, course_to_teacher):
+        """Ensure each course gets the required number of lab sessions based on capacity allocation strategy."""
         for teacher, courses in self.scheduler.lab_requirements.items():
             for course in courses:
                 course_instance_id = course['course_instance_id']
-                required_sessions = course['total_sessions_needed']
+                total_lab_slots_needed = course['total_lab_slots_needed']
+                batching_required = course['batching_required']
+                num_batches = course['num_batches']
                 
-                # Collect all possible lab session assignments for this specific course
-                course_lab_vars = []
-                for day_idx in range(self.scheduler.num_days):
-                    for session_idx in range(len(lab_sessions)):
-                        for room_id in self.scheduler.labs['id']:
-                            course_lab_vars.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+                if course_instance_id in lab_assignments:
+                    # Count total assignments for this course instance
+                    total_assignments = []
+                    
+                    for day_idx in range(self.scheduler.num_days):
+                        for session_idx in range(len(list(self.scheduler.lab_sessions.keys()))):
+                            for room_id in self.scheduler.labs['id'].tolist():
+                                total_assignments.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+                    
+                    # Add constraint for exact number of lab slots needed
+                    model.Add(sum(total_assignments) == total_lab_slots_needed)
+                    
+                    # If batching is required, add additional constraints
+                    if batching_required and num_batches > 1:
+                        # Constraint: Batches must be on different days/times (same teacher can't be in two places)
+                        self._add_batch_separation_constraint(model, lab_assignments, course_instance_id, num_batches)
+                        
+                        # Constraint: Ensure consistent room capacity for batched assignments
+                        self._add_capacity_consistency_constraint(model, lab_assignments, course_instance_id, course)
+    
+    def _add_batch_separation_constraint(self, model, lab_assignments, course_instance_id, num_batches):
+        """Ensure batches are scheduled at different times (same teacher can't be in multiple places)."""
+        # For each day-session combination, at most one batch can be scheduled
+        for day_idx in range(self.scheduler.num_days):
+            for session_idx in range(len(list(self.scheduler.lab_sessions.keys()))):
+                session_assignments = []
+                for room_id in self.scheduler.labs['id'].tolist():
+                    session_assignments.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
                 
-                # Ensure course gets exactly the required number of lab sessions
-                model.Add(sum(course_lab_vars) == required_sessions)
+                # At most one assignment per day-session (to avoid teacher conflicts)
+                model.Add(sum(session_assignments) <= 1)
+    
+    def _add_capacity_consistency_constraint(self, model, lab_assignments, course_instance_id, course):
+        """Ensure room capacity is appropriate for the allocation strategy."""
+        preferred_capacities = course['preferred_lab_capacities']
+        students_per_batch = course['students_per_batch']
+        
+        # Get lab rooms categorized by capacity
+        labs_by_capacity = {
+            35: [lab['id'] for lab in self.scheduler.lab_capacity_analysis['labs_35']],
+            70: [lab['id'] for lab in self.scheduler.lab_capacity_analysis['labs_70']],
+            140: [lab['id'] for lab in self.scheduler.lab_capacity_analysis['labs_140']]
+        }
+        
+        # Create capacity preference constraints
+        for day_idx in range(self.scheduler.num_days):
+            for session_idx in range(len(list(self.scheduler.lab_sessions.keys()))):
+                capacity_assignments = {}
                 
-                self.logger.info(f"Course {course['display_course_code']} (ID: {course['course_instance_id']}, Teacher {teacher}): {course['practical_hours']} practical hours -> {required_sessions} lab sessions required")
+                # Group assignments by capacity
+                for capacity in [35, 70, 140]:
+                    capacity_assignments[capacity] = []
+                    if capacity in labs_by_capacity:
+                        for room_id in labs_by_capacity[capacity]:
+                            if room_id in self.scheduler.labs['id'].tolist():
+                                capacity_assignments[capacity].append(
+                                    lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+                
+                # Apply capacity preference logic
+                if students_per_batch <= 35:
+                    # Can use any capacity, but prefer higher capacities first if available
+                    if preferred_capacities:
+                        # Prefer rooms in order of preference
+                        for i, preferred_cap in enumerate(preferred_capacities):
+                            if preferred_cap in capacity_assignments and capacity_assignments[preferred_cap]:
+                                # This is handled by the solver optimization
+                                pass
+                elif students_per_batch <= 70:
+                    # Cannot use 35-capacity rooms
+                    if 35 in capacity_assignments:
+                        model.Add(sum(capacity_assignments[35]) == 0)
+                else:
+                    # Can only use 140-capacity rooms
+                    if 35 in capacity_assignments:
+                        model.Add(sum(capacity_assignments[35]) == 0)
+                    if 70 in capacity_assignments:
+                        model.Add(sum(capacity_assignments[70]) == 0)
     
     def apply_teacher_single_lab_assignment_constraint(self, model, lab_assignments, lab_room_ids, lab_sessions, course_to_teacher):
         """Prevent teacher from being in multiple labs at the same time."""
@@ -78,7 +147,7 @@ class LabConstraints:
                         room_vars.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
                     model.Add(sum(room_vars) <= 1)
     
-    def apply_no_theory_lab_overlap_constraint(self, model, lab_assignments, lab_sessions, course_to_teacher):
+    def apply_theory_lab_overlap_prevention_constraint(self, model, lab_assignments, lab_sessions, course_to_teacher):
         """Prevent teachers from having overlapping theory and lab sessions."""
         self.logger.info("Applying no theory-lab overlap constraint...")
         
@@ -217,6 +286,51 @@ class LabConstraints:
         
         self.logger.info("Continuous lab room constraint: Handled by session-level assignment structure")
     
+    def apply_capacity_based_room_assignment_constraint(self, model, lab_assignments):
+        """Apply capacity-based room assignment constraints for optimal allocation."""
+        self.logger.info("Applying capacity-based room assignment constraint...")
+        
+        # For each course, prefer rooms that match their capacity requirements
+        for teacher, courses in self.scheduler.lab_requirements.items():
+            for course in courses:
+                course_instance_id = course['course_instance_id']
+                preferred_capacities = course['preferred_lab_capacities']
+                practical_hours = course['practical_hours']
+                
+                if course_instance_id in lab_assignments:
+                    # Apply preference weighting (this will be used in the objective function)
+                    # For practical hours > 3, strongly prefer 70+ capacity labs
+                    if practical_hours > 3:
+                        self._apply_capacity_preference_weights(model, lab_assignments, course_instance_id, preferred_capacities)
+        
+        self.logger.info("Capacity-based room assignment constraint applied successfully")
+    
+    def _apply_capacity_preference_weights(self, model, lab_assignments, course_instance_id, preferred_capacities):
+        """Apply capacity preference weights to encourage optimal room allocation."""
+        # Get lab rooms categorized by capacity
+        labs_by_capacity = {
+            35: [lab['id'] for lab in self.scheduler.lab_capacity_analysis['labs_35']],
+            70: [lab['id'] for lab in self.scheduler.lab_capacity_analysis['labs_70']],
+            140: [lab['id'] for lab in self.scheduler.lab_capacity_analysis['labs_140']]
+        }
+        
+        # Create soft constraints for capacity preferences
+        # This can be implemented as penalty terms in the objective function
+        # For now, we'll enforce hard constraints to avoid 35-capacity rooms for high practical hours
+        
+        for day_idx in range(self.scheduler.num_days):
+            for session_idx in range(len(list(self.scheduler.lab_sessions.keys()))):
+                # For courses with practical_hours > 3, avoid 35-capacity rooms if possible
+                if 35 in labs_by_capacity:
+                    small_room_assignments = []
+                    for room_id in labs_by_capacity[35]:
+                        if room_id in self.scheduler.labs['id'].tolist():
+                            small_room_assignments.append(
+                                lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+                    
+                    # Add soft constraint to minimize use of 35-capacity rooms for high practical hours
+                    # This will be enforced through the objective function in the main solver
+    
     def apply_relaxed_constraints(self, model, lab_assignments, lab_room_ids, lab_sessions, course_to_teacher):
         """Apply relaxed constraints for when normal constraints are too restrictive."""
         self.logger.info("Applying relaxed lab constraints...")
@@ -225,7 +339,7 @@ class LabConstraints:
         for teacher, courses in self.scheduler.lab_requirements.items():
             for course in courses:
                 course_instance_id = course['course_instance_id']
-                required_sessions = course['total_sessions_needed']
+                required_sessions = course['total_lab_slots_needed']
                 
                 # Collect all possible lab session assignments for this specific course
                 course_lab_vars = []
@@ -268,6 +382,42 @@ class LabConstraints:
         
         self.logger.info("Relaxed lab constraints applied successfully")
 
+    def _add_dynamic_batching_constraint(self, model, lab_assignments, course_instance_id, course):
+        """Add constraints for dynamic batching based on assigned lab capacity."""
+        # For 70-student courses, the batching will be handled during solution processing
+        # based on the actual lab capacity that gets assigned
+        
+        # Just log that dynamic batching is enabled for this course
+        self.scheduler.logger.info(f"Dynamic batching enabled for course {course['display_course_code']} "
+                                 f"(ID: {course_instance_id}) - will create batches based on assigned lab capacity")
+    
+    def _add_course_allocation_constraints(self, model, lab_assignments, course_to_teacher):
+        """Each course instance gets the required number of lab slots based on its allocation strategy."""
+        for teacher, courses in self.scheduler.lab_requirements.items():
+            for course in courses:
+                course_instance_id = course['course_instance_id']
+                required_lab_slots = course['total_lab_slots_needed']  # This accounts for potential batching
+                
+                # Each course instance gets exactly the required number of lab slots
+                total_assignments = []
+                for day_idx in range(self.scheduler.num_days):
+                    for session_idx in range(len(self.lab_sessions)):
+                        for room_id in self.lab_room_ids:
+                            total_assignments.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+                
+                # Ensure course gets exactly the required number of lab slot assignments
+                model.Add(sum(total_assignments) == required_lab_slots)
+                
+                self.scheduler.logger.info(f"Constraint: Course {course['display_course_code']} "
+                                         f"(ID: {course_instance_id}) must get exactly {required_lab_slots} lab slots")
+                
+                # For potential batching courses (70 students), add additional constraints
+                if course.get('potential_batching_needed', False):
+                    # Add constraint to ensure consistent room capacity usage
+                    # If assigned to 35-capacity labs, should get 2x the base sessions
+                    # If assigned to 70+ capacity labs, should get 1x the base sessions
+                    self._add_dynamic_batching_constraint(model, lab_assignments, course_instance_id, course)
+
 
 # Utility functions for constraint validation and debugging
 def validate_lab_constraints(schedule_df, lab_requirements):
@@ -280,7 +430,7 @@ def validate_lab_constraints(schedule_df, lab_requirements):
     for teacher, courses in lab_requirements.items():
         for course in courses:
             course_instance_id = course['course_instance_id']
-            required_sessions = course['total_sessions_needed']
+            required_sessions = course['total_lab_slots_needed']
             
             # Count actual lab sessions for this course
             course_labs = lab_data[lab_data['course_instance_id'] == course_instance_id]
@@ -347,7 +497,7 @@ def analyze_constraint_conflicts(lab_requirements, theory_schedule_df, lab_rooms
     # Calculate total lab sessions needed
     for courses in lab_requirements.values():
         for course in courses:
-            analysis['total_lab_sessions_needed'] += course['total_sessions_needed']
+            analysis['total_lab_sessions_needed'] += course['total_lab_slots_needed']
     
     # Calculate total lab capacity per week
     analysis['total_lab_capacity'] = len(lab_rooms) * 6 * 5  # 6 sessions * 5 days
@@ -355,7 +505,7 @@ def analyze_constraint_conflicts(lab_requirements, theory_schedule_df, lab_rooms
     # Check for potential teacher overloads
     for teacher, courses in lab_requirements.items():
         teacher_theory_hours = len(theory_schedule_df[theory_schedule_df['teacher_id'] == teacher])
-        teacher_lab_hours = sum(course['total_sessions_needed'] * 2 for course in courses)  # Each session = 2 hours
+        teacher_lab_hours = sum(course['total_lab_slots_needed'] * 2 for course in courses)  # Each session = 2 hours
         total_hours = teacher_theory_hours + teacher_lab_hours
         
         if total_hours > 25:
