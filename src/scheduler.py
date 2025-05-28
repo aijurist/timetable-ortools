@@ -102,7 +102,7 @@ class MacroblockTimetableScheduler:
         
         # Pre-compute room IDs for efficiency
         classroom_ids = self.classrooms['id'].tolist()
-        lab_ids = self.labs['id'].tolist()
+        # Skip lab IDs as we're not allocating labs for now
         
         # Define assignment variables
         # teacher_theory_assignments[t][d][s][r] = 1 if teacher t is assigned to classroom r in slot s on day d
@@ -117,18 +117,8 @@ class MacroblockTimetableScheduler:
                         teacher_theory_assignments[teacher][d][s][room_id] = model.NewBoolVar(
                             f'teacher_{teacher}_day_{d}_slot_{s}_classroom_{room_id}')
         
-        # Define lab assignment variables
-        # teacher_lab_assignments[t][d][ls][r] = 1 if teacher t is assigned to lab r in lab slot ls on day d
-        teacher_lab_assignments = {}
-        for teacher in self.teachers:
-            teacher_lab_assignments[teacher] = {}
-            for d in range(self.num_days):
-                teacher_lab_assignments[teacher][d] = {}
-                for ls in range(12):  # 12 lab slots per day
-                    teacher_lab_assignments[teacher][d][ls] = {}
-                    for room_id in lab_ids:
-                        teacher_lab_assignments[teacher][d][ls][room_id] = model.NewBoolVar(
-                            f'teacher_{teacher}_day_{d}_labslot_{ls}_lab_{room_id}')
+        # Skip lab assignments as requested
+        # teacher_lab_assignments = None  # Not needed for now
         
         # Initialize constraints handler
         constraints = MacroblockTimetableConstraints(
@@ -139,8 +129,8 @@ class MacroblockTimetableScheduler:
             self.labs
         )
         
-        # Apply all constraints (including lab assignments)
-        constraints.apply_all_constraints(teacher_theory_assignments, teacher_lab_assignments)
+        # Apply all constraints (skip lab assignments)
+        constraints.apply_all_constraints(teacher_theory_assignments, None)
         
         # Create the solver and solve the model
         solver = cp_model.CpSolver()
@@ -173,8 +163,8 @@ class MacroblockTimetableScheduler:
             return False
     
     def extract_base_macroblock_assignments(self, solver, constraints):
-        """Extract base macroblock and lab assignments from CP-SAT solution."""
-        self.logger.info("Extracting base macroblock and lab assignments from CP-SAT solution...")
+        """Extract base macroblock assignments from CP-SAT solution (SIMPLIFIED APPROACH)."""
+        self.logger.info("Extracting base macroblock assignments from CP-SAT solution...")
         
         base_assignments = {}
         
@@ -184,33 +174,15 @@ class MacroblockTimetableScheduler:
                 base_assignments[teacher] = {}
                 
                 for instance_id, macroblock_vars in constraints.macroblock_assignments[teacher].items():
-                    assignment_info = {
-                        'instance_data': constraints.course_instance_mappings[instance_id]
-                    }
-                    
-                    # Extract theory/tutorial assignments
                     for block_var_name, block_var in macroblock_vars.items():
                         if block_var_name.endswith('_chosen') and solver.Value(block_var) == 1:
                             base_block = block_var_name.replace('_chosen', '')
-                            assignment_info['base_macroblock'] = base_block
-                            self.logger.info(f"Instance {instance_id} (Teacher {teacher}) -> Theory: {base_block}")
+                            base_assignments[teacher][instance_id] = {
+                                'base_macroblock': base_block,
+                                'instance_data': constraints.course_instance_mappings[instance_id]
+                            }
+                            self.logger.info(f"Instance {instance_id} (Teacher {teacher}) -> {base_block}")
                             break
-                    
-                    # Extract lab assignments if they exist
-                    if teacher in constraints.lab_assignments and instance_id in constraints.lab_assignments[teacher]:
-                        lab_vars = constraints.lab_assignments[teacher][instance_id]
-                        assigned_lab_groups = []
-                        
-                        for lab_var_name, lab_var in lab_vars.items():
-                            if lab_var_name.endswith('_chosen') and solver.Value(lab_var) == 1:
-                                lab_group = lab_var_name.replace('_chosen', '')
-                                assigned_lab_groups.append(lab_group)
-                                self.logger.info(f"Instance {instance_id} (Teacher {teacher}) -> Lab: {lab_group}")
-                        
-                        if assigned_lab_groups:
-                            assignment_info['lab_groups'] = assigned_lab_groups
-                    
-                    base_assignments[teacher][instance_id] = assignment_info
         
         return base_assignments
     
@@ -248,141 +220,62 @@ class MacroblockTimetableScheduler:
                 'capacity': room_row.get('room_max_cap', 0)
             }
         
-        lab_info = {}
-        for _, room_row in self.labs.iterrows():
-            room_id = room_row['id']
-            lab_info[room_id] = {
-                'room_number': room_row['room_number'],
-                'block': room_row.get('block', ''),
-                'description': room_row.get('description', ''),
-                'capacity': room_row.get('room_max_cap', 0)
-            }
-        
         # Map base assignments to specific time slots using the 6-case logic
         room_counter = 0  # Simple room assignment strategy
-        lab_room_counter = 0  # Simple lab room assignment strategy
-        
-        # Create lab group room mapping to ensure consistency
-        lab_group_room_mapping = {}
         
         for teacher, teacher_assignments in base_assignments.items():
             for instance_id, assignment_info in teacher_assignments.items():
+                base_block = assignment_info['base_macroblock']
                 instance_data = assignment_info['instance_data']['instance']
                 
                 lecture_hours = instance_data['lecture_hours']
                 tutorial_hours = instance_data['tutorial_hours']
-                practical_hours = instance_data['practical_hours']
                 
-                # Process theory/tutorial assignments
-                if 'base_macroblock' in assignment_info:
-                    base_block = assignment_info['base_macroblock']
-                    
-                    # Apply the 6-case logic to determine specific slot allocations
-                    slot_assignments = self._apply_case_logic(
-                        base_block, lecture_hours, tutorial_hours, instance_data, teacher)
-                    
-                    # Convert slot assignments to schedule entries
-                    for slot_assignment in slot_assignments:
-                        # Assign room (simple round-robin for now)
-                        room_id = list(classroom_info.keys())[room_counter % len(classroom_info)]
-                        room_counter += 1
-                        
-                        teacher_info = teacher_info_cache[teacher]
-                        room_details = classroom_info[room_id]
-                        
-                        schedule_data.append({
-                            'day': slot_assignment['day'],
-                            'slot_index': slot_assignment['slot_index'],
-                            'time_interval': slot_assignment['time_interval'],
-                            'slot_type': slot_assignment['slot_type'],
-                            'macroblock': slot_assignment['macroblock'],
-                            'teacher_id': teacher,
-                            'first_name': teacher_info['first_name'],
-                            'last_name': teacher_info['last_name'],
-                            'staff_code': teacher_info['staff_code'],
-                            'room_id': room_id,
-                            'room_number': room_details['room_number'],
-                            'block': room_details['block'],
-                            'room_type': 'Classroom',
-                            'capacity': room_details['capacity'],
-                            'course_id': instance_data['course_id'],
-                            'course_code': instance_data['course_code'],
-                            'course_name': instance_data['course_name'],
-                            'course_instance_id': instance_id,
-                            'student_count': instance_data['student_count'],
-                            'academic_year': instance_data.get('academic_year', ''),
-                            'semester': instance_data.get('semester', ''),
-                            'course_dept': instance_data.get('course_dept', ''),
-                            'teacher_shift': 'combined_shift',
-                            'daily_shift_pattern': 'Combined→Combined→Combined→Combined→Combined'
-                        })
+                # Apply the 6-case logic to determine specific slot allocations
+                slot_assignments = self._apply_case_logic(
+                    base_block, lecture_hours, tutorial_hours, instance_data, teacher)
                 
-                # Process lab assignments
-                if 'lab_groups' in assignment_info and practical_hours > 0:
-                    lab_groups = assignment_info['lab_groups']
+                # Convert slot assignments to schedule entries
+                for slot_assignment in slot_assignments:
+                    # Assign room (simple round-robin for now)
+                    room_id = list(classroom_info.keys())[room_counter % len(classroom_info)]
+                    room_counter += 1
                     
-                    for lab_group in lab_groups:
-                        # Map lab group to specific time slots
-                        lab_slot_assignments = self._apply_lab_logic(lab_group, practical_hours, instance_data, teacher)
-                        
-                        # Convert lab slot assignments to schedule entries
-                        for lab_slot_assignment in lab_slot_assignments:
-                            # Assign lab room - use different rooms for different course instances
-                            if lab_info:
-                                # Create a unique key for each course instance to ensure different rooms
-                                instance_lab_key = f"{teacher}_{instance_id}_{lab_group}"
-                                
-                                # Check if this specific instance already has a room assigned for this lab group
-                                if instance_lab_key not in lab_group_room_mapping:
-                                    # Assign a new room for this specific course instance and lab group
-                                    lab_room_id = list(lab_info.keys())[lab_room_counter % len(lab_info)]
-                                    lab_group_room_mapping[instance_lab_key] = lab_room_id
-                                    lab_room_counter += 1
-                                    self.logger.info(f"Assigned instance {instance_id} lab group {lab_group} to room {lab_room_id}")
-                                
-                                # Use the room assigned to this specific instance
-                                lab_room_id = lab_group_room_mapping[instance_lab_key]
-                                
-                                teacher_info = teacher_info_cache[teacher]
-                                lab_room_details = lab_info[lab_room_id]
-                                
-                                schedule_data.append({
-                                    'day': lab_slot_assignment['day'],
-                                    'slot_index': lab_slot_assignment['slot_index'],
-                                    'time_interval': lab_slot_assignment['time_interval'],
-                                    'slot_type': 'Practical',
-                                    'macroblock': lab_group,
-                                    'teacher_id': teacher,
-                                    'first_name': teacher_info['first_name'],
-                                    'last_name': teacher_info['last_name'],
-                                    'staff_code': teacher_info['staff_code'],
-                                    'room_id': lab_room_id,
-                                    'room_number': lab_room_details['room_number'],
-                                    'block': lab_room_details['block'],
-                                    'room_type': 'Lab',
-                                    'capacity': lab_room_details['capacity'],
-                                    'course_id': instance_data['course_id'],
-                                    'course_code': instance_data['course_code'],
-                                    'course_name': instance_data['course_name'],
-                                    'course_instance_id': instance_id,
-                                    'student_count': instance_data['student_count'],
-                                    'academic_year': instance_data.get('academic_year', ''),
-                                    'semester': instance_data.get('semester', ''),
-                                    'course_dept': instance_data.get('course_dept', ''),
-                                    'teacher_shift': 'combined_shift',
-                                    'daily_shift_pattern': 'Combined→Combined→Combined→Combined→Combined'
-                                })
+                    teacher_info = teacher_info_cache[teacher]
+                    room_details = classroom_info[room_id]
+                    
+                    schedule_data.append({
+                        'day': slot_assignment['day'],
+                        'slot_index': slot_assignment['slot_index'],
+                        'time_interval': slot_assignment['time_interval'],
+                        'slot_type': slot_assignment['slot_type'],
+                        'macroblock': slot_assignment['macroblock'],
+                        'teacher_id': teacher,
+                        'first_name': teacher_info['first_name'],
+                        'last_name': teacher_info['last_name'],
+                        'staff_code': teacher_info['staff_code'],
+                        'room_id': room_id,
+                        'room_number': room_details['room_number'],
+                        'block': room_details['block'],
+                        'room_type': 'Classroom',
+                        'capacity': room_details['capacity'],
+                        'course_id': instance_data['course_id'],
+                        'course_code': instance_data['course_code'],
+                        'course_name': instance_data['course_name'],
+                        'course_instance_id': instance_id,
+                        'student_count': instance_data['student_count'],
+                        'academic_year': instance_data.get('academic_year', ''),
+                        'semester': instance_data.get('semester', ''),
+                        'course_dept': instance_data.get('course_dept', ''),
+                        'teacher_shift': 'combined_shift',
+                        'daily_shift_pattern': 'Combined→Combined→Combined→Combined→Combined'
+                    })
         
         return {
             'schedule_data': schedule_data,
             'daily_schedules': self._create_daily_schedule_structure(schedule_data),
             'time_slot_definitions': {
                 'T': self.time_slots,
-                'L': [
-                    "8:00 - 8:50", "8:50 - 9:40", "9:50 - 10:40", "10:40 - 11:30",
-                    "11:50 - 12:40", "12:40 - 1:30", "1:50 - 2:40", "2:40 - 3:30", 
-                    "3:50 - 4:40", "4:40 - 5:30", "5:30 - 6:20", "6:20 - 7:10"
-                ]
             }
         }
     
@@ -542,58 +435,6 @@ class MacroblockTimetableScheduler:
         
         self.logger.info(f"Case result: {len(slot_assignments)} slot assignments for instance {instance_data['id']}")
         return slot_assignments
-    
-    def _apply_lab_logic(self, lab_group, practical_hours, instance_data, teacher):
-        """Apply lab logic to determine specific lab slot allocations."""
-        lab_slot_assignments = []
-        
-        # Get the slot indices for this lab group
-        lab_slot_groups = {
-            'l1': [0, 1],    # 8:00-8:50, 8:50-9:40
-            'l2': [2, 3],    # 9:50-10:40, 10:40-11:30
-            'l3': [4, 5],    # 11:50-12:40, 12:40-1:30
-            'l4': [6, 7],    # 1:50-2:40, 2:40-3:30
-            'l5': [8, 9],    # 3:50-4:40, 4:40-5:30
-            'l6': [10, 11]   # 5:30-6:20, 6:20-7:10
-        }
-        
-        if lab_group not in lab_slot_groups:
-            self.logger.warning(f"Unknown lab group: {lab_group}")
-            return lab_slot_assignments
-        
-        slot_indices = lab_slot_groups[lab_group]
-        
-        # Lab time slots (12 slots per day matching the constraint definition)
-        lab_time_slots = [
-            "8:00 - 8:50", "8:50 - 9:40", "9:50 - 10:40", "10:40 - 11:30",
-            "11:50 - 12:40", "12:40 - 1:30", "1:50 - 2:40", "2:40 - 3:30", 
-            "3:50 - 4:40", "4:40 - 5:30", "5:30 - 6:20", "6:20 - 7:10"
-        ]
-        
-        # Strategy: Use a consistent mapping for lab groups to days to minimize conflicts
-        # Map lab groups to preferred days to spread load
-        lab_group_day_mapping = {
-            'l1': 'tuesday',    # 8:00-9:40 on Tuesday
-            'l2': 'wed',        # 9:50-11:30 on Wednesday  
-            'l3': 'thur',       # 11:50-1:30 on Thursday
-            'l4': 'fri',        # 1:50-3:30 on Friday
-            'l5': 'sat',        # 3:50-5:30 on Saturday
-            'l6': 'tuesday'     # 5:30-7:10 on Tuesday (fallback)
-        }
-        
-        preferred_day = lab_group_day_mapping.get(lab_group, 'tuesday')
-        
-        # Assign lab slots for the preferred day
-        for slot_idx in slot_indices:
-            if slot_idx < len(lab_time_slots):
-                lab_slot_assignments.append({
-                    'day': preferred_day,
-                    'slot_index': slot_idx,  # Lab slot index (0-11)
-                    'time_interval': lab_time_slots[slot_idx]
-                })
-        
-        self.logger.info(f"Lab logic result: {len(lab_slot_assignments)} lab slot assignments for {lab_group} on {preferred_day} (instance {instance_data['id']})")
-        return lab_slot_assignments
     
     def process_solution(self, solver, teacher_theory_assignments, teacher_lab_assignments, constraints):
         """Process the solution and extract the schedule. Skip lab processing."""
