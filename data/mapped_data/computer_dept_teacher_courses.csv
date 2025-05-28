@@ -284,6 +284,7 @@ id,student_count,academic_year,semester,requires_special_scheduling,is_assistant
 609,70,2,3,0,0,288,EC186,Assistant Professor SG,,Mrs.,Yogalakshmi.V,yogalakshmi.v@rajalakshmi.edu.in,Electronics & Communication Engineering,2046,CS23336,Introduction to Python Programming,LoT,1,4,0,3.0,Electronics & Communication Engineering
 168,70,2,3,0,0,288,EC186,Assistant Professor SG,,Mrs.,Yogalakshmi.V,yogalakshmi.v@rajalakshmi.edu.in,Electronics & Communication Engineering,1573,EC23331,Microprocessors and Microcontrollers,LoT,3,2,0,4.0,Electronics & Communication Engineering
 69,70,2,3,0,0,400,IT230,Professor,,Mr.,Dr B Muthu Kumar,muthukumar.b@rajalakshmi.edu.in,Information Technology,1833,CS23331,Design and Analysis of Algorithms,LoT,3,2,0,4.0,Computer Science & Engineering
+
 418,67,3,5,0,0,495,ME256,Assistant Professor SS,,Mr.,Dr Ramesh Shanmugam,ramesh.s@rajalakshmi.edu.in,Mechatronics Engineering,1973,MT23513,Basic Engineering Research Methods,T,3,0,0,3.0,Mechatronics Engineering
 425,63,2,3,0,0,495,ME256,Assistant Professor SS,,Mr.,Dr Ramesh Shanmugam,ramesh.s@rajalakshmi.edu.in,Mechatronics Engineering,1956,CS23336,Introduction to Python Programming,LoT,1,4,0,3.0,Mechatronics Engineering
 476,68,4,7,0,0,495,ME256,Assistant Professor SS,,Mr.,Dr Ramesh Shanmugam,ramesh.s@rajalakshmi.edu.in,Mechatronics Engineering,2004,MT19713,"Mechatronics Problem Solving using AI, ML & DL",L,0,4,0,2.0,Mechatronics Engineering
@@ -305,23 +306,3 @@ id,student_count,academic_year,semester,requires_special_scheduling,is_assistant
 419,67,3,5,0,0,496,ME147,Assistant Professor SG,,Mrs.,Uma Maheswari M,umamaheswari.m@rajalakshmi.edu.in,Mechatronics Engineering,1984,CS23422,Python Programming for Machine Learning,L,0,4,0,2.0,Mechatronics Engineering
 472,68,4,7,0,0,482,ME242,Assistant Professor,,Mr.,Vimalesh. A,vimalesh.a@rajalakshmi.edu.in,Mechatronics Engineering,2000,MT19704,Machine Vision,T,3,0,0,3.0,Mechatronics Engineering
 417,67,3,5,0,0,482,ME242,Assistant Professor,,Mr.,Vimalesh. A,vimalesh.a@rajalakshmi.edu.in,Mechatronics Engineering,1972,MT23511,Semiconductor Manufacturing,T,3,0,0,3.0,Mechatronics Engineering
-445,66,4,7,0,0,558,ME185,Assistant Professor SS,,Mr.,Eswaran A,eswaran.a@rajalakshmi.edu.in,Robotics & Automation,1991,RO19702,Computer Integrated Manufacturing,T,3,0,0,3.0,Robotics & Automation
-343,67,3,5,0,0,564,ME246,Assistant Professor SG,,Mr.,L Ganesh Babu,ganeshbabu.l@rajalakshmi.edu.in,Robotics & Automation,1770,RO23511,AI for Robotics,T,3,0,0,3.0,Robotics & Automation
-415,67,3,5,0,0,564,ME246,Assistant Professor SG,,Mr.,L Ganesh Babu,ganeshbabu.l@rajalakshmi.edu.in,Robotics & Automation,1773,RO23522,"Industrial Automation 
- Laboratory-II",L,0,4,0,2.0,Robotics & Automation
-349,70,2,3,0,0,564,ME246,Assistant Professor SG,,Mr.,L Ganesh Babu,ganeshbabu.l@rajalakshmi.edu.in,Robotics & Automation,1761,RO23313,Sensors in Automation,T,3,0,0,3.0,Robotics & Automation
-412,63,2,3,0,0,567,ME236,Assistant Professor,,Mr.,P.Vimalanathan,vimalanathan.p@rajalakshmi.edu.in,Robotics & Automation,1762,RO23331,Elements of Manufacturing Process,LoT,2,2,0,3.0,Robotics & Automation
-444,66,4,7,0,0,567,ME236,Assistant Professor,,Mr.,P.Vimalanathan,vimalanathan.p@rajalakshmi.edu.in,Robotics & Automation,1987,GE19304,Fundamentals of Management for Engineers,T,3,0,0,3.0,Robotics & Automation
-477,66,4,7,0,0,557,ME247,Assistant Professor,,Mr.,R Saravanan,saravanan.r@rajalakshmi.edu.in,Robotics & Automation,2008,RO19711,Innovation and Design thinking for Robotics and Automation,L,0,4,0,2.0,Robotics & Automation
-449,66,4,7,0,0,557,ME247,Assistant Professor,,Mr.,R Saravanan,saravanan.r@rajalakshmi.edu.in,Robotics & Automation,1993,RO19703,Material Handling system,T,3,0,0,3.0,Robotics & Automation
-398,67,3,5,0,0,557,ME247,Assistant Professor,,Mr.,R Saravanan,saravanan.r@rajalakshmi.edu.in,Robotics & Automation,1771,RO23512,Theory of Mechanisms and Machines-II,T,3,0,1,4.0,Robotics & Automation
-414,60,1,1,0,0,578,ME050,HOD,,HOD,RA,hod.ra@rajalakshmi.edu.in,Robotics & Automation,501,RO23111,Introduction To Mechanical Systems,T,2,0,1,3.0,Robotics & Automation
-416,63,2,3,0,0,578,ME050,HOD,,HOD,RA,hod.ra@rajalakshmi.edu.in,Robotics & Automation,1891,CS23422,Python Programming for Machine Learning,L,0,4,0,2.0,Robotics & Automation
-401,63,2,3,0,0,563,ME213,Assistant Professor,,Mr.,Ramkumar S,ramkumar.s@rajalakshmi.edu.in,Robotics & Automation,1759,RO23311,Analog and Digital Electronics,T,3,0,0,3.0,Robotics & Automation
-404,67,3,5,0,0,563,ME213,Assistant Professor,,Mr.,Ramkumar S,ramkumar.s@rajalakshmi.edu.in,Robotics & Automation,1772,RO23521,Mobile Robotics laboratory,L,0,4,0,2.0,Robotics & Automation
-407,66,4,7,0,0,563,ME213,Assistant Professor,,Mr.,Ramkumar S,ramkumar.s@rajalakshmi.edu.in,Robotics & Automation,1781,RO23721,"Robotics & Automation Problem Solving using AI, ML and DL",L,0,4,0,2.0,Robotics & Automation
-454,67,3,5,0,0,572,ME248,Assistant Professor,,Dr.,Senthilrajan S,senthilrajan.r@rajalakshmi.edu.in,Robotics & Automation,1995,RO23C13,Farm Automation,T,3,0,0,3.0,Robotics & Automation
-408,63,2,3,0,0,572,ME248,Assistant Professor,,Dr.,Senthilrajan S,senthilrajan.r@rajalakshmi.edu.in,Robotics & Automation,1763,RO23332,Mechanics of Materials,LoT,3,2,0,4.0,Robotics & Automation
-450,66,4,7,0,0,570,ME244,Assistant Professor,,Mr.,Venugopal K,venugopal.k@rajalakshmi.edu.in,Robotics & Automation,1994,RO19D12,Advanced Manufacturing Systems,T,3,0,0,3.0,Robotics & Automation
-410,63,2,3,0,0,570,ME244,Assistant Professor,,Mr.,Venugopal K,venugopal.k@rajalakshmi.edu.in,Robotics & Automation,1762,RO23331,Elements of Manufacturing Process,LoT,2,2,0,3.0,Robotics & Automation
-413,66,4,7,0,0,570,ME244,Assistant Professor,,Mr.,Venugopal K,venugopal.k@rajalakshmi.edu.in,Robotics & Automation,1782,RO23722,Project Work (Phase - I),L,0,4,0,2.0,Robotics & Automation

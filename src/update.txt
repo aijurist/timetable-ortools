@@ -58,3 +58,10 @@ Example teacher_shit 1 on tuesday, then teacher_shift 2 on wed, then thur teache
 why did not assign a tutorial hour the data is attached check it
 
 
+T,       8:00 - 8:50,9:00 - 9:50,10:00 - 10:50,11:00 - 11:50,12:00 - 12:50,1:00  - 1:50,2:00 - 2:50,3:00 - 3:50,4:00 - 4:50,5:00 - 5:50,6:00 - 6:50
+L,       8:00 - 8:50,8:50 - 9:40, 9:50 - 10:40,10:40 - 11:30,11:50 - 12:40,12:40 - 1:30,1:50 - 2:40,2:40 - 3:30,3:50 - 4:40,4:40 - 5:30,5:30 - 6:20, 6:20 - 7:10
+tuesday, a1/L1,      f1/L2,       e1/L3,       d1/a2/L4,      a2/L5,        f2/L6,       e2/L7,     d2/a3/L8,   f3/L9,      e3/L10,     d3/L11,      L12
+wed,     b1/L12,     a1/L14,      f1/L15,      e1/b2/L24,     b2/L17,       a2/L18,      f2/L19,    e2/b3/L20,  a3/L21,     f3/L22,     e3/L23,      L24
+thur,    c1/L25,     b1/L26,      a1/L27,      f1/c2/L28,     c2/L29,       b2/L30,      a2/L31,    f2/c3/L32,  b3/L33,     a3/L34,     f3/L35,      L36
+fri,     d1/L37,     c1/L38,      b1/L39,      ta1/d2/L40,    d2/L41,       c2/L42,      b2/L43,    ta2/d4/L44, c3/L45,     b3/L46,     ta3/L47,     L46
+sat,     e1/L49,     d1/L50,      c1/L51,      tb1/e2/L52,    e2/L53,       d2/L54,      c2/L55,    tb2/e3/L56, d3/L57,     c3/L58,     tb3/L59,     L60

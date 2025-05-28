@@ -7,6 +7,8 @@ from datetime import datetime
 from ortools.sat.python import cp_model
 from src.constraints import MacroblockTimetableConstraints
 from src.utils.macroblock_visualizer import MacroblockTimetableVisualizer
+from src.utils.room_verifier import RoomVerifier
+from src.utils.room_visualizer import RoomVisualizer
 
 class MacroblockTimetableScheduler:
     def __init__(self, course_file, room_file):
@@ -21,26 +23,27 @@ class MacroblockTimetableScheduler:
         self.days = ["tuesday", "wed", "thur", "fri", "sat"]  # Excluding Monday
         self.num_days = len(self.days)
         
-        # Time slots (12 slots per day - Theory timing with proper breaks)
+        # Time slots (11 slots per day - Theory timing with proper breaks)
+        # Covers 8:00-19:00 as requested (11 slots: 8:00-8:50 to 6:00-6:50 PM)
         self.time_slots = [
             "8:00 - 8:50", "9:00 - 9:50", "10:00 - 10:50", "11:00 - 11:50",
             "12:00 - 12:50", "1:00 - 1:50", "2:00 - 2:50", "3:00 - 3:50", 
-            "4:00 - 4:50", "5:00 - 5:50", "6:00 - 6:50", "7:00 - 7:50"
+            "4:00 - 4:50", "5:00 - 5:50", "6:00 - 6:50"
         ]
         self.num_slots = len(self.time_slots)
         
-        # Macroblock structure from new format - 12 slots per day
+        # Macroblock structure from new format - 11 slots per day
         self.daily_schedule_structure = {
             "tuesday": ["a1/L1", "b1/L2", "c1/L3", "d1/L4", "e1/L5", "f1/L6", 
-                       "g1/L7", "a2/L8", "b2/L9", "c2/L10", "L11", 'L12'],
+                       "g1/L7", "a2/L8", "b2/L9", "c2/L10", "L11"],
             "wed": ["d2/L12", "e2/L14", "f2/L15", "g2/L16", "ta1/L17", "tb1/L18", 
-                   "tc1/L19", "td1/L20", "te1/L21", "tf1/L22", "L23", "L24"],
+                   "tc1/L19", "td1/L20", "te1/L21", "tf1/L22", "L23"],
             "thur": ["tg1/L25", "taa2/L26", "tbb2/L27", "tcc2/L28", "v1/L29", "v2/L30", 
-                    "a1/L31", "b1/L32", "c1/L33", "d1/L34", "L35", "L36"],
+                    "a1/L31", "b1/L32", "c1/L33", "d1/L34", "L35"],
             "fri": ["e1/L37", "f1/L38", "g1/L39", "ta2/L40", "tb2/L41", "tc2/L42", 
-                   "td2/L43", "te2/L44", "tf2/L45", "tg2/L46", "L47", "L48"],
+                   "td2/L43", "te2/L44", "tf2/L45", "tg2/L46", "L47"],
             "sat": ["a2/L49", "b2/L50", "c2/L51", "taa1/L52", "tbb1/L53", "tcc1/L54", 
-                   "d2/L55", "e2/L56", "f2/L57", "g2/L58", "L59", "L60"]
+                   "d2/L55", "e2/L56", "f2/L57", "g2/L58", "L59"]
         }
         
         # Process rooms - separate classrooms and labs
@@ -157,6 +160,18 @@ class MacroblockTimetableScheduler:
             # Generate visualizations
             self.generate_visualizations(schedule_result)
             
+            # Verify room distribution and check for overlaps using dedicated module
+            room_verifier = RoomVerifier(self.logger)
+            verification_result = room_verifier.verify_room_distribution_and_overlaps(schedule_result)
+            
+            # Generate room-specific visualizations
+            room_visualizer = RoomVisualizer(schedule_result['schedule_data'], self.output_dir, self.logger)
+            room_visualizer.generate_all_room_visualizations()
+            
+            # Generate detailed room verification report
+            verification_report_path = os.path.join(self.output_dir, 'room_verification_report.txt')
+            room_verifier.generate_room_verification_report(schedule_result, verification_report_path)
+            
             return True
         else:
             self.logger.warning(f"No solution found. Status: {status}")
@@ -221,7 +236,6 @@ class MacroblockTimetableScheduler:
             }
         
         # Map base assignments to specific time slots using the 6-case logic
-        room_counter = 0  # Simple room assignment strategy
         
         for teacher, teacher_assignments in base_assignments.items():
             for instance_id, assignment_info in teacher_assignments.items():
@@ -237,9 +251,18 @@ class MacroblockTimetableScheduler:
                 
                 # Convert slot assignments to schedule entries
                 for slot_assignment in slot_assignments:
-                    # Assign room (simple round-robin for now)
-                    room_id = list(classroom_info.keys())[room_counter % len(classroom_info)]
-                    room_counter += 1
+                    # FIXED: Proper room assignment with conflict checking
+                    room_id = self._assign_room_with_constraints(
+                        slot_assignment['day'], 
+                        slot_assignment['slot_index'], 
+                        teacher, 
+                        classroom_info,
+                        schedule_data
+                    )
+                    
+                    if room_id is None:
+                        self.logger.warning(f"Could not assign room for {teacher} on {slot_assignment['day']} slot {slot_assignment['slot_index']}")
+                        continue
                     
                     teacher_info = teacher_info_cache[teacher]
                     room_details = classroom_info[room_id]
@@ -299,7 +322,8 @@ class MacroblockTimetableScheduler:
                 for part in parts:
                     if part in ['a1', 'a2', 'b1', 'b2', 'c1', 'c2', 'd1', 'd2', 'e1', 'e2', 'f1', 'f2', 'g1', 'g2',
                                'ta1', 'ta2', 'tb1', 'tb2', 'tc1', 'tc2', 'td1', 'td2', 'te1', 'te2', 'tf1', 'tf2', 'tg1', 'tg2',
-                               'taa1', 'taa2', 'tbb1', 'tbb2', 'tcc1', 'tcc2', 'v1', 'v2']:
+                               'taa1', 'taa2', 'tbb1', 'tbb2', 'tcc1', 'tcc2']:
+                        # Exclude v1 and v2 as they are not assigned to any courses
                         theory_blocks.append(part)
                 
                 # Collect slots for base block
@@ -417,8 +441,96 @@ class MacroblockTimetableScheduler:
                     'slot_type': 'Lecture', 'macroblock': base_block
                 })
         
+        elif lecture_hours == 4 and tutorial_hours >= 1:
+            # Case 7: 4L+1T or 4L+2T → Use multiple blocks if needed
+            # Allocate 4 lecture hours from base blocks and tutorial blocks
+            lecture_slots_used = 0
+            for i, slot in enumerate(base_slots[:2]):  # Use base slots first
+                slot_assignments.append({
+                    'day': slot['day'], 'slot_index': slot['slot_idx'],
+                    'time_interval': slot['time_interval'],
+                    'slot_type': 'Lecture', 'macroblock': base_block
+                })
+                lecture_slots_used += 1
+            
+            # Use tutorial slots for additional lectures if needed
+            for slot in tutorial_slots[:lecture_hours - lecture_slots_used]:
+                slot_assignments.append({
+                    'day': slot['day'], 'slot_index': slot['slot_idx'],
+                    'time_interval': slot['time_interval'],
+                    'slot_type': 'Lecture', 'macroblock': slot['block']
+                })
+                lecture_slots_used += 1
+            
+            # Assign actual tutorial hours
+            remaining_tutorial_slots = tutorial_slots[lecture_hours - 2:] + extended_tutorial_slots
+            for i, slot in enumerate(remaining_tutorial_slots[:tutorial_hours]):
+                slot_assignments.append({
+                    'day': slot['day'], 'slot_index': slot['slot_idx'],
+                    'time_interval': slot['time_interval'],
+                    'slot_type': 'Tutorial', 'macroblock': slot['block']
+                })
+        
+        elif lecture_hours == 5 and tutorial_hours >= 1:
+            # Case 8: 5L+1T or 5L+2T → Use all available slots
+            # This handles courses like EC23511 mentioned in the query
+            lecture_slots_used = 0
+            
+            # Use all base slots for lectures
+            for slot in base_slots:
+                slot_assignments.append({
+                    'day': slot['day'], 'slot_index': slot['slot_idx'],
+                    'time_interval': slot['time_interval'],
+                    'slot_type': 'Lecture', 'macroblock': base_block
+                })
+                lecture_slots_used += 1
+            
+            # Use tutorial slots for additional lectures
+            tutorial_slots_for_lectures = lecture_hours - lecture_slots_used
+            for slot in tutorial_slots[:tutorial_slots_for_lectures]:
+                slot_assignments.append({
+                    'day': slot['day'], 'slot_index': slot['slot_idx'],
+                    'time_interval': slot['time_interval'],
+                    'slot_type': 'Lecture', 'macroblock': slot['block']
+                })
+                lecture_slots_used += 1
+            
+            # Assign actual tutorial hours using remaining tutorial and extended tutorial slots
+            remaining_tutorial_slots = tutorial_slots[tutorial_slots_for_lectures:] + extended_tutorial_slots
+            for i, slot in enumerate(remaining_tutorial_slots[:tutorial_hours]):
+                slot_assignments.append({
+                    'day': slot['day'], 'slot_index': slot['slot_idx'],
+                    'time_interval': slot['time_interval'],
+                    'slot_type': 'Tutorial', 'macroblock': slot['block']
+                })
+                
+            self.logger.info(f"Allocated {lecture_hours} lectures and {tutorial_hours} tutorials for 5L+{tutorial_hours}T course")
+        
+        elif lecture_hours == 2 and tutorial_hours == 2:
+            # Case 9: 2L+2T → a1 + a1 + ta1 + taa1 (ta1 as tutorial, taa1 as tutorial)
+            for i, slot in enumerate(base_slots[:2]):  # Take first 2 base slots as lectures
+                slot_assignments.append({
+                    'day': slot['day'], 'slot_index': slot['slot_idx'],
+                    'time_interval': slot['time_interval'],
+                    'slot_type': 'Lecture', 'macroblock': base_block
+                })
+            
+            for slot in tutorial_slots[:1]:  # Take first tutorial slot as tutorial
+                slot_assignments.append({
+                    'day': slot['day'], 'slot_index': slot['slot_idx'],
+                    'time_interval': slot['time_interval'],
+                    'slot_type': 'Tutorial', 'macroblock': slot['block']
+                })
+            
+            for slot in extended_tutorial_slots[:1]:  # Take first extended tutorial as tutorial
+                slot_assignments.append({
+                    'day': slot['day'], 'slot_index': slot['slot_idx'],
+                    'time_interval': slot['time_interval'],
+                    'slot_type': 'Tutorial', 'macroblock': slot['block']
+                })
+        
         else:
-            # General case - allocate flexibly
+            # General case - allocate flexibly for any other combinations
             for i, slot in enumerate(base_slots[:lecture_hours]):
                 slot_assignments.append({
                     'day': slot['day'], 'slot_index': slot['slot_idx'],
@@ -432,6 +544,8 @@ class MacroblockTimetableScheduler:
                     'time_interval': slot['time_interval'],
                     'slot_type': 'Tutorial', 'macroblock': slot['block']
                 })
+            
+            self.logger.info(f"General case: Allocated {len(base_slots[:lecture_hours])} lectures and {len(tutorial_slots[:tutorial_hours])} tutorials")
         
         self.logger.info(f"Case result: {len(slot_assignments)} slot assignments for instance {instance_data['id']}")
         return slot_assignments
@@ -542,7 +656,8 @@ class MacroblockTimetableScheduler:
                        'g1', 'g2', 'ta1', 'ta2', 'tb1', 'tb2',
                        'tc1', 'tc2', 'td1', 'td2', 'te1', 'te2',
                        'tf1', 'tf2', 'tg1', 'tg2', 'taa1', 'taa2',
-                       'tbb1', 'tbb2', 'tcc1', 'tcc2', 'v1', 'v2']:
+                       'tbb1', 'tbb2', 'tcc1', 'tcc2']:
+                # Exclude v1 and v2 as they are not assigned to any courses
                 theory_blocks.append(part)
         
         # Check each course instance for this teacher
@@ -575,7 +690,7 @@ class MacroblockTimetableScheduler:
                             elif block in ['ta1', 'ta2', 'tb1', 'tb2', 'tc1', 'tc2', 
                                           'td1', 'td2', 'te1', 'te2', 'tf1', 'tf2',
                                           'tg1', 'tg2', 'taa1', 'taa2', 'tbb1', 'tbb2',
-                                          'tcc1', 'tcc2', 'v1', 'v2']:
+                                          'tcc1', 'tcc2']:
                                 # Tutorial block - find parent block
                                 if block.startswith('taa'):
                                     parent_block = 'a' + block[3:]  # taa1 -> a1, taa2 -> a2
@@ -583,8 +698,6 @@ class MacroblockTimetableScheduler:
                                     parent_block = 'b' + block[3:]  # tbb1 -> b1, tbb2 -> b2
                                 elif block.startswith('tcc'):
                                     parent_block = 'c' + block[3:]  # tcc1 -> c1, tcc2 -> c2
-                                elif block.startswith('v'):
-                                    parent_block = block  # v1 -> v1 (standalone tutorial block)
                                 else:
                                     parent_block = block[1:]  # Remove 't' prefix: ta1 -> a1
                                 
@@ -862,4 +975,41 @@ class MacroblockTimetableScheduler:
             self.logger.warning(f"Could not generate visualizations due to missing dependencies: {e}")
         except Exception as e:
             self.logger.error(f"Error generating visualizations: {e}")
-            self.logger.exception("Visualization error details") 
+            self.logger.exception("Visualization error details")
+
+    def _assign_room_with_constraints(self, day, slot_index, teacher, classroom_info, schedule_data):
+        """
+        Simplified room assignment with only time slot conflict checking.
+        
+        SIMPLIFIED CONSTRAINT: Only prevent room conflicts at the same time slot.
+        - A room cannot be used by multiple courses at the same time slot
+        - Same room CAN be used by different courses at different time slots
+        - No macroblock linking required
+        """
+        # Get all existing assignments for this specific day and slot
+        existing_assignments = [
+            item for item in schedule_data 
+            if item['day'] == day and item['slot_index'] == slot_index
+        ]
+        
+        # Get rooms already occupied in this specific time slot
+        occupied_rooms = {item['room_id'] for item in existing_assignments}
+        
+        # Find available rooms (not occupied in this specific time slot)
+        available_rooms = [
+            room_id for room_id in classroom_info.keys() 
+            if room_id not in occupied_rooms
+        ]
+        
+        if not available_rooms:
+            self.logger.warning(f"No available rooms for {day} slot {slot_index}")
+            return None
+        
+        # Select first available room (simple assignment)
+        selected_room = available_rooms[0]
+        
+        self.logger.debug(f"Assigned room {selected_room} to teacher {teacher} for {day} slot {slot_index}")
+        return selected_room
+    
+    # NOTE: verify_room_distribution_and_overlaps() function has been moved to 
+    # src/utils/room_verifier.py for better modularity and reusability 

@@ -209,10 +209,13 @@ class SemesterGroupingAnalyzer:
         # 4. Student Choice Optimization
         self._plot_student_choices(choice_analysis)
         
-        # 5. Constraint Violations Summary
+        # 5. 5th Semester CSE Student Choices
+        self._plot_5th_sem_cse_choices(choice_analysis)
+        
+        # 6. Constraint Violations Summary
         self._plot_violations_summary(macroblock_analysis)
         
-        # 6. Detailed Macroblock Grid
+        # 7. Detailed Macroblock Grid
         self._plot_macroblock_grid(macroblock_analysis)
 
     def _plot_macroblock_distribution(self, macroblock_analysis):
@@ -486,6 +489,285 @@ class SemesterGroupingAnalyzer:
         
         plt.tight_layout()
         plt.savefig(os.path.join(self.output_dir, 'student_choice_analysis.png'), dpi=300, bbox_inches='tight')
+        plt.close()
+
+    def _plot_5th_sem_cse_choices(self, choice_analysis):
+        """Plot course choices specifically for 5th semester Computer Science Engineering students."""
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(20, 16))
+        
+        # Define main theory blocks only (exclude tutorial blocks)
+        main_theory_blocks = ['a1', 'a2', 'b1', 'b2', 'c1', 'c2', 'd1', 'd2', 'e1', 'e2', 'f1', 'f2', 'g1', 'g2']
+        
+        # Filter for 5th semester Computer Science Engineering courses
+        cse_5th_sem_data = []
+        cse_key = None
+        
+        # Find the key for 5th semester CSE - use exact department name
+        for (semester, dept), courses in choice_analysis.items():
+            if (str(semester) == '5' and 
+                dept == 'Computer Science & Engineering'):  # Use exact match
+                cse_key = (semester, dept)
+                break
+        
+        if cse_key and cse_key in choice_analysis:
+            for course_code, choice_info in choice_analysis[cse_key].items():
+                # Get additional course information from schedule_df
+                course_schedule = self.schedule_df[self.schedule_df['course_code'] == course_code]
+                course_name = choice_info.get('course_name', course_code)
+                
+                # Filter macroblock distribution to only include main theory blocks
+                filtered_macroblock_dist = {}
+                all_teachers = set()
+                
+                for macroblock, teachers in choice_info['macroblock_distribution'].items():
+                    if macroblock in main_theory_blocks:
+                        filtered_macroblock_dist[macroblock] = teachers
+                        all_teachers.update(teachers)
+                
+                macroblocks = list(filtered_macroblock_dist.keys())
+                
+                cse_5th_sem_data.append({
+                    'Course Code': course_code,
+                    'Course Name': course_name,
+                    'Teachers Available': len(all_teachers),
+                    'Macroblocks Available': len(macroblocks),
+                    'Choice Score': len(all_teachers) * len(macroblocks),
+                    'Teacher Options': ', '.join([self._get_teacher_name(t) for t in all_teachers]),
+                    'Macroblock Options': ', '.join(sorted(macroblocks)),
+                    'Macroblock Distribution': filtered_macroblock_dist
+                })
+        
+        # If no data found in choice_analysis, try to get directly from schedule_df
+        if not cse_5th_sem_data and hasattr(self, 'schedule_df') and not self.schedule_df.empty:
+            # Get 5th semester CSE courses directly from schedule
+            cse_5th_schedule = self.schedule_df[
+                (self.schedule_df['semester'] == 5) & 
+                (self.schedule_df['course_dept'] == 'Computer Science & Engineering')
+            ]
+            
+            if not cse_5th_schedule.empty:
+                for course_code in cse_5th_schedule['course_code'].unique():
+                    course_data = cse_5th_schedule[cse_5th_schedule['course_code'] == course_code]
+                    course_name = course_data['course_name'].iloc[0]
+                    
+                    # Filter to only main theory blocks
+                    course_data_filtered = course_data[course_data['macroblock'].isin(main_theory_blocks)]
+                    
+                    teachers = course_data_filtered['teacher_id'].unique()
+                    macroblocks = course_data_filtered['macroblock'].unique()
+                    
+                    # Create macroblock distribution (only main blocks)
+                    macroblock_dist = {}
+                    for macroblock in macroblocks:
+                        mb_data = course_data_filtered[course_data_filtered['macroblock'] == macroblock]
+                        macroblock_dist[macroblock] = mb_data['teacher_id'].unique().tolist()
+                    
+                    cse_5th_sem_data.append({
+                        'Course Code': course_code,
+                        'Course Name': course_name,
+                        'Teachers Available': len(teachers),
+                        'Macroblocks Available': len(macroblocks),
+                        'Choice Score': len(teachers) * len(macroblocks),
+                        'Teacher Options': ', '.join([self._get_teacher_name(t) for t in teachers]),
+                        'Macroblock Options': ', '.join(sorted(macroblocks)),
+                        'Macroblock Distribution': macroblock_dist
+                    })
+        
+        if cse_5th_sem_data:
+            cse_df = pd.DataFrame(cse_5th_sem_data)
+            
+            # 1. Course-wise teacher availability
+            bars1 = ax1.bar(range(len(cse_df)), cse_df['Teachers Available'], 
+                           color='lightblue', alpha=0.8, edgecolor='navy')
+            ax1.set_title('Teacher Availability for 5th Sem CSE Courses', fontsize=14, fontweight='bold')
+            ax1.set_xlabel('Courses')
+            ax1.set_ylabel('Number of Teachers Available')
+            ax1.set_xticks(range(len(cse_df)))
+            ax1.set_xticklabels(cse_df['Course Code'], rotation=45, ha='right')
+            
+            # Add value labels on bars
+            for i, bar in enumerate(bars1):
+                height = bar.get_height()
+                ax1.text(bar.get_x() + bar.get_width()/2., height + 0.05,
+                        f'{int(height)}', ha='center', va='bottom', fontweight='bold')
+            
+            # 2. Course-wise macroblock availability
+            bars2 = ax2.bar(range(len(cse_df)), cse_df['Macroblocks Available'], 
+                           color='lightgreen', alpha=0.8, edgecolor='darkgreen')
+            ax2.set_title('Main Macroblock Availability for 5th Sem CSE Courses', fontsize=14, fontweight='bold')
+            ax2.set_xlabel('Courses')
+            ax2.set_ylabel('Number of Main Macroblocks Available')
+            ax2.set_xticks(range(len(cse_df)))
+            ax2.set_xticklabels(cse_df['Course Code'], rotation=45, ha='right')
+            
+            # Add value labels on bars
+            for i, bar in enumerate(bars2):
+                height = bar.get_height()
+                ax2.text(bar.get_x() + bar.get_width()/2., height + 0.05,
+                        f'{int(height)}', ha='center', va='bottom', fontweight='bold')
+            
+            # 3. Detailed Macroblock Distribution Heatmap (only main blocks)
+            ax3.set_title('Main Macroblock Distribution for Each Course\n(Theory Blocks: a1-g2 only)', fontsize=14, fontweight='bold')
+            
+            # Create a matrix showing which main blocks each course uses
+            all_blocks = set()
+            for _, row in cse_df.iterrows():
+                all_blocks.update(row['Macroblock Distribution'].keys())
+            
+            # Filter to only main theory blocks and sort them properly
+            all_blocks = [block for block in main_theory_blocks if block in all_blocks]
+            
+            # Create matrix
+            matrix = []
+            course_labels = []
+            
+            for _, row in cse_df.iterrows():
+                course_labels.append(f"{row['Course Code']}\n{row['Course Name'][:20]}...")
+                block_row = []
+                for block in all_blocks:
+                    if block in row['Macroblock Distribution']:
+                        # Count how many teachers for this course in this block
+                        teacher_count = len(row['Macroblock Distribution'][block])
+                        block_row.append(teacher_count)
+                    else:
+                        block_row.append(0)
+                matrix.append(block_row)
+            
+            # Plot heatmap
+            if matrix and all_blocks:
+                matrix = np.array(matrix)
+                im = ax3.imshow(matrix, cmap='YlOrRd', aspect='auto')
+                
+                # Set ticks and labels
+                ax3.set_xticks(range(len(all_blocks)))
+                ax3.set_xticklabels(all_blocks, rotation=45, ha='right')
+                ax3.set_yticks(range(len(course_labels)))
+                ax3.set_yticklabels(course_labels)
+                
+                # Add text annotations
+                for i in range(len(course_labels)):
+                    for j in range(len(all_blocks)):
+                        if matrix[i, j] > 0:
+                            ax3.text(j, i, f'{int(matrix[i, j])}', 
+                                   ha='center', va='center', fontweight='bold', color='black')
+                
+                # Add colorbar
+                plt.colorbar(im, ax=ax3, label='Number of Teachers')
+            else:
+                ax3.text(0.5, 0.5, 'No main macroblock distribution data', 
+                        ha='center', va='center', transform=ax3.transAxes)
+            
+            # 4. Detailed course information table with main block distribution
+            ax4.axis('tight')
+            ax4.axis('off')
+            
+            # Create a detailed summary table
+            table_data = []
+            for _, row in cse_df.iterrows():
+                # Format main macroblock distribution only
+                block_dist = row['Macroblock Distribution']
+                block_summary = []
+                for block, teachers in sorted(block_dist.items()):
+                    if block in main_theory_blocks:  # Only include main blocks
+                        block_summary.append(f"{block}({len(teachers)}T)")
+                
+                blocks_text = ', '.join(block_summary[:8])  # Limit to first 8 blocks
+                if len(block_summary) > 8:
+                    blocks_text += f"... +{len(block_summary)-8} more"
+                
+                table_data.append([
+                    row['Course Code'],
+                    row['Course Name'][:30] + '...' if len(row['Course Name']) > 30 else row['Course Name'],
+                    f"{row['Teachers Available']}",
+                    f"{row['Macroblocks Available']}",
+                    blocks_text
+                ])
+            
+            table = ax4.table(cellText=table_data,
+                             colLabels=['Code', 'Course Name', 'Teachers', 'Main Blocks', 'Main Block Distribution (Block(Teachers))'],
+                             cellLoc='left',
+                             loc='center',
+                             bbox=[0, 0, 1, 1])
+            
+            table.auto_set_font_size(False)
+            table.set_fontsize(8)
+            table.scale(1, 2.5)
+            
+            # Style the table
+            for i in range(len(table_data) + 1):
+                for j in range(5):
+                    cell = table[(i, j)]
+                    if i == 0:  # Header row
+                        cell.set_facecolor('#4CAF50')
+                        cell.set_text_props(weight='bold', color='white')
+                    else:
+                        if i % 2 == 0:
+                            cell.set_facecolor('#F5F5F5')
+                        else:
+                            cell.set_facecolor('#FFFFFF')
+            
+            ax4.set_title('5th Semester CSE Course - Main Block Distribution Details', fontsize=14, fontweight='bold', pad=20)
+            
+            # Add summary statistics with main block distribution info
+            avg_teachers = cse_df['Teachers Available'].mean()
+            avg_blocks = cse_df['Macroblocks Available'].mean()
+            avg_flexibility = cse_df['Choice Score'].mean()
+            
+            # Create detailed main block distribution summary
+            block_usage_summary = {}
+            for _, row in cse_df.iterrows():
+                for block in row['Macroblock Distribution'].keys():
+                    if block in main_theory_blocks:  # Only count main blocks
+                        if block not in block_usage_summary:
+                            block_usage_summary[block] = 0
+                        block_usage_summary[block] += 1
+            
+            most_used_blocks = sorted(block_usage_summary.items(), key=lambda x: x[1], reverse=True)[:5]
+            
+            summary_text = f"""
+Summary for 5th Semester Computer Science Engineering Students:
+
+📚 Total Courses Available: {len(cse_df)}
+👨‍🏫 Average Teachers per Course: {avg_teachers:.1f}
+🏗️ Average Main Macroblocks per Course: {avg_blocks:.1f}
+⭐ Average Flexibility Score: {avg_flexibility:.1f}
+
+Most Used Main Macroblocks:
+            """
+            
+            for block, count in most_used_blocks:
+                summary_text += f"\n  • {block}: Used by {count} course(s)"
+            
+            summary_text += f"\n\nCourse Details (Main Blocks Only):"
+            # Add course details with their main blocks only
+            for _, row in cse_df.iterrows():
+                main_blocks_only = [block for block in row['Macroblock Distribution'].keys() if block in main_theory_blocks][:3]
+                summary_text += f"\n• {row['Course Code']}: {', '.join(main_blocks_only)}"
+                if len([block for block in row['Macroblock Distribution'].keys() if block in main_theory_blocks]) > 3:
+                    summary_text += f" (+{len([block for block in row['Macroblock Distribution'].keys() if block in main_theory_blocks])-3} more)"
+            
+            summary_text += f"\n\nNote: Only showing main theory blocks (a1-g2)."
+            summary_text += f"\nTutorial blocks (ta1, taa1, etc.) are derived from main blocks."
+            
+            # Add this as a text box
+            fig.text(0.02, 0.02, summary_text, fontsize=9, 
+                    bbox=dict(boxstyle="round,pad=0.5", facecolor='lightblue', alpha=0.7),
+                    verticalalignment='bottom')
+            
+        else:
+            # No 5th semester CSE data found
+            for ax in [ax1, ax2, ax3, ax4]:
+                ax.text(0.5, 0.5, 'No 5th Semester CSE Data Found', 
+                       ha='center', va='center', transform=ax.transAxes, 
+                       fontsize=16, color='red')
+                ax.set_title('5th Semester CSE Course Analysis')
+        
+        plt.suptitle('5th Semester Computer Science Engineering - Main Block Distribution Analysis\n(Theory Blocks: a1, a2, b1, b2, c1, c2, d1, d2, e1, e2, f1, f2, g1, g2)', 
+                     fontsize=16, fontweight='bold', y=0.95)
+        plt.tight_layout()
+        plt.subplots_adjust(bottom=0.35)  # Make room for summary text
+        plt.savefig(os.path.join(self.output_dir, '5th_sem_cse_student_choices.png'), 
+                   dpi=300, bbox_inches='tight')
         plt.close()
 
     def _plot_violations_summary(self, macroblock_analysis):

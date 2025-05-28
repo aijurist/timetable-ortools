@@ -14,20 +14,22 @@ class MacroblockTimetableVisualizer:
         # Macroblock days structure
         self.days = ["tuesday", "wed", "thur", "fri", "sat"]
         
-        # Time slots (12 slots per day - Theory timing with proper breaks)
+        # Time slots (11 slots per day - Theory timing with proper breaks)
+        # Covers 8:00-19:00 as requested (11 slots: 8:00-8:50 to 6:00-6:50 PM)
         self.time_slots = [
             "8:00 - 8:50", "9:00 - 9:50", "10:00 - 10:50", "11:00 - 11:50",
             "12:00 - 12:50", "1:00 - 1:50", "2:00 - 2:50", "3:00 - 3:50", 
-            "4:00 - 4:50", "5:00 - 5:50", "6:00 - 6:50", "7:00 - 7:50"
+            "4:00 - 4:50", "5:00 - 5:50", "6:00 - 6:50"
         ]
         
         # Define macroblock groups (no shift separation since they are merged)
         self.theory_blocks = ['a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2']
         
         # Tutorial blocks for 3rd lecture hour (ta1, tb1, tc1 etc. are used as 3rd hour for 3-lecture courses)
+        # v1 and v2 are excluded as they are not assigned to any courses
         self.tutorial_blocks = ['ta1', 'tb1', 'tc1', 'td1', 'te1', 'tf1', 'tg1', 
                                'ta2', 'tb2', 'tc2', 'td2', 'te2', 'tf2', 'tg2',
-                               'taa1', 'taa2', 'tbb1', 'tbb2', 'tcc1', 'tcc2', 'v1', 'v2']
+                               'taa1', 'taa2', 'tbb1', 'tbb2', 'tcc1', 'tcc2']
         
         if not self.schedule_df.empty:
             # Create color map for courses

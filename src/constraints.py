@@ -16,10 +16,11 @@ class MacroblockTimetableConstraints:
         self.num_days = len(self.days)
         
         # Time slots based on theory class structure (T slots - proper hourly timing)
+        # Covers 8:00-19:00 as requested (11 slots: 8:00-8:50 to 18:00-18:50)
         self.time_slots = [
             "8:00 - 8:50", "9:00 - 9:50", "10:00 - 10:50", "11:00 - 11:50",
             "12:00 - 12:50", "1:00 - 1:50", "2:00 - 2:50", "3:00 - 3:50", 
-            "4:00 - 4:50", "5:00 - 5:50", "6:00 - 6:50", "7:00 - 7:50"
+            "4:00 - 4:50", "5:00 - 5:50", "6:00 - 6:50"
         ]
         self.num_slots = len(self.time_slots)
         
@@ -31,18 +32,18 @@ class MacroblockTimetableConstraints:
         ]
         
         # Simplified macroblock structure - no separate macro shifts or teacher shifts
-        # All blocks are available to all teachers
+        # All blocks are available to all teachers (11 slots to match time_slots)
         self.daily_schedule_structure = {
             "tuesday": ["a1/L1", "b1/L2", "c1/L3", "d1/L4", "e1/L5", "f1/L6", 
-                       "g1/L7", "a2/L8", "b2/L9", "c2/L10", "L11", 'L12'],
+                       "g1/L7", "a2/L8", "b2/L9", "c2/L10", "L11"],
             "wed": ["d2/L12", "e2/L14", "f2/L15", "g2/L16", "ta1/L17", "tb1/L18", 
-                   "tc1/L19", "td1/L20", "te1/L21", "tf1/L22", "L23", "L24"],
+                   "tc1/L19", "td1/L20", "te1/L21", "tf1/L22", "L23"],
             "thur": ["tg1/L25", "taa2/L26", "tbb2/L27", "tcc2/L28", "v1/L29", "v2/L30", 
-                    "a1/L31", "b1/L32", "c1/L33", "d1/L34", "L35", "L36"],
+                    "a1/L31", "b1/L32", "c1/L33", "d1/L34", "L35"],
             "fri": ["e1/L37", "f1/L38", "g1/L39", "ta2/L40", "tb2/L41", "tc2/L42", 
-                   "td2/L43", "te2/L44", "tf2/L45", "tg2/L46", "L47", "L48"],
+                   "td2/L43", "te2/L44", "tf2/L45", "tg2/L46", "L47"],
             "sat": ["a2/L49", "b2/L50", "c2/L51", "taa1/L52", "tbb1/L53", "tcc1/L54", 
-                   "d2/L55", "e2/L56", "f2/L57", "g2/L58", "L59", "L60"]
+                   "d2/L55", "e2/L56", "f2/L57", "g2/L58", "L59"]
         }
         
         # Define all available blocks (no shift separation)
@@ -145,31 +146,45 @@ class MacroblockTimetableConstraints:
                 self.macroblock_assignments[teacher][instance_id] = {}
                 
                 # Create macroblock choice variables for base blocks only (a1, a2, b1, b2, etc.)
-                # NO detailed slot allocation - just block assignment
-                for block in self.theory_blocks:
+                # EXCLUDE v1 and v2 from assignments - they should not be assigned to any courses
+                allowed_theory_blocks = [block for block in self.theory_blocks if block not in ['v1', 'v2']]
+                
+                for block in allowed_theory_blocks:
                     self.macroblock_assignments[teacher][instance_id][f'{block}_chosen'] = (
                         self.model.NewBoolVar(f'teacher_{teacher}_instance_{instance_id}_{block}_chosen'))
                 
-                # Apply simple constraint: 3L+1T courses can only use blocks with extended tutorial support
-                if lecture_hours == 3 and tutorial_hours == 1:
-                    # Only allow assignment to blocks that have extended tutorial support (a1, a2, b1, b2, c1, c2)
-                    blocks_with_extended_tutorials = ['a1', 'a2', 'b1', 'b2', 'c1', 'c2']
-                    blocks_without_extended_tutorials = [block for block in self.theory_blocks 
-                                                       if block not in blocks_with_extended_tutorials]
+                # PRIORITY CONSTRAINT: Courses requiring extended tutorial support should get priority for a1-c2 blocks
+                blocks_with_extended_tutorials = ['a1', 'a2', 'b1', 'b2', 'c1', 'c2']
+                blocks_without_extended_tutorials = [block for block in allowed_theory_blocks 
+                                                   if block not in blocks_with_extended_tutorials]
+                
+                # Priority cases that need extended tutorial support (taa1, taa2, tbb1, tbb2, tcc1, tcc2)
+                if ((lecture_hours == 4) or 
+                    (lecture_hours == 3 and tutorial_hours == 1) or 
+                    (lecture_hours == 2 and tutorial_hours == 2)):
                     
-                    # Prohibit assignment to blocks without extended tutorial support
+                    # STRICT constraint: These courses can ONLY use blocks with extended tutorial support
                     for block in blocks_without_extended_tutorials:
                         self.model.Add(
                             self.macroblock_assignments[teacher][instance_id][f'{block}_chosen'] == 0)
                     
-                    logger.info(f"3L+1T course {instance_id} restricted to blocks with extended tutorial support: {blocks_with_extended_tutorials}")
+                    logger.info(f"Priority course {instance_id} ({lecture_hours}L+{tutorial_hours}T) restricted to blocks with extended tutorial support: {blocks_with_extended_tutorials}")
+                
+                # Secondary priority: Other courses with tutorial hours > 0 can use any block with basic tutorial support
+                elif tutorial_hours > 0:
+                    # These courses can use any block with at least basic tutorial support (all blocks have ta1/ta2 support)
+                    logger.info(f"Course {instance_id} with {lecture_hours}L+{tutorial_hours}T can use any block with basic tutorial support")
+                
+                # Standard courses (lectures only) can use any available block
+                else:
+                    logger.info(f"Course {instance_id} with {lecture_hours}L+0T can use any available block")
                 
                 # Ensure exactly one block is chosen per course instance (if it has theory hours)
                 if lecture_hours > 0 or tutorial_hours > 0:
                     block_choices = []
                     
-                    # Collect all possible block choices
-                    for block in self.theory_blocks:
+                    # Collect all possible block choices (excluding v1, v2)
+                    for block in allowed_theory_blocks:
                         block_choices.append(
                             self.macroblock_assignments[teacher][instance_id][f'{block}_chosen'])
                     
@@ -177,6 +192,9 @@ class MacroblockTimetableConstraints:
                     self.model.Add(sum(block_choices) == 1)  # Exactly one block
                     
                     logger.info(f"Course instance {instance_id} (Teacher {teacher}, {lecture_hours}L+{tutorial_hours}T) - simplified macroblock assignment")
+        
+        # Apply teacher course instance overlap constraint
+        self._apply_teacher_course_instance_overlap_constraint()
         
         # Apply semester and department grouping constraints (simplified)
         self._apply_semester_grouping_constraints()
@@ -194,6 +212,49 @@ class MacroblockTimetableConstraints:
         
         return True
     
+    def _apply_teacher_course_instance_overlap_constraint(self):
+        """
+        NEW Constraint: Teacher Course Instance Overlap Prevention
+        Prevents the same teacher from having multiple different course instances 
+        assigned to overlapping time slots within the same macroblock.
+        """
+        logger.info("Applying teacher course instance overlap constraint...")
+        
+        for teacher in self.teachers:
+            if teacher not in self.teacher_course_assignments or len(self.teacher_course_assignments[teacher]) <= 1:
+                continue  # Skip if teacher has 0 or 1 course instances
+            
+            course_instances = self.teacher_course_assignments[teacher]
+            
+            # For each pair of different course instances for the same teacher
+            for i in range(len(course_instances)):
+                for j in range(i + 1, len(course_instances)):
+                    instance1 = course_instances[i]
+                    instance2 = course_instances[j]
+                    
+                    instance1_id = instance1['id']
+                    instance2_id = instance2['id']
+                    
+                    # Check if both instances have macroblock assignments
+                    if (teacher in self.macroblock_assignments and 
+                        instance1_id in self.macroblock_assignments[teacher] and 
+                        instance2_id in self.macroblock_assignments[teacher]):
+                        
+                        # For each macroblock, ensure at most one of the two instances is assigned
+                        allowed_theory_blocks = [block for block in self.theory_blocks if block not in ['v1', 'v2']]
+                        
+                        for block in allowed_theory_blocks:
+                            instance1_block_var = self.macroblock_assignments[teacher][instance1_id].get(f'{block}_chosen')
+                            instance2_block_var = self.macroblock_assignments[teacher][instance2_id].get(f'{block}_chosen')
+                            
+                            if instance1_block_var is not None and instance2_block_var is not None:
+                                # At most one of the two instances can be assigned to this block
+                                self.model.Add(instance1_block_var + instance2_block_var <= 1)
+                        
+                        logger.info(f"Applied overlap constraint for Teacher {teacher}: instances {instance1_id} and {instance2_id} cannot be in same macroblock")
+        
+        logger.info("Teacher course instance overlap constraint applied successfully")
+    
     def _apply_macroblock_span_constraints(self, teacher, instance, teacher_theory_assignments):
         """SIMPLIFIED: No detailed span constraints - handled in post-processing."""
         # This function is now simplified - detailed allocation moved to post-processing
@@ -208,13 +269,12 @@ class MacroblockTimetableConstraints:
     
     # REMOVED: All detailed case allocation functions moved to post-processing
     
-
-    
-
-    
     def _apply_semester_grouping_constraints(self):
         """Apply constraints to group courses by semester and department with teacher diversity."""
         logger.info("Applying semester and department grouping constraints...")
+        
+        # Exclude v1 and v2 from semester grouping as well
+        allowed_theory_blocks = [block for block in self.theory_blocks if block not in ['v1', 'v2']]
         
         for (semester, dept), course_group in self.semester_course_groups.items():
             if len(course_group) <= 1:
@@ -228,8 +288,8 @@ class MacroblockTimetableConstraints:
                     course_code_groups[course_code] = []
                 course_code_groups[course_code].append(item)
             
-            # For each macroblock, apply diversity constraints
-            for block in self.theory_blocks:
+            # For each macroblock, apply diversity constraints (excluding v1, v2)
+            for block in allowed_theory_blocks:
                 
                 # Collect all course instances that could be assigned to this block
                 block_assignments = []
