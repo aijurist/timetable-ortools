@@ -10,7 +10,7 @@ id,student_count,academic_year,semester,requires_special_scheduling,is_assistant
 274,70,3,5,0,0,195,CS203,Ms.,Jaeyalakshmi M,jaeyalakshmi.m@rajalakshmi.edu.in,1868,CS23533,Foundations of Artificial Intelligence,LoT,3,2,0,4.0,Computer Science & Engineering
 214,70,2,3,0,0,196,CS251,Mr.,Dr.P.Shanmugam,shanmugam.p@rajalakshmi.edu.in,1543,CS23331,Design and Analysis of Algorithms,LoT,3,2,0,4.0,Computer Science & Engineering
 259,70,3,5,0,0,196,CS251,Mr.,Dr.P.Shanmugam,shanmugam.p@rajalakshmi.edu.in,1554,CS23512,Fundamentals of Mobile Computing,T,3,0,0,3.0,Computer Science & Engineering
-268,70,2,3,0,0,197,CS171,Mrs.,S.Ponmani,ponmani.s@rajalakshmi.edu.in,1545,CS23333,Object Oriented Programming Using JAVA,LoT,1,4,0,4.0,Computer Science & Engineering
+268,70,2,3,0,0,197,CS171,Mrs.,S.Ponmani,ponmani.s@rajalakshmi.edu.in,1545,CS23333,Object Oriented Programming Using JAVA,LoT,1,6,0,4.0,Computer Science & Engineering
 269,70,3,5,0,0,197,CS171,Mrs.,S.Ponmani,ponmani.s@rajalakshmi.edu.in,1554,CS23512,Fundamentals of Mobile Computing,T,3,0,0,3.0,Computer Science & Engineering
 276,70,3,5,0,0,198,IT194,Mrs.,Farjana U,farjana.u@rajalakshmi.edu.in,1556,CS23532,Computer Networks,LoT,3,2,0,5.0,Computer Science & Engineering
 272,70,2,3,0,0,199,CS221,Mrs.,J.Jinu Sophia,jinusophia.j@rajalakshmi.edu.in,1545,CS23333,Object Oriented Programming Using JAVA,LoT,1,4,0,4.0,Computer Science & Engineering

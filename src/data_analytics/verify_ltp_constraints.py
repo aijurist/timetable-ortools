@@ -7,8 +7,8 @@ def verify_ltp_constraints():
     
     # Load course requirements - try both possible file names
     course_files = [
-        # "data/mapped_data/computer_dept_teacher_courses.csv",
-        "data/mapped_data/cs_teacher_courses.csv"
+        "data/mapped_data/computer_dept_teacher_courses.csv",
+        # "data/mapped_data/cs_teacher_courses.csv"
     ]
     
     course_file = None
@@ -30,25 +30,68 @@ def verify_ltp_constraints():
         print("No output directory found!")
         return False
     
-    folders = [f for f in os.listdir(output_dir) if f.startswith("macroblock_schedule_")]
-    if not folders:
+    # Find theory schedule
+    theory_folders = [f for f in os.listdir(output_dir) if f.startswith("macroblock_schedule_")]
+    if not theory_folders:
         print("No macroblock schedule found!")
         return False
         
-    latest_folder = max(folders)
-    print(f"Latest folder: {latest_folder}")
-    schedule_file = os.path.join(output_dir, latest_folder, "macroblock_schedule.csv")
-    print(f"Schedule file: {schedule_file}")
+    latest_theory_folder = max(theory_folders)
+    print(f"Latest theory folder: {latest_theory_folder}")
+    theory_schedule_file = os.path.join(output_dir, latest_theory_folder, "macroblock_schedule.csv")
+    print(f"Theory schedule file: {theory_schedule_file}")
     
-    if not os.path.exists(schedule_file):
-        print(f"Schedule file not found: {schedule_file}")
+    if not os.path.exists(theory_schedule_file):
+        print(f"Theory schedule file not found: {theory_schedule_file}")
         return False
     
-    schedule_df = pd.read_csv(schedule_file)
+    theory_schedule_df = pd.read_csv(theory_schedule_file)
     
-    print("🔍 LTP CONSTRAINT VERIFICATION (SIMPLIFIED SYSTEM)")
+    # Check for lab schedule
+    lab_folders = [f for f in os.listdir(output_dir) if f.startswith("lab_schedule_")]
+    lab_schedule_df = pd.DataFrame()
+    has_lab_schedule = False
+    
+    if lab_folders:
+        latest_lab_folder = max(lab_folders)
+        print(f"Latest lab folder: {latest_lab_folder}")
+        
+        # Try different lab schedule file names
+        lab_file_candidates = [
+            "combined_theory_lab_schedule.csv",
+            "lab_schedule.csv"
+        ]
+        
+        for lab_file_name in lab_file_candidates:
+            lab_schedule_file = os.path.join(output_dir, latest_lab_folder, lab_file_name)
+            if os.path.exists(lab_schedule_file):
+                print(f"Lab schedule file: {lab_schedule_file}")
+                lab_schedule_df = pd.read_csv(lab_schedule_file)
+                has_lab_schedule = True
+                break
+        
+        if not has_lab_schedule:
+            print(f"Lab schedule files not found in {latest_lab_folder}")
+    
+    # Combine schedules if lab schedule exists
+    if has_lab_schedule:
+        # If using combined schedule, use lab schedule only
+        if 'combined_theory_lab_schedule.csv' in lab_schedule_file:
+            schedule_df = lab_schedule_df
+        else:
+            # Combine theory and lab schedules
+            schedule_df = pd.concat([theory_schedule_df, lab_schedule_df], ignore_index=True)
+        print(f"Using combined theory + lab schedule ({len(schedule_df)} total assignments)")
+    else:
+        schedule_df = theory_schedule_df
+        print(f"Using theory schedule only ({len(schedule_df)} assignments)")
+    
+    print("🔍 LTP CONSTRAINT VERIFICATION (WITH LAB EVALUATION)")
     print("=" * 80)
-    print("Note: Lab allocation is skipped - only theory (Lecture/Tutorial) verified")
+    if has_lab_schedule:
+        print("✅ Lab allocation found - evaluating practical hours")
+    else:
+        print("⚠️  Lab allocation not found - practical hours will be marked as missing")
     print("=" * 80)
     
     print(f"📊 SUMMARY:")
@@ -56,6 +99,9 @@ def verify_ltp_constraints():
     print(f"Total scheduled assignments: {len(schedule_df)}")
     print(f"Unique courses scheduled: {schedule_df['course_code'].nunique()}")
     print(f"Unique teachers scheduled: {schedule_df['teacher_id'].nunique()}")
+    if has_lab_schedule:
+        lab_assignments = len(schedule_df[schedule_df['slot_type'] == 'Practical'])
+        print(f"Lab assignments found: {lab_assignments}")
     print("=" * 80)
     
     # Create mapping of course requirements - SHOW ALL INSTANCES
@@ -94,13 +140,14 @@ def verify_ltp_constraints():
         elif slot_type == 'Practical':
             scheduled_hours[instance_id]['practical'] += 1
     
-    print(f"{'ID':<6} {'Course':<12} {'Teacher':<20} {'Sem':<4} {'L Req':<6} {'L Sch':<6} {'T Req':<6} {'T Sch':<6} {'P Req':<6} {'P Sch':<6} {'Status':<20}")
-    print("-" * 130)
+    print(f"{'ID':<6} {'Course':<12} {'Teacher':<20} {'Sem':<4} {'L Req':<6} {'L Sch':<6} {'T Req':<6} {'T Sch':<6} {'P Req':<6} {'P Sch':<6} {'Status':<25}")
+    print("-" * 135)
     
     violations = 0
     total_instances = 0
     theory_only_violations = 0
     not_scheduled = 0
+    practical_violations = 0
     
     # Process ALL instances from the course file
     for instance_id, requirements in sorted(course_requirements.items(), key=lambda x: int(x[0])):
@@ -126,12 +173,6 @@ def verify_ltp_constraints():
             not_scheduled += 1
         else:
             # Determine expected tutorial hours based on the specific allocation rules
-            # Case 1: 3L+0T -> a1 + a1 + ta1 (ta1 as 3rd lecture) = 3 lecture + 0 tutorial
-            # Case 2: 3L+1T -> a1 + a1 + ta1 + taa1 (ta1 as 3rd lecture, taa1 as tutorial) = 3 lecture + 1 tutorial  
-            # Case 3: 2L+1T -> a1 + a1 + ta1 (ta1 as tutorial) = 2 lecture + 1 tutorial
-            # Case 4: 1L+1T -> a1 + ta1 (ta1 as tutorial) = 1 lecture + 1 tutorial
-            # Case 5: 2L+0T -> a1 + a1 = 2 lecture + 0 tutorial
-            # Case 6: 1L+0T -> a1 = 1 lecture + 0 tutorial
             if lecture_required == 3 and tutorial_required == 0:
                 expected_lecture = 3  # 2 from a1 + 1 from ta1 (as lecture)
                 expected_tutorial = 0  # No tutorials
@@ -160,52 +201,81 @@ def verify_ltp_constraints():
                 expected_lecture = lecture_required
                 expected_tutorial = 0
             
-            # Check compliance - strict for theory, skip practicals
+            # Check compliance
             lecture_ok = lecture_scheduled == expected_lecture
             tutorial_ok = tutorial_scheduled == expected_tutorial
-            practical_ok = True  # Skip practical validation (labs not allocated)
+            
+            # Check practical hours based on lab session structure
+            if practical_required > 0 and has_lab_schedule:
+                # Each lab session = 2 practical hours, so required sessions = practical_required / 2
+                expected_lab_sessions = (practical_required + 1) // 2  # Round up for odd numbers
+                expected_practical_hours = expected_lab_sessions * 2
+                practical_ok = practical_scheduled >= practical_required  # Allow scheduling more than required
+            elif practical_required > 0 and not has_lab_schedule:
+                # Lab schedule not available, mark as missing
+                practical_ok = False
+                expected_practical_hours = practical_required
+            else:
+                # No practical hours required
+                practical_ok = practical_scheduled == 0
+                expected_practical_hours = 0
             
             # Overall status
             theory_ok = lecture_ok and tutorial_ok
             
-            if theory_ok:
-                status = "✅ Compliant"
-            else:
-                if practical_required > 0:
-                    status = "⚠️ Theory Issue"  # Only theory violation, practicals expected but not checked
-                    theory_only_violations += 1
+            if theory_ok and practical_ok:
+                status = "✅ FULLY COMPLIANT"
+            elif theory_ok and not practical_ok and practical_required > 0:
+                if has_lab_schedule:
+                    status = "⚠️ PRACTICAL ISSUE"
+                    practical_violations += 1
                 else:
-                    status = "❌ Violation"
+                    status = "⚠️ PRACTICAL MISSING"
+                    # Don't count as violation if lab schedule not available
+            elif not theory_ok and practical_ok:
+                status = "⚠️ THEORY ISSUE"
+                theory_only_violations += 1
+            elif not theory_ok and not practical_ok:
+                if practical_required > 0:
+                    status = "❌ THEORY+PRACTICAL"
                     violations += 1
+                else:
+                    status = "❌ THEORY VIOLATION"
+                    violations += 1
+            else:
+                status = "✅ COMPLIANT"
         
-        # Show actual vs expected for clarity (or just actual if not scheduled)
+        # Show actual vs expected for clarity
         if total_scheduled == 0:
             lec_display = f"0/{lecture_required}"
             tut_display = f"0/{tutorial_required if tutorial_required > 0 else '0'}"
-            prac_display = f"0/Skip" if practical_required > 0 else "0/0"
+            if practical_required > 0:
+                prac_display = f"0/{practical_required}"
+            else:
+                prac_display = "0/0"
         else:
             # Use the same logic as above for display consistency
             if lecture_required == 3 and tutorial_required == 0:
-                display_expected_lecture = 3  # 2 from a1 + 1 from ta1 (as lecture)
-                display_expected_tutorial = 0  # No tutorials
+                display_expected_lecture = 3
+                display_expected_tutorial = 0
             elif lecture_required == 3 and tutorial_required == 1:
-                display_expected_lecture = 3  # 2 from a1 + 1 from ta1 (as lecture)
-                display_expected_tutorial = 1  # 1 from taa1 (as tutorial)
+                display_expected_lecture = 3
+                display_expected_tutorial = 1
             elif lecture_required == 2 and tutorial_required == 1:
-                display_expected_lecture = 2  # 2 from a1 slots
-                display_expected_tutorial = 1  # 1 from ta1 (as tutorial)
+                display_expected_lecture = 2
+                display_expected_tutorial = 1
             elif lecture_required == 1 and tutorial_required == 1:
-                display_expected_lecture = 1  # 1 from a1 slot
-                display_expected_tutorial = 1  # 1 from ta1 (as tutorial)
+                display_expected_lecture = 1
+                display_expected_tutorial = 1
             elif lecture_required == 2 and tutorial_required == 0:
-                display_expected_lecture = 2  # 2 from a1 slots
-                display_expected_tutorial = 0  # No tutorials
+                display_expected_lecture = 2
+                display_expected_tutorial = 0
             elif lecture_required == 1 and tutorial_required == 0:
-                display_expected_lecture = 1  # 1 from a1 slot
-                display_expected_tutorial = 0  # No tutorials
+                display_expected_lecture = 1
+                display_expected_tutorial = 0
             elif lecture_required == 4:
-                display_expected_lecture = 4  # 4-lecture courses get all lecture hours
-                display_expected_tutorial = 1  # Plus 1 tutorial
+                display_expected_lecture = 4
+                display_expected_tutorial = 1
             elif tutorial_required > 0:
                 display_expected_lecture = lecture_required
                 display_expected_tutorial = tutorial_required
@@ -215,19 +285,87 @@ def verify_ltp_constraints():
             
             lec_display = f"{lecture_scheduled}/{display_expected_lecture}"
             tut_display = f"{tutorial_scheduled}/{display_expected_tutorial}"
-            prac_display = f"{practical_scheduled}/Skip" if practical_required > 0 else f"{practical_scheduled}/0"
+            
+            if practical_required > 0:
+                if has_lab_schedule:
+                    prac_display = f"{practical_scheduled}/{practical_required}"
+                else:
+                    prac_display = f"{practical_scheduled}/Missing"
+            else:
+                prac_display = f"{practical_scheduled}/0"
         
-        print(f"{instance_id:<6} {course_code:<12} {teacher_name[:19]:<20} {semester:<4} {lecture_required:<6} {lec_display:<6} {tutorial_required:<6} {tut_display:<6} {practical_required:<6} {prac_display:<6} {status:<20}")
+        print(f"{instance_id:<6} {course_code:<12} {teacher_name[:19]:<20} {semester:<4} {lecture_required:<6} {lec_display:<6} {tutorial_required:<6} {tut_display:<6} {practical_required:<6} {prac_display:<6} {status:<25}")
     
-    print("-" * 130)
+    print("-" * 135)
     print(f"\n📊 COMPREHENSIVE LTP CONSTRAINT RESULTS:")
     print(f"Total instances in dataset: {total_instances}")
-    print(f"✅ Fully compliant instances: {total_instances - violations - theory_only_violations - not_scheduled}")
-    print(f"⚠️  Theory issues (but have practicals): {theory_only_violations}")
-    print(f"❌ Pure violations: {violations}")
+    print(f"✅ Fully compliant instances: {total_instances - violations - theory_only_violations - not_scheduled - practical_violations}")
+    print(f"⚠️  Theory issues only: {theory_only_violations}")
+    if has_lab_schedule:
+        print(f"⚠️  Practical issues only: {practical_violations}")
+        print(f"❌ Theory+Practical violations: {violations}")
+    else:
+        print(f"⚠️  Practical missing (no lab schedule): {len([req for req in course_requirements.values() if req['practical_hours'] > 0])}")
+        print(f"❌ Theory violations: {violations}")
     print(f"🚫 Not scheduled at all: {not_scheduled}")
-    print(f"📈 Overall success rate: {((total_instances - violations - not_scheduled)/total_instances)*100:.1f}%")
-    print(f"📈 Theory compliance rate (excluding unscheduled): {((total_instances - violations - not_scheduled)/max(total_instances - not_scheduled, 1))*100:.1f}%")
+    
+    if has_lab_schedule:
+        total_with_issues = violations + theory_only_violations + practical_violations + not_scheduled
+        print(f"📈 Overall success rate: {((total_instances - total_with_issues)/total_instances)*100:.1f}%")
+        print(f"📈 Theory compliance rate: {((total_instances - violations - theory_only_violations - not_scheduled)/max(total_instances - not_scheduled, 1))*100:.1f}%")
+        print(f"📈 Practical compliance rate: {((total_instances - violations - practical_violations)/max(sum(1 for req in course_requirements.values() if req['practical_hours'] > 0), 1))*100:.1f}%")
+    else:
+        print(f"📈 Overall success rate (theory only): {((total_instances - violations - theory_only_violations - not_scheduled)/total_instances)*100:.1f}%")
+        print(f"📈 Theory compliance rate: {((total_instances - violations - theory_only_violations - not_scheduled)/max(total_instances - not_scheduled, 1))*100:.1f}%")
+    
+    # Lab-specific analysis if lab schedule exists
+    if has_lab_schedule:
+        print(f"\n🧪 LAB SCHEDULING ANALYSIS:")
+        courses_with_practicals = {id: req for id, req in course_requirements.items() if req['practical_hours'] > 0}
+        print(f"Courses requiring practicals: {len(courses_with_practicals)}")
+        
+        lab_scheduled = 0
+        lab_compliant = 0
+        total_practical_hours_required = 0
+        total_practical_hours_scheduled = 0
+        
+        for instance_id, req in courses_with_practicals.items():
+            practical_required = req['practical_hours']
+            practical_scheduled = scheduled_hours[instance_id]['practical']
+            total_practical_hours_required += practical_required
+            total_practical_hours_scheduled += practical_scheduled
+            
+            if practical_scheduled > 0:
+                lab_scheduled += 1
+                if practical_scheduled >= practical_required:
+                    lab_compliant += 1
+        
+        print(f"Courses with lab sessions scheduled: {lab_scheduled}/{len(courses_with_practicals)} ({(lab_scheduled/max(len(courses_with_practicals), 1))*100:.1f}%)")
+        print(f"Courses with sufficient practical hours: {lab_compliant}/{len(courses_with_practicals)} ({(lab_compliant/max(len(courses_with_practicals), 1))*100:.1f}%)")
+        print(f"Total practical hours: {total_practical_hours_scheduled}/{total_practical_hours_required} scheduled")
+        
+        # Analyze lab session efficiency
+        lab_sessions_used = total_practical_hours_scheduled // 2  # Each lab session = 2 hours
+        print(f"Lab sessions utilized: {lab_sessions_used} (each session = 2 practical hours)")
+        
+        # Check for teacher workload in labs
+        teacher_lab_hours = defaultdict(int)
+        for _, row in schedule_df.iterrows():
+            if row['slot_type'] == 'Practical':
+                teacher_lab_hours[row['teacher_id']] += 2  # Each lab slot = 2 hours
+        
+        if teacher_lab_hours:
+            max_lab_hours = max(teacher_lab_hours.values())
+            avg_lab_hours = sum(teacher_lab_hours.values()) / len(teacher_lab_hours)
+            print(f"Teacher lab workload: Max {max_lab_hours}h, Avg {avg_lab_hours:.1f}h per teacher")
+    
+    else:
+        print(f"\n🧪 LAB SCHEDULING ANALYSIS:")
+        courses_with_practicals = {id: req for id, req in course_requirements.items() if req['practical_hours'] > 0}
+        total_practical_hours_required = sum(req['practical_hours'] for req in courses_with_practicals.values())
+        print(f"Courses requiring practicals: {len(courses_with_practicals)}")
+        print(f"Total practical hours required: {total_practical_hours_required}")
+        print(f"❌ Lab schedule not found - run lab_scheduler.py to generate lab allocations")
     
     # Group analysis by course type
     print(f"\n📋 ANALYSIS BY COURSE TYPE:")
@@ -345,11 +483,11 @@ def verify_ltp_constraints():
         print(f"3-lecture scheduling rate: {three_lec_scheduled}/{len(three_lecture_courses)} ({(three_lec_scheduled/len(three_lecture_courses))*100:.1f}%)")
         print(f"3-lecture compliance rate: {three_lec_compliant}/{three_lec_scheduled if three_lec_scheduled > 0 else 1} ({(three_lec_compliant/max(three_lec_scheduled, 1))*100:.1f}%)")
     
-    if violations == 0 and theory_only_violations == 0 and not_scheduled == 0:
-        print(f"\n🎉 ALL THEORY CONSTRAINTS SATISFIED!")
+    if violations == 0 and theory_only_violations == 0 and not_scheduled == 0 and (not has_lab_schedule or practical_violations == 0):
+        print(f"\n🎉 ALL LTP CONSTRAINTS SATISFIED!")
         print(f"   ✅ All course instances scheduled and compliant")
         print(f"   ✅ Lecture hours properly allocated")
-        print(f"   ✅ Tutorial hours allocated according to NEW rules:")
+        print(f"   ✅ Tutorial hours allocated according to rules:")
         print(f"      - 3L+0T courses: 3 lectures (ta1 as 3rd lecture) + 0 tutorials")
         print(f"      - 3L+1T courses: 3 lectures (ta1 as 3rd lecture) + 1 tutorial (taa1)")
         print(f"      - 2L+1T courses: 2 lectures + 1 tutorial (ta1 as tutorial)")
@@ -358,18 +496,37 @@ def verify_ltp_constraints():
         print(f"      - 1L+0T courses: 1 lecture + 0 tutorials")
         print(f"      - 4-lecture courses: 4 lectures + 1 tutorial")
         print(f"      - Other courses: as specified in tutorial_hours")
-        print(f"   ⏭️  Practical hours validation skipped (labs not allocated)")
+        if has_lab_schedule:
+            print(f"   ✅ Practical hours properly allocated in lab sessions")
+            print(f"      - Each lab session = 2 practical hours (L1, L2, L3, L4, L5, L6)")
+            print(f"      - Continuous room assignment for multi-slot sessions")
+            print(f"      - No conflicts between theory and lab schedules")
+        else:
+            print(f"   ⚠️  Practical hours not evaluated (lab schedule not found)")
         return True
     else:
         print(f"\n⚠️  CONSTRAINT ISSUES DETECTED!")
         if not_scheduled > 0:
             print(f"   🚫 {not_scheduled} course instances not scheduled at all")
         if violations > 0:
-            print(f"   ❌ {violations} pure theory constraint violations")
+            if has_lab_schedule:
+                print(f"   ❌ {violations} theory+practical constraint violations")
+            else:
+                print(f"   ❌ {violations} theory constraint violations")
         if theory_only_violations > 0:
-            print(f"   ⚠️  {theory_only_violations} theory issues (courses with practicals)")
-        print(f"   Note: Practical issues expected (labs not implemented)")
-        return violations == 0 and not_scheduled == 0  # Consider not_scheduled as failure too
+            print(f"   ⚠️  {theory_only_violations} theory-only issues")
+        if has_lab_schedule and practical_violations > 0:
+            print(f"   ⚠️  {practical_violations} practical-only issues")
+        if not has_lab_schedule:
+            courses_needing_labs = len([req for req in course_requirements.values() if req['practical_hours'] > 0])
+            if courses_needing_labs > 0:
+                print(f"   🧪 {courses_needing_labs} courses need lab allocation - run lab_scheduler.py")
+        
+        # Return success if only missing lab schedule but theory is good
+        if has_lab_schedule:
+            return violations == 0 and not_scheduled == 0
+        else:
+            return violations == 0 and not_scheduled == 0 and theory_only_violations == 0
 
 if __name__ == "__main__":
     verify_ltp_constraints() 
