@@ -34,6 +34,9 @@ class LabConstraints:
         # Apply capacity preference constraints for 70-student courses
         self.apply_capacity_preference_constraints(model, lab_assignments, lab_room_ids, lab_sessions)
         
+        # Apply the new shift-based constraint
+        self.apply_teacher_shift_constraint(model, lab_assignments, lab_sessions, course_to_teacher)
+        
         self.logger.info("All lab constraints applied successfully")
     
     def apply_course_lab_requirements_constraint(self, model, lab_assignments, course_to_teacher):
@@ -434,7 +437,62 @@ class LabConstraints:
                         room_vars.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
                     model.Add(sum(room_vars) <= 1)
         
+        # 4. Apply relaxed shift constraints (more lenient than full constraints)
+        self.apply_relaxed_teacher_shift_constraint(model, lab_assignments, lab_sessions, course_to_teacher)
+        
         self.logger.info("Relaxed lab constraints applied successfully")
+
+    def apply_relaxed_teacher_shift_constraint(self, model, lab_assignments, lab_sessions, course_to_teacher):
+        """Apply relaxed teacher shift constraint - prefer shift-compliant sessions but allow violations if necessary."""
+        self.logger.info("Applying relaxed teacher shift constraint...")
+        
+        if not hasattr(self.scheduler, 'teacher_shift_data') or not self.scheduler.teacher_shift_data:
+            self.logger.warning("No teacher shift data available - skipping relaxed shift constraints")
+            return
+        
+        penalty_vars = []
+        
+        # Group course assignments by teacher
+        teacher_courses = {}
+        for course_instance_id, teacher in course_to_teacher.items():
+            if teacher not in teacher_courses:
+                teacher_courses[teacher] = []
+            teacher_courses[teacher].append(course_instance_id)
+        
+        for teacher_id, course_list in teacher_courses.items():
+            for day_idx, day in enumerate(self.scheduler.days):
+                # Get allowed lab sessions for this teacher on this day
+                allowed_sessions = self.scheduler.get_teacher_allowed_lab_sessions(teacher_id, day)
+                
+                # Convert allowed session names to indices
+                allowed_session_indices = []
+                for session_name in allowed_sessions:
+                    if session_name in lab_sessions:
+                        allowed_session_indices.append(lab_sessions.index(session_name))
+                
+                # For each non-allowed session, create penalty variables instead of hard constraints
+                for session_idx in range(len(lab_sessions)):
+                    if session_idx not in allowed_session_indices:
+                        # Create penalty variables for assignments to non-preferred sessions
+                        for course_instance_id in course_list:
+                            for room_id in self.scheduler.labs['id'].tolist():
+                                if course_instance_id in lab_assignments:
+                                    assignment_var = lab_assignments[course_instance_id][day_idx][session_idx][room_id]
+                                    
+                                    # Add penalty variable that equals assignment_var
+                                    penalty_var = model.NewBoolVar(f'shift_penalty_{teacher_id}_{day}_{session_idx}_{course_instance_id}_{room_id}')
+                                    model.Add(penalty_var == assignment_var)
+                                    penalty_vars.append(penalty_var)
+        
+        # Add penalty to objective function (this will be handled by the solver's objective)
+        # For now, just log the relaxed constraint application
+        self.logger.info(f"Applied relaxed shift constraints with {len(penalty_vars)} potential penalties")
+        
+        # Store penalty variables for objective function modification (if needed)
+        if hasattr(self.scheduler, 'shift_penalty_vars'):
+            self.scheduler.shift_penalty_vars.extend(penalty_vars)
+        else:
+            self.scheduler.shift_penalty_vars = penalty_vars
 
     def _add_dynamic_batching_constraint(self, model, lab_assignments, course_instance_id, course):
         """Add constraints for dynamic batching based on assigned lab capacity."""
@@ -509,6 +567,75 @@ class LabConstraints:
                                     model.Add(assignment_var == 0)
         
         self.logger.info("Hard constraint applied: Courses with <3 practical hours blocked from 70+ capacity labs")
+
+    def apply_teacher_shift_constraint(self, model, lab_assignments, lab_sessions, course_to_teacher):
+        """Apply teacher shift constraint - ensure lab sessions are scheduled according to teacher shifts."""
+        self.logger.info("Applying teacher shift constraint...")
+        
+        violations_applied = 0
+        
+        # Group course assignments by teacher
+        teacher_courses = {}
+        for course_instance_id, teacher in course_to_teacher.items():
+            if teacher not in teacher_courses:
+                teacher_courses[teacher] = []
+            teacher_courses[teacher].append(course_instance_id)
+        
+        for teacher_id, course_list in teacher_courses.items():
+            for day_idx, day in enumerate(self.scheduler.days):
+                # Get allowed lab sessions for this teacher on this day
+                allowed_sessions = self.scheduler.get_teacher_allowed_lab_sessions(teacher_id, day)
+                
+                # Convert allowed session names to indices
+                allowed_session_indices = []
+                for session_name in allowed_sessions:
+                    if session_name in lab_sessions:
+                        allowed_session_indices.append(lab_sessions.index(session_name))
+                
+                # Apply constraint: teacher can only be assigned to allowed lab sessions
+                for session_idx in range(len(lab_sessions)):
+                    session_name = lab_sessions[session_idx]
+                    
+                    if session_idx not in allowed_session_indices:
+                        # This session is NOT allowed for this teacher on this day
+                        # Set all assignments for this teacher in this session to 0
+                        for course_instance_id in course_list:
+                            for room_id in self.scheduler.labs['id'].tolist():
+                                if course_instance_id in lab_assignments:
+                                    assignment_var = lab_assignments[course_instance_id][day_idx][session_idx][room_id]
+                                    model.Add(assignment_var == 0)
+                                    violations_applied += 1
+                        
+                        # Log the constraint application
+                        shift_info = self.scheduler.teacher_shift_data.get(teacher_id, {}).get(day, {})
+                        shift = shift_info.get('shift', 'unknown')
+                        self.logger.debug(f"SHIFT CONSTRAINT: Teacher {teacher_id} on {day} blocked from session {session_name} "
+                                        f"(shift: {shift}, allowed: {allowed_sessions})")
+        
+        self.logger.info(f"Applied {violations_applied} shift-based constraints")
+        
+        # Log shift constraint summary
+        if hasattr(self.scheduler, 'teacher_shift_data') and self.scheduler.teacher_shift_data:
+            total_teacher_days = len(self.scheduler.teacher_shift_data) * len(self.scheduler.days)
+            
+            # Count shift distribution
+            shift_distribution = {'shift1': 0, 'shift2': 0, 'shift3': 0, 'no_classes': 0, 'other': 0}
+            for teacher_id, teacher_shifts in self.scheduler.teacher_shift_data.items():
+                for day, shift_info in teacher_shifts.items():
+                    shift = shift_info.get('shift', 'other')
+                    if shift in shift_distribution:
+                        shift_distribution[shift] += 1
+                    else:
+                        shift_distribution['other'] += 1
+            
+            self.logger.info(f"Shift constraint summary:")
+            self.logger.info(f"  - shift1 (8:00-3:00, L1-L3): {shift_distribution['shift1']} teacher-days")
+            self.logger.info(f"  - shift2 (10:00-5:00, L2-L4): {shift_distribution['shift2']} teacher-days") 
+            self.logger.info(f"  - shift3 (12:00-7:00, L4-L6): {shift_distribution['shift3']} teacher-days")
+            self.logger.info(f"  - no_classes: {shift_distribution['no_classes']} teacher-days")
+            self.logger.info(f"  - other/unknown: {shift_distribution['other']} teacher-days")
+        else:
+            self.logger.warning("No teacher shift data available - shift constraints not applied")
 
 
 # Utility functions for constraint validation and debugging

@@ -50,9 +50,31 @@ class LabScheduler:
             'L6': ['5:30 - 6:20', '6:20 - 7:10']       # 5:30 - 7:10
         }
         
+        # Define shift timings and their corresponding lab sessions
+        self.shift_definitions = {
+            'shift1': {
+                'time_range': '8:00 - 3:00',
+                'allowed_lab_sessions': ['L1', 'L2', 'L3'],  # 8:00-9:40, 9:50-11:30, 11:50-1:30, 1:50-3:30
+                'description': 'Morning to Early Afternoon Shift'
+            },
+            'shift2': {
+                'time_range': '10:00 - 5:00', 
+                'allowed_lab_sessions': ['L2', 'L3', 'L4'],  # 9:50-11:30, 11:50-1:30, 1:50-3:30, 3:50-5:30
+                'description': 'Mid-day to Afternoon Shift'
+            },
+            'shift3': {
+                'time_range': '12:00 - 7:00',
+                'allowed_lab_sessions': ['L4', 'L5', 'L6'],  # 11:50-1:30, 1:50-3:30, 3:50-5:30, 5:30-7:10
+                'description': 'Afternoon to Evening Shift'
+            }
+        }
+        
         # Process rooms - separate labs from classrooms
         self.labs = self.rooms_df[self.rooms_df['is_lab'] == 1]
         self.classrooms = self.rooms_df[self.rooms_df['is_lab'] == 0]
+        
+        # Load teacher shift data from latest theory schedule
+        self.teacher_shift_data = self._load_teacher_shift_data(theory_schedule_path)
         
         # Identify courses needing lab allocation
         self.process_lab_requirements()
@@ -67,6 +89,80 @@ class LabScheduler:
         self.lab_constraints = LabConstraints(self)
         
         self.logger.info(f"Lab scheduler initialized. Output directory: {self.output_dir}")
+        self.logger.info(f"Loaded shift data for {len(self.teacher_shift_data)} teacher-day combinations")
+    
+    def _load_teacher_shift_data(self, theory_schedule_path):
+        """Load teacher shift data from the latest theory schedule output."""
+        teacher_shift_data = {}
+        
+        # Get the theory schedule directory
+        theory_dir = os.path.dirname(theory_schedule_path)
+        shift_file_path = os.path.join(theory_dir, 'teacher_daily_shifts.csv')
+        
+        if os.path.exists(shift_file_path):
+            self.logger.info(f"Loading teacher shift data from: {shift_file_path}")
+            shift_df = pd.read_csv(shift_file_path)
+            
+            for _, row in shift_df.iterrows():
+                teacher_id = row['teacher_id']
+                day = row['day']
+                shift = row['shift']
+                shift_name = row.get('shift_name', 'No Classes')
+                recommended_shift = row.get('recommended_shift', '')
+                
+                if teacher_id not in teacher_shift_data:
+                    teacher_shift_data[teacher_id] = {}
+                
+                # Use actual shift if available, otherwise use recommended shift
+                effective_shift = shift if shift != 'no_classes' else recommended_shift
+                
+                teacher_shift_data[teacher_id][day] = {
+                    'shift': effective_shift,
+                    'shift_name': shift_name,
+                    'original_shift': shift,
+                    'recommended_shift': recommended_shift
+                }
+            
+            self.logger.info(f"Successfully loaded shift data for {len(teacher_shift_data)} teachers")
+        else:
+            self.logger.warning(f"Teacher shift file not found at: {shift_file_path}")
+            self.logger.warning("Lab scheduling will proceed without shift constraints")
+        
+        return teacher_shift_data
+    
+    def get_teacher_allowed_lab_sessions(self, teacher_id, day):
+        """Get the allowed lab sessions for a teacher on a specific day based on their shift."""
+        if (teacher_id in self.teacher_shift_data and 
+            day in self.teacher_shift_data[teacher_id]):
+            
+            shift_info = self.teacher_shift_data[teacher_id][day]
+            shift = shift_info['shift']
+            
+            if shift in self.shift_definitions:
+                allowed_sessions = self.shift_definitions[shift]['allowed_lab_sessions']
+                self.logger.debug(f"Teacher {teacher_id} on {day}: {shift} -> allowed sessions {allowed_sessions}")
+                return allowed_sessions
+            else:
+                # If no valid shift or shift is 'no_classes', allow all sessions
+                self.logger.debug(f"Teacher {teacher_id} on {day}: no valid shift ({shift}) -> allowing all sessions")
+                return list(self.lab_sessions.keys())
+        else:
+            # If no shift data available, allow all sessions
+            self.logger.debug(f"Teacher {teacher_id} on {day}: no shift data -> allowing all sessions")
+            return list(self.lab_sessions.keys())
+    
+    def validate_lab_session_against_shift(self, teacher_id, day, lab_session):
+        """Validate if a lab session is allowed for a teacher's shift on a specific day."""
+        allowed_sessions = self.get_teacher_allowed_lab_sessions(teacher_id, day)
+        is_valid = lab_session in allowed_sessions
+        
+        if not is_valid:
+            shift_info = self.teacher_shift_data.get(teacher_id, {}).get(day, {})
+            shift = shift_info.get('shift', 'unknown')
+            self.logger.warning(f"SHIFT VIOLATION: Teacher {teacher_id} on {day} cannot use lab session {lab_session} "
+                              f"(shift: {shift}, allowed: {allowed_sessions})")
+        
+        return is_valid
     
     def process_lab_requirements(self):
         """Identify courses that need lab allocation and their requirements with capacity-based batching."""
@@ -263,7 +359,6 @@ class LabScheduler:
             if practical_hours >= 3:
                 # Courses with >=3 practical hours: can use 70-capacity labs (preferred) or 35-capacity labs (with batching)
                 strategy['preferred_lab_capacities'] = [70, 35]  # Prefer 70, allow 35 as fallback
-                strategy['can_use_70_capacity'] = True
                 
                 self.logger.info(f"70-student course with {practical_hours} practical hours -> "
                                f"CAN use 70-capacity labs (>=3 practical hours), prefer {strategy['preferred_lab_capacities']}")
@@ -389,6 +484,7 @@ class LabScheduler:
         # Add optimization objective - minimize total lab usage with capacity preferences
         total_lab_usage = []
         capacity_preference_penalties = []
+        shift_preference_penalties = []
         
         # Get lab rooms categorized by capacity for preference weighting
         labs_by_capacity = {
@@ -407,10 +503,24 @@ class LabScheduler:
                     break
             
             for day_idx in range(self.num_days):
+                day = self.days[day_idx]
+                # Get allowed sessions for this teacher on this day
+                allowed_sessions = self.get_teacher_allowed_lab_sessions(teacher, day)
+                
                 for session_idx in range(len(lab_sessions)):
+                    session_name = lab_sessions[session_idx]
+                    
                     for room_id in lab_room_ids:
                         assignment_var = lab_assignments[course_instance_id][day_idx][session_idx][room_id]
                         total_lab_usage.append(assignment_var)
+                        
+                        # Add shift preference penalties
+                        if session_name not in allowed_sessions:
+                            # Heavy penalty for assignments outside teacher's shift
+                            shift_preference_penalties.extend([assignment_var] * 100)
+                        else:
+                            # Light penalty for assignments within shift (to minimize total usage)
+                            shift_preference_penalties.extend([assignment_var] * 1)
                         
                         # Add capacity preference penalties for 70-student courses
                         if course_info and course_info['students_per_instance'] == 70:
@@ -433,8 +543,8 @@ class LabScheduler:
                                     # Very light penalty for 70-capacity labs
                                     capacity_preference_penalties.extend([assignment_var] * 1)
         
-        # Objective: Minimize total usage + capacity preference penalties
-        model.Minimize(sum(total_lab_usage) + sum(capacity_preference_penalties))
+        # Objective: Minimize total usage + capacity preference penalties + shift preference penalties
+        model.Minimize(sum(total_lab_usage) + sum(capacity_preference_penalties) + sum(shift_preference_penalties))
         
         # Create solver and solve
         solver = cp_model.CpSolver()
@@ -927,6 +1037,38 @@ class LabScheduler:
                     f.write(f"  {room}: {count} sessions\n")
             
             f.write(f"\nLab schedule generation completed successfully!\n")
+            
+            # Add shift compliance analysis
+            if hasattr(self, 'teacher_shift_data') and self.teacher_shift_data and not lab_data.empty:
+                f.write(f"\nShift Compliance Analysis:\n")
+                shift_compliance_stats = self._analyze_shift_compliance(lab_data)
+                
+                f.write(f"Total lab assignments: {shift_compliance_stats['total_assignments']}\n")
+                f.write(f"Shift-compliant assignments: {shift_compliance_stats['compliant_assignments']}\n")
+                f.write(f"Overall shift compliance rate: {shift_compliance_stats['compliance_rate']:.1f}%\n\n")
+                
+                f.write(f"Compliance by Shift Type:\n")
+                for shift, stats in shift_compliance_stats['by_shift'].items():
+                    if stats['total'] > 0:
+                        f.write(f"  {shift}: {stats['compliant']}/{stats['total']} ({stats['rate']:.1f}%)\n")
+                
+                # Explain shift definitions
+                f.write(f"\nShift Definitions:\n")
+                for shift_name, shift_info in self.shift_definitions.items():
+                    f.write(f"  {shift_name}: {shift_info['time_range']} -> Lab sessions {', '.join(shift_info['allowed_lab_sessions'])}\n")
+                
+                # Identify non-compliant assignments
+                violations = self._validate_shift_constraints(schedule_df)
+                if violations:
+                    f.write(f"\nShift Violations Found ({len(violations)}):\n")
+                    for violation in violations[:10]:  # Show first 10 violations
+                        f.write(f"  - {violation}\n")
+                    if len(violations) > 10:
+                        f.write(f"  ... and {len(violations) - 10} more violations\n")
+                else:
+                    f.write(f"\n✅ No shift violations detected!\n")
+            elif not hasattr(self, 'teacher_shift_data') or not self.teacher_shift_data:
+                f.write(f"\nShift Compliance Analysis: Not available (no shift data loaded)\n")
         
         self.logger.info(f"Lab summary saved to {summary_path}")
 
@@ -959,6 +1101,37 @@ class LabScheduler:
         # Apply relaxed constraints using the LabConstraints class
         self.lab_constraints.apply_relaxed_constraints(model, lab_assignments, lab_room_ids, lab_sessions, course_to_teacher)
         
+        # Create relaxed objective function with shift preferences
+        total_lab_usage = []
+        shift_penalty_terms = []
+        
+        for course_instance_id in all_course_instances:
+            teacher = course_to_teacher[course_instance_id]
+            
+            for day_idx in range(self.num_days):
+                day = self.days[day_idx]
+                allowed_sessions = self.get_teacher_allowed_lab_sessions(teacher, day)
+                
+                for session_idx in range(len(lab_sessions)):
+                    session_name = lab_sessions[session_idx]
+                    
+                    for room_id in lab_room_ids:
+                        assignment_var = lab_assignments[course_instance_id][day_idx][session_idx][room_id]
+                        total_lab_usage.append(assignment_var)
+                        
+                        # Add shift penalty (lighter than full constraints)
+                        if session_name not in allowed_sessions:
+                            shift_penalty_terms.extend([assignment_var] * 50)  # Lighter penalty than full constraint
+        
+        # Include any penalty variables created by relaxed constraints
+        additional_penalties = []
+        if hasattr(self, 'shift_penalty_vars'):
+            additional_penalties.extend(self.shift_penalty_vars)
+        
+        # Relaxed objective: minimize usage + shift penalties
+        objective_terms = total_lab_usage + shift_penalty_terms + additional_penalties
+        model.Minimize(sum(objective_terms))
+        
         # Solve with relaxed constraints
         solver = cp_model.CpSolver()
         solver.parameters.max_time_in_seconds = 180
@@ -986,6 +1159,10 @@ class LabScheduler:
             # Validate constraints
             violations = validate_lab_constraints(schedule_df, self.lab_requirements)
             
+            # Validate shift constraints
+            shift_violations = self._validate_shift_constraints(schedule_df)
+            violations.extend(shift_violations)
+            
             # Analyze constraint conflicts
             analysis = analyze_constraint_conflicts(self.lab_requirements, self.theory_schedule_df, self.labs)
             
@@ -1004,6 +1181,14 @@ class LabScheduler:
                 else:
                     f.write("✅ All constraints satisfied successfully!\n")
                 
+                # Separate shift violation reporting
+                if shift_violations:
+                    f.write(f"\nShift Constraint Violations ({len(shift_violations)}):\n")
+                    for violation in shift_violations:
+                        f.write(f"  - {violation}\n")
+                else:
+                    f.write(f"\n✅ All shift constraints satisfied!\n")
+                
                 f.write(f"\nCapacity Analysis:\n")
                 f.write(f"Total lab sessions needed: {analysis['total_lab_sessions_needed']}\n")
                 f.write(f"Total lab capacity per week: {analysis['total_lab_capacity']}\n")
@@ -1016,6 +1201,19 @@ class LabScheduler:
                                f"({overload['theory_hours']} theory + {overload['lab_hours']} lab)\n")
                 else:
                     f.write(f"\n✅ All teachers within workload limits\n")
+                
+                # Add shift compliance summary
+                if hasattr(self, 'teacher_shift_data') and self.teacher_shift_data:
+                    f.write(f"\nShift Compliance Summary:\n")
+                    lab_data = schedule_df[schedule_df['slot_type'] == 'Practical']
+                    shift_compliance_stats = self._analyze_shift_compliance(lab_data)
+                    
+                    f.write(f"Total lab assignments: {shift_compliance_stats['total_assignments']}\n")
+                    f.write(f"Shift-compliant assignments: {shift_compliance_stats['compliant_assignments']}\n")
+                    f.write(f"Shift compliance rate: {shift_compliance_stats['compliance_rate']:.1f}%\n")
+                    
+                    for shift, stats in shift_compliance_stats['by_shift'].items():
+                        f.write(f"  - {shift}: {stats['compliant']}/{stats['total']} ({stats['rate']:.1f}%)\n")
             
             if violations:
                 self.logger.warning(f"Found {len(violations)} constraint violations in generated schedule")
@@ -1029,6 +1227,101 @@ class LabScheduler:
         except Exception as e:
             self.logger.error(f"Error during constraint validation: {e}")
             self.logger.exception("Constraint validation error details")
+
+    def _validate_shift_constraints(self, schedule_df):
+        """Validate that lab assignments comply with teacher shift constraints."""
+        violations = []
+        
+        if not hasattr(self, 'teacher_shift_data') or not self.teacher_shift_data:
+            return violations
+        
+        lab_data = schedule_df[schedule_df['slot_type'] == 'Practical']
+        
+        for _, row in lab_data.iterrows():
+            teacher_id = row['teacher_id']
+            day = row['day']
+            time_interval = row['time_interval']
+            
+            # Map time interval to lab session
+            lab_session = self._map_time_to_lab_session(time_interval)
+            
+            # Check if this assignment violates shift constraints
+            if not self.validate_lab_session_against_shift(teacher_id, day, lab_session):
+                course_code = row.get('display_course_code', row.get('course_code', 'Unknown'))
+                shift_info = self.teacher_shift_data.get(teacher_id, {}).get(day, {})
+                shift = shift_info.get('shift', 'unknown')
+                
+                violations.append(f"Teacher {teacher_id} assigned to {lab_session} ({time_interval}) on {day} "
+                                f"violates {shift} constraint for course {course_code}")
+        
+        return violations
+
+    def _map_time_to_lab_session(self, time_interval):
+        """Map a time interval to the corresponding lab session."""
+        # Map based on exact time intervals
+        time_to_session_map = {
+            '8:00 - 8:50': 'L1',
+            '8:50 - 9:40': 'L1',
+            '9:50 - 10:40': 'L2', 
+            '10:40 - 11:30': 'L2',
+            '11:50 - 12:40': 'L3',
+            '12:40 - 1:30': 'L3',
+            '1:50 - 2:40': 'L4',
+            '2:40 - 3:30': 'L4',
+            '3:50 - 4:40': 'L5',
+            '4:40 - 5:30': 'L5',
+            '5:30 - 6:20': 'L6',
+            '6:20 - 7:10': 'L6'
+        }
+        
+        return time_to_session_map.get(time_interval, 'L1')  # Default to L1 if not found
+
+    def _analyze_shift_compliance(self, lab_data):
+        """Analyze shift compliance statistics."""
+        stats = {
+            'total_assignments': len(lab_data),
+            'compliant_assignments': 0,
+            'compliance_rate': 0.0,
+            'by_shift': {}
+        }
+        
+        shift_stats = {
+            'shift1': {'total': 0, 'compliant': 0, 'rate': 0.0},
+            'shift2': {'total': 0, 'compliant': 0, 'rate': 0.0},
+            'shift3': {'total': 0, 'compliant': 0, 'rate': 0.0},
+            'unknown': {'total': 0, 'compliant': 0, 'rate': 0.0}
+        }
+        
+        for _, row in lab_data.iterrows():
+            teacher_id = row['teacher_id']
+            day = row['day']
+            time_interval = row['time_interval']
+            
+            lab_session = self._map_time_to_lab_session(time_interval)
+            is_compliant = self.validate_lab_session_against_shift(teacher_id, day, lab_session)
+            
+            # Get teacher's shift for this day
+            shift_info = self.teacher_shift_data.get(teacher_id, {}).get(day, {})
+            shift = shift_info.get('shift', 'unknown')
+            
+            if shift not in shift_stats:
+                shift = 'unknown'
+            
+            shift_stats[shift]['total'] += 1
+            if is_compliant:
+                stats['compliant_assignments'] += 1
+                shift_stats[shift]['compliant'] += 1
+        
+        # Calculate rates
+        if stats['total_assignments'] > 0:
+            stats['compliance_rate'] = (stats['compliant_assignments'] / stats['total_assignments']) * 100
+        
+        for shift, data in shift_stats.items():
+            if data['total'] > 0:
+                data['rate'] = (data['compliant'] / data['total']) * 100
+        
+        stats['by_shift'] = shift_stats
+        return stats
 
 def main():
     """Main function to run the lab scheduler."""
@@ -1077,7 +1370,7 @@ def main():
         print(f"✓ Found theory schedule: {theory_schedule_path}")
         
         # Path to data files (same as theory scheduler)
-        course_file = os.path.join(base_dir, "data/mapped_data/computer_dept_teacher_courses.csv")
+        course_file = os.path.join(base_dir, "data/mapped_data/cs_teacher_courses.csv")
         room_file = os.path.join(base_dir, 'data/block_wise/techlongue.csv')
         
         if not os.path.exists(course_file):
