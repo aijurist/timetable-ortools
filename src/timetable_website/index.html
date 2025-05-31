@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Computer Science Timetable Builder - 5th Semester</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-calendar-alt"></i> Timetable Builder</h1>
+                <p>Computer Science & Engineering - 5th Semester</p>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Course Selection Panel -->
+            <div class="course-panel">
+                <h2><i class="fas fa-book"></i> Select Your Courses</h2>
+                <div class="course-selection" id="courseSelection">
+                    <!-- Course cards will be generated here -->
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="clearAll" class="btn btn-secondary">
+                        <i class="fas fa-trash"></i> Clear All
+                    </button>
+                    <button id="generateTimetable" class="btn btn-primary" disabled>
+                        <i class="fas fa-magic"></i> Generate Timetable
+                    </button>
+                </div>
+            </div>
+
+            <!-- Timetable Display -->
+            <div class="timetable-panel">
+                <div class="timetable-header">
+                    <h2><i class="fas fa-table"></i> Your Timetable</h2>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <span class="color-box lecture"></span>
+                            <span>Lecture</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="color-box practical"></span>
+                            <span>Lab/Practical</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="color-box tutorial"></span>
+                            <span>Tutorial</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="color-box conflict"></span>
+                            <span>Conflict</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="timetable-container">
+                    <table class="timetable" id="timetable">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Monday</th>
+                                <th>Tuesday</th>
+                                <th>Wednesday</th>
+                                <th>Thursday</th>
+                                <th>Friday</th>
+                                <th>Saturday</th>
+                            </tr>
+                        </thead>
+                        <tbody id="timetableBody">
+                            <!-- Timetable rows will be generated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Course Details Modal -->
+        <div id="courseModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modalTitle"></h3>
+                    <span class="close" id="closeModal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="teacher-selection">
+                        <h4>Select Teacher:</h4>
+                        <div id="teacherOptions"></div>
+                    </div>
+                    <div class="course-info">
+                        <div class="info-item">
+                            <strong>Course Code:</strong> <span id="courseCode"></span>
+                        </div>
+                        <div class="info-item">
+                            <strong>Credits:</strong> <span id="courseCredits"></span>
+                        </div>
+                        <div class="info-item">
+                            <strong>Type:</strong> <span id="courseType"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancelSelection" class="btn btn-secondary">Cancel</button>
+                    <button id="confirmSelection" class="btn btn-primary" disabled>Confirm Selection</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conflict Alert Modal -->
+        <div id="conflictModal" class="modal">
+            <div class="modal-content conflict-modal">
+                <div class="modal-header">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Schedule Conflict Detected</h3>
+                    <span class="close" id="closeConflictModal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div id="conflictDetails"></div>
+                    <div class="alternative-teachers">
+                        <h4>Alternative Teachers:</h4>
+                        <div id="alternativeOptions"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancelConflict" class="btn btn-secondary">Cancel</button>
+                    <button id="resolveConflict" class="btn btn-primary" disabled>Select Alternative</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading course data...</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 

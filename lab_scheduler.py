@@ -1370,7 +1370,7 @@ def main():
         print(f"✓ Found theory schedule: {theory_schedule_path}")
         
         # Path to data files (same as theory scheduler)
-        course_file = os.path.join(base_dir, "data/mapped_data/cs_teacher_courses.csv")
+        course_file = os.path.join(base_dir, "data/mapped_data/computer_dept_teacher_courses.csv")
         room_file = os.path.join(base_dir, 'data/block_wise/techlongue.csv')
         
         if not os.path.exists(course_file):

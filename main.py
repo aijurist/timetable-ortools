@@ -19,7 +19,7 @@ def main():
         base_dir = os.path.dirname(os.path.abspath(__file__))
         
         # Path to data files
-        course_file = os.path.join(base_dir, 'data/mapped_data/cs_teacher_courses.csv')
+        course_file = os.path.join(base_dir, 'data/mapped_data/computer_dept_teacher_courses.csv')
         if not os.path.exists(course_file):
             print(f"Error: Course file not found at {course_file}")
             return
