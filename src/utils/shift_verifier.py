@@ -179,7 +179,7 @@ class ShiftVerifier:
         return result
     
     def _create_shift_pattern(self, daily_shifts: Dict[str, Dict]) -> str:
-        """Create a weekly shift pattern string for a teacher."""
+        """Create a visual pattern string showing the weekly shift distribution."""
         pattern_parts = []
         
         for day in self.days:
@@ -187,21 +187,29 @@ class ShiftVerifier:
                 shift_info = daily_shifts[day]
                 shift = shift_info.get('shift')
                 
-                if shift == 'invalid':
-                    pattern_parts.append('XX')
-                elif shift == 'no_classes' and 'recommended_shift' in shift_info:
-                    # Show recommended shifts for days with no classes
-                    rec_shift = shift_info['recommended_shift'].replace('shift', 'S')
-                    pattern_parts.append(f"[{rec_shift}]")  # Recommended shift in brackets
-                elif shift and shift != 'no_classes':
-                    shift_num = shift.replace('shift', 'S')
-                    pattern_parts.append(shift_num)
+                if shift == 'shift1':
+                    pattern_parts.append('S1')
+                elif shift == 'shift2':
+                    pattern_parts.append('S2')
+                elif shift == 'shift3':
+                    pattern_parts.append('S3')
+                elif shift == 'no_classes':
+                    # Show recommended shift for days with no classes
+                    recommended = shift_info.get('recommended_shift', 'shift1')
+                    if recommended == 'shift1':
+                        pattern_parts.append('[S1]')
+                    elif recommended == 'shift2':
+                        pattern_parts.append('[S2]')
+                    elif recommended == 'shift3':
+                        pattern_parts.append('[S3]')
+                    else:
+                        pattern_parts.append('--')
                 else:
-                    pattern_parts.append('--')
+                    pattern_parts.append('XX')  # Violation or unknown
             else:
                 pattern_parts.append('--')
         
-        return '→'.join(pattern_parts)
+        return '->'.join(pattern_parts)
     
     def _generate_verification_summary(self, violations: List[Dict], teacher_daily_shifts: Dict, 
                                      teacher_shift_patterns: Dict) -> Dict[str, Any]:
@@ -280,7 +288,7 @@ class ShiftVerifier:
         # Teacher shift patterns
         self.logger.info("\nTEACHER WEEKLY SHIFT PATTERNS:")
         self.logger.info("-" * 60)
-        self.logger.info("Pattern Format: Tue→Wed→Thu→Fri→Sat")
+        self.logger.info("Pattern Format: Tue->Wed->Thu->Fri->Sat")
         self.logger.info("S1=Shift1, S2=Shift2, S3=Shift3, --=No classes, XX=Violation, [S1]=Recommended shift")
         
         for teacher_id, pattern in sorted(teacher_shift_patterns.items()):
@@ -389,7 +397,7 @@ class ShiftVerifier:
             # Teacher patterns
             f.write("TEACHER WEEKLY SHIFT PATTERNS:\n")
             f.write("-" * 50 + "\n")
-            f.write("Pattern Format: Tue→Wed→Thu→Fri→Sat\n")
+            f.write("Pattern Format: Tue->Wed->Thu->Fri->Sat\n")
             f.write("S1=Shift1, S2=Shift2, S3=Shift3, --=No classes, XX=Violation, [S1]=Recommended shift\n\n")
             
             for teacher_id, pattern in sorted(teacher_shift_patterns.items()):
@@ -814,7 +822,7 @@ class ShiftVerifier:
                                f"[{forced_days} forced, {optimized_days} optimized]")
                 
                 if days_with_recommendations > 0:
-                    self.logger.info(f"  → Recommended shifts for days with no classes: S1={recommended[0]}, S2={recommended[1]}, S3={recommended[2]}")
+                    self.logger.info(f"  -> Recommended shifts for days with no classes: S1={recommended[0]}, S2={recommended[1]}, S3={recommended[2]}")
         
         # Overall distribution summary
         total_teacher_days = sum(actual_distribution[shift] for shift in ['shift1', 'shift2', 'shift3'])
@@ -854,7 +862,7 @@ class ShiftVerifier:
         # Teacher shift patterns
         self.logger.info("\nTEACHER WEEKLY SHIFT PATTERNS:")
         self.logger.info("-" * 60)
-        self.logger.info("Pattern Format: Tue→Wed→Thu→Fri→Sat")
+        self.logger.info("Pattern Format: Tue->Wed->Thu->Fri->Sat")
         self.logger.info("S1=Shift1, S2=Shift2, S3=Shift3, --=No classes, XX=Violation, [S1]=Recommended shift")
         
         for teacher_id, pattern in sorted(teacher_shift_patterns.items()):
@@ -939,7 +947,6 @@ class ShiftVerifier:
                 # Calculate distribution quality score
                 target = self.teacher_target_patterns.get(teacher_id, self.preferred_pattern)
                 actual = [teacher_distribution['shift1'], teacher_distribution['shift2'], teacher_distribution['shift3']]
-                recommended = [recommended_distribution['shift1'], recommended_distribution['shift2'], recommended_distribution['shift3']]
                 
                 if sum(actual) > 0:
                     score = 100 - sum(abs(t - a) for t, a in zip(target, actual)) * 20
@@ -951,7 +958,8 @@ class ShiftVerifier:
                            f"[{forced_days} forced, {optimized_days} optimized]\n")
                     
                     if days_with_recommendations > 0:
-                        f.write(f"  → Recommended shifts for days with no classes: S1={recommended[0]}, S2={recommended[1]}, S3={recommended[2]}\n")
+                        recommended = [recommended_distribution['shift1'], recommended_distribution['shift2'], recommended_distribution['shift3']]
+                        f.write(f"  -> Recommended shifts for days with no classes: S1={recommended[0]}, S2={recommended[1]}, S3={recommended[2]}\n")
             
             # Overall summary
             total_teacher_days = sum(actual_distribution[shift] for shift in ['shift1', 'shift2', 'shift3'])
@@ -991,7 +999,7 @@ class ShiftVerifier:
             # Teacher shift patterns
             f.write("\nTEACHER WEEKLY SHIFT PATTERNS:\n")
             f.write("-" * 60 + "\n")
-            f.write("Pattern Format: Tue→Wed→Thu→Fri→Sat\n")
+            f.write("Pattern Format: Tue->Wed->Thu->Fri->Sat\n")
             f.write("S1=Shift1, S2=Shift2, S3=Shift3, --=No classes, XX=Violation, [S1]=Recommended shift\n\n")
             
             for teacher_id, pattern in sorted(teacher_shift_patterns.items()):

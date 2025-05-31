@@ -1,7 +1,7 @@
 import pandas as pd
 
 # Load the schedule
-df = pd.read_csv('output/macroblock_schedule_20250528_152022/macroblock_schedule.csv')
+df = pd.read_csv('output/macroblock_schedule_20250601_000548/macroblock_schedule.csv')
 
 # Filter for 5th semester Computer Science Engineering
 cse_5 = df[(df['semester'] == 5) & (df['course_dept'] == 'Computer Science & Engineering')]

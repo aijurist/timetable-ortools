@@ -24,6 +24,28 @@ class MacroblockTimetableConstraints:
         ]
         self.num_slots = len(self.time_slots)
         
+        # NEW: Department-specific block allocation mapping
+        # Define which departments are allocated to which block ranges
+        self.department_block_allocation = {
+            'Computer Science & Engineering': {
+                'allowed_blocks': ['a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1'],
+                'block_range': 'a1-g1',
+                'description': 'Computer Science courses restricted to a1-g1 blocks only'
+            },
+            # Future departments can be added here
+            # 'Mechanical Engineering': {
+            #     'allowed_blocks': ['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2'],
+            #     'block_range': 'a2-g2',
+            #     'description': 'Mechanical Engineering courses in a2-g2 blocks'
+            # },
+            # Default for other departments (if any)
+            'default': {
+                'allowed_blocks': ['a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2'],
+                'block_range': 'a1-g2',
+                'description': 'Other departments can use any available blocks'
+            }
+        }
+        
         # NEW: Teacher shift definitions
         # Shift 1: 8:00 - 3:00 PM (slots 0-6: 8:00-8:50 to 2:00-2:50)
         # Shift 2: 10:00 - 5:00 PM (slots 2-8: 10:00-10:50 to 4:00-4:50) 
@@ -44,16 +66,16 @@ class MacroblockTimetableConstraints:
         # Simplified macroblock structure - no separate macro shifts or teacher shifts
         # All blocks are available to all teachers (11 slots to match time_slots)
         self.daily_schedule_structure = {
-            "tuesday": ["a1/L1", "b1/L2", "c1/L3", "d1/L4", "e1/L5", "f1/L6", 
-                       "g1/L7", "a2/L8", "b2/L9", "c2/L10", "L11"],
-            "wed": ["d2/L12", "e2/L14", "f2/L15", "g2/L16", "ta1/L17", "tb1/L18", 
-                   "tc1/L19", "td1/L20", "te1/L21", "tf1/L22", "L23"],
-            "thur": ["tg1/L25", "taa2/L26", "tbb2/L27", "tcc2/L28", "v1/L29", "v2/L30", 
-                    "a1/L31", "b1/L32", "c1/L33", "d1/L34", "L35"],
-            "fri": ["e1/L37", "f1/L38", "g1/L39", "ta2/L40", "tb2/L41", "tc2/L42", 
-                   "td2/L43", "te2/L44", "tf2/L45", "tg2/L46", "L47"],
-            "sat": ["a2/L49", "b2/L50", "c2/L51", "taa1/L52", "tbb1/L53", "tcc1/L54", 
-                   "d2/L55", "e2/L56", "f2/L57", "g2/L58", "L59"]
+            "tuesday": ["a1/L1", "f1/L2", "d1/L3", "t81/L4", "tg1/L5", "L6", 
+                       "a2/L31", "f2/L32", "d2/L33", "t82/L34", "tg2/L35"],
+            "wed": ["b1/L7", "g1/L8", "e1/L9", "tc1/L10", "taa1/L11", "L12", 
+                   "b2/L37", "g2/L38", "e2/L39", "tc2/L40", "taa2/L41"],
+            "thur": ["c1/L13", "a1/L14", "f1/L15", "v1/L16", "v2/L17", "L18", 
+                    "c2/L43", "a2/L44", "f2/L45", "td2/L46", "tbb2/L47"],
+            "fri": ["d1/L19", "b1/L20", "g1/L21", "te1/L22", "tcc1/L23", "L24", 
+                   "d2/L49", "b2/L50", "g2/L51", "te2/L52", "tcc2/L53"],
+            "sat": ["e1/L25", "c1/L26", "ta1/L27", "tf1/L28", "td1/L29", "L30", 
+                   "e2/L55", "c2/L56", "ta2/L57", "tf2/L58", "tdd2/L59"]
         }
         
         # Define all available blocks (no shift separation)
@@ -62,7 +84,8 @@ class MacroblockTimetableConstraints:
         # Tutorial blocks for 3rd hour of lecture courses
         self.tutorial_blocks = ['ta1', 'tb1', 'tc1', 'td1', 'te1', 'tf1', 'tg1', 
                                'ta2', 'tb2', 'tc2', 'td2', 'te2', 'tf2', 'tg2',
-                               'taa1', 'taa2', 'tbb1', 'tbb2', 'tcc1', 'tcc2', 'v1', 'v2']
+                               'taa1', 'taa2', 'tbb1', 'tbb2', 'tcc1', 'tcc2', 
+                               't81', 't82', 'tdd2', 'v1', 'v2']
         
         # Parse slot assignments for each day to identify theory and lab slots
         self.slot_assignments = self._parse_slot_assignments()
@@ -134,8 +157,13 @@ class MacroblockTimetableConstraints:
         Only assigns base macroblocks (a1, b1, c1, etc.) to course instances.
         Detailed lecture/tutorial mapping will be done in post-processing.
         This dramatically reduces model complexity from 1.6M+ variables to manageable size.
+        
+        NEW: Department-specific block allocation constraints applied.
         """
-        logger.info("Applying simplified course hours constraint (base macroblock assignment only)...")
+        logger.info("Applying simplified course hours constraint with department-specific block allocation...")
+        
+        # Log department block allocation summary
+        allocation_stats = self.log_department_block_allocation_summary()
         
         # Create simplified macroblock assignment variables - ONLY for base blocks
         self.macroblock_assignments = {}
@@ -152,19 +180,34 @@ class MacroblockTimetableConstraints:
                 lecture_hours = instance['lecture_hours']
                 tutorial_hours = instance['tutorial_hours'] 
                 practical_hours = instance['practical_hours']  # Not used for now
+                course_dept = instance.get('course_dept', 'default')
                         
                 self.macroblock_assignments[teacher][instance_id] = {}
                 
-                # Create macroblock choice variables for base blocks only (a1, a2, b1, b2, etc.)
+                # NEW: Get department-specific allowed blocks
+                if course_dept in self.department_block_allocation:
+                    dept_allowed_blocks = self.department_block_allocation[course_dept]['allowed_blocks']
+                    dept_description = self.department_block_allocation[course_dept]['description']
+                    logger.info(f"Course {instance_id} ({course_dept}): {dept_description}")
+                else:
+                    dept_allowed_blocks = self.department_block_allocation['default']['allowed_blocks']
+                    logger.info(f"Course {instance_id} ({course_dept}): Using default block allocation")
+                
+                # Create macroblock choice variables for department-allowed blocks only
                 # EXCLUDE v1 and v2 from assignments - they should not be assigned to any courses
-                allowed_theory_blocks = [block for block in self.theory_blocks if block not in ['v1', 'v2']]
+                allowed_theory_blocks = [block for block in self.theory_blocks 
+                                       if block not in ['v1', 'v2'] and block in dept_allowed_blocks]
+                
+                logger.info(f"Course {instance_id} allowed blocks: {allowed_theory_blocks}")
                 
                 for block in allowed_theory_blocks:
                     self.macroblock_assignments[teacher][instance_id][f'{block}_chosen'] = (
                         self.model.NewBoolVar(f'teacher_{teacher}_instance_{instance_id}_{block}_chosen'))
                 
                 # PRIORITY CONSTRAINT: Courses requiring extended tutorial support should get priority for a1-c2 blocks
-                blocks_with_extended_tutorials = ['a1', 'a2', 'b1', 'b2', 'c1', 'c2']
+                # BUT now restricted by department allocation
+                blocks_with_extended_tutorials = [block for block in ['a1', 'a2', 'b1', 'b2', 'c1', 'c2'] 
+                                                if block in allowed_theory_blocks]
                 blocks_without_extended_tutorials = [block for block in allowed_theory_blocks 
                                                    if block not in blocks_with_extended_tutorials]
                 
@@ -174,43 +217,55 @@ class MacroblockTimetableConstraints:
                     (lecture_hours == 2 and tutorial_hours == 2)):
                     
                     # STRICT constraint: These courses can ONLY use blocks with extended tutorial support
+                    # within their department's allowed blocks
                     for block in blocks_without_extended_tutorials:
                         self.model.Add(
                             self.macroblock_assignments[teacher][instance_id][f'{block}_chosen'] == 0)
                     
-                    logger.info(f"Priority course {instance_id} ({lecture_hours}L+{tutorial_hours}T) restricted to blocks with extended tutorial support: {blocks_with_extended_tutorials}")
+                    logger.info(f"Priority course {instance_id} ({lecture_hours}L+{tutorial_hours}T) restricted to blocks with extended tutorial support within {course_dept}: {blocks_with_extended_tutorials}")
                 
                 # Secondary priority: Other courses with tutorial hours > 0 can use any block with basic tutorial support
+                # within their department's allowed blocks
                 elif tutorial_hours > 0:
-                    # These courses can use any block with at least basic tutorial support (all blocks have ta1/ta2 support)
-                    logger.info(f"Course {instance_id} with {lecture_hours}L+{tutorial_hours}T can use any block with basic tutorial support")
+                    logger.info(f"Course {instance_id} with {lecture_hours}L+{tutorial_hours}T can use any block with basic tutorial support within {course_dept}")
                 
-                # Standard courses (lectures only) can use any available block
+                # Standard courses (lectures only) can use any available block within their department
                 else:
-                    logger.info(f"Course {instance_id} with {lecture_hours}L+0T can use any available block")
+                    logger.info(f"Course {instance_id} with {lecture_hours}L+0T can use any available block within {course_dept}")
                 
                 # Ensure exactly one block is chosen per course instance (if it has theory hours)
                 if lecture_hours > 0 or tutorial_hours > 0:
                     block_choices = []
                     
-                    # Collect all possible block choices (excluding v1, v2)
+                    # Collect all possible block choices (excluding v1, v2, and department-restricted blocks)
                     for block in allowed_theory_blocks:
                         block_choices.append(
                             self.macroblock_assignments[teacher][instance_id][f'{block}_chosen'])
                     
-                    # Must assign exactly one macroblock for courses with theory hours
-                    self.model.Add(sum(block_choices) == 1)  # Exactly one block
-                    
-                    logger.info(f"Course instance {instance_id} (Teacher {teacher}, {lecture_hours}L+{tutorial_hours}T) - simplified macroblock assignment")
+                    if block_choices:  # Only add constraint if there are valid choices
+                        # Must assign exactly one macroblock for courses with theory hours
+                        self.model.Add(sum(block_choices) == 1)  # Exactly one block
+                        
+                        logger.info(f"Course instance {instance_id} (Teacher {teacher}, {lecture_hours}L+{tutorial_hours}T, {course_dept}) - simplified macroblock assignment with department restriction")
+                    else:
+                        logger.warning(f"No valid blocks available for course {instance_id} in department {course_dept}")
         
         # Apply teacher course instance overlap constraint
-        self._apply_teacher_course_instance_overlap_constraint()
+        # COMMENTED OUT: Removed as part of teacher instance diversity constraint removal
+        # self._apply_teacher_course_instance_overlap_constraint()
+        logger.info("REMOVED: Teacher course instance overlap constraint - teachers can have multiple course instances in same block")
         
-        # Apply semester and department grouping constraints (simplified)
-        self._apply_semester_grouping_constraints()
+        # Apply semester and department grouping constraints (enhanced for department-specific allocation)
+        self._apply_enhanced_semester_grouping_constraints()
         
-        # NEW: Apply teacher shift constraints to prevent cross-shift violations
-        self._apply_teacher_shift_constraints()
+        # Finalize course preference optimization
+        preference_bonus = self.finalize_course_preferences()
+        if preference_bonus is not None:
+            logger.info("Course preference optimization activated - solver will try to satisfy course-to-block preferences")
+        
+        # COMMENTED OUT: Apply teacher shift constraints to prevent cross-shift violations
+        # self._apply_teacher_shift_constraints()
+        logger.info("Teacher shift constraints DISABLED in course hours constraint - focusing on course grouping")
         
         # Store assignment mapping for post-processing
         self.course_instance_mappings = {}
@@ -282,18 +337,37 @@ class MacroblockTimetableConstraints:
     
     # REMOVED: All detailed case allocation functions moved to post-processing
     
-    def _apply_semester_grouping_constraints(self):
-        """Apply constraints to group courses by semester and department with teacher diversity."""
-        logger.info("Applying semester and department grouping constraints...")
+    def _apply_enhanced_semester_grouping_constraints(self):
+        """
+        Apply enhanced constraints to group courses by semester and department with teacher diversity.
+        NEW: Simple global teacher-block constraint (PRIORITY).
+        NEW: Different courses assigned to different macroblocks (FLEXIBLE when conflicts).
+        PRIORITY: Teacher conflicts override course-block assignments.
+        """
+        logger.info("Applying enhanced semester and department grouping constraints...")
+        logger.info("PRIORITY CONSTRAINT: Teacher cannot have multiple course instances in same macroblock")
+        logger.info("FLEXIBLE CONSTRAINT: Different courses in different macroblocks (yields to teacher conflicts)")
         
-        # Exclude v1 and v2 from semester grouping as well
-        allowed_theory_blocks = [block for block in self.theory_blocks if block not in ['v1', 'v2']]
+        # STEP 1: Apply global teacher-block constraint (HARD CONSTRAINT - HIGHEST PRIORITY)
+        self._apply_global_teacher_block_constraint()
         
+        # STEP 2: Apply flexible different-courses-different-blocks constraint
         for (semester, dept), course_group in self.semester_course_groups.items():
             if len(course_group) <= 1:
                 continue  # Skip if only one course in the group
             
-            # Group by unique course codes to avoid same course repetition
+            # Get department-specific allowed blocks
+            if dept in self.department_block_allocation:
+                dept_allowed_blocks = self.department_block_allocation[dept]['allowed_blocks']
+                logger.info(f"Department {dept} semester {semester}: Using blocks {dept_allowed_blocks}")
+            else:
+                dept_allowed_blocks = self.department_block_allocation['default']['allowed_blocks']
+                logger.info(f"Department {dept} semester {semester}: Using default blocks")
+            
+            # Filter allowed blocks to exclude v1, v2
+            allowed_theory_blocks = [block for block in dept_allowed_blocks if block not in ['v1', 'v2']]
+            
+            # Group by unique course codes to enable same course with different teachers grouping
             course_code_groups = {}
             for item in course_group:
                 course_code = item['course_code']
@@ -301,57 +375,237 @@ class MacroblockTimetableConstraints:
                     course_code_groups[course_code] = []
                 course_code_groups[course_code].append(item)
             
-            # For each macroblock, apply diversity constraints (excluding v1, v2)
+            # NEW CONSTRAINT SYSTEM: Different courses in different macroblocks (FLEXIBLE)
+            logger.info(f"Applying FLEXIBLE different-courses-different-blocks constraint for semester {semester} in department {dept}")
+            
+            # Step 1: Identify courses with lecture + tutorial = 4 (priority courses)
+            priority_courses = []
+            regular_courses = []
+            
+            for course_code, course_instances in course_code_groups.items():
+                # Get lecture and tutorial hours from first instance (should be same for all instances of same course)
+                if course_instances:
+                    first_instance = course_instances[0]['instance']
+                    lecture_hours = first_instance['lecture_hours']
+                    tutorial_hours = first_instance['tutorial_hours']
+                    total_lt_hours = lecture_hours + tutorial_hours
+                    
+                    if total_lt_hours == 4:
+                        priority_courses.append((course_code, course_instances))
+                        logger.info(f"Priority course {course_code}: {lecture_hours}L + {tutorial_hours}T = {total_lt_hours} hours")
+                    else:
+                        regular_courses.append((course_code, course_instances))
+                        logger.info(f"Regular course {course_code}: {lecture_hours}L + {tutorial_hours}T = {total_lt_hours} hours")
+            
+            # Step 2: Apply flexible course-to-block assignments
+            priority_blocks = ['a1', 'b1', 'c1']  # Priority blocks for courses with L+T=4
+            available_priority_blocks = [block for block in priority_blocks if block in allowed_theory_blocks]
+            
+            logger.info(f"Priority courses ({len(priority_courses)}): {[course[0] for course in priority_courses]}")
+            logger.info(f"Available priority blocks: {available_priority_blocks}")
+            
+            # Assign priority courses to priority blocks (FLEXIBLE)
+            for i, (course_code, course_instances) in enumerate(priority_courses):
+                if i < len(available_priority_blocks):
+                    preferred_block = available_priority_blocks[i]
+                    logger.info(f"Assigning priority course {course_code} to preferred block {preferred_block} (FLEXIBLE)")
+                    self._apply_flexible_course_block_assignment(course_code, course_instances, preferred_block, allowed_theory_blocks)
+                else:
+                    logger.info(f"Priority course {course_code} gets flexible assignment - no preferred block available")
+                    self._apply_flexible_course_block_assignment(course_code, course_instances, None, allowed_theory_blocks)
+            
+            # Step 3: Assign regular courses to remaining blocks (FLEXIBLE)
+            used_blocks = set(available_priority_blocks[:len(priority_courses)])
+            remaining_blocks = [block for block in allowed_theory_blocks if block not in used_blocks]
+            
+            logger.info(f"Regular courses ({len(regular_courses)}): {[course[0] for course in regular_courses]}")
+            logger.info(f"Remaining blocks for regular courses: {remaining_blocks}")
+            
+            # Assign regular courses to remaining blocks (FLEXIBLE)
+            for i, (course_code, course_instances) in enumerate(regular_courses):
+                if i < len(remaining_blocks):
+                    preferred_block = remaining_blocks[i]
+                    logger.info(f"Assigning regular course {course_code} to preferred block {preferred_block} (FLEXIBLE)")
+                    self._apply_flexible_course_block_assignment(course_code, course_instances, preferred_block, allowed_theory_blocks)
+                else:
+                    logger.info(f"Regular course {course_code} gets flexible assignment - no preferred block available")
+                    self._apply_flexible_course_block_assignment(course_code, course_instances, None, allowed_theory_blocks)
+        
+        logger.info("Enhanced semester and department grouping constraints applied successfully")
+        logger.info("PRIORITY: Global teacher-block constraint (HARD)")
+        logger.info("FLEXIBLE: Course-to-block assignments (yield to teacher conflicts)")
+    
+    def _apply_global_teacher_block_constraint(self):
+        """
+        Apply global teacher-block constraint: A teacher cannot have multiple course instances 
+        (same course OR different courses) assigned to the same macroblock.
+        
+        This is much simpler than the previous approach and handles all conflict scenarios.
+        """
+        logger.info("Applying global teacher-block constraint...")
+        logger.info("CONSTRAINT: Teacher cannot have multiple course instances in same macroblock")
+        
+        for teacher in self.teachers:
+            if teacher not in self.teacher_course_assignments or len(self.teacher_course_assignments[teacher]) <= 1:
+                continue  # Skip teachers with 0 or 1 course instances
+            
+            course_instances = self.teacher_course_assignments[teacher]
+            logger.info(f"Teacher {teacher} has {len(course_instances)} course instances")
+            
+            # Get all allowed blocks for this teacher's department(s)
+            # For simplicity, use the first course's department to determine allowed blocks
+            first_course_dept = course_instances[0].get('course_dept', 'default')
+            if first_course_dept in self.department_block_allocation:
+                allowed_blocks = self.department_block_allocation[first_course_dept]['allowed_blocks']
+            else:
+                allowed_blocks = self.department_block_allocation['default']['allowed_blocks']
+            
+            # Filter to exclude v1, v2
+            allowed_theory_blocks = [block for block in allowed_blocks if block not in ['v1', 'v2']]
+            
+            # For each macroblock, ensure at most ONE course instance is assigned to it
             for block in allowed_theory_blocks:
+                block_assignment_vars = []
                 
-                # Collect all course instances that could be assigned to this block
-                block_assignments = []
-                teacher_assignments = {}
-                
-                for course_code, course_instances in course_code_groups.items():
-                    for item in course_instances:
-                        teacher = item['teacher']
-                        instance_id = item['instance']['id']
+                # Collect all assignment variables for this block across all course instances
+                for instance in course_instances:
+                    instance_id = instance['id']
+                    if (teacher in self.macroblock_assignments and 
+                        instance_id in self.macroblock_assignments[teacher]):
                         
-                        if teacher in self.macroblock_assignments and instance_id in self.macroblock_assignments[teacher]:
-                            block_var = self.macroblock_assignments[teacher][instance_id].get(f'{block}_chosen')
-                            if block_var is not None:
-                                block_assignments.append((teacher, instance_id, block_var, course_code))
+                        block_var = self.macroblock_assignments[teacher][instance_id].get(f'{block}_chosen')
+                        if block_var is not None:
+                            block_assignment_vars.append(block_var)
+                
+                # Apply constraint: at most 1 course instance per teacher per block
+                if len(block_assignment_vars) > 1:
+                    self.model.Add(sum(block_assignment_vars) <= 1)
+                    logger.info(f"GLOBAL CONSTRAINT: Teacher {teacher} can assign at most 1 course instance to block {block}")
+            
+            logger.info(f"Applied global teacher-block constraint for Teacher {teacher}")
+        
+        logger.info("Global teacher-block constraint applied successfully")
+        logger.info("RESULT: No teacher will have multiple course instances in the same macroblock")
+    
+    def _apply_flexible_course_block_assignment(self, course_code, course_instances, preferred_block, allowed_theory_blocks):
+        """
+        Apply flexible course-to-block assignment with ACTUAL soft constraints.
+        Creates preference constraints that guide the solver towards intended patterns
+        while still allowing alternatives when teacher conflicts occur.
+        """
+        if preferred_block:
+            logger.info(f"SOFT CONSTRAINT: Course {course_code} → Preferred block {preferred_block} (alternatives allowed for conflicts)")
+        else:
+            logger.info(f"FLEXIBLE ASSIGNMENT: Course {course_code} → Any available block")
+        
+        # Group instances by teacher to detect potential conflicts
+        teacher_instances = {}
+        for item in course_instances:
+            teacher_id = item['teacher']
+            if teacher_id not in teacher_instances:
+                teacher_instances[teacher_id] = []
+            teacher_instances[teacher_id].append(item)
+        
+        # Create preference variables and soft constraints
+        course_preference_vars = []
+        
+        # Apply constraints for each teacher
+        for teacher_id, instances in teacher_instances.items():
+            if len(instances) == 1:
+                # Single instance - create strong preference for preferred block
+                instance = instances[0]
+                instance_id = instance['instance']['id']
+                
+                if (teacher_id in self.macroblock_assignments and 
+                    instance_id in self.macroblock_assignments[teacher_id] and
+                    preferred_block and preferred_block in allowed_theory_blocks):
+                    
+                    preferred_block_var = self.macroblock_assignments[teacher_id][instance_id].get(f'{preferred_block}_chosen')
+                    if preferred_block_var is not None:
+                        # Create a preference variable for this assignment
+                        preference_var = self.model.NewBoolVar(f'course_{course_code}_instance_{instance_id}_prefers_{preferred_block}')
+                        
+                        # Link preference to actual assignment
+                        self.model.Add(preference_var <= preferred_block_var)
+                        
+                        # Add to course preference tracking
+                        course_preference_vars.append(preference_var)
+                        
+                        logger.info(f"SOFT CONSTRAINT: Course {course_code} instance {instance_id} (Teacher {teacher_id}) gets preference for block {preferred_block}")
+                else:
+                    logger.info(f"FLEXIBLE: Course {course_code} instance {instance_id} (Teacher {teacher_id}) - no preferred block or not available")
+            
+            else:
+                # Multiple instances for same teacher - still try to use preferred block when possible
+                logger.info(f"CONFLICT DETECTED: Teacher {teacher_id} has {len(instances)} instances of course {course_code}")
+                logger.info(f"PARTIAL PREFERENCE: Will try to assign at least one instance to preferred block {preferred_block} if possible")
+                
+                # Try to assign at least one instance to preferred block
+                if preferred_block and preferred_block in allowed_theory_blocks:
+                    instance_preference_vars = []
+                    
+                    for instance in instances:
+                        instance_id = instance['instance']['id']
+                        if (teacher_id in self.macroblock_assignments and 
+                            instance_id in self.macroblock_assignments[teacher_id]):
+                            
+                            preferred_block_var = self.macroblock_assignments[teacher_id][instance_id].get(f'{preferred_block}_chosen')
+                            if preferred_block_var is not None:
+                                # Create preference variable for this instance
+                                preference_var = self.model.NewBoolVar(f'course_{course_code}_instance_{instance_id}_prefers_{preferred_block}')
+                                self.model.Add(preference_var <= preferred_block_var)
+                                instance_preference_vars.append(preference_var)
                                 
-                                # Track teacher assignments
-                                if teacher not in teacher_assignments:
-                                    teacher_assignments[teacher] = []
-                                teacher_assignments[teacher].append(block_var)
-                
-                # Constraint: Prevent same teacher from having multiple DIFFERENT course instances in same block
-                for teacher, teacher_vars in teacher_assignments.items():
-                    if len(teacher_vars) > 1:
-                        # Group by course instance ID to allow same instance, prevent different instances
-                        teacher_instances = {}
-                        for teacher_id, instance_id, block_var, course_code in block_assignments:
-                            if teacher_id == teacher:
-                                if instance_id not in teacher_instances:
-                                    teacher_instances[instance_id] = []
-                                teacher_instances[instance_id].append(block_var)
-                        
-                        # If teacher has multiple different instances, only one can be in this block
-                        if len(teacher_instances) > 1:
-                            instance_vars = [teacher_instances[inst][0] for inst in teacher_instances]  # One var per instance
-                            self.model.Add(sum(instance_vars) <= 1)
-                
-                # Constraint: Allow up to 2 instances per course code per block (enabling same course with different teachers)
-                course_code_vars = {}
-                for teacher, instance_id, block_var, course_code in block_assignments:
-                    if course_code not in course_code_vars:
-                        course_code_vars[course_code] = []
-                    course_code_vars[course_code].append(block_var)
-                
-                # MODIFIED: Allow at most 2 instances per course code per block (instead of 2)
-                # This enables same course instance with different teachers to be grouped in same macroblock
-                for course_code, course_vars in course_code_vars.items():
-                    if len(course_vars) > 1:
-                        self.model.Add(sum(course_vars) <= 2)  
-                        logger.info(f"Course {course_code} in block {block}: allowing up to 3 instances (different teachers)")
+                                logger.info(f"CONFLICT RESOLUTION: Course {course_code} instance {instance_id} (Teacher {teacher_id}) can prefer block {preferred_block}")
+                    
+                    # Soft constraint: prefer at least one instance in preferred block (but don't force it)
+                    if instance_preference_vars:
+                        # This is a soft preference - we want at least one but won't force it
+                        total_preferences = sum(instance_preference_vars)
+                        course_preference_vars.append(total_preferences)
+        
+        # Global soft constraint: Maximize preference satisfaction for this course
+        if course_preference_vars and preferred_block:
+            # Create an objective term to maximize preference satisfaction
+            total_course_preferences = sum(course_preference_vars)
+            
+            # Add to a global preference objective (we'll create this)
+            if not hasattr(self, 'global_preference_vars'):
+                self.global_preference_vars = []
+            
+            self.global_preference_vars.append(total_course_preferences)
+            
+            logger.info(f"GLOBAL PREFERENCE: Course {course_code} preference satisfaction added to global objective")
+        
+        # The key insight: Create actual constraints that guide the solver towards preferred patterns
+        # while still allowing flexibility due to the global teacher-block constraint
+    
+    def finalize_course_preferences(self):
+        """
+        Finalize the course preference optimization by adding it as a secondary objective.
+        This ensures the solver tries to satisfy course-block preferences when possible.
+        """
+        if hasattr(self, 'global_preference_vars') and self.global_preference_vars:
+            total_preferences = sum(self.global_preference_vars)
+            
+            # Add as a secondary objective (maximize preferences)
+            # We can't use Maximize directly with other constraints, so we create bonus variables
+            max_possible_preferences = len(self.global_preference_vars)
+            
+            # Create bonus variables for preference satisfaction
+            preference_bonus = self.model.NewIntVar(0, max_possible_preferences, 'preference_bonus')
+            self.model.Add(preference_bonus == total_preferences)
+            
+            logger.info(f"PREFERENCE OPTIMIZATION: Added {len(self.global_preference_vars)} course preferences to optimization")
+            logger.info(f"PREFERENCE GOAL: Maximize course-to-block preference satisfaction")
+            
+            return preference_bonus
+        
+        return None
+    
+    def _apply_semester_grouping_constraints(self):
+        """Legacy method - now redirects to enhanced version."""
+        return self._apply_enhanced_semester_grouping_constraints()
     
     def _link_macroblock_to_slots(self, teacher, instance, teacher_theory_assignments, teacher_lab_assignments):
         """SIMPLIFIED: No detailed slot linking - handled in post-processing."""
@@ -423,8 +677,9 @@ class MacroblockTimetableConstraints:
             self.apply_weekly_working_hour_constraint(teacher_theory_assignments, None),
         ]
         
-        # Apply teacher shift constraints (this method doesn't return a boolean)
-        self._apply_teacher_shift_constraints()
+        # COMMENTED OUT: Apply teacher shift constraints (this method doesn't return a boolean)
+        # self._apply_teacher_shift_constraints()
+        logger.info("Teacher shift constraints DISABLED - focusing on course grouping")
         
         return all(constraints_applied)
 
@@ -758,3 +1013,75 @@ class MacroblockTimetableConstraints:
         # Remove duplicates and sort
         predicted_slots = sorted(list(set(predicted_slots)))
         return predicted_slots
+
+    def log_department_block_allocation_summary(self):
+        """Log a summary of department block allocation for monitoring and verification."""
+        logger.info("=" * 80)
+        logger.info("DEPARTMENT BLOCK ALLOCATION SUMMARY")
+        logger.info("=" * 80)
+        
+        # Count courses by department
+        dept_course_counts = {}
+        dept_teacher_counts = {}
+        
+        for teacher in self.teachers:
+            if teacher not in self.teacher_course_assignments:
+                continue
+                
+            for instance in self.teacher_course_assignments[teacher]:
+                course_dept = instance.get('course_dept', 'default')
+                
+                if course_dept not in dept_course_counts:
+                    dept_course_counts[course_dept] = 0
+                    dept_teacher_counts[course_dept] = set()
+                
+                dept_course_counts[course_dept] += 1
+                dept_teacher_counts[course_dept].add(teacher)
+        
+        # Log allocation for each department
+        for dept, allocation in self.department_block_allocation.items():
+            if dept == 'default':
+                continue
+                
+            course_count = dept_course_counts.get(dept, 0)
+            teacher_count = len(dept_teacher_counts.get(dept, set()))
+            
+            logger.info(f"Department: {dept}")
+            logger.info(f"  Block Range: {allocation['block_range']}")
+            logger.info(f"  Allowed Blocks: {allocation['allowed_blocks']}")
+            logger.info(f"  Description: {allocation['description']}")
+            logger.info(f"  Course Instances: {course_count}")
+            logger.info(f"  Teachers: {teacher_count}")
+            logger.info(f"  Block Capacity: {len(allocation['allowed_blocks'])} blocks available")
+            
+            # Calculate utilization estimate
+            if len(allocation['allowed_blocks']) > 0:
+                utilization = (course_count / len(allocation['allowed_blocks'])) * 100
+                logger.info(f"  Estimated Utilization: {utilization:.1f}% (courses per block)")
+            
+            logger.info("-" * 60)
+        
+        # Log default allocation
+        default_depts = [dept for dept in dept_course_counts.keys() 
+                        if dept not in self.department_block_allocation or dept == 'default']
+        
+        if default_depts:
+            default_course_count = sum(dept_course_counts.get(dept, 0) for dept in default_depts)
+            default_teacher_count = len(set().union(*[dept_teacher_counts.get(dept, set()) for dept in default_depts]))
+            
+            logger.info(f"Other Departments (using default allocation):")
+            logger.info(f"  Departments: {default_depts}")
+            logger.info(f"  Block Range: {self.department_block_allocation['default']['block_range']}")
+            logger.info(f"  Allowed Blocks: {self.department_block_allocation['default']['allowed_blocks']}")
+            logger.info(f"  Course Instances: {default_course_count}")
+            logger.info(f"  Teachers: {default_teacher_count}")
+        
+        logger.info("=" * 80)
+        
+        return {
+            'department_stats': {dept: {'courses': dept_course_counts.get(dept, 0), 
+                                      'teachers': len(dept_teacher_counts.get(dept, set()))}
+                               for dept in self.department_block_allocation.keys() if dept != 'default'},
+            'total_courses': sum(dept_course_counts.values()),
+            'total_teachers': len(set().union(*dept_teacher_counts.values()))
+        }

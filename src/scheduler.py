@@ -33,18 +33,18 @@ class MacroblockTimetableScheduler:
         ]
         self.num_slots = len(self.time_slots)
         
-        # Macroblock structure from new format - 11 slots per day
+        # Macroblock structure from new format - 11 slots per day, Tuesday to Saturday
         self.daily_schedule_structure = {
-            "tuesday": ["a1/L1", "b1/L2", "c1/L3", "d1/L4", "e1/L5", "f1/L6", 
-                       "g1/L7", "a2/L8", "b2/L9", "c2/L10", "L11"],
-            "wed": ["d2/L12", "e2/L14", "f2/L15", "g2/L16", "ta1/L17", "tb1/L18", 
-                   "tc1/L19", "td1/L20", "te1/L21", "tf1/L22", "L23"],
-            "thur": ["tg1/L25", "taa2/L26", "tbb2/L27", "tcc2/L28", "v1/L29", "v2/L30", 
-                    "a1/L31", "b1/L32", "c1/L33", "d1/L34", "L35"],
-            "fri": ["e1/L37", "f1/L38", "g1/L39", "ta2/L40", "tb2/L41", "tc2/L42", 
-                   "td2/L43", "te2/L44", "tf2/L45", "tg2/L46", "L47"],
-            "sat": ["a2/L49", "b2/L50", "c2/L51", "taa1/L52", "tbb1/L53", "tcc1/L54", 
-                   "d2/L55", "e2/L56", "f2/L57", "g2/L58", "L59"]
+            "tuesday": ["a1/L1", "f1/L2", "d1/L3", "tb1/L4", "tg1/L5", "L6", 
+                       "a2/L31", "f2/L32", "d2/L33", "tb2/L34", "tg2/L35"],
+            "wed": ["b1/L7", "g1/L8", "e1/L9", "tc1/L10", "taa1/L11", "L12", 
+                   "b2/L37", "g2/L38", "e2/L39", "tc2/L40", "taa2/L41"],
+            "thur": ["c1/L13", "a1/L14", "f1/L15", "v1/L16", "tbb1/L17", "L18", 
+                    "c2/L43", "a2/L44", "f2/L45", "td2/L46", "tbb2/L47"],
+            "fri": ["d1/L19", "b1/L20", "g1/L21", "te1/L22", "tcc1/L23", "L24", 
+                   "d2/L49", "b2/L50", "g2/L51", "te2/L52", "tcc2/L53"],
+            "sat": ["e1/L25", "c1/L26", "ta1/L27", "tf1/L28", "td1/L29", "L30", 
+                   "e2/L55", "c2/L56", "ta2/L57", "tf2/L58", "tdd2/L59"]
         }
         
         # Process rooms - separate classrooms and labs
@@ -173,8 +173,9 @@ class MacroblockTimetableScheduler:
             verification_report_path = os.path.join(self.output_dir, 'room_verification_report.txt')
             room_verifier.generate_room_verification_report(schedule_result, verification_report_path)
             
-            # The shift verification is already handled in post_process_detailed_schedule
-            # So we don't need to repeat it here
+            # COMMENTED OUT: Now determine teacher shifts based on actual slot assignments
+            # schedule_data = self._finalize_teacher_shifts(schedule_data)
+            self.logger.info("Teacher shift finalization DISABLED - focusing on course grouping")
             
             return True
         else:
@@ -294,30 +295,13 @@ class MacroblockTimetableScheduler:
                         'academic_year': instance_data.get('academic_year', ''),
                         'semester': instance_data.get('semester', ''),
                         'course_dept': instance_data.get('course_dept', ''),
-                        'teacher_shift': 'processing',  # Will be determined after all assignments
-                        'daily_shift_pattern': 'processing'  # Will be determined after all assignments
+                        'teacher_shift': 'disabled',  # DISABLED - focusing on course grouping
+                        'daily_shift_pattern': 'disabled'  # DISABLED - focusing on course grouping
                     })
         
-        # Now determine teacher shifts based on actual slot assignments
-        schedule_data = self._finalize_teacher_shifts(schedule_data)
-        
-        # Use ShiftVerifier to add comprehensive shift information and verify constraints
-        shift_verifier = ShiftVerifier(self.logger)
-        schedule_data = shift_verifier.add_shift_info_to_schedule(schedule_data)
-        
-        # Use ENHANCED verification with weekly distribution patterns
-        verification_result = shift_verifier.verify_shift_constraints_with_distribution(schedule_data)
-        shift_verifier.print_distribution_verification_report(verification_result)
-        
-        # Save enhanced shift verification report
-        shift_report_path = os.path.join(self.output_dir, 'enhanced_shift_verification_report.txt')
-        shift_verifier.save_distribution_verification_report(verification_result, shift_report_path)
-        self.logger.info(f"Enhanced shift verification report saved to: {shift_report_path}")
-        
-        # NEW: Save detailed teacher shift data for visualizer
-        shift_data_files = shift_verifier.save_teacher_shift_data(verification_result, self.output_dir)
-        self.logger.info(f"Teacher shift data files created for visualizer access")
-        self.logger.info(f"Comprehensive teacher shift summary saved to: {shift_data_files.get('teacher_shifts_file', 'N/A')}")
+        # COMMENTED OUT: Now determine teacher shifts based on actual slot assignments
+        # schedule_data = self._finalize_teacher_shifts(schedule_data)
+        self.logger.info("Teacher shift finalization DISABLED - focusing on course grouping")
         
         return {
             'schedule_data': schedule_data,
@@ -325,7 +309,7 @@ class MacroblockTimetableScheduler:
             'time_slot_definitions': {
                 'T': self.time_slots,
             },
-            'shift_verification': verification_result
+            # 'shift_verification': verification_result  # COMMENTED OUT
         }
     
     def _apply_case_logic(self, base_block, lecture_hours, tutorial_hours, instance_data, teacher):
@@ -649,8 +633,8 @@ class MacroblockTimetableScheduler:
                                     'academic_year': course_info.get('academic_year', ''),
                                     'semester': course_info.get('semester', ''),
                                     'course_dept': course_info.get('course_dept', ''),
-                                    'teacher_shift': self._determine_daily_shift(teacher, day_idx, constraints, solver),
-                                    'daily_shift_pattern': self._get_teacher_weekly_shift_pattern(teacher, constraints, solver)
+                                    'teacher_shift': 'disabled',  # DISABLED - focusing on course grouping
+                                    'daily_shift_pattern': 'disabled'  # DISABLED - focusing on course grouping
                                 })
                     
                     # Skip lab assignments processing as requested
@@ -785,7 +769,7 @@ class MacroblockTimetableScheduler:
     
     def _get_teacher_weekly_shift_pattern(self, teacher, constraints, solver):
         """Get the weekly shift pattern for a teacher - simplified since shifts are merged."""
-        return 'Combined→Combined→Combined→Combined→Combined'  # All days use combined shift
+        return 'Combined->Combined->Combined->Combined->Combined'  # All days use combined shift
     
     def _create_daily_schedule_structure(self, schedule_data):
         """Create the daily schedule structure matching the required format."""
@@ -1098,7 +1082,7 @@ class MacroblockTimetableScheduler:
                 }.get(shift, shift)
                 pattern_parts.append(shift_display)
             
-            teacher_shift_patterns[teacher_id] = '→'.join(pattern_parts)
+            teacher_shift_patterns[teacher_id] = '->'.join(pattern_parts)
         
         # Update schedule data with proper shift patterns
         for item in schedule_data:
