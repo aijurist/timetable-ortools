@@ -9,7 +9,7 @@ class TimetableDataLoader {
     // Load CSV data from file
     async loadCSVData() {
         try {
-            const response = await fetch('../output/lab_schedule_20250529_125226/combined_theory_lab_schedule.csv');
+            const response = await fetch('../output/lab_schedule_20250601_054204/combined_theory_lab_schedule.csv');
             const csvText = await response.text();
             return csvText;
         } catch (error) {

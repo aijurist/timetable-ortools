@@ -5,6 +5,8 @@ let teachers = {};
 let selectedCourses = {};
 let currentTimetable = {};
 let timeSlots = {};
+let coursesByMacroblock = {}; // NEW: Group courses by macroblock
+let selectedCourseTracker = new Set(); // NEW: Track selected course codes to prevent duplicates
 
 // Time slot mappings - matching the visualizer structure
 const TIME_SLOTS = {
@@ -51,6 +53,14 @@ const MACROBLOCK_PATTERNS = {
     }
 };
 
+// NEW: Define macroblock groups for course selection
+const MACROBLOCK_GROUPS = {
+    morning: ['a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1'],
+    afternoon: ['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2'],
+    tutorial: ['ta1', 'tb1', 'tc1', 'td1', 'te1', 'tf1', 'tg1', 'ta2', 'tb2', 'tc2', 'td2', 'te2', 'tf2', 'tg2', 'taa1', 'tbb1', 'tcc1', 'taa2', 'tbb2', 'tcc2'],
+    other: ['v1', 'v2']
+};
+
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
     showLoadingSpinner();
@@ -65,7 +75,7 @@ function setupEventListeners() {
     document.getElementById('closeModal').addEventListener('click', closeModal);
     document.getElementById('closeConflictModal').addEventListener('click', closeConflictModal);
     document.getElementById('cancelSelection').addEventListener('click', closeModal);
-    document.getElementById('confirmSelection').addEventListener('click', confirmTeacherSelection);
+    document.getElementById('confirmSelection').addEventListener('click', confirmMacroblockTeacherSelection);
     document.getElementById('cancelConflict').addEventListener('click', closeConflictModal);
     document.getElementById('resolveConflict').addEventListener('click', resolveConflict);
     
@@ -171,6 +181,7 @@ function parseCSVData(csvText) {
 function processCourseData() {
     courses = {};
     teachers = {};
+    coursesByMacroblock = {}; // NEW: Reset macroblock grouping
     
     csvData.forEach(row => {
         const courseCode = row.course_code;
@@ -183,9 +194,18 @@ function processCourseData() {
         const isBatched = row.is_batched === 'True';
         const batchNumber = row.batch_number;
         const batchInfo = row.batch_info;
+        const macroblock = row.macroblock; // NEW: Extract macroblock
         
         // Only process 5th semester courses
         if (semester !== '5') return;
+        
+        // NEW: Group courses by macroblock
+        if (macroblock && macroblock !== '--') {
+            if (!coursesByMacroblock[macroblock]) {
+                coursesByMacroblock[macroblock] = new Set();
+            }
+            coursesByMacroblock[macroblock].add(courseCode);
+        }
         
         // Initialize course if not exists
         if (!courses[courseCode]) {
@@ -196,137 +216,225 @@ function processCourseData() {
                 semester: semester,
                 hasLab: false,
                 hasLecture: false,
-                isBatched: false
+                isBatched: false,
+                macroblocks: new Set() // NEW: Track which macroblocks this course appears in
             };
         }
         
-        // Add teacher to course
+        // NEW: Add macroblock to course tracking
+        if (macroblock && macroblock !== '--') {
+            courses[courseCode].macroblocks.add(macroblock);
+        }
+        
+        // Track course types
+        const slotType = row.slot_type;
+        if (slotType === 'Lecture') {
+            courses[courseCode].hasLecture = true;
+        } else if (slotType === 'Practical') {
+            courses[courseCode].hasLab = true;
+            courses[courseCode].isBatched = isBatched || courses[courseCode].isBatched;
+        } else if (slotType === 'Tutorial') {
+            courses[courseCode].hasTutorial = true;
+        }
+        
+        // Initialize teacher if not exists for this course
         if (!courses[courseCode].teachers[teacherId]) {
             courses[courseCode].teachers[teacherId] = {
                 id: teacherId,
                 name: teacherName,
                 staffCode: staffCode,
-                slots: [],
                 courseInstances: {},
-                isBatched: false
+                slots: []
             };
         }
         
-        // Add slot information
-        const slot = {
+        const teacher = courses[courseCode].teachers[teacherId];
+        
+        // Initialize course instance if not exists
+        if (!teacher.courseInstances[courseInstanceId]) {
+            teacher.courseInstances[courseInstanceId] = {
+                instanceId: courseInstanceId,
+                slots: [],
+                batches: {},
+                isBatched: isBatched
+            };
+        }
+        
+        const instance = teacher.courseInstances[courseInstanceId];
+        
+        // Create slot information
+        const slotInfo = {
             day: row.day,
             slotIndex: parseInt(row.slot_index),
             timeInterval: row.time_interval,
-            slotType: row.slot_type,
+            slotType: slotType,
             roomNumber: row.room_number,
-            block: row.block,
-            roomType: row.room_type,
             courseInstanceId: courseInstanceId,
+            macroblock: macroblock,
             isBatched: isBatched,
-            batchNumber: batchNumber,
             batchInfo: batchInfo,
-            labSession: row.lab_session,
-            macroblock: row.macroblock
+            batchNumber: batchNumber,
+            studentCount: row.student_count
         };
         
-        courses[courseCode].teachers[teacherId].slots.push(slot);
+        // Add to instance slots
+        instance.slots.push(slotInfo);
         
-        // Organize by course instances for better grouping
-        if (!courses[courseCode].teachers[teacherId].courseInstances[courseInstanceId]) {
-            courses[courseCode].teachers[teacherId].courseInstances[courseInstanceId] = {
-                instanceId: courseInstanceId,
-                slots: [],
-                isBatched: false,
-                batches: {}
-            };
-        }
+        // Add to teacher's overall slots
+        teacher.slots.push(slotInfo);
         
-        courses[courseCode].teachers[teacherId].courseInstances[courseInstanceId].slots.push(slot);
-        
-        // If this slot is batched, mark the instance as batched
-        if (isBatched) {
-            courses[courseCode].teachers[teacherId].courseInstances[courseInstanceId].isBatched = true;
-            courses[courseCode].teachers[teacherId].isBatched = true;
-            courses[courseCode].isBatched = true;
-        }
-        
-        // For batched courses, organize by batch
+        // Handle batches
         if (isBatched && batchNumber) {
-            if (!courses[courseCode].teachers[teacherId].courseInstances[courseInstanceId].batches[batchNumber]) {
-                courses[courseCode].teachers[teacherId].courseInstances[courseInstanceId].batches[batchNumber] = {
+            if (!instance.batches[batchNumber]) {
+                instance.batches[batchNumber] = {
                     batchNumber: batchNumber,
                     batchInfo: batchInfo,
                     slots: []
                 };
             }
-            courses[courseCode].teachers[teacherId].courseInstances[courseInstanceId].batches[batchNumber].slots.push(slot);
+            instance.batches[batchNumber].slots.push(slotInfo);
         }
         
-        // Update course flags
-        if (slot.slotType.toLowerCase() === 'lecture') {
-            courses[courseCode].hasLecture = true;
-        } else if (slot.slotType.toLowerCase() === 'practical') {
-            courses[courseCode].hasLab = true;
+        // Initialize teacher if not exists globally
+        if (!teachers[teacherId]) {
+            teachers[teacherId] = {
+                id: teacherId,
+                name: teacherName,
+                staffCode: staffCode,
+                courses: new Set()
+            };
         }
         
-        // Store teacher info globally
-        teachers[teacherId] = {
-            id: teacherId,
-            name: teacherName,
-            staffCode: staffCode
-        };
+        teachers[teacherId].courses.add(courseCode);
     });
-}
-
-// Render course selection interface
-function renderCourseSelection() {
-    const container = document.getElementById('courseSelection');
-    container.innerHTML = '';
     
+    // NEW: Convert Sets to Arrays for easier processing
     Object.values(courses).forEach(course => {
-        const courseCard = createCourseCard(course);
-        container.appendChild(courseCard);
+        course.macroblocks = Array.from(course.macroblocks);
+    });
+    
+    console.log('Processed courses by macroblock:', coursesByMacroblock);
+    console.log('Course macroblock mapping:', Object.fromEntries(
+        Object.entries(courses).map(([code, course]) => [code, course.macroblocks])
+    ));
+}
+
+// Render course selection interface - NEW: Macroblock-based selection
+function renderCourseSelection() {
+    const courseSelectionContainer = document.getElementById('courseSelection');
+    courseSelectionContainer.innerHTML = '';
+    
+    // Create macroblock group sections
+    const macroblockGroupsToShow = ['morning', 'afternoon']; // Focus on main teaching blocks
+    
+    macroblockGroupsToShow.forEach(groupName => {
+        const groupSection = document.createElement('div');
+        groupSection.className = 'macroblock-group-section';
+        
+        const groupTitle = document.createElement('h3');
+        groupTitle.className = 'macroblock-group-title';
+        groupTitle.textContent = `${groupName.charAt(0).toUpperCase() + groupName.slice(1)} Sessions (${MACROBLOCK_GROUPS[groupName].join(', ')})`;
+        groupSection.appendChild(groupTitle);
+        
+        // Get all courses available in this macroblock group
+        const coursesInGroup = new Set();
+        MACROBLOCK_GROUPS[groupName].forEach(macroblock => {
+            if (coursesByMacroblock[macroblock]) {
+                coursesByMacroblock[macroblock].forEach(courseCode => {
+                    coursesInGroup.add(courseCode);
+                });
+            }
+        });
+        
+        if (coursesInGroup.size === 0) {
+            const noCourses = document.createElement('p');
+            noCourses.textContent = 'No courses available in this time block.';
+            noCourses.className = 'no-courses-message';
+            groupSection.appendChild(noCourses);
+            courseSelectionContainer.appendChild(groupSection);
+            return;
+        }
+        
+        // Create course selection grid for this group
+        const courseGrid = document.createElement('div');
+        courseGrid.className = 'course-selection-grid';
+        
+        Array.from(coursesInGroup).sort().forEach(courseCode => {
+            const course = courses[courseCode];
+            if (!course) return;
+            
+            const courseCard = createMacroblockCourseCard(course, groupName);
+            courseGrid.appendChild(courseCard);
+        });
+        
+        groupSection.appendChild(courseGrid);
+        courseSelectionContainer.appendChild(groupSection);
     });
 }
 
-// Create course card element
-function createCourseCard(course) {
+// NEW: Create course card for macroblock-based selection
+function createMacroblockCourseCard(course, groupName) {
     const card = document.createElement('div');
     card.className = 'course-card';
-    card.dataset.courseCode = course.code;
     
-    const courseTypes = [];
-    if (course.hasLecture) courseTypes.push('Lecture');
-    if (course.hasLab) courseTypes.push('Lab');
+    // Check if this course is already selected (prevent duplicates)
+    const isAlreadySelected = selectedCourseTracker.has(course.code);
+    const isCurrentlySelected = selectedCourses[course.code];
     
-    card.innerHTML = `
-        <div class="course-header">
-            <div class="course-title">${course.name}</div>
-            <div class="course-code">${course.code}</div>
-        </div>
-        <div class="course-details">
-            <div>Semester: ${course.semester}</div>
-            <div>Type: ${courseTypes.join(', ')}</div>
-            <div>Teachers: ${Object.keys(course.teachers).length}</div>
-        </div>
-        ${selectedCourses[course.code] ? `
-            <div class="course-teacher">
-                <strong>Selected:</strong> ${selectedCourses[course.code].teacher.name}
-            </div>
-        ` : ''}
-    `;
-    
-    if (selectedCourses[course.code]) {
+    if (isAlreadySelected && !isCurrentlySelected) {
+        card.classList.add('disabled');
+    } else if (isCurrentlySelected) {
         card.classList.add('selected');
     }
     
-    card.addEventListener('click', () => openCourseModal(course));
+    // Get available macroblocks for this course within the group
+    const availableBlocks = course.macroblocks.filter(block => 
+        MACROBLOCK_GROUPS[groupName].includes(block)
+    );
+    
+    let courseTypes = [];
+    if (course.hasLecture) courseTypes.push('Lecture');
+    if (course.hasLab) courseTypes.push('Lab');
+    if (course.hasTutorial) courseTypes.push('Tutorial');
+    
+    card.innerHTML = `
+        <div class="course-header">
+            <h4 class="course-name">${course.name}</h4>
+            <div class="course-code">${course.code}</div>
+        </div>
+        <div class="course-details">
+            <div class="course-type">${courseTypes.join(', ')}</div>
+            <div class="available-blocks">Available in: ${availableBlocks.join(', ')}</div>
+            <div class="teachers-count">${Object.keys(course.teachers).length} teacher(s)</div>
+        </div>
+        <div class="selection-status">
+            ${isAlreadySelected && !isCurrentlySelected ? 
+                '<span class="status-text disabled">Already Selected in Another Block</span>' : 
+                isCurrentlySelected ? 
+                '<span class="status-text selected">Selected</span>' : 
+                '<span class="status-text available">Click to Select</span>'
+            }
+        </div>
+    `;
+    
+    // Add click handler for course selection
+    if (!isAlreadySelected || isCurrentlySelected) {
+        card.addEventListener('click', () => {
+            if (isCurrentlySelected) {
+                // Deselect course
+                deselectCourse(course.code);
+            } else {
+                // Select course
+                openMacroblockCourseModal(course, groupName);
+            }
+        });
+    }
     
     return card;
 }
 
-// Open course modal for teacher selection
-function openCourseModal(course) {
+// NEW: Open course modal for macroblock-based selection
+function openMacroblockCourseModal(course, groupName) {
     const modal = document.getElementById('courseModal');
     const modalTitle = document.getElementById('modalTitle');
     const teacherOptions = document.getElementById('teacherOptions');
@@ -348,70 +456,105 @@ function openCourseModal(course) {
     // Clear previous options
     teacherOptions.innerHTML = '';
     
-    // Create teacher options with instance selection
+    // Add macroblock selection info
+    const availableBlocks = course.macroblocks.filter(block => 
+        MACROBLOCK_GROUPS[groupName].includes(block)
+    );
+    
+    const macroblockInfo = document.createElement('div');
+    macroblockInfo.className = 'macroblock-info';
+    macroblockInfo.innerHTML = `
+        <p><strong>Available in ${groupName} blocks:</strong> ${availableBlocks.join(', ')}</p>
+        <p><em>Note: Selecting this course will prevent you from selecting it in other macroblock groups.</em></p>
+    `;
+    teacherOptions.appendChild(macroblockInfo);
+    
+    // Create teacher options with macroblock-filtered slots
     Object.values(course.teachers).forEach(teacher => {
-        const optionContainer = createTeacherOption(teacher, course.code);
+        const optionContainer = createMacroblockTeacherOption(teacher, course.code, groupName);
         teacherOptions.appendChild(optionContainer);
     });
     
     // Reset modal state
     document.getElementById('confirmSelection').disabled = true;
     modal.dataset.courseCode = course.code;
+    modal.dataset.groupName = groupName;
     modal.style.display = 'block';
 }
 
-// Create teacher option with instance selection
-function createTeacherOption(teacher, courseCode) {
+// NEW: Create teacher option with macroblock filtering
+function createMacroblockTeacherOption(teacher, courseCode, groupName) {
     const optionContainer = document.createElement('div');
     optionContainer.className = 'teacher-option-container';
+    
+    // Filter teacher's slots to only show those in the selected macroblock group
+    const relevantSlots = teacher.slots.filter(slot => 
+        MACROBLOCK_GROUPS[groupName].includes(slot.macroblock)
+    );
+    
+    // Filter instances to only show those with slots in the selected macroblock group
+    const relevantInstances = {};
+    Object.entries(teacher.courseInstances).forEach(([instanceId, instance]) => {
+        const instanceRelevantSlots = instance.slots.filter(slot => 
+            MACROBLOCK_GROUPS[groupName].includes(slot.macroblock)
+        );
+        if (instanceRelevantSlots.length > 0) {
+            relevantInstances[instanceId] = {
+                ...instance,
+                slots: instanceRelevantSlots
+            };
+        }
+    });
+    
+    if (relevantSlots.length === 0) {
+        // This teacher doesn't have slots in this macroblock group
+        const noSlotsMessage = document.createElement('div');
+        noSlotsMessage.className = 'no-slots-message';
+        noSlotsMessage.textContent = `${teacher.name} - No slots available in ${groupName} blocks`;
+        optionContainer.appendChild(noSlotsMessage);
+        return optionContainer;
+    }
     
     // Create main teacher option
     const teacherOption = document.createElement('div');
     teacherOption.className = 'teacher-option';
     teacherOption.dataset.teacherId = teacher.id;
     
-    // Count total instances for this teacher
-    const totalInstances = Object.keys(teacher.courseInstances).length;
-    const totalSlots = teacher.slots.length;
+    const totalInstances = Object.keys(relevantInstances).length;
+    const totalSlots = relevantSlots.length;
     
     teacherOption.innerHTML = `
         <div class="teacher-name">${teacher.name}</div>
         <div class="teacher-code">ID: ${teacher.id}</div>
         <div class="teacher-instances">
-            ${totalInstances} course instance${totalInstances !== 1 ? 's' : ''} • 
-            ${totalSlots} time slot${totalSlots !== 1 ? 's' : ''}
+            ${totalInstances} instance${totalInstances !== 1 ? 's' : ''} • 
+            ${totalSlots} slot${totalSlots !== 1 ? 's' : ''} in ${groupName} blocks
         </div>
     `;
     
     optionContainer.appendChild(teacherOption);
     
-    // If teacher has multiple instances, show instance selection
+    // Store relevant instances and slots for later use
+    optionContainer.dataset.relevantInstances = JSON.stringify(relevantInstances);
+    optionContainer.dataset.relevantSlots = JSON.stringify(relevantSlots);
+    
+    // Add instance selection if needed
     if (totalInstances > 1) {
         const instanceSelection = document.createElement('div');
         instanceSelection.className = 'instance-selection';
         instanceSelection.style.display = 'none';
-        
         instanceSelection.innerHTML = '<h5>Select Course Instance:</h5>';
         
-        Object.values(teacher.courseInstances).forEach(instance => {
+        Object.values(relevantInstances).forEach(instance => {
             const instanceDiv = document.createElement('div');
             instanceDiv.className = 'instance-details';
             
-            // Show instance information
             let instanceInfo = `<strong>Instance ${instance.instanceId}</strong><br>`;
-            instanceInfo += `${instance.slots.length} slots`;
+            instanceInfo += `${instance.slots.length} slots in ${groupName} blocks`;
             
             if (instance.isBatched && Object.keys(instance.batches).length > 0) {
                 instanceInfo += ` • Batched (${Object.keys(instance.batches).length} batches)`;
             }
-            
-            // Show schedule summary
-            const scheduleSummary = getInstanceScheduleSummary(instance);
-            if (scheduleSummary) {
-                instanceInfo += `<br><small>${scheduleSummary}</small>`;
-            }
-            
-            instanceDiv.innerHTML = instanceInfo;
             
             const instanceOption = document.createElement('div');
             instanceOption.className = 'instance-option';
@@ -422,61 +565,13 @@ function createTeacherOption(teacher, courseCode) {
             `;
             
             instanceSelection.appendChild(instanceOption);
-            
-            // If this instance has batches, show batch selection
-            if (instance.isBatched && Object.keys(instance.batches).length > 0) {
-                const batchSelection = document.createElement('div');
-                batchSelection.className = 'batch-selection';
-                batchSelection.style.display = 'none';
-                batchSelection.innerHTML = '<h6>Select Batch:</h6>';
-                
-                Object.values(instance.batches).forEach(batch => {
-                    const batchOption = document.createElement('div');
-                    batchOption.className = 'batch-option';
-                    batchOption.innerHTML = `
-                        <input type="radio" name="batch_${teacher.id}_${instance.instanceId}" id="batch_${teacher.id}_${instance.instanceId}_${batch.batchNumber}" value="${batch.batchNumber}">
-                        <label for="batch_${teacher.id}_${instance.instanceId}_${batch.batchNumber}">${batch.batchInfo || `Batch ${batch.batchNumber}`}</label>
-                    `;
-                    batchSelection.appendChild(batchOption);
-                });
-                
-                instanceOption.appendChild(batchSelection);
-                
-                // Show batch selection when instance is selected
-                instanceOption.querySelector('input[type="radio"]').addEventListener('change', function() {
-                    if (this.checked) {
-                        batchSelection.style.display = 'block';
-                    }
-                });
-            }
         });
         
         optionContainer.appendChild(instanceSelection);
-    } else {
-        // Single instance - check if it needs batch selection
-        const singleInstance = Object.values(teacher.courseInstances)[0];
-        if (singleInstance && singleInstance.isBatched && Object.keys(singleInstance.batches).length > 0) {
-            const batchSelection = document.createElement('div');
-            batchSelection.className = 'batch-selection';
-            batchSelection.style.display = 'none';
-            batchSelection.innerHTML = '<h6>Select Batch:</h6>';
-            
-            Object.values(singleInstance.batches).forEach(batch => {
-                const batchOption = document.createElement('div');
-                batchOption.className = 'batch-option';
-                batchOption.innerHTML = `
-                    <input type="radio" name="batch_${teacher.id}_${singleInstance.instanceId}" id="batch_${teacher.id}_${singleInstance.instanceId}_${batch.batchNumber}" value="${batch.batchNumber}">
-                    <label for="batch_${teacher.id}_${singleInstance.instanceId}_${batch.batchNumber}">${batch.batchInfo || `Batch ${batch.batchNumber}`}</label>
-                `;
-                batchSelection.appendChild(batchOption);
-            });
-            
-            optionContainer.appendChild(batchSelection);
-        }
     }
     
     // Add click handler
-    teacherOption.addEventListener('click', () => selectTeacher(optionContainer, teacher.id));
+    teacherOption.addEventListener('click', () => selectMacroblockTeacher(optionContainer, teacher.id));
     
     return optionContainer;
 }
@@ -1190,10 +1285,11 @@ function clearAllSelections() {
     
     if (confirm('Are you sure you want to clear all course selections?')) {
         selectedCourses = {};
+        selectedCourseTracker.clear();
         renderCourseSelection();
         updateGenerateButton();
         clearTimetable();
-        showNotification('All selections cleared!', 'info');
+        showNotification('All course selections cleared.', 'info');
     }
 }
 
@@ -1271,4 +1367,167 @@ style.textContent = `
         }
     }
 `;
-document.head.appendChild(style); 
+document.head.appendChild(style);
+
+// NEW: Select teacher for macroblock-based selection
+function selectMacroblockTeacher(optionContainer, teacherId) {
+    // Remove previous selection
+    const parentContainer = optionContainer.parentNode;
+    parentContainer.querySelectorAll('.teacher-option').forEach(opt => {
+        opt.classList.remove('selected');
+    });
+    parentContainer.querySelectorAll('.instance-selection').forEach(sel => {
+        sel.style.display = 'none';
+    });
+    
+    // Select current option
+    const teacherOption = optionContainer.querySelector('.teacher-option');
+    teacherOption.classList.add('selected');
+    
+    // Get relevant data
+    const relevantInstances = JSON.parse(optionContainer.dataset.relevantInstances || '{}');
+    const relevantSlots = JSON.parse(optionContainer.dataset.relevantSlots || '[]');
+    
+    // Show instance selection if available
+    const instanceSelection = optionContainer.querySelector('.instance-selection');
+    if (instanceSelection && Object.keys(relevantInstances).length > 1) {
+        instanceSelection.style.display = 'block';
+    }
+    
+    // Enable confirm button
+    document.getElementById('confirmSelection').disabled = false;
+    
+    // Store selection data for confirmation
+    const modal = document.getElementById('courseModal');
+    modal.dataset.selectedTeacherId = teacherId;
+    modal.dataset.selectedSlots = JSON.stringify(relevantSlots);
+    modal.dataset.selectedInstances = JSON.stringify(relevantInstances);
+}
+
+// NEW: Confirm macroblock-based teacher selection
+function confirmMacroblockTeacherSelection() {
+    const modal = document.getElementById('courseModal');
+    const courseCode = modal.dataset.courseCode;
+    const groupName = modal.dataset.groupName;
+    const teacherId = modal.dataset.selectedTeacherId;
+    const selectedSlots = JSON.parse(modal.dataset.selectedSlots || '[]');
+    const selectedInstances = JSON.parse(modal.dataset.selectedInstances || '{}');
+    
+    if (!courseCode || !teacherId || !groupName) {
+        alert('Please select a teacher first.');
+        return;
+    }
+    
+    // Check for conflicts with existing selections
+    const conflicts = checkMacroblockConflicts(courseCode, teacherId, selectedSlots);
+    if (conflicts.length > 0) {
+        showConflictModal(courseCode, teacherId, conflicts);
+        return;
+    }
+    
+    // Get teacher data
+    const course = courses[courseCode];
+    const teacher = course.teachers[teacherId];
+    
+    // Create filtered teacher object with only relevant slots
+    const filteredTeacher = {
+        ...teacher,
+        slots: selectedSlots,
+        courseInstances: selectedInstances
+    };
+    
+    // Add to selected courses
+    selectedCourses[courseCode] = {
+        course: course,
+        teacher: filteredTeacher,
+        groupName: groupName,
+        macroblockGroup: groupName
+    };
+    
+    // Add to selected course tracker to prevent duplicates
+    selectedCourseTracker.add(courseCode);
+    
+    console.log(`Selected course ${courseCode} in ${groupName} blocks with teacher ${teacher.name}`);
+    console.log('Slots:', selectedSlots.map(slot => `${slot.day} ${slot.timeInterval} (${slot.macroblock})`));
+    
+    // Update UI
+    renderCourseSelection();
+    updateGenerateButton();
+    closeModal();
+    
+    showNotification(`Successfully selected ${course.name} (${courseCode}) with ${teacher.name} in ${groupName} blocks!`, 'success');
+}
+
+// NEW: Deselect a course
+function deselectCourse(courseCode) {
+    if (selectedCourses[courseCode]) {
+        const course = selectedCourses[courseCode].course;
+        const groupName = selectedCourses[courseCode].groupName;
+        
+        // Remove from selected courses
+        delete selectedCourses[courseCode];
+        
+        // Remove from tracker
+        selectedCourseTracker.delete(courseCode);
+        
+        // Update UI
+        renderCourseSelection();
+        updateGenerateButton();
+        
+        showNotification(`Deselected ${course.name} (${courseCode}) from ${groupName} blocks.`, 'info');
+    }
+}
+
+// NEW: Check for conflicts in macroblock-based selection
+function checkMacroblockConflicts(newCourseCode, newTeacherId, newSlots) {
+    const conflicts = [];
+    
+    // Check against existing selections
+    Object.values(selectedCourses).forEach(selectedCourse => {
+        const selectedTeacher = selectedCourse.teacher;
+        const selectedCourseCode = selectedCourse.course.code;
+        
+        // Skip if same course (shouldn't happen but safety check)
+        if (selectedCourseCode === newCourseCode) return;
+        
+        // Check for teacher conflicts (same teacher, overlapping time slots)
+        if (selectedTeacher.id === newTeacherId) {
+            selectedTeacher.slots.forEach(selectedSlot => {
+                newSlots.forEach(newSlot => {
+                    if (selectedSlot.day === newSlot.day && 
+                        selectedSlot.slotIndex === newSlot.slotIndex) {
+                        conflicts.push({
+                            type: 'teacher_overlap',
+                            conflictingCourse: selectedCourseCode,
+                            day: selectedSlot.day,
+                            time: selectedSlot.timeInterval,
+                            macroblock: selectedSlot.macroblock
+                        });
+                    }
+                });
+            });
+        }
+        
+        // Check for room conflicts (different teachers, same room, same time)
+        selectedTeacher.slots.forEach(selectedSlot => {
+            newSlots.forEach(newSlot => {
+                if (selectedSlot.day === newSlot.day && 
+                    selectedSlot.slotIndex === newSlot.slotIndex &&
+                    selectedSlot.roomNumber === newSlot.roomNumber &&
+                    selectedTeacher.id !== newTeacherId) {
+                    conflicts.push({
+                        type: 'room_overlap',
+                        conflictingCourse: selectedCourseCode,
+                        conflictingTeacher: selectedTeacher.name,
+                        day: selectedSlot.day,
+                        time: selectedSlot.timeInterval,
+                        room: selectedSlot.roomNumber,
+                        macroblock: selectedSlot.macroblock
+                    });
+                }
+            });
+        });
+    });
+    
+    return conflicts;
+} 
