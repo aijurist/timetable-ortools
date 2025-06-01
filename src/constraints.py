@@ -32,6 +32,21 @@ class MacroblockTimetableConstraints:
                 'block_range': 'a1-g1',
                 'description': 'Computer Science courses restricted to a1-g1 blocks only'
             },
+            'Artificial Intelligence & Data Science': {
+                'allowed_blocks': ['a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1'],
+                'block_range': 'a1-g1',
+                'description': 'AI & Data Science courses restricted to a1-g1 blocks only'
+            },
+            'Artificial Intelligence & Machine Learning': {
+                'allowed_blocks': ['a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1'],
+                'block_range': 'a1-g1',
+                'description': 'AI & Machine Learning courses restricted to a1-g1 blocks only'
+            },
+            'Computer Science & Design': {
+                'allowed_blocks': ['a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1'],
+                'block_range': 'a1-g1',
+                'description': 'Computer Science & Design courses restricted to a1-g1 blocks only'
+            },
             # Future departments can be added here
             # 'Mechanical Engineering': {
             #     'allowed_blocks': ['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2'],

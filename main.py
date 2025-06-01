@@ -19,7 +19,7 @@ def main():
         base_dir = os.path.dirname(os.path.abspath(__file__))
         
         # Path to data files
-        course_file = os.path.join(base_dir, 'data/mapped_data/cs_teacher_courses.csv')
+        course_file = os.path.join(base_dir, 'data/mapped_data/computer_dept_teacher_courses.csv')
         if not os.path.exists(course_file):
             print(f"Error: Course file not found at {course_file}")
             return
@@ -62,6 +62,9 @@ def main():
         print("• Theory-only scheduling with classroom assignments")
         print("• ENHANCED: Department-specific block allocation constraints")
         print("  - Computer Science & Engineering: RESTRICTED to a1-g1 blocks ONLY")
+        print("  - Artificial Intelligence & Data Science: RESTRICTED to a1-g1 blocks ONLY")
+        print("  - Artificial Intelligence & Machine Learning: RESTRICTED to a1-g1 blocks ONLY")
+        print("  - Computer Science & Design: RESTRICTED to a1-g1 blocks ONLY")
         print("  - Course cohorts for each semester grouped within department's allowed blocks")
         print("  - Enhanced semester grouping with different courses in different blocks")
         print("  - Department utilization tracking and monitoring")

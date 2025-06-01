@@ -7,8 +7,8 @@ def verify_ltp_constraints():
     
     # Load course requirements - try both possible file names
     course_files = [
-        # "data/mapped_data/computer_dept_teacher_courses.csv",
-        "data/mapped_data/cs_teacher_courses.csv"
+        "data/mapped_data/computer_dept_teacher_courses.csv",
+        # "data/mapped_data/cs_teacher_courses.csv"
     ]
     
     course_file = None
@@ -85,16 +85,16 @@ def verify_ltp_constraints():
         schedule_df = theory_schedule_df
         print(f"Using theory schedule only ({len(schedule_df)} assignments)")
     
-    print("🔍 LTP CONSTRAINT VERIFICATION (WITH ENHANCED BATCHING ANALYSIS)")
+    print("LTP CONSTRAINT VERIFICATION (WITH ENHANCED BATCHING ANALYSIS)")
     print("=" * 85)
     if has_lab_schedule:
-        print("✅ Lab allocation found - evaluating practical hours with batching support")
-        print("📊 Batching Logic: S1 B1/S1 B2 for courses split across multiple labs")
+        print("Lab allocation found - evaluating practical hours with batching support")
+        print("Batching Logic: S1 B1/S1 B2 for courses split across multiple labs")
     else:
-        print("⚠️  Lab allocation not found - practical hours will be marked as missing")
+        print("Lab allocation not found - practical hours will be marked as missing")
     print("=" * 85)
     
-    print(f"📊 SUMMARY:")
+    print(f"SUMMARY:")
     print(f"Total course instances in dataset: {len(courses_df)}")
     print(f"Total scheduled assignments: {len(schedule_df)}")
     print(f"Unique courses scheduled: {schedule_df['course_code'].nunique()}")
@@ -176,7 +176,7 @@ def verify_ltp_constraints():
                         batch_info = display_code.split(' B')[-1]  # Extract batch number
                         scheduled_hours[instance_id]['batches'].add(batch_info)
     
-    print(f"{'ID':<6} {'Course':<12} {'Teacher':<20} {'Sem':<4} {'L Req':<6} {'L Sch':<6} {'T Req':<6} {'T Sch':<6} {'P Req':<6} {'P Status':<12} {'Status':<25}")
+    print(f"{'ID':<6} {'Course':<12} {'Teacher':<20} {'Sem':<4} {'L Req':<6} {'L Sch':<6} {'T Req':<6} {'T Sch':<6} {'P Req':<6} {'P Sch':<10} {'P Status':<10} {'Status':<25}")
     print("-" * 150)
     
     violations = 0
@@ -204,11 +204,30 @@ def verify_ltp_constraints():
         practical_scheduled = scheduled_hours[instance_id]['practical']
         batches_found = scheduled_hours[instance_id]['batches']
         
-        # Practical status display
+        # Practical status display and compliance checking
         if practical_required > 0:
-            practical_status = "SKIPPED"
+            if has_lab_schedule:
+                # For batched courses: practical_scheduled represents total practical hours across all batches
+                # Compare against the original practical_required (not expected slots)
+                
+                # Set practical status based on actual hours
+                if practical_scheduled >= practical_required:
+                    practical_status = "OK"
+                    practical_ok = True
+                elif practical_scheduled > 0:
+                    practical_status = f"PARTIAL {practical_scheduled}/{practical_required}"
+                    practical_ok = False
+                    practical_violations += 1
+                else:
+                    practical_status = "MISSING"
+                    practical_ok = False
+                    practical_violations += 1
+            else:
+                practical_status = "SKIPPED"
+                practical_ok = True  # Consider OK if no lab schedule available
         else:
             practical_status = "N/A"
+            practical_ok = True  # No practical required
         
         # Check if this instance was scheduled at all
         total_scheduled = lecture_scheduled + tutorial_scheduled + practical_scheduled
@@ -249,17 +268,20 @@ def verify_ltp_constraints():
             lecture_ok = lecture_scheduled == expected_lecture
             tutorial_ok = tutorial_scheduled == expected_tutorial
             
-            # MODIFIED: Skip practical hours validation - only check theory (lectures + tutorials)
-            practical_ok = True  # Always consider practical as OK since we're not checking
-            
-            # Overall status - only based on theory compliance
+            # Overall status - based on theory and practical compliance
             theory_ok = lecture_ok and tutorial_ok
+            overall_ok = theory_ok and practical_ok
             
-            if theory_ok:
+            if overall_ok:
                 status = "✅ COMPLIANT"
-            else:
+            elif theory_ok and not practical_ok:
+                status = "⚠️ PRACTICAL ISSUE"
+            elif not theory_ok and practical_ok:
                 status = "⚠️ THEORY ISSUE"
                 theory_only_violations += 1
+            else:
+                status = "❌ MULTIPLE ISSUES"
+                violations += 1
         
         # Enhanced display showing actual vs expected for clarity
         if total_scheduled == 0:
@@ -299,158 +321,62 @@ def verify_ltp_constraints():
             lec_display = f"{lecture_scheduled}/{display_expected_lecture}"
             tut_display = f"{tutorial_scheduled}/{display_expected_tutorial}"
             
-            # Simplified practical display - just show scheduled hours
-            prac_display = f"{practical_scheduled}"
+            # Practical display - show actual hours (scheduled_hours/required_hours)
+            if practical_required > 0 and has_lab_schedule:
+                # practical_scheduled already represents the correct practical hours from lab sessions
+                # Each lab session in the schedule = 2 practical hours, so counting is already correct
+                prac_display = f"{practical_scheduled}/{practical_required}"
+            else:
+                prac_display = f"{practical_scheduled}"
         
         print(f"{instance_id:<6} {course_code:<12} {teacher_name[:19]:<20} {semester:<4} {lecture_required:<6} {lec_display:<6} {tutorial_required:<6} {tut_display:<6} {practical_required:<6} {prac_display:<10} {practical_status:<10} {status:<25}")
     
     print("-" * 150)
-    print(f"\n📊 THEORY-ONLY LTP CONSTRAINT RESULTS:")
+    print(f"\n📊 LTP CONSTRAINT RESULTS:")
     print(f"Total instances in dataset: {total_instances}")
-    print(f"✅ Theory compliant instances: {total_instances - theory_only_violations - not_scheduled}")
+    print(f"✅ Fully compliant instances: {total_instances - violations - theory_only_violations - practical_violations - not_scheduled}")
     print(f"⚠️  Theory issues: {theory_only_violations}")
+    if has_lab_schedule:
+        print(f"⚠️  Practical issues: {practical_violations}")
+        print(f"❌ Multiple issues: {violations}")
     print(f"🚫 Not scheduled at all: {not_scheduled}")
-    print(f"📈 Overall theory success rate: {((total_instances - theory_only_violations - not_scheduled)/total_instances)*100:.1f}%")
-    print(f"📈 Theory compliance rate: {((total_instances - theory_only_violations - not_scheduled)/max(total_instances - not_scheduled, 1))*100:.1f}%")
-    print(f"🔍 NOTE: Practical hour validation skipped as requested")
+    print(f"📈 Overall success rate: {((total_instances - violations - theory_only_violations - practical_violations - not_scheduled)/total_instances)*100:.1f}%")
+    print(f"📈 Theory compliance rate: {((total_instances - violations - theory_only_violations - not_scheduled)/max(total_instances - not_scheduled, 1))*100:.1f}%")
+    if has_lab_schedule:
+        courses_with_practicals = sum(1 for req in course_requirements.values() if req['practical_hours'] > 0)
+        print(f"📈 Practical compliance rate: {((courses_with_practicals - practical_violations - violations)/max(courses_with_practicals, 1))*100:.1f}%")
     
     if has_lab_schedule:
-        total_with_issues = violations + theory_only_violations + practical_violations + not_scheduled
-        print(f"📈 Overall success rate: {((total_instances - total_with_issues)/total_instances)*100:.1f}%")
-        print(f"📈 Theory compliance rate: {((total_instances - violations - theory_only_violations - not_scheduled)/max(total_instances - not_scheduled, 1))*100:.1f}%")
-        print(f"📈 Practical compliance rate: {((total_instances - violations - practical_violations)/max(sum(1 for req in course_requirements.values() if req['practical_hours'] > 0), 1))*100:.1f}%")
-        if batching_issues == 0:
-            print(f"📈 Batching success rate: 100.0% (All batching requirements met)")
+        print(f"\n💡 Lab scheduling features implemented:")
+        print(f"  ✓ L1-L6 lab sessions (2 hours each)")
+        print(f"  ✓ No conflicts with existing theory schedule")
+        print(f"  ✓ Continuous room assignment for multi-slot sessions")
+        print(f"  ✓ Individual teacher lab visualizations")
+        print(f"  ✓ Macroblock-based allocation prevents theory-lab conflicts")
+        print(f"    - Teachers with a1-g1 theory blocks → L4-L6 lab sessions only")
+        print(f"    - Teachers with a2-g2 theory blocks → L1-L3 lab sessions only")
+        
+        # Perform comprehensive lab constraint verification
+        lab_verification_result = verify_lab_constraints(schedule_df, course_requirements)
+        
+        # Analyze lab efficiency and utilization
+        analyze_lab_efficiency(schedule_df, course_requirements)
+        
+        # Update final success determination to include lab constraint compliance
+        lab_constraints_ok = lab_verification_result['compliant']
+        if not lab_constraints_ok:
+            print(f"\n❌ LAB CONSTRAINT VIOLATIONS DETECTED!")
+            print(f"  - {len(lab_verification_result['violations'])} lab constraint violations found")
+            print(f"  - Review detailed violation list above for specific issues")
         else:
-            batched_courses = len([id for id, hours in scheduled_hours.items() if len(hours['batches']) > 0])
-            if batched_courses > 0:
-                print(f"📈 Batching success rate: {((batched_courses - batching_issues)/batched_courses)*100:.1f}%")
+            print(f"\n✅ ALL LAB CONSTRAINTS VERIFIED SUCCESSFULLY!")
     else:
-        print(f"📈 Overall success rate (theory only): {((total_instances - violations - theory_only_violations - not_scheduled)/total_instances)*100:.1f}%")
-        print(f"📈 Theory compliance rate: {((total_instances - violations - theory_only_violations - not_scheduled)/max(total_instances - not_scheduled, 1))*100:.1f}%")
+        lab_constraints_ok = True  # No lab constraints to check
+        print(f"  ⚠️  Practical hours not evaluated (lab schedule not found)")
     
-    # Enhanced lab-specific analysis if lab schedule exists
-    if has_lab_schedule:
-        print(f"\n🧪 ENHANCED LAB SCHEDULING ANALYSIS:")
-        courses_with_practicals = {id: req for id, req in course_requirements.items() if req['practical_hours'] > 0}
-        print(f"Courses requiring practicals: {len(courses_with_practicals)}")
-        
-        lab_scheduled = 0
-        lab_compliant = 0
-        total_practical_hours_required = 0
-        total_practical_hours_scheduled = 0
-        courses_with_batching = 0
-        
-        for instance_id, req in courses_with_practicals.items():
-            practical_required = req['practical_hours']
-            practical_scheduled = scheduled_hours[instance_id]['practical']
-            batches_found = scheduled_hours[instance_id]['batches']
-            
-            total_practical_hours_required += practical_required
-            total_practical_hours_scheduled += practical_scheduled
-            
-            if practical_scheduled > 0:
-                lab_scheduled += 1
-                if practical_scheduled >= practical_required:
-                    lab_compliant += 1
-            
-            if len(batches_found) > 1:  # Multiple batches found
-                courses_with_batching += 1
-        
-        print(f"Courses with lab sessions scheduled: {lab_scheduled}/{len(courses_with_practicals)} ({(lab_scheduled/max(len(courses_with_practicals), 1))*100:.1f}%)")
-        print(f"Courses with sufficient practical hours: {lab_compliant}/{len(courses_with_practicals)} ({(lab_compliant/max(len(courses_with_practicals), 1))*100:.1f}%)")
-        print(f"Courses using dynamic batching: {courses_with_batching}")
-        print(f"Total practical hours: {total_practical_hours_scheduled}/{total_practical_hours_required} scheduled")
-        
-        # Analyze lab session efficiency
-        lab_sessions_used = total_practical_hours_scheduled // 2  # Each lab session = 2 hours
-        print(f"Lab sessions utilized: {lab_sessions_used} (each session = 2 practical hours)")
-        
-        # Enhanced batching analysis
-        if courses_with_batching > 0:
-            print(f"\n🔄 BATCHING EFFICIENCY ANALYSIS:")
-            print(f"Courses successfully batched: {courses_with_batching}")
-            
-            # Analyze specific batching patterns
-            s1_b1_b2_pattern = 0
-            for instance_id in scheduled_hours.keys():
-                batches = scheduled_hours[instance_id]['batches']
-                if '1' in batches and '2' in batches:  # Found B1 and B2
-                    s1_b1_b2_pattern += 1
-            
-            print(f"Courses with S1 B1/B2 pattern: {s1_b1_b2_pattern}")
-            
-            # HARD CONSTRAINT VALIDATION: Check capacity assignments
-            if 'room_capacity' in schedule_df.columns:
-                capacity_35_assignments = len(schedule_df[(schedule_df['slot_type'] == 'Practical') & 
-                                                        (schedule_df.get('room_capacity', 0) <= 35)])
-                capacity_70_assignments = len(schedule_df[(schedule_df['slot_type'] == 'Practical') & 
-                                                        (schedule_df.get('room_capacity', 0) > 35) &
-                                                        (schedule_df.get('room_capacity', 0) <= 70)])
-                print(f"Lab assignments to 35-capacity labs: {capacity_35_assignments}")
-                print(f"Lab assignments to 70+ capacity labs: {capacity_70_assignments}")
-                
-                # Validate hard constraint: courses with <3 practical hours should not be in 70+ capacity labs
-                constraint_violations = 0
-                courses_under_3_practical = 0
-                courses_3_plus_practical = 0
-                
-                for instance_id, req in courses_with_practicals.items():
-                    practical_hours = req['practical_hours']
-                    student_count = req.get('student_count', 70)
-                    
-                    if student_count == 70:  # Only check 70-student courses
-                        instance_labs = schedule_df[(schedule_df['course_instance_id'].astype(str) == instance_id) & 
-                                                   (schedule_df['slot_type'] == 'Practical')]
-                        
-                        if len(instance_labs) > 0:
-                            room_cap = instance_labs.iloc[0].get('room_capacity', 0)
-                            
-                            if practical_hours < 3:
-                                courses_under_3_practical += 1
-                                if room_cap > 35:
-                                    constraint_violations += 1
-                                    print(f"❌ HARD CONSTRAINT VIOLATION: Course {req['course_code']} "
-                                         f"({practical_hours} practical hours) assigned to {room_cap}-capacity lab")
-                            else:
-                                courses_3_plus_practical += 1
-                
-                print(f"\n🚨 HARD CONSTRAINT VALIDATION:")
-                print(f"70-student courses with <3 practical hours: {courses_under_3_practical}")
-                print(f"70-student courses with >=3 practical hours: {courses_3_plus_practical}")
-                print(f"Hard constraint violations: {constraint_violations}")
-                
-                if constraint_violations == 0:
-                    print(f"✅ All courses respect the hard constraint!")
-                    print(f"   - Courses with <3 practical hours → 35-capacity labs only")
-                    print(f"   - Courses with >=3 practical hours → can use 70-capacity labs")
-                else:
-                    print(f"❌ Found {constraint_violations} hard constraint violations!")
-                    print(f"   - Some courses with <3 practical hours incorrectly assigned to 70+ capacity labs")
-            
-        # Check for teacher workload in labs
-        teacher_lab_hours = defaultdict(int)
-        for _, row in schedule_df.iterrows():
-            if row['slot_type'] == 'Practical':
-                teacher_lab_hours[row['teacher_id']] += 2  # Each lab slot = 2 hours
-        
-        if teacher_lab_hours:
-            max_lab_hours = max(teacher_lab_hours.values())
-            avg_lab_hours = sum(teacher_lab_hours.values()) / len(teacher_lab_hours)
-            print(f"Teacher lab workload: Max {max_lab_hours}h, Avg {avg_lab_hours:.1f}h per teacher")
-            
-            # Identify teachers with high lab workload
-            high_workload_teachers = [t for t, h in teacher_lab_hours.items() if h > 16]  # More than 8 lab sessions
-            if high_workload_teachers:
-                print(f"Teachers with high lab workload (>16h): {len(high_workload_teachers)}")
-    
-    else:
-        print(f"\n🧪 LAB SCHEDULING ANALYSIS:")
-        courses_with_practicals = {id: req for id, req in course_requirements.items() if req['practical_hours'] > 0}
-        total_practical_hours_required = sum(req['practical_hours'] for req in courses_with_practicals.values())
-        print(f"Courses requiring practicals: {len(courses_with_practicals)}")
-        print(f"Total practical hours required: {total_practical_hours_required}")
-        print(f"❌ Lab schedule not found - run lab_scheduler.py to generate lab allocations")
+    # Enhanced final validation including lab constraints
+    overall_success = (violations == 0 and theory_only_violations == 0 and not_scheduled == 0 and 
+                      (not has_lab_schedule or (practical_violations == 0 and batching_issues == 0 and lab_constraints_ok)))
     
     # Group analysis by course type
     print(f"\n📋 ANALYSIS BY COURSE TYPE:")
@@ -568,7 +494,7 @@ def verify_ltp_constraints():
         print(f"3-lecture scheduling rate: {three_lec_scheduled}/{len(three_lecture_courses)} ({(three_lec_scheduled/len(three_lecture_courses))*100:.1f}%)")
         print(f"3-lecture compliance rate: {three_lec_compliant}/{three_lec_scheduled if three_lec_scheduled > 0 else 1} ({(three_lec_compliant/max(three_lec_scheduled, 1))*100:.1f}%)")
     
-    if violations == 0 and theory_only_violations == 0 and not_scheduled == 0 and (not has_lab_schedule or (practical_violations == 0 and batching_issues == 0)):
+    if overall_success:
         print(f"\n🎉 ALL LTP CONSTRAINTS SATISFIED!")
         print(f"   ✅ All course instances scheduled and compliant")
         print(f"   ✅ Lecture hours properly allocated")
@@ -592,6 +518,7 @@ def verify_ltp_constraints():
             print(f"      - Continuous room assignment for multi-slot sessions")
             print(f"      - No conflicts between theory and lab schedules")
             print(f"      - All batching requirements properly satisfied")
+            print(f"      - All lab constraints verified: ✅ COMPLIANT")
         else:
             print(f"   ⚠️  Practical hours not evaluated (lab schedule not found)")
         return True
@@ -613,6 +540,12 @@ def verify_ltp_constraints():
             print(f"       - Check for courses with <3 practical hours incorrectly assigned to 70-capacity labs")
             print(f"       - Verify forced batching for courses with <3 practical hours")
             print(f"       - Ensure courses with >=3 practical hours can access 70-capacity labs")
+        if has_lab_schedule and not lab_constraints_ok:
+            print(f"   ❌ Lab constraint violations detected")
+            print(f"       - Review detailed lab constraint verification above")
+            print(f"       - Check macroblock allocation rules")
+            print(f"       - Verify capacity constraints")
+            print(f"       - Check for room/teacher conflicts")
         if not has_lab_schedule:
             courses_needing_labs = len([req for req in course_requirements.values() if req['practical_hours'] > 0])
             if courses_needing_labs > 0:
@@ -620,9 +553,458 @@ def verify_ltp_constraints():
         
         # Return success if only missing lab schedule but theory is good
         if has_lab_schedule:
-            return violations == 0 and not_scheduled == 0 and batching_issues == 0
+            return violations == 0 and not_scheduled == 0 and batching_issues == 0 and lab_constraints_ok
         else:
             return violations == 0 and not_scheduled == 0 and theory_only_violations == 0
+
+def verify_lab_constraints(schedule_df, course_requirements):
+    """Comprehensive lab constraint verification."""
+    print("\n🧪 DETAILED LAB CONSTRAINT VERIFICATION")
+    print("=" * 80)
+    
+    lab_data = schedule_df[schedule_df['slot_type'] == 'Practical']
+    if len(lab_data) == 0:
+        print("❌ No lab assignments found!")
+        return {'violations': [], 'compliant': False}
+    
+    violations = []
+    
+    # 1. Verify macroblock-based lab allocation constraints
+    macroblock_violations = verify_macroblock_lab_constraints(schedule_df)
+    violations.extend(macroblock_violations)
+    
+    # 2. Verify capacity constraints (hard constraint for practical hours)
+    capacity_violations = verify_lab_capacity_constraints(schedule_df, course_requirements)
+    violations.extend(capacity_violations)
+    
+    # 3. Verify lab room single assignment constraint
+    room_violations = verify_lab_room_constraints(schedule_df)
+    violations.extend(room_violations)
+    
+    # 4. Verify teacher single assignment constraint
+    teacher_violations = verify_lab_teacher_constraints(schedule_df)
+    violations.extend(teacher_violations)
+    
+    # 5. Verify theory-lab overlap constraints
+    overlap_violations = verify_theory_lab_overlaps(schedule_df)
+    violations.extend(overlap_violations)
+    
+    # 6. Verify continuous lab room assignment
+    continuity_violations = verify_lab_continuity_constraints(schedule_df)
+    violations.extend(continuity_violations)
+    
+    # 7. Verify weekly working hour constraints
+    workload_violations = verify_lab_workload_constraints(schedule_df)
+    violations.extend(workload_violations)
+    
+    # Print summary
+    print(f"\n📊 LAB CONSTRAINT VERIFICATION SUMMARY:")
+    print(f"Total lab assignments: {len(lab_data)}")
+    print(f"Macroblock violations: {len(macroblock_violations)}")
+    print(f"Capacity violations: {len(capacity_violations)}")
+    print(f"Room assignment violations: {len(room_violations)}")
+    print(f"Teacher assignment violations: {len(teacher_violations)}")
+    print(f"Theory-lab overlap violations: {len(overlap_violations)}")
+    print(f"Continuity violations: {len(continuity_violations)}")
+    print(f"Workload violations: {len(workload_violations)}")
+    print(f"TOTAL VIOLATIONS: {len(violations)}")
+    
+    if len(violations) == 0:
+        print("✅ ALL LAB CONSTRAINTS SATISFIED!")
+    else:
+        print("❌ LAB CONSTRAINT VIOLATIONS DETECTED:")
+        for i, violation in enumerate(violations[:10], 1):  # Show first 10
+            print(f"  {i}. {violation}")
+        if len(violations) > 10:
+            print(f"  ... and {len(violations) - 10} more violations")
+    
+    return {'violations': violations, 'compliant': len(violations) == 0}
+
+def verify_macroblock_lab_constraints(schedule_df):
+    """Verify macroblock-based lab allocation constraints."""
+    violations = []
+    
+    # Define macroblock to lab session mapping
+    macroblock_to_lab_sessions = {
+        # Morning theory blocks (a1-g1) -> Afternoon lab sessions (L4-L6)
+        'a1': ['L4', 'L5', 'L6'], 'b1': ['L4', 'L5', 'L6'], 'c1': ['L4', 'L5', 'L6'],
+        'd1': ['L4', 'L5', 'L6'], 'e1': ['L4', 'L5', 'L6'], 'f1': ['L4', 'L5', 'L6'], 'g1': ['L4', 'L5', 'L6'],
+        
+        # Afternoon theory blocks (a2-g2) -> Morning lab sessions (L1-L3)
+        'a2': ['L1', 'L2', 'L3'], 'b2': ['L1', 'L2', 'L3'], 'c2': ['L1', 'L2', 'L3'],
+        'd2': ['L1', 'L2', 'L3'], 'e2': ['L1', 'L2', 'L3'], 'f2': ['L1', 'L2', 'L3'], 'g2': ['L1', 'L2', 'L3']
+    }
+    
+    # Map time intervals to lab sessions
+    time_to_session_map = {
+        '8:00 - 8:50': 'L1', '8:50 - 9:40': 'L1',
+        '9:50 - 10:40': 'L2', '10:40 - 11:30': 'L2',
+        '11:50 - 12:40': 'L3', '12:40 - 1:30': 'L3',
+        '1:50 - 2:40': 'L4', '2:40 - 3:30': 'L4',
+        '3:50 - 4:40': 'L5', '4:40 - 5:30': 'L5',
+        '5:30 - 6:20': 'L6', '6:20 - 7:10': 'L6'
+    }
+    
+    theory_data = schedule_df[schedule_df['slot_type'].isin(['Lecture', 'Tutorial'])]
+    lab_data = schedule_df[schedule_df['slot_type'] == 'Practical']
+    
+    # Group teachers by their macroblocks
+    teacher_macroblocks = {}
+    for _, row in theory_data.iterrows():
+        teacher_id = row['teacher_id']
+        macroblock = row.get('macroblock', '')
+        if macroblock:
+            if teacher_id not in teacher_macroblocks:
+                teacher_macroblocks[teacher_id] = set()
+            teacher_macroblocks[teacher_id].add(macroblock.lower())
+    
+    # Check each lab assignment against macroblock constraints
+    for _, lab_row in lab_data.iterrows():
+        teacher_id = lab_row['teacher_id']
+        time_interval = lab_row['time_interval']
+        course_code = lab_row.get('display_course_code', lab_row.get('course_code', 'Unknown'))
+        day = lab_row['day']
+        
+        # Map time interval to lab session
+        lab_session = time_to_session_map.get(time_interval, 'Unknown')
+        
+        # Get teacher's macroblocks
+        teacher_blocks = teacher_macroblocks.get(teacher_id, set())
+        
+        if teacher_blocks:
+            # Determine allowed lab sessions for this teacher
+            allowed_sessions = set()
+            for macroblock in teacher_blocks:
+                if macroblock in macroblock_to_lab_sessions:
+                    allowed_sessions.update(macroblock_to_lab_sessions[macroblock])
+            
+            # Check if current lab session is allowed
+            if allowed_sessions and lab_session not in allowed_sessions:
+                violations.append(f"MACROBLOCK VIOLATION: Teacher {teacher_id} assigned to lab session {lab_session} "
+                                f"({time_interval}) on {day} violates macroblock constraint for course {course_code} "
+                                f"(teacher macroblocks: {teacher_blocks}, allowed sessions: {allowed_sessions})")
+    
+    print(f"🎯 Macroblock constraint violations: {len(violations)}")
+    return violations
+
+def verify_lab_capacity_constraints(schedule_df, course_requirements):
+    """Verify hard constraint: courses with <3 practical hours cannot use 70+ capacity labs."""
+    violations = []
+    
+    lab_data = schedule_df[schedule_df['slot_type'] == 'Practical']
+    
+    for _, lab_row in lab_data.iterrows():
+        course_instance_id = str(lab_row.get('course_instance_id', ''))
+        course_code = lab_row.get('display_course_code', lab_row.get('course_code', 'Unknown'))
+        room_capacity = lab_row.get('room_capacity', lab_row.get('capacity', 0))
+        
+        # Get course requirements
+        if course_instance_id in course_requirements:
+            practical_hours = course_requirements[course_instance_id]['practical_hours']
+            student_count = course_requirements[course_instance_id]['student_count']
+            
+            # HARD CONSTRAINT: courses with <3 practical hours cannot use 70+ capacity labs
+            if practical_hours < 3 and room_capacity > 35 and student_count == 70:
+                violations.append(f"CAPACITY VIOLATION: Course {course_code} (ID: {course_instance_id}) "
+                                f"with {practical_hours} practical hours incorrectly assigned to "
+                                f"{room_capacity}-capacity lab (should use 35-capacity only)")
+    
+    print(f"🏗️ Capacity constraint violations: {len(violations)}")
+    return violations
+
+def verify_lab_room_constraints(schedule_df):
+    """Verify that lab rooms are not double-booked."""
+    violations = []
+    
+    lab_data = schedule_df[schedule_df['slot_type'] == 'Practical']
+    
+    # Group by room, day, and time
+    room_usage = defaultdict(list)
+    for _, row in lab_data.iterrows():
+        room_id = row['room_id']
+        day = row['day']
+        time_interval = row['time_interval']
+        course_code = row.get('display_course_code', row.get('course_code', 'Unknown'))
+        teacher_id = row['teacher_id']
+        
+        key = (room_id, day, time_interval)
+        room_usage[key].append({
+            'course': course_code,
+            'teacher': teacher_id,
+            'room_number': row.get('room_number', f'Room{room_id}')
+        })
+    
+    # Check for double bookings
+    for (room_id, day, time_interval), assignments in room_usage.items():
+        if len(assignments) > 1:
+            room_number = assignments[0]['room_number']
+            course_details = [f"{a['course']} (T{a['teacher']})" for a in assignments]
+            violations.append(f"ROOM DOUBLE-BOOKING: Lab {room_number} (ID: {room_id}) "
+                            f"on {day} at {time_interval} assigned to multiple courses: {', '.join(course_details)}")
+    
+    print(f"🏠 Room assignment violations: {len(violations)}")
+    return violations
+
+def verify_lab_teacher_constraints(schedule_df):
+    """Verify that teachers are not assigned to multiple labs at the same time."""
+    violations = []
+    
+    lab_data = schedule_df[schedule_df['slot_type'] == 'Practical']
+    
+    # Group by teacher, day, and time
+    teacher_usage = defaultdict(list)
+    for _, row in lab_data.iterrows():
+        teacher_id = row['teacher_id']
+        day = row['day']
+        time_interval = row['time_interval']
+        course_code = row.get('display_course_code', row.get('course_code', 'Unknown'))
+        room_number = row.get('room_number', f"Room{row['room_id']}")
+        
+        key = (teacher_id, day, time_interval)
+        teacher_usage[key].append({
+            'course': course_code,
+            'room': room_number
+        })
+    
+    # Check for teacher conflicts
+    for (teacher_id, day, time_interval), assignments in teacher_usage.items():
+        if len(assignments) > 1:
+            assignment_details = [f"{a['course']} in {a['room']}" for a in assignments]
+            violations.append(f"TEACHER CONFLICT: Teacher {teacher_id} on {day} at {time_interval} "
+                            f"assigned to multiple labs: {', '.join(assignment_details)}")
+    
+    print(f"👨‍🏫 Teacher assignment violations: {len(violations)}")
+    return violations
+
+def verify_theory_lab_overlaps(schedule_df):
+    """Verify that teachers don't have overlapping theory and lab sessions."""
+    violations = []
+    
+    def parse_time(time_str):
+        """Parse time string to minutes since midnight."""
+        time_part = time_str.split()[0]
+        hours, minutes = map(int, time_part.split(':'))
+        return hours * 60 + minutes
+    
+    def time_ranges_overlap(range1, range2):
+        """Check if two time ranges overlap."""
+        start1_str, end1_str = range1.split(' - ')
+        start1 = parse_time(start1_str)
+        end1 = parse_time(end1_str)
+        
+        start2_str, end2_str = range2.split(' - ')
+        start2 = parse_time(start2_str)
+        end2 = parse_time(end2_str)
+        
+        return start1 < end2 and start2 < end1
+    
+    theory_data = schedule_df[schedule_df['slot_type'].isin(['Lecture', 'Tutorial'])]
+    lab_data = schedule_df[schedule_df['slot_type'] == 'Practical']
+    
+    # Check for each teacher
+    for teacher_id in schedule_df['teacher_id'].unique():
+        teacher_theory = theory_data[theory_data['teacher_id'] == teacher_id]
+        teacher_labs = lab_data[lab_data['teacher_id'] == teacher_id]
+        
+        for _, theory_row in teacher_theory.iterrows():
+            theory_day = theory_row['day']
+            theory_time = theory_row['time_interval']
+            theory_course = theory_row.get('course_code', 'Unknown')
+            
+            for _, lab_row in teacher_labs.iterrows():
+                lab_day = lab_row['day']
+                lab_time = lab_row['time_interval']
+                lab_course = lab_row.get('display_course_code', lab_row.get('course_code', 'Unknown'))
+                
+                if theory_day == lab_day and time_ranges_overlap(theory_time, lab_time):
+                    violations.append(f"THEORY-LAB OVERLAP: Teacher {teacher_id} on {theory_day} "
+                                    f"has overlapping theory class {theory_course} ({theory_time}) "
+                                    f"and lab {lab_course} ({lab_time})")
+    
+    print(f"⚡ Theory-lab overlap violations: {len(violations)}")
+    return violations
+
+def verify_lab_continuity_constraints(schedule_df):
+    """Verify continuous lab room assignment for multi-slot sessions."""
+    violations = []
+    
+    lab_data = schedule_df[schedule_df['slot_type'] == 'Practical']
+    
+    # Define lab session time slots
+    lab_session_slots = {
+        'L1': ['8:00 - 8:50', '8:50 - 9:40'],
+        'L2': ['9:50 - 10:40', '10:40 - 11:30'],
+        'L3': ['11:50 - 12:40', '12:40 - 1:30'],
+        'L4': ['1:50 - 2:40', '2:40 - 3:30'],
+        'L5': ['3:50 - 4:40', '4:40 - 5:30'],
+        'L6': ['5:30 - 6:20', '6:20 - 7:10']
+    }
+    
+    # Map time intervals to sessions
+    time_to_session = {}
+    for session, slots in lab_session_slots.items():
+        for slot in slots:
+            time_to_session[slot] = session
+    
+    # Group by course, teacher, day
+    course_sessions = defaultdict(lambda: defaultdict(list))
+    for _, row in lab_data.iterrows():
+        course_instance_id = row.get('course_instance_id', '')
+        teacher_id = row['teacher_id']
+        day = row['day']
+        time_interval = row['time_interval']
+        room_id = row['room_id']
+        session = time_to_session.get(time_interval, 'Unknown')
+        
+        key = (course_instance_id, teacher_id, day)
+        course_sessions[key][session].append({
+            'time': time_interval,
+            'room_id': room_id,
+            'room_number': row.get('room_number', f'Room{room_id}')
+        })
+    
+    # Check for continuity violations
+    for (course_id, teacher_id, day), sessions in course_sessions.items():
+        for session, assignments in sessions.items():
+            if len(assignments) > 1:
+                # Multiple slots in same session - check if same room
+                rooms = set(a['room_id'] for a in assignments)
+                if len(rooms) > 1:
+                    room_details = [f"{a['room_number']} ({a['time']})" for a in assignments]
+                    violations.append(f"CONTINUITY VIOLATION: Course {course_id} teacher {teacher_id} "
+                                    f"on {day} in session {session} uses multiple rooms: {', '.join(room_details)}")
+    
+    print(f"🔗 Continuity violations: {len(violations)}")
+    return violations
+
+def verify_lab_workload_constraints(schedule_df):
+    """Verify weekly working hour constraints including labs."""
+    violations = []
+    
+    # Calculate total hours per teacher
+    teacher_hours = defaultdict(lambda: {'theory': 0, 'lab': 0, 'lab_sessions': set()})
+    
+    # Define lab session time slots for proper grouping
+    lab_session_slots = {
+        'L1': ['8:00 - 8:50', '8:50 - 9:40'],
+        'L2': ['9:50 - 10:40', '10:40 - 11:30'],
+        'L3': ['11:50 - 12:40', '12:40 - 1:30'],
+        'L4': ['1:50 - 2:40', '2:40 - 3:30'],
+        'L5': ['3:50 - 4:40', '4:40 - 5:30'],
+        'L6': ['5:30 - 6:20', '6:20 - 7:10']
+    }
+    
+    # Map time intervals to sessions
+    time_to_session = {}
+    for session, slots in lab_session_slots.items():
+        for slot in slots:
+            time_to_session[slot] = session
+    
+    for _, row in schedule_df.iterrows():
+        teacher_id = row['teacher_id']
+        slot_type = row['slot_type']
+        
+        if slot_type in ['Lecture', 'Tutorial']:
+            teacher_hours[teacher_id]['theory'] += 1
+        elif slot_type == 'Practical':
+            # Group lab slots into sessions to avoid double counting
+            time_interval = row['time_interval']
+            day = row['day']
+            course_instance_id = row.get('course_instance_id', '')
+            
+            # Map time to session and create unique session identifier
+            session = time_to_session.get(time_interval, 'Unknown')
+            session_key = f"{day}_{session}_{course_instance_id}"
+            
+            # Only count each lab session once (2 hours per session)
+            if session_key not in teacher_hours[teacher_id]['lab_sessions']:
+                teacher_hours[teacher_id]['lab_sessions'].add(session_key)
+                teacher_hours[teacher_id]['lab'] += 2  # Each lab session = 2 hours
+    
+    # Check for violations (assuming 25-hour weekly limit)
+    for teacher_id, hours in teacher_hours.items():
+        total_hours = hours['theory'] + hours['lab']
+        if total_hours > 25:
+            violations.append(f"WORKLOAD VIOLATION: Teacher {teacher_id} assigned {total_hours} hours "
+                            f"({hours['theory']} theory + {hours['lab']} lab) exceeds 25-hour weekly limit")
+    
+    print(f"⏰ Workload violations: {len(violations)}")
+    return violations
+
+def verify_lab_shift_constraints(schedule_df):
+    """Verify lab assignments comply with teacher shift constraints (if shift data available)."""
+    violations = []
+    
+    # This would require access to teacher shift data
+    # For now, return empty violations since shift data is not readily available in this context
+    print(f"🕐 Shift constraint verification: Skipped (requires shift data)")
+    return violations
+
+def analyze_lab_efficiency(schedule_df, course_requirements):
+    """Analyze lab allocation efficiency and utilization."""
+    print("\n📊 LAB EFFICIENCY ANALYSIS")
+    print("=" * 60)
+    
+    lab_data = schedule_df[schedule_df['slot_type'] == 'Practical']
+    
+    if len(lab_data) == 0:
+        print("❌ No lab data available for analysis")
+        return
+    
+    # Room utilization analysis
+    room_usage = defaultdict(int)
+    room_capacities = {}
+    total_student_hours = 0
+    total_lab_capacity_hours = 0
+    
+    for _, row in lab_data.iterrows():
+        room_id = row['room_id']
+        room_number = row.get('room_number', f'Room{room_id}')
+        room_capacity = row.get('room_capacity', row.get('capacity', 0))
+        student_count = row.get('student_count', 0)
+        
+        room_usage[room_number] += 1
+        room_capacities[room_number] = room_capacity
+        
+        # Each lab slot = 2 hours
+        total_student_hours += student_count * 2
+        total_lab_capacity_hours += room_capacity * 2
+    
+    print(f"Lab rooms utilized: {len(room_usage)}")
+    print(f"Total lab sessions: {sum(room_usage.values())}")
+    print(f"Total student-hours: {total_student_hours}")
+    print(f"Total capacity-hours: {total_lab_capacity_hours}")
+    if total_lab_capacity_hours > 0:
+        utilization_rate = (total_student_hours / total_lab_capacity_hours) * 100
+        print(f"Overall capacity utilization: {utilization_rate:.1f}%")
+    
+    # Room-wise utilization
+    print(f"\n🏠 ROOM-WISE UTILIZATION:")
+    for room, sessions in sorted(room_usage.items()):
+        capacity = room_capacities.get(room, 0)
+        max_weekly_sessions = 30  # 6 sessions * 5 days
+        utilization = (sessions / max_weekly_sessions) * 100
+        print(f"  {room} (Cap: {capacity}): {sessions}/30 sessions ({utilization:.1f}% utilization)")
+    
+    # Capacity distribution analysis
+    capacity_35_sessions = len(lab_data[lab_data.get('room_capacity', 0) <= 35])
+    capacity_70_sessions = len(lab_data[lab_data.get('room_capacity', 0) > 35])
+    
+    print(f"\n🔢 CAPACITY DISTRIBUTION:")
+    print(f"Sessions in 35-capacity labs: {capacity_35_sessions}")
+    print(f"Sessions in 70+ capacity labs: {capacity_70_sessions}")
+    
+    # Batching analysis
+    if 'is_batched' in lab_data.columns:
+        batched_sessions = len(lab_data[lab_data.get('is_batched', False) == True])
+        print(f"Sessions using batching: {batched_sessions}")
+    
+    # Daily distribution
+    daily_distribution = lab_data['day'].value_counts()
+    print(f"\n📅 DAILY DISTRIBUTION:")
+    for day in ['tuesday', 'wed', 'thur', 'fri', 'sat']:
+        sessions = daily_distribution.get(day, 0)
+        print(f"  {day.capitalize()}: {sessions} sessions")
 
 if __name__ == "__main__":
     verify_ltp_constraints() 

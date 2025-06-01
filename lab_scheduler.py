@@ -1163,6 +1163,10 @@ class LabScheduler:
             shift_violations = self._validate_shift_constraints(schedule_df)
             violations.extend(shift_violations)
             
+            # Validate macroblock constraints
+            macroblock_violations = self._validate_macroblock_constraints(schedule_df)
+            violations.extend(macroblock_violations)
+            
             # Analyze constraint conflicts
             analysis = analyze_constraint_conflicts(self.lab_requirements, self.theory_schedule_df, self.labs)
             
@@ -1189,6 +1193,14 @@ class LabScheduler:
                 else:
                     f.write(f"\n✅ All shift constraints satisfied!\n")
                 
+                # Separate macroblock violation reporting
+                if macroblock_violations:
+                    f.write(f"\nMacroblock Constraint Violations ({len(macroblock_violations)}):\n")
+                    for violation in macroblock_violations:
+                        f.write(f"  - {violation}\n")
+                else:
+                    f.write(f"\n✅ All macroblock constraints satisfied!\n")
+                
                 f.write(f"\nCapacity Analysis:\n")
                 f.write(f"Total lab sessions needed: {analysis['total_lab_sessions_needed']}\n")
                 f.write(f"Total lab capacity per week: {analysis['total_lab_capacity']}\n")
@@ -1214,6 +1226,22 @@ class LabScheduler:
                     
                     for shift, stats in shift_compliance_stats['by_shift'].items():
                         f.write(f"  - {shift}: {stats['compliant']}/{stats['total']} ({stats['rate']:.1f}%)\n")
+                
+                # Add macroblock compliance summary
+                f.write(f"\nMacroblock Compliance Summary:\n")
+                macroblock_compliance_stats = self._analyze_macroblock_compliance(schedule_df)
+                f.write(f"Total lab assignments: {macroblock_compliance_stats['total_assignments']}\n")
+                f.write(f"Macroblock-compliant assignments: {macroblock_compliance_stats['compliant_assignments']}\n")
+                f.write(f"Macroblock compliance rate: {macroblock_compliance_stats['compliance_rate']:.1f}%\n")
+                f.write(f"Macroblock grouping violations: {macroblock_compliance_stats['grouping_violations']}\n")
+                f.write(f"Macroblock grouping compliance rate: {macroblock_compliance_stats['grouping_compliance_rate']:.1f}%\n")
+                f.write(f"Macroblock constraint rules:\n")
+                f.write(f"  - Theory blocks a1-g1 (morning) → Lab sessions L4-L6 (afternoon)\n")
+                f.write(f"  - Theory blocks a2-g2 (afternoon) → Lab sessions L1-L3 (morning)\n")
+                f.write(f"Macroblock grouping rules:\n")
+                f.write(f"  ✓ Courses within same macroblock CAN overlap in lab sessions\n")
+                f.write(f"  ✓ Courses from different semesters CAN overlap in lab sessions\n")
+                f.write(f"  ❌ Courses from different macroblocks CANNOT overlap in lab sessions\n")
             
             if violations:
                 self.logger.warning(f"Found {len(violations)} constraint violations in generated schedule")
@@ -1323,6 +1351,241 @@ class LabScheduler:
         stats['by_shift'] = shift_stats
         return stats
 
+    def _validate_macroblock_constraints(self, schedule_df):
+        """Validate that lab assignments comply with macroblock constraints."""
+        violations = []
+        
+        lab_data = schedule_df[schedule_df['slot_type'] == 'Practical']
+        
+        # Define macroblock to lab session mapping (same as in constraints)
+        macroblock_to_lab_sessions = {
+            # Morning theory blocks (a1-g1) -> Afternoon lab sessions (L4-L6)
+            'a1': ['L4', 'L5', 'L6'], 'b1': ['L4', 'L5', 'L6'], 'c1': ['L4', 'L5', 'L6'],
+            'd1': ['L4', 'L5', 'L6'], 'e1': ['L4', 'L5', 'L6'], 'f1': ['L4', 'L5', 'L6'], 'g1': ['L4', 'L5', 'L6'],
+            
+            # Afternoon theory blocks (a2-g2) -> Morning lab sessions (L1-L3)
+            'a2': ['L1', 'L2', 'L3'], 'b2': ['L1', 'L2', 'L3'], 'c2': ['L1', 'L2', 'L3'],
+            'd2': ['L1', 'L2', 'L3'], 'e2': ['L1', 'L2', 'L3'], 'f2': ['L1', 'L2', 'L3'], 'g2': ['L1', 'L2', 'L3']
+        }
+        
+        # 1. Validate basic macroblock allocation (time slot constraints)
+        for _, row in lab_data.iterrows():
+            teacher_id = row['teacher_id']
+            day = row['day']
+            time_interval = row['time_interval']
+            course_code = row.get('display_course_code', row.get('course_code', 'Unknown'))
+            
+            # Map time interval to lab session
+            lab_session = self._map_time_to_lab_session(time_interval)
+            
+            # Get teacher's theory schedule to determine their macroblocks
+            teacher_theory = self.theory_schedule_df[self.theory_schedule_df['teacher_id'] == teacher_id]
+            
+            if teacher_theory.empty:
+                continue  # No theory schedule, no constraint to validate
+            
+            # Determine teacher's macroblocks from theory schedule
+            teacher_macroblocks = set()
+            for _, theory_row in teacher_theory.iterrows():
+                macroblock = theory_row.get('macroblock', '')
+                if macroblock:
+                    teacher_macroblocks.add(macroblock.lower())
+            
+            if not teacher_macroblocks:
+                continue  # No macroblocks found, no constraint to validate
+            
+            # Determine allowed lab sessions based on teacher's macroblocks
+            allowed_lab_sessions = set()
+            for macroblock in teacher_macroblocks:
+                if macroblock in macroblock_to_lab_sessions:
+                    allowed_lab_sessions.update(macroblock_to_lab_sessions[macroblock])
+            
+            # Check if this lab session violates macroblock constraints
+            if allowed_lab_sessions and lab_session not in allowed_lab_sessions:
+                violations.append(f"Teacher {teacher_id} assigned to lab session {lab_session} ({time_interval}) on {day} "
+                                f"violates macroblock constraint for course {course_code} "
+                                f"(teacher macroblocks: {teacher_macroblocks}, allowed lab sessions: {allowed_lab_sessions})")
+        
+        # 2. Validate macroblock grouping constraints (overlap constraints)
+        grouping_violations = self._validate_macroblock_grouping_constraints(lab_data, macroblock_to_lab_sessions)
+        violations.extend(grouping_violations)
+        
+        return violations
+
+    def _validate_macroblock_grouping_constraints(self, lab_data, macroblock_to_lab_sessions):
+        """Validate that courses from different macroblock groups don't overlap in lab sessions."""
+        violations = []
+        
+        # Group lab assignments by day, session, and room
+        lab_slot_usage = {}
+        
+        for _, row in lab_data.iterrows():
+            teacher_id = row['teacher_id']
+            day = row['day']
+            time_interval = row['time_interval']
+            room_id = row['room_id']
+            course_code = row.get('display_course_code', row.get('course_code', 'Unknown'))
+            
+            # Map time interval to lab session
+            lab_session = self._map_time_to_lab_session(time_interval)
+            
+            # Get teacher's macroblocks
+            teacher_theory = self.theory_schedule_df[self.theory_schedule_df['teacher_id'] == teacher_id]
+            teacher_macroblocks = set()
+            
+            if not teacher_theory.empty:
+                for _, theory_row in teacher_theory.iterrows():
+                    macroblock = theory_row.get('macroblock', '')
+                    if macroblock:
+                        teacher_macroblocks.add(macroblock.lower())
+            
+            if not teacher_macroblocks:
+                continue  # No macroblocks, no grouping constraint
+            
+            # Create slot key
+            slot_key = (day, lab_session, room_id)
+            
+            if slot_key not in lab_slot_usage:
+                lab_slot_usage[slot_key] = []
+            
+            # Store assignment with macroblock information
+            lab_slot_usage[slot_key].append({
+                'teacher_id': teacher_id,
+                'course_code': course_code,
+                'macroblocks': teacher_macroblocks,
+                'time_interval': time_interval
+            })
+        
+        # Check for violations: different macroblock groups in same lab slot
+        for slot_key, assignments in lab_slot_usage.items():
+            if len(assignments) > 1:  # Multiple assignments in same slot
+                day, lab_session, room_id = slot_key
+                
+                # Check if assignments are from different macroblock groups
+                macroblocks_in_slot = set()
+                for assignment in assignments:
+                    macroblocks_in_slot.update(assignment['macroblocks'])
+                
+                # Check if any two different macroblocks are using the same lab session type
+                macroblock_types = set()
+                for macroblock in macroblocks_in_slot:
+                    if macroblock in macroblock_to_lab_sessions:
+                        allowed_sessions = macroblock_to_lab_sessions[macroblock]
+                        if lab_session in allowed_sessions:
+                            macroblock_types.add(macroblock)
+                
+                if len(macroblock_types) > 1:
+                    # Violation: different macroblock groups are sharing the same lab slot
+                    course_details = []
+                    for assignment in assignments:
+                        course_details.append(f"{assignment['course_code']} (Teacher {assignment['teacher_id']}, macroblocks: {assignment['macroblocks']})")
+                    
+                    violations.append(f"Macroblock grouping violation in {lab_session} on {day} in room {room_id}: "
+                                    f"Different macroblock groups sharing same lab slot - {'; '.join(course_details)}")
+        
+        return violations
+
+    def _analyze_macroblock_compliance(self, schedule_df):
+        """Analyze macroblock compliance statistics."""
+        stats = {
+            'total_assignments': 0,
+            'compliant_assignments': 0,
+            'compliance_rate': 0.0,
+            'grouping_violations': 0,
+            'grouping_compliance_rate': 0.0,
+            'by_macroblock_type': {
+                'morning_theory': {'total': 0, 'compliant': 0, 'rate': 0.0},
+                'afternoon_theory': {'total': 0, 'compliant': 0, 'rate': 0.0},
+                'no_theory': {'total': 0, 'compliant': 0, 'rate': 0.0}
+            }
+        }
+        
+        lab_data = schedule_df[schedule_df['slot_type'] == 'Practical']
+        stats['total_assignments'] = len(lab_data)
+        
+        if stats['total_assignments'] == 0:
+            return stats
+        
+        # Define macroblock to lab session mapping
+        macroblock_to_lab_sessions = {
+            'a1': ['L4', 'L5', 'L6'], 'b1': ['L4', 'L5', 'L6'], 'c1': ['L4', 'L5', 'L6'],
+            'd1': ['L4', 'L5', 'L6'], 'e1': ['L4', 'L5', 'L6'], 'f1': ['L4', 'L5', 'L6'], 'g1': ['L4', 'L5', 'L6'],
+            'a2': ['L1', 'L2', 'L3'], 'b2': ['L1', 'L2', 'L3'], 'c2': ['L1', 'L2', 'L3'],
+            'd2': ['L1', 'L2', 'L3'], 'e2': ['L1', 'L2', 'L3'], 'f2': ['L1', 'L2', 'L3'], 'g2': ['L1', 'L2', 'L3']
+        }
+        
+        # 1. Analyze basic macroblock compliance (time slot constraints)
+        for _, row in lab_data.iterrows():
+            teacher_id = row['teacher_id']
+            time_interval = row['time_interval']
+            
+            # Map time interval to lab session
+            lab_session = self._map_time_to_lab_session(time_interval)
+            
+            # Get teacher's theory schedule to determine their macroblocks
+            teacher_theory = self.theory_schedule_df[self.theory_schedule_df['teacher_id'] == teacher_id]
+            
+            if teacher_theory.empty:
+                # No theory schedule - count as compliant (no constraint to violate)
+                stats['compliant_assignments'] += 1
+                stats['by_macroblock_type']['no_theory']['total'] += 1
+                stats['by_macroblock_type']['no_theory']['compliant'] += 1
+                continue
+            
+            # Determine teacher's macroblocks from theory schedule
+            teacher_macroblocks = set()
+            for _, theory_row in teacher_theory.iterrows():
+                macroblock = theory_row.get('macroblock', '')
+                if macroblock:
+                    teacher_macroblocks.add(macroblock.lower())
+            
+            if not teacher_macroblocks:
+                # No macroblocks found - count as compliant
+                stats['compliant_assignments'] += 1
+                stats['by_macroblock_type']['no_theory']['total'] += 1
+                stats['by_macroblock_type']['no_theory']['compliant'] += 1
+                continue
+            
+            # Determine macroblock type and allowed lab sessions
+            allowed_lab_sessions = set()
+            macroblock_type = 'no_theory'
+            
+            for macroblock in teacher_macroblocks:
+                if macroblock in macroblock_to_lab_sessions:
+                    allowed_lab_sessions.update(macroblock_to_lab_sessions[macroblock])
+                    if macroblock.endswith('1'):
+                        macroblock_type = 'morning_theory'
+                    elif macroblock.endswith('2'):
+                        macroblock_type = 'afternoon_theory'
+            
+            # Check compliance
+            is_compliant = not allowed_lab_sessions or lab_session in allowed_lab_sessions
+            
+            if is_compliant:
+                stats['compliant_assignments'] += 1
+                stats['by_macroblock_type'][macroblock_type]['compliant'] += 1
+            
+            stats['by_macroblock_type'][macroblock_type]['total'] += 1
+        
+        # 2. Analyze macroblock grouping compliance
+        grouping_violations = self._validate_macroblock_grouping_constraints(lab_data, macroblock_to_lab_sessions)
+        stats['grouping_violations'] = len(grouping_violations)
+        
+        # Calculate rates
+        if stats['total_assignments'] > 0:
+            stats['compliance_rate'] = (stats['compliant_assignments'] / stats['total_assignments']) * 100
+            
+            # Calculate grouping compliance rate
+            total_possible_conflicts = stats['total_assignments']  # Simplified calculation
+            if total_possible_conflicts > 0:
+                stats['grouping_compliance_rate'] = ((total_possible_conflicts - stats['grouping_violations']) / total_possible_conflicts) * 100
+        
+        for macroblock_type, data in stats['by_macroblock_type'].items():
+            if data['total'] > 0:
+                data['rate'] = (data['compliant'] / data['total']) * 100
+        
+        return stats
+
 def main():
     """Main function to run the lab scheduler."""
     try:
@@ -1336,6 +1599,7 @@ def main():
         print("• Allocates labs based on practical_hours in course data")
         print("• Generates individual teacher lab schedule visualizations")
         print("• Continuous lab room assignment: L1 uses same room for both slots")
+        print("• Macroblock-based allocation: a1-g1 theory → L4-L6 labs, a2-g2 theory → L1-L3 labs")
         print("*" * 80)
         
         # Get the base directory of the project (timetable_scheduler directory)
@@ -1405,6 +1669,9 @@ def main():
             print("  ✓ No conflicts with existing theory schedule")
             print("  ✓ Continuous room assignment for multi-slot sessions")
             print("  ✓ Individual teacher lab visualizations")
+            print("  ✓ Macroblock-based allocation prevents theory-lab conflicts")
+            print("    - Teachers with a1-g1 theory blocks → L4-L6 lab sessions only")
+            print("    - Teachers with a2-g2 theory blocks → L1-L3 lab sessions only")
         else:
             print("❌ Failed to generate a feasible lab schedule.")
             print("💡 Try adjusting course requirements or increasing available lab rooms.")
