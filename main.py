@@ -1,6 +1,9 @@
 import os
 import logging
+import argparse
 from src.scheduler import MacroblockTimetableScheduler
+from src.utils.validate_scheduler_output import validate_scheduler_output
+from src.utils.fix_combinations import fix_course_combinations
 
 # Configure basic logging
 logging.basicConfig(
@@ -14,12 +17,20 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def main():
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Macroblock Timetable Scheduler')
+    parser.add_argument('--fix-combinations', action='store_true',
+                        help='Attempt to fix course combination issues if validation fails')
+    parser.add_argument('--student-count', type=int, default=700,
+                        help='Number of students to accommodate (default: 700)')
+    args = parser.parse_args()
+    
     try:
         # Get the base directory of the project
         base_dir = os.path.dirname(os.path.abspath(__file__))
         
         # Path to data files
-        course_file = os.path.join(base_dir, 'data/mapped_data/computer_dept_teacher_courses.csv')
+        course_file = os.path.join(base_dir, 'data/mapped_data/cs_5sem.csv')
         if not os.path.exists(course_file):
             print(f"Error: Course file not found at {course_file}")
             return
@@ -71,6 +82,9 @@ def main():
         print("• Schedule structure: Tuesday-Saturday (Monday excluded)")
         print("• FOCUS: Different courses in different macroblocks with priority system")
         print("• BENEFIT: Clear course separation and priority allocation for high-hour courses")
+        print("• NEW: Course combination validation for student registration")
+        print(f"  - Checks if {args.student_count} students can select one teacher per course without conflicts")
+        print("  - Ensures students can register for all required courses in their semester")
         print("*" * 80)
         
         # Create and run the scheduler
@@ -93,6 +107,37 @@ def main():
             print("  - teacher_*_macroblock_schedule.png: Individual teacher visualizations")
             print("  - room_*_macroblock_schedule.png: Individual room visualizations")
             print("  - macroblock_analysis.png: Macroblock distribution analysis")
+            
+            # Validate student course combinations
+            print("\nValidating student course combinations...")
+            validation_result = validate_scheduler_output(scheduler.output_dir, student_count=args.student_count)
+            
+            if validation_result:
+                print("✅ VALIDATION PASSED: The timetable allows students to select all required courses")
+                print("  - Each student can find at least one valid combination of courses")
+                print("  - See combination_validation_report.txt for details")
+            else:
+                print("❌ VALIDATION FAILED: The timetable does not allow all students to select required courses")
+                print("  - Check combination_validation_report.txt for details")
+                
+                # Try to fix combination issues if requested
+                if args.fix_combinations:
+                    print("\nAttempting to fix course combination issues...")
+                    schedule_path = os.path.join(scheduler.output_dir, 'macroblock_schedule.csv')
+                    fix_success = fix_course_combinations(
+                        schedule_path, scheduler.output_dir, semester=5, student_count=args.student_count
+                    )
+                    
+                    if fix_success:
+                        print("✅ Fixed timetable generated successfully!")
+                        print("  - modified_macroblock_schedule.csv contains the fixed timetable")
+                        print("  - See combination_fix_report.txt for details on applied fixes")
+                    else:
+                        print("⚠️ Could not fully resolve combination issues automatically")
+                        print("  - Partial fixes may have been applied")
+                        print("  - Consider adjusting the constraints or running with different parameters")
+                else:
+                    print("  - Run with --fix-combinations to attempt automatic fixes")
         else:
             print("Failed to generate a feasible macroblock timetable.")
     except Exception as e:

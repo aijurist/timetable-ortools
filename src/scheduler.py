@@ -39,11 +39,11 @@ class MacroblockTimetableScheduler:
                        "a2/L31", "f2/L32", "d2/L33", "tb2/L34", "tg2/L35"],
             "wed": ["b1/L7", "g1/L8", "e1/L9", "tc1/L10", "taa1/L11", "L12", 
                    "b2/L37", "g2/L38", "e2/L39", "tc2/L40", "taa2/L41"],
-            "thur": ["c1/L13", "a1/L14", "f1/L15", "v1/L16", "tbb1/L17", "L18", 
+            "thur": ["c1/L13", "a1/L14", "f1/L15", "td1/L16", "v2/L17", "L18", 
                     "c2/L43", "a2/L44", "f2/L45", "td2/L46", "tbb2/L47"],
             "fri": ["d1/L19", "b1/L20", "g1/L21", "te1/L22", "tcc1/L23", "L24", 
                    "d2/L49", "b2/L50", "g2/L51", "te2/L52", "tcc2/L53"],
-            "sat": ["e1/L25", "c1/L26", "ta1/L27", "tf1/L28", "td1/L29", "L30", 
+            "sat": ["e1/L25", "c1/L26", "ta1/L27", "tf1/L28", "tdd1/L29", "L30", 
                    "e2/L55", "c2/L56", "ta2/L57", "tf2/L58", "tdd2/L59"]
         }
         

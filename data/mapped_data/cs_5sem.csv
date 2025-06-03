@@ -1,0 +1,78 @@
+id,student_count,academic_year,semester,requires_special_scheduling,is_assistant,teacher_id,staff_code,first_name,last_name,teacher_email,course_id,course_code,course_name,course_type,lecture_hours,practical_hours,tutorial_hours,credits,course_dept
+1,70,3,5,0,0,101,CS101,Dr.,Rajesh Kumar,rajesh.kumar@rajalakshmi.edu.in,1001,CS23501,Data Structures and Algorithms,LoT,3,0,0,4.0,Computer Science & Engineering
+2,70,3,5,0,0,102,CS102,Mrs.,Priya Sharma,priya.sharma@rajalakshmi.edu.in,1001,CS23501,Data Structures and Algorithms,LoT,3,0,0,4.0,Computer Science & Engineering
+3,70,3,5,0,1,103,CS103,Mr.,Arun Krishnan,arun.krishnan@rajalakshmi.edu.in,1001,CS23501,Data Structures and Algorithms,LoT,3,0,0,4.0,Computer Science & Engineering
+4,70,3,5,0,0,104,CS104,Dr.,Meera Nair,meera.nair@rajalakshmi.edu.in,1001,CS23501,Data Structures and Algorithms,LoT,3,0,0,4.0,Computer Science & Engineering
+5,70,3,5,1,0,105,CS105,Mr.,Suresh Babu,suresh.babu@rajalakshmi.edu.in,1001,CS23501,Data Structures and Algorithms,LoT,3,0,0,4.0,Computer Science & Engineering
+6,70,3,5,0,1,106,CS106,Mrs.,Lakshmi Devi,lakshmi.devi@rajalakshmi.edu.in,1001,CS23501,Data Structures and Algorithms,LoT,3,0,0,4.0,Computer Science & Engineering
+7,70,3,5,0,0,107,CS107,Dr.,Vijay Kumar,vijay.kumar@rajalakshmi.edu.in,1001,CS23501,Data Structures and Algorithms,LoT,3,0,0,4.0,Computer Science & Engineering
+8,70,3,5,0,0,201,CS201,Dr.,Amit Verma,amit.verma@rajalakshmi.edu.in,1001,CS23501,Data Structures and Algorithms,LoT,3,0,0,4.0,Computer Science & Engineering
+9,70,3,5,0,0,202,CS202,Prof.,Nisha Patel,nisha.patel@rajalakshmi.edu.in,1001,CS23501,Data Structures and Algorithms,LoT,3,0,0,4.0,Computer Science & Engineering
+10,70,3,5,0,0,203,CS203,Dr.,Suman Rao,suman.rao@rajalakshmi.edu.in,1001,CS23501,Data Structures and Algorithms,LoT,3,0,0,4.0,Computer Science & Engineering
+100,70,3,5,0,0,204,CS204,Mr.,Vikram Singh,vikram.singh@rajalakshmi.edu.in,1001,CS23501,Data Structures and Algorithms,LoT,3,0,0,4.0,Computer Science & Engineering
+101,70,3,5,0,0,205,CS205,Ms.,Divya Reddy,divya.reddy@rajalakshmi.edu.in,1001,CS23501,Data Structures and Algorithms,LoT,3,0,0,4.0,Computer Science & Engineering
+11,70,3,5,0,0,111,CS111,Prof.,Ramesh Gupta,ramesh.gupta@rajalakshmi.edu.in,1002,CS23502,Database Management Systems,LoT,2,4,0,3.0,Computer Science & Engineering
+12,70,3,5,0,0,112,CS112,Dr.,Kavitha Menon,kavitha.menon@rajalakshmi.edu.in,1002,CS23502,Database Management Systems,LoT,2,4,0,3.0,Computer Science & Engineering
+13,70,3,5,0,1,113,CS113,Mr.,Bala Krishnan,bala.krishnan@rajalakshmi.edu.in,1002,CS23502,Database Management Systems,LoT,2,4,0,3.0,Computer Science & Engineering
+14,70,3,5,1,0,114,CS114,Mrs.,Deepa Srinivasan,deepa.srinivasan@rajalakshmi.edu.in,1002,CS23502,Database Management Systems,LoT,2,4,0,3.0,Computer Science & Engineering
+15,70,3,5,0,1,115,CS115,Dr.,Manoj Kumar,manoj.kumar@rajalakshmi.edu.in,1002,CS23502,Database Management Systems,LoT,2,4,0,3.0,Computer Science & Engineering
+16,70,3,5,0,0,116,CS116,Ms.,Radha Krishnan,radha.krishnan@rajalakshmi.edu.in,1002,CS23502,Database Management Systems,LoT,2,4,0,3.0,Computer Science & Engineering
+17,70,3,5,1,0,117,CS117,Mr.,Sanjay Patel,sanjay.patel@rajalakshmi.edu.in,1002,CS23502,Database Management Systems,LoT,2,4,0,3.0,Computer Science & Engineering
+18,70,3,5,0,0,211,CS211,Dr.,Pradeep Joshi,pradeep.joshi@rajalakshmi.edu.in,1002,CS23502,Database Management Systems,LoT,2,4,0,3.0,Computer Science & Engineering
+19,70,3,5,0,0,212,CS212,Mrs.,Anita Reddy,anita.reddy@rajalakshmi.edu.in,1002,CS23502,Database Management Systems,LoT,2,4,0,3.0,Computer Science & Engineering
+20,70,3,5,0,0,213,CS213,Mr.,Ashok Gupta,ashok.gupta@rajalakshmi.edu.in,1002,CS23502,Database Management Systems,LoT,2,4,0,3.0,Computer Science & Engineering
+102,70,3,5,0,0,214,CS214,Dr.,Shreya Mishra,shreya.mishra@rajalakshmi.edu.in,1002,CS23502,Database Management Systems,LoT,2,4,0,3.0,Computer Science & Engineering
+103,70,3,5,0,0,215,CS215,Prof.,Rahul Sharma,rahul.sharma@rajalakshmi.edu.in,1002,CS23502,Database Management Systems,LoT,2,4,0,3.0,Computer Science & Engineering
+21,70,3,5,0,0,121,CS121,Dr.,Sathish Kumar,sathish.kumar@rajalakshmi.edu.in,1003,CS23503,Computer Graphics,T,4,0,1,4.0,Computer Science & Engineering
+22,70,3,5,0,0,122,CS122,Mrs.,Geetha Rajesh,geetha.rajesh@rajalakshmi.edu.in,1003,CS23503,Computer Graphics,T,4,0,1,4.0,Computer Science & Engineering
+23,70,3,5,1,0,123,CS123,Mr.,Dinesh Babu,dinesh.babu@rajalakshmi.edu.in,1003,CS23503,Computer Graphics,T,4,0,1,4.0,Computer Science & Engineering
+24,70,3,5,0,0,124,CS124,Dr.,Shanti Priya,shanti.priya@rajalakshmi.edu.in,1003,CS23503,Computer Graphics,T,4,0,1,4.0,Computer Science & Engineering
+25,70,3,5,0,0,125,CS125,Ms.,Pooja Malhotra,pooja.malhotra@rajalakshmi.edu.in,1003,CS23503,Computer Graphics,T,4,0,1,4.0,Computer Science & Engineering
+26,70,3,5,1,0,126,CS126,Mr.,Ravi Shankar,ravi.shankar@rajalakshmi.edu.in,1003,CS23503,Computer Graphics,T,4,0,1,4.0,Computer Science & Engineering
+27,70,3,5,0,0,127,CS127,Dr.,Nalini Kumari,nalini.kumari@rajalakshmi.edu.in,1003,CS23503,Computer Graphics,T,4,0,1,4.0,Computer Science & Engineering
+104,70,3,5,0,0,221,CS221,Prof.,Arvind Nair,arvind.nair@rajalakshmi.edu.in,1003,CS23503,Computer Graphics,T,4,0,1,4.0,Computer Science & Engineering
+105,70,3,5,0,0,222,CS222,Dr.,Sonali Gupta,sonali.gupta@rajalakshmi.edu.in,1003,CS23503,Computer Graphics,T,4,0,1,4.0,Computer Science & Engineering
+106,70,3,5,0,0,223,CS223,Mr.,Nitin Saxena,nitin.saxena@rajalakshmi.edu.in,1003,CS23503,Computer Graphics,T,4,0,1,4.0,Computer Science & Engineering
+107,70,3,5,0,0,224,CS224,Mrs.,Anjali Kumar,anjali.kumar@rajalakshmi.edu.in,1003,CS23503,Computer Graphics,T,4,0,1,4.0,Computer Science & Engineering
+108,70,3,5,0,0,225,CS225,Dr.,Vishal Reddy,vishal.reddy@rajalakshmi.edu.in,1003,CS23503,Computer Graphics,T,4,0,1,4.0,Computer Science & Engineering
+31,70,3,5,0,0,131,CS131,Prof.,Harish Chandra,harish.chandra@rajalakshmi.edu.in,1004,CS23504,Software Engineering,T,3,0,0,3.0,Computer Science & Engineering
+32,70,3,5,1,0,132,CS132,Dr.,Indira Gandhi,indira.gandhi@rajalakshmi.edu.in,1004,CS23504,Software Engineering,T,3,0,0,3.0,Computer Science & Engineering
+33,70,3,5,0,0,133,CS133,Mr.,Gopal Krishna,gopal.krishna@rajalakshmi.edu.in,1004,CS23504,Software Engineering,T,3,0,0,3.0,Computer Science & Engineering
+34,70,3,5,0,0,134,CS134,Mrs.,Saraswati Devi,saraswati.devi@rajalakshmi.edu.in,1004,CS23504,Software Engineering,T,3,0,0,3.0,Computer Science & Engineering
+35,70,3,5,1,0,135,CS135,Dr.,Mohan Lal,mohan.lal@rajalakshmi.edu.in,1004,CS23504,Software Engineering,T,3,0,0,3.0,Computer Science & Engineering
+36,70,3,5,0,0,136,CS136,Ms.,Swati Sharma,swati.sharma@rajalakshmi.edu.in,1004,CS23504,Software Engineering,T,3,0,0,3.0,Computer Science & Engineering
+37,70,3,5,0,0,137,CS137,Mr.,Arjun Singh,arjun.singh@rajalakshmi.edu.in,1004,CS23504,Software Engineering,T,3,0,0,3.0,Computer Science & Engineering
+109,70,3,5,0,0,231,CS231,Dr.,Pankaj Verma,pankaj.verma@rajalakshmi.edu.in,1004,CS23504,Software Engineering,T,3,0,0,3.0,Computer Science & Engineering
+110,70,3,5,0,0,232,CS232,Mrs.,Sangeeta Rao,sangeeta.rao@rajalakshmi.edu.in,1004,CS23504,Software Engineering,T,3,0,0,3.0,Computer Science & Engineering
+111,70,3,5,0,0,233,CS233,Prof.,Aditya Kapoor,aditya.kapoor@rajalakshmi.edu.in,1004,CS23504,Software Engineering,T,3,0,0,3.0,Computer Science & Engineering
+112,70,3,5,0,0,234,CS234,Ms.,Neha Sharma,neha.sharma@rajalakshmi.edu.in,1004,CS23504,Software Engineering,T,3,0,0,3.0,Computer Science & Engineering
+113,70,3,5,0,0,235,CS235,Mr.,Rajiv Khanna,rajiv.khanna@rajalakshmi.edu.in,1004,CS23504,Software Engineering,T,3,0,0,3.0,Computer Science & Engineering
+41,70,3,5,0,0,141,CS141,Dr.,Subhash Chandra,subhash.chandra@rajalakshmi.edu.in,1005,CS23505,Machine Learning Laboratory,P,0,6,0,3.0,Computer Science & Engineering
+42,70,3,5,0,0,142,CS142,Mrs.,Asha Kumari,asha.kumari@rajalakshmi.edu.in,1005,CS23505,Machine Learning Laboratory,P,0,6,0,3.0,Computer Science & Engineering
+43,70,3,5,0,1,143,CS143,Mr.,Rohit Sharma,rohit.sharma@rajalakshmi.edu.in,1005,CS23505,Machine Learning Laboratory,P,0,6,0,3.0,Computer Science & Engineering
+44,70,3,5,0,1,144,CS144,Dr.,Neeta Agarwal,neeta.agarwal@rajalakshmi.edu.in,1005,CS23505,Machine Learning Laboratory,P,0,6,0,3.0,Computer Science & Engineering
+45,70,3,5,1,1,145,CS145,Ms.,Ritu Gupta,ritu.gupta@rajalakshmi.edu.in,1005,CS23505,Machine Learning Laboratory,P,0,6,0,3.0,Computer Science & Engineering
+49,70,3,5,0,1,149,CS149,Mr.,Naveen Kumar,naveen.kumar@rajalakshmi.edu.in,1005,CS23505,Machine Learning Laboratory,P,0,6,0,3.0,Computer Science & Engineering
+50,70,3,5,0,1,150,CS150,Dr.,Preeti Singh,preeti.singh@rajalakshmi.edu.in,1005,CS23505,Machine Learning Laboratory,P,0,6,0,3.0,Computer Science & Engineering
+114,70,3,5,0,0,241,CS241,Prof.,Manish Jain,manish.jain@rajalakshmi.edu.in,1005,CS23505,Machine Learning Laboratory,P,0,6,0,3.0,Computer Science & Engineering
+115,70,3,5,0,0,242,CS242,Dr.,Sunita Kapoor,sunita.kapoor@rajalakshmi.edu.in,1005,CS23505,Machine Learning Laboratory,P,0,6,0,3.0,Computer Science & Engineering
+116,70,3,5,0,0,243,CS243,Mr.,Alok Gupta,alok.gupta@rajalakshmi.edu.in,1005,CS23505,Machine Learning Laboratory,P,0,6,0,3.0,Computer Science & Engineering
+117,70,3,5,0,0,244,CS244,Mrs.,Tanvi Mehta,tanvi.mehta@rajalakshmi.edu.in,1005,CS23505,Machine Learning Laboratory,P,0,6,0,3.0,Computer Science & Engineering
+118,70,3,5,0,0,245,CS245,Dr.,Rajeev Saxena,rajeev.saxena@rajalakshmi.edu.in,1005,CS23505,Machine Learning Laboratory,P,0,6,0,3.0,Computer Science & Engineering
+51,70,3,5,0,0,151,CS151,Prof.,Yogesh Patel,yogesh.patel@rajalakshmi.edu.in,1006,CS23506,Compiler Design,LoT,3,0,0,5.0,Computer Science & Engineering
+52,70,3,5,0,0,052,CS152,Dr.,Ranjana Gupta,ranjana.gupta@rajalakshmi.edu.in,1006,CS23506,Compiler Design,LoT,3,0,0,5.0,Computer Science & Engineering
+53,70,3,5,1,0,053,CS153,Mr.,Deepak Kumar,deepak.kumar@rajalakshmi.edu.in,1006,CS23506,Compiler Design,LoT,3,0,0,5.0,Computer Science & Engineering
+54,70,3,5,0,0,154,CS154,Mrs.,Bharti Sharma,bharti.sharma@rajalakshmi.edu.in,1006,CS23506,Compiler Design,LoT,3,0,0,5.0,Computer Science & Engineering
+55,70,3,5,0,0,055,CS155,Dr.,Mahesh Kumar,mahesh.kumar@rajalakshmi.edu.in,1006,CS23506,Compiler Design,LoT,3,0,0,5.0,Computer Science & Engineering
+56,70,3,5,1,1,156,CS156,Ms.,Shweta Agarwal,shweta.agarwal@rajalakshmi.edu.in,1006,CS23506,Compiler Design,LoT,3,0,0,5.0,Computer Science & Engineering
+57,70,3,5,0,0,057,CS157,Mr.,Vinod Kumar,vinod.kumar@rajalakshmi.edu.in,1006,CS23506,Compiler Design,LoT,3,0,0,5.0,Computer Science & Engineering
+119,70,3,5,0,0,251,CS251,Dr.,Anand Mishra,anand.mishra@rajalakshmi.edu.in,1006,CS23506,Compiler Design,LoT,3,0,0,5.0,Computer Science & Engineering
+120,70,3,5,0,0,252,CS252,Mrs.,Sneha Yadav,sneha.yadav@rajalakshmi.edu.in,1006,CS23506,Compiler Design,LoT,3,0,0,5.0,Computer Science & Engineering
+121,70,3,5,0,0,253,CS253,Prof.,Kiran Kumar,kiran.kumar@rajalakshmi.edu.in,1006,CS23506,Compiler Design,LoT,3,0,0,5.0,Computer Science & Engineering
+122,70,3,5,0,0,254,CS254,Mr.,Ajay Saxena,ajay.saxena@rajalakshmi.edu.in,1006,CS23506,Compiler Design,LoT,3,0,0,5.0,Computer Science & Engineering
+123,70,3,5,0,0,255,CS255,Dr.,Mala Verma,mala.verma@rajalakshmi.edu.in,1006,CS23506,Compiler Design,LoT,3,0,0,5.0,Computer Science & Engineering
+124,70,3,5,0,0,161,CS161,Dr.,Prakash Raj,prakash.raj@rajalakshmi.edu.in,1007,CS23507,Machine Learning Algorithms,T,3,0,2,4.5,Computer Science & Engineering
+125,70,3,5,0,0,162,CS162,Prof.,Ritu Sharma,ritu.sharma@rajalakshmi.edu.in,1007,CS23507,Machine Learning Algorithms,T,3,0,2,4.5,Computer Science & Engineering
+126,70,3,5,0,0,163,CS163,Mrs.,Anita Desai,anita.desai@rajalakshmi.edu.in,1007,CS23507,Machine Learning Algorithms,T,3,0,2,4.5,Computer Science & Engineering
+127,70,3,5,0,0,164,CS164,Dr.,Ramesh Iyer,ramesh.iyer@rajalakshmi.edu.in,1007,CS23507,Machine Learning Algorithms,T,3,0,2,4.5,Computer Science & Engineering
+128,70,3,5,0,0,165,CS165,Mr.,Sudhir Menon,sudhir.menon@rajalakshmi.edu.in,1007,CS23507,Machine Learning Algorithms,T,3,0,2,4.5,Computer Science & Engineering

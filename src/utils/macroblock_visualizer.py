@@ -32,7 +32,8 @@ class MacroblockTimetableVisualizer:
         # v1 and v2 are excluded as they are not assigned to any courses
         self.tutorial_blocks = ['ta1', 'tb1', 'tc1', 'td1', 'te1', 'tf1', 'tg1', 
                                'ta2', 'tb2', 'tc2', 'td2', 'te2', 'tf2', 'tg2',
-                               'taa1', 'taa2', 'tbb1', 'tbb2', 'tcc1', 'tcc2']
+                               'taa1', 'taa2', 'tbb1', 'tbb2', 'tcc1', 'tcc2',
+                               'tdd1', 'tdd2', 't81', 't82']
         
         if not self.schedule_df.empty:
             # Create color map for courses
