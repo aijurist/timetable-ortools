@@ -8,7 +8,7 @@ from ortools.sat.python import cp_model
 from collections import defaultdict
 
 # Import the lab constraints module
-from src.lab_constraints import LabConstraints, validate_lab_constraints, analyze_constraint_conflicts
+from src.lab_scheduler.lab_constraints import LabConstraints, validate_lab_constraints, analyze_constraint_conflicts
 
 # Add import for the lab visualizer
 try:

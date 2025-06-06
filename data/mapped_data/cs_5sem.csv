@@ -71,8 +71,3 @@ id,student_count,academic_year,semester,requires_special_scheduling,is_assistant
 121,70,3,5,0,0,253,CS253,Prof.,Kiran Kumar,kiran.kumar@rajalakshmi.edu.in,1006,CS23506,Compiler Design,LoT,3,0,0,5.0,Computer Science & Engineering
 122,70,3,5,0,0,254,CS254,Mr.,Ajay Saxena,ajay.saxena@rajalakshmi.edu.in,1006,CS23506,Compiler Design,LoT,3,0,0,5.0,Computer Science & Engineering
 123,70,3,5,0,0,255,CS255,Dr.,Mala Verma,mala.verma@rajalakshmi.edu.in,1006,CS23506,Compiler Design,LoT,3,0,0,5.0,Computer Science & Engineering
-124,70,3,5,0,0,161,CS161,Dr.,Prakash Raj,prakash.raj@rajalakshmi.edu.in,1007,CS23507,Machine Learning Algorithms,T,3,0,2,4.5,Computer Science & Engineering
-125,70,3,5,0,0,162,CS162,Prof.,Ritu Sharma,ritu.sharma@rajalakshmi.edu.in,1007,CS23507,Machine Learning Algorithms,T,3,0,2,4.5,Computer Science & Engineering
-126,70,3,5,0,0,163,CS163,Mrs.,Anita Desai,anita.desai@rajalakshmi.edu.in,1007,CS23507,Machine Learning Algorithms,T,3,0,2,4.5,Computer Science & Engineering
-127,70,3,5,0,0,164,CS164,Dr.,Ramesh Iyer,ramesh.iyer@rajalakshmi.edu.in,1007,CS23507,Machine Learning Algorithms,T,3,0,2,4.5,Computer Science & Engineering
-128,70,3,5,0,0,165,CS165,Mr.,Sudhir Menon,sudhir.menon@rajalakshmi.edu.in,1007,CS23507,Machine Learning Algorithms,T,3,0,2,4.5,Computer Science & Engineering
