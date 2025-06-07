@@ -293,91 +293,70 @@ class FifthSemesterGroupingAnalyzer:
         return groups
     
     def _distribute_multi_instance_teachers_fixed(self, groups, multi_instance_teachers, global_teacher_assignments):
-        """FIXED: Distribute teachers with multiple instances - each teacher goes to ONLY ONE group."""
-        print(f"\n📦 DISTRIBUTING MULTI-INSTANCE TEACHERS (FIXED):")
+        """CORRECTED: Distribute teacher instances ensuring no teacher appears multiple times in SAME group."""
+        print(f"\n📦 DISTRIBUTING MULTI-INSTANCE TEACHERS (CORRECTED CONSTRAINT):")
         print("-" * 40)
-        print("🔒 FIXED CONSTRAINT: Each teacher assigned to exactly ONE group")
-        print("📦 Strategy: Distribute instances across groups, but teacher stays in first assigned group")
+        print("🔧 CORRECT CONSTRAINT: No teacher multiple times in SAME group (same time slot)")
+        print("✅ ALLOWED: Teacher in different groups (different time slots)")
         
         for teacher_id, teacher_info in multi_instance_teachers.items():
             print(f"\n👨‍🏫 Processing Teacher {teacher_id}:")
             
-            # Check if teacher is already assigned
-            if teacher_id in global_teacher_assignments:
-                assigned_group_id = global_teacher_assignments[teacher_id]
-                assigned_group = groups[assigned_group_id - 1]  # Convert to 0-based index
-                
-                print(f"   ℹ️  Teacher {teacher_id} already assigned to Group {assigned_group_id}")
-                
-                # Add all remaining instances of this teacher to the same group
-                for course_code, course_instances in teacher_info['course_distribution'].items():
-                    for instance in course_instances:
-                        instance_id = instance['instance_id']
-                        if instance_id not in [inst['instance_id'] for _, inst in assigned_group['course_instances']]:
-                            assigned_group['course_instances'].append((course_code, instance))
-                            assigned_group['courses_represented'].add(course_code)
-                            assigned_group['teacher_instances'].append(instance)
-                            assigned_group['student_capacity'] += self.students_per_teacher
-                            
-                            print(f"      ➕ Added instance {instance_id} ({course_code}) to Group {assigned_group_id}")
-                continue
-            
-            # Find the best group for this teacher (teacher goes to ONE group only)
-            best_group = None
-            min_capacity = float('inf')
-            
-            # Find group with minimum capacity that can accommodate this teacher
-            for group in groups:
-                # Check if any teacher in this group conflicts
-                if not any(tid in global_teacher_assignments and global_teacher_assignments[tid] == group['group_id'] for tid in group['teachers_assigned']):
-                    if group['student_capacity'] < min_capacity:
-                        min_capacity = group['student_capacity']
-                        best_group = group
-            
-            if best_group is None:
-                # Create emergency group if needed
-                emergency_group = {
-                    'group_id': len(groups) + 1,
-                    'course_instances': [],
-                    'courses_represented': set(),
-                    'teachers_assigned': set(),
-                    'teacher_instances': [],
-                    'student_capacity': 0,
-                    'halls_satisfied': False,
-                    'halls_violations': [],
-                    'instance_constraint_satisfied': True,
-                    'enhanced_constraint_satisfied': True,
-                    'course_teacher_matrix': {}
-                }
-                groups.append(emergency_group)
-                best_group = emergency_group
-                print(f"   🆘 Created emergency Group {best_group['group_id']} for Teacher {teacher_id}")
-            
-            # Assign teacher to the best group (ALL instances go to this ONE group)
-            global_teacher_assignments[teacher_id] = best_group['group_id']
-            best_group['teachers_assigned'].add(teacher_id)
-            
-            print(f"   ✅ Assigned Teacher {teacher_id} to Group {best_group['group_id']}")
-            
-            # Add all instances of this teacher to the assigned group
-            total_instances_added = 0
             for course_code, course_instances in teacher_info['course_distribution'].items():
-                for instance in course_instances:
-                    best_group['course_instances'].append((course_code, instance))
-                    best_group['courses_represented'].add(course_code)
-                    best_group['teacher_instances'].append(instance)
-                    best_group['student_capacity'] += self.students_per_teacher
-                    total_instances_added += 1
+                print(f"   📖 Course {course_code}: {len(course_instances)} instances to distribute")
+                
+                for i, instance in enumerate(course_instances):
+                    # Find group where this teacher doesn't already appear
+                    target_group = self._find_best_group_without_teacher_conflict(
+                        groups, teacher_id, instance
+                    )
                     
-                    print(f"      ➕ Added instance {instance['instance_id']} ({course_code})")
-            
-            print(f"   📊 Total instances added: {total_instances_added}")
+                    if target_group:
+                        # Assign instance to the group
+                        target_group['course_instances'].append((course_code, instance))
+                        target_group['courses_represented'].add(course_code)
+                        target_group['teachers_assigned'].add(teacher_id)
+                        target_group['teacher_instances'].append(instance)
+                        target_group['student_capacity'] += self.students_per_teacher
+                        
+                        # Track that this teacher is now in this group
+                        if teacher_id not in global_teacher_assignments:
+                            global_teacher_assignments[teacher_id] = set()
+                        global_teacher_assignments[teacher_id].add(target_group['group_id'])
+                        
+                        print(f"      ✅ Instance {instance['instance_id']} → Group {target_group['group_id']}")
+                    else:
+                        print(f"      ❌ Could not assign instance {instance['instance_id']}")
         
         return groups
     
+    def _find_best_group_without_teacher_conflict(self, groups, teacher_id, instance):
+        """Find the best group where teacher doesn't already appear (to avoid same-time conflicts)."""
+        course_code = instance['course_code']
+        
+        # Find groups where this teacher is NOT already assigned
+        valid_groups = []
+        
+        for group in groups:
+            # Check if teacher is already in this group (same time slot)
+            if teacher_id not in group['teachers_assigned']:
+                # This group is valid - teacher not already scheduled in this time slot
+                valid_groups.append(group)
+            else:
+                # Teacher already in this group - would create time conflict
+                print(f"      ⚠️  Skipping Group {group['group_id']} - Teacher {teacher_id} already scheduled in this time slot")
+        
+        if not valid_groups:
+            print(f"      ❌ No valid groups found - Teacher {teacher_id} already in all groups")
+            return None
+        
+        # Choose the group with the lowest current capacity (for balance)
+        best_group = min(valid_groups, key=lambda g: g['student_capacity'])
+        return best_group
+    
     def _assign_remaining_teachers_fixed(self, groups, global_teacher_assignments):
-        """FIXED: Assign remaining teachers ensuring each teacher goes to exactly one group."""
-        print(f"\n📋 ASSIGNING REMAINING SINGLE-INSTANCE TEACHERS (FIXED):")
+        """CORRECTED: Assign remaining teachers ensuring no teacher appears multiple times in same group."""
+        print(f"\n📋 ASSIGNING REMAINING SINGLE-INSTANCE TEACHERS (CORRECTED):")
         print("-" * 40)
         
         # Get all assigned instances
@@ -397,22 +376,12 @@ class FifthSemesterGroupingAnalyzer:
             teacher_id = instance['teacher_id']
             course_code = instance['course_code']
             
-            # Check if teacher is already assigned to a group
-            if teacher_id in global_teacher_assignments:
-                assigned_group_id = global_teacher_assignments[teacher_id]
-                assigned_group = groups[assigned_group_id - 1]  # Convert to 0-based index
-                
-                # Add this instance to the teacher's already assigned group
-                assigned_group['course_instances'].append((course_code, instance))
-                assigned_group['courses_represented'].add(course_code)
-                assigned_group['teacher_instances'].append(instance)
-                assigned_group['student_capacity'] += self.students_per_teacher
-                
-                print(f"   ➕ Added instance to existing assignment: Teacher {teacher_id} ({course_code}) → Group {assigned_group_id}")
-            else:
-                # Find best group for this new teacher
-                best_group = min(groups, key=lambda g: g['student_capacity'])
-                
+            # Find best group where this teacher doesn't already appear
+            best_group = self._find_best_group_without_teacher_conflict(
+                groups, teacher_id, instance
+            )
+            
+            if best_group:
                 # Assign teacher to group
                 best_group['course_instances'].append((course_code, instance))
                 best_group['courses_represented'].add(course_code)
@@ -420,69 +389,99 @@ class FifthSemesterGroupingAnalyzer:
                 best_group['teacher_instances'].append(instance)
                 best_group['student_capacity'] += self.students_per_teacher
                 
-                global_teacher_assignments[teacher_id] = best_group['group_id']
+                # Track assignment
+                if teacher_id not in global_teacher_assignments:
+                    global_teacher_assignments[teacher_id] = set()
+                global_teacher_assignments[teacher_id].add(best_group['group_id'])
                 
-                print(f"   ✅ New assignment: Teacher {teacher_id} ({course_code}) → Group {best_group['group_id']}")
+                print(f"   ✅ Teacher {teacher_id} ({course_code}) → Group {best_group['group_id']}")
+            else:
+                # Teacher already in all groups - need to extend to more groups
+                print(f"   ⚠️  Teacher {teacher_id} ({course_code}) already in all groups - need more groups")
         
         return groups
     
     def _final_enhanced_constraint_verification_fixed(self, groups, global_teacher_assignments):
-        """FIXED: Perform final verification of all enhanced constraints."""
-        print(f"\n✅ FINAL ENHANCED CONSTRAINT VERIFICATION (FIXED):")
+        """CORRECTED: Verify constraints - no teacher multiple times in SAME group, but can be in different groups."""
+        print(f"\n✅ FINAL CONSTRAINT VERIFICATION (CORRECT UNDERSTANDING):")
         print("-" * 50)
+        print("🔧 CORRECT CONSTRAINT LOGIC:")
+        print("   🕘 Each GROUP = Single Time Slot (e.g., Monday 9:00-10:00 AM)")
+        print("   🚫 Same teacher CANNOT be in a group multiple times (can't be in multiple places simultaneously)")
+        print("   ✅ Teacher CAN be in different groups (different time slots)")
         
-        # Verify unique teacher constraint - should be ZERO violations now
-        total_violations = 0
-        teacher_group_counts = {}
+        # Verify within-group uniqueness constraint (the REAL constraint)
+        within_group_violations = 0
         
-        for teacher_id, group_id in global_teacher_assignments.items():
-            if teacher_id not in teacher_group_counts:
-                teacher_group_counts[teacher_id] = []
-            teacher_group_counts[teacher_id].append(group_id)
-        
-        for teacher_id, group_ids in teacher_group_counts.items():
-            if len(group_ids) > 1:
-                total_violations += 1
-                print(f"   ❌ Teacher {teacher_id} appears in multiple groups: {group_ids}")
-        
-        unique_constraint_satisfied = total_violations == 0
-        print(f"🔒 Unique Teacher Constraint: {'✅ SATISFIED' if unique_constraint_satisfied else f'❌ VIOLATED ({total_violations} teachers)'}")
-        
-        # Verify enhanced distribution constraint (no multiple instances of same course by same teacher in same group)
-        distribution_violations = 0
         for group in groups:
-            teacher_course_instances = {}
+            print(f"\n🎯 Checking Group {group['group_id']} (Single Time Slot):")
+            
+            # Check for duplicate teachers within the same group
+            teachers_in_group = []
+            teacher_course_count = {}
+            
             for course_code, instance in group['course_instances']:
                 teacher_id = instance['teacher_id']
-                key = (teacher_id, course_code)
-                teacher_course_instances[key] = teacher_course_instances.get(key, 0) + 1
+                teachers_in_group.append(teacher_id)
+                
+                if teacher_id not in teacher_course_count:
+                    teacher_course_count[teacher_id] = []
+                teacher_course_count[teacher_id].append(course_code)
             
-            group_violations = 0
-            for (teacher_id, course_code), count in teacher_course_instances.items():
+            # Check for teachers appearing multiple times in THIS group
+            teacher_counts = {}
+            for teacher_id in teachers_in_group:
+                teacher_counts[teacher_id] = teacher_counts.get(teacher_id, 0) + 1
+            
+            group_has_violations = False
+            for teacher_id, count in teacher_counts.items():
                 if count > 1:
-                    # This is expected now - teacher's multiple instances of same course will be in same group
-                    print(f"   ℹ️  Group {group['group_id']}: Teacher {teacher_id} has {count} instances of {course_code} (all in same group)")
+                    within_group_violations += 1
+                    group_has_violations = True
+                    courses = teacher_course_count[teacher_id]
+                    print(f"   ❌ VIOLATION: Teacher {teacher_id} appears {count} times in same group (courses: {courses})")
+                    print(f"      → Teacher cannot be in multiple places at the same time!")
+                else:
+                    courses = teacher_course_count[teacher_id]
+                    print(f"   ✅ Teacher {teacher_id}: 1 assignment in this group (course: {courses[0]})")
             
-            group['enhanced_constraint_satisfied'] = True  # This is now satisfied by design
+            if not group_has_violations:
+                print(f"   ✅ Group {group['group_id']}: No within-group teacher conflicts")
         
-        print(f"📦 Enhanced Distribution Constraint: ✅ SATISFIED (teachers with multiple instances keep them in same group)")
+        within_group_satisfied = within_group_violations == 0
+        print(f"\n🔒 Within-Group Uniqueness Constraint: {'✅ SATISFIED' if within_group_satisfied else f'❌ VIOLATED ({within_group_violations} violations)'}")
+        
+        # Show cross-group assignments (which ARE allowed)
+        print(f"\n🕘 CROSS-GROUP TEACHER ASSIGNMENTS (ALLOWED):")
+        teacher_group_assignments = {}
+        
+        for group in groups:
+            for teacher_id in group['teachers_assigned']:
+                if teacher_id not in teacher_group_assignments:
+                    teacher_group_assignments[teacher_id] = []
+                teacher_group_assignments[teacher_id].append(group['group_id'])
+        
+        for teacher_id, group_list in teacher_group_assignments.items():
+            if len(group_list) > 1:
+                print(f"   ✅ Teacher {teacher_id} teaching in {len(group_list)} different time slots: Groups {group_list}")
+            else:
+                print(f"   ℹ️  Teacher {teacher_id} teaching in 1 time slot: Group {group_list[0]}")
         
         # Verify Hall's theorem overall
         halls_satisfied_count = sum(1 for g in groups if g['halls_satisfied'])
-        print(f"🧮 Hall's Theorem: {halls_satisfied_count}/{len(groups)} groups satisfied")
+        print(f"\n🧮 Hall's Theorem: {halls_satisfied_count}/{len(groups)} groups satisfied")
         
         # Calculate summary statistics
         total_instances_assigned = sum(len(g['course_instances']) for g in groups)
-        total_teachers_assigned = len(global_teacher_assignments)
+        total_unique_teachers = len(teacher_group_assignments)
         total_capacity = sum(g['student_capacity'] for g in groups)
         
-        print(f"\n📊 FIXED DISTRIBUTION SUMMARY:")
-        print(f"   📦 Groups created: {len(groups)}")
-        print(f"   🔢 Instances distributed: {total_instances_assigned}/{len(self.teacher_instances)}")
-        print(f"   👥 Teachers assigned: {total_teachers_assigned}/{len(self.teachers)}")
-        print(f"   👨‍🎓 Total capacity: {total_capacity} students")
-        print(f"   🔒 Unique constraint: {'✅' if unique_constraint_satisfied else '❌'}")
-        print(f"   📦 Distribution constraint: ✅")
+        print(f"\n📊 CORRECTED DISTRIBUTION SUMMARY:")
+        print(f"   📦 Groups created: {len(groups)} (each = 1 time slot)")
+        print(f"   🔢 Course instances distributed: {total_instances_assigned}")
+        print(f"   👥 Unique teachers involved: {total_unique_teachers}")
+        print(f"   👨‍🎓 Total student capacity: {total_capacity}")
+        print(f"   🔒 Within-group uniqueness: {'✅ SATISFIED' if within_group_satisfied else '❌ VIOLATED'}")
         print(f"   🧮 Hall's theorem: {'✅' if halls_satisfied_count == len(groups) else '❌'}")
         
         return groups
@@ -687,71 +686,6 @@ class FifthSemesterGroupingAnalyzer:
             if not group['halls_satisfied']:
                 for violation in group['halls_violations']:
                     print(f"         ⚠️  Subset {violation['subset']}: needs {violation['subset_size']}, has {violation['neighbor_count']}")
-        
-        return groups
-    
-    def _final_enhanced_constraint_verification(self, groups, global_teacher_assignments):
-        """Perform final verification of all enhanced constraints."""
-        print(f"\n✅ FINAL ENHANCED CONSTRAINT VERIFICATION:")
-        print("-" * 50)
-        
-        # Verify unique teacher constraint
-        total_violations = 0
-        for teacher_id, group_ids in global_teacher_assignments.items():
-            if len(group_ids) > 1:
-                total_violations += 1
-                print(f"   ❌ Teacher {teacher_id} appears in multiple groups: {list(group_ids)}")
-        
-        unique_constraint_satisfied = total_violations == 0
-        print(f"🔒 Unique Teacher Constraint: {'✅ SATISFIED' if unique_constraint_satisfied else f'❌ VIOLATED ({total_violations} teachers)'}")
-        
-        # Verify enhanced distribution constraint
-        distribution_violations = 0
-        for group in groups:
-            teacher_course_instances = defaultdict(lambda: defaultdict(int))
-            for course_code, instance in group['course_instances']:
-                teacher_id = instance['teacher_id']
-                teacher_course_instances[teacher_id][course_code] += 1
-            
-            group_violations = 0
-            for teacher_id, course_counts in teacher_course_instances.items():
-                for course_code, count in course_counts.items():
-                    if count > 1:
-                        # Check if this teacher has instances of this course in other groups
-                        other_group_instances = 0
-                        for other_group in groups:
-                            if other_group['group_id'] != group['group_id']:
-                                for other_course, other_instance in other_group['course_instances']:
-                                    if (other_instance['teacher_id'] == teacher_id and 
-                                        other_course == course_code):
-                                        other_group_instances += 1
-                        
-                        if other_group_instances == 0:
-                            # This teacher's multiple instances of this course are all in the same group
-                            group_violations += 1
-                            distribution_violations += 1
-            
-            group['enhanced_constraint_satisfied'] = group_violations == 0
-        
-        print(f"📦 Enhanced Distribution Constraint: {'✅ SATISFIED' if distribution_violations == 0 else f'❌ VIOLATED ({distribution_violations} cases)'}")
-        
-        # Verify Hall's theorem overall
-        halls_satisfied_count = sum(1 for g in groups if g['halls_satisfied'])
-        print(f"🧮 Hall's Theorem: {halls_satisfied_count}/{len(groups)} groups satisfied")
-        
-        # Calculate summary statistics
-        total_instances_assigned = sum(len(g['course_instances']) for g in groups)
-        total_teachers_assigned = len(global_teacher_assignments)
-        total_capacity = sum(g['student_capacity'] for g in groups)
-        
-        print(f"\n📊 ENHANCED DISTRIBUTION SUMMARY:")
-        print(f"   📦 Groups created: {len(groups)}")
-        print(f"   🔢 Instances distributed: {total_instances_assigned}/{len(self.teacher_instances)}")
-        print(f"   👥 Teachers assigned: {total_teachers_assigned}/{len(self.teachers)}")
-        print(f"   👨‍🎓 Total capacity: {total_capacity} students")
-        print(f"   🔒 Unique constraint: {'✅' if unique_constraint_satisfied else '❌'}")
-        print(f"   📦 Distribution constraint: {'✅' if distribution_violations == 0 else '❌'}")
-        print(f"   🧮 Hall's theorem: {'✅' if halls_satisfied_count == len(groups) else '❌'}")
         
         return groups
     
@@ -1545,8 +1479,8 @@ class FifthSemesterGroupingAnalyzer:
             optimization_complete = not violated_groups and not constraint_violated_groups and not insufficient_capacity
             f.write(f"\nOptimization Status: {'✅ COMPLETE' if optimization_complete else '⚠️ NEEDS ATTENTION'}\n")
     
-    def run_complete_analysis(self):
-        """Run the complete 5th semester grouping analysis."""
+    def run_complete_analysis(self, target_students=420):
+        """Run the complete 5th semester grouping analysis with student choice optimization."""
         print("🚀 STARTING COMPLETE FIFTH SEMESTER GROUPING ANALYSIS")
         print("=" * 80)
         
@@ -1556,25 +1490,122 @@ class FifthSemesterGroupingAnalyzer:
         # Step 2: Create optimal groups
         optimal_groups = self.create_optimal_groups(courses_per_group=None)
         
-        # Step 3: Generate visualizations
-        self.generate_group_visualizations(optimal_groups)
+        # Step 3: OPTIMIZE FOR MAXIMUM STUDENT CHOICE (NEW!)
+        print("\n" + "🎯" * 40)
+        print("OPTIMIZING FOR MAXIMUM STUDENT CHOICE")
+        print("🎯" * 40)
+        student_optimized_groups = self.optimize_for_maximum_student_choice(optimal_groups, target_students)
         
-        # Step 4: Generate course-group heatmap
-        heatmap_data = self.generate_course_group_heatmap(optimal_groups)
+        # Step 4: Generate visualizations
+        self.generate_group_visualizations(student_optimized_groups)
         
-        # Step 5: Save results
-        results = self.save_grouping_results(optimal_groups)
+        # Step 5: Generate course-group heatmap
+        heatmap_data = self.generate_course_group_heatmap(student_optimized_groups)
+        
+        # Step 6: Generate final student choice report
+        final_report = self._generate_student_choice_final_report(student_optimized_groups, target_students)
+        
+        # Step 7: Save results
+        results = self.save_grouping_results(student_optimized_groups)
         
         print("\n🎉 ANALYSIS COMPLETED SUCCESSFULLY!")
         print(f"📁 All results saved to: {self.output_dir}")
-        print(f"📊 Created {len(optimal_groups)} optimal groups")
-        print(f"✅ Hall's theorem satisfied: {results['summary']['halls_satisfied_groups']}/{len(optimal_groups)} groups")
-        print(f"👨‍🎓 Student capacity sufficient: {results['summary']['capacity_sufficient_groups']}/{len(optimal_groups)} groups")
+        print(f"📊 Created {len(student_optimized_groups)} optimal groups")
+        print(f"✅ Hall's theorem satisfied: {results['summary']['halls_satisfied_groups']}/{len(student_optimized_groups)} groups")
+        print(f"👨‍🎓 Student capacity sufficient: {results['summary']['capacity_sufficient_groups']}/{len(student_optimized_groups)} groups")
         print(f"📈 Average efficiency: {results['summary']['avg_group_efficiency']:.1f}%")
-        print(f"🔥 Course-Group heatmap generated with teacher instance counts")
+        print(f"🎯 Student choice optimized for {target_students} students")
+        print(f"🔥 Final choice index: {final_report['choice_index']:.2f}")
         
         return results
-
+    
+    def _generate_student_choice_final_report(self, groups, target_students):
+        """Generate final report on student choice optimization."""
+        print(f"\n📊 FINAL STUDENT CHOICE REPORT:")
+        print("=" * 60)
+        
+        # Calculate final metrics
+        final_metrics = self._calculate_student_choice_metrics(groups, target_students)
+        
+        # Calculate choice satisfaction for different student positions
+        choice_satisfaction = {}
+        for percentile in [50, 90, 95, 99, 100]:  # 50th, 90th, 95th, 99th, 100th percentile students
+            student_position = int(target_students * percentile / 100)
+            satisfaction = self._calculate_choice_satisfaction_for_student_position(groups, student_position, target_students)
+            choice_satisfaction[percentile] = satisfaction
+        
+        print(f"🎯 CHOICE SATISFACTION BY STUDENT POSITION:")
+        print(f"   👥 50th percentile student (#{int(target_students*0.5)}): {choice_satisfaction[50]:.1f}% choice satisfaction")
+        print(f"   👥 90th percentile student (#{int(target_students*0.9)}): {choice_satisfaction[90]:.1f}% choice satisfaction")
+        print(f"   👥 95th percentile student (#{int(target_students*0.95)}): {choice_satisfaction[95]:.1f}% choice satisfaction")
+        print(f"   👥 99th percentile student (#{int(target_students*0.99)}): {choice_satisfaction[99]:.1f}% choice satisfaction")
+        print(f"   👥 420th student (last): {choice_satisfaction[100]:.1f}% choice satisfaction")
+        
+        # Overall assessment
+        worst_case_satisfaction = choice_satisfaction[100]
+        if worst_case_satisfaction >= 80:
+            overall_grade = "🏆 EXCELLENT"
+            recommendation = "Even the 420th student has excellent course choices!"
+        elif worst_case_satisfaction >= 60:
+            overall_grade = "✅ GOOD"
+            recommendation = "The 420th student has reasonable course choices."
+        elif worst_case_satisfaction >= 40:
+            overall_grade = "⚠️ FAIR"
+            recommendation = "The 420th student has limited but acceptable choices."
+        else:
+            overall_grade = "❌ POOR"
+            recommendation = "Need more optimization - 420th student has insufficient choices."
+        
+        print(f"\n📈 OVERALL STUDENT CHOICE GRADE: {overall_grade}")
+        print(f"💡 RECOMMENDATION: {recommendation}")
+        
+        # Detailed capacity analysis
+        print(f"\n📊 DETAILED CAPACITY ANALYSIS:")
+        print(f"   📦 Total Groups: {len(groups)}")
+        print(f"   👨‍🎓 Total Capacity: {final_metrics['total_capacity']}")
+        print(f"   📈 Capacity Buffer: {((final_metrics['total_capacity'] - target_students) / target_students * 100):.1f}%")
+        print(f"   ⚖️  Capacity Balance (lower = better): {final_metrics['capacity_variance']:.0f}")
+        print(f"   🎯 Choice Index: {final_metrics['choice_index']:.2f}")
+        print(f"   🚫 Bottleneck Groups: {final_metrics['bottleneck_groups']}")
+        
+        return {
+            'choice_index': final_metrics['choice_index'],
+            'choice_satisfaction': choice_satisfaction,
+            'overall_grade': overall_grade,
+            'worst_case_satisfaction': worst_case_satisfaction,
+            'total_capacity': final_metrics['total_capacity'],
+            'capacity_buffer': ((final_metrics['total_capacity'] - target_students) / target_students * 100),
+            'recommendation': recommendation
+        }
+    
+    def _calculate_choice_satisfaction_for_student_position(self, groups, student_position, total_students):
+        """Calculate choice satisfaction for a student at a specific position in the queue."""
+        # Simulate how many choices this student would have
+        # Assumes students are assigned in order and popular courses fill up first
+        
+        remaining_capacity_per_group = []
+        
+        for group in groups:
+            # Calculate remaining capacity if this many students have already been assigned
+            students_per_group = student_position // len(groups)  # Even distribution assumption
+            remaining_in_group = max(0, group['student_capacity'] - students_per_group)
+            
+            # Calculate choice diversity in this group
+            courses_available = len(group['courses_represented'])
+            
+            # If there's capacity and choices available
+            if remaining_in_group > 0 and courses_available > 0:
+                choice_score = min(100, (remaining_in_group / 70) * 50 + courses_available * 25)
+            else:
+                choice_score = 0
+            
+            remaining_capacity_per_group.append(choice_score)
+        
+        # Average satisfaction across all groups
+        avg_satisfaction = sum(remaining_capacity_per_group) / len(groups) if groups else 0
+        
+        return min(100, avg_satisfaction)
+    
     def generate_course_group_heatmap(self, groups):
         """Generate heatmap showing courses vs groups with ACTUAL teacher instance counts as values."""
         print("\n📊 GENERATING COURSE-GROUP TEACHER INSTANCE COUNT HEATMAP...")
@@ -1766,6 +1797,361 @@ FIXED Heatmap Summary:
         # Combined efficiency
         efficiency = (assignment_density + teacher_utilization) / 2
         return efficiency
+    
+    def _find_best_group_for_instance_corrected(self, groups, teacher_id, instance, teacher_groups):
+        """Find the best group for a teacher instance with corrected constraint logic."""
+        course_code = instance['course_code']
+        
+        # With corrected logic: teachers can be in multiple groups
+        # Focus on load balancing and optimal distribution
+        valid_groups = []
+        
+        for group in groups:
+            # All groups are potentially valid since teachers can be in multiple groups
+            valid_groups.append(group)
+        
+        if not valid_groups:
+            return None
+        
+        # Choose the group with the lowest current capacity for load balancing
+        best_group = min(valid_groups, key=lambda g: g['student_capacity'])
+        return best_group
+    
+    def optimize_for_maximum_student_choice(self, groups, target_students=420):
+        """Optimize groups to ensure maximum student choice, even for the 420th student."""
+        print(f"\n🎯 OPTIMIZING FOR MAXIMUM STUDENT CHOICE ({target_students} students)")
+        print("=" * 80)
+        
+        # Calculate current capacity and choice metrics
+        current_metrics = self._calculate_student_choice_metrics(groups, target_students)
+        print(f"📊 CURRENT STUDENT CHOICE ANALYSIS:")
+        print(f"   👥 Target Students: {target_students}")
+        print(f"   📦 Current Groups: {len(groups)}")
+        print(f"   👨‍🎓 Total Capacity: {current_metrics['total_capacity']}")
+        print(f"   📈 Capacity Utilization: {current_metrics['capacity_utilization']:.1f}%")
+        print(f"   🎯 Choice Index: {current_metrics['choice_index']:.2f} (higher = better choice)")
+        
+        # Identify optimization opportunities
+        optimization_needed = self._identify_optimization_opportunities(groups, current_metrics, target_students)
+        
+        if optimization_needed['needs_optimization']:
+            print(f"\n⚠️  OPTIMIZATION NEEDED:")
+            for issue in optimization_needed['issues']:
+                print(f"   • {issue}")
+            
+            # Apply optimization strategies
+            optimized_groups = self._apply_student_choice_optimizations(groups, optimization_needed, target_students)
+            
+            # Recalculate metrics
+            new_metrics = self._calculate_student_choice_metrics(optimized_groups, target_students)
+            
+            print(f"\n✅ OPTIMIZATION RESULTS:")
+            print(f"   📈 Choice Index: {current_metrics['choice_index']:.2f} → {new_metrics['choice_index']:.2f}")
+            print(f"   👨‍🎓 Total Capacity: {current_metrics['total_capacity']} → {new_metrics['total_capacity']}")
+            print(f"   📊 Groups: {len(groups)} → {len(optimized_groups)}")
+            
+            return optimized_groups
+        else:
+            print(f"\n✅ CURRENT CONFIGURATION OPTIMAL FOR STUDENT CHOICE!")
+            return groups
+    
+    def _calculate_student_choice_metrics(self, groups, target_students):
+        """Calculate comprehensive metrics for student choice quality."""
+        total_capacity = sum(g['student_capacity'] for g in groups)
+        
+        # Calculate choice diversity (how many options students have)
+        course_choices_per_group = []
+        for group in groups:
+            unique_courses = len(group['courses_represented'])
+            course_choices_per_group.append(unique_courses)
+        
+        avg_choices_per_group = sum(course_choices_per_group) / len(groups) if groups else 0
+        
+        # Calculate capacity distribution variance (lower = more balanced)
+        group_capacities = [g['student_capacity'] for g in groups]
+        capacity_variance = np.var(group_capacities) if group_capacities else 0
+        
+        # Calculate choice index (combines choice diversity and capacity balance)
+        choice_index = avg_choices_per_group * (total_capacity / target_students) / (1 + capacity_variance/1000)
+        
+        # Calculate bottleneck risk (groups with very low capacity)
+        bottleneck_groups = sum(1 for cap in group_capacities if cap < target_students / len(groups) * 0.8)
+        
+        return {
+            'total_capacity': total_capacity,
+            'capacity_utilization': (target_students / total_capacity * 100) if total_capacity > 0 else 0,
+            'avg_choices_per_group': avg_choices_per_group,
+            'capacity_variance': capacity_variance,
+            'choice_index': choice_index,
+            'bottleneck_groups': bottleneck_groups,
+            'group_capacities': group_capacities
+        }
+    
+    def _identify_optimization_opportunities(self, groups, metrics, target_students):
+        """Identify what optimizations are needed for better student choice."""
+        issues = []
+        needs_optimization = False
+        
+        # Check total capacity
+        if metrics['total_capacity'] < target_students * 1.2:  # Need 20% buffer
+            issues.append(f"Insufficient capacity: {metrics['total_capacity']} < {target_students * 1.2:.0f} (need 20% buffer)")
+            needs_optimization = True
+        
+        # Check capacity balance
+        if metrics['capacity_variance'] > 500:  # High variance in group capacities
+            issues.append(f"Unbalanced group capacities (variance: {metrics['capacity_variance']:.0f})")
+            needs_optimization = True
+        
+        # Check for bottleneck groups
+        if metrics['bottleneck_groups'] > 0:
+            issues.append(f"{metrics['bottleneck_groups']} groups have insufficient capacity")
+            needs_optimization = True
+        
+        # Check choice diversity
+        if metrics['avg_choices_per_group'] < 2:
+            issues.append(f"Limited course choices per group (avg: {metrics['avg_choices_per_group']:.1f})")
+            needs_optimization = True
+        
+        # Check for courses with single teacher instances
+        single_teacher_courses = 0
+        for group in groups:
+            for course_code in group['courses_represented']:
+                course_teachers = set()
+                for cc, instance in group['course_instances']:
+                    if cc == course_code:
+                        course_teachers.add(instance['teacher_id'])
+                if len(course_teachers) == 1:
+                    single_teacher_courses += 1
+        
+        if single_teacher_courses > len(groups) * 0.5:
+            issues.append(f"Too many single-teacher courses ({single_teacher_courses})")
+            needs_optimization = True
+        
+        return {
+            'needs_optimization': needs_optimization,
+            'issues': issues,
+            'single_teacher_courses': single_teacher_courses
+        }
+    
+    def _apply_student_choice_optimizations(self, groups, optimization_needed, target_students):
+        """Apply optimization strategies to improve student choice."""
+        print(f"\n🔧 APPLYING STUDENT CHOICE OPTIMIZATIONS:")
+        print("-" * 50)
+        
+        optimized_groups = groups.copy()
+        
+        # Strategy 1: Add more groups if capacity is insufficient
+        if any("Insufficient capacity" in issue for issue in optimization_needed['issues']):
+            optimized_groups = self._add_capacity_groups(optimized_groups, target_students)
+        
+        # Strategy 2: Redistribute teachers for better balance
+        if any("Unbalanced" in issue for issue in optimization_needed['issues']):
+            optimized_groups = self._rebalance_group_capacities(optimized_groups)
+        
+        # Strategy 3: Create backup teacher instances for popular courses
+        if optimization_needed['single_teacher_courses'] > len(groups) * 0.5:
+            optimized_groups = self._create_backup_teacher_instances(optimized_groups)
+        
+        # Strategy 4: Ensure minimum capacity per group
+        optimized_groups = self._ensure_minimum_group_capacity(optimized_groups, target_students)
+        
+        return optimized_groups
+    
+    def _add_capacity_groups(self, groups, target_students):
+        """Add additional groups to increase total capacity."""
+        print("📦 Strategy 1: Adding capacity groups...")
+        
+        current_capacity = sum(g['student_capacity'] for g in groups)
+        needed_capacity = target_students * 1.2 - current_capacity
+        
+        if needed_capacity > 0:
+            additional_groups_needed = max(1, int(needed_capacity / (self.students_per_teacher * 2)))
+            print(f"   ➕ Adding {additional_groups_needed} groups for {needed_capacity:.0f} additional capacity")
+            
+            # Identify underutilized teachers to create new groups
+            utilized_teachers = set()
+            for group in groups:
+                utilized_teachers.update(group['teachers_assigned'])
+            
+            available_teachers = [t for t in self.teachers if t not in utilized_teachers]
+            
+            for i in range(additional_groups_needed):
+                if available_teachers:
+                    new_group = self._create_additional_group(groups, available_teachers, i)
+                    if new_group:
+                        groups.append(new_group)
+                        print(f"   ✅ Created Group {new_group['group_id']} with {new_group['student_capacity']} capacity")
+        
+        return groups
+    
+    def _create_additional_group(self, existing_groups, available_teachers, group_index):
+        """Create an additional group with available teachers."""
+        new_group_id = len(existing_groups) + 1 + group_index
+        
+        # Select teachers and courses for new group
+        selected_teachers = available_teachers[:min(3, len(available_teachers))]  # Max 3 teachers per new group
+        
+        if not selected_teachers:
+            return None
+        
+        new_group = {
+            'group_id': new_group_id,
+            'course_instances': [],
+            'courses_represented': set(),
+            'teachers_assigned': set(selected_teachers),
+            'teacher_instances': [],
+            'student_capacity': len(selected_teachers) * self.students_per_teacher,
+            'halls_satisfied': True,  # Will be verified later
+            'halls_violations': [],
+            'instance_constraint_satisfied': True,
+            'enhanced_constraint_satisfied': True,
+            'course_teacher_matrix': {}
+        }
+        
+        # Assign courses to these teachers
+        for teacher_id in selected_teachers:
+            if teacher_id in self.teacher_course_instances:
+                for instance in self.teacher_course_instances[teacher_id][:1]:  # One instance per teacher
+                    course_code = instance['course_code']
+                    new_group['course_instances'].append((course_code, instance))
+                    new_group['courses_represented'].add(course_code)
+                    new_group['teacher_instances'].append(instance)
+        
+        return new_group
+    
+    def _rebalance_group_capacities(self, groups):
+        """Rebalance teacher distribution to reduce capacity variance."""
+        print("⚖️  Strategy 2: Rebalancing group capacities...")
+        
+        # Calculate target capacity per group
+        total_capacity = sum(g['student_capacity'] for g in groups)
+        target_per_group = total_capacity / len(groups)
+        
+        print(f"   🎯 Target capacity per group: {target_per_group:.0f}")
+        
+        # Identify overfull and underfull groups
+        overfull_groups = [g for g in groups if g['student_capacity'] > target_per_group * 1.2]
+        underfull_groups = [g for g in groups if g['student_capacity'] < target_per_group * 0.8]
+        
+        print(f"   📊 Overfull groups: {len(overfull_groups)}, Underfull groups: {len(underfull_groups)}")
+        
+        # Move teacher instances from overfull to underfull groups
+        for overfull in overfull_groups:
+            for underfull in underfull_groups:
+                if overfull['student_capacity'] > target_per_group * 1.1 and underfull['student_capacity'] < target_per_group * 0.9:
+                    # Move one teacher instance
+                    if overfull['teacher_instances']:
+                        instance = overfull['teacher_instances'][-1]
+                        course_code = None
+                        
+                        # Find the course for this instance
+                        for cc, inst in overfull['course_instances']:
+                            if inst == instance:
+                                course_code = cc
+                                break
+                        
+                        if course_code and instance['teacher_id'] not in underfull['teachers_assigned']:
+                            # Move instance
+                            overfull['course_instances'] = [(cc, inst) for cc, inst in overfull['course_instances'] if inst != instance]
+                            overfull['teacher_instances'].remove(instance)
+                            overfull['teachers_assigned'].discard(instance['teacher_id'])
+                            overfull['student_capacity'] -= self.students_per_teacher
+                            
+                            underfull['course_instances'].append((course_code, instance))
+                            underfull['teacher_instances'].append(instance)
+                            underfull['teachers_assigned'].add(instance['teacher_id'])
+                            underfull['courses_represented'].add(course_code)
+                            underfull['student_capacity'] += self.students_per_teacher
+                            
+                            print(f"   🔄 Moved teacher {instance['teacher_id']} from Group {overfull['group_id']} to Group {underfull['group_id']}")
+                            break
+        
+        return groups
+    
+    def _create_backup_teacher_instances(self, groups):
+        """Create backup teacher instances for courses with only single teachers."""
+        print("👥 Strategy 3: Creating backup teacher instances...")
+        
+        # Identify courses that need backup teachers
+        courses_needing_backup = set()
+        
+        for group in groups:
+            for course_code in group['courses_represented']:
+                course_teachers = set()
+                for cc, instance in group['course_instances']:
+                    if cc == course_code:
+                        course_teachers.add(instance['teacher_id'])
+                
+                if len(course_teachers) == 1:
+                    courses_needing_backup.add(course_code)
+        
+        print(f"   📚 Courses needing backup teachers: {len(courses_needing_backup)}")
+        
+        # Try to add backup teachers from available pool
+        for course_code in courses_needing_backup:
+            # Find groups that have this course
+            groups_with_course = [g for g in groups if course_code in g['courses_represented']]
+            
+            # Find teachers who can teach this course but aren't already in these groups
+            course_teachers = list(self.course_teacher_matrix.get(course_code, []))
+            
+            for group in groups_with_course:
+                available_backup_teachers = [t for t in course_teachers if t not in group['teachers_assigned']]
+                
+                if available_backup_teachers:
+                    # Add one backup teacher
+                    backup_teacher = available_backup_teachers[0]
+                    
+                    # Create backup instance
+                    if backup_teacher in self.teacher_course_instances:
+                        for instance in self.teacher_course_instances[backup_teacher]:
+                            if instance['course_code'] == course_code:
+                                group['course_instances'].append((course_code, instance))
+                                group['teachers_assigned'].add(backup_teacher)
+                                group['teacher_instances'].append(instance)
+                                group['student_capacity'] += self.students_per_teacher
+                                
+                                print(f"   ✅ Added backup teacher {backup_teacher} for {course_code} in Group {group['group_id']}")
+                                break
+                        break
+        
+        return groups
+    
+    def _ensure_minimum_group_capacity(self, groups, target_students):
+        """Ensure each group has minimum capacity for student choice."""
+        print("📊 Strategy 4: Ensuring minimum group capacity...")
+        
+        min_capacity_per_group = target_students / len(groups) * 0.8  # 80% of average
+        
+        for group in groups:
+            if group['student_capacity'] < min_capacity_per_group:
+                deficit = min_capacity_per_group - group['student_capacity']
+                teachers_needed = max(1, int(deficit / self.students_per_teacher))
+                
+                print(f"   ⚠️  Group {group['group_id']} below minimum ({group['student_capacity']:.0f} < {min_capacity_per_group:.0f})")
+                print(f"   ➕ Need {teachers_needed} additional teachers")
+                
+                # Try to add teachers from the available pool
+                utilized_teachers = group['teachers_assigned']
+                available_teachers = [t for t in self.teachers if t not in utilized_teachers]
+                
+                added_teachers = 0
+                for teacher_id in available_teachers[:teachers_needed]:
+                    if teacher_id in self.teacher_course_instances:
+                        for instance in self.teacher_course_instances[teacher_id][:1]:  # One instance
+                            course_code = instance['course_code']
+                            group['course_instances'].append((course_code, instance))
+                            group['teachers_assigned'].add(teacher_id)
+                            group['teacher_instances'].append(instance)
+                            group['courses_represented'].add(course_code)
+                            group['student_capacity'] += self.students_per_teacher
+                            added_teachers += 1
+                            break
+                
+                if added_teachers > 0:
+                    print(f"   ✅ Added {added_teachers} teachers to Group {group['group_id']}")
+        
+        return groups
 
 def main():
     """Main function to run the 5th semester grouping analysis."""
