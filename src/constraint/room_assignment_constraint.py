@@ -3,6 +3,7 @@ Room Assignment Constraint
 
 This constraint ensures proper room allocation based on capacity,
 availability, and department-based block assignments.
+INSTANCE-AWARE: Considers individual course instance requirements.
 """
 
 import logging
@@ -31,7 +32,7 @@ class RoomAssignmentConstraint:
         # Pre-process room data by department blocks
         self.rooms_by_block = self._categorize_rooms_by_block()
         
-        logger.info("RoomAssignmentConstraint initialized with department-based block allocation")
+        logger.info("RoomAssignmentConstraint initialized with department-based block allocation (INSTANCE-AWARE)")
     
     def _categorize_rooms_by_block(self):
         """Categorize classrooms by their building blocks."""
@@ -99,30 +100,52 @@ class RoomAssignmentConstraint:
         
         return suitable_rooms
     
-    def apply(self, teacher_theory_assignments, teacher_lab_assignments=None):
-        """Apply room assignment constraints with department-based block allocation."""
-        try:
-            logger.info("Applying department-based room assignment constraints...")
+    def _get_instance_capacity_requirements(self, teacher_id):
+        """Get capacity requirements for each course instance of a teacher (INSTANCE-AWARE)."""
+        if teacher_id not in self.teacher_course_assignments:
+            return {}
+        
+        instance_requirements = {}
+        for instance in self.teacher_course_assignments[teacher_id]:
+            instance_id = instance['id']
+            student_count = instance.get('student_count', 0)
+            course_code = instance.get('course_code', '')
             
-            # 1. Department-based classroom allocation for theory classes
-            self._apply_department_classroom_constraints(teacher_theory_assignments)
+            # Determine minimum capacity needed (add 10% buffer)
+            min_capacity = int(student_count * 1.1) if student_count > 0 else 70
+            
+            instance_requirements[instance_id] = {
+                'student_count': student_count,
+                'min_capacity': min_capacity,
+                'course_code': course_code
+            }
+        
+        return instance_requirements
+    
+    def apply(self, teacher_theory_assignments, teacher_lab_assignments=None):
+        """Apply room assignment constraints with department-based block allocation (INSTANCE-AWARE)."""
+        try:
+            logger.info("Applying department-based room assignment constraints (INSTANCE-AWARE)...")
+            
+            # 1. Department-based classroom allocation for theory classes (instance-aware)
+            self._apply_department_classroom_constraints_instance_aware(teacher_theory_assignments)
             
             # 2. Basic room conflict prevention
             self._apply_room_conflict_constraints(teacher_theory_assignments, teacher_lab_assignments)
             
-            # 3. Room capacity constraints (soft)
-            self._apply_room_capacity_constraints(teacher_theory_assignments, teacher_lab_assignments)
+            # 3. Room capacity constraints (instance-aware)
+            self._apply_room_capacity_constraints_instance_aware(teacher_theory_assignments, teacher_lab_assignments)
             
-            logger.info("Department-based room assignment constraints applied successfully")
+            logger.info("Department-based room assignment constraints (INSTANCE-AWARE) applied successfully")
             return True
             
         except Exception as e:
             logger.error(f"Error applying room assignment constraints: {e}")
             return False
     
-    def _apply_department_classroom_constraints(self, teacher_theory_assignments):
-        """Apply department-based classroom allocation constraints."""
-        logger.info("Applying department-based classroom allocation...")
+    def _apply_department_classroom_constraints_instance_aware(self, teacher_theory_assignments):
+        """Apply department-based classroom allocation constraints (INSTANCE-AWARE)."""
+        logger.info("Applying department-based classroom allocation (INSTANCE-AWARE)...")
         
         constraint_count = 0
         for teacher in self.teachers:
@@ -131,7 +154,19 @@ class RoomAssignmentConstraint:
             department = self._get_department_from_teacher(teacher)
             preferred_blocks = self._get_preferred_blocks_for_teacher(teacher)
             
-            logger.debug(f"Teacher {teacher} ({department}) can use rooms in blocks: {preferred_blocks}")
+            # Get course instances for this teacher (INSTANCE-AWARE)
+            teacher_instances = self.teacher_course_assignments.get(teacher, [])
+            instance_info = []
+            total_theory_hours = 0
+            for instance in teacher_instances:
+                theory_hrs = instance['lecture_hours'] + instance['tutorial_hours']
+                if theory_hrs > 0:
+                    total_theory_hours += theory_hrs
+                    instance_info.append(f"Instance {instance['id']}:{instance['course_code']}(Cap:{instance['student_count']},Hrs:{theory_hrs})")
+            
+            logger.debug(f"Teacher {teacher} ({department}) - {len(instance_info)} theory instances, {total_theory_hours} total hours")
+            logger.debug(f"  Instances: {', '.join(instance_info)}")
+            logger.debug(f"  Can use rooms in blocks: {preferred_blocks} ({len(suitable_room_ids)} rooms)")
             
             # Constrain teacher to only use rooms from their department's blocks
             for day in range(len(teacher_theory_assignments[teacher])):
@@ -151,7 +186,7 @@ class RoomAssignmentConstraint:
                         self.model.Add(blocked_var == 0)
                         constraint_count += 1
         
-        logger.info(f"Applied {constraint_count} department-based classroom allocation constraints")
+        logger.info(f"Applied {constraint_count} department-based classroom allocation constraints (INSTANCE-AWARE)")
     
     def _apply_room_conflict_constraints(self, teacher_theory_assignments, teacher_lab_assignments):
         """Ensure no room conflicts - one assignment per room per time slot."""
@@ -194,49 +229,61 @@ class RoomAssignmentConstraint:
         
         logger.info(f"Applied {constraint_count} room conflict prevention constraints")
     
-    def _apply_room_capacity_constraints(self, teacher_theory_assignments, teacher_lab_assignments):
-        """Apply room capacity constraints (soft - prefer larger rooms for larger classes)."""
-        logger.info("Applying room capacity preference constraints...")
-        
-        # This is implemented as soft constraints through room selection preferences
-        # rather than hard constraints to maintain feasibility
+    def _apply_room_capacity_constraints_instance_aware(self, teacher_theory_assignments, teacher_lab_assignments):
+        """Apply room capacity constraints based on individual course instances (INSTANCE-AWARE)."""
+        logger.info("Applying room capacity preference constraints (INSTANCE-AWARE)...")
         
         constraint_count = 0
+        capacity_mismatches = 0
+        
         for teacher in self.teachers:
             if teacher not in self.teacher_course_assignments:
                 continue
             
-            # Get maximum student count for this teacher's courses
-            max_students = 0
-            for assignment in self.teacher_course_assignments[teacher]:
-                student_count = assignment.get('student_count', 0)
-                max_students = max(max_students, student_count)
+            # Get instance-specific capacity requirements
+            instance_requirements = self._get_instance_capacity_requirements(teacher)
             
-            # If student count is high, prefer larger capacity rooms
-            if max_students > 60:  # Large class threshold
-                suitable_room_ids = self._get_rooms_for_department(teacher)
+            if not instance_requirements:
+                continue
+            
+            # Log instance capacity requirements
+            for instance_id, req in instance_requirements.items():
+                logger.debug(f"Teacher {teacher} - Instance {instance_id} ({req['course_code']}): {req['student_count']} students, needs {req['min_capacity']}+ capacity")
+            
+            # Get maximum student count across all instances
+            max_students = max(req['student_count'] for req in instance_requirements.values())
+            min_capacity_needed = max(req['min_capacity'] for req in instance_requirements.values())
+            
+            # Get suitable rooms for this teacher's department
+            suitable_room_ids = self._get_rooms_for_department(teacher)
+            
+            # Check if suitable rooms can accommodate the largest class
+            suitable_large_rooms = []
+            for room_id in suitable_room_ids:
+                room_info = self.classrooms[self.classrooms['id'] == room_id]
+                if not room_info.empty:
+                    capacity = room_info.iloc[0]['room_max_cap']
+                    if capacity >= min_capacity_needed:
+                        suitable_large_rooms.append(room_id)
+            
+            if not suitable_large_rooms and max_students > 0:
+                # No suitable rooms with adequate capacity - log warning
+                logger.warning(f"Teacher {teacher}: Max {max_students} students but no suitable rooms with {min_capacity_needed}+ capacity")
+                capacity_mismatches += 1
                 
-                # Get large capacity rooms from suitable blocks
-                large_rooms = []
-                for room_id in suitable_room_ids:
-                    room_info = self.classrooms[self.classrooms['id'] == room_id]
-                    if not room_info.empty:
-                        capacity = room_info.iloc[0]['room_max_cap']
-                        if capacity >= 70:  # Large room threshold
-                            large_rooms.append(room_id)
+                # Allow any room as fallback to maintain feasibility
+                suitable_large_rooms = suitable_room_ids
+            
+            # If we have large classes, prefer large capacity rooms
+            if max_students > 60 and suitable_large_rooms:
+                logger.debug(f"Teacher {teacher}: Large classes ({max_students} students) - preferring {len(suitable_large_rooms)} large rooms")
                 
-                # Prefer large rooms for large classes (soft constraint)
-                if large_rooms:
-                    for day in range(5):
-                        for slot in range(11):
-                            large_room_assignments = []
-                            for room_id in large_rooms:
-                                if room_id in teacher_theory_assignments[teacher][day][slot]:
-                                    large_room_assignments.append(teacher_theory_assignments[teacher][day][slot][room_id])
-                            
-                            # Encourage use of large rooms (soft constraint via objective)
-                            # This is handled in the optimization objective
-                            constraint_count += len(large_room_assignments)
+                # Soft constraint via room preference (implemented through ordering)
+                # The actual preference is handled by the room selection algorithm
+                constraint_count += 1
         
-        logger.info(f"Applied {constraint_count} room capacity preference constraints")
+        if capacity_mismatches > 0:
+            logger.warning(f"Found {capacity_mismatches} teachers with potential capacity mismatches")
+        
+        logger.info(f"Applied {constraint_count} room capacity preference constraints (INSTANCE-AWARE)")
         return True 

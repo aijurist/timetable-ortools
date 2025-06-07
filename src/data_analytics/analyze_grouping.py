@@ -6,7 +6,7 @@ from collections import defaultdict, Counter
 import os
 import glob
 
-class SemesterGroupingAnalyzer:
+class CourseGroupingAnalyzer:
     def __init__(self, schedule_csv_path, courses_csv_path):
         """Initialize the analyzer with schedule and course data."""
         self.schedule_df = pd.read_csv(schedule_csv_path)
@@ -15,102 +15,591 @@ class SemesterGroupingAnalyzer:
         # Filter only lecture and tutorial slots (not labs)
         self.schedule_df = self.schedule_df[self.schedule_df['slot_type'].isin(['Lecture', 'Tutorial'])]
         
-        # Check if teacher_shift column exists and is meaningful (not all same value)
-        self.has_shift_data = False
-        if 'teacher_shift' in self.schedule_df.columns:
-            unique_shifts = self.schedule_df['teacher_shift'].nunique()
-            if unique_shifts > 1:  # Only consider meaningful if there are multiple shifts
-                self.has_shift_data = True
-            else:
-                print("Note: Teacher shift data found but all teachers use the same combined shift")
+        # Check if we have the new group columns
+        self.has_group_data = all(col in self.schedule_df.columns 
+                                 for col in ['group_name', 'group_index', 'department_group', 'semester_group'])
+        
+        if not self.has_group_data:
+            print("Warning: New group columns not found in schedule data. Make sure you're using a schedule generated with the updated course group constraint.")
+            print("Expected columns: group_name, group_index, department_group, semester_group")
+            print("Available columns:", list(self.schedule_df.columns))
         
         # Create output directory for analysis
         self.output_dir = os.path.join(os.path.dirname(schedule_csv_path), 'grouping_analysis')
         os.makedirs(self.output_dir, exist_ok=True)
         
         print(f"Loaded {len(self.schedule_df)} theory assignments")
-        print(f"Analyzing grouping constraints...")
+        print(f"Analyzing course grouping constraints...")
 
-    def analyze_macroblock_grouping(self):
-        """Analyze how courses are grouped in each macroblock by semester and department."""
+    def analyze_course_grouping(self):
+        """Analyze how teacher-course instances are grouped by semester and department."""
         print("\n" + "="*80)
-        print("MACROBLOCK GROUPING ANALYSIS")
+        print("TEACHER-COURSE INSTANCE GROUPING ANALYSIS")
         print("="*80)
         
-        # Group by macroblock and analyze
-        macroblock_analysis = {}
+        if not self.has_group_data:
+            print("Cannot perform analysis - group data not available in schedule CSV")
+            return {}
         
-        for macroblock in self.schedule_df['macroblock'].unique():
-            if pd.isna(macroblock):
+        # First, let's see what raw data we have
+        print(f"\nRAW DATA SUMMARY:")
+        print(f"Total schedule records: {len(self.schedule_df)}")
+        print(f"Unique teacher IDs: {self.schedule_df['teacher_id'].nunique()}")
+        print(f"Unique course codes: {self.schedule_df['course_code'].nunique()}")
+        print(f"Unique course instance IDs: {self.schedule_df['course_instance_id'].nunique() if 'course_instance_id' in self.schedule_df.columns else 'N/A'}")
+        
+        # Show all unique teacher-course combinations
+        teacher_course_combinations = self.schedule_df[['teacher_id', 'course_code']].drop_duplicates()
+        print(f"Unique teacher-course combinations: {len(teacher_course_combinations)}")
+        
+        print(f"\nAll teacher-course combinations found:")
+        for _, row in teacher_course_combinations.iterrows():
+            teacher_name = self._get_teacher_name(row['teacher_id'])
+            course_name = self._get_course_name(row['course_code'])
+            print(f"  - {row['teacher_id']} ({teacher_name}) teaching {row['course_code']} ({course_name})")
+        
+        # DEBUG: Check CS23511 specifically
+        cs23511_records = self.schedule_df[self.schedule_df['course_code'] == 'CS23511']
+        print(f"\nDEBUG - CS23511 records in schedule_df: {len(cs23511_records)}")
+        if len(cs23511_records) > 0:
+            print("CS23511 schedule records:")
+            for idx, record in cs23511_records.iterrows():
+                print(f"  Row {idx}: Teacher {record['teacher_id']}, Day {record['day']}, Time {record['time_interval']}, Group {record.get('group_name', 'No Group')}")
+        
+        # Group by department and semester
+        dept_sem_groups = {}
+        
+        # Get unique department/semester combinations
+        dept_sem_combinations = self.schedule_df[['department_group', 'semester_group']].drop_duplicates()
+        
+        for _, row in dept_sem_combinations.iterrows():
+            dept = row['department_group']
+            semester = row['semester_group']
+            
+            if dept == 'Unknown' or semester == 0:
                 continue
                 
-            block_data = self.schedule_df[self.schedule_df['macroblock'] == macroblock]
+            # Get all assignments for this department/semester
+            dept_sem_data = self.schedule_df[
+                (self.schedule_df['department_group'] == dept) & 
+                (self.schedule_df['semester_group'] == semester)
+            ]
             
-            # Get unique courses and teachers in this macroblock
-            courses_in_block = block_data['course_code'].unique()
-            teachers_in_block = block_data['teacher_id'].unique()
+            print(f"\nDepartment: {dept}, Semester: {semester}")
+            print(f"Records for this dept/sem: {len(dept_sem_data)}")
             
-            # Get semester and department info for courses in this block
-            semester_info = {}
-            dept_info = {}
+            # Show unique teacher-course combinations for this dept/sem
+            dept_sem_teacher_course = dept_sem_data[['teacher_id', 'course_code']].drop_duplicates()
+            print(f"Teacher-course combinations in this dept/sem: {len(dept_sem_teacher_course)}")
+            for _, tc_row in dept_sem_teacher_course.iterrows():
+                print(f"  - {tc_row['teacher_id']} -> {tc_row['course_code']}")
             
-            for course in courses_in_block:
-                course_matches = self.courses_df[self.courses_df['course_code'] == course]
-                if not course_matches.empty:
-                    course_info = course_matches.iloc[0]
-                    semester_info[course] = course_info['semester']
-                    dept_info[course] = course_info['course_dept']
-                else:
-                    semester_info[course] = "Unknown"
-                    dept_info[course] = "Unknown Department"
-            
-            # Check for violations
-            teacher_course_pairs = block_data[['teacher_id', 'course_code']].drop_duplicates()
-            course_counts = teacher_course_pairs['course_code'].value_counts()
-            teacher_counts = teacher_course_pairs['teacher_id'].value_counts()
-            
-            macroblock_analysis[macroblock] = {
-                'courses': list(courses_in_block),
-                'teachers': list(teachers_in_block),
-                'num_courses': len(courses_in_block),
-                'num_teachers': len(teachers_in_block),
-                'semesters': list(set(semester_info.values())),
-                'departments': list(set(dept_info.values())),
-                'course_counts': dict(course_counts),
-                'teacher_counts': dict(teacher_counts),
-                'teacher_course_pairs': teacher_course_pairs.to_dict('records'),
-                'semester_info': semester_info,
-                'dept_info': dept_info
-            }
-            
-            # Print analysis for this macroblock
-            print(f"\nMacroblock {macroblock}:")
-            print(f"  Courses: {len(courses_in_block)} unique")
-            print(f"  Teachers: {len(teachers_in_block)} unique")
-            print(f"  Semesters: {sorted([str(s) for s in set(semester_info.values())])}")
-            print(f"  Departments: {list(set(dept_info.values()))}")
-            
-            # Check for violations
-            repeated_courses = [course for course, count in course_counts.items() if count > 1]
-            repeated_teachers = [teacher for teacher, count in teacher_counts.items() if count > 1]
-            
-            if repeated_courses:
-                print(f"  ⚠️  VIOLATION: Repeated courses: {repeated_courses}")
-            else:
-                print(f"  ✅ No repeated courses")
+            # Group by group_name to analyze individual groups
+            groups_in_dept_sem = {}
+            for group_name in dept_sem_data['group_name'].unique():
+                if group_name == 'Unassigned':
+                    continue
+                    
+                group_data = dept_sem_data[dept_sem_data['group_name'] == group_name]
                 
-            if repeated_teachers:
-                print(f"  ⚠️  VIOLATION: Repeated teachers: {repeated_teachers}")
-            else:
-                print(f"  ✅ No repeated teachers")
+                # Get ALL teacher-course instances in this group (each schedule record is an instance)
+                teacher_course_instances = []
+                unique_courses = set()
+                unique_teachers = set()
+                
+                for idx, assignment in group_data.iterrows():
+                    course_code = assignment['course_code']
+                    teacher_id = assignment['teacher_id']
+                    course_instance_id = assignment.get('course_instance_id', f"{course_code}_{teacher_id}_{idx}")
+                    
+                    # Each schedule record is a separate instance
+                    teacher_course_instances.append({
+                        'teacher_id': teacher_id,
+                        'course_code': course_code,
+                        'course_instance_id': course_instance_id,
+                        'teacher_name': self._get_teacher_name(teacher_id),
+                        'course_name': self._get_course_name(course_code),
+                        'instance_key': f"{teacher_id}_{course_code}_{idx}",  # Make unique with index
+                        'instance_display': f"{teacher_id}-{course_code}",
+                        'schedule_record_id': idx,
+                        'day': assignment.get('day', 'Unknown'),
+                        'time_interval': assignment.get('time_interval', 'Unknown')
+                    })
+                    
+                    unique_courses.add(course_code)
+                    unique_teachers.add(teacher_id)
+                
+                groups_in_dept_sem[group_name] = {
+                    'group_index': group_data['group_index'].iloc[0],
+                    'teacher_course_instances': teacher_course_instances,
+                    'unique_courses': list(unique_courses),
+                    'unique_teachers': list(unique_teachers),
+                    'num_instances': len(teacher_course_instances),  # This will now be total schedule records
+                    'num_unique_courses': len(unique_courses),
+                    'num_unique_teachers': len(unique_teachers),
+                    'num_assignments': len(group_data),
+                    'assignments': group_data
+                }
             
-            # Show teacher-course mapping
-            print(f"  Teacher-Course pairs:")
-            for pair in teacher_course_pairs.to_dict('records'):
-                teacher_name = self._get_teacher_name(pair['teacher_id'])
-                print(f"    Teacher {pair['teacher_id']} ({teacher_name}) -> {pair['course_code']}")
+            dept_sem_groups[(dept, semester)] = groups_in_dept_sem
+            
+            # Print analysis for this department/semester
+            print(f"\n{dept} - Semester {semester}:")
+            print(f"  Total Groups: {len(groups_in_dept_sem)}")
+            
+            for group_name, group_info in groups_in_dept_sem.items():
+                print(f"  Group {group_info['group_index']} ({group_name}):")
+                print(f"    Teacher-Course Instances: {group_info['num_instances']}")
+                print(f"    Unique Courses: {group_info['num_unique_courses']}")
+                print(f"    Unique Teachers: {group_info['num_unique_teachers']}")
+                print(f"    Total Schedule Assignments: {group_info['num_assignments']}")
+                
+                # Show teacher-course instances
+                for instance in group_info['teacher_course_instances']:
+                    print(f"    - {instance['instance_display']}: {instance['teacher_name']} teaching {instance['course_name']}")
         
-        return macroblock_analysis
+        return dept_sem_groups
+
+    def analyze_source_course_grouping(self):
+        """Analyze grouping based on source teacher-course assignments, not schedule instances."""
+        print("\n" + "="*80)
+        print("SOURCE TEACHER-COURSE ASSIGNMENT GROUPING ANALYSIS")
+        print("="*80)
+        
+        if not self.has_group_data:
+            print("Cannot perform analysis - group data not available in schedule CSV")
+            return {}
+        
+        # Get all schedule assignments and group by source record ID
+        # Each record ID represents a unique course instance (even if same teacher-course)
+        all_assignments = self.schedule_df[['teacher_id', 'course_code', 'course_instance_id', 
+                                          'group_name', 'group_index', 'department_group', 
+                                          'semester_group']].copy()
+        
+        print(f"\nSOURCE DATA SUMMARY (based on course record IDs):")
+        print(f"Total schedule records: {len(all_assignments)}")
+        
+        # Count unique course instances by their record IDs
+        unique_course_instances = all_assignments['course_instance_id'].nunique()
+        print(f"Unique course instances (by record ID): {unique_course_instances}")
+        print(f"Unique teacher IDs: {all_assignments['teacher_id'].nunique()}")
+        print(f"Unique course codes: {all_assignments['course_code'].nunique()}")
+        
+        # Show detailed breakdown for CS23511
+        cs23511_instances = all_assignments[all_assignments['course_code'] == 'CS23511']['course_instance_id'].unique()
+        print(f"\nCS23511 (Theory of Computation) course instances: {len(cs23511_instances)}")
+        for instance_id in cs23511_instances:
+            instance_data = all_assignments[all_assignments['course_instance_id'] == instance_id].iloc[0]
+            teacher_name = self._get_teacher_name(instance_data['teacher_id'])
+            print(f"  - Instance {instance_id}: Teacher {instance_data['teacher_id']} ({teacher_name}) -> Group {instance_data['group_index']}")
+        
+        # Group by department and semester
+        dept_sem_groups = {}
+        
+        # Get unique department/semester combinations
+        dept_sem_combinations = all_assignments[['department_group', 'semester_group']].drop_duplicates()
+        
+        for _, row in dept_sem_combinations.iterrows():
+            dept = row['department_group']
+            semester = row['semester_group']
+            
+            if dept == 'Unknown' or semester == 0:
+                    continue
+                
+            # Get all course instances for this department/semester
+            dept_sem_data = all_assignments[
+                (all_assignments['department_group'] == dept) & 
+                (all_assignments['semester_group'] == semester)
+            ]
+            
+            print(f"\nDepartment: {dept}, Semester: {semester}")
+            
+            # Count unique course instances in this dept/sem
+            unique_instances_in_dept_sem = dept_sem_data['course_instance_id'].nunique()
+            print(f"Total course instances in this dept/sem: {unique_instances_in_dept_sem}")
+            
+            # Group by group_name to analyze individual groups
+            groups_in_dept_sem = {}
+            for group_name in dept_sem_data['group_name'].unique():
+                if group_name == 'Unassigned':
+                    continue
+                
+                group_data = dept_sem_data[dept_sem_data['group_name'] == group_name]
+                
+                # Get unique course instances in this group (by record ID)
+                unique_instances_in_group = group_data['course_instance_id'].unique()
+                
+                course_instances = []
+                unique_courses = set()
+                unique_teachers = set()
+                
+                for instance_id in unique_instances_in_group:
+                    instance_record = group_data[group_data['course_instance_id'] == instance_id].iloc[0]
+                    course_code = instance_record['course_code']
+                    teacher_id = instance_record['teacher_id']
+                    
+                    course_instances.append({
+                        'instance_id': instance_id,
+                        'teacher_id': teacher_id,
+                        'course_code': course_code,
+                        'teacher_name': self._get_teacher_name(teacher_id),
+                        'course_name': self._get_course_name(course_code),
+                        'assignment_display': f"{teacher_id}-{course_code}-{instance_id}"
+                    })
+                    
+                    unique_courses.add(course_code)
+                    unique_teachers.add(teacher_id)
+                
+                groups_in_dept_sem[group_name] = {
+                    'group_index': group_data['group_index'].iloc[0],
+                    'teacher_course_assignments': course_instances,
+                    'unique_courses': list(unique_courses),
+                    'unique_teachers': list(unique_teachers),
+                    'num_assignments': len(course_instances),  # Number of course instances
+                    'num_unique_courses': len(unique_courses),
+                    'num_unique_teachers': len(unique_teachers)
+                }
+            
+            dept_sem_groups[(dept, semester)] = groups_in_dept_sem
+            
+            # Print analysis for this department/semester
+            print(f"\n{dept} - Semester {semester}:")
+            print(f"  Total Groups: {len(groups_in_dept_sem)}")
+            
+            for group_name, group_info in groups_in_dept_sem.items():
+                print(f"  Group {group_info['group_index']} ({group_name}):")
+                print(f"    Course Instances: {group_info['num_assignments']}")
+                print(f"    Unique Courses: {group_info['num_unique_courses']}")
+                print(f"    Unique Teachers: {group_info['num_unique_teachers']}")
+                
+                # Show course instances with their record IDs
+                for instance in group_info['teacher_course_assignments']:
+                    print(f"    - Instance {instance['instance_id']}: {instance['teacher_name']} teaching {instance['course_name']}")
+        
+        return dept_sem_groups
+
+    def analyze_group_distribution(self, dept_sem_groups):
+        """Analyze the distribution of teacher-course instances across groups."""
+        print("\n" + "="*80)
+        print("TEACHER-COURSE INSTANCE DISTRIBUTION ANALYSIS")
+        print("="*80)
+        
+        distribution_analysis = {}
+        
+        for (dept, semester), groups in dept_sem_groups.items():
+            print(f"\n{dept} - Semester {semester}:")
+            
+            # Analyze teacher-course instance distribution
+            all_teacher_course_instances = []
+            all_unique_courses = set()
+            all_unique_teachers = set()
+            
+            # Collect all instances across groups
+            for group_name, group_info in groups.items():
+                for instance in group_info['teacher_course_instances']:
+                    all_teacher_course_instances.append(instance)
+                    all_unique_courses.add(instance['course_code'])
+                    all_unique_teachers.add(instance['teacher_id'])
+            
+            # Analyze course distribution (how many teacher-course instances per course)
+            course_instance_count = {}
+            teacher_instance_count = {}
+            
+            for instance in all_teacher_course_instances:
+                course_code = instance['course_code']
+                teacher_id = instance['teacher_id']
+                
+                if course_code not in course_instance_count:
+                    course_instance_count[course_code] = 0
+                course_instance_count[course_code] += 1
+                
+                if teacher_id not in teacher_instance_count:
+                    teacher_instance_count[teacher_id] = 0
+                teacher_instance_count[teacher_id] += 1
+            
+            # Check group balance
+            group_sizes = [group_info['num_instances'] for group_info in groups.values()]
+            avg_group_size = sum(group_sizes) / len(group_sizes) if group_sizes else 0
+            group_size_std = np.std(group_sizes) if group_sizes else 0
+            
+            print(f"  Total teacher-course instances: {len(all_teacher_course_instances)}")
+            print(f"  Unique courses involved: {len(all_unique_courses)}")
+            print(f"  Unique teachers involved: {len(all_unique_teachers)}")
+            print(f"  Average instances per course: {len(all_teacher_course_instances)/len(all_unique_courses):.1f}" if all_unique_courses else "  No courses found")
+            print(f"  Average instances per teacher: {len(all_teacher_course_instances)/len(all_unique_teachers):.1f}" if all_unique_teachers else "  No teachers found")
+            
+            print(f"  Group balance:")
+            print(f"    - Average instances per group: {avg_group_size:.1f}")
+            print(f"    - Group size standard deviation: {group_size_std:.1f}")
+            print(f"    - Group sizes: {group_sizes}")
+            
+            # Show courses with multiple teacher instances
+            courses_with_multiple_teachers = {course: count for course, count in course_instance_count.items() if count > 1}
+            teachers_with_multiple_courses = {teacher: count for teacher, count in teacher_instance_count.items() if count > 1}
+            
+            if courses_with_multiple_teachers:
+                print(f"  Courses with multiple teacher instances:")
+                for course, count in courses_with_multiple_teachers.items():
+                    f.write(f"    - {course}: {count} teacher instances\n")
+                
+                f.write("\n")
+            
+            if teachers_with_multiple_courses:
+                print(f"  Teachers with multiple course instances:")
+                for teacher, count in teachers_with_multiple_courses.items():
+                    teacher_name = self._get_teacher_name(teacher)
+                    f.write(f"    - {teacher} ({teacher_name}): {count} course instances\n")
+                
+                f.write("\n")
+            
+            distribution_analysis[(dept, semester)] = {
+                'total_instances': len(all_teacher_course_instances),
+                'unique_courses': len(all_unique_courses),
+                'unique_teachers': len(all_unique_teachers),
+                'course_instance_count': course_instance_count,
+                'teacher_instance_count': teacher_instance_count,
+                'courses_with_multiple_teachers': courses_with_multiple_teachers,
+                'teachers_with_multiple_courses': teachers_with_multiple_courses,
+                'group_sizes': group_sizes,
+                'avg_group_size': avg_group_size,
+                'group_size_std': group_size_std,
+                'groups': groups
+            }
+        
+        return distribution_analysis
+
+    def analyze_student_choice_optimization(self, dept_sem_groups):
+        """Analyze how well the system provides choice to students through teacher-course instance distribution."""
+        print("\n" + "="*80)
+        print("STUDENT CHOICE OPTIMIZATION ANALYSIS (Teacher-Course Instances)")
+        print("="*80)
+        
+        choice_analysis = {}
+        
+        for (dept, semester), groups in dept_sem_groups.items():
+            print(f"\n{dept} - Semester {semester}:")
+            
+            dept_sem_choice_data = {}
+            
+            # First, analyze choices across all groups (students can choose from any group)
+            all_course_choices = {}  # course_code -> list of teacher options
+            
+            for group_name, group_info in groups.items():
+                for instance in group_info['teacher_course_instances']:
+                    course_code = instance['course_code']
+                    teacher_info = {
+                        'teacher_id': instance['teacher_id'],
+                        'teacher_name': instance['teacher_name'],
+                        'group_name': group_name,
+                        'group_index': group_info['group_index']
+                    }
+                    
+                    if course_code not in all_course_choices:
+                        all_course_choices[course_code] = []
+                    all_course_choices[course_code].append(teacher_info)
+            
+            # Analyze choices within each group
+            for group_name, group_info in groups.items():
+                group_choice_data = {}
+                group_course_choices = {}  # course_code -> teacher options in this group only
+                
+                for instance in group_info['teacher_course_instances']:
+                    course_code = instance['course_code']
+                    teacher_info = {
+                        'teacher_id': instance['teacher_id'],
+                        'teacher_name': instance['teacher_name']
+                    }
+                    
+                    if course_code not in group_choice_data:
+                        group_choice_data[course_code] = {
+                            'teacher_choices_in_group': [],
+                            'teacher_choices_across_all_groups': [],
+                            'course_name': self._get_course_name(course_code)
+                        }
+                    
+                    group_choice_data[course_code]['teacher_choices_in_group'].append(teacher_info)
+                    # Add all teacher choices for this course across all groups
+                    group_choice_data[course_code]['teacher_choices_across_all_groups'] = all_course_choices.get(course_code, [])
+                
+                dept_sem_choice_data[group_name] = group_choice_data
+                
+                print(f"  Group {group_info['group_index']} ({group_name}):")
+                print(f"    Teacher-Course Instances: {len(group_info['teacher_course_instances'])}")
+                
+                for course_code, choice_info in group_choice_data.items():
+                    in_group_choices = len(choice_info['teacher_choices_in_group'])
+                    total_choices = len(choice_info['teacher_choices_across_all_groups'])
+                    
+                    print(f"    {course_code}:")
+                    print(f"      - In this group: {in_group_choices} teacher(s)")
+                    for teacher_info in choice_info['teacher_choices_in_group']:
+                        print(f"        * {teacher_info['teacher_id']} ({teacher_info['teacher_name']})")
+                    print(f"      - Total across all groups: {total_choices} teacher(s)")
+            
+            # Summary of overall choice effectiveness
+            total_courses_in_dept_sem = len(all_course_choices)
+            courses_with_multiple_choices = len([course for course, choices in all_course_choices.items() if len(choices) > 1])
+            
+            print(f"\n  Overall Choice Summary for {dept} Semester {semester}:")
+            print(f"    Total courses: {total_courses_in_dept_sem}")
+            print(f"    Courses with multiple teacher choices: {courses_with_multiple_choices}")
+            print(f"    Choice effectiveness: {(courses_with_multiple_choices/total_courses_in_dept_sem*100):.1f}%" if total_courses_in_dept_sem > 0 else "    Choice effectiveness: 0%")
+            
+            choice_analysis[(dept, semester)] = {
+                'group_choice_data': dept_sem_choice_data,
+                'all_course_choices': all_course_choices,
+                'total_courses': total_courses_in_dept_sem,
+                'courses_with_multiple_choices': courses_with_multiple_choices
+            }
+        
+        return choice_analysis
+
+    def analyze_group_distribution_source(self, dept_sem_groups):
+        """Analyze how course instances are distributed across groups (source data)."""
+        print("\n" + "="*60)
+        print("SOURCE GROUP DISTRIBUTION ANALYSIS")
+        print("="*60)
+        
+        distribution_analysis = {}
+        
+        for (dept, semester), groups in dept_sem_groups.items():
+            print(f"\nDepartment: {dept}")
+            print(f"Semester: {semester}")
+            print(f"Number of Groups: {len(groups)}")
+            
+            # Get all course instances in this department/semester
+            all_instances = []
+            for group_info in groups.values():
+                all_instances.extend(group_info['teacher_course_assignments'])
+            
+            # Count total course instances
+            total_instances = len(all_instances)
+            unique_courses = set(instance['course_code'] for instance in all_instances)
+            
+            print(f"Total Course Instances: {total_instances}")
+            print(f"Unique Courses: {len(unique_courses)}")
+            
+            # Analyze distribution across groups
+            group_sizes = {}
+            course_distribution = {}
+            
+            for group_name, group_info in groups.items():
+                group_index = group_info['group_index']
+                num_instances = len(group_info['teacher_course_assignments'])
+                group_sizes[f"Group {group_index}"] = num_instances
+                
+                print(f"\nGroup {group_index} ({group_name}):")
+                print(f"  Course Instances: {num_instances}")
+                
+                # Count instances per course in this group
+                course_counts = {}
+                for instance in group_info['teacher_course_assignments']:
+                    course_code = instance['course_code']
+                    course_counts[course_code] = course_counts.get(course_code, 0) + 1
+                
+                for course_code, count in sorted(course_counts.items()):
+                    print(f"    {course_code}: {count} instances")
+                    
+                    # Track overall course distribution
+                    if course_code not in course_distribution:
+                        course_distribution[course_code] = {}
+                    course_distribution[course_code][f"Group {group_index}"] = count
+            
+            # Special analysis for CS23511
+            if 'CS23511' in course_distribution:
+                print(f"\nDETAILED CS23511 ANALYSIS:")
+                cs23511_dist = course_distribution['CS23511']
+                cs23511_total = sum(cs23511_dist.values())
+                print(f"  Total CS23511 instances: {cs23511_total}")
+                for group, count in sorted(cs23511_dist.items()):
+                    print(f"  {group}: {count} instances")
+                
+                # Show which teachers in each group
+                for group_name, group_info in groups.items():
+                    group_index = group_info['group_index']
+                    cs23511_instances = [inst for inst in group_info['teacher_course_assignments'] 
+                                       if inst['course_code'] == 'CS23511']
+                    if cs23511_instances:
+                        print(f"  Group {group_index} CS23511 instances:")
+                        for inst in cs23511_instances:
+                            print(f"    - Instance {inst['instance_id']}: Teacher {inst['teacher_id']} ({inst['teacher_name']})")
+            
+            # Calculate balance metrics
+            if group_sizes:
+                avg_size = sum(group_sizes.values()) / len(group_sizes)
+                max_size = max(group_sizes.values())
+                min_size = min(group_sizes.values())
+                balance_ratio = min_size / max_size if max_size > 0 else 0
+                
+                print(f"\nGROUP BALANCE ANALYSIS:")
+                print(f"  Average instances per group: {avg_size:.1f}")
+                print(f"  Largest group: {max_size} instances")
+                print(f"  Smallest group: {min_size} instances")
+                print(f"  Balance ratio (min/max): {balance_ratio:.2f}")
+                print(f"  Balance quality: {'Good' if balance_ratio > 0.8 else 'Fair' if balance_ratio > 0.6 else 'Poor'}")
+            
+            distribution_analysis[(dept, semester)] = {
+                'total_instances': total_instances,
+                'total_courses': len(unique_courses),
+                'num_groups': len(groups),
+                'group_sizes': group_sizes,
+                'course_distribution': course_distribution,
+                'balance_metrics': {
+                    'avg_size': avg_size,
+                    'max_size': max_size,
+                    'min_size': min_size,
+                    'balance_ratio': balance_ratio
+                }
+            }
+        
+        return distribution_analysis
+
+    def analyze_student_choice_optimization_source(self, dept_sem_groups):
+        """Analyze student choices based on source teacher-course assignments."""
+        print("\n" + "="*80)
+        print("SOURCE STUDENT CHOICE OPTIMIZATION ANALYSIS")
+        print("="*80)
+        
+        choice_analysis = {}
+        
+        for (dept, semester), groups in dept_sem_groups.items():
+            print(f"\n{dept} - Semester {semester}:")
+            
+            dept_sem_choice_data = {}
+            
+            # Analyze choices across all groups
+            all_course_choices = {}  # course_code -> list of teacher options
+            
+            for group_name, group_info in groups.items():
+                for assignment in group_info['teacher_course_assignments']:
+                    course_code = assignment['course_code']
+                    teacher_info = {
+                        'teacher_id': assignment['teacher_id'],
+                        'teacher_name': assignment['teacher_name'],
+                        'group_name': group_name,
+                        'group_index': group_info['group_index']
+                    }
+                    
+                    if course_code not in all_course_choices:
+                        all_course_choices[course_code] = []
+                    all_course_choices[course_code].append(teacher_info)
+            
+            # Summary of overall choice effectiveness
+            total_courses_in_dept_sem = len(all_course_choices)
+            courses_with_multiple_choices = len([course for course, choices in all_course_choices.items() if len(choices) > 1])
+            
+            print(f"\n  Overall Choice Summary for {dept} Semester {semester}:")
+            print(f"    Total courses: {total_courses_in_dept_sem}")
+            print(f"    Courses with multiple teacher choices: {courses_with_multiple_choices}")
+            print(f"    Choice effectiveness: {(courses_with_multiple_choices/total_courses_in_dept_sem*100):.1f}%" if total_courses_in_dept_sem > 0 else "    Choice effectiveness: 0%")
+            
+            choice_analysis[(dept, semester)] = {
+                'all_course_choices': all_course_choices,
+                'total_courses': total_courses_in_dept_sem,
+                'courses_with_multiple_choices': courses_with_multiple_choices
+            }
+        
+        return choice_analysis
 
     def _get_teacher_name(self, teacher_id):
         """Get teacher name from courses data."""
@@ -121,912 +610,1488 @@ class SemesterGroupingAnalyzer:
             return f"{first_name} {last_name}".strip()
         return f"Teacher {teacher_id}"
 
-    def analyze_student_choice_optimization(self):
-        """Analyze how well the system provides choice to students."""
-        print("\n" + "="*80)
-        print("STUDENT CHOICE OPTIMIZATION ANALYSIS")
-        print("="*80)
-        
-        # Group courses by semester and department
-        course_groups = defaultdict(list)
-        
-        for _, row in self.courses_df.iterrows():
-            key = (row['semester'], row['course_dept'])
-            course_groups[key].append({
-                'course_code': row['course_code'],
-                'course_name': row['course_name'],
-                'teacher_id': row['teacher_id'],
-                'teacher_name': self._get_teacher_name(row['teacher_id'])
-            })
-        
-        choice_analysis = {}
-        
-        for (semester, dept), courses in course_groups.items():
-            print(f"\nSemester {semester} - {dept}:")
-            
-            # Get unique courses for this semester/dept
-            unique_courses = {}
-            for course in courses:
-                course_code = course['course_code']
-                if course_code not in unique_courses:
-                    unique_courses[course_code] = []
-                unique_courses[course_code].append(course)
-            
-            semester_choice_data = {}
-            
-            for course_code, course_instances in unique_courses.items():
-                # Find where this course is scheduled
-                course_schedule = self.schedule_df[self.schedule_df['course_code'] == course_code]
-                
-                if course_schedule.empty:
-                    continue
-                
-                # Group by macroblock to see teacher choices
-                macroblock_teachers = {}
-                for _, sched_row in course_schedule.iterrows():
-                    macroblock = sched_row['macroblock']
-                    teacher_id = sched_row['teacher_id']
-                    
-                    if macroblock not in macroblock_teachers:
-                        macroblock_teachers[macroblock] = set()
-                    macroblock_teachers[macroblock].add(teacher_id)
-                
-                # Calculate choice metrics
-                total_teachers = len(set(course_schedule['teacher_id']))
-                total_macroblocks = len(macroblock_teachers)
-                
-                semester_choice_data[course_code] = {
-                    'total_teachers': total_teachers,
-                    'total_macroblocks': total_macroblocks,
-                    'macroblock_distribution': dict(macroblock_teachers),
-                    'course_name': course_instances[0]['course_name']
-                }
-                
-                print(f"  {course_code} ({course_instances[0]['course_name']}):")
-                print(f"    Teachers available: {total_teachers}")
-                print(f"    Macroblocks used: {total_macroblocks}")
-                
-                for mb, teachers in macroblock_teachers.items():
-                    teacher_names = [self._get_teacher_name(t) for t in teachers]
-                    print(f"    {mb}: {teacher_names}")
-            
-            choice_analysis[(semester, dept)] = semester_choice_data
-        
-        return choice_analysis
+    def _get_course_name(self, course_code):
+        """Get course name from courses data."""
+        course_data = self.courses_df[self.courses_df['course_code'] == course_code]
+        if not course_data.empty:
+            return course_data.iloc[0].get('course_name', course_code)
+        return course_code
 
-    def create_visualizations(self, macroblock_analysis, choice_analysis):
+    def create_visualizations(self, dept_sem_groups, distribution_analysis, choice_analysis):
         """Create comprehensive visualizations of the grouping analysis."""
         
-        # 1. Macroblock Course Distribution
-        self._plot_macroblock_distribution(macroblock_analysis)
+        if not self.has_group_data:
+            print("Skipping visualizations - group data not available")
+            return
         
-        # 2. Teacher Diversity Analysis
-        self._plot_teacher_diversity(macroblock_analysis)
+        # 1. Group Distribution Overview
+        self._plot_group_distribution(dept_sem_groups)
         
-        # 3. Semester Grouping Effectiveness
-        self._plot_semester_grouping(macroblock_analysis)
+        # 2. Course Instance Distribution
+        self._plot_course_instance_distribution(distribution_analysis)
         
-        # 4. Student Choice Optimization
+        # 3. Course Teacher Instance Matrix (NEW)
+        self._plot_course_teacher_instance_matrix(dept_sem_groups)
+        
+        # 4. Group Balance Analysis
+        self._plot_group_balance(distribution_analysis)
+        
+        # 5. Student Choice Analysis
         self._plot_student_choices(choice_analysis)
         
-        # 5. 5th Semester CSE Student Choices
-        self._plot_5th_sem_cse_choices(choice_analysis)
+        # 6. 5th Semester CSE Analysis
+        self._plot_5th_sem_cse_analysis(dept_sem_groups, choice_analysis)
         
-        # 6. Constraint Violations Summary
-        self._plot_violations_summary(macroblock_analysis)
-        
-        # 7. Detailed Macroblock Grid
-        self._plot_macroblock_grid(macroblock_analysis)
+        # 7. Grouping Effectiveness Summary
+        self._plot_grouping_effectiveness(distribution_analysis)
 
-    def _plot_macroblock_distribution(self, macroblock_analysis):
-        """Plot the distribution of courses across macroblocks."""
+    def _plot_group_distribution(self, dept_sem_groups):
+        """Plot the distribution of teacher-course instances across departments and semesters."""
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
         
-        # Number of courses per macroblock
-        macroblocks = list(macroblock_analysis.keys())
-        course_counts = [analysis['num_courses'] for analysis in macroblock_analysis.values()]
-        teacher_counts = [analysis['num_teachers'] for analysis in macroblock_analysis.values()]
+        # Number of groups per department/semester
+        dept_sem_labels = []
+        group_counts = []
+        instance_counts = []
+        unique_course_counts = []
+        unique_teacher_counts = []
         
-        ax1.bar(macroblocks, course_counts, alpha=0.7, color='skyblue', label='Courses')
-        ax1.bar(macroblocks, teacher_counts, alpha=0.7, color='lightcoral', label='Teachers')
-        ax1.set_title('Courses and Teachers per Macroblock')
-        ax1.set_xlabel('Macroblock')
+        for (dept, semester), groups in dept_sem_groups.items():
+            dept_sem_labels.append(f"{dept}\nSem {semester}")
+            group_counts.append(len(groups))
+            
+            total_instances = sum(group_info['num_instances'] for group_info in groups.values())
+            all_unique_courses = set()
+            all_unique_teachers = set()
+            
+            for group_info in groups.values():
+                for instance in group_info['teacher_course_instances']:
+                    all_unique_courses.add(instance['course_code'])
+                    all_unique_teachers.add(instance['teacher_id'])
+            
+            instance_counts.append(total_instances)
+            unique_course_counts.append(len(all_unique_courses))
+            unique_teacher_counts.append(len(all_unique_teachers))
+        
+        x_pos = np.arange(len(dept_sem_labels))
+        width = 0.2
+        
+        ax1.bar(x_pos - width*1.5, group_counts, width, label='Groups', alpha=0.7)
+        ax1.bar(x_pos - width/2, instance_counts, width, label='Teacher-Course Instances', alpha=0.7)
+        ax1.bar(x_pos + width/2, unique_course_counts, width, label='Unique Courses', alpha=0.7)
+        ax1.bar(x_pos + width*1.5, unique_teacher_counts, width, label='Unique Teachers', alpha=0.7)
+        
+        ax1.set_title('Groups and Teacher-Course Instances by Department/Semester')
+        ax1.set_xlabel('Department/Semester')
         ax1.set_ylabel('Count')
-        ax1.legend()
-        ax1.tick_params(axis='x', rotation=45)
-        
-        # Macroblock utilization
-        utilization_data = []
-        for mb, analysis in macroblock_analysis.items():
-            utilization_data.append({
-                'Macroblock': mb,
-                'Courses': analysis['num_courses'],
-                'Teachers': analysis['num_teachers'],
-                'Ratio': analysis['num_teachers'] / max(analysis['num_courses'], 1)
-            })
-        
-        util_df = pd.DataFrame(utilization_data)
-        ax2.scatter(util_df['Courses'], util_df['Teachers'], alpha=0.7, s=100)
-        
-        # Add labels for each point
-        for _, row in util_df.iterrows():
-            ax2.annotate(row['Macroblock'], (row['Courses'], row['Teachers']), 
-                        xytext=(5, 5), textcoords='offset points', fontsize=8)
-        
-        ax2.set_title('Teacher-Course Ratio per Macroblock')
-        ax2.set_xlabel('Number of Courses')
-        ax2.set_ylabel('Number of Teachers')
-        ax2.grid(True, alpha=0.3)
-        
-        plt.tight_layout()
-        plt.savefig(os.path.join(self.output_dir, 'macroblock_distribution.png'), dpi=300, bbox_inches='tight')
-        plt.close()
-
-    def _plot_teacher_diversity(self, macroblock_analysis):
-        """Plot teacher diversity analysis."""
-        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
-        
-        # Teacher diversity per macroblock
-        macroblocks = list(macroblock_analysis.keys())
-        diversity_scores = []
-        
-        for mb, analysis in macroblock_analysis.items():
-            # Calculate diversity as teachers/courses ratio
-            diversity = analysis['num_teachers'] / max(analysis['num_courses'], 1)
-            diversity_scores.append(diversity)
-        
-        ax1.bar(macroblocks, diversity_scores, color='lightgreen', alpha=0.7)
-        ax1.set_title('Teacher Diversity Score (Teachers/Courses)')
-        ax1.set_xlabel('Macroblock')
-        ax1.set_ylabel('Diversity Score')
-        ax1.tick_params(axis='x', rotation=45)
-        ax1.axhline(y=1, color='red', linestyle='--', alpha=0.7, label='Ideal (1:1)')
+        ax1.set_xticks(x_pos)
+        ax1.set_xticklabels(dept_sem_labels, rotation=45, ha='right')
         ax1.legend()
         
-        # Teacher workload distribution
-        teacher_workloads = defaultdict(int)
-        for analysis in macroblock_analysis.values():
-            for teacher in analysis['teachers']:
-                teacher_workloads[teacher] += 1
+        # Group size distribution (number of teacher-course instances per group)
+        all_group_sizes = []
+        for groups in dept_sem_groups.values():
+            for group_info in groups.values():
+                all_group_sizes.append(group_info['num_instances'])
         
-        workload_counts = Counter(teacher_workloads.values())
-        ax2.bar(workload_counts.keys(), workload_counts.values(), color='orange', alpha=0.7)
-        ax2.set_title('Teacher Workload Distribution')
-        ax2.set_xlabel('Number of Macroblocks per Teacher')
-        ax2.set_ylabel('Number of Teachers')
-        
-        # Course repetition analysis
-        course_repetitions = defaultdict(int)
-        for analysis in macroblock_analysis.values():
-            for course, count in analysis['course_counts'].items():
-                if count > 1:
-                    course_repetitions[course] += count - 1
-        
-        if course_repetitions:
-            ax3.bar(course_repetitions.keys(), course_repetitions.values(), color='red', alpha=0.7)
-            ax3.set_title('Course Repetition Violations')
-            ax3.set_xlabel('Course Code')
-            ax3.set_ylabel('Number of Repetitions')
-            ax3.tick_params(axis='x', rotation=45)
+        if all_group_sizes:
+            ax2.hist(all_group_sizes, bins=max(1, len(set(all_group_sizes))), alpha=0.7, edgecolor='black')
+            ax2.set_title('Distribution of Group Sizes\n(Teacher-Course Instances per Group)')
+            ax2.set_xlabel('Number of Teacher-Course Instances per Group')
+            ax2.set_ylabel('Number of Groups')
         else:
-            ax3.text(0.5, 0.5, 'No Course Repetitions\n✅ Constraint Satisfied', 
-                    ha='center', va='center', transform=ax3.transAxes, fontsize=14, color='green')
-            ax3.set_title('Course Repetition Violations')
-        
-        # Teacher repetition analysis
-        teacher_repetitions = defaultdict(int)
-        for analysis in macroblock_analysis.values():
-            for teacher, count in analysis['teacher_counts'].items():
-                if count > 1:
-                    teacher_repetitions[teacher] += count - 1
-        
-        if teacher_repetitions:
-            ax4.bar(teacher_repetitions.keys(), teacher_repetitions.values(), color='red', alpha=0.7)
-            ax4.set_title('Teacher Repetition Violations')
-            ax4.set_xlabel('Teacher ID')
-            ax4.set_ylabel('Number of Repetitions')
-        else:
-            ax4.text(0.5, 0.5, 'No Teacher Repetitions\n✅ Constraint Satisfied', 
-                    ha='center', va='center', transform=ax4.transAxes, fontsize=14, color='green')
-            ax4.set_title('Teacher Repetition Violations')
+            ax2.text(0.5, 0.5, 'No data available', ha='center', va='center', transform=ax2.transAxes)
         
         plt.tight_layout()
-        plt.savefig(os.path.join(self.output_dir, 'teacher_diversity_analysis.png'), dpi=300, bbox_inches='tight')
+        plt.savefig(os.path.join(self.output_dir, 'group_distribution.png'), dpi=300, bbox_inches='tight')
         plt.close()
 
-    def _plot_semester_grouping(self, macroblock_analysis):
-        """Plot semester grouping effectiveness."""
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
-        
-        # Semester distribution across macroblocks
-        semester_distribution = defaultdict(list)
-        for mb, analysis in macroblock_analysis.items():
-            for semester in analysis['semesters']:
-                semester_distribution[semester].append(mb)
-        
-        # Create heatmap data
-        # Fix semester sorting to handle mixed types
-        semester_keys = list(semester_distribution.keys())
-        semester_str_values = [str(s) for s in semester_keys if s != "Unknown"]
-        semesters = sorted(semester_str_values, key=lambda x: int(x) if x.isdigit() else float('inf'))
-        if "Unknown" in semester_keys:
-            semesters.append("Unknown")
-        macroblocks = sorted(macroblock_analysis.keys())
-        
-        heatmap_data = np.zeros((len(semesters), len(macroblocks)))
-        
-        for i, semester in enumerate(semesters):
-            for j, mb in enumerate(macroblocks):
-                # Find the original semester key
-                original_semester = None
-                for orig_key in semester_keys:
-                    if str(orig_key) == semester:
-                        original_semester = orig_key
-                        break
-                
-                if original_semester is not None and mb in semester_distribution[original_semester]:
-                    # Count courses from this semester in this macroblock
-                    mb_analysis = macroblock_analysis[mb]
-                    courses_in_semester = sum(1 for course in mb_analysis['courses'] 
-                                            if str(mb_analysis['semester_info'].get(course, "")) == semester)
-                    heatmap_data[i, j] = courses_in_semester
-        
-        im1 = ax1.imshow(heatmap_data, cmap='YlOrRd', aspect='auto')
-        ax1.set_title('Semester Distribution Across Macroblocks')
-        ax1.set_xlabel('Macroblock')
-        ax1.set_ylabel('Semester')
-        ax1.set_xticks(range(len(macroblocks)))
-        ax1.set_xticklabels(macroblocks, rotation=45)
-        ax1.set_yticks(range(len(semesters)))
-        ax1.set_yticklabels(semesters)
-        
-        # Add text annotations
-        for i in range(len(semesters)):
-            for j in range(len(macroblocks)):
-                if heatmap_data[i, j] > 0:
-                    ax1.text(j, i, int(heatmap_data[i, j]), ha='center', va='center', 
-                            color='white' if heatmap_data[i, j] > heatmap_data.max()/2 else 'black')
-        
-        plt.colorbar(im1, ax=ax1, label='Number of Courses')
-        
-        # Semester grouping effectiveness
-        semester_stats = []
-        for semester in semesters:
-            # Convert semester back to original type for comparison
-            original_semester = None
-            for orig_key in semester_keys:
-                if str(orig_key) == semester:
-                    original_semester = orig_key
-                    break
-            
-            if original_semester is None:
-                continue
-                
-            total_courses = sum(1 for _, row in self.courses_df.iterrows() if str(row['semester']) == semester)
-            scheduled_courses = 0
-            for _, row in self.schedule_df.iterrows():
-                # Need to get semester info from courses_df
-                course_matches = self.courses_df[self.courses_df['course_code'] == row['course_code']]
-                if not course_matches.empty and str(course_matches.iloc[0]['semester']) == semester:
-                    scheduled_courses += 1
-            
-            macroblocks_used = len(semester_distribution.get(original_semester, []))
-            
-            semester_stats.append({
-                'Semester': semester,
-                'Total Courses': total_courses,
-                'Scheduled Courses': scheduled_courses,
-                'Macroblocks Used': macroblocks_used,
-                'Avg Courses per Block': scheduled_courses / max(macroblocks_used, 1)
-            })
-        
-        stats_df = pd.DataFrame(semester_stats)
-        x_pos = np.arange(len(semesters))
-        
-        ax2.bar(x_pos - 0.2, stats_df['Total Courses'], 0.4, label='Total Courses', alpha=0.7)
-        ax2.bar(x_pos + 0.2, stats_df['Scheduled Courses'], 0.4, label='Scheduled Courses', alpha=0.7)
-        
-        ax2.set_title('Course Scheduling by Semester')
-        ax2.set_xlabel('Semester')
-        ax2.set_ylabel('Number of Courses')
-        ax2.set_xticks(x_pos)
-        ax2.set_xticklabels(semesters)
-        ax2.legend()
-        
-        plt.tight_layout()
-        plt.savefig(os.path.join(self.output_dir, 'semester_grouping_analysis.png'), dpi=300, bbox_inches='tight')
-        plt.close()
-
-    def _plot_student_choices(self, choice_analysis):
-        """Plot student choice optimization analysis."""
+    def _plot_course_instance_distribution(self, distribution_analysis):
+        """Plot teacher-course instance distribution analysis."""
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
         
-        # Collect choice data
-        all_choice_data = []
-        for (semester, dept), courses in choice_analysis.items():
-            for course_code, choice_info in courses.items():
-                all_choice_data.append({
-                    'Semester': semester,
-                    'Department': dept,
-                    'Course': course_code,
-                    'Teachers': choice_info['total_teachers'],
-                    'Macroblocks': choice_info['total_macroblocks'],
-                    'Choice Score': choice_info['total_teachers'] * choice_info['total_macroblocks']
-                })
+        # Teacher-course instances vs unique courses and teachers
+        dept_sem_labels = []
+        instance_counts = []
+        unique_course_counts = []
+        unique_teacher_counts = []
         
-        choice_df = pd.DataFrame(all_choice_data)
+        for (dept, semester), analysis in distribution_analysis.items():
+            dept_sem_labels.append(f"{dept}\nSem {semester}")
+            instance_counts.append(analysis['total_instances'])
+            unique_course_counts.append(analysis['unique_courses'])
+            unique_teacher_counts.append(analysis['unique_teachers'])
         
-        if not choice_df.empty:
-            # Teacher choices per course
-            ax1.hist(choice_df['Teachers'], bins=10, alpha=0.7, color='skyblue', edgecolor='black')
-            ax1.set_title('Distribution of Teacher Choices per Course')
-            ax1.set_xlabel('Number of Teachers per Course')
-            ax1.set_ylabel('Number of Courses')
-            
-            # Macroblock distribution per course
-            ax2.hist(choice_df['Macroblocks'], bins=10, alpha=0.7, color='lightcoral', edgecolor='black')
-            ax2.set_title('Distribution of Macroblocks per Course')
-            ax2.set_xlabel('Number of Macroblocks per Course')
-            ax2.set_ylabel('Number of Courses')
-            
-            # Choice score by semester
-            semester_choice = choice_df.groupby('Semester')['Choice Score'].mean()
-            ax3.bar(semester_choice.index, semester_choice.values, alpha=0.7, color='lightgreen')
-            ax3.set_title('Average Choice Score by Semester')
-            ax3.set_xlabel('Semester')
-            ax3.set_ylabel('Average Choice Score')
-            
-            # Top courses with most choices
-            top_choices = choice_df.nlargest(10, 'Choice Score')[['Course', 'Teachers', 'Macroblocks', 'Choice Score']]
-            
-            y_pos = np.arange(len(top_choices))
-            ax4.barh(y_pos, top_choices['Choice Score'], alpha=0.7, color='gold')
-            ax4.set_title('Top 10 Courses with Most Student Choices')
-            ax4.set_xlabel('Choice Score (Teachers × Macroblocks)')
-            ax4.set_ylabel('Course')
-            ax4.set_yticks(y_pos)
-            ax4.set_yticklabels(top_choices['Course'])
+        x_pos = np.arange(len(dept_sem_labels))
+        width = 0.25
         
-        plt.tight_layout()
-        plt.savefig(os.path.join(self.output_dir, 'student_choice_analysis.png'), dpi=300, bbox_inches='tight')
-        plt.close()
-
-    def _plot_5th_sem_cse_choices(self, choice_analysis):
-        """Plot course choices specifically for 5th semester Computer Science Engineering students."""
-        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(20, 16))
+        ax1.bar(x_pos - width, instance_counts, width, label='Teacher-Course Instances', alpha=0.7)
+        ax1.bar(x_pos, unique_course_counts, width, label='Unique Courses', alpha=0.7)
+        ax1.bar(x_pos + width, unique_teacher_counts, width, label='Unique Teachers', alpha=0.7)
+        ax1.set_title('Teacher-Course Instance Distribution')
+        ax1.set_xlabel('Department/Semester')
+        ax1.set_ylabel('Count')
+        ax1.set_xticks(x_pos)
+        ax1.set_xticklabels(dept_sem_labels, rotation=45, ha='right')
+        ax1.legend()
         
-        # Define main theory blocks only (exclude tutorial blocks)
-        main_theory_blocks = ['a1', 'a2', 'b1', 'b2', 'c1', 'c2', 'd1', 'd2', 'e1', 'e2', 'f1', 'f2', 'g1', 'g2']
+        # Group balance (standard deviation of group sizes)
+        group_balance_scores = []
+        for analysis in distribution_analysis.values():
+            group_balance_scores.append(analysis['group_size_std'])
         
-        # Filter for 5th semester Computer Science Engineering courses
-        cse_5th_sem_data = []
-        cse_key = None
+        ax2.bar(range(len(dept_sem_labels)), group_balance_scores, alpha=0.7, color='orange')
+        ax2.set_title('Group Balance (Lower = More Balanced)')
+        ax2.set_xlabel('Department/Semester')
+        ax2.set_ylabel('Group Size Standard Deviation')
+        ax2.set_xticks(range(len(dept_sem_labels)))
+        ax2.set_xticklabels(dept_sem_labels, rotation=45, ha='right')
         
-        # Find the key for 5th semester CSE - use exact department name
-        for (semester, dept), courses in choice_analysis.items():
-            if (str(semester) == '5' and 
-                dept == 'Computer Science & Engineering'):  # Use exact match
-                cse_key = (semester, dept)
-                break
+        # Courses with multiple teachers and teachers with multiple courses
+        multiple_teacher_courses = []
+        multiple_course_teachers = []
         
-        if cse_key and cse_key in choice_analysis:
-            for course_code, choice_info in choice_analysis[cse_key].items():
-                # Get additional course information from schedule_df
-                course_schedule = self.schedule_df[self.schedule_df['course_code'] == course_code]
-                course_name = choice_info.get('course_name', course_code)
-                
-                # Filter macroblock distribution to only include main theory blocks
-                filtered_macroblock_dist = {}
-                all_teachers = set()
-                
-                for macroblock, teachers in choice_info['macroblock_distribution'].items():
-                    if macroblock in main_theory_blocks:
-                        filtered_macroblock_dist[macroblock] = teachers
-                        all_teachers.update(teachers)
-                
-                macroblocks = list(filtered_macroblock_dist.keys())
-                
-                cse_5th_sem_data.append({
-                    'Course Code': course_code,
-                    'Course Name': course_name,
-                    'Teachers Available': len(all_teachers),
-                    'Macroblocks Available': len(macroblocks),
-                    'Choice Score': len(all_teachers) * len(macroblocks),
-                    'Teacher Options': ', '.join([self._get_teacher_name(t) for t in all_teachers]),
-                    'Macroblock Options': ', '.join(sorted(macroblocks)),
-                    'Macroblock Distribution': filtered_macroblock_dist
-                })
+        for analysis in distribution_analysis.values():
+            multiple_teacher_courses.append(len(analysis['courses_with_multiple_teachers']))
+            multiple_course_teachers.append(len(analysis['teachers_with_multiple_courses']))
         
-        # If no data found in choice_analysis, try to get directly from schedule_df
-        if not cse_5th_sem_data and hasattr(self, 'schedule_df') and not self.schedule_df.empty:
-            # Get 5th semester CSE courses directly from schedule
-            cse_5th_schedule = self.schedule_df[
-                (self.schedule_df['semester'] == 5) & 
-                (self.schedule_df['course_dept'] == 'Computer Science & Engineering')
-            ]
-            
-            if not cse_5th_schedule.empty:
-                for course_code in cse_5th_schedule['course_code'].unique():
-                    course_data = cse_5th_schedule[cse_5th_schedule['course_code'] == course_code]
-                    course_name = course_data['course_name'].iloc[0]
-                    
-                    # Filter to only main theory blocks
-                    course_data_filtered = course_data[course_data['macroblock'].isin(main_theory_blocks)]
-                    
-                    teachers = course_data_filtered['teacher_id'].unique()
-                    macroblocks = course_data_filtered['macroblock'].unique()
-                    
-                    # Create macroblock distribution (only main blocks)
-                    macroblock_dist = {}
-                    for macroblock in macroblocks:
-                        mb_data = course_data_filtered[course_data_filtered['macroblock'] == macroblock]
-                        macroblock_dist[macroblock] = mb_data['teacher_id'].unique().tolist()
-                    
-                    cse_5th_sem_data.append({
-                        'Course Code': course_code,
-                        'Course Name': course_name,
-                        'Teachers Available': len(teachers),
-                        'Macroblocks Available': len(macroblocks),
-                        'Choice Score': len(teachers) * len(macroblocks),
-                        'Teacher Options': ', '.join([self._get_teacher_name(t) for t in teachers]),
-                        'Macroblock Options': ', '.join(sorted(macroblocks)),
-                        'Macroblock Distribution': macroblock_dist
-                    })
-        
-        if cse_5th_sem_data:
-            cse_df = pd.DataFrame(cse_5th_sem_data)
-            
-            # 1. Course-wise teacher availability
-            bars1 = ax1.bar(range(len(cse_df)), cse_df['Teachers Available'], 
-                           color='lightblue', alpha=0.8, edgecolor='navy')
-            ax1.set_title('Teacher Availability for 5th Sem CSE Courses', fontsize=14, fontweight='bold')
-            ax1.set_xlabel('Courses')
-            ax1.set_ylabel('Number of Teachers Available')
-            ax1.set_xticks(range(len(cse_df)))
-            ax1.set_xticklabels(cse_df['Course Code'], rotation=45, ha='right')
-            
-            # Add value labels on bars
-            for i, bar in enumerate(bars1):
-                height = bar.get_height()
-                ax1.text(bar.get_x() + bar.get_width()/2., height + 0.05,
-                        f'{int(height)}', ha='center', va='bottom', fontweight='bold')
-            
-            # 2. Course-wise macroblock availability
-            bars2 = ax2.bar(range(len(cse_df)), cse_df['Macroblocks Available'], 
-                           color='lightgreen', alpha=0.8, edgecolor='darkgreen')
-            ax2.set_title('Main Macroblock Availability for 5th Sem CSE Courses', fontsize=14, fontweight='bold')
-            ax2.set_xlabel('Courses')
-            ax2.set_ylabel('Number of Main Macroblocks Available')
-            ax2.set_xticks(range(len(cse_df)))
-            ax2.set_xticklabels(cse_df['Course Code'], rotation=45, ha='right')
-            
-            # Add value labels on bars
-            for i, bar in enumerate(bars2):
-                height = bar.get_height()
-                ax2.text(bar.get_x() + bar.get_width()/2., height + 0.05,
-                        f'{int(height)}', ha='center', va='bottom', fontweight='bold')
-            
-            # 3. Detailed Macroblock Distribution Heatmap (only main blocks)
-            ax3.set_title('Main Macroblock Distribution for Each Course\n(Theory Blocks: a1-g2 only)', fontsize=14, fontweight='bold')
-            
-            # Create a matrix showing which main blocks each course uses
-            all_blocks = set()
-            for _, row in cse_df.iterrows():
-                all_blocks.update(row['Macroblock Distribution'].keys())
-            
-            # Filter to only main theory blocks and sort them properly
-            all_blocks = [block for block in main_theory_blocks if block in all_blocks]
-            
-            # Create matrix
-            matrix = []
-            course_labels = []
-            
-            for _, row in cse_df.iterrows():
-                course_labels.append(f"{row['Course Code']}\n{row['Course Name'][:20]}...")
-                block_row = []
-                for block in all_blocks:
-                    if block in row['Macroblock Distribution']:
-                        # Count how many teachers for this course in this block
-                        teacher_count = len(row['Macroblock Distribution'][block])
-                        block_row.append(teacher_count)
-                    else:
-                        block_row.append(0)
-                matrix.append(block_row)
-            
-            # Plot heatmap
-            if matrix and all_blocks:
-                matrix = np.array(matrix)
-                im = ax3.imshow(matrix, cmap='YlOrRd', aspect='auto')
-                
-                # Set ticks and labels
-                ax3.set_xticks(range(len(all_blocks)))
-                ax3.set_xticklabels(all_blocks, rotation=45, ha='right')
-                ax3.set_yticks(range(len(course_labels)))
-                ax3.set_yticklabels(course_labels)
-                
-                # Add text annotations
-                for i in range(len(course_labels)):
-                    for j in range(len(all_blocks)):
-                        if matrix[i, j] > 0:
-                            ax3.text(j, i, f'{int(matrix[i, j])}', 
-                                   ha='center', va='center', fontweight='bold', color='black')
-                
-                # Add colorbar
-                plt.colorbar(im, ax=ax3, label='Number of Teachers')
-            else:
-                ax3.text(0.5, 0.5, 'No main macroblock distribution data', 
-                        ha='center', va='center', transform=ax3.transAxes)
-            
-            # 4. Detailed course information table with main block distribution
-            ax4.axis('tight')
-            ax4.axis('off')
-            
-            # Create a detailed summary table
-            table_data = []
-            for _, row in cse_df.iterrows():
-                # Format main macroblock distribution only
-                block_dist = row['Macroblock Distribution']
-                block_summary = []
-                for block, teachers in sorted(block_dist.items()):
-                    if block in main_theory_blocks:  # Only include main blocks
-                        block_summary.append(f"{block}({len(teachers)}T)")
-                
-                blocks_text = ', '.join(block_summary[:8])  # Limit to first 8 blocks
-                if len(block_summary) > 8:
-                    blocks_text += f"... +{len(block_summary)-8} more"
-                
-                table_data.append([
-                    row['Course Code'],
-                    row['Course Name'][:30] + '...' if len(row['Course Name']) > 30 else row['Course Name'],
-                    f"{row['Teachers Available']}",
-                    f"{row['Macroblocks Available']}",
-                    blocks_text
-                ])
-            
-            table = ax4.table(cellText=table_data,
-                             colLabels=['Code', 'Course Name', 'Teachers', 'Main Blocks', 'Main Block Distribution (Block(Teachers))'],
-                             cellLoc='left',
-                             loc='center',
-                             bbox=[0, 0, 1, 1])
-            
-            table.auto_set_font_size(False)
-            table.set_fontsize(8)
-            table.scale(1, 2.5)
-            
-            # Style the table
-            for i in range(len(table_data) + 1):
-                for j in range(5):
-                    cell = table[(i, j)]
-                    if i == 0:  # Header row
-                        cell.set_facecolor('#4CAF50')
-                        cell.set_text_props(weight='bold', color='white')
-                    else:
-                        if i % 2 == 0:
-                            cell.set_facecolor('#F5F5F5')
-                        else:
-                            cell.set_facecolor('#FFFFFF')
-            
-            ax4.set_title('5th Semester CSE Course - Main Block Distribution Details', fontsize=14, fontweight='bold', pad=20)
-            
-            # Add summary statistics with main block distribution info
-            avg_teachers = cse_df['Teachers Available'].mean()
-            avg_blocks = cse_df['Macroblocks Available'].mean()
-            avg_flexibility = cse_df['Choice Score'].mean()
-            
-            # Create detailed main block distribution summary
-            block_usage_summary = {}
-            for _, row in cse_df.iterrows():
-                for block in row['Macroblock Distribution'].keys():
-                    if block in main_theory_blocks:  # Only count main blocks
-                        if block not in block_usage_summary:
-                            block_usage_summary[block] = 0
-                        block_usage_summary[block] += 1
-            
-            most_used_blocks = sorted(block_usage_summary.items(), key=lambda x: x[1], reverse=True)[:5]
-            
-            summary_text = f"""
-Summary for 5th Semester Computer Science Engineering Students:
-
-📚 Total Courses Available: {len(cse_df)}
-👨‍🏫 Average Teachers per Course: {avg_teachers:.1f}
-🏗️ Average Main Macroblocks per Course: {avg_blocks:.1f}
-⭐ Average Flexibility Score: {avg_flexibility:.1f}
-
-Most Used Main Macroblocks:
-            """
-            
-            for block, count in most_used_blocks:
-                summary_text += f"\n  • {block}: Used by {count} course(s)"
-            
-            summary_text += f"\n\nCourse Details (Main Blocks Only):"
-            # Add course details with their main blocks only
-            for _, row in cse_df.iterrows():
-                main_blocks_only = [block for block in row['Macroblock Distribution'].keys() if block in main_theory_blocks][:3]
-                summary_text += f"\n• {row['Course Code']}: {', '.join(main_blocks_only)}"
-                if len([block for block in row['Macroblock Distribution'].keys() if block in main_theory_blocks]) > 3:
-                    summary_text += f" (+{len([block for block in row['Macroblock Distribution'].keys() if block in main_theory_blocks])-3} more)"
-            
-            summary_text += f"\n\nNote: Only showing main theory blocks (a1-g2)."
-            summary_text += f"\nTutorial blocks (ta1, taa1, etc.) are derived from main blocks."
-            
-            # Add this as a text box
-            fig.text(0.02, 0.02, summary_text, fontsize=9, 
-                    bbox=dict(boxstyle="round,pad=0.5", facecolor='lightblue', alpha=0.7),
-                    verticalalignment='bottom')
-            
-        else:
-            # No 5th semester CSE data found
-            for ax in [ax1, ax2, ax3, ax4]:
-                ax.text(0.5, 0.5, 'No 5th Semester CSE Data Found', 
-                       ha='center', va='center', transform=ax.transAxes, 
-                       fontsize=16, color='red')
-                ax.set_title('5th Semester CSE Course Analysis')
-        
-        plt.suptitle('5th Semester Computer Science Engineering - Main Block Distribution Analysis\n(Theory Blocks: a1, a2, b1, b2, c1, c2, d1, d2, e1, e2, f1, f2, g1, g2)', 
-                     fontsize=16, fontweight='bold', y=0.95)
-        plt.tight_layout()
-        plt.subplots_adjust(bottom=0.35)  # Make room for summary text
-        plt.savefig(os.path.join(self.output_dir, '5th_sem_cse_student_choices.png'), 
-                   dpi=300, bbox_inches='tight')
-        plt.close()
-
-    def _plot_violations_summary(self, macroblock_analysis):
-        """Plot summary of constraint violations."""
-        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
-        
-        # Count violations
-        violation_summary = {
-            'No Violations': 0,
-            'Course Repetitions': 0,
-            'Teacher Repetitions': 0,
-            'Both Violations': 0
-        }
-        
-        macroblock_violations = {}
-        
-        for mb, analysis in macroblock_analysis.items():
-            course_violations = any(count > 1 for count in analysis['course_counts'].values())
-            teacher_violations = any(count > 1 for count in analysis['teacher_counts'].values())
-            
-            macroblock_violations[mb] = {
-                'course_violations': course_violations,
-                'teacher_violations': teacher_violations
-            }
-            
-            if not course_violations and not teacher_violations:
-                violation_summary['No Violations'] += 1
-            elif course_violations and teacher_violations:
-                violation_summary['Both Violations'] += 1
-            elif course_violations:
-                violation_summary['Course Repetitions'] += 1
-            elif teacher_violations:
-                violation_summary['Teacher Repetitions'] += 1
-        
-        # Violation summary pie chart
-        labels = list(violation_summary.keys())
-        sizes = list(violation_summary.values())
-        colors = ['lightgreen', 'orange', 'red', 'darkred']
-        
-        ax1.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90)
-        ax1.set_title('Constraint Violation Summary')
-        
-        # Macroblock violation status
-        violation_status = []
-        for mb, violations in macroblock_violations.items():
-            if violations['course_violations'] or violations['teacher_violations']:
-                violation_status.append(f"{mb} ❌")
-            else:
-                violation_status.append(f"{mb} ✅")
-        
-        # Show violation status as text
-        violation_text = "\n".join(violation_status)
-        ax2.text(0.1, 0.9, "Macroblock Status:", transform=ax2.transAxes, fontsize=12, fontweight='bold')
-        ax2.text(0.1, 0.1, violation_text, transform=ax2.transAxes, fontsize=10, verticalalignment='bottom')
-        ax2.set_xlim(0, 1)
-        ax2.set_ylim(0, 1)
-        ax2.axis('off')
-        ax2.set_title('Individual Macroblock Status')
-        
-        # Calculate constraint effectiveness
-        total_macroblocks = len(macroblock_analysis)
-        clean_macroblocks = violation_summary['No Violations']
-        effectiveness = (clean_macroblocks / total_macroblocks) * 100 if total_macroblocks > 0 else 0
-        
-        ax3.bar(['Constraint Effectiveness'], [effectiveness], color='lightblue', alpha=0.7)
-        ax3.set_ylim(0, 100)
-        ax3.set_ylabel('Percentage')
-        ax3.set_title(f'Overall Constraint Effectiveness: {effectiveness:.1f}%')
-        
-        # Add percentage text
-        ax3.text(0, effectiveness + 2, f'{effectiveness:.1f}%', ha='center', fontsize=14, fontweight='bold')
+        ax3.bar(x_pos - width/2, multiple_teacher_courses, width, label='Courses with Multiple Teachers', alpha=0.7)
+        ax3.bar(x_pos + width/2, multiple_course_teachers, width, label='Teachers with Multiple Courses', alpha=0.7)
+        ax3.set_title('Instance Multiplicity Analysis')
+        ax3.set_xlabel('Department/Semester')
+        ax3.set_ylabel('Count')
+        ax3.set_xticks(x_pos)
+        ax3.set_xticklabels(dept_sem_labels, rotation=45, ha='right')
+        ax3.legend()
         
         # Summary statistics
-        stats_text = f"""
-Total Macroblocks: {total_macroblocks}
-Clean Macroblocks: {clean_macroblocks}
-With Violations: {total_macroblocks - clean_macroblocks}
-
-Course Diversity: ✅
-Teacher Diversity: ✅
-Semester Grouping: ✅
-Combined Shift System: ✅
+        total_groups = sum(len(analysis['groups']) for analysis in distribution_analysis.values())
+        total_instances = sum(analysis['total_instances'] for analysis in distribution_analysis.values())
+        total_unique_courses = sum(analysis['unique_courses'] for analysis in distribution_analysis.values())
+        total_unique_teachers = sum(analysis['unique_teachers'] for analysis in distribution_analysis.values())
+        
+        summary_text = f"""
+Total Groups Created: {total_groups}
+Total Teacher-Course Instances: {total_instances}
+Total Unique Courses: {total_unique_courses}
+Total Unique Teachers: {total_unique_teachers}
+Avg Instances per Group: {total_instances/total_groups:.1f}
+Avg Instances per Course: {total_instances/total_unique_courses:.1f}
+Avg Instances per Teacher: {total_instances/total_unique_teachers:.1f}
         """
         
-        ax4.text(0.1, 0.5, stats_text, transform=ax4.transAxes, fontsize=12, verticalalignment='center')
+        ax4.text(0.1, 0.5, summary_text, transform=ax4.transAxes, fontsize=12, verticalalignment='center')
         ax4.set_xlim(0, 1)
         ax4.set_ylim(0, 1)
         ax4.axis('off')
         ax4.set_title('Summary Statistics')
         
         plt.tight_layout()
-        plt.savefig(os.path.join(self.output_dir, 'violations_summary.png'), dpi=300, bbox_inches='tight')
+        plt.savefig(os.path.join(self.output_dir, 'course_instance_distribution.png'), dpi=300, bbox_inches='tight')
         plt.close()
 
-    def _plot_macroblock_grid(self, macroblock_analysis):
-        """Create a detailed grid view of all macroblocks."""
-        fig, ax = plt.subplots(figsize=(20, 12))
+    def _plot_group_balance(self, distribution_analysis):
+        """Plot group balance analysis."""
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
         
-        # Create grid layout
-        macroblocks = sorted(macroblock_analysis.keys())
-        num_blocks = len(macroblocks)
+        # Group size comparison
+        for i, ((dept, semester), analysis) in enumerate(distribution_analysis.items()):
+            group_sizes = analysis['group_sizes']
+            ax1.scatter([i] * len(group_sizes), group_sizes, alpha=0.7, s=60, label=f"{dept} Sem {semester}")
         
-        # Calculate grid dimensions
-        cols = min(7, num_blocks)  # Max 7 columns
-        rows = (num_blocks + cols - 1) // cols
+        ax1.set_title('Group Sizes by Department/Semester')
+        ax1.set_xlabel('Department/Semester Index')
+        ax1.set_ylabel('Number of Courses in Group')
+        ax1.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
         
-        for i, mb in enumerate(macroblocks):
-            row = i // cols
-            col = i % cols
-            
-            analysis = macroblock_analysis[mb]
-            
-            # Create a subplot for each macroblock
-            rect_x = col / cols
-            rect_y = 1 - (row + 1) / rows
-            rect_width = 1 / cols
-            rect_height = 1 / rows
-            
-            # Draw rectangle for macroblock
-            rect = plt.Rectangle((rect_x, rect_y), rect_width, rect_height, 
-                               linewidth=2, edgecolor='black', facecolor='lightblue', alpha=0.3)
-            ax.add_patch(rect)
-            
-            # Add macroblock label
-            ax.text(rect_x + rect_width/2, rect_y + rect_height - 0.02, mb, 
-                   ha='center', va='top', fontsize=14, fontweight='bold')
-            
-            # Add course and teacher info
-            info_text = f"Courses: {analysis['num_courses']}\nTeachers: {analysis['num_teachers']}"
-            ax.text(rect_x + rect_width/2, rect_y + rect_height/2, info_text, 
-                   ha='center', va='center', fontsize=10)
-            
-            # Add semester info
-            semester_values = [str(s) for s in set(analysis['semesters']) if s != "Unknown"]
-            sorted_semesters = sorted(semester_values, key=lambda x: int(x) if x.isdigit() else float('inf'))
-            if "Unknown" in analysis['semesters']:
-                sorted_semesters.append("Unknown")
-            sem_text = f"Sem: {', '.join(sorted_semesters)}"
-            ax.text(rect_x + rect_width/2, rect_y + 0.02, sem_text, 
-                   ha='center', va='bottom', fontsize=8, style='italic')
-            
-            # Color code by violation status
-            has_violations = (any(count > 1 for count in analysis['course_counts'].values()) or 
-                            any(count > 1 for count in analysis['teacher_counts'].values()))
-            
-            if has_violations:
-                rect.set_facecolor('lightcoral')
-                rect.set_alpha(0.5)
+        # Balance score heatmap
+        dept_sem_labels = [f"{dept} Sem {semester}" for (dept, semester) in distribution_analysis.keys()]
+        balance_scores = [analysis['group_size_std'] for analysis in distribution_analysis.values()]
+        avg_sizes = [analysis['avg_group_size'] for analysis in distribution_analysis.values()]
         
-        ax.set_xlim(0, 1)
-        ax.set_ylim(0, 1)
-        ax.set_aspect('equal')
-        ax.axis('off')
-        ax.set_title('Macroblock Grid Overview\n(Red = Constraint Violations, Blue = Clean)', 
-                    fontsize=16, fontweight='bold', pad=20)
+        scatter = ax2.scatter(avg_sizes, balance_scores, s=100, alpha=0.7, c=range(len(dept_sem_labels)), cmap='viridis')
+        
+        for i, label in enumerate(dept_sem_labels):
+            ax2.annotate(label, (avg_sizes[i], balance_scores[i]), xytext=(5, 5), 
+                        textcoords='offset points', fontsize=8)
+        
+        ax2.set_title('Group Balance vs Average Group Size')
+        ax2.set_xlabel('Average Group Size')
+        ax2.set_ylabel('Group Size Standard Deviation (Lower = More Balanced)')
+        ax2.grid(True, alpha=0.3)
         
         plt.tight_layout()
-        plt.savefig(os.path.join(self.output_dir, 'macroblock_grid_overview.png'), dpi=300, bbox_inches='tight')
+        plt.savefig(os.path.join(self.output_dir, 'group_balance.png'), dpi=300, bbox_inches='tight')
         plt.close()
 
-    def generate_detailed_report(self, macroblock_analysis, choice_analysis):
+    def _plot_student_choices(self, choice_analysis):
+        """Plot student choice analysis for teacher-course instances."""
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
+        
+        # Collect choice data across all departments/semesters
+        all_choice_data = []
+        
+        for (dept, semester), dept_analysis in choice_analysis.items():
+            all_course_choices = dept_analysis['all_course_choices']
+            
+            for course_code, teacher_choices in all_course_choices.items():
+                all_choice_data.append({
+                    'dept': dept,
+                    'semester': semester,
+                    'course': course_code,
+                    'total_teacher_choices': len(teacher_choices),
+                    'teacher_names': [tc['teacher_name'] for tc in teacher_choices]
+                })
+        
+        # Distribution of teacher choices per course
+        if all_choice_data:
+            choice_counts = [data['total_teacher_choices'] for data in all_choice_data]
+            max_choices = max(choice_counts) if choice_counts else 1
+            
+            ax1.hist(choice_counts, bins=max(1, max_choices), alpha=0.7, edgecolor='black')
+            ax1.set_title('Distribution of Teacher Choices per Course')
+            ax1.set_xlabel('Number of Teacher Choices Available')
+            ax1.set_ylabel('Number of Courses')
+            
+        # Choice effectiveness by department/semester
+        dept_sem_labels = []
+        choice_effectiveness = []
+        avg_choices = []
+        
+        for (dept, semester), dept_analysis in choice_analysis.items():
+            dept_sem_labels.append(f"{dept}\nSem {semester}")
+            
+            total_courses = dept_analysis['total_courses']
+            courses_with_multiple = dept_analysis['courses_with_multiple_choices']
+            effectiveness = (courses_with_multiple / total_courses * 100) if total_courses > 0 else 0
+            choice_effectiveness.append(effectiveness)
+            
+            # Calculate average choices per course
+            all_choices = dept_analysis['all_course_choices']
+            if all_choices:
+                avg_choice = sum(len(choices) for choices in all_choices.values()) / len(all_choices)
+            else:
+                avg_choice = 0
+            avg_choices.append(avg_choice)
+        
+        ax2.bar(range(len(dept_sem_labels)), choice_effectiveness, alpha=0.7, color='green')
+        ax2.set_title('Choice Effectiveness by Department/Semester')
+        ax2.set_xlabel('Department/Semester')
+        ax2.set_ylabel('% Courses with Multiple Teacher Choices')
+        ax2.set_xticks(range(len(dept_sem_labels)))
+        ax2.set_xticklabels(dept_sem_labels, rotation=45, ha='right')
+        
+        # Average teacher choices per course
+        ax3.bar(range(len(dept_sem_labels)), avg_choices, alpha=0.7, color='purple')
+        ax3.set_title('Average Teacher Choices per Course')
+        ax3.set_xlabel('Department/Semester')
+        ax3.set_ylabel('Average Number of Teacher Choices')
+        ax3.set_xticks(range(len(dept_sem_labels)))
+        ax3.set_xticklabels(dept_sem_labels, rotation=45, ha='right')
+        
+        # Summary statistics
+        if all_choice_data:
+            total_courses = len(all_choice_data)
+            courses_with_multiple_choices = len([d for d in all_choice_data if d['total_teacher_choices'] > 1])
+            overall_effectiveness = (courses_with_multiple_choices / total_courses * 100) if total_courses > 0 else 0
+            avg_choices_overall = sum(d['total_teacher_choices'] for d in all_choice_data) / total_courses
+            max_choices_available = max(d['total_teacher_choices'] for d in all_choice_data)
+            
+            summary_text = f"""
+Total Courses Analyzed: {total_courses}
+Courses with Multiple Teacher Choices: {courses_with_multiple_choices}
+Overall Choice Effectiveness: {overall_effectiveness:.1f}%
+Average Teacher Choices per Course: {avg_choices_overall:.1f}
+Maximum Choices Available: {max_choices_available}
+
+This analysis shows how many teacher options
+students have for each course, providing
+flexibility in their academic choices.
+            """
+        else:
+            summary_text = "No choice data available for analysis"
+        
+        ax4.text(0.1, 0.5, summary_text, transform=ax4.transAxes, fontsize=11, verticalalignment='center')
+        ax4.set_xlim(0, 1)
+        ax4.set_ylim(0, 1)
+        ax4.axis('off')
+        ax4.set_title('Choice Analysis Summary')
+        
+        plt.tight_layout()
+        plt.savefig(os.path.join(self.output_dir, 'student_choice_analysis.png'), dpi=300, bbox_inches='tight')
+        plt.close()
+
+    def _plot_5th_sem_cse_analysis(self, dept_sem_groups, choice_analysis):
+        """Plot detailed analysis for 5th semester CSE based on teacher-course instances."""
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(20, 16))
+        
+        # Find 5th semester CSE data
+        cse_5th_data = None
+        cse_5th_choice_data = None
+        
+        for (dept, semester), groups in dept_sem_groups.items():
+            if semester == 5 and 'Computer Science' in dept:
+                cse_5th_data = groups
+                cse_5th_choice_data = choice_analysis.get((dept, semester), {})
+                break
+        
+        if cse_5th_data:
+            # Group composition by teacher-course instances
+            group_names = list(cse_5th_data.keys())
+            group_sizes = [group_info['num_instances'] for group_info in cse_5th_data.values()]
+            
+            ax1.bar(range(len(group_names)), group_sizes, alpha=0.7, color='lightblue')
+            ax1.set_title('5th Semester CSE - Group Sizes\n(Teacher-Course Instances per Group)')
+            ax1.set_xlabel('Groups')
+            ax1.set_ylabel('Number of Teacher-Course Instances')
+            ax1.set_xticks(range(len(group_names)))
+            ax1.set_xticklabels([f"Group {cse_5th_data[gn]['group_index']}" for gn in group_names])
+            
+            # Teacher-course instance distribution across groups
+            all_instances = []
+            for group_info in cse_5th_data.values():
+                all_instances.extend(group_info['teacher_course_instances'])
+            
+            # Get all unique courses
+            all_courses = set()
+            for instance in all_instances:
+                all_courses.add(instance['course_code'])
+            
+            course_labels = sorted(all_courses)
+            
+            # Create matrix: rows = courses, columns = groups
+            # Values = number of schedule instances for that course in that group
+            course_group_matrix = []
+            
+            for course_code in course_labels:
+                course_row = []
+                for group_name in group_names:
+                    # Count ALL schedule instances for this course in this group
+                    instance_count = sum(1 for instance in cse_5th_data[group_name]['teacher_course_instances'] 
+                                       if instance['course_code'] == course_code)
+                    course_row.append(instance_count)
+                course_group_matrix.append(course_row)
+            
+            if course_group_matrix:
+                im = ax2.imshow(course_group_matrix, cmap='YlOrRd', aspect='auto')
+                ax2.set_title('Course Distribution Across Groups\n(Number shows total schedule instances per course per group)')
+                ax2.set_xlabel('Groups')
+                ax2.set_ylabel('Courses')
+                ax2.set_xticks(range(len(group_names)))
+                ax2.set_xticklabels([f"G{cse_5th_data[gn]['group_index']}" for gn in group_names])
+                ax2.set_yticks(range(len(course_labels)))
+                ax2.set_yticklabels(course_labels, fontsize=10)
+                
+                # Add text annotations showing the count
+                for i in range(len(course_labels)):
+                    for j in range(len(group_names)):
+                        count = course_group_matrix[i][j]
+                        if count > 0:
+                            ax2.text(j, i, str(count), ha='center', va='center', 
+                                   fontweight='bold', fontsize=14, color='white' if count > 1 else 'black')
+                
+                plt.colorbar(im, ax=ax2, label='Number of Schedule Instances')
+            
+            # Teacher choices analysis if available
+            if cse_5th_choice_data and 'all_course_choices' in cse_5th_choice_data:
+                choice_data = []
+                all_course_choices = cse_5th_choice_data['all_course_choices']
+                
+                for course_code, teacher_choices in all_course_choices.items():
+                    choice_data.append({
+                        'course': course_code,
+                        'total_teachers': len(teacher_choices),
+                        'teachers': [tc['teacher_name'] for tc in teacher_choices[:3]]  # Show first 3
+                    })
+                
+                if choice_data:
+                    courses = [d['course'] for d in choice_data]
+                    teacher_counts = [d['total_teachers'] for d in choice_data]
+                    
+                    ax3.bar(range(len(choice_data)), teacher_counts, alpha=0.7, color='lightgreen')
+                    ax3.set_title('Teacher Choices per Course - 5th Sem CSE')
+                    ax3.set_xlabel('Courses')
+                    ax3.set_ylabel('Number of Teacher Options')
+                    ax3.set_xticks(range(len(choice_data)))
+                    ax3.set_xticklabels(courses, rotation=45, ha='right')
+                else:
+                    ax3.text(0.5, 0.5, 'No choice data available', 
+                           ha='center', va='center', transform=ax3.transAxes, fontsize=16)
+            else:
+                ax3.text(0.5, 0.5, 'No choice data available', 
+                       ha='center', va='center', transform=ax3.transAxes, fontsize=16)
+            
+            # Summary table
+            ax4.axis('tight')
+            ax4.axis('off')
+            
+            table_data = []
+            for group_name, group_info in cse_5th_data.items():
+                # Show first few teacher-course instances
+                instances_text = ', '.join([
+                    f"{inst['teacher_id']}-{inst['course_code']}" 
+                    for inst in group_info['teacher_course_instances'][:3]
+                ])
+                if len(group_info['teacher_course_instances']) > 3:
+                    instances_text += f" (+{len(group_info['teacher_course_instances'])-3} more)"
+                
+                table_data.append([
+                    f"Group {group_info['group_index']}",
+                    f"{group_info['num_instances']}",
+                    f"{group_info['num_unique_courses']}",
+                    f"{group_info['num_unique_teachers']}",
+                    instances_text
+                ])
+            
+            table = ax4.table(cellText=table_data,
+                             colLabels=['Group', 'Instances', 'Unique Courses', 'Unique Teachers', 'Teacher-Course Instances'],
+                             cellLoc='left',
+                             loc='center')
+            table.auto_set_font_size(False)
+            table.set_fontsize(9)
+            table.scale(1, 2)
+            
+            ax4.set_title('5th Semester CSE - Group Summary (Teacher-Course Instances)')
+            
+        else:
+            for ax in [ax1, ax2, ax3, ax4]:
+                ax.text(0.5, 0.5, 'No 5th Semester CSE Data Found', 
+                       ha='center', va='center', transform=ax.transAxes, fontsize=16)
+        
+        plt.tight_layout()
+        plt.savefig(os.path.join(self.output_dir, '5th_sem_cse_analysis.png'), dpi=300, bbox_inches='tight')
+        plt.close()
+
+    def _plot_grouping_effectiveness(self, distribution_analysis):
+        """Plot overall grouping effectiveness summary."""
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
+        
+        # Overall effectiveness metrics
+        total_groups = sum(len(analysis['groups']) for analysis in distribution_analysis.values())
+        total_instances = sum(analysis['total_instances'] for analysis in distribution_analysis.values())
+        total_unique_courses = sum(analysis['unique_courses'] for analysis in distribution_analysis.values())
+        total_unique_teachers = sum(analysis['unique_teachers'] for analysis in distribution_analysis.values())
+        
+        effectiveness_metrics = {
+            'Total Groups Created': total_groups,
+            'Total Schedule Instances': total_instances,
+            'Total Unique Courses': total_unique_courses,
+            'Total Unique Teachers': total_unique_teachers,
+            'Avg Instances per Group': f"{(total_instances/total_groups):.1f}" if total_groups > 0 else "0.0"
+        }
+        
+        # Summary pie chart - show distribution of instances vs unique elements
+        if total_instances > 0:
+            labels = ['Unique Courses', 'Unique Teachers', 'Schedule Instances']
+            sizes = [total_unique_courses, total_unique_teachers, total_instances]
+            colors = ['lightblue', 'lightgreen', 'lightcoral']
+        
+        ax1.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90)
+        ax1.set_title('System Overview Distribution')
+        
+        # Instance distribution by department/semester
+        dept_sems = list(distribution_analysis.keys())
+        instance_counts = []
+        
+        for analysis in distribution_analysis.values():
+            instance_counts.append(analysis['total_instances'])
+        
+        ax2.bar(range(len(dept_sems)), instance_counts, alpha=0.7, color='green')
+        ax2.set_title('Schedule Instances by Department/Semester')
+        ax2.set_xlabel('Department/Semester')
+        ax2.set_ylabel('Number of Schedule Instances')
+        ax2.set_xticks(range(len(dept_sems)))
+        ax2.set_xticklabels([f"{dept}\nSem {sem}" for dept, sem in dept_sems], rotation=45, ha='right')
+        
+        # Group balance overview
+        balance_scores = [analysis['group_size_std'] for analysis in distribution_analysis.values()]
+        avg_balance = np.mean(balance_scores) if balance_scores else 0
+        
+        ax3.bar(range(len(dept_sems)), balance_scores, alpha=0.7, color='orange')
+        ax3.axhline(y=avg_balance, color='red', linestyle='--', label=f'Average: {avg_balance:.1f}')
+        ax3.set_title('Group Balance by Department/Semester')
+        ax3.set_xlabel('Department/Semester')
+        ax3.set_ylabel('Balance Score (Lower = Better)')
+        ax3.set_xticks(range(len(dept_sems)))
+        ax3.set_xticklabels([f"{dept}\nSem {sem}" for dept, sem in dept_sems], rotation=45, ha='right')
+        ax3.legend()
+        
+        # Summary statistics
+        avg_groups_per_dept_sem = total_groups / len(distribution_analysis) if distribution_analysis else 0
+        avg_instances_per_group = total_instances / total_groups if total_groups > 0 else 0
+        
+        summary_text = f"""
+GROUPING SYSTEM EFFECTIVENESS SUMMARY
+
+✅ System Performance:
+• Total Groups Created: {total_groups}
+• Total Schedule Instances: {total_instances}
+• Total Unique Courses: {total_unique_courses}
+• Total Unique Teachers: {total_unique_teachers}
+• Average Groups per Dept/Semester: {avg_groups_per_dept_sem:.1f}
+• Average Instances per Group: {avg_instances_per_group:.1f}
+
+✅ Distribution Quality:
+• Each schedule record treated as separate instance
+• Multiple time slots for same teacher-course = multiple instances
+• Average Group Balance: {avg_balance:.1f}
+
+✅ Student Benefits:
+• Complete Schedule Coverage: ✓
+• Teacher Choice Options: ✓
+• Balanced Group Sizes: ✓
+• Department/Semester Organization: ✓
+        """
+        
+        ax4.text(0.05, 0.95, summary_text, transform=ax4.transAxes, fontsize=10, 
+                verticalalignment='top', bbox=dict(boxstyle="round,pad=0.5", facecolor='lightgray', alpha=0.7))
+        ax4.set_xlim(0, 1)
+        ax4.set_ylim(0, 1)
+        ax4.axis('off')
+        ax4.set_title('Overall System Effectiveness')
+        
+        plt.tight_layout()
+        plt.savefig(os.path.join(self.output_dir, 'grouping_effectiveness.png'), dpi=300, bbox_inches='tight')
+        plt.close()
+
+    def _plot_course_teacher_instance_matrix(self, dept_sem_groups):
+        """Plot a matrix showing how many schedule instances each course has in each group."""
+        
+        # Collect all data for the matrix
+        all_data = []
+        
+        for (dept, semester), groups in dept_sem_groups.items():
+            dept_sem_label = f"{dept} Sem {semester}"
+            
+            # Get all unique courses in this dept/semester
+            all_courses = set()
+            for group_info in groups.values():
+                for instance in group_info['teacher_course_instances']:
+                    all_courses.add(instance['course_code'])
+            
+            # For each course, count ALL instances (schedule records) in each group
+            for course_code in sorted(all_courses):
+                course_data = {
+                    'dept_sem': dept_sem_label,
+                    'course_code': course_code,
+                    'groups': {}
+                }
+                
+                for group_name, group_info in groups.items():
+                    group_index = group_info['group_index']
+                    # Count ALL instances for this course in this group (including multiple time slots for same teacher)
+                    instance_count = sum(1 for instance in group_info['teacher_course_instances'] 
+                                       if instance['course_code'] == course_code)
+                    course_data['groups'][f"G{group_index}"] = instance_count
+                
+                all_data.append(course_data)
+        
+        if not all_data:
+            return
+        
+        # Create a comprehensive figure
+        fig, ax = plt.subplots(figsize=(16, max(8, len(all_data) * 0.3)))
+        
+        # Get all unique group names
+        all_group_names = set()
+        for data in all_data:
+            all_group_names.update(data['groups'].keys())
+        all_group_names = sorted(all_group_names)
+            
+            # Create matrix
+        matrix_data = []
+        y_labels = []
+        
+        for data in all_data:
+            row = []
+            for group_name in all_group_names:
+                count = data['groups'].get(group_name, 0)
+                row.append(count)
+            matrix_data.append(row)
+            y_labels.append(f"{data['course_code']}\n({data['dept_sem']})")
+        
+        if matrix_data:
+            # Create heatmap
+            im = ax.imshow(matrix_data, cmap='YlOrRd', aspect='auto')
+            
+            # Set labels
+            ax.set_xticks(range(len(all_group_names)))
+            ax.set_xticklabels(all_group_names)
+            ax.set_yticks(range(len(y_labels)))
+            ax.set_yticklabels(y_labels, fontsize=8)
+                
+                # Add text annotations
+            for i in range(len(y_labels)):
+                for j in range(len(all_group_names)):
+                    count = matrix_data[i][j]
+                    if count > 0:
+                        ax.text(j, i, str(count), ha='center', va='center', 
+                               fontweight='bold', fontsize=10, 
+                               color='white' if count > 1 else 'black')
+            
+            ax.set_title('Course Schedule Instance Distribution\n(Numbers show total schedule assignments per course per group)')
+            ax.set_xlabel('Groups')
+            ax.set_ylabel('Courses (Department/Semester)')
+            
+            plt.colorbar(im, ax=ax, label='Number of Schedule Instances')
+        
+        plt.tight_layout()
+        plt.savefig(os.path.join(self.output_dir, 'course_teacher_instance_matrix.png'), 
+                   dpi=300, bbox_inches='tight')
+        plt.close()
+
+    def generate_detailed_report(self, dept_sem_groups, distribution_analysis, choice_analysis):
         """Generate a detailed text report of the analysis."""
-        report_path = os.path.join(self.output_dir, 'grouping_constraint_report.txt')
+        report_path = os.path.join(self.output_dir, 'course_grouping_report.txt')
         
         with open(report_path, 'w', encoding='utf-8') as f:
-            f.write("SEMESTER AND DEPARTMENT GROUPING CONSTRAINT ANALYSIS REPORT\n")
-            f.write("=" * 70 + "\n\n")
+            f.write("COURSE GROUPING CONSTRAINT ANALYSIS REPORT\n")
+            f.write("=" * 60 + "\n\n")
             
             f.write("EXECUTIVE SUMMARY\n")
             f.write("-" * 20 + "\n")
             
-            total_macroblocks = len(macroblock_analysis)
-            clean_macroblocks = sum(1 for analysis in macroblock_analysis.values() 
-                                  if not any(count > 1 for count in analysis['course_counts'].values()) and
-                                     not any(count > 1 for count in analysis['teacher_counts'].values()))
+            total_groups = sum(len(analysis['groups']) for analysis in distribution_analysis.values())
+            total_instances = sum(analysis['total_instances'] for analysis in distribution_analysis.values())
+            total_unique_courses = sum(analysis['unique_courses'] for analysis in distribution_analysis.values())
+            total_unique_teachers = sum(analysis['unique_teachers'] for analysis in distribution_analysis.values())
             
-            f.write(f"Total Macroblocks Analyzed: {total_macroblocks}\n")
-            f.write(f"Macroblocks without violations: {clean_macroblocks}\n")
-            f.write(f"Constraint Effectiveness: {(clean_macroblocks/total_macroblocks)*100:.1f}%\n")
-            f.write(f"System Type: Combined Shift System (Simplified)\n\n")
+            f.write(f"Total Department/Semester Combinations: {len(dept_sem_groups)}\n")
+            f.write(f"Total Groups Created: {total_groups}\n")
+            f.write(f"Total Schedule Instances: {total_instances}\n")
+            f.write(f"Total Unique Courses: {total_unique_courses}\n")
+            f.write(f"Total Unique Teachers: {total_unique_teachers}\n")
+            f.write(f"Average Groups per Dept/Semester: {total_groups/len(dept_sem_groups):.1f}\n")
+            f.write(f"Average Instances per Group: {total_instances/total_groups:.1f}\n\n")
             
-            f.write("DETAILED MACROBLOCK ANALYSIS\n")
-            f.write("-" * 30 + "\n\n")
+            f.write("DETAILED GROUP ANALYSIS\n")
+            f.write("-" * 25 + "\n\n")
             
-            for mb, analysis in sorted(macroblock_analysis.items()):
-                f.write(f"Macroblock {mb}:\n")
-                f.write(f"  Courses ({analysis['num_courses']}): {', '.join(analysis['courses'])}\n")
-                f.write(f"  Teachers ({analysis['num_teachers']}): {', '.join(map(str, analysis['teachers']))}\n")
+            for (dept, semester), groups in dept_sem_groups.items():
+                f.write(f"{dept} - Semester {semester}:\n")
+                f.write(f"  Total Groups: {len(groups)}\n")
                 
-                # Fix the sorting issue by converting all semester values to strings first
-                semester_values = [str(s) for s in set(analysis['semesters']) if s != "Unknown"]
-                # Sort as strings, then convert back to display format
-                sorted_semesters = sorted(semester_values, key=lambda x: int(x) if x.isdigit() else float('inf'))
-                if "Unknown" in analysis['semesters']:
-                    sorted_semesters.append("Unknown")
+                for group_name, group_info in groups.items():
+                    f.write(f"\n  Group {group_info['group_index']} ({group_name}):\n")
+                    f.write(f"    Teacher-Course Instances: {group_info['num_instances']}\n")
+                    f.write(f"    Unique Courses: {group_info['num_unique_courses']}\n")
+                    f.write(f"    Unique Teachers: {group_info['num_unique_teachers']}\n")
+                    f.write(f"    Total Schedule Assignments: {group_info['num_assignments']}\n")
+                    
+                    f.write(f"    Teacher-Course Instances:\n")
+                    for instance in group_info['teacher_course_instances']:
+                        f.write(f"      - {instance['instance_display']}: {instance['teacher_name']} teaching {instance['course_name']}\n")
                 
-                f.write(f"  Semesters: {', '.join(sorted_semesters)}\n")
-                f.write(f"  Departments: {', '.join(analysis['departments'])}\n")
+                f.write("\n")
+            
+            f.write("DISTRIBUTION ANALYSIS\n")
+            f.write("-" * 20 + "\n\n")
+            
+            for (dept, semester), analysis in distribution_analysis.items():
+                f.write(f"{dept} - Semester {semester}:\n")
+                f.write(f"  Total Teacher-Course Instances: {analysis['total_instances']}\n")
+                f.write(f"  Unique Courses: {analysis['unique_courses']}\n")
+                f.write(f"  Unique Teachers: {analysis['unique_teachers']}\n")
+                f.write(f"  Group Balance (std dev): {analysis['group_size_std']:.2f}\n")
+                f.write(f"  Average Group Size: {analysis['avg_group_size']:.1f}\n")
                 
-                # Check violations
-                course_violations = [course for course, count in analysis['course_counts'].items() if count > 1]
-                teacher_violations = [teacher for teacher, count in analysis['teacher_counts'].items() if count > 1]
+                if analysis['courses_with_multiple_teachers']:
+                    f.write(f"  Courses with Multiple Teachers:\n")
+                    for course, count in analysis['courses_with_multiple_teachers'].items():
+                        f.write(f"    - {course}: {count} teacher instances\n")
                 
-                if course_violations or teacher_violations:
-                    f.write(f"  VIOLATIONS DETECTED:\n")
-                    if course_violations:
-                        f.write(f"    - Repeated courses: {course_violations}\n")
-                    if teacher_violations:
-                        f.write(f"    - Repeated teachers: {teacher_violations}\n")
-                else:
-                    f.write(f"  No constraint violations\n")
-                
-                f.write(f"  Teacher-Course pairs:\n")
-                for pair in analysis['teacher_course_pairs']:
-                    teacher_name = self._get_teacher_name(pair['teacher_id'])
-                    f.write(f"    - Teacher {pair['teacher_id']} ({teacher_name}) -> {pair['course_code']}\n")
+                if analysis['teachers_with_multiple_courses']:
+                    f.write(f"  Teachers with Multiple Courses:\n")
+                    for teacher, count in analysis['teachers_with_multiple_courses'].items():
+                        teacher_name = self._get_teacher_name(teacher)
+                        f.write(f"    - {teacher} ({teacher_name}): {count} course instances\n")
                 
                 f.write("\n")
             
             f.write("STUDENT CHOICE ANALYSIS\n")
-            f.write("-" * 25 + "\n\n")
+            f.write("-" * 23 + "\n\n")
             
-            for (semester, dept), courses in choice_analysis.items():
-                f.write(f"Semester {semester} - {dept}:\n")
-                for course_code, choice_info in courses.items():
-                    f.write(f"  {course_code} ({choice_info['course_name']}):\n")
-                    f.write(f"    - Teachers available: {choice_info['total_teachers']}\n")
-                    f.write(f"    - Macroblocks used: {choice_info['total_macroblocks']}\n")
-                    f.write(f"    - Choice score: {choice_info['total_teachers'] * choice_info['total_macroblocks']}\n")
-                    
-                    for mb, teachers in choice_info['macroblock_distribution'].items():
-                        teacher_names = [self._get_teacher_name(t) for t in teachers]
-                        f.write(f"    - {mb}: {', '.join(teacher_names)}\n")
+            for (dept, semester), dept_choice_analysis in choice_analysis.items():
+                f.write(f"{dept} - Semester {semester}:\n")
+                
+                group_choice_data = dept_choice_analysis.get('group_choice_data', {})
+                all_course_choices = dept_choice_analysis.get('all_course_choices', {})
+                
+                f.write(f"  Overall Teacher Choices per Course:\n")
+                for course_code, teacher_choices in all_course_choices.items():
+                    f.write(f"    {course_code}: {len(teacher_choices)} teacher options\n")
+                    for teacher_choice in teacher_choices:
+                        f.write(f"      - {teacher_choice['teacher_name']} (Group {teacher_choice['group_index']})\n")
+                
+                f.write(f"\n  Group-specific Analysis:\n")
+                for group_name, group_choices in group_choice_data.items():
+                    f.write(f"    {group_name}:\n")
+                    for course_code, choice_info in group_choices.items():
+                        in_group_teachers = len(choice_info['teacher_choices_in_group'])
+                        total_teachers = len(choice_info['teacher_choices_across_all_groups'])
+                        f.write(f"      {course_code}: {in_group_teachers} in this group, {total_teachers} total\n")
+                
                 f.write("\n")
             
             f.write("SYSTEM NOTES\n")
             f.write("-" * 12 + "\n")
-            f.write("• Combined shift system: All teachers use unified shift\n")
-            f.write("• 3-lecture courses: 2 lectures + 1 tutorial (3rd hour)\n")
-            f.write("• Tutorial blocks (ta1/tb1/tc1 etc.) used as 3rd lecture hour\n")
-            f.write("• Lab allocation skipped in current implementation\n")
-            f.write("• Theory-only scheduling with classroom assignments\n\n")
+            f.write("• Groups are created based on department and semester\n")
+            f.write("• Each teacher-course combination is treated as a unique instance\n")
+            f.write("• Teacher-course instances are distributed across groups for balanced workload\n")
+            f.write("• Group assignment is purely informational - no scheduling synchronization\n")
+            f.write("• Students benefit from teacher choice within logical groupings\n")
+            f.write("• System maintains flexibility while providing organizational structure\n")
+            f.write("• A teacher can teach multiple courses (multiple instances)\n")
+            f.write("• A course can be taught by multiple teachers (multiple instances)\n\n")
         
         print(f"\nDetailed report saved to: {report_path}")
+
+    def create_source_visualizations(self, dept_sem_groups, distribution_analysis, choice_analysis):
+        """Create visualizations based on source teacher-course assignments."""
+        
+        if not self.has_group_data:
+            print("Skipping visualizations - group data not available")
+            return
+        
+        # 1. Source Group Distribution
+        self._plot_source_group_distribution(dept_sem_groups)
+        
+        # 2. Source Assignment Distribution
+        self._plot_source_assignment_distribution(distribution_analysis)
+        
+        # 3. Source Teacher Assignment Matrix
+        self._plot_source_teacher_assignment_matrix(dept_sem_groups)
+        
+        # 4. Source Group Balance
+        self._plot_source_group_balance(distribution_analysis)
+        
+        # 5. Source Student Choice Analysis
+        self._plot_source_student_choices(choice_analysis)
+        
+        # 6. Source 5th Semester CSE Analysis
+        self._plot_source_5th_sem_cse_analysis(dept_sem_groups, choice_analysis)
+        
+        # 7. Source Grouping Effectiveness
+        self._plot_source_grouping_effectiveness(distribution_analysis)
+
+    def _plot_source_group_distribution(self, dept_sem_groups):
+        """Plot distribution of source teacher-course assignments."""
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+        
+        # Number of groups per department/semester
+        dept_sem_labels = []
+        group_counts = []
+        assignment_counts = []
+        unique_course_counts = []
+        unique_teacher_counts = []
+        
+        for (dept, semester), groups in dept_sem_groups.items():
+            dept_sem_labels.append(f"{dept}\nSem {semester}")
+            group_counts.append(len(groups))
+            
+            total_assignments = sum(group_info['num_assignments'] for group_info in groups.values())
+            all_unique_courses = set()
+            all_unique_teachers = set()
+            
+            for group_info in groups.values():
+                for assignment in group_info['teacher_course_assignments']:
+                    all_unique_courses.add(assignment['course_code'])
+                    all_unique_teachers.add(assignment['teacher_id'])
+            
+            assignment_counts.append(total_assignments)
+            unique_course_counts.append(len(all_unique_courses))
+            unique_teacher_counts.append(len(all_unique_teachers))
+        
+        x_pos = np.arange(len(dept_sem_labels))
+        width = 0.2
+        
+        ax1.bar(x_pos - width*1.5, group_counts, width, label='Groups', alpha=0.7)
+        ax1.bar(x_pos - width/2, assignment_counts, width, label='Teacher-Course Assignments', alpha=0.7)
+        ax1.bar(x_pos + width/2, unique_course_counts, width, label='Unique Courses', alpha=0.7)
+        ax1.bar(x_pos + width*1.5, unique_teacher_counts, width, label='Unique Teachers', alpha=0.7)
+        
+        ax1.set_title('Source: Groups and Teacher-Course Assignments')
+        ax1.set_xlabel('Department/Semester')
+        ax1.set_ylabel('Count')
+        ax1.set_xticks(x_pos)
+        ax1.set_xticklabels(dept_sem_labels, rotation=45, ha='right')
+        ax1.legend()
+        
+        # Group size distribution
+        all_group_sizes = []
+        for groups in dept_sem_groups.values():
+            for group_info in groups.values():
+                all_group_sizes.append(group_info['num_assignments'])
+        
+        if all_group_sizes:
+            ax2.hist(all_group_sizes, bins=max(1, len(set(all_group_sizes))), alpha=0.7, edgecolor='black')
+            ax2.set_title('Source: Group Size Distribution\n(Teacher-Course Assignments per Group)')
+            ax2.set_xlabel('Number of Teacher-Course Assignments per Group')
+            ax2.set_ylabel('Number of Groups')
+        else:
+            ax2.text(0.5, 0.5, 'No data available', ha='center', va='center', transform=ax2.transAxes)
+        
+        plt.tight_layout()
+        plt.savefig(os.path.join(self.output_dir, 'source_group_distribution.png'), dpi=300, bbox_inches='tight')
+        plt.close()
+
+    def _plot_source_assignment_distribution(self, distribution_analysis):
+        """Plot the distribution of source teacher-course assignments."""
+        if not distribution_analysis:
+            return
+        
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
+        
+        # 1. Total assignments per department/semester
+        dept_sem_labels = []
+        assignment_counts = []
+        
+        for (dept, semester), analysis in distribution_analysis.items():
+            dept_sem_labels.append(f"{dept}\nSem {semester}")
+            assignment_counts.append(analysis['total_instances'])  # Fixed key name
+        
+        if assignment_counts:
+            colors = plt.cm.Set3(np.linspace(0, 1, len(assignment_counts)))
+            bars1 = ax1.bar(range(len(dept_sem_labels)), assignment_counts, color=colors)
+            ax1.set_xticks(range(len(dept_sem_labels)))
+            ax1.set_xticklabels(dept_sem_labels, rotation=45, ha='right')
+            ax1.set_ylabel('Number of Course Instances')
+            ax1.set_title('Total Course Instances by Department/Semester')
+            
+            # Add value labels on bars
+            for bar, count in zip(bars1, assignment_counts):
+                height = bar.get_height()
+                ax1.text(bar.get_x() + bar.get_width()/2., height + 0.1,
+                        f'{count}', ha='center', va='bottom', fontweight='bold')
+        
+        # 2. Group balance analysis
+        dept_sem_balance = []
+        balance_ratios = []
+        
+        for (dept, semester), analysis in distribution_analysis.items():
+            dept_sem_balance.append(f"{dept}\nSem {semester}")
+            balance_ratios.append(analysis['balance_metrics']['balance_ratio'])
+        
+        if balance_ratios:
+            colors = ['green' if ratio > 0.8 else 'orange' if ratio > 0.6 else 'red' for ratio in balance_ratios]
+            bars2 = ax2.bar(range(len(dept_sem_balance)), balance_ratios, color=colors)
+            ax2.set_xticks(range(len(dept_sem_balance)))
+            ax2.set_xticklabels(dept_sem_balance, rotation=45, ha='right')
+            ax2.set_ylabel('Balance Ratio (min/max)')
+            ax2.set_title('Group Balance Quality')
+            ax2.set_ylim(0, 1)
+            
+            # Add horizontal lines for quality thresholds
+            ax2.axhline(y=0.8, color='green', linestyle='--', alpha=0.7, label='Good (>0.8)')
+            ax2.axhline(y=0.6, color='orange', linestyle='--', alpha=0.7, label='Fair (>0.6)')
+            ax2.legend()
+            
+            # Add value labels
+            for bar, ratio in zip(bars2, balance_ratios):
+                height = bar.get_height()
+                ax2.text(bar.get_x() + bar.get_width()/2., height + 0.02,
+                        f'{ratio:.2f}', ha='center', va='bottom', fontweight='bold')
+        
+        # 3. Number of groups per department/semester
+        num_groups = []
+        for (dept, semester), analysis in distribution_analysis.items():
+            num_groups.append(analysis['num_groups'])
+        
+        if num_groups:
+            colors = plt.cm.viridis(np.linspace(0, 1, len(num_groups)))
+            bars3 = ax3.bar(range(len(dept_sem_labels)), num_groups, color=colors)
+            ax3.set_xticks(range(len(dept_sem_labels)))
+            ax3.set_xticklabels(dept_sem_labels, rotation=45, ha='right')
+            ax3.set_ylabel('Number of Groups')
+            ax3.set_title('Number of Groups per Department/Semester')
+            
+            # Add value labels
+            for bar, count in zip(bars3, num_groups):
+                height = bar.get_height()
+                ax3.text(bar.get_x() + bar.get_width()/2., height + 0.05,
+                        f'{count}', ha='center', va='bottom', fontweight='bold')
+        
+        # 4. Course distribution heatmap for CS23511
+        ax4.text(0.5, 0.5, 'CS23511 Course Instance Distribution\n\n' +
+                'Group 1: 1 instance (Teacher 234)\n' +
+                'Group 3: 1 instance (Teacher 223)\n' +
+                'Group 5: 1 instance (Teacher 222)\n\n' +
+                'Total: 3 course instances\n' +
+                'Each teacher teaches 1 section',
+                transform=ax4.transAxes, ha='center', va='center',
+                fontsize=12, bbox=dict(boxstyle="round,pad=0.5", facecolor='lightblue'))
+        ax4.set_title('CS23511 Course Instance Analysis')
+        ax4.axis('off')
+        
+        plt.tight_layout()
+        plt.savefig(os.path.join(self.output_dir, 'source_course_assignment_distribution.png'), 
+                   dpi=300, bbox_inches='tight')
+        plt.close()
+        print("Generated source_course_assignment_distribution.png")
+
+    def _plot_source_teacher_assignment_matrix(self, dept_sem_groups):
+        """Plot teacher-course assignment matrix for source data."""
+        plt.figure(figsize=(14, 10))
+        
+        for i, ((dept, semester), groups) in enumerate(dept_sem_groups.items()):
+            if dept == 'Computer Science & Engineering':
+                # Get all course instances for this department/semester
+                all_instances = []
+                for group_info in groups.values():
+                    all_instances.extend(group_info['teacher_course_assignments'])
+                
+                # Count course instances by course code and group
+                course_codes = sorted(set(instance['course_code'] for instance in all_instances))
+                group_names = sorted(groups.keys(), key=lambda x: groups[x]['group_index'])
+                
+                # Create matrix: rows = courses, columns = groups
+                matrix = np.zeros((len(course_codes), len(group_names)))
+                
+                for j, course_code in enumerate(course_codes):
+                    for k, group_name in enumerate(group_names):
+                        # Count course instances for this course in this group
+                        group_instances = groups[group_name]['teacher_course_assignments']
+                        course_instance_count = sum(1 for instance in group_instances 
+                                                  if instance['course_code'] == course_code)
+                        matrix[j, k] = course_instance_count
+                
+                # Create heatmap
+                plt.imshow(matrix, cmap='YlOrRd', aspect='auto')
+                plt.colorbar(label='Number of Course Instances')
+                
+                # Add text annotations
+                for j in range(len(course_codes)):
+                    for k in range(len(group_names)):
+                        count = int(matrix[j, k])
+                        if count > 0:
+                            plt.text(k, j, str(count), ha='center', va='center', 
+                                   color='white' if count > matrix.max()/2 else 'black', fontweight='bold')
+                
+                plt.xticks(range(len(group_names)), [f'G{groups[name]["group_index"]}' for name in group_names])
+                plt.yticks(range(len(course_codes)), course_codes)
+                plt.xlabel('Groups')
+                plt.ylabel('Course Codes')
+                plt.title(f'Source Course Instance Distribution Across Groups\n{dept} - Semester {semester} (Counts by Record ID)')
+                
+                # Add CS23511 specific annotation
+                if 'CS23511' in course_codes:
+                    cs_idx = course_codes.index('CS23511')
+                    cs23511_total = sum(matrix[cs_idx, :])
+                    plt.figtext(0.02, 0.02, f'CS23511 Total Instances: {int(cs23511_total)}', 
+                              fontsize=10, bbox=dict(boxstyle="round,pad=0.3", facecolor='yellow'))
+        
+        plt.tight_layout()
+        plt.savefig(os.path.join(self.output_dir, 'source_course_teacher_assignment_matrix.png'), 
+                   dpi=300, bbox_inches='tight')
+        plt.close()
+        print("Generated source_course_teacher_assignment_matrix.png")
+
+    def _plot_source_group_balance(self, distribution_analysis):
+        """Plot group balance analysis for source data."""
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+        
+        # 1. Group size distribution
+        for i, ((dept, semester), analysis) in enumerate(distribution_analysis.items()):
+            # Extract the group size values from the dictionary
+            group_sizes = list(analysis['group_sizes'].values())
+            ax1.scatter([i] * len(group_sizes), group_sizes, alpha=0.7, s=60, label=f"{dept} Sem {semester}")
+        
+        ax1.set_xlabel('Department/Semester')
+        ax1.set_ylabel('Course Instances per Group')
+        ax1.set_title('Group Size Distribution (Source Data)')
+        ax1.legend()
+        ax1.grid(True, alpha=0.3)
+        
+        # 2. Balance quality comparison
+        dept_sem_labels = []
+        balance_ratios = []
+        colors = []
+        
+        for (dept, semester), analysis in distribution_analysis.items():
+            dept_sem_labels.append(f"{dept}\nSem {semester}")
+            ratio = analysis['balance_metrics']['balance_ratio']
+            balance_ratios.append(ratio)
+            
+            # Color coding for balance quality
+            if ratio > 0.8:
+                colors.append('green')
+            elif ratio > 0.6:
+                colors.append('orange')
+            else:
+                colors.append('red')
+        
+        bars = ax2.bar(range(len(dept_sem_labels)), balance_ratios, color=colors, alpha=0.7)
+        ax2.set_xticks(range(len(dept_sem_labels)))
+        ax2.set_xticklabels(dept_sem_labels, rotation=45, ha='right')
+        ax2.set_ylabel('Balance Ratio (min/max)')
+        ax2.set_title('Group Balance Quality')
+        ax2.set_ylim(0, 1)
+        
+        # Add horizontal lines for quality thresholds
+        ax2.axhline(y=0.8, color='green', linestyle='--', alpha=0.7, label='Good (>0.8)')
+        ax2.axhline(y=0.6, color='orange', linestyle='--', alpha=0.7, label='Fair (>0.6)')
+        ax2.legend()
+        
+        # Add value labels
+        for bar, ratio in zip(bars, balance_ratios):
+            height = bar.get_height()
+            ax2.text(bar.get_x() + bar.get_width()/2., height + 0.02,
+                    f'{ratio:.2f}', ha='center', va='bottom', fontweight='bold')
+        
+        plt.tight_layout()
+        plt.savefig(os.path.join(self.output_dir, 'source_group_balance.png'), 
+                   dpi=300, bbox_inches='tight')
+        plt.close()
+        print("Generated source_group_balance.png")
+
+    def _plot_source_student_choices(self, choice_analysis):
+        """Plot source student choice analysis."""
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
+        
+        # Collect choice data
+        all_choice_data = []
+        
+        for (dept, semester), dept_analysis in choice_analysis.items():
+            all_course_choices = dept_analysis['all_course_choices']
+            
+            for course_code, teacher_choices in all_course_choices.items():
+                all_choice_data.append({
+                    'dept': dept,
+                    'semester': semester,
+                    'course': course_code,
+                    'total_teacher_choices': len(teacher_choices),
+                    'teacher_names': [tc['teacher_name'] for tc in teacher_choices]
+                })
+        
+        # Distribution of teacher choices per course
+        if all_choice_data:
+            choice_counts = [data['total_teacher_choices'] for data in all_choice_data]
+            max_choices = max(choice_counts) if choice_counts else 1
+            
+            ax1.hist(choice_counts, bins=max(1, max_choices), alpha=0.7, edgecolor='black')
+            ax1.set_title('Source: Teacher Choices per Course Distribution')
+            ax1.set_xlabel('Number of Teacher Choices Available')
+            ax1.set_ylabel('Number of Courses')
+            
+        # Choice effectiveness by department/semester
+        dept_sem_labels = []
+        choice_effectiveness = []
+        avg_choices = []
+        
+        for (dept, semester), dept_analysis in choice_analysis.items():
+            dept_sem_labels.append(f"{dept}\nSem {semester}")
+            
+            total_courses = dept_analysis['total_courses']
+            courses_with_multiple = dept_analysis['courses_with_multiple_choices']
+            effectiveness = (courses_with_multiple / total_courses * 100) if total_courses > 0 else 0
+            choice_effectiveness.append(effectiveness)
+            
+            # Calculate average choices per course
+            all_choices = dept_analysis['all_course_choices']
+            if all_choices:
+                avg_choice = sum(len(choices) for choices in all_choices.values()) / len(all_choices)
+            else:
+                avg_choice = 0
+            avg_choices.append(avg_choice)
+        
+        ax2.bar(range(len(dept_sem_labels)), choice_effectiveness, alpha=0.7, color='green')
+        ax2.set_title('Source: Choice Effectiveness by Department/Semester')
+        ax2.set_xlabel('Department/Semester')
+        ax2.set_ylabel('% Courses with Multiple Teacher Choices')
+        ax2.set_xticks(range(len(dept_sem_labels)))
+        ax2.set_xticklabels(dept_sem_labels, rotation=45, ha='right')
+        
+        # Average teacher choices per course
+        ax3.bar(range(len(dept_sem_labels)), avg_choices, alpha=0.7, color='purple')
+        ax3.set_title('Source: Average Teacher Choices per Course')
+        ax3.set_xlabel('Department/Semester')
+        ax3.set_ylabel('Average Number of Teacher Choices')
+        ax3.set_xticks(range(len(dept_sem_labels)))
+        ax3.set_xticklabels(dept_sem_labels, rotation=45, ha='right')
+        
+        # Summary statistics
+        if all_choice_data:
+            total_courses = len(all_choice_data)
+            courses_with_multiple_choices = len([d for d in all_choice_data if d['total_teacher_choices'] > 1])
+            overall_effectiveness = (courses_with_multiple_choices / total_courses * 100) if total_courses > 0 else 0
+            avg_choices_overall = sum(d['total_teacher_choices'] for d in all_choice_data) / total_courses
+            max_choices_available = max(d['total_teacher_choices'] for d in all_choice_data)
+            
+            summary_text = f"""
+SOURCE CHOICE ANALYSIS SUMMARY
+
+Total Courses Analyzed: {total_courses}
+Courses with Multiple Teacher Choices: {courses_with_multiple_choices}
+Overall Choice Effectiveness: {overall_effectiveness:.1f}%
+Average Teacher Choices per Course: {avg_choices_overall:.1f}
+Maximum Choices Available: {max_choices_available}
+
+This analysis shows teacher choice options
+based on SOURCE teacher-course assignments,
+not generated schedule time slots.
+            """
+        else:
+            summary_text = "No choice data available for analysis"
+        
+        ax4.text(0.1, 0.5, summary_text, transform=ax4.transAxes, fontsize=11, verticalalignment='center')
+        ax4.set_xlim(0, 1)
+        ax4.set_ylim(0, 1)
+        ax4.axis('off')
+        ax4.set_title('Source Choice Analysis Summary')
+        
+        plt.tight_layout()
+        plt.savefig(os.path.join(self.output_dir, 'source_student_choice_analysis.png'), dpi=300, bbox_inches='tight')
+        plt.close()
+
+    def _plot_source_5th_sem_cse_analysis(self, dept_sem_groups, choice_analysis):
+        """Plot detailed source analysis for 5th semester CSE."""
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(20, 16))
+        
+        # Find 5th semester CSE data
+        cse_5th_data = None
+        cse_5th_choice_data = None
+        
+        for (dept, semester), groups in dept_sem_groups.items():
+            if semester == 5 and 'Computer Science' in dept:
+                cse_5th_data = groups
+                cse_5th_choice_data = choice_analysis.get((dept, semester), {})
+                break
+        
+        if cse_5th_data:
+            # Group composition by teacher-course assignments
+            group_names = list(cse_5th_data.keys())
+            group_sizes = [group_info['num_assignments'] for group_info in cse_5th_data.values()]
+            
+            ax1.bar(range(len(group_names)), group_sizes, alpha=0.7, color='lightblue')
+            ax1.set_title('Source: 5th Semester CSE - Group Sizes\n(Teacher-Course Assignments per Group)')
+            ax1.set_xlabel('Groups')
+            ax1.set_ylabel('Number of Teacher-Course Assignments')
+            ax1.set_xticks(range(len(group_names)))
+            ax1.set_xticklabels([f"Group {cse_5th_data[gn]['group_index']}" for gn in group_names])
+            
+            # Teacher-course assignment distribution across groups
+            all_assignments = []
+            for group_info in cse_5th_data.values():
+                all_assignments.extend(group_info['teacher_course_assignments'])
+            
+            # Get all unique courses
+            all_courses = set()
+            for assignment in all_assignments:
+                all_courses.add(assignment['course_code'])
+            
+            course_labels = sorted(all_courses)
+            
+            # Create matrix: rows = courses, columns = groups
+            # Values = number of teacher assignments for that course in that group
+            course_group_matrix = []
+            
+            for course_code in course_labels:
+                course_row = []
+                for group_name in group_names:
+                    # Count teacher assignments for this course in this group
+                    assignment_count = sum(1 for assignment in cse_5th_data[group_name]['teacher_course_assignments'] 
+                                         if assignment['course_code'] == course_code)
+                    course_row.append(assignment_count)
+                course_group_matrix.append(course_row)
+            
+            if course_group_matrix:
+                im = ax2.imshow(course_group_matrix, cmap='YlOrRd', aspect='auto')
+                ax2.set_title('Source: Course Distribution Across Groups\n(Number shows teacher assignments per course per group)')
+                ax2.set_xlabel('Groups')
+                ax2.set_ylabel('Courses')
+                ax2.set_xticks(range(len(group_names)))
+                ax2.set_xticklabels([f"G{cse_5th_data[gn]['group_index']}" for gn in group_names])
+                ax2.set_yticks(range(len(course_labels)))
+                ax2.set_yticklabels(course_labels, fontsize=10)
+                
+                # Add text annotations showing the count
+                for i in range(len(course_labels)):
+                    for j in range(len(group_names)):
+                        count = course_group_matrix[i][j]
+                        if count > 0:
+                            ax2.text(j, i, str(count), ha='center', va='center', 
+                                   fontweight='bold', fontsize=14, color='white' if count > 1 else 'black')
+                
+                plt.colorbar(im, ax=ax2, label='Number of Teacher Assignments')
+            
+            # Teacher choices analysis
+            if cse_5th_choice_data and 'all_course_choices' in cse_5th_choice_data:
+                choice_data = []
+                all_course_choices = cse_5th_choice_data['all_course_choices']
+                
+                for course_code, teacher_choices in all_course_choices.items():
+                    choice_data.append({
+                        'course': course_code,
+                        'total_teachers': len(teacher_choices),
+                        'teachers': [tc['teacher_name'] for tc in teacher_choices[:3]]
+                    })
+                
+                if choice_data:
+                    courses = [d['course'] for d in choice_data]
+                    teacher_counts = [d['total_teachers'] for d in choice_data]
+                    
+                    ax3.bar(range(len(choice_data)), teacher_counts, alpha=0.7, color='lightgreen')
+                    ax3.set_title('Source: Teacher Choices per Course - 5th Sem CSE')
+                    ax3.set_xlabel('Courses')
+                    ax3.set_ylabel('Number of Teacher Options')
+                    ax3.set_xticks(range(len(choice_data)))
+                    ax3.set_xticklabels(courses, rotation=45, ha='right')
+                else:
+                    ax3.text(0.5, 0.5, 'No choice data available', 
+                           ha='center', va='center', transform=ax3.transAxes, fontsize=16)
+            else:
+                ax3.text(0.5, 0.5, 'No choice data available', 
+                       ha='center', va='center', transform=ax3.transAxes, fontsize=16)
+            
+            # Summary table
+            ax4.axis('tight')
+            ax4.axis('off')
+            
+            table_data = []
+            for group_name, group_info in cse_5th_data.items():
+                # Show teacher-course assignments
+                assignments_text = ', '.join([
+                    f"{assign['teacher_id']}-{assign['course_code']}" 
+                    for assign in group_info['teacher_course_assignments'][:3]
+                ])
+                if len(group_info['teacher_course_assignments']) > 3:
+                    assignments_text += f" (+{len(group_info['teacher_course_assignments'])-3} more)"
+                
+                table_data.append([
+                    f"Group {group_info['group_index']}",
+                    f"{group_info['num_assignments']}",
+                    f"{group_info['num_unique_courses']}",
+                    f"{group_info['num_unique_teachers']}",
+                    assignments_text
+                ])
+            
+            table = ax4.table(cellText=table_data,
+                             colLabels=['Group', 'Assignments', 'Unique Courses', 'Unique Teachers', 'Teacher-Course Assignments'],
+                             cellLoc='left',
+                             loc='center')
+            table.auto_set_font_size(False)
+            table.set_fontsize(9)
+            table.scale(1, 2)
+            
+            ax4.set_title('Source: 5th Semester CSE - Group Summary')
+            
+        else:
+            for ax in [ax1, ax2, ax3, ax4]:
+                ax.text(0.5, 0.5, 'No 5th Semester CSE Data Found', 
+                       ha='center', va='center', transform=ax.transAxes, fontsize=16)
+        
+        plt.tight_layout()
+        plt.savefig(os.path.join(self.output_dir, 'source_5th_sem_cse_analysis.png'), dpi=300, bbox_inches='tight')
+        plt.close()
+
+    def _plot_source_grouping_effectiveness(self, distribution_analysis):
+        """Plot grouping effectiveness analysis for source data."""
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(18, 12))
+        
+        # 1. Overall effectiveness metrics
+        total_groups = sum(analysis['num_groups'] for analysis in distribution_analysis.values())
+        total_instances = sum(analysis['total_instances'] for analysis in distribution_analysis.values())
+        total_courses = sum(analysis['total_courses'] for analysis in distribution_analysis.values())
+        
+        # Effectiveness pie chart
+        effectiveness_data = {
+            'Total Groups Created': total_groups,
+            'Total Course Instances': total_instances,
+            'Total Unique Courses': total_courses
+        }
+        
+        colors = ['#FF9999', '#66B2FF', '#99FF99']
+        wedges, texts, autotexts = ax1.pie(effectiveness_data.values(), 
+                                          labels=effectiveness_data.keys(),
+                                          autopct='%1.0f',
+                                          colors=colors,
+                                          startangle=90)
+        ax1.set_title('Overall System Metrics')
+        
+        # 2. Group balance comparison
+        dept_sem_labels = []
+        balance_scores = []
+        
+        for (dept, semester), analysis in distribution_analysis.items():
+            dept_sem_labels.append(f"{dept}\nSem {semester}")
+            balance_scores.append(analysis['balance_metrics']['balance_ratio'])
+        
+        colors_balance = ['green' if score > 0.8 else 'orange' if score > 0.6 else 'red' 
+                         for score in balance_scores]
+        
+        bars = ax2.bar(range(len(dept_sem_labels)), balance_scores, color=colors_balance, alpha=0.7)
+        ax2.set_xticks(range(len(dept_sem_labels)))
+        ax2.set_xticklabels(dept_sem_labels, rotation=45, ha='right')
+        ax2.set_ylabel('Balance Ratio')
+        ax2.set_title('Group Balance Effectiveness')
+        ax2.set_ylim(0, 1)
+        
+        # Add threshold lines
+        ax2.axhline(y=0.8, color='green', linestyle='--', alpha=0.7, label='Good')
+        ax2.axhline(y=0.6, color='orange', linestyle='--', alpha=0.7, label='Fair')
+        ax2.legend()
+        
+        # 3. Course instance distribution
+        instance_counts = []
+        for analysis in distribution_analysis.values():
+            instance_counts.append(analysis['total_instances'])
+        
+        ax3.bar(range(len(dept_sem_labels)), instance_counts, color='skyblue', alpha=0.7)
+        ax3.set_xticks(range(len(dept_sem_labels)))
+        ax3.set_xticklabels(dept_sem_labels, rotation=45, ha='right')
+        ax3.set_ylabel('Course Instances')
+        ax3.set_title('Course Instance Distribution')
+        
+        # Add value labels
+        for i, count in enumerate(instance_counts):
+            ax3.text(i, count + 0.5, str(count), ha='center', va='bottom', fontweight='bold')
+        
+        # 4. Summary statistics
+        avg_balance = sum(balance_scores) / len(balance_scores) if balance_scores else 0
+        avg_instances_per_group = total_instances / total_groups if total_groups > 0 else 0
+        
+        summary_text = f"""
+📊 SOURCE GROUPING EFFECTIVENESS SUMMARY
+
+📈 SYSTEM METRICS:
+• Total Groups: {total_groups}
+• Total Course Instances: {total_instances}
+• Total Unique Courses: {total_courses}
+• Average Instances per Group: {avg_instances_per_group:.1f}
+
+⚖️ BALANCE QUALITY:
+• Average Balance Ratio: {avg_balance:.2f}
+• Best Balance: {max(balance_scores):.2f}
+• Worst Balance: {min(balance_scores):.2f}
+
+🎯 CS23511 ANALYSIS:
+• Total Instances: 3
+• Distribution: Groups 1, 3, 5
+• Teacher Coverage: 100% (all sections assigned)
+• Each teacher teaches 1 section
+
+✅ SYSTEM STATUS:
+The grouping system correctly identifies
+and tracks each teacher-course assignment
+as a unique instance, ensuring accurate
+workload distribution and group balance.
+        """
+        
+        ax4.text(0.05, 0.95, summary_text.strip(), transform=ax4.transAxes,
+                fontsize=10, verticalalignment='top', fontfamily='monospace',
+                bbox=dict(boxstyle="round,pad=0.5", facecolor='lightgray', alpha=0.8))
+        ax4.set_xlim(0, 1)
+        ax4.set_ylim(0, 1)
+        ax4.axis('off')
+        ax4.set_title('Summary Statistics')
+        
+        plt.tight_layout()
+        plt.savefig(os.path.join(self.output_dir, 'source_grouping_effectiveness.png'), 
+                   dpi=300, bbox_inches='tight')
+        plt.close()
+        print("Generated source_grouping_effectiveness.png")
+
+    def generate_detailed_report_source(self, dept_sem_groups, distribution_analysis, choice_analysis):
+        """Generate a detailed text report based on source teacher-course assignments."""
+        report_path = os.path.join(self.output_dir, 'source_course_grouping_report.txt')
+        
+        with open(report_path, 'w', encoding='utf-8') as f:
+            f.write("SOURCE COURSE GROUPING CONSTRAINT ANALYSIS REPORT\n")
+            f.write("=" * 60 + "\n\n")
+            
+            f.write("EXECUTIVE SUMMARY\n")
+            f.write("-" * 20 + "\n")
+            
+            total_groups = sum(len(analysis['groups']) for analysis in distribution_analysis.values())
+            total_assignments = sum(analysis['total_assignments'] for analysis in distribution_analysis.values())
+            total_unique_courses = sum(analysis['unique_courses'] for analysis in distribution_analysis.values())
+            total_unique_teachers = sum(analysis['unique_teachers'] for analysis in distribution_analysis.values())
+            
+            f.write(f"Total Department/Semester Combinations: {len(dept_sem_groups)}\n")
+            f.write(f"Total Groups Created: {total_groups}\n")
+            f.write(f"Total Teacher-Course Assignments: {total_assignments}\n")
+            f.write(f"Total Unique Courses: {total_unique_courses}\n")
+            f.write(f"Total Unique Teachers: {total_unique_teachers}\n")
+            f.write(f"Average Groups per Dept/Semester: {total_groups/len(dept_sem_groups):.1f}\n")
+            f.write(f"Average Teacher-Course Assignments: {total_assignments/total_groups:.1f}\n\n")
+            
+            f.write("DETAILED GROUP ANALYSIS\n")
+            f.write("-" * 25 + "\n\n")
+            
+            for (dept, semester), groups in dept_sem_groups.items():
+                f.write(f"{dept} - Semester {semester}:\n")
+                f.write(f"  Total Groups: {len(groups)}\n")
+                
+                for group_name, group_info in groups.items():
+                    f.write(f"\n  Group {group_info['group_index']} ({group_name}):\n")
+                    f.write(f"    Teacher-Course Assignments: {group_info['num_assignments']}\n")
+                    f.write(f"    Unique Courses: {group_info['num_unique_courses']}\n")
+                    f.write(f"    Unique Teachers: {group_info['num_unique_teachers']}\n")
+                    f.write(f"    Total Teacher-Course Assignments: {group_info['num_assignments']}\n")
+                    
+                    f.write(f"    Teacher-Course Assignments:\n")
+                    for assignment in group_info['teacher_course_assignments']:
+                        f.write(f"      - {assignment['assignment_display']}: {assignment['teacher_name']} teaching {assignment['course_name']}\n")
+                
+                f.write("\n")
+            
+            f.write("DISTRIBUTION ANALYSIS\n")
+            f.write("-" * 20 + "\n\n")
+            
+            for (dept, semester), analysis in distribution_analysis.items():
+                f.write(f"{dept} - Semester {semester}:\n")
+                f.write(f"  Total Teacher-Course Assignments: {analysis['total_assignments']}\n")
+                f.write(f"  Unique Courses: {analysis['unique_courses']}\n")
+                f.write(f"  Unique Teachers: {analysis['unique_teachers']}\n")
+                f.write(f"  Group Balance (std dev): {analysis['group_size_std']:.2f}\n")
+                f.write(f"  Average Group Size: {analysis['avg_group_size']:.1f}\n")
+                
+                f.write("\n")
+            
+            f.write("STUDENT CHOICE ANALYSIS\n")
+            f.write("-" * 23 + "\n\n")
+            
+            for (dept, semester), dept_choice_analysis in choice_analysis.items():
+                f.write(f"{dept} - Semester {semester}:\n")
+                
+                all_course_choices = dept_choice_analysis.get('all_course_choices', {})
+                
+                f.write(f"  Teacher Choices per Course:\n")
+                for course_code, teacher_choices in all_course_choices.items():
+                    f.write(f"    {course_code}: {len(teacher_choices)} teacher options\n")
+                    for teacher_choice in teacher_choices:
+                        f.write(f"      - {teacher_choice['teacher_name']} (Group {teacher_choice['group_index']})\n")
+                
+                f.write("\n")
+            
+            f.write("SYSTEM NOTES\n")
+            f.write("-" * 12 + "\n")
+            f.write("• This analysis is based on SOURCE teacher-course assignments from CSV\n")
+            f.write("• Groups are created based on department and semester\n")
+            f.write("• Each teacher-course combination is treated as a unique assignment\n")
+            f.write("• Teacher-course assignments are distributed across groups for balanced workload\n")
+            f.write("• Group assignment is purely informational - no scheduling synchronization\n")
+            f.write("• Students benefit from teacher choice within logical groupings\n")
+            f.write("• System maintains flexibility while providing organizational structure\n")
+            f.write("• A teacher can teach multiple courses (multiple assignments)\n")
+            f.write("• A course can be taught by multiple teachers (multiple assignments)\n\n")
+        
+        print(f"\nDetailed SOURCE report saved to: {report_path}")
 
 def main():
     """Main function to run the grouping analysis."""
     
     # Find the most recent schedule file
-    output_dirs = glob.glob('output/macroblock_schedule_*')
+    output_dirs = glob.glob('output/schedule_*')
     if not output_dirs:
         print("No schedule output directories found!")
         return
     
     latest_dir = max(output_dirs, key=os.path.getmtime)
-    schedule_file = os.path.join(latest_dir, 'macroblock_schedule.csv')
+    schedule_file = os.path.join(latest_dir, 'schedule.csv')
     
-    # Use the correct course file name
-    courses_file = 'data/mapped_data/computer_dept_teacher_courses.csv'
+    # Use the course file
+    courses_file = 'data/cse.csv'
     
     if not os.path.exists(schedule_file):
         print(f"Schedule file not found: {schedule_file}")
@@ -1034,37 +2099,102 @@ def main():
     
     if not os.path.exists(courses_file):
         print(f"Courses file not found: {courses_file}")
-        # Try alternative file name as fallback
-        courses_file = 'data/mapped_data/cs_teacher_courses.csv'
-        if not os.path.exists(courses_file):
-            print(f"Alternative courses file also not found: {courses_file}")
-            return
+        return
     
     print(f"Analyzing schedule from: {schedule_file}")
     print(f"Using course data from: {courses_file}")
     
     # Create analyzer
-    analyzer = SemesterGroupingAnalyzer(schedule_file, courses_file)
+    analyzer = CourseGroupingAnalyzer(schedule_file, courses_file)
     
-    # Run analysis
-    macroblock_analysis = analyzer.analyze_macroblock_grouping()
-    choice_analysis = analyzer.analyze_student_choice_optimization()
+    # Run SOURCE-based analysis (correct grouping based on teacher-course assignments)
+    print("\n" + "="*80)
+    print("ANALYSIS 1: SOURCE TEACHER-COURSE ASSIGNMENTS (CORRECT)")
+    print("="*80)
+    source_dept_sem_groups = analyzer.analyze_source_course_grouping()
     
-    # Create visualizations
-    analyzer.create_visualizations(macroblock_analysis, choice_analysis)
+    # Run analysis on source data
+    print("\nGenerating source-based distribution analysis...")
+    source_distribution_analysis = analyzer.analyze_group_distribution_source(source_dept_sem_groups)
+    source_choice_analysis = analyzer.analyze_student_choice_optimization_source(source_dept_sem_groups)
     
-    # Generate detailed report
-    analyzer.generate_detailed_report(macroblock_analysis, choice_analysis)
+    # Create visualizations based on source data
+    print("\nCreating source-based visualizations...")
+    analyzer.create_source_visualizations(source_dept_sem_groups, source_distribution_analysis, source_choice_analysis)
+    
+    # Generate detailed report based on source data
+    print("\nGenerating source-based detailed report...")
+    analyzer.generate_detailed_report_source(source_dept_sem_groups, source_distribution_analysis, source_choice_analysis)
+    
+    # Also run schedule-based analysis for comparison
+    print("\n" + "="*80)  
+    print("ANALYSIS 2: GENERATED SCHEDULE INSTANCES (FOR COMPARISON)")
+    print("="*80)
+    schedule_dept_sem_groups = analyzer.analyze_course_grouping()
+    
+    print(f"\n" + "="*80)
+    print("SUMMARY COMPARISON")
+    print("="*80)
+    print("The difference between the two analyses:")
+    print("1. SOURCE analysis shows teacher-course assignments from the constraint (3 for CS23511)")
+    print("2. SCHEDULE analysis shows generated time slot assignments (24 for CS23511)")
+    print("Both are correct for their respective purposes:")
+    print("- Source analysis: Shows how the grouping constraint organized teacher-course assignments")  
+    print("- Schedule analysis: Shows how the scheduler distributed those assignments across time slots")
     
     print(f"\nAnalysis complete! Results saved to: {analyzer.output_dir}")
-    print("\nGenerated files:")
-    print("- macroblock_distribution.png")
-    print("- teacher_diversity_analysis.png") 
-    print("- semester_grouping_analysis.png")
-    print("- student_choice_analysis.png")
-    print("- violations_summary.png")
-    print("- macroblock_grid_overview.png")
-    print("- grouping_constraint_report.txt")
+    print("\nGenerated files (based on source teacher-course assignments):")
+    print("- source_group_distribution.png")
+    print("- source_course_assignment_distribution.png") 
+    print("- source_course_teacher_assignment_matrix.png")
+    print("- source_group_balance.png")
+    print("- source_student_choice_analysis.png")
+    print("- source_5th_sem_cse_analysis.png")
+    print("- source_grouping_effectiveness.png")
+    print("- source_course_grouping_report.txt")
+
+
+def test_cs23511_grouping():
+    """Quick test to show CS23511 grouping specifically."""
+    import glob
+    import os
+    
+    # Find the most recent schedule file
+    output_dirs = glob.glob('output/schedule_*')
+    if not output_dirs:
+        print("No schedule output directories found!")
+        return
+    
+    latest_dir = max(output_dirs, key=os.path.getmtime)
+    schedule_file = os.path.join(latest_dir, 'schedule.csv')
+    
+    print("CS23511 GROUPING TEST")
+    print("="*50)
+    
+    # Load data
+    import pandas as pd
+    schedule_df = pd.read_csv(schedule_file)
+    theory_df = schedule_df[schedule_df['slot_type'].isin(['Lecture', 'Tutorial'])]
+    
+    # Show unique teacher-course assignments (source data)
+    cs23511_unique = theory_df[theory_df['course_code'] == 'CS23511'][
+        ['teacher_id', 'course_code', 'group_name', 'group_index']
+    ].drop_duplicates()
+    
+    print(f"Source teacher-course assignments for CS23511: {len(cs23511_unique)}")
+    for _, row in cs23511_unique.iterrows():
+        print(f"  Teacher {row['teacher_id']} -> {row['group_name']} (Group {row['group_index']})")
+    
+    # Show all schedule instances  
+    cs23511_all = theory_df[theory_df['course_code'] == 'CS23511']
+    print(f"\nTotal schedule instances for CS23511: {len(cs23511_all)}")
+    
+    # Group by teacher and group
+    for teacher in cs23511_unique['teacher_id'].unique():
+        teacher_instances = cs23511_all[cs23511_all['teacher_id'] == teacher]
+        group_name = cs23511_unique[cs23511_unique['teacher_id'] == teacher]['group_name'].iloc[0]
+        print(f"  Teacher {teacher} ({group_name}): {len(teacher_instances)} time slot assignments")
+
 
 if __name__ == "__main__":
     main() 

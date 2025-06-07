@@ -77,14 +77,9 @@ now implement this constraint in scheduling theory and tutorial hour for each se
 now implement this constraint from the @fifth_semester_grouping.py hall logic distribution in scheduling theory and tutorial hour for each sem and dept grouping in a new file in @constraint folder
 keep this in consideration 
 1) the point is to group course in the basis of hall distribution soo that all student can select all the courses for that sem with min of 1 min comibnation for the last student also ensuring every can select the required course for each sem
-2) courses instance in a group for  that sem scheduled should not overlap with other group course instance in that sem which will enable student select different course from different group in that sem, but courses instance within the same group can overlap and runned parallel
-3) the grouping is for each sem and dept right, the grouping (all group in that sem) can overlap with other sem or dept but with respect to teacher constraint
+
 4) make sure adequate lecuture and tutorial hours are allocated
 
 
 
-
-1) group teacher course instance in multiple group according to the number course in the basis of sem and dept and allocate all the course instance in the group in same timing 
-Example if 5th sem cse has 5 course
-then group it in 5 group in equal course instance distribution all the course instance inside a group should be scheduled in same timing according to lecure and tutorial some will have more lecture hour and some dont have tutorial hour and some have so dont make it as a very hard constraint just make sure the course instance in a group doesnt overlap with other group course instance
-implement them if it is constraint then in  
+seems lot of variable why not just find optimal 4 slots for a group rather than giving all to the model if we just get the 4 slots for a group in the current given constraint without violating any course instance in group can be scheduled even in the postprocessing parallely according to their lecture and tutorial hour

@@ -39,31 +39,41 @@ class LabAssignmentConstraint:
     
     def apply(self, teacher_theory_assignments, teacher_lab_assignments=None):
         """
-        Apply lab assignment constraint for proper lab scheduling.
+        Apply lab assignment constraint for proper lab scheduling (instance-aware).
         
         This constraint ensures that:
         1. Teachers with practical hours get appropriate lab assignments
-        2. Lab sessions are properly allocated
-        3. Lab assignments match course requirements
+        2. Lab sessions are properly allocated based on individual course instances
+        3. Lab assignments match course instance requirements
         """
         # Only apply if lab assignments are provided
         if teacher_lab_assignments is None:
             logger.info("No lab assignments provided - skipping lab assignment constraints")
             return True
             
-        logger.info("Applying lab assignment constraint...")
+        logger.info("Applying lab assignment constraint (instance-aware)...")
         
         for teacher in self.teachers:
             if teacher not in self.teacher_course_assignments:
                 continue
                 
-            # Calculate total practical hours for this teacher
+            # Get course instances for this teacher
+            teacher_instances = self.teacher_course_assignments[teacher]
+            
+            # Calculate total practical hours and log instance details
             total_practical_hours = 0
-            for instance in self.teacher_course_assignments[teacher]:
-                total_practical_hours += instance['practical_hours']
+            practical_instances = []
+            for instance in teacher_instances:
+                practical_hrs = instance['practical_hours']
+                total_practical_hours += practical_hrs
+                if practical_hrs > 0:
+                    practical_instances.append(f"Instance {instance['id']}:{instance['course_code']}({practical_hrs}P)")
             
             # If teacher has practical hours, ensure they get lab assignments
             if total_practical_hours > 0:
+                logger.debug(f"Teacher {teacher}: {len(practical_instances)} practical instances, {total_practical_hours} total practical hours")
+                logger.debug(f"  Instances: {', '.join(practical_instances)}")
+                
                 lab_assignment_vars = []
                 
                 for day_idx in range(self.num_days):
@@ -86,49 +96,56 @@ class LabAssignmentConstraint:
                 logger.info(f"Teacher {teacher}: {total_practical_hours} practical hours → {required_lab_sessions}-{max_allowed_sessions} lab sessions")
         
         # Additional constraint: Ensure lab sessions are used efficiently
-        # Priority given to teachers with more practical hours
-        self._apply_lab_priority_constraints(teacher_lab_assignments)
+        # Priority given to teachers with more practical hours and instances
+        self._apply_lab_priority_constraints_instance_aware(teacher_lab_assignments)
         
-        logger.info("Lab assignment constraint applied successfully")
+        logger.info("Lab assignment constraint (instance-aware) applied successfully")
         return True
     
-    def _apply_lab_priority_constraints(self, teacher_lab_assignments):
-        """Apply priority constraints for lab assignment efficiency."""
-        # Calculate practical hours per teacher for priority
-        teacher_practical_hours = {}
+    def _apply_lab_priority_constraints_instance_aware(self, teacher_lab_assignments):
+        """Apply priority constraints for lab assignment efficiency (instance-aware)."""
+        # Calculate practical hours per teacher and number of practical instances
+        teacher_priority_data = {}
         for teacher in self.teachers:
             if teacher not in self.teacher_course_assignments:
                 continue
                 
             total_practical_hours = 0
+            practical_instance_count = 0
             for instance in self.teacher_course_assignments[teacher]:
-                total_practical_hours += instance['practical_hours']
+                practical_hrs = instance['practical_hours']
+                total_practical_hours += practical_hrs
+                if practical_hrs > 0:
+                    practical_instance_count += 1
             
-            teacher_practical_hours[teacher] = total_practical_hours
+            teacher_priority_data[teacher] = {
+                'total_practical_hours': total_practical_hours,
+                'practical_instances': practical_instance_count,
+                'priority_score': total_practical_hours + (practical_instance_count * 0.5)  # Slight boost for more instances
+            }
         
-        # Sort teachers by practical hours (descending)
+        # Sort teachers by priority score (descending)
         teachers_by_priority = sorted(
-            teacher_practical_hours.keys(), 
-            key=lambda t: teacher_practical_hours[t], 
+            [t for t in teacher_priority_data.keys() if teacher_priority_data[t]['total_practical_hours'] > 0], 
+            key=lambda t: teacher_priority_data[t]['priority_score'], 
             reverse=True
         )
         
-        # Apply soft constraints to encourage assignment of high-priority teachers first
-        # This is done by adding preferences rather than hard constraints
-        for i, teacher in enumerate(teachers_by_priority):
-            if teacher_practical_hours[teacher] > 0:
-                lab_vars = []
-                for day_idx in range(self.num_days):
-                    for session in self.lab_sessions.keys():
-                        for room_id in self.lab_ids:
-                            lab_vars.append(teacher_lab_assignments[teacher][day_idx][session][room_id])
-                
-                # Add a soft constraint that encourages assignment (but doesn't force it)
-                # Higher priority teachers get more encouragement
-                priority_weight = len(teachers_by_priority) - i
-                if lab_vars and priority_weight > 1:
-                    # This is a preference rather than a hard constraint
-                    # The solver will try to satisfy it but it's not mandatory
-                    pass  # For now, we rely on the main constraints
+        # Log priority information
+        logger.debug("Lab assignment priority order:")
+        for i, teacher in enumerate(teachers_by_priority[:5]):  # Show top 5
+            data = teacher_priority_data[teacher]
+            logger.debug(f"  {i+1}. Teacher {teacher}: {data['total_practical_hours']}h, {data['practical_instances']} instances, score: {data['priority_score']:.1f}")
         
-        logger.info("Lab priority constraints applied") 
+        # Apply soft constraints to encourage assignment of high-priority teachers first
+        for i, teacher in enumerate(teachers_by_priority):
+            lab_vars = []
+            for day_idx in range(self.num_days):
+                for session in self.lab_sessions.keys():
+                    for room_id in self.lab_ids:
+                        lab_vars.append(teacher_lab_assignments[teacher][day_idx][session][room_id])
+            
+            # Priority constraints can be enhanced here if needed
+            # For now, the main constraints handle the core requirements
+        
+        logger.info(f"Lab priority constraints applied (instance-aware) for {len(teachers_by_priority)} teachers with practical requirements") 

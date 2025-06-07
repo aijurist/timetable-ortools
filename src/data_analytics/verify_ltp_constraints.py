@@ -5,92 +5,58 @@ from collections import defaultdict
 def verify_ltp_constraints():
     """Verify that LTP constraints are satisfied for all courses with updated batching logic."""
     
-    # Load course requirements - try both possible file names
-    course_files = [
-        # "data/mapped_data/computer_dept_teacher_courses.csv",
-        # "data/mapped_data/cs_teacher_courses.csv",
-        "data/cse.csv"
-    ]
+    # Load course requirements
+    course_file = "data/cse.csv"
     
-    course_file = None
-    for file_path in course_files:
-        if os.path.exists(file_path):
-            course_file = file_path
-            break
-    
-    if not course_file:
-        print(f"Course file not found. Tried: {course_files}")
+    if not os.path.exists(course_file):
+        print(f"Course file not found: {course_file}")
         return False
     
     print(f"Using course file: {course_file}")
     courses_df = pd.read_csv(course_file)
     
-    # Find the latest schedule
+    # Find the latest schedule from current implementation
     output_dir = "output"
     if not os.path.exists(output_dir):
         print("No output directory found!")
         return False
     
-    # Find theory schedule
-    theory_folders = [f for f in os.listdir(output_dir) if f.startswith("macroblock_schedule_")]
-    if not theory_folders:
-        print("No macroblock schedule found!")
+    # Find schedule folders with format: schedule_YYYYMMDD_HHMMSS
+    schedule_folders = [f for f in os.listdir(output_dir) if f.startswith("schedule_")]
+    if not schedule_folders:
+        print("No schedule folders found!")
         return False
         
-    latest_theory_folder = max(theory_folders)
-    print(f"Latest theory folder: {latest_theory_folder}")
-    theory_schedule_file = os.path.join(output_dir, latest_theory_folder, "macroblock_schedule.csv")
-    print(f"Theory schedule file: {theory_schedule_file}")
+    latest_schedule_folder = max(schedule_folders)
+    print(f"Latest schedule folder: {latest_schedule_folder}")
     
-    if not os.path.exists(theory_schedule_file):
-        print(f"Theory schedule file not found: {theory_schedule_file}")
+    # Look for main schedule file
+    schedule_file = os.path.join(output_dir, latest_schedule_folder, "schedule.csv")
+    print(f"Schedule file: {schedule_file}")
+    
+    if not os.path.exists(schedule_file):
+        print(f"Schedule file not found: {schedule_file}")
         return False
     
-    theory_schedule_df = pd.read_csv(theory_schedule_file)
+    # Load the main schedule
+    schedule_df = pd.read_csv(schedule_file)
+    print(f"Loaded schedule with {len(schedule_df)} assignments")
     
-    # Check for lab schedule
-    lab_folders = [f for f in os.listdir(output_dir) if f.startswith("lab_schedule_")]
-    lab_schedule_df = pd.DataFrame()
-    has_lab_schedule = False
+    # Check what types of assignments we have
+    slot_types = schedule_df['slot_type'].value_counts()
+    print(f"Assignment types found: {dict(slot_types)}")
     
-    if lab_folders:
-        latest_lab_folder = max(lab_folders)
-        print(f"Latest lab folder: {latest_lab_folder}")
-        
-        # Try different lab schedule file names
-        lab_file_candidates = [
-            "combined_theory_lab_schedule.csv",
-            "lab_schedule.csv"
-        ]
-        
-        for lab_file_name in lab_file_candidates:
-            lab_schedule_file = os.path.join(output_dir, latest_lab_folder, lab_file_name)
-            if os.path.exists(lab_schedule_file):
-                print(f"Lab schedule file: {lab_schedule_file}")
-                lab_schedule_df = pd.read_csv(lab_schedule_file)
-                has_lab_schedule = True
-                break
-        
-        if not has_lab_schedule:
-            print(f"Lab schedule files not found in {latest_lab_folder}")
-    
-    # Combine schedules if lab schedule exists
+    # Check if we have lab assignments
+    has_lab_schedule = 'Practical' in slot_types
     if has_lab_schedule:
-        # FIXED: Always combine latest theory with latest lab, don't rely on potentially outdated combined file
-        # Always use the latest theory schedule + latest lab schedule
-        schedule_df = pd.concat([theory_schedule_df, lab_schedule_df], ignore_index=True)
-        print(f"Using combined theory + lab schedule ({len(schedule_df)} total assignments)")
-        print(f"  - Theory assignments: {len(theory_schedule_df)}")
-        print(f"  - Lab assignments: {len(lab_schedule_df)}")
+        print(f"Lab assignments found: {slot_types.get('Practical', 0)}")
     else:
-        schedule_df = theory_schedule_df
-        print(f"Using theory schedule only ({len(schedule_df)} assignments)")
+        print("No lab assignments found - theory-only schedule")
     
-    print("LTP CONSTRAINT VERIFICATION (WITH ENHANCED BATCHING ANALYSIS)")
+    print("LTP CONSTRAINT VERIFICATION (CURRENT IMPLEMENTATION)")
     print("=" * 85)
     if has_lab_schedule:
-        print("Lab allocation found - evaluating practical hours with batching support")
-        print("Batching Logic: S1 B1/S1 B2 for courses split across multiple labs")
+        print("Lab allocation found - evaluating practical hours")
     else:
         print("Lab allocation not found - practical hours will be marked as missing")
     print("=" * 85)
@@ -145,7 +111,7 @@ def verify_ltp_constraints():
     
     # FIXED: Separate theory and lab counting to avoid double-counting
     # Count theory assignments ONLY from theory schedule
-    for _, row in theory_schedule_df.iterrows():
+    for _, row in schedule_df.iterrows():
         try:
             instance_id = str(int(float(row['course_instance_id'])))  # Handle float conversion issues
         except:
@@ -159,7 +125,7 @@ def verify_ltp_constraints():
     
     # Count lab assignments ONLY from lab schedule (if available)
     if has_lab_schedule:
-        for _, row in lab_schedule_df.iterrows():
+        for _, row in schedule_df[schedule_df['slot_type'] == 'Practical'].iterrows():
             try:
                 instance_id = str(int(float(row['course_instance_id'])))  # Handle float conversion issues
             except:
@@ -236,34 +202,9 @@ def verify_ltp_constraints():
             status = "❌ NOT SCHEDULED"
             not_scheduled += 1
         else:
-            # Determine expected tutorial hours based on the specific allocation rules
-            if lecture_required == 3 and tutorial_required == 0:
-                expected_lecture = 3  # 2 from a1 + 1 from ta1 (as lecture)
-                expected_tutorial = 0  # No tutorials
-            elif lecture_required == 3 and tutorial_required == 1:
-                expected_lecture = 3  # 2 from a1 + 1 from ta1 (as lecture)
-                expected_tutorial = 1  # 1 from taa1 (as tutorial)
-            elif lecture_required == 2 and tutorial_required == 1:
-                expected_lecture = 2  # 2 from a1 slots
-                expected_tutorial = 1  # 1 from ta1 (as tutorial)
-            elif lecture_required == 1 and tutorial_required == 1:
-                expected_lecture = 1  # 1 from a1 slot
-                expected_tutorial = 1  # 1 from ta1 (as tutorial)
-            elif lecture_required == 2 and tutorial_required == 0:
-                expected_lecture = 2  # 2 from a1 slots
-                expected_tutorial = 0  # No tutorials
-            elif lecture_required == 1 and tutorial_required == 0:
-                expected_lecture = 1  # 1 from a1 slot
-                expected_tutorial = 0  # No tutorials
-            elif lecture_required == 4:
-                expected_lecture = 4  # 4-lecture courses get all lecture hours
-                expected_tutorial = 1  # Plus 1 tutorial
-            elif tutorial_required > 0:
-                expected_lecture = lecture_required
-                expected_tutorial = tutorial_required
-            else:
-                expected_lecture = lecture_required
-                expected_tutorial = 0
+            # SIMPLIFIED: Use the exact lecture and tutorial hours from course data
+            expected_lecture = lecture_required
+            expected_tutorial = tutorial_required
             
             # Check compliance
             lecture_ok = lecture_scheduled == expected_lecture
@@ -290,37 +231,9 @@ def verify_ltp_constraints():
             tut_display = f"0/{tutorial_required if tutorial_required > 0 else '0'}"
             prac_display = f"{practical_scheduled}"
         else:
-            # Use the same logic as above for display consistency
-            if lecture_required == 3 and tutorial_required == 0:
-                display_expected_lecture = 3
-                display_expected_tutorial = 0
-            elif lecture_required == 3 and tutorial_required == 1:
-                display_expected_lecture = 3
-                display_expected_tutorial = 1
-            elif lecture_required == 2 and tutorial_required == 1:
-                display_expected_lecture = 2
-                display_expected_tutorial = 1
-            elif lecture_required == 1 and tutorial_required == 1:
-                display_expected_lecture = 1
-                display_expected_tutorial = 1
-            elif lecture_required == 2 and tutorial_required == 0:
-                display_expected_lecture = 2
-                display_expected_tutorial = 0
-            elif lecture_required == 1 and tutorial_required == 0:
-                display_expected_lecture = 1
-                display_expected_tutorial = 0
-            elif lecture_required == 4:
-                display_expected_lecture = 4
-                display_expected_tutorial = 1
-            elif tutorial_required > 0:
-                display_expected_lecture = lecture_required
-                display_expected_tutorial = tutorial_required
-            else:
-                display_expected_lecture = lecture_required
-                display_expected_tutorial = 0
-            
-            lec_display = f"{lecture_scheduled}/{display_expected_lecture}"
-            tut_display = f"{tutorial_scheduled}/{display_expected_tutorial}"
+            # SIMPLIFIED: Use exact requirements for display
+            lec_display = f"{lecture_scheduled}/{lecture_required}"
+            tut_display = f"{tutorial_scheduled}/{tutorial_required}"
             
             # Practical display - show actual hours (scheduled_hours/required_hours)
             if practical_required > 0 and has_lab_schedule:
@@ -988,8 +901,8 @@ def analyze_lab_efficiency(schedule_df, course_requirements):
         print(f"  {room} (Cap: {capacity}): {sessions}/30 sessions ({utilization:.1f}% utilization)")
     
     # Capacity distribution analysis
-    capacity_35_sessions = len(lab_data[lab_data.get('room_capacity', 0) <= 35])
-    capacity_70_sessions = len(lab_data[lab_data.get('room_capacity', 0) > 35])
+    capacity_35_sessions = len(lab_data[lab_data['room_capacity'].fillna(0) <= 35])
+    capacity_70_sessions = len(lab_data[lab_data['room_capacity'].fillna(0) > 35])
     
     print(f"\n🔢 CAPACITY DISTRIBUTION:")
     print(f"Sessions in 35-capacity labs: {capacity_35_sessions}")
@@ -997,7 +910,7 @@ def analyze_lab_efficiency(schedule_df, course_requirements):
     
     # Batching analysis
     if 'is_batched' in lab_data.columns:
-        batched_sessions = len(lab_data[lab_data.get('is_batched', False) == True])
+        batched_sessions = len(lab_data[lab_data['is_batched'].fillna(False) == True])
         print(f"Sessions using batching: {batched_sessions}")
     
     # Daily distribution

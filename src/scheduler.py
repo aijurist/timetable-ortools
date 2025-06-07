@@ -69,6 +69,29 @@ class TimetableScheduler:
         # Process teacher-course assignments
         self.process_teacher_courses()
         
+        # Initialize instance usage tracking for fair distribution
+        self.teacher_instance_usage = {}
+        # ENHANCED: Track lecture vs tutorial assignment counts per instance
+        self.instance_assignment_tracking = {}
+        
+        for teacher, assignments in self.teacher_course_assignments.items():
+            self.teacher_instance_usage[teacher] = {
+                'theory_instances': [inst for inst in assignments if inst['lecture_hours'] > 0 or inst['tutorial_hours'] > 0],
+                'lab_instances': [inst for inst in assignments if inst['practical_hours'] > 0],
+                'theory_index': 0,
+                'lab_index': 0
+            }
+            
+            # Track assignment counts for each instance
+            for instance in assignments:
+                instance_id = instance['id']
+                self.instance_assignment_tracking[instance_id] = {
+                    'lecture_required': instance['lecture_hours'],
+                    'tutorial_required': instance['tutorial_hours'],
+                    'lecture_assigned': 0,
+                    'tutorial_assigned': 0
+                }
+        
         # Create output directory
         self.output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
                                       'output', 
@@ -77,18 +100,40 @@ class TimetableScheduler:
     
     def process_teacher_courses(self):
         """Process the teacher-course assignments from the CSV data."""
-        # Filter out rows with Unknown teacher_id first
-        valid_courses_df = self.courses_df[self.courses_df['teacher_id'] != 'Unknown']
-        self.logger.info(f"Filtered out {len(self.courses_df) - len(valid_courses_df)} course assignments with 'Unknown' teacher_id")
+        import random
+        
+        # Assign random IDs to Unknown teachers
+        unknown_teacher_counter = 9000  # Start from 9000 to avoid conflicts
+        teacher_id_mapping = {}
+        
+        # First pass: create mapping for Unknown teachers
+        for idx, row in self.courses_df.iterrows():
+            if row['teacher_id'] == 'Unknown':
+                # Create a unique key based on row characteristics
+                unknown_key = f"Unknown_{row.get('course_code', '')}_{row.get('semester', '')}_{idx}"
+                if unknown_key not in teacher_id_mapping:
+                    teacher_id_mapping[unknown_key] = str(unknown_teacher_counter)
+                    unknown_teacher_counter += 1
+                    self.logger.info(f"Assigned Teacher ID {teacher_id_mapping[unknown_key]} to Unknown teacher for {row.get('course_code', 'Unknown Course')}")
+                
+                # Update the dataframe
+                self.courses_df.at[idx, 'teacher_id'] = teacher_id_mapping[unknown_key]
+                self.courses_df.at[idx, 'first_name'] = f"Unknown"
+                self.courses_df.at[idx, 'last_name'] = f"Teacher_{teacher_id_mapping[unknown_key]}"
+                self.courses_df.at[idx, 'staff_code'] = f"UNK{teacher_id_mapping[unknown_key]}"
+        
+        # Now all teachers have valid IDs - process normally
+        valid_courses_df = self.courses_df  # No need to filter anymore
+        self.logger.info(f"Processing all {len(valid_courses_df)} course assignments (including formerly Unknown teachers)")
         
         if valid_courses_df.empty:
-            self.logger.error("No valid teacher assignments found after filtering Unknown teachers")
-            raise ValueError("No valid teacher assignments available")
+            self.logger.error("No course assignments found")
+            raise ValueError("No course assignments available")
         
-        # Extract unique teachers (excluding Unknown)
+        # Extract unique teachers (now all have valid IDs)
         self.teachers = valid_courses_df['teacher_id'].unique()
         self.num_teachers = len(self.teachers)
-        self.logger.info(f"Processing {self.num_teachers} valid teachers")
+        self.logger.info(f"Processing {self.num_teachers} teachers (including {len(teacher_id_mapping)} formerly Unknown)")
         
         # Extract unique courses
         self.courses = valid_courses_df[['course_id', 'course_code', 'course_name']].drop_duplicates()
@@ -131,7 +176,8 @@ class TimetableScheduler:
             total_theory_hours = sum(a['lecture_hours'] + a['tutorial_hours'] for a in assignments)
             total_practical_hours = sum(a['practical_hours'] for a in assignments)
             dept = assignments[0].get('course_dept', 'Unknown') if assignments else 'Unknown'
-            self.logger.info(f"Teacher {teacher_id} ({dept}): {total_theory_hours} theory hours, {total_practical_hours} practical hours")
+            teacher_type = "Unknown Teacher" if int(teacher_id) >= 9000 else "Known Teacher"
+            self.logger.info(f"Teacher {teacher_id} ({teacher_type}, {dept}): {total_theory_hours} theory hours, {total_practical_hours} practical hours")
     
     def _analyze_departments(self, courses_df):
         """Analyze departments and their requirements for building block allocation."""
@@ -294,18 +340,10 @@ class TimetableScheduler:
                         teacher_theory_assignments[teacher][d][s][room_id] = model.NewBoolVar(
                             f'teacher_{teacher}_day_{d}_slot_{s}_classroom_{room_id}')
         
+        # TEMPORARILY DISABLED: Lab assignments
         # teacher_lab_assignments[t][d][session][r] = 1 if teacher t is assigned to lab r in session on day d
-        teacher_lab_assignments = {}
-        lab_ids = self.labs['id'].tolist()
-        for teacher in self.teachers:
-            teacher_lab_assignments[teacher] = {}
-            for d in range(self.num_days):
-                teacher_lab_assignments[teacher][d] = {}
-                for session in self.lab_sessions.keys():
-                    teacher_lab_assignments[teacher][d][session] = {}
-                    for room_id in lab_ids:
-                        teacher_lab_assignments[teacher][d][session][room_id] = model.NewBoolVar(
-                            f'teacher_{teacher}_day_{d}_labsession_{session}_lab_{room_id}')
+        teacher_lab_assignments = None
+        self.logger.info("Lab assignments temporarily disabled as requested")
         
         # Initialize constraints handler
         constraints = TimetableConstraints(
@@ -316,7 +354,10 @@ class TimetableScheduler:
             self.labs
         )
         
-        # Apply all constraints
+        # Store reference to constraints for later use in extraction
+        self.constraints = constraints
+        
+        # Apply all constraints (lab_assignments = None will skip lab constraints)
         constraints.apply_all_constraints(teacher_theory_assignments, teacher_lab_assignments)
         
         # Create the solver and solve the model
@@ -338,9 +379,9 @@ class TimetableScheduler:
         if status == cp_model.OPTIMAL:
             self.logger.info("Optimal solution found!")
             
-            # Extract assignments from CP-SAT solution
+            # Extract assignments from CP-SAT solution (no lab assignments)
             theory_assignments = self.extract_theory_assignments(solver, teacher_theory_assignments)
-            lab_assignments = self.extract_lab_assignments(solver, teacher_lab_assignments)
+            lab_assignments = []  # Empty list since lab assignments are disabled
             
             # Create detailed schedule
             schedule_result = self.create_detailed_schedule(theory_assignments, lab_assignments)
@@ -367,9 +408,9 @@ class TimetableScheduler:
         elif status == cp_model.FEASIBLE:
             self.logger.info("Feasible solution found!")
             
-            # Extract assignments from CP-SAT solution
+            # Extract assignments from CP-SAT solution (no lab assignments)
             theory_assignments = self.extract_theory_assignments(solver, teacher_theory_assignments)
-            lab_assignments = self.extract_lab_assignments(solver, teacher_lab_assignments)
+            lab_assignments = []  # Empty list since lab assignments are disabled
             
             # Create detailed schedule
             schedule_result = self.create_detailed_schedule(theory_assignments, lab_assignments)
@@ -394,9 +435,8 @@ class TimetableScheduler:
             
             return True
         elif status == cp_model.INFEASIBLE:
-            self.logger.error("Problem is infeasible - trying with further relaxed constraints...")
-            # Try with even more relaxed constraints
-            return self._try_relaxed_solution()
+            self.logger.error("Problem is infeasible - no solution possible with current constraints")
+            return False
         else:
             self.logger.warning(f"No solution found. Status: {status}")
             return False
@@ -405,120 +445,217 @@ class TimetableScheduler:
         """Extract theory assignments from CP-SAT solution."""
         theory_assignments = []
         
-        for teacher in self.teachers:
-            for day_idx, day in enumerate(self.days):
-                for slot_idx in range(self.num_slots):
-                    for room_id in self.classrooms['id'].tolist():
-                        if solver.Value(teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]) == 1:
-                            course_info = self._determine_assigned_course(teacher, 'theory')
-                            
-                            if course_info:
-                                theory_assignments.append({
-                                    'day': day,
-                                    'slot_index': slot_idx,
-                                    'time_interval': self.time_slots[slot_idx],
-                                    'slot_type': course_info['slot_type'],
-                        'teacher_id': teacher,
-                                    'first_name': course_info['first_name'],
-                                    'last_name': course_info['last_name'],
-                                    'staff_code': course_info['staff_code'],
-                        'room_id': room_id,
-                                    'room_number': self.classrooms[self.classrooms['id'] == room_id]['room_number'].values[0],
-                                    'block': self.classrooms[self.classrooms['id'] == room_id]['block'].values[0],
-                        'room_type': 'Classroom',
-                                    'capacity': self.classrooms[self.classrooms['id'] == room_id]['room_max_cap'].values[0],
-                                    'course_id': course_info['course_id'],
-                                    'course_code': course_info['course_code'],
-                                    'course_name': course_info['course_name'],
-                                    'course_instance_id': course_info['instance_id'],
-                                    'student_count': course_info['student_count'],
-                                    'academic_year': course_info.get('academic_year', ''),
-                                    'semester': course_info.get('semester', ''),
-                                    'course_dept': course_info.get('course_dept', ''),
-                                })
+        # Get the course group constraint instance for group information
+        course_group_constraint = self.constraints.course_group_constraint
         
+        for teacher in self.teachers:
+            if teacher in teacher_theory_assignments:
+                for day_idx, day in enumerate(self.days):
+                    for slot_idx in range(self.num_slots):
+                        for room_id in self.classrooms['id'].tolist():
+                            if solver.Value(teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]) == 1:
+                                # Find the specific course instance by its ID
+                                course_info = self._get_course_instance_info(teacher, 'theory')
+                                
+                                if course_info:
+                                    # Get group information if available
+                                    group_info = {'group_name': 'Unassigned', 'group_index': 0}
+                                    if course_group_constraint and hasattr(course_group_constraint, 'get_group_info_for_course_instance'):
+                                        group_info = course_group_constraint.get_group_info_for_course_instance(
+                                            teacher, course_info['instance_id']
+                                        )
+                                    
+                                    theory_assignments.append({
+                                        'day': day,
+                                        'slot_index': slot_idx,
+                                        'time_interval': self.time_slots[slot_idx],
+                                        'slot_type': course_info['slot_type'],
+                                        'teacher_id': teacher,
+                                        'first_name': course_info['first_name'],
+                                        'last_name': course_info['last_name'],
+                                        'staff_code': course_info['staff_code'],
+                                        'room_id': room_id,
+                                        'room_number': self.classrooms[self.classrooms['id'] == room_id]['room_number'].values[0],
+                                        'block': self.classrooms[self.classrooms['id'] == room_id]['block'].values[0],
+                                        'room_type': 'Classroom',
+                                        'capacity': self.classrooms[self.classrooms['id'] == room_id]['room_max_cap'].values[0],
+                                        'course_id': course_info['course_id'],
+                                        'course_code': course_info['course_code'],
+                                        'course_name': course_info['course_name'],
+                                        'course_instance_id': course_info['instance_id'],
+                                        'student_count': course_info['student_count'],
+                                        'academic_year': course_info.get('academic_year', ''),
+                                        'semester': course_info.get('semester', ''),
+                                        'course_dept': course_info.get('course_dept', ''),
+                                        'group_name': group_info.get('group_name', 'Unassigned'),
+                                        'group_index': group_info.get('group_index', 0),
+                                        'department_group': group_info.get('department', 'Unknown'),
+                                        'semester_group': group_info.get('semester', 0),
+                                    })
+        
+        self.logger.info(f"Extracted {len(theory_assignments)} theory assignments")
         return theory_assignments
     
     def extract_lab_assignments(self, solver, teacher_lab_assignments):
         """Extract lab assignments from CP-SAT solution."""
         lab_assignments = []
         
+        # Get the course group constraint instance for group information
+        course_group_constraint = self.constraints.course_group_constraint
+        
         for teacher in self.teachers:
-            for day_idx, day in enumerate(self.days):
-                for session_name, session_info in self.lab_sessions.items():
-                    for room_id in self.labs['id'].tolist():
-                        if solver.Value(teacher_lab_assignments[teacher][day_idx][session_name][room_id]) == 1:
-                            course_info = self._determine_assigned_course(teacher, 'lab')
-                            
-                            if course_info:
-                                lab_assignments.append({
-                                    'day': day,
-                                    'slot_index': f"Lab_{session_name}",
-                                    'time_interval': session_info['time_range'],
-                                    'slot_type': course_info['slot_type'],
+            if teacher in teacher_lab_assignments:
+                for day_idx, day in enumerate(self.days):
+                    for session_name, session_info in self.lab_sessions.items():
+                        for room_id in self.labs['id'].tolist():
+                            if solver.Value(teacher_lab_assignments[teacher][day_idx][session_name][room_id]) == 1:
+                                # Find the specific course instance by its ID
+                                course_info = self._get_course_instance_info(teacher, 'lab')
+                                
+                                if course_info:
+                                    # Get group information if available
+                                    group_info = {'group_name': 'Unassigned', 'group_index': 0}
+                                    if course_group_constraint and hasattr(course_group_constraint, 'get_group_info_for_course_instance'):
+                                        group_info = course_group_constraint.get_group_info_for_course_instance(
+                                            teacher, course_info['instance_id']
+                                        )
+                                    
+                                    lab_assignments.append({
+                                        'day': day,
+                                        'slot_index': f"Lab_{session_name}",
+                                        'time_interval': session_info['time_range'],
+                                        'slot_type': course_info['slot_type'],
                                         'teacher_id': teacher,
-                                    'first_name': course_info['first_name'],
-                                    'last_name': course_info['last_name'],
-                                    'staff_code': course_info['staff_code'],
+                                        'first_name': course_info['first_name'],
+                                        'last_name': course_info['last_name'],
+                                        'staff_code': course_info['staff_code'],
                                         'room_id': room_id,
-                                    'room_number': self.labs[self.labs['id'] == room_id]['room_number'].values[0],
-                                    'block': self.labs[self.labs['id'] == room_id]['block'].values[0],
-                                    'room_type': 'Lab',
-                                    'capacity': self.labs[self.labs['id'] == room_id]['room_max_cap'].values[0],
+                                        'room_number': self.labs[self.labs['id'] == room_id]['room_number'].values[0],
+                                        'block': self.labs[self.labs['id'] == room_id]['block'].values[0],
+                                        'room_type': 'Lab',
+                                        'capacity': self.labs[self.labs['id'] == room_id]['room_max_cap'].values[0],
                                         'course_id': course_info['course_id'],
                                         'course_code': course_info['course_code'],
                                         'course_name': course_info['course_name'],
-                                    'course_instance_id': course_info['instance_id'],
-                                    'student_count': course_info['student_count'],
-                                    'academic_year': course_info.get('academic_year', ''),
-                                    'semester': course_info.get('semester', ''),
-                                    'course_dept': course_info.get('course_dept', ''),
-                                })
+                                        'course_instance_id': course_info['instance_id'],
+                                        'student_count': course_info['student_count'],
+                                        'academic_year': course_info.get('academic_year', ''),
+                                        'semester': course_info.get('semester', ''),
+                                        'course_dept': course_info.get('course_dept', ''),
+                                        'group_name': group_info.get('group_name', 'Unassigned'),
+                                        'group_index': group_info.get('group_index', 0),
+                                        'department_group': group_info.get('department', 'Unknown'),
+                                        'semester_group': group_info.get('semester', 0),
+                                    })
         
         return lab_assignments
     
-    def _determine_assigned_course(self, teacher, assignment_type):
-        """Determine which course instance is assigned for a teacher."""
+    def _get_course_instance_info(self, teacher, assignment_type):
+        """Get next course instance information by teacher, ensuring each instance gets its required hours."""
         if teacher not in self.teacher_course_assignments:
             return None
         
         teacher_info = self._get_teacher_info(teacher)
         
-        for instance in self.teacher_course_assignments[teacher]:
-            if assignment_type == 'theory':
-                # For theory assignments, prioritize courses with lecture/tutorial hours
-                if instance['lecture_hours'] > 0 or instance['tutorial_hours'] > 0:
-                                        return {
-                        'instance_id': instance['id'],
-                                            'course_id': instance['course_id'],
-                                            'course_code': instance['course_code'],
-                                            'course_name': instance['course_name'],
-                                            'student_count': instance['student_count'],
-                                            'academic_year': instance.get('academic_year', ''),
-                                            'semester': instance.get('semester', ''),
-                                            'course_dept': instance.get('course_dept', ''),
-                        'slot_type': 'Lecture' if instance['lecture_hours'] > 0 else 'Tutorial',
-                        'first_name': teacher_info['first_name'],
-                        'last_name': teacher_info['last_name'],
-                        'staff_code': teacher_info['staff_code']
-                    }
+        # Get the usage tracking for this teacher
+        if teacher not in self.teacher_instance_usage:
+            return None
+        
+        usage_info = self.teacher_instance_usage[teacher]
+        
+        if assignment_type == 'theory':
+            theory_instances = usage_info['theory_instances']
+            if not theory_instances:
+                return None
             
-            elif assignment_type == 'lab' and instance['practical_hours'] > 0:
-                # For lab assignments, only courses with practical hours
-                                        return {
-                    'instance_id': instance['id'],
-                                            'course_id': instance['course_id'],
-                                            'course_code': instance['course_code'],
-                                            'course_name': instance['course_name'],
-                                            'student_count': instance['student_count'],
-                                            'academic_year': instance.get('academic_year', ''),
-                                            'semester': instance.get('semester', ''),
-                                            'course_dept': instance.get('course_dept', ''),
-                    'slot_type': 'Practical',
-                    'first_name': teacher_info['first_name'],
-                    'last_name': teacher_info['last_name'],
-                    'staff_code': teacher_info['staff_code']
-                }
+            # ENHANCED: Priority-based assignment to ensure each instance gets required hours
+            # Find the instance that needs the most assignments relative to its requirements
+            best_instance = None
+            best_priority = -1
+            
+            for instance in theory_instances:
+                instance_id = instance['id']
+                tracking = self.instance_assignment_tracking[instance_id]
+                
+                # Calculate remaining requirements
+                lecture_remaining = tracking['lecture_required'] - tracking['lecture_assigned']
+                tutorial_remaining = tracking['tutorial_required'] - tracking['tutorial_assigned']
+                total_remaining = lecture_remaining + tutorial_remaining
+                
+                # Skip instances that are already satisfied
+                if total_remaining <= 0:
+                    continue
+                
+                # Priority = remaining requirements (higher is better)
+                # This ensures instances with more remaining requirements get prioritized
+                priority = total_remaining
+                
+                if priority > best_priority:
+                    best_priority = priority
+                    best_instance = instance
+            
+            # If no instance needs assignments, return None
+            if best_instance is None:
+                return None
+            
+            instance_id = best_instance['id']
+            tracking = self.instance_assignment_tracking[instance_id]
+            
+            # Determine slot type based on what's still needed for this specific instance
+            if tracking['lecture_assigned'] < tracking['lecture_required']:
+                slot_type = 'Lecture'
+                tracking['lecture_assigned'] += 1
+            elif tracking['tutorial_assigned'] < tracking['tutorial_required']:
+                slot_type = 'Tutorial'
+                tracking['tutorial_assigned'] += 1
+            else:
+                # This shouldn't happen with the priority logic, but fallback
+                slot_type = 'Lecture'
+            
+            self.logger.info(f"Assigning {slot_type} slot to Instance {instance_id} ({best_instance['course_code']}) for Teacher {teacher}")
+            self.logger.info(f"  Progress: L:{tracking['lecture_assigned']}/{tracking['lecture_required']} T:{tracking['tutorial_assigned']}/{tracking['tutorial_required']}")
+            
+            return {
+                'instance_id': best_instance['id'],
+                'course_id': best_instance['course_id'],
+                'course_code': best_instance['course_code'],
+                'course_name': best_instance['course_name'],
+                'student_count': best_instance['student_count'],
+                'academic_year': best_instance.get('academic_year', ''),
+                'semester': best_instance.get('semester', ''),
+                'course_dept': best_instance.get('course_dept', ''),
+                'slot_type': slot_type,
+                'first_name': teacher_info['first_name'],
+                'last_name': teacher_info['last_name'],
+                'staff_code': teacher_info['staff_code']
+            }
+        
+        elif assignment_type == 'lab':
+            lab_instances = usage_info['lab_instances']
+            if not lab_instances:
+                return None
+            
+            # Get the next instance in round-robin fashion
+            current_index = usage_info['lab_index']
+            instance = lab_instances[current_index]
+            
+            # Move to next instance for next call
+            usage_info['lab_index'] = (current_index + 1) % len(lab_instances)
+            
+            return {
+                'instance_id': instance['id'],
+                'course_id': instance['course_id'],
+                'course_code': instance['course_code'],
+                'course_name': instance['course_name'],
+                'student_count': instance['student_count'],
+                'academic_year': instance.get('academic_year', ''),
+                'semester': instance.get('semester', ''),
+                'course_dept': instance.get('course_dept', ''),
+                'slot_type': 'Practical',
+                'first_name': teacher_info['first_name'],
+                'last_name': teacher_info['last_name'],
+                'staff_code': teacher_info['staff_code']
+            }
         
         return None
     
@@ -791,123 +928,6 @@ class TimetableScheduler:
         except Exception as e:
             self.logger.error(f"Error generating visualizations: {e}")
             self.logger.exception("Visualization error details")
-
-    def _try_relaxed_solution(self):
-        """Try to create a minimal schedule with highly relaxed constraints."""
-        self.logger.info("Attempting to create minimal schedule with relaxed constraints...")
-        
-        try:
-            # Create a simplified model with minimal constraints
-            model = cp_model.CpModel()
-            
-            # Pre-compute room IDs for efficiency
-            classroom_ids = self.classrooms['id'].tolist()
-            lab_ids = self.labs['id'].tolist()
-            
-            # Define simplified assignment variables - only a subset of teachers
-            limited_teachers = list(self.teachers)[:min(5, len(self.teachers))]  # Limit to first 5 teachers
-            
-            teacher_theory_assignments = {}
-            for teacher in limited_teachers:
-                teacher_theory_assignments[teacher] = {}
-                for d in range(self.num_days):
-                    teacher_theory_assignments[teacher][d] = {}
-                    for s in range(min(5, self.num_slots)):  # Limit to first 5 slots
-                        teacher_theory_assignments[teacher][d][s] = {}
-                        for room_id in classroom_ids[:min(10, len(classroom_ids))]:  # Limit rooms
-                            teacher_theory_assignments[teacher][d][s][room_id] = model.NewBoolVar(
-                                f'simple_teacher_{teacher}_day_{d}_slot_{s}_classroom_{room_id}')
-            
-            # Apply only basic constraints
-            # 1. Each teacher can only be in one room at a time
-            for teacher in limited_teachers:
-                for d in range(self.num_days):
-                    for s in range(min(5, self.num_slots)):
-                        room_assignments = []
-                        for room_id in classroom_ids[:min(10, len(classroom_ids))]:
-                            room_assignments.append(teacher_theory_assignments[teacher][d][s][room_id])
-                        model.Add(sum(room_assignments) <= 1)
-            
-            # 2. Each room can only have one teacher at a time
-            for room_id in classroom_ids[:min(10, len(classroom_ids))]:
-                for d in range(self.num_days):
-                    for s in range(min(5, self.num_slots)):
-                        teacher_assignments = []
-                        for teacher in limited_teachers:
-                            teacher_assignments.append(teacher_theory_assignments[teacher][d][s][room_id])
-                        model.Add(sum(teacher_assignments) <= 1)
-            
-            # 3. Encourage some assignments (soft objective)
-            assignment_vars = []
-            for teacher in limited_teachers:
-                for d in range(self.num_days):
-                    for s in range(min(5, self.num_slots)):
-                        for room_id in classroom_ids[:min(10, len(classroom_ids))]:
-                            assignment_vars.append(teacher_theory_assignments[teacher][d][s][room_id])
-            
-            # Maximize assignments
-            model.Maximize(sum(assignment_vars))
-            
-            # Solve simplified model
-            solver = cp_model.CpSolver()
-            solver.parameters.max_time_in_seconds = 300  # 5 minutes
-            status = solver.Solve(model)
-            
-            if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-                self.logger.info("Created minimal schedule successfully!")
-                
-                # Extract minimal assignments
-                theory_assignments = []
-                for teacher in limited_teachers:
-                    for day_idx in range(self.num_days):
-                        for slot_idx in range(min(5, self.num_slots)):
-                            for room_id in classroom_ids[:min(10, len(classroom_ids))]:
-                                if solver.Value(teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]) == 1:
-                                    course_info = self._determine_assigned_course(teacher, 'theory')
-                                    if course_info:
-                                        theory_assignments.append({
-                                            'day': self.days[day_idx],
-                                            'slot_index': slot_idx,
-                                            'time_interval': self.time_slots[slot_idx],
-                                            'slot_type': course_info['slot_type'],
-                                            'teacher_id': teacher,
-                                            'first_name': course_info['first_name'],
-                                            'last_name': course_info['last_name'],
-                                            'staff_code': course_info['staff_code'],
-                                            'room_id': room_id,
-                                            'room_number': self.classrooms[self.classrooms['id'] == room_id]['room_number'].values[0],
-                                            'block': self.classrooms[self.classrooms['id'] == room_id]['block'].values[0],
-                                            'room_type': 'Classroom',
-                                            'capacity': self.classrooms[self.classrooms['id'] == room_id]['room_max_cap'].values[0],
-                                            'course_id': course_info['course_id'],
-                                            'course_code': course_info['course_code'],
-                                            'course_name': course_info['course_name'],
-                                            'course_instance_id': course_info['instance_id'],
-                                            'student_count': course_info['student_count'],
-                                            'academic_year': course_info.get('academic_year', ''),
-                                            'semester': course_info.get('semester', ''),
-                                            'course_dept': course_info.get('course_dept', ''),
-                                        })
-                
-                # Create minimal schedule result
-                schedule_result = self.create_detailed_schedule(theory_assignments, [])
-                
-                # Save minimal schedule results
-                self.save_schedule_results(schedule_result)
-                
-                # Generate visualizations
-                self.generate_visualizations(schedule_result)
-                
-                self.logger.info(f"Minimal schedule created with {len(theory_assignments)} assignments")
-                return True
-            else:
-                self.logger.error("Even minimal schedule creation failed")
-                return False
-                
-        except Exception as e:
-            self.logger.error(f"Error in relaxed solution: {e}")
-            self.logger.exception("Relaxed solution error details")
-            return False
 
 # Backward compatibility alias
 MacroblockTimetableScheduler = TimetableScheduler 

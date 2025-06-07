@@ -1,626 +1,597 @@
+"""
+Optimized Teacher Overlap Verification System
+
+This module provides comprehensive verification of teacher schedules to detect:
+- Teacher double-booking conflicts
+- Room allocation conflicts  
+- Lab scheduling overlaps
+- Cross-schedule conflicts between different schedule types
+
+OPTIMIZED: Improved performance, better code organization, and enhanced reporting.
+"""
+
 import pandas as pd
 import os
-from collections import defaultdict
+from collections import defaultdict, Counter
 from datetime import datetime
+from typing import List, Dict, Tuple, Optional, Set
+import logging
 
-def parse_time(time_str):
-    """Parse time string like '11:00' to minutes since midnight."""
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class TimeRange:
+    """Utility class for handling time range operations."""
+    
+    def __init__(self, time_str: str):
+        """Initialize with time range string like '11:00 - 11:50'."""
+        self.time_str = time_str
+        self.start_minutes, self.end_minutes = self._parse_time_range(time_str)
+    
+    def _parse_time_range(self, time_str: str) -> Tuple[int, int]:
+        """Parse time range string to start and end minutes since midnight."""
+        try:
     if ' - ' in time_str:
-        time_part = time_str.split(' - ')[0]  # Get start time from range
+                start_str, end_str = time_str.split(' - ')
+                start_minutes = self._time_to_minutes(start_str.strip())
+                end_minutes = self._time_to_minutes(end_str.strip())
+                return start_minutes, end_minutes
     else:
-        time_part = time_str.split()[0]  # Get '11:00' from '11:00 - 11:50'
-    hours, minutes = map(int, time_part.split(':'))
+                # Single time point, assume 50-minute duration
+                start_minutes = self._time_to_minutes(time_str.strip())
+                return start_minutes, start_minutes + 50
+        except (ValueError, AttributeError) as e:
+            logger.warning(f"Failed to parse time range '{time_str}': {e}")
+            return 0, 0
+    
+    def _time_to_minutes(self, time_str: str) -> int:
+        """Convert time string like '11:00' to minutes since midnight."""
+        hours, minutes = map(int, time_str.split(':'))
     return hours * 60 + minutes
 
-def time_ranges_overlap(range1, range2):
-    """Check if two time ranges overlap."""
-    try:
-        # Parse range1 (e.g., "11:00 - 11:50")
-        start1_str, end1_str = range1.split(' - ')
-        start1 = parse_time(start1_str)
-        end1 = parse_time(end1_str)
-        
-        # Parse range2 (e.g., "10:40 - 11:30") 
-        start2_str, end2_str = range2.split(' - ')
-        start2 = parse_time(start2_str)
-        end2 = parse_time(end2_str)
-        
-        # Check for overlap: ranges overlap if start1 < end2 and start2 < end1
-        return start1 < end2 and start2 < end1
-    except (ValueError, AttributeError):
-        return False
-
-def find_latest_schedules():
-    """Find the most recent lab and theory schedule files."""
-    output_dir = "output"
-    if not os.path.exists(output_dir):
-        return None, None, None, None
+    def overlaps_with(self, other: 'TimeRange') -> bool:
+        """Check if this time range overlaps with another."""
+        return self.start_minutes < other.end_minutes and other.start_minutes < self.end_minutes
     
-    # Find latest lab schedule
-    lab_file = None
-    lab_type = None
+    def __str__(self) -> str:
+        return self.time_str
+
+class ScheduleFile:
+    """Utility class for managing schedule file discovery and loading."""
+    
+    @staticmethod
+    def find_latest_schedule_files() -> Dict[str, Optional[str]]:
+        """Find the most recent schedule files of different types."""
+        output_dir = "output"
+        files = {'combined': None, 'theory_only': None, 'lab_only': None}
+        
+        if not os.path.exists(output_dir):
+            return files
+        
+        try:
+            # Find combined schedules (lab + theory)
     lab_folders = [f for f in os.listdir(output_dir) if f.startswith("lab_schedule_")]
     if lab_folders:
         latest_lab_folder = max(lab_folders)
         combined_file = os.path.join(output_dir, latest_lab_folder, "combined_theory_lab_schedule.csv")
         if os.path.exists(combined_file):
-            lab_file = combined_file
-            lab_type = "combined"
+                    files['combined'] = combined_file
     
-    # Find latest theory schedule
-    theory_file = None
-    theory_type = None
+            # Find theory-only schedules
     theory_folders = [f for f in os.listdir(output_dir) if f.startswith("macroblock_schedule_")]
     if theory_folders:
         latest_theory_folder = max(theory_folders)
         theory_file = os.path.join(output_dir, latest_theory_folder, "macroblock_schedule.csv")
         if os.path.exists(theory_file):
-            theory_type = "theory_only"
-    
-    return lab_file, lab_type, theory_file, theory_type
-
-def find_latest_schedule():
-    """Find the most recent schedule file (prioritizing lab schedules for lab analysis)."""
-    output_dir = "output"
-    if not os.path.exists(output_dir):
-        return None, None
-    
-    # MODIFIED: Prioritize lab schedules first for lab assignment analysis
-    lab_folders = [f for f in os.listdir(output_dir) if f.startswith("lab_schedule_")]
-    if lab_folders:
-        latest_lab_folder = max(lab_folders)
-        combined_file = os.path.join(output_dir, latest_lab_folder, "combined_theory_lab_schedule.csv")
-        if os.path.exists(combined_file):
-            return combined_file, "combined"
-    
-    # Fall back to theory-only schedules if no lab schedules exist
-    theory_folders = [f for f in os.listdir(output_dir) if f.startswith("macroblock_schedule_")]
-    if theory_folders:
-        latest_theory_folder = max(theory_folders)
-        theory_file = os.path.join(output_dir, latest_theory_folder, "macroblock_schedule.csv")
-        if os.path.exists(theory_file):
-            return theory_file, "theory_only"
-    
-    return None, None
-
-def verify_cross_schedule_overlaps():
-    """Verify that teachers don't have overlapping assignments between lab and theory schedules."""
-    print("\n🔄 CROSS-SCHEDULE OVERLAP VERIFICATION (Lab vs Theory)")
-    print("=" * 80)
-    print("Checking for teacher conflicts between lab_schedule and macroblock_schedule")
-    print("=" * 80)
-    
-    # Find both schedule files
-    lab_file, lab_type, theory_file, theory_type = find_latest_schedules()
-    
-    if lab_file is None or theory_file is None:
-        if lab_file is None:
-            print("❌ No lab schedule file found!")
-        if theory_file is None:
-            print("❌ No theory schedule file found!")
-        print("⚠️  Cannot perform cross-schedule verification without both files.")
-        return []
-    
-    print(f"📁 Lab schedule file: {lab_file}")
-    print(f"📁 Theory schedule file: {theory_file}")
-    
-    try:
-        # Load lab schedule and filter for lab assignments only
-        lab_df = pd.read_csv(lab_file)
-        lab_assignments = lab_df[lab_df['slot_type'] == 'Practical'].copy()
-        print(f"✅ Loaded {len(lab_assignments)} lab assignments from {lab_file}")
-        
-        # Load theory schedule and filter for theory assignments only
-        theory_df = pd.read_csv(theory_file)
-        theory_assignments = theory_df[theory_df['slot_type'].isin(['Lecture', 'Tutorial'])].copy()
-        print(f"✅ Loaded {len(theory_assignments)} theory assignments from {theory_file}")
-        
-    except Exception as e:
-        print(f"❌ Error loading schedule files: {e}")
-        return []
-    
-    if lab_assignments.empty and theory_assignments.empty:
-        print("❌ Both schedules are empty!")
-        return []
-    
-    if lab_assignments.empty:
-        print("⚠️  No lab assignments found - skipping cross-schedule verification")
-        return []
-    
-    if theory_assignments.empty:
-        print("⚠️  No theory assignments found - skipping cross-schedule verification")
-        return []
-    
-    # Find common teachers between both schedules
-    lab_teachers = set(lab_assignments['teacher_id'].unique())
-    theory_teachers = set(theory_assignments['teacher_id'].unique())
-    common_teachers = lab_teachers.intersection(theory_teachers)
-    
-    print(f"\n📊 TEACHER ANALYSIS:")
-    print(f"Teachers with lab assignments: {len(lab_teachers)}")
-    print(f"Teachers with theory assignments: {len(theory_teachers)}")
-    print(f"Teachers with both lab and theory: {len(common_teachers)}")
-    
-    if not common_teachers:
-        print("✅ No teachers have both lab and theory assignments - no cross-schedule conflicts possible")
-        return []
-    
-    # Check for overlaps between lab and theory for each common teacher
-    cross_schedule_conflicts = []
-    
-    print(f"\n🔍 CHECKING CROSS-SCHEDULE CONFLICTS FOR {len(common_teachers)} TEACHERS...")
-    print("-" * 80)
-    
-    for teacher_id in common_teachers:
-        teacher_lab_assignments = lab_assignments[lab_assignments['teacher_id'] == teacher_id]
-        teacher_theory_assignments = theory_assignments[theory_assignments['teacher_id'] == teacher_id]
-        
-        teacher_conflicts = 0
-        
-        # Check each lab assignment against each theory assignment for the same teacher
-        for _, lab_row in teacher_lab_assignments.iterrows():
-            for _, theory_row in teacher_theory_assignments.iterrows():
-                # Check if they're on the same day
-                if lab_row['day'] == theory_row['day']:
-                    lab_time = lab_row['time_interval']
-                    theory_time = theory_row['time_interval']
-                    
-                    # Check for time overlap
-                    if time_ranges_overlap(lab_time, theory_time):
-                        conflict_info = {
-                            'teacher_id': teacher_id,
-                            'day': lab_row['day'],
-                            'lab_course': lab_row.get('display_course_code', lab_row.get('course_code', 'Unknown')),
-                            'lab_time': lab_time,
-                            'lab_room': lab_row['room_number'],
-                            'lab_session': lab_row.get('lab_session', 'Unknown'),
-                            'theory_course': theory_row['course_code'],
-                            'theory_time': theory_time,
-                            'theory_room': theory_row['room_number'],
-                            'theory_macroblock': theory_row.get('macroblock', 'Unknown'),
-                            'conflict_type': 'cross_schedule_overlap'
-                        }
-                        cross_schedule_conflicts.append(conflict_info)
-                        teacher_conflicts += 1
-        
-        if teacher_conflicts > 0:
-            print(f"⚠️  Teacher {teacher_id}: {teacher_conflicts} cross-schedule conflict(s)")
-    
-    print(f"\n📈 CROSS-SCHEDULE OVERLAP ANALYSIS RESULTS:")
-    print(f"Total cross-schedule conflicts found: {len(cross_schedule_conflicts)}")
-    print(f"Teachers with cross-schedule conflicts: {len(set(c['teacher_id'] for c in cross_schedule_conflicts))}")
-    
-    if not cross_schedule_conflicts:
-        print("✅ NO CROSS-SCHEDULE OVERLAPS DETECTED - Lab and theory schedules are compatible!")
-    else:
-        print(f"❌ {len(cross_schedule_conflicts)} CROSS-SCHEDULE CONFLICTS DETECTED!")
-        print("\n📋 DETAILED CROSS-SCHEDULE CONFLICT REPORT:")
-        print("=" * 120)
-        print(f"{'Teacher':<10} {'Day':<10} {'Lab Course':<15} {'Lab Time':<15} {'Lab Room':<12} {'Theory Course':<15} {'Theory Time':<15} {'Theory Room':<12}")
-        print("-" * 120)
-        
-        for conflict in cross_schedule_conflicts:
-            print(f"{conflict['teacher_id']:<10} "
-                 f"{conflict['day'].capitalize():<10} "
-                 f"{conflict['lab_course']:<15} "
-                 f"{conflict['lab_time']:<15} "
-                 f"{conflict['lab_room']:<12} "
-                 f"{conflict['theory_course']:<15} "
-                 f"{conflict['theory_time']:<15} "
-                 f"{conflict['theory_room']:<12}")
-        
-        print(f"\n⚠️  CRITICAL: These teachers are double-booked between lab and theory schedules!")
-        print(f"   - Lab assignments are from: {lab_file}")
-        print(f"   - Theory assignments are from: {theory_file}")
-    
-    return cross_schedule_conflicts
-
-def verify_lab_overlaps(schedule_df):
-    """Verify lab assignments for overlaps and capacity constraint violations."""
-    print("🧪 LAB SCHEDULE OVERLAP VERIFICATION")
-    print("=" * 60)
-    
-    # Filter for lab assignments only
-    lab_schedule = schedule_df[schedule_df['slot_type'] == 'Practical'].copy()
-    
-    if lab_schedule.empty:
-        print("❌ No lab assignments found in schedule")
-        return [], []
-    
-    print(f"📊 Found {len(lab_schedule)} lab assignments to verify")
-    
-    # Teacher overlap detection
-    teacher_overlaps = []
-    teachers = lab_schedule['teacher_id'].unique()
-    
-    for teacher in teachers:
-        teacher_labs = lab_schedule[lab_schedule['teacher_id'] == teacher]
-        
-        # Check for overlapping lab sessions for the same teacher
-        for i, (_, lab1) in enumerate(teacher_labs.iterrows()):
-            for j, (_, lab2) in enumerate(teacher_labs.iterrows()):
-                if i >= j:  # Avoid duplicate comparisons
-                    continue
-                
-                # Check if labs are on the same day
-                if lab1['day'] == lab2['day']:
-                    # Parse time intervals
-                    time1 = lab1['time_interval']
-                    time2 = lab2['time_interval']
-                    
-                    # Check for overlap
-                    if time_ranges_overlap(time1, time2):
-                        overlap_info = {
-                            'teacher_id': teacher,
-                            'day': lab1['day'],
-                            'course1': lab1.get('display_course_code', lab1.get('course_code', 'Unknown')),
-                            'time1': time1,
-                            'room1': lab1['room_number'],
-                            'course2': lab2.get('display_course_code', lab2.get('course_code', 'Unknown')),
-                            'time2': time2,
-                            'room2': lab2['room_number'],
-                            'type': 'teacher_lab_overlap'
-                        }
-                        teacher_overlaps.append(overlap_info)
-    
-    # Lab room overlap detection
-    lab_room_overlaps = []
-    lab_rooms = lab_schedule['room_id'].unique()
-    
-    for room in lab_rooms:
-        room_labs = lab_schedule[lab_schedule['room_id'] == room]
-        
-        # Check for overlapping assignments in the same lab room
-        for i, (_, lab1) in enumerate(room_labs.iterrows()):
-            for j, (_, lab2) in enumerate(room_labs.iterrows()):
-                if i >= j:  # Avoid duplicate comparisons
-                    continue
-                
-                # Check if labs are on the same day
-                if lab1['day'] == lab2['day']:
-                    # Parse time intervals
-                    time1 = lab1['time_interval']
-                    time2 = lab2['time_interval']
-                    
-                    # Check for overlap
-                    if time_ranges_overlap(time1, time2):
-                        overlap_info = {
-                            'room_id': room,
-                            'room_number': lab1['room_number'],
-                            'day': lab1['day'],
-                            'course1': lab1.get('display_course_code', lab1.get('course_code', 'Unknown')),
-                            'teacher1': lab1['teacher_id'],
-                            'time1': time1,
-                            'course2': lab2.get('display_course_code', lab2.get('course_code', 'Unknown')),
-                            'teacher2': lab2['teacher_id'],
-                            'time2': time2,
-                            'type': 'lab_room_overlap'
-                        }
-                        lab_room_overlaps.append(overlap_info)
-    
-    # NEW: Hard constraint validation - capacity assignments
-    capacity_violations = []
-    if 'room_capacity' in lab_schedule.columns and 'practical_hours' in lab_schedule.columns:
-        print(f"\n🚨 HARD CONSTRAINT VALIDATION (Capacity Assignment Rules)")
-        print("=" * 60)
-        
-        # Check for hard constraint violations: courses with <3 practical hours in 70+ capacity labs
-        for _, lab in lab_schedule.iterrows():
-            practical_hours = lab.get('practical_hours', 0)
-            room_capacity = lab.get('room_capacity', 0)
-            student_count = lab.get('student_count', 70)
-            course_code = lab.get('display_course_code', lab.get('course_code', 'Unknown'))
+                    files['theory_only'] = theory_file
             
-            # Apply hard constraint check for 70-student courses
-            if student_count == 70 and practical_hours < 3 and room_capacity > 35:
-                violation_info = {
-                    'course_code': course_code,
-                    'teacher_id': lab['teacher_id'],
-                    'practical_hours': practical_hours,
-                    'room_capacity': room_capacity,
-                    'room_number': lab['room_number'],
-                    'day': lab['day'],
-                    'time_interval': lab['time_interval'],
-                    'violation_type': 'hard_constraint_capacity',
-                    'description': f"Course with {practical_hours} practical hours assigned to {room_capacity}-capacity lab (should be ≤35)"
-                }
-                capacity_violations.append(violation_info)
+            # Find newest schedule (prioritize combined schedules)
+            newest_folder = None
+            all_folders = [f for f in os.listdir(output_dir) if f.startswith(("schedule_", "lab_schedule_", "macroblock_schedule_"))]
+            if all_folders:
+                newest_folder = max(all_folders)
+                newest_file = os.path.join(output_dir, newest_folder, "schedule.csv")
+                if os.path.exists(newest_file):
+                    files['newest'] = newest_file
+                    
+        except Exception as e:
+            logger.error(f"Error finding schedule files: {e}")
         
-        if capacity_violations:
-            print(f"❌ Found {len(capacity_violations)} hard constraint violations:")
-            for violation in capacity_violations:
-                print(f"   - {violation['course_code']} (Teacher {violation['teacher_id']}): "
-                     f"{violation['practical_hours']} practical hours → {violation['room_capacity']}-capacity lab "
-                     f"({violation['room_number']}) on {violation['day']} at {violation['time_interval']}")
-            print(f"\n⚠️  RULE: Courses with <3 practical hours MUST use 35-capacity labs only!")
-        else:
-            print(f"✅ All lab assignments respect the hard constraint!")
-            print(f"   - Courses with <3 practical hours → 35-capacity labs only")
-            print(f"   - Courses with ≥3 practical hours → can use 70-capacity labs")
+        return files
     
-    # Report lab overlap results
-    total_lab_violations = len(teacher_overlaps) + len(lab_room_overlaps) + len(capacity_violations)
-    
-    if teacher_overlaps:
-        print(f"\n❌ Found {len(teacher_overlaps)} teacher lab overlaps:")
-        for overlap in teacher_overlaps:
-            print(f"   - Teacher {overlap['teacher_id']} on {overlap['day']}: "
-                 f"{overlap['course1']} at {overlap['time1']} in {overlap['room1']} "
-                 f"overlaps with {overlap['course2']} at {overlap['time2']} in {overlap['room2']}")
-    else:
-        print(f"\n✅ No teacher lab overlaps detected")
-    
-    if lab_room_overlaps:
-        print(f"\n❌ Found {len(lab_room_overlaps)} lab room overlaps:")
-        for overlap in lab_room_overlaps:
-            print(f"   - Room {overlap['room_number']} on {overlap['day']}: "
-                 f"{overlap['course1']} (T:{overlap['teacher1']}) at {overlap['time1']} "
-                 f"overlaps with {overlap['course2']} (T:{overlap['teacher2']}) at {overlap['time2']}")
-    else:
-        print(f"\n✅ No lab room overlaps detected")
-    
-    print(f"\n📊 LAB VERIFICATION SUMMARY:")
-    print(f"Total lab assignments verified: {len(lab_schedule)}")
-    print(f"Teacher lab overlaps: {len(teacher_overlaps)}")
-    print(f"Lab room overlaps: {len(lab_room_overlaps)}")
-    print(f"Capacity constraint violations: {len(capacity_violations)}")
-    print(f"Total lab violations: {total_lab_violations}")
-    
-    # Combine all lab violations
-    all_lab_violations = teacher_overlaps + lab_room_overlaps + capacity_violations
-    
-    return all_lab_violations, lab_schedule
+    @staticmethod
+    def load_schedule(file_path: str) -> Optional[pd.DataFrame]:
+        """Load and validate a schedule file."""
+        try:
+            if not os.path.exists(file_path):
+                logger.error(f"Schedule file not found: {file_path}")
+                return None
+            
+            df = pd.read_csv(file_path)
+            
+            # Validate required columns
+            required_columns = ['teacher_id', 'day', 'slot_index', 'time_interval', 'room_id', 'course_code']
+            missing_columns = [col for col in required_columns if col not in df.columns]
+            
+            if missing_columns:
+                logger.error(f"Missing required columns in {file_path}: {missing_columns}")
+                return None
+            
+            if df.empty:
+                logger.warning(f"Schedule file is empty: {file_path}")
+                return None
+            
+            logger.info(f"Successfully loaded {len(df)} assignments from {file_path}")
+            return df
+            
+        except Exception as e:
+            logger.error(f"Error loading schedule file {file_path}: {e}")
+            return None
 
-def verify_teacher_overlap():
-    """Verify that no teacher has overlapping assignments at the same time slot."""
+class ConflictDetector:
+    """Optimized conflict detection for teacher and room scheduling."""
     
-    print("🔍 COMPREHENSIVE TEACHER & LAB OVERLAP VERIFICATION")
-    print("=" * 80)
-    print("Checking for teacher double-booking conflicts and lab overlaps")
-    print("=" * 80)
-    
-    # Find the latest schedule
-    schedule_file, schedule_type = find_latest_schedule()
-    
-    if schedule_file is None:
-        print("❌ No schedule files found!")
-        return False
-    
-    print(f"📁 Schedule file: {schedule_file}")
-    print(f"📄 Schedule type: {schedule_type}")
-    
-    try:
-        schedule_df = pd.read_csv(schedule_file)
-        print(f"✅ Successfully loaded schedule with {len(schedule_df)} assignments")
-    except Exception as e:
-        print(f"❌ Error loading schedule file: {e}")
-        return False
-    
-    if schedule_df.empty:
-        print("❌ Schedule file is empty!")
-        return False
-    
-    print("\n📊 SCHEDULE SUMMARY:")
-    print(f"Total scheduled assignments: {len(schedule_df)}")
-    print(f"Unique teachers: {schedule_df['teacher_id'].nunique()}")
-    print(f"Unique courses: {schedule_df['course_code'].nunique()}")
-    print(f"Unique rooms: {schedule_df['room_id'].nunique()}")
-    print(f"Days covered: {', '.join(sorted(schedule_df['day'].unique()))}")
-    
-    # Check slot types present
-    slot_types = schedule_df['slot_type'].value_counts()
-    print(f"Slot types: {dict(slot_types)}")
-    print("=" * 80)
-    
-    # Group assignments by teacher and time slot to detect overlaps
-    overlap_conflicts = []
-    teacher_schedule = defaultdict(lambda: defaultdict(list))
-    
-    # Build teacher schedule mapping: teacher_id -> {(day, slot_index): [assignments]}
-    for _, row in schedule_df.iterrows():
-        teacher_id = row['teacher_id']
-        day = row['day']
-        slot_index = row['slot_index']
-        time_key = (day, slot_index)
-        
-        assignment_info = {
-            'course_code': row['course_code'],
-            'course_name': row['course_name'],
-            'room_number': row['room_number'],
-            'room_id': row['room_id'],
-            'slot_type': row['slot_type'],
-            'macroblock': row.get('macroblock', 'Unknown'),
-            'time_interval': row['time_interval'],
-            'course_instance_id': row['course_instance_id'],
-            'lab_session': row.get('lab_session', ''),
-            'display_course_code': row.get('display_course_code', row['course_code'])
+    def __init__(self, schedule_df: pd.DataFrame):
+        """Initialize with schedule data."""
+        self.schedule_df = schedule_df
+        self.conflicts = {
+            'teacher_overlaps': [],
+            'room_conflicts': [],
+            'lab_overlaps': [],
+            'capacity_violations': [],
+            'cross_schedule_conflicts': []
         }
         
-        teacher_schedule[teacher_id][time_key].append(assignment_info)
+        # Pre-build efficient lookup structures
+        self._build_lookup_structures()
     
-    # Check for overlaps (same teacher, same time slot, multiple assignments)
-    print("🔍 CHECKING FOR TEACHER TIME SLOT OVERLAPS...")
-    print("-" * 80)
-    
-    total_conflicts = 0
-    teachers_with_conflicts = set()
-    
-    # Check each teacher's schedule
-    for teacher_id, teacher_slots in teacher_schedule.items():
-        teacher_conflicts = 0
+    def _build_lookup_structures(self):
+        """Build efficient lookup structures for conflict detection."""
+        # Teacher schedule lookup: {teacher_id: {(day, slot_index): [assignments]}}
+        self.teacher_schedule = defaultdict(lambda: defaultdict(list))
         
-        for time_key, assignments in teacher_slots.items():
-            if len(assignments) > 1:
-                # Found overlap conflict!
-                day, slot_index = time_key
-                conflict = {
-                    'teacher_id': teacher_id,
-                    'day': day,
-                    'slot_index': slot_index,
-                    'time_interval': assignments[0]['time_interval'],
-                    'assignments': assignments
-                }
-                overlap_conflicts.append(conflict)
-                teacher_conflicts += 1
-                total_conflicts += 1
-                teachers_with_conflicts.add(teacher_id)
+        # Room schedule lookup: {room_id: {(day, slot_index): [assignments]}}
+        self.room_schedule = defaultdict(lambda: defaultdict(list))
         
-        if teacher_conflicts > 0:
-            print(f"⚠️  Teacher {teacher_id}: {teacher_conflicts} time slot conflict(s)")
-    
-    print(f"\n📈 TIME SLOT OVERLAP ANALYSIS RESULTS:")
-    print(f"Total time slot conflicts found: {total_conflicts}")
-    print(f"Teachers with conflicts: {len(teachers_with_conflicts)} out of {len(teacher_schedule)}")
-    
-    if total_conflicts == 0:
-        print("✅ NO TEACHER TIME SLOT OVERLAPS DETECTED - All teachers have clean schedules!")
-    else:
-        print(f"❌ {total_conflicts} TIME SLOT OVERLAP CONFLICTS DETECTED!")
-        print("\n📋 DETAILED CONFLICT REPORT:")
-        print("=" * 120)
-        print(f"{'Teacher':<10} {'Day':<10} {'Time':<15} {'Slot':<5} {'Conflicts':<12} {'Details':<60}")
-        print("-" * 120)
+        # Time-based lookup for cross-schedule conflicts
+        self.time_assignments = defaultdict(list)  # {(day, time_range): [assignments]}
         
-        for i, conflict in enumerate(overlap_conflicts, 1):
-            teacher_id = conflict['teacher_id']
-            day = conflict['day']
-            time_interval = conflict['time_interval']
-            slot_index = conflict['slot_index']
-            assignments = conflict['assignments']
-            num_conflicts = len(assignments)
+        for _, row in self.schedule_df.iterrows():
+            teacher_id = row['teacher_id']
+            room_id = row['room_id']
+            day = row['day']
+            slot_index = row['slot_index']
+            time_interval = row['time_interval']
             
-            # Create conflict details string
-            conflict_details = []
-            for assignment in assignments:
-                course_display = assignment.get('display_course_code', assignment['course_code'])
-                detail = f"{course_display}({assignment['slot_type']}) in {assignment['room_number']}"
-                if assignment['lab_session']:
-                    detail += f" [{assignment['lab_session']}]"
-                conflict_details.append(detail)
+            # Create assignment info
+            assignment = {
+                'teacher_id': teacher_id,
+                'room_id': room_id,
+                'course_code': row['course_code'],
+                'course_name': row.get('course_name', ''),
+                'room_number': row.get('room_number', ''),
+                'slot_type': row.get('slot_type', ''),
+                'time_interval': time_interval,
+                'course_instance_id': row.get('course_instance_id', ''),
+                'lab_session': row.get('lab_session', ''),
+                'macroblock': row.get('macroblock', ''),
+                'student_count': row.get('student_count', 0),
+                'practical_hours': row.get('practical_hours', 0),
+                'room_capacity': row.get('room_capacity', 0)
+            }
             
-            details_str = " | ".join(conflict_details)
-            if len(details_str) > 58:
-                details_str = details_str[:55] + "..."
-            
-            print(f"{teacher_id:<10} {day.capitalize():<10} {time_interval:<15} {slot_index:<5} {num_conflicts:<12} {details_str:<60}")
-            
-            # Print detailed breakdown for each conflict
-            print(" " * 10 + "└─ Breakdown:")
-            for j, assignment in enumerate(assignments, 1):
-                course_instance = assignment['course_instance_id']
-                macroblock = assignment['macroblock']
-                course_display = assignment.get('display_course_code', assignment['course_code'])
-                print(f" " * 12 + f"{j}. {course_display} - {assignment['course_name'][:40]}")
-                print(f" " * 15 + f"Instance: {course_instance}, Macroblock: {macroblock}, Room: {assignment['room_number']}, Type: {assignment['slot_type']}")
-            print()
+            # Build lookup structures
+            time_key = (day, slot_index)
+            self.teacher_schedule[teacher_id][time_key].append(assignment)
+            self.room_schedule[room_id][time_key].append(assignment)
+            self.time_assignments[(day, time_interval)].append(assignment)
     
-    # Additional analysis: Room conflicts (same room, same time, different teachers)
-    print("\n🏫 CHECKING FOR ROOM CONFLICTS...")
-    print("-" * 80)
-    
-    room_conflicts = []
-    room_schedule = defaultdict(lambda: defaultdict(list))
-    
-    # Build room schedule mapping: room_id -> {(day, slot_index): [assignments]}
-    for _, row in schedule_df.iterrows():
-        room_id = row['room_id']
-        day = row['day']
-        slot_index = row['slot_index']
-        time_key = (day, slot_index)
+    def detect_teacher_overlaps(self) -> List[Dict]:
+        """Detect teacher double-booking conflicts efficiently."""
+        logger.info("Detecting teacher overlap conflicts...")
         
-        assignment_info = {
-            'teacher_id': row['teacher_id'],
-            'course_code': row['course_code'],
-            'slot_type': row['slot_type'],
-            'time_interval': row['time_interval'],
-            'course_instance_id': row['course_instance_id'],
-            'display_course_code': row.get('display_course_code', row['course_code'])
-        }
+        teacher_conflicts = []
         
-        room_schedule[room_id][time_key].append(assignment_info)
-    
-    # Check for room conflicts
-    room_conflict_count = 0
-    for room_id, room_slots in room_schedule.items():
-        for time_key, assignments in room_slots.items():
-            if len(assignments) > 1:
-                # Check if different teachers are using the same room
-                teachers_in_room = set(assignment['teacher_id'] for assignment in assignments)
-                if len(teachers_in_room) > 1:
+        for teacher_id, teacher_slots in self.teacher_schedule.items():
+            for time_key, assignments in teacher_slots.items():
+                if len(assignments) > 1:
+                    # Teacher has multiple assignments at the same time
                     day, slot_index = time_key
-                    room_conflicts.append({
-                        'room_id': room_id,
+                    conflict = {
+                        'type': 'teacher_overlap',
+                        'teacher_id': teacher_id,
                         'day': day,
                         'slot_index': slot_index,
                         'time_interval': assignments[0]['time_interval'],
-                        'assignments': assignments
-                    })
-                    room_conflict_count += 1
-    
-    if room_conflict_count == 0:
-        print("✅ NO ROOM CONFLICTS DETECTED - All rooms properly allocated!")
-    else:
-        print(f"❌ {room_conflict_count} ROOM CONFLICTS DETECTED!")
-        print(f"{'Room':<10} {'Day':<10} {'Time':<15} {'Teachers':<30} {'Courses':<30}")
-        print("-" * 95)
+                        'assignments': assignments,
+                        'conflict_count': len(assignments)
+                    }
+                    teacher_conflicts.append(conflict)
         
-        for conflict in room_conflicts:
-            room_id = conflict['room_id']
-            day = conflict['day']
-            time_interval = conflict['time_interval']
-            assignments = conflict['assignments']
+        self.conflicts['teacher_overlaps'] = teacher_conflicts
+        logger.info(f"Found {len(teacher_conflicts)} teacher overlap conflicts")
+        return teacher_conflicts
+    
+    def detect_room_conflicts(self) -> List[Dict]:
+        """Detect room double-booking conflicts efficiently."""
+        logger.info("Detecting room allocation conflicts...")
+        
+        room_conflicts = []
+        
+        for room_id, room_slots in self.room_schedule.items():
+            for time_key, assignments in room_slots.items():
+                if len(assignments) > 1:
+                    # Check if different teachers are using the same room
+                    teachers_in_room = set(assignment['teacher_id'] for assignment in assignments)
+                    if len(teachers_in_room) > 1:
+                        day, slot_index = time_key
+                        conflict = {
+                            'type': 'room_conflict',
+                            'room_id': room_id,
+                            'room_number': assignments[0]['room_number'],
+                            'day': day,
+                            'slot_index': slot_index,
+                            'time_interval': assignments[0]['time_interval'],
+                            'assignments': assignments,
+                            'teachers': list(teachers_in_room)
+                        }
+                        room_conflicts.append(conflict)
+        
+        self.conflicts['room_conflicts'] = room_conflicts
+        logger.info(f"Found {len(room_conflicts)} room allocation conflicts")
+        return room_conflicts
+    
+    def detect_lab_overlaps(self) -> List[Dict]:
+        """Detect lab-specific conflicts and capacity violations."""
+        logger.info("Detecting lab scheduling conflicts...")
+        
+        lab_assignments = self.schedule_df[self.schedule_df['slot_type'] == 'Practical'].copy() if 'slot_type' in self.schedule_df.columns else pd.DataFrame()
+        
+        if lab_assignments.empty:
+            logger.info("No lab assignments found")
+            return []
+        
+        lab_conflicts = []
+        
+        # Detect time-based lab overlaps using improved time parsing
+        for assignments_list in self.time_assignments.values():
+            lab_assigns = [a for a in assignments_list if a['slot_type'] == 'Practical']
+            if len(lab_assigns) > 1:
+                # Check for teacher overlaps in labs
+                teacher_assignments = defaultdict(list)
+                for assignment in lab_assigns:
+                    teacher_assignments[assignment['teacher_id']].append(assignment)
+                
+                for teacher, assignments in teacher_assignments.items():
+                    if len(assignments) > 1:
+                        # Same teacher in multiple labs at same time
+                        conflict = {
+                            'type': 'lab_teacher_overlap',
+                            'teacher_id': teacher,
+                            'day': assignments[0].get('day', ''),
+                            'time_interval': assignments[0].get('time_interval', ''),
+                            'assignments': assignments,
+                            'conflict_count': len(assignments)
+                        }
+                        lab_conflicts.append(conflict)
+        
+        # Detect capacity constraint violations with improved logic
+    capacity_violations = []
+        for _, lab in lab_assignments.iterrows():
+            practical_hours = lab.get('practical_hours', 0)
+            room_capacity = lab.get('capacity', lab.get('room_capacity', 0))
+            student_count = lab.get('student_count', 70)
             
-            teachers = ", ".join(set(str(a['teacher_id']) for a in assignments))
-            courses = ", ".join(set(a.get('display_course_code', a['course_code']) for a in assignments))
+            # Convert to numeric if needed
+            try:
+                practical_hours = float(practical_hours) if practical_hours else 0
+                room_capacity = float(room_capacity) if room_capacity else 0
+                student_count = float(student_count) if student_count else 70
+            except (ValueError, TypeError):
+                logger.warning(f"Invalid numeric values in lab assignment: {lab.get('course_code', 'Unknown')}")
+                continue
             
-            print(f"{room_id:<10} {day.capitalize():<10} {time_interval:<15} {teachers:<30} {courses:<30}")
+            # Hard constraint: courses with <3 practical hours should use ≤35 capacity labs
+            if student_count >= 70 and practical_hours < 3 and room_capacity > 35:
+                violation = {
+                    'type': 'capacity_violation',
+                    'course_code': lab.get('course_code', ''),
+                    'teacher_id': lab['teacher_id'],
+                    'practical_hours': practical_hours,
+                    'room_capacity': room_capacity,
+                    'student_count': student_count,
+                    'room_number': lab.get('room_number', ''),
+                    'violation_rule': f"{practical_hours}h course (70 students) in {room_capacity}-capacity lab (should be ≤35)"
+                }
+                capacity_violations.append(violation)
+            
+            # Additional check: very high capacity utilization
+            if room_capacity > 0:
+                utilization = (student_count / room_capacity) * 100
+                if utilization > 100:
+                    violation = {
+                        'type': 'overcapacity_violation',
+                        'course_code': lab.get('course_code', ''),
+                        'teacher_id': lab['teacher_id'],
+                        'student_count': student_count,
+                        'room_capacity': room_capacity,
+                        'utilization_percent': utilization,
+                        'room_number': lab.get('room_number', ''),
+                        'violation_rule': f"{student_count} students in {room_capacity}-capacity lab ({utilization:.1f}% utilization)"
+                    }
+                    capacity_violations.append(violation)
+        
+        self.conflicts['lab_overlaps'] = lab_conflicts
+        self.conflicts['capacity_violations'] = capacity_violations
+        
+        logger.info(f"Found {len(lab_conflicts)} lab overlaps and {len(capacity_violations)} capacity violations")
+        return lab_conflicts + capacity_violations
     
-    # Lab overlap verification (if we have lab data)
-    all_lab_violations, lab_schedule = verify_lab_overlaps(schedule_df)
+    def detect_cross_schedule_conflicts(self, other_schedule_file: str) -> List[Dict]:
+        """Detect conflicts between current schedule and another schedule file."""
+        logger.info(f"Detecting cross-schedule conflicts with {other_schedule_file}")
+        
+        other_df = ScheduleFile.load_schedule(other_schedule_file)
+        if other_df is None:
+            return []
+        
+        cross_conflicts = []
+        
+        # Compare assignments by teacher and time overlap
+        for _, assignment1 in self.schedule_df.iterrows():
+            teacher_id = assignment1['teacher_id']
+            day1 = assignment1['day']
+            time1 = TimeRange(assignment1['time_interval'])
+            
+            # Find overlapping assignments for the same teacher in other schedule
+            other_teacher_assigns = other_df[other_df['teacher_id'] == teacher_id]
+            
+            for _, assignment2 in other_teacher_assigns.iterrows():
+                day2 = assignment2['day']
+                if day1 == day2:
+                    time2 = TimeRange(assignment2['time_interval'])
+                    
+                    if time1.overlaps_with(time2):
+                        conflict = {
+                            'type': 'cross_schedule_conflict',
+                            'teacher_id': teacher_id,
+                            'day': day1,
+                            'schedule1_course': assignment1['course_code'],
+                            'schedule1_time': str(time1),
+                            'schedule1_room': assignment1.get('room_number', ''),
+                            'schedule2_course': assignment2['course_code'],
+                            'schedule2_time': str(time2),
+                            'schedule2_room': assignment2.get('room_number', ''),
+                        }
+                        cross_conflicts.append(conflict)
+        
+        self.conflicts['cross_schedule_conflicts'] = cross_conflicts
+        logger.info(f"Found {len(cross_conflicts)} cross-schedule conflicts")
+        return cross_conflicts
     
-    # Cross-schedule verification
-    cross_schedule_conflicts = verify_cross_schedule_overlaps()
+    def detect_all_conflicts(self) -> Dict[str, List[Dict]]:
+        """Run all conflict detection methods."""
+        logger.info("Running comprehensive conflict detection...")
+        
+        self.detect_teacher_overlaps()
+        self.detect_room_conflicts()
+        self.detect_lab_overlaps()
+        
+        return self.conflicts
+
+class ReportGenerator:
+    """Generate comprehensive verification reports."""
     
-    # Summary report
-    print("\n" + "=" * 80)
-    print("📊 FINAL VERIFICATION SUMMARY")
-    print("=" * 80)
-    print(f"✅ Schedule file analyzed: {schedule_file}")
-    print(f"📅 Analysis timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"📈 Total assignments checked: {len(schedule_df)}")
-    print(f"👥 Teachers analyzed: {len(teacher_schedule)}")
-    print(f"🏫 Rooms analyzed: {len(room_schedule)}")
-    print(f"📋 Schedule type: {schedule_type}")
-    print()
-    print("🎯 CONFLICT RESULTS:")
-    print(f"   Teacher time slot conflicts: {total_conflicts}")
-    print(f"   Room double-booking conflicts: {room_conflict_count}")
-    print(f"   Teacher lab overlaps: {len(all_lab_violations)}")
-    print(f"   Cross-schedule conflicts: {len(cross_schedule_conflicts)}")
-    print()
+    def __init__(self, conflicts: Dict[str, List[Dict]], schedule_df: pd.DataFrame):
+        """Initialize with conflict data and schedule."""
+        self.conflicts = conflicts
+        self.schedule_df = schedule_df
     
-    total_issues = total_conflicts + room_conflict_count + len(all_lab_violations) + len(cross_schedule_conflicts)
+    def generate_summary_report(self) -> str:
+        """Generate a summary report of all conflicts."""
+        total_conflicts = sum(len(conflicts) for conflicts in self.conflicts.values())
+        
+        report = []
+        report.append("=" * 80)
+        report.append("📊 COMPREHENSIVE SCHEDULE VERIFICATION REPORT")
+        report.append("=" * 80)
+        report.append(f"📅 Analysis timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        report.append(f"📈 Total assignments analyzed: {len(self.schedule_df)}")
+        report.append(f"👥 Teachers: {self.schedule_df['teacher_id'].nunique()}")
+        report.append(f"🏫 Rooms: {self.schedule_df['room_id'].nunique()}")
+        report.append(f"📚 Courses: {self.schedule_df['course_code'].nunique()}")
+        
+        # Add schedule type breakdown
+        if 'slot_type' in self.schedule_df.columns:
+            slot_types = self.schedule_df['slot_type'].value_counts()
+            report.append(f"📋 Schedule breakdown:")
+            for slot_type, count in slot_types.items():
+                report.append(f"   {slot_type}: {count} assignments")
+        
+        report.append("")
+        
+        # Conflict summary
+        report.append("🎯 CONFLICT ANALYSIS RESULTS:")
+        report.append(f"   Teacher overlaps: {len(self.conflicts['teacher_overlaps'])}")
+        report.append(f"   Room conflicts: {len(self.conflicts['room_conflicts'])}")
+        report.append(f"   Lab overlaps: {len(self.conflicts['lab_overlaps'])}")
+        report.append(f"   Capacity violations: {len(self.conflicts['capacity_violations'])}")
+        report.append(f"   Cross-schedule conflicts: {len(self.conflicts['cross_schedule_conflicts'])}")
+        report.append(f"   TOTAL CONFLICTS: {total_conflicts}")
+        report.append("")
+        
+        if total_conflicts == 0:
+            report.append("🎉 VERIFICATION PASSED: No conflicts detected!")
+            report.append("✅ Schedule is feasible and conflict-free")
+        else:
+            report.append(f"⚠️  VERIFICATION FAILED: {total_conflicts} conflicts require resolution!")
+            
+            # Add recommendations based on conflict types
+            if self.conflicts['teacher_overlaps']:
+                report.append("   📌 Teacher overlaps detected - check constraint logic")
+            if self.conflicts['room_conflicts']:
+                report.append("   📌 Room conflicts detected - verify room assignment constraints")
+            if self.conflicts['capacity_violations']:
+                report.append("   📌 Capacity violations detected - review lab allocation rules")
+        
+        return "\n".join(report)
     
-    if total_issues == 0:
-        print("🎉 VERIFICATION PASSED: No overlapping conflicts detected!")
-        return True
-    else:
-        print(f"⚠️  VERIFICATION FAILED: {total_issues} total conflicts detected that need resolution!")
+    def generate_detailed_report(self) -> str:
+        """Generate detailed conflict reports."""
+        report = [self.generate_summary_report()]
+        
+        # Teacher overlap details
+        if self.conflicts['teacher_overlaps']:
+            report.append("\n" + "=" * 80)
+            report.append("❌ TEACHER OVERLAP CONFLICTS")
+            report.append("=" * 80)
+            
+            for conflict in self.conflicts['teacher_overlaps']:
+                report.append(f"\nTeacher {conflict['teacher_id']} - {conflict['day'].capitalize()} - {conflict['time_interval']}")
+                report.append(f"   Conflicting assignments ({conflict['conflict_count']}):")
+                
+                for i, assignment in enumerate(conflict['assignments'], 1):
+                    course = assignment['course_code']
+                    room = assignment['room_number']
+                    slot_type = assignment['slot_type']
+                    report.append(f"   {i}. {course} ({slot_type}) in {room}")
+        
+        # Room conflict details
+        if self.conflicts['room_conflicts']:
+            report.append("\n" + "=" * 80)
+            report.append("❌ ROOM ALLOCATION CONFLICTS")
+            report.append("=" * 80)
+            
+            for conflict in self.conflicts['room_conflicts']:
+                room = conflict['room_number']
+                day = conflict['day']
+                time = conflict['time_interval']
+                teachers = ', '.join(map(str, conflict['teachers']))
+                
+                report.append(f"\nRoom {room} - {day.capitalize()} - {time}")
+                report.append(f"   Multiple teachers assigned: {teachers}")
+                
+                for assignment in conflict['assignments']:
+                    teacher = assignment['teacher_id']
+                    course = assignment['course_code']
+                    report.append(f"   - Teacher {teacher}: {course}")
+        
+        # Lab conflict details
+        if self.conflicts['lab_overlaps']:
+            report.append("\n" + "=" * 80)
+            report.append("❌ LAB SCHEDULING CONFLICTS")
+            report.append("=" * 80)
+            
+            for conflict in self.conflicts['lab_overlaps']:
+                if conflict['type'] == 'lab_teacher_overlap':
+                    teacher = conflict['teacher_id']
+                    report.append(f"\nTeacher {teacher} - Lab overlap:")
+                    for assignment in conflict['assignments']:
+                        course = assignment['course_code']
+                        room = assignment['room_number']
+                        report.append(f"   - {course} in {room}")
+        
+        # Capacity violation details
+        if self.conflicts['capacity_violations']:
+            report.append("\n" + "=" * 80)
+            report.append("❌ CAPACITY CONSTRAINT VIOLATIONS")
+            report.append("=" * 80)
+            
+            for violation in self.conflicts['capacity_violations']:
+                course = violation['course_code']
+                teacher = violation['teacher_id']
+                rule = violation['violation_rule']
+                room = violation['room_number']
+                
+                report.append(f"\n{course} (Teacher {teacher}) in {room}")
+                report.append(f"   Violation: {rule}")
+        
+        return "\n".join(report)
+
+class OptimizedTeacherOverlapVerifier:
+    """Main class for optimized teacher overlap verification."""
+    
+    def __init__(self):
+        """Initialize the verifier."""
+        self.schedule_files = ScheduleFile.find_latest_schedule_files()
+        self.primary_schedule = None
+        self.conflicts_detected = {}
+    
+    def verify_schedules(self) -> bool:
+        """Run comprehensive schedule verification."""
+        logger.info("Starting optimized schedule verification...")
+        
+        # Find and load primary schedule
+        primary_file = self._get_primary_schedule_file()
+        if not primary_file:
+            logger.error("No valid schedule files found for verification")
+            return False
+        
+        self.primary_schedule = ScheduleFile.load_schedule(primary_file)
+        if self.primary_schedule is None:
+            logger.error(f"Failed to load primary schedule from {primary_file}")
+            return False
+        
+        logger.info(f"Primary schedule loaded: {primary_file}")
+        
+        # Run conflict detection
+        detector = ConflictDetector(self.primary_schedule)
+        self.conflicts_detected = detector.detect_all_conflicts()
+        
+        # Check for cross-schedule conflicts if multiple files exist
+        if self.schedule_files['theory_only'] and self.schedule_files['combined']:
+            detector.detect_cross_schedule_conflicts(self.schedule_files['theory_only'])
+        
+        # Generate and display reports
+        reporter = ReportGenerator(self.conflicts_detected, self.primary_schedule)
+        
+        print(reporter.generate_detailed_report())
+        
+        # Determine verification result
+        total_conflicts = sum(len(conflicts) for conflicts in self.conflicts_detected.values())
+        success = total_conflicts == 0
+        
+        if success:
+            logger.info("✅ Schedule verification PASSED")
+        else:
+            logger.warning(f"❌ Schedule verification FAILED - {total_conflicts} conflicts detected")
+        
+        return success
+    
+    def _get_primary_schedule_file(self) -> Optional[str]:
+        """Get the primary schedule file for verification."""
+        # Priority order: newest > combined > theory_only
+        for file_type in ['newest', 'combined', 'theory_only']:
+            if self.schedule_files.get(file_type):
+                return self.schedule_files[file_type]
+        return None
+
+def verify_teacher_overlap() -> bool:
+    """Main function for teacher overlap verification."""
+    try:
+        verifier = OptimizedTeacherOverlapVerifier()
+        return verifier.verify_schedules()
+    except Exception as e:
+        logger.error(f"Error during verification: {e}")
+        logger.exception("Verification error details")
         return False
 
 def main():
-    """Main function to run teacher overlap verification."""
-    # Change to the correct directory if needed
+    """Main entry point."""
+    # Change to correct directory if needed
     if os.path.exists("timetable_scheduler"):
         os.chdir("timetable_scheduler")
     
-    # Run verification
+    print("🔍 OPTIMIZED TEACHER OVERLAP VERIFICATION SYSTEM")
+    print("=" * 60)
+    
     success = verify_teacher_overlap()
     
     if success:
         print("\n✅ Teacher overlap verification completed successfully!")
     else:
-        print("\n❌ Teacher overlap verification found issues!")
+        print("\n❌ Teacher overlap verification found conflicts!")
     
     return success
 

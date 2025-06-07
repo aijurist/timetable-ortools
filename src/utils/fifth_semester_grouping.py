@@ -237,12 +237,19 @@ class FifthSemesterGroupingAnalyzer:
         # Determine optimal number of groups based on teacher instance distribution
         total_instances = len(self.teacher_instances)
         instances_per_group = max(4, total_instances // 6)  # Aim for 4-6 instances per group
-        optimal_group_count = max(3, min(8, total_instances // instances_per_group))
+        # DYNAMIC: Set groups = number of courses for optimal Hall's theorem compliance
+        num_courses = len(self.courses)
+        optimal_group_count = num_courses  # Dynamic: groups = courses for perfect Hall's theorem
+        # optimal_group_count = max(3, min(8, total_instances // instances_per_group))  # Original dynamic calculation
         
-        print(f"\n📊 Group Configuration:")
+        print(f"\n📊 Group Configuration (DYNAMIC - COURSES = GROUPS):")
         print(f"   🔢 Total instances to distribute: {total_instances}")
-        print(f"   📦 Target groups: {optimal_group_count}")
+        print(f"   📚 Number of courses: {num_courses}")
+        print(f"   📦 Target groups: {optimal_group_count} (DYNAMIC: groups = courses)")
         print(f"   📊 Target instances per group: {instances_per_group}")
+        print(f"   🎯 Hall's Theorem Optimal: Each course needs {optimal_group_count} teachers for perfect compliance")
+        print(f"   👥 Students per group: {420 // optimal_group_count} students")
+        print(f"   📈 Teachers per group: ~{(420 // optimal_group_count)/70:.1f} teachers needed")
         
         # Initialize groups
         groups = []
@@ -1949,8 +1956,9 @@ FIXED Heatmap Summary:
             optimized_groups = self._rebalance_group_capacities(optimized_groups)
         
         # Strategy 3: Create backup teacher instances for popular courses
-        if optimization_needed['single_teacher_courses'] > len(groups) * 0.5:
-            optimized_groups = self._create_backup_teacher_instances(optimized_groups)
+        # DISABLED: This was creating additional instances (e.g., 7th CS23511 instance)
+        # if optimization_needed['single_teacher_courses'] > len(groups) * 0.5:
+        #     optimized_groups = self._create_backup_teacher_instances(optimized_groups)
         
         # Strategy 4: Ensure minimum capacity per group
         optimized_groups = self._ensure_minimum_group_capacity(optimized_groups, target_students)
