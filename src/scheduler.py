@@ -346,10 +346,26 @@ class TimetableScheduler:
                         teacher_theory_assignments[teacher][d][s][room_id] = model.NewBoolVar(
                             f'teacher_{teacher}_day_{d}_slot_{s}_classroom_{room_id}')
         
-        # TEMPORARILY DISABLED: Lab assignments
+        # ENABLED: Lab assignments
         # teacher_lab_assignments[t][d][session][r] = 1 if teacher t is assigned to lab r in session on day d
-        teacher_lab_assignments = None
-        self.logger.info("Lab assignments temporarily disabled as requested")
+        teacher_lab_assignments = {}
+        lab_ids = self.labs['id'].tolist() if not self.labs.empty else []
+        
+        if lab_ids:
+            for teacher in self.teachers:
+                teacher_lab_assignments[teacher] = {}
+                for d in range(self.num_days):
+                    teacher_lab_assignments[teacher][d] = {}
+                    for session_name in self.lab_sessions.keys():
+                        teacher_lab_assignments[teacher][d][session_name] = {}
+                        for room_id in lab_ids:
+                            teacher_lab_assignments[teacher][d][session_name][room_id] = model.NewBoolVar(
+                                f'teacher_{teacher}_day_{d}_session_{session_name}_lab_{room_id}')
+            
+            self.logger.info(f"Lab assignments ENABLED: {len(lab_ids)} labs available for scheduling")
+        else:
+            teacher_lab_assignments = None
+            self.logger.warning("No labs found in room data - lab assignments disabled")
         
         # Initialize constraints handler
         constraints = TimetableConstraints(
@@ -391,7 +407,13 @@ class TimetableScheduler:
             
             # Run post-processing to distribute course instances across group timeslots
             theory_assignments = self.post_process_group_scheduling(solver, teacher_theory_assignments, group_timeslots)
-            lab_assignments = []  # Empty list since lab assignments are disabled
+            
+            # Extract lab assignments if enabled
+            if teacher_lab_assignments is not None:
+                lab_assignments = self.extract_lab_assignments(solver, teacher_lab_assignments)
+                self.logger.info(f"Extracted {len(lab_assignments)} lab assignments")
+            else:
+                lab_assignments = []  # Empty list since no labs available
             
             # Create detailed schedule
             schedule_result = self.create_detailed_schedule(theory_assignments, lab_assignments)
@@ -424,7 +446,13 @@ class TimetableScheduler:
             
             # Run post-processing to distribute course instances across group timeslots
             theory_assignments = self.post_process_group_scheduling(solver, teacher_theory_assignments, group_timeslots)
-            lab_assignments = []  # Empty list since lab assignments are disabled
+            
+            # Extract lab assignments if enabled
+            if teacher_lab_assignments is not None:
+                lab_assignments = self.extract_lab_assignments(solver, teacher_lab_assignments)
+                self.logger.info(f"Extracted {len(lab_assignments)} lab assignments")
+            else:
+                lab_assignments = []  # Empty list since no labs available
             
             # Create detailed schedule
             schedule_result = self.create_detailed_schedule(theory_assignments, lab_assignments)

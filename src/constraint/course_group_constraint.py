@@ -281,27 +281,27 @@ class CourseGroupConstraint:
                 
                 # Add instance to the selected group
                 groups[best_group].append(instance)
-                
-                # Update metrics
-                metrics = group_metrics[best_group]
-                theory_hrs = instance['lecture_hours'] + instance['tutorial_hours']
-                practical_hrs = instance['practical_hours']
-                workload = theory_hrs + practical_hrs
-                
-                metrics['workload'] += workload
-                metrics['theory_workload'] += theory_hrs
-                metrics['practical_workload'] += practical_hrs
-                metrics['student_count'] += instance.get('student_count', 0)
-                metrics['instance_count'] += 1
-                if theory_hrs > 0:
-                    metrics['theory_instance_count'] += 1
-                metrics['courses'].add(instance['course_code'])
-                metrics['teachers'].add(instance['teacher_id'])
-                
-                logger.info(f"  Distributing: {course_code} (T{teacher_id}) → Group {best_group + 1} (Teacher uniqueness constraint satisfied)")
-                
-                # Move to next group for round-robin distribution
-                next_group = (next_group + 1) % num_groups
+            
+            # Update metrics
+            metrics = group_metrics[best_group]
+            theory_hrs = instance['lecture_hours'] + instance['tutorial_hours']
+            practical_hrs = instance['practical_hours']
+            workload = theory_hrs + practical_hrs
+            
+            metrics['workload'] += workload
+            metrics['theory_workload'] += theory_hrs
+            metrics['practical_workload'] += practical_hrs
+            metrics['student_count'] += instance.get('student_count', 0)
+            metrics['instance_count'] += 1
+            if theory_hrs > 0:
+                metrics['theory_instance_count'] += 1
+            metrics['courses'].add(instance['course_code'])
+            metrics['teachers'].add(instance['teacher_id'])
+            
+            logger.info(f"  Distributing: {course_code} (T{teacher_id}) → Group {best_group + 1} (Teacher uniqueness constraint satisfied)")
+            
+            # Move to next group for round-robin distribution
+            next_group = (next_group + 1) % num_groups
         
         # Validate teacher uniqueness constraint
         self._validate_teacher_uniqueness_constraint(groups, dept, semester)
@@ -619,7 +619,7 @@ class CourseGroupConstraint:
             logger.warning("  Consider manual adjustment for optimal student choice")
         
         return groups
-
+    
     def _create_instance_group_mapping(self):
         """Create enhanced mapping from course instances to their groups (INSTANCE-AWARE)."""
         logger.info("Creating enhanced instance-group mapping (INSTANCE-AWARE)...")
@@ -1116,7 +1116,7 @@ class CourseGroupConstraint:
             self.model.Add(sum(day_usage_vars[:max_theory_slots_per_day]) >= sum(day_usage_vars))
             
         logger.info("✅ Global compactness: Theory limited to early slots, late slots reserved for labs")
-
+    
     def _store_group_mappings_enhanced(self):
         """Store enhanced group mappings for use in output generation (INSTANCE-AWARE)."""
         logger.info("Storing enhanced group mappings for output generation...")
@@ -1173,7 +1173,7 @@ class CourseGroupConstraint:
                 'semester': 0,
                 'teacher_id': teacher_id,
                 'course_code': 'Unknown'
-            }
+            } 
     
     def extract_group_timeslots(self, solver):
         """

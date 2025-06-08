@@ -95,3 +95,4 @@ now add this new grouping constraint
 2) first try to parallelly schedule different course instance in the same group in same time slot, max limit time slot is 4 timeslot
 3) generate a python code to verify it after running the scheduler
 
+for lab scheduling use the lab constraint given in @lab_constraints.py  @lab_scheduler.py integrate them into our system but dont just import the constraint create constraint according to current system just get the batching of labs according to room capacity using large lab for some course with more practical hour make changes according to current implementation 
