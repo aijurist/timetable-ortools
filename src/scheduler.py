@@ -35,6 +35,9 @@ class TimetableScheduler:
         self.days = ["tuesday", "wed", "thur", "fri", "sat"]  # Excluding Monday
         self.num_days = len(self.days)
         
+        # Pre-compute room IDs for efficiency (moved here for availability in all methods)
+        self.classroom_ids = None  # Will be initialized after classrooms are processed
+        
         # Time slots (11 slots per day - Theory timing)
         self.time_slots = [
             "8:00 - 8:50", "9:00 - 9:50", "10:00 - 10:50", "11:00 - 11:50",
@@ -65,6 +68,12 @@ class TimetableScheduler:
         # Process rooms - separate classrooms and labs
         self.classrooms = self.rooms_df[self.rooms_df['is_lab'] == 0]
         self.labs = self.rooms_df[self.rooms_df['is_lab'] == 1]
+        
+        # Initialize room IDs
+        if not self.classrooms.empty:
+            self.classroom_ids = self.classrooms['id'].tolist()
+        else:
+            self.classroom_ids = []
         
         # Process teacher-course assignments
         self.process_teacher_courses()
@@ -318,14 +327,11 @@ class TimetableScheduler:
         return self.department_block_allocation
     
     def generate_timetable(self):
-        """Generate the timetable using OR-Tools CP-SAT solver with basic scheduling."""
-        self.logger.info("Starting timetable generation...")
+        """Generate the timetable using OR-Tools CP-SAT solver with group-based scheduling."""
+        self.logger.info("Starting timetable generation with GROUP-BASED SCHEDULING...")
         
         # Create the CP-SAT model
         model = cp_model.CpModel()
-        
-        # Pre-compute room IDs for efficiency
-        classroom_ids = self.classrooms['id'].tolist()
         
         # Define assignment variables
         # teacher_theory_assignments[t][d][s][r] = 1 if teacher t is assigned to classroom r in slot s on day d
@@ -336,7 +342,7 @@ class TimetableScheduler:
                 teacher_theory_assignments[teacher][d] = {}
                 for s in range(self.num_slots):
                     teacher_theory_assignments[teacher][d][s] = {}
-                    for room_id in classroom_ids:
+                    for room_id in self.classroom_ids:
                         teacher_theory_assignments[teacher][d][s][room_id] = model.NewBoolVar(
                             f'teacher_{teacher}_day_{d}_slot_{s}_classroom_{room_id}')
         
@@ -373,14 +379,18 @@ class TimetableScheduler:
         solver.parameters.cp_model_presolve = True
         solver.parameters.cp_model_probing_level = 2
         
-        self.logger.info("Solving the scheduling model with relaxed constraints...")
+        self.logger.info("Solving the scheduling model with GROUP-BASED SCHEDULING...")
         status = solver.Solve(model)
         
         if status == cp_model.OPTIMAL:
             self.logger.info("Optimal solution found!")
             
-            # Extract assignments from CP-SAT solution (no lab assignments)
-            theory_assignments = self.extract_theory_assignments(solver, teacher_theory_assignments)
+            # Extract group timeslots from the solution
+            course_group_constraint = self.constraints.course_group_constraint
+            group_timeslots = course_group_constraint.extract_group_timeslots(solver)
+            
+            # Run post-processing to distribute course instances across group timeslots
+            theory_assignments = self.post_process_group_scheduling(solver, teacher_theory_assignments, group_timeslots)
             lab_assignments = []  # Empty list since lab assignments are disabled
             
             # Create detailed schedule
@@ -408,8 +418,12 @@ class TimetableScheduler:
         elif status == cp_model.FEASIBLE:
             self.logger.info("Feasible solution found!")
             
-            # Extract assignments from CP-SAT solution (no lab assignments)
-            theory_assignments = self.extract_theory_assignments(solver, teacher_theory_assignments)
+            # Extract group timeslots from the solution
+            course_group_constraint = self.constraints.course_group_constraint
+            group_timeslots = course_group_constraint.extract_group_timeslots(solver)
+            
+            # Run post-processing to distribute course instances across group timeslots
+            theory_assignments = self.post_process_group_scheduling(solver, teacher_theory_assignments, group_timeslots)
             lab_assignments = []  # Empty list since lab assignments are disabled
             
             # Create detailed schedule
@@ -928,6 +942,216 @@ class TimetableScheduler:
         except Exception as e:
             self.logger.error(f"Error generating visualizations: {e}")
             self.logger.exception("Visualization error details")
+
+    def post_process_group_scheduling(self, solver, teacher_theory_assignments, group_timeslots):
+        """
+        Post-process group-based scheduling by distributing course instances across group timeslots.
+        
+        Instead of directly scheduling individual course instances in the algorithm, 
+        we allocated 4 optimal timeslots to each group. Now we distribute the actual 
+        course instances across these timeslots based on their lecture and tutorial hours.
+        
+        Args:
+            solver: The CP-SAT solver with a solution
+            teacher_theory_assignments: The theory assignment variables
+            group_timeslots: Dictionary mapping group_name to list of (day_idx, slot_idx) tuples
+            
+        Returns:
+            List of theory assignments (same format as extract_theory_assignments)
+        """
+        self.logger.info("Post-processing group-based scheduling...")
+        
+        # Get the course group constraint instance for group information
+        course_group_constraint = self.constraints.course_group_constraint
+        
+        # Initialize list for theory assignments
+        theory_assignments = []
+        
+        # Track which course instances have been processed
+        processed_instances = set()
+        
+        # Track usage of group timeslots (to avoid conflicts)
+        timeslot_usage = {}  # (day_idx, slot_idx, room_id) -> list of assigned instances
+        
+        # Process each teacher's course instances
+        for teacher in self.teachers:
+            if teacher not in self.teacher_course_assignments:
+                continue
+                
+            teacher_info = self._get_teacher_info(teacher)
+            teacher_instances = self.teacher_course_assignments[teacher]
+            
+            # Group instances by group
+            instances_by_group = {}
+            for instance in teacher_instances:
+                instance_id = instance['id']
+                
+                # Skip if already processed
+                if instance_id in processed_instances:
+                    continue
+                
+                # Skip if no theory hours
+                if instance['lecture_hours'] == 0 and instance['tutorial_hours'] == 0:
+                    continue
+                
+                # Get group information
+                group_info = course_group_constraint.get_group_info_for_course_instance(
+                    teacher, instance_id
+                )
+                group_name = group_info.get('group_name', 'Unassigned')
+                
+                if group_name not in instances_by_group:
+                    instances_by_group[group_name] = []
+                
+                instances_by_group[group_name].append(instance)
+            
+            # For each group, distribute instances across the allocated timeslots
+            for group_name, instances in instances_by_group.items():
+                # Get allocated timeslots for this group
+                allocated_timeslots = course_group_constraint.get_group_timeslots(group_name)
+                
+                if not allocated_timeslots:
+                    self.logger.warning(f"No timeslots allocated for group {group_name}, skipping {len(instances)} instances")
+                    continue
+                
+                self.logger.info(f"Distributing {len(instances)} instances for teacher {teacher} in group {group_name}")
+                self.logger.info(f"  Group {group_name} has {len(allocated_timeslots)} allocated timeslots")
+                
+                # Sort instances by total theory hours (descending) for better distribution
+                instances.sort(key=lambda x: x['lecture_hours'] + x['tutorial_hours'], reverse=True)
+                
+                # Distribute instances across timeslots
+                for instance in instances:
+                    instance_id = instance['id']
+                    lecture_hours = instance['lecture_hours']
+                    tutorial_hours = instance['tutorial_hours']
+                    total_hours = lecture_hours + tutorial_hours
+                    
+                    # Skip if no theory hours
+                    if total_hours == 0:
+                        continue
+                    
+                    # Mark as processed
+                    processed_instances.add(instance_id)
+                    
+                    # Find suitable room based on student count and availability
+                    suitable_rooms = [
+                        room_id for room_id in self.classroom_ids
+                        if self.classrooms[self.classrooms['id'] == room_id]['room_max_cap'].values[0] >= instance['student_count']
+                    ]
+                    
+                    if not suitable_rooms:
+                        # If no suitable room, use any room
+                        suitable_rooms = self.classroom_ids
+                    
+                    # Sort rooms by capacity (ascending) to minimize waste
+                    suitable_rooms.sort(
+                        key=lambda r: self.classrooms[self.classrooms['id'] == r]['room_max_cap'].values[0]
+                    )
+                    
+                    # Try to assign this instance to allocated timeslots
+                    hours_assigned = 0
+                    lecture_assigned = 0
+                    tutorial_assigned = 0
+                    
+                    self.logger.info(f"  Instance {instance_id} ({instance['course_code']}): {lecture_hours}L + {tutorial_hours}T hours")
+                    
+                    # Sort allocated timeslots to distribute classes evenly across days
+                    # We'll try to use different days to spread out the schedule
+                    sorted_timeslots = sorted(allocated_timeslots, key=lambda ts: (ts[0], ts[1]))
+                    
+                    # Track which timeslots are already used by this teacher
+                    teacher_used_timeslots = set()
+                    for key, data in timeslot_usage.items():
+                        day, slot, _ = key  # Unpack day_idx, slot_idx, room_id
+                        if data.get('teacher_id') == teacher:
+                            teacher_used_timeslots.add((day, slot))
+                    
+                    # Try to assign to each allocated timeslot
+                    for day_idx, slot_idx in sorted_timeslots:
+                        # Skip if we've assigned all hours
+                        if hours_assigned >= total_hours:
+                            break
+                            
+                        # Skip if teacher already has an assignment in this timeslot
+                        if (day_idx, slot_idx) in teacher_used_timeslots:
+                            continue
+                        
+                        # Find an available room for this timeslot
+                        room_assigned = False
+                        for room_id in suitable_rooms:
+                            timeslot_key = (day_idx, slot_idx, room_id)
+                            
+                            # Check if this timeslot+room is already used
+                            if timeslot_key in timeslot_usage:
+                                continue
+                            
+                            # Determine slot type based on what's still needed
+                            if lecture_assigned < lecture_hours:
+                                slot_type = 'Lecture'
+                                lecture_assigned += 1
+                            else:
+                                slot_type = 'Tutorial'
+                                tutorial_assigned += 1
+                                
+                            # Add this timeslot to teacher's used timeslots
+                            teacher_used_timeslots.add((day_idx, slot_idx))
+                            
+                            # Create the assignment
+                            group_info = course_group_constraint.get_group_info_for_course_instance(
+                                teacher, instance_id
+                            )
+                            
+                            theory_assignments.append({
+                                'day': self.days[day_idx],
+                                'slot_index': slot_idx,
+                                'time_interval': self.time_slots[slot_idx],
+                                'slot_type': slot_type,
+                                'teacher_id': teacher,
+                                'first_name': teacher_info['first_name'],
+                                'last_name': teacher_info['last_name'],
+                                'staff_code': teacher_info['staff_code'],
+                                'room_id': room_id,
+                                'room_number': self.classrooms[self.classrooms['id'] == room_id]['room_number'].values[0],
+                                'block': self.classrooms[self.classrooms['id'] == room_id]['block'].values[0],
+                                'room_type': 'Classroom',
+                                'capacity': self.classrooms[self.classrooms['id'] == room_id]['room_max_cap'].values[0],
+                                'course_id': instance['course_id'],
+                                'course_code': instance['course_code'],
+                                'course_name': instance['course_name'],
+                                'course_instance_id': instance_id,
+                                'student_count': instance['student_count'],
+                                'academic_year': instance.get('academic_year', ''),
+                                'semester': instance.get('semester', ''),
+                                'course_dept': instance.get('course_dept', ''),
+                                'group_name': group_info.get('group_name', 'Unassigned'),
+                                'group_index': group_info.get('group_index', 0),
+                                'department_group': group_info.get('department', 'Unknown'),
+                                'semester_group': group_info.get('semester', 0),
+                            })
+                            
+                            # Mark this timeslot+room as used
+                            timeslot_usage[timeslot_key] = {
+                                'instance_id': instance_id,
+                                'teacher_id': teacher,
+                                'course_code': instance['course_code']
+                            }
+                            
+                            hours_assigned += 1
+                            room_assigned = True
+                            
+                            self.logger.info(f"    Assigned {slot_type} for {instance['course_code']} to {self.days[day_idx]} slot {slot_idx} ({self.time_slots[slot_idx]}) in room {room_id}")
+                            break  # Break out of room loop once assigned
+                        
+                        if not room_assigned:
+                            self.logger.warning(f"    Could not find available room for {self.days[day_idx]} slot {slot_idx}")
+                    
+                    # Log if we couldn't assign all hours
+                    if hours_assigned < total_hours:
+                        self.logger.warning(f"  Could only assign {hours_assigned}/{total_hours} hours for instance {instance_id}")
+        
+        self.logger.info(f"Post-processing complete: {len(theory_assignments)} theory assignments created")
+        return theory_assignments
 
 # Backward compatibility alias
 MacroblockTimetableScheduler = TimetableScheduler 

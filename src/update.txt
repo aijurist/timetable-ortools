@@ -83,3 +83,15 @@ keep this in consideration
 
 
 seems lot of variable why not just find optimal 4 slots for a group rather than giving all to the model if we just get the 4 slots for a group in the current given constraint without violating any course instance in group can be scheduled even in the postprocessing parallely according to their lecture and tutorial hour
+
+
+
+
+i think enforcing this parallel will make sure at most the group will max of 4 slot am i right then enforcing in a sem a group cannot overlap with other group will be easy
+
+
+now add this new grouping constraint
+1) no same teacher can be in the same group they can be only once at a group
+2) first try to parallelly schedule different course instance in the same group in same time slot, max limit time slot is 4 timeslot
+3) generate a python code to verify it after running the scheduler
+

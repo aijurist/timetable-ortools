@@ -3,6 +3,7 @@ Course Hours Constraint
 
 This constraint ensures correct hour allocation per course instance with minimal variables.
 OPTIMIZED: Eliminates redundant instance variables while maintaining instance-aware logic.
+GROUP-BASED COMPATIBLE: Works with the new group-based scheduling approach.
 """
 
 import logging
@@ -19,6 +20,10 @@ class CourseHoursConstraint(ConstraintBase):
         
         OPTIMIZATION: Uses existing teacher assignment variables instead of creating
         redundant instance variables, while maintaining instance-aware logic.
+        
+        GROUP-BASED COMPATIBLE: With group-based scheduling, this constraint only ensures
+        that total required hours per teacher are available across all groups.
+        Post-processing will handle the actual hour distribution.
         """
         logger.info("Applying course hours constraint...")
         

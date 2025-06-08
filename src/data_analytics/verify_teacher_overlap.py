@@ -32,12 +32,12 @@ class TimeRange:
     def _parse_time_range(self, time_str: str) -> Tuple[int, int]:
         """Parse time range string to start and end minutes since midnight."""
         try:
-    if ' - ' in time_str:
+            if ' - ' in time_str:
                 start_str, end_str = time_str.split(' - ')
                 start_minutes = self._time_to_minutes(start_str.strip())
                 end_minutes = self._time_to_minutes(end_str.strip())
                 return start_minutes, end_minutes
-    else:
+            else:
                 # Single time point, assume 50-minute duration
                 start_minutes = self._time_to_minutes(time_str.strip())
                 return start_minutes, start_minutes + 50
@@ -48,7 +48,7 @@ class TimeRange:
     def _time_to_minutes(self, time_str: str) -> int:
         """Convert time string like '11:00' to minutes since midnight."""
         hours, minutes = map(int, time_str.split(':'))
-    return hours * 60 + minutes
+        return hours * 60 + minutes
 
     def overlaps_with(self, other: 'TimeRange') -> bool:
         """Check if this time range overlaps with another."""
@@ -71,19 +71,19 @@ class ScheduleFile:
         
         try:
             # Find combined schedules (lab + theory)
-    lab_folders = [f for f in os.listdir(output_dir) if f.startswith("lab_schedule_")]
-    if lab_folders:
-        latest_lab_folder = max(lab_folders)
-        combined_file = os.path.join(output_dir, latest_lab_folder, "combined_theory_lab_schedule.csv")
-        if os.path.exists(combined_file):
+            lab_folders = [f for f in os.listdir(output_dir) if f.startswith("lab_schedule_")]
+            if lab_folders:
+                latest_lab_folder = max(lab_folders)
+                combined_file = os.path.join(output_dir, latest_lab_folder, "combined_theory_lab_schedule.csv")
+                if os.path.exists(combined_file):
                     files['combined'] = combined_file
     
             # Find theory-only schedules
-    theory_folders = [f for f in os.listdir(output_dir) if f.startswith("macroblock_schedule_")]
-    if theory_folders:
-        latest_theory_folder = max(theory_folders)
-        theory_file = os.path.join(output_dir, latest_theory_folder, "macroblock_schedule.csv")
-        if os.path.exists(theory_file):
+            theory_folders = [f for f in os.listdir(output_dir) if f.startswith("macroblock_schedule_")]
+            if theory_folders:
+                latest_theory_folder = max(theory_folders)
+                theory_file = os.path.join(output_dir, latest_theory_folder, "macroblock_schedule.csv")
+                if os.path.exists(theory_file):
                     files['theory_only'] = theory_file
             
             # Find newest schedule (prioritize combined schedules)
@@ -277,7 +277,7 @@ class ConflictDetector:
                         lab_conflicts.append(conflict)
         
         # Detect capacity constraint violations with improved logic
-    capacity_violations = []
+        capacity_violations = []
         for _, lab in lab_assignments.iterrows():
             practical_hours = lab.get('practical_hours', 0)
             room_capacity = lab.get('capacity', lab.get('room_capacity', 0))
