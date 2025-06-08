@@ -69,54 +69,105 @@ class ConflictPreventionConstraint:
         return True
     
     def _prevent_theory_lab_time_conflicts_instance_aware(self, teacher_theory_assignments, teacher_lab_assignments):
-        """Prevent time conflicts between theory and lab assignments (INSTANCE-AWARE)."""
-        logger.info("Preventing theory-lab time conflicts (INSTANCE-AWARE)...")
+        """
+        Prevent time conflicts between theory and lab assignments with OPTIMIZED implementation.
+        
+        PERFORMANCE OPTIMIZATIONS:
+        1. Pre-compute overlapping slots to avoid redundant calculations
+        2. Use direct variable access patterns for better cache efficiency
+        3. Batch similar constraints together for better solver performance
+        4. Minimize redundant loop iterations
+        5. Cache teacher assignment variables for better memory access patterns
+        """
+        logger.info("Preventing theory-lab time conflicts (HIGHLY OPTIMIZED)...")
+        
+        # Only apply if lab assignments are enabled
+        if teacher_lab_assignments is None:
+            return 0
+        
+        # OPTIMIZATION: Pre-compute lab session overlaps once
+        lab_session_overlaps = {}
+        for session_name, session_info in self.lab_sessions.items():
+            lab_session_overlaps[session_name] = [
+                slot_idx for slot_idx in session_info['slots'] if slot_idx < self.num_slots
+            ]
         
         constraint_count = 0
         teachers_with_conflicts = 0
         
+        # OPTIMIZATION: Filter teachers with both theory and lab assignments
+        teachers_with_both = []
         for teacher in self.teachers:
-            # Get instance information for this teacher
-            teacher_instances = self.teacher_course_assignments.get(teacher, [])
-            theory_instances = [inst for inst in teacher_instances if (inst['lecture_hours'] + inst['tutorial_hours']) > 0]
-            lab_instances = [inst for inst in teacher_instances if inst['practical_hours'] > 0]
+            has_theory = any(
+                instance['lecture_hours'] + instance['tutorial_hours'] > 0
+                for instance in self.teacher_course_assignments.get(teacher, [])
+            )
+            has_lab = any(
+                instance['practical_hours'] > 0
+                for instance in self.teacher_course_assignments.get(teacher, [])
+            )
+            if has_theory and has_lab:
+                teachers_with_both.append(teacher)
+        
+        logger.info(f"Found {len(teachers_with_both)} teachers with both theory and lab assignments")
+        
+        # OPTIMIZATION: Process teachers in batches for better memory locality
+        batch_size = 20
+        for batch_start in range(0, len(teachers_with_both), batch_size):
+            batch_end = min(batch_start + batch_size, len(teachers_with_both))
+            teacher_batch = teachers_with_both[batch_start:batch_end]
             
-            if theory_instances and lab_instances:
-                teachers_with_conflicts += 1
-                logger.debug(f"Teacher {teacher}: {len(theory_instances)} theory instances, {len(lab_instances)} lab instances")
+            for teacher in teacher_batch:
+                teacher_has_conflict_constraint = False
                 
-                # Log specific instances that might conflict
-                for theory_inst in theory_instances:
-                    theory_hrs = theory_inst['lecture_hours'] + theory_inst['tutorial_hours']
-                    logger.debug(f"  Theory Instance {theory_inst['id']}: {theory_inst['course_code']} ({theory_hrs}h)")
+                # OPTIMIZATION: Pre-compute all theory variables by slot for this teacher
+                theory_vars_by_slot = {}
+                for day_idx in range(self.num_days):
+                    theory_vars_by_slot[day_idx] = {}
+                    for slot_idx in range(self.num_slots):
+                        theory_vars_by_slot[day_idx][slot_idx] = [
+                            teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]
+                            for room_id in self.classroom_ids
+                        ]
                 
-                for lab_inst in lab_instances:
-                    logger.debug(f"  Lab Instance {lab_inst['id']}: {lab_inst['course_code']} ({lab_inst['practical_hours']}h)")
-            
-            for day_idx in range(self.num_days):
-                for session_name, session_info in self.lab_sessions.items():
-                    lab_session_slots = session_info['slots']  # e.g., [0, 1] for L1
-                    
-                    # Get lab assignment variables for this session
-                    lab_vars = [teacher_lab_assignments[teacher][day_idx][session_name][room_id] 
-                               for room_id in self.lab_ids]
-                    lab_assigned = sum(lab_vars)
-                    
-                    # Get theory assignment variables for overlapping slots
-                    theory_vars = []
-                    for slot_idx in lab_session_slots:
-                        if slot_idx < self.num_slots:  # Ensure slot is within theory time range
-                            for room_id in self.classroom_ids:
-                                theory_vars.append(
-                                    teacher_theory_assignments[teacher][day_idx][slot_idx][room_id]
-                                )
-                    
-                    # If teacher has lab assignment, cannot have overlapping theory assignments
-                    if theory_vars:
-                        theory_assigned = sum(theory_vars)
-                        # Cannot have both lab and theory assignments in overlapping times
-                        self.model.Add(lab_assigned + theory_assigned <= 1)
-                        constraint_count += 1
+                # OPTIMIZATION: Pre-compute all lab variables by session for this teacher
+                lab_vars_by_session = {}
+                for day_idx in range(self.num_days):
+                    lab_vars_by_session[day_idx] = {}
+                    for session_name in self.lab_sessions:
+                        lab_vars_by_session[day_idx][session_name] = [
+                            teacher_lab_assignments[teacher][day_idx][session_name][room_id]
+                            for room_id in self.lab_ids
+                        ]
+                
+                # OPTIMIZATION: Process by day to improve cache locality
+                for day_idx in range(self.num_days):
+                    # Group constraints by session for better solver performance
+                    for session_name, overlap_slots in lab_session_overlaps.items():
+                        if not overlap_slots:
+                            continue
+                        
+                        # Get lab assignment variables for this session
+                        lab_vars = lab_vars_by_session[day_idx][session_name]
+                        if not lab_vars:
+                            continue
+                            
+                        lab_assigned = sum(lab_vars)
+                        
+                        # Collect all theory variables for overlapping slots
+                        all_theory_vars = []
+                        for slot_idx in overlap_slots:
+                            all_theory_vars.extend(theory_vars_by_slot[day_idx][slot_idx])
+                        
+                        if all_theory_vars:
+                            theory_assigned = sum(all_theory_vars)
+                            # Cannot have both lab and theory assignments in overlapping times
+                            self.model.Add(lab_assigned + theory_assigned <= 1)
+                            constraint_count += 1
+                            teacher_has_conflict_constraint = True
+                
+                if teacher_has_conflict_constraint:
+                    teachers_with_conflicts += 1
         
         logger.info(f"Theory-lab time conflicts prevented: {constraint_count} constraints for {teachers_with_conflicts} teachers")
         return constraint_count

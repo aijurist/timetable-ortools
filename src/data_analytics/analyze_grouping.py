@@ -2152,10 +2152,15 @@ workload distribution and group balance.
             f.write("EXECUTIVE SUMMARY\n")
             f.write("-" * 20 + "\n")
             
-            total_groups = sum(len(analysis['groups']) for analysis in distribution_analysis.values())
-            total_assignments = sum(analysis['total_assignments'] for analysis in distribution_analysis.values())
-            total_unique_courses = sum(analysis['unique_courses'] for analysis in distribution_analysis.values())
-            total_unique_teachers = sum(analysis['unique_teachers'] for analysis in distribution_analysis.values())
+            total_groups = sum(analysis['num_groups'] for analysis in distribution_analysis.values())
+            total_assignments = sum(analysis['total_instances'] for analysis in distribution_analysis.values())
+            total_unique_courses = sum(analysis['total_courses'] for analysis in distribution_analysis.values())
+            total_unique_teachers = len(set(
+                assignment['teacher_id'] 
+                for groups in dept_sem_groups.values() 
+                for group_info in groups.values() 
+                for assignment in group_info['teacher_course_assignments']
+            ))
             
             f.write(f"Total Department/Semester Combinations: {len(dept_sem_groups)}\n")
             f.write(f"Total Groups Created: {total_groups}\n")
@@ -2190,11 +2195,15 @@ workload distribution and group balance.
             
             for (dept, semester), analysis in distribution_analysis.items():
                 f.write(f"{dept} - Semester {semester}:\n")
-                f.write(f"  Total Teacher-Course Assignments: {analysis['total_assignments']}\n")
-                f.write(f"  Unique Courses: {analysis['unique_courses']}\n")
-                f.write(f"  Unique Teachers: {analysis['unique_teachers']}\n")
-                f.write(f"  Group Balance (std dev): {analysis['group_size_std']:.2f}\n")
-                f.write(f"  Average Group Size: {analysis['avg_group_size']:.1f}\n")
+                f.write(f"  Total Teacher-Course Assignments: {analysis['total_instances']}\n")
+                f.write(f"  Unique Courses: {analysis['total_courses']}\n")
+                f.write(f"  Number of Groups: {analysis['num_groups']}\n")
+                f.write(f"  Balance Metrics:\n")
+                balance = analysis['balance_metrics']
+                f.write(f"    Average Group Size: {balance['avg_size']:.1f}\n")
+                f.write(f"    Max Group Size: {balance['max_size']}\n")
+                f.write(f"    Min Group Size: {balance['min_size']}\n")
+                f.write(f"    Balance Ratio: {balance['balance_ratio']:.2f}\n")
                 
                 f.write("\n")
             

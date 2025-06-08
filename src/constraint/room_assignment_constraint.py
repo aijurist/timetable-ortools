@@ -19,14 +19,18 @@ class RoomAssignmentConstraint:
         self.classrooms = classrooms
         self.labs = labs
         
-        # Create department-to-block mapping
+        # Create department-to-block mapping - DISTRIBUTED across all available blocks including D Block
         self.department_block_mapping = {
-            'Computer Science & Engineering': ['A Block'],  # CS can use both A and B blocks
-            'Information Technology': ['A Block'],
-            'Electronics and Communication Engineering': ['B Block'],
-            'Mechanical Engineering': ['B Block'],
-            'Civil Engineering': ['B Block'],
-            'Default': ['A Block', 'B Block']  # Fallback for unknown departments
+            'Computer Science & Engineering': ['A Block', 'B Block', 'D Block'],  # Main CS dept gets all blocks
+            'Artificial Intelligence & Data Science': ['A Block', 'B Block', 'D Block'],  # AI Data Science → A Block + D Block
+            'Artificial Intelligence & Machine Learning': ['B Block','A Block', 'D Block'],  # AI ML → B Block + D Block  
+            'Computer Science & Business Systems': ['A Block', 'B Block', 'D Block'],  # CS Business → A Block + D Block
+            'Computer Science & Design': ['B Block', 'D Block', 'A Block'],  # CS Design → B Block + D Block
+            'Information Technology': ['A Block', 'B Block', 'D Block'],  # IT gets all blocks
+            'Electronics and Communication Engineering': ['B Block', 'D Block'],
+            'Mechanical Engineering': ['B Block', 'D Block'],
+            'Civil Engineering': ['B Block', 'D Block'],
+            'Default': ['A Block', 'B Block', 'D Block']  # Fallback for unknown departments gets all blocks
         }
         
         # Pre-process room data by department blocks
@@ -189,45 +193,82 @@ class RoomAssignmentConstraint:
         logger.info(f"Applied {constraint_count} department-based classroom allocation constraints (INSTANCE-AWARE)")
     
     def _apply_room_conflict_constraints(self, teacher_theory_assignments, teacher_lab_assignments):
-        """Ensure no room conflicts - one assignment per room per time slot."""
-        logger.info("Applying room conflict prevention constraints...")
+        """
+        Ensure no room conflicts - one assignment per room per time slot.
+        
+        PERFORMANCE OPTIMIZATIONS:
+        1. Pre-compute room assignments by time slot
+        2. Add constraints only where needed (2+ teachers)
+        3. Process in batches for better cache efficiency
+        4. Use direct indexing for faster access
+        """
+        logger.info("Applying OPTIMIZED room conflict prevention constraints...")
         
         constraint_count = 0
         
-        # Theory room conflicts
+        # OPTIMIZATION: Process theory rooms in batches for better cache locality
         all_room_ids = self.classrooms['id'].tolist()
-        for room_id in all_room_ids:
-            for day in range(5):  # 5 days
-                for slot in range(11):  # 11 theory slots
-                    room_assignments = []
-                    for teacher in self.teachers:
-                        if (room_id in teacher_theory_assignments[teacher][day][slot]):
-                            room_assignments.append(teacher_theory_assignments[teacher][day][slot][room_id])
+        batch_size = min(20, len(all_room_ids))
+        
+        for batch_start in range(0, len(all_room_ids), batch_size):
+            batch_end = min(batch_start + batch_size, len(all_room_ids))
+            room_batch = all_room_ids[batch_start:batch_end]
+            
+            # OPTIMIZATION: Process by day and slot for better memory access patterns
+            for day in range(self.num_days):
+                for slot in range(self.num_slots):
+                    # OPTIMIZATION: Pre-compute room assignments by teacher for this time slot
+                    room_assignments_by_room = {room_id: [] for room_id in room_batch}
                     
-                    if len(room_assignments) > 1:
-                        # At most one teacher can use this room at this time
-                        self.model.Add(sum(room_assignments) <= 1)
-                        constraint_count += 1
+                    # Collect all assignments for each room in this time slot
+                    for teacher in self.teachers:
+                        for room_id in room_batch:
+                            if room_id in teacher_theory_assignments[teacher][day][slot]:
+                                room_assignments_by_room[room_id].append(
+                                    teacher_theory_assignments[teacher][day][slot][room_id]
+                                )
+                    
+                    # OPTIMIZATION: Add constraints only where needed (2+ teachers)
+                    for room_id, assignments in room_assignments_by_room.items():
+                        if len(assignments) > 1:
+                            # At most one teacher can use this room at this time
+                            self.model.Add(sum(assignments) <= 1)
+                            constraint_count += 1
         
         # Lab room conflicts (if lab assignments exist)
         if teacher_lab_assignments:
             lab_room_ids = self.labs['id'].tolist()
-            lab_sessions = ['L1', 'L2', 'L3', 'L4', 'L5', 'L6']
+            lab_sessions = list(self.lab_sessions.keys()) if hasattr(self, 'lab_sessions') else ['L1', 'L2', 'L3', 'L4', 'L5', 'L6']
             
-            for room_id in lab_room_ids:
-                for day in range(5):  # 5 days
+            # OPTIMIZATION: Process lab rooms in batches
+            lab_batch_size = min(10, len(lab_room_ids))
+            for lab_batch_start in range(0, len(lab_room_ids), lab_batch_size):
+                lab_batch_end = min(lab_batch_start + lab_batch_size, len(lab_room_ids))
+                lab_room_batch = lab_room_ids[lab_batch_start:lab_batch_end]
+                
+                # OPTIMIZATION: Process by day and session for better memory access
+                for day in range(self.num_days):
                     for session in lab_sessions:
-                        room_assignments = []
-                        for teacher in self.teachers:
-                            if (room_id in teacher_lab_assignments[teacher][day][session]):
-                                room_assignments.append(teacher_lab_assignments[teacher][day][session][room_id])
+                        # OPTIMIZATION: Pre-compute lab assignments by room
+                        lab_assignments_by_room = {room_id: [] for room_id in lab_room_batch}
                         
-                        if len(room_assignments) > 1:
-                            # At most one teacher can use this lab at this time
-                            self.model.Add(sum(room_assignments) <= 1)
-                            constraint_count += 1
+                        # Collect all assignments for each lab in this session
+                        for teacher in self.teachers:
+                            for room_id in lab_room_batch:
+                                if room_id in teacher_lab_assignments[teacher][day][session]:
+                                    lab_assignments_by_room[room_id].append(
+                                        teacher_lab_assignments[teacher][day][session][room_id]
+                                    )
+                        
+                        # OPTIMIZATION: Add constraints only where needed
+                        for room_id, assignments in lab_assignments_by_room.items():
+                            if len(assignments) > 1:
+                                # At most one teacher can use this lab at this time
+                                self.model.Add(sum(assignments) <= 1)
+                                constraint_count += 1
         
-        logger.info(f"Applied {constraint_count} room conflict prevention constraints")
+        logger.info(f"Applied {constraint_count} OPTIMIZED room conflict prevention constraints")
+        return constraint_count
     
     def _apply_room_capacity_constraints_instance_aware(self, teacher_theory_assignments, teacher_lab_assignments):
         """Apply room capacity constraints based on individual course instances (INSTANCE-AWARE)."""
