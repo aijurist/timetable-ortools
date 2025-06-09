@@ -1,23 +1,23 @@
 id,student_count,academic_year,semester,requires_special_scheduling,is_assistant,teacher_id,staff_code,first_name,last_name,teacher_email,course_id,course_code,course_name,course_type,lecture_hours,practical_hours,tutorial_hours,credits,course_dept
-345,70,2,3,False,False,273,CS273,Teacher_273,Unknown,teacher_273@university.edu,CS23334,CS23334,Fundamentals of Data Science,LoT,3,2,0,4,Computer Science & Engineering
-344,70,2,3,False,False,273,CS273,Teacher_273,Unknown,teacher_273@university.edu,CS23334,CS23334,Fundamentals of Data Science,LoT,3,2,0,4,Computer Science & Engineering
-342,70,2,3,False,False,272,CS272,Teacher_272,Unknown,teacher_272@university.edu,CS23333,CS23333,Object Oriented Programming Using JAVA,LoT,1,6,0,4,Computer Science & Engineering
-341,70,2,3,False,False,273,CS273,Teacher_273,Unknown,teacher_273@university.edu,CS23334,CS23334,Fundamentals of Data Science,LoT,3,2,0,4,Computer Science & Engineering
-339,70,2,3,False,False,271,CS271,Teacher_271,Unknown,teacher_271@university.edu,CS23332,CS23332,Database Management Systems,LoT,3,4,0,5,Computer Science & Engineering
-329,70,2,3,False,False,271,CS271,Teacher_271,Unknown,teacher_271@university.edu,CS23332,CS23332,Database Management Systems,LoT,3,4,0,5,Computer Science & Engineering
-323,70,2,3,False,False,271,CS271,Teacher_271,Unknown,teacher_271@university.edu,CS23332,CS23332,Database Management Systems,LoT,3,4,0,5,Computer Science & Engineering
-318,70,2,3,False,False,270,CS270,Teacher_270,Unknown,teacher_270@university.edu,CS23331,CS23331,Design and Analysis of Algorithms,LoT,3,2,0,4,Computer Science & Engineering
-316,70,2,3,False,False,270,CS270,Teacher_270,Unknown,teacher_270@university.edu,CS23331,CS23331,Design and Analysis of Algorithms,LoT,3,2,0,4,Computer Science & Engineering
-315,70,2,3,False,False,270,CS270,Teacher_270,Unknown,teacher_270@university.edu,CS23331,CS23331,Design and Analysis of Algorithms,LoT,3,2,0,4,Computer Science & Engineering
-313,70,2,3,False,False,270,CS270,Teacher_270,Unknown,teacher_270@university.edu,CS23331,CS23331,Design and Analysis of Algorithms,LoT,3,2,0,4,Computer Science & Engineering
-312,70,2,3,False,False,270,CS270,Teacher_270,Unknown,teacher_270@university.edu,CS23331,CS23331,Design and Analysis of Algorithms,LoT,3,2,0,4,Computer Science & Engineering
-311,70,2,3,False,False,270,CS270,Teacher_270,Unknown,teacher_270@university.edu,CS23331,CS23331,Design and Analysis of Algorithms,LoT,3,2,0,4,Computer Science & Engineering
-310,70,2,3,False,False,270,CS270,Teacher_270,Unknown,teacher_270@university.edu,CS23331,CS23331,Design and Analysis of Algorithms,LoT,3,2,0,4,Computer Science & Engineering
-308,70,2,3,False,False,270,CS270,Teacher_270,Unknown,teacher_270@university.edu,CS23331,CS23331,Design and Analysis of Algorithms,LoT,3,2,0,4,Computer Science & Engineering
-307,70,2,3,False,False,269,CS269,Teacher_269,Unknown,teacher_269@university.edu,CS23311,CS23311,Computer Architecture,T,3,0,0,3,Computer Science & Engineering
-306,70,2,3,False,False,269,CS269,Teacher_269,Unknown,teacher_269@university.edu,CS23311,CS23311,Computer Architecture,T,3,0,0,3,Computer Science & Engineering
-305,70,2,3,False,False,269,CS269,Teacher_269,Unknown,teacher_269@university.edu,CS23311,CS23311,Computer Architecture,T,3,0,0,3,Computer Science & Engineering
-304,70,2,3,False,False,269,CS269,Teacher_269,Unknown,teacher_269@university.edu,CS23311,CS23311,Computer Architecture,T,3,0,0,3,Computer Science & Engineering
+345,70,2,3,False,False,Unknown,,,Unknown,,CS23334,CS23334,Fundamentals of Data Science,LoT,3,2,0,4,Computer Science & Engineering
+344,70,2,3,False,False,Unknown,,,Unknown,,CS23334,CS23334,Fundamentals of Data Science,LoT,3,2,0,4,Computer Science & Engineering
+342,70,2,3,False,False,Unknown,,,Unknown,,CS23333,CS23333,Object Oriented Programming Using JAVA,LoT,1,6,0,4,Computer Science & Engineering
+341,70,2,3,False,False,Unknown,,,Unknown,,CS23334,CS23334,Fundamentals of Data Science,LoT,3,2,0,4,Computer Science & Engineering
+339,70,2,3,False,False,Unknown,,,Unknown,,CS23332,CS23332,Database Management Systems,LoT,3,4,0,5,Computer Science & Engineering
+329,70,2,3,False,False,Unknown,,,Unknown,,CS23332,CS23332,Database Management Systems,LoT,3,4,0,5,Computer Science & Engineering
+323,70,2,3,False,False,Unknown,,,Unknown,,CS23332,CS23332,Database Management Systems,LoT,3,4,0,5,Computer Science & Engineering
+318,70,2,3,False,False,Unknown,,,Unknown,,CS23331,CS23331,Design and Analysis of Algorithms,LoT,3,2,0,4,Computer Science & Engineering
+316,70,2,3,False,False,Unknown,,,Unknown,,CS23331,CS23331,Design and Analysis of Algorithms,LoT,3,2,0,4,Computer Science & Engineering
+315,70,2,3,False,False,Unknown,,,Unknown,,CS23331,CS23331,Design and Analysis of Algorithms,LoT,3,2,0,4,Computer Science & Engineering
+313,70,2,3,False,False,Unknown,,,Unknown,,CS23331,CS23331,Design and Analysis of Algorithms,LoT,3,2,0,4,Computer Science & Engineering
+312,70,2,3,False,False,Unknown,,,Unknown,,CS23331,CS23331,Design and Analysis of Algorithms,LoT,3,2,0,4,Computer Science & Engineering
+311,70,2,3,False,False,Unknown,,,Unknown,,CS23331,CS23331,Design and Analysis of Algorithms,LoT,3,2,0,4,Computer Science & Engineering
+310,70,2,3,False,False,Unknown,,,Unknown,,CS23331,CS23331,Design and Analysis of Algorithms,LoT,3,2,0,4,Computer Science & Engineering
+308,70,2,3,False,False,Unknown,,,Unknown,,CS23331,CS23331,Design and Analysis of Algorithms,LoT,3,2,0,4,Computer Science & Engineering
+307,70,2,3,False,False,Unknown,,,Unknown,,CS23311,CS23311,Computer Architecture,T,3,0,0,3,Computer Science & Engineering
+306,70,2,3,False,False,Unknown,,,Unknown,,CS23311,CS23311,Computer Architecture,T,3,0,0,3,Computer Science & Engineering
+305,70,2,3,False,False,Unknown,,,Unknown,,CS23311,CS23311,Computer Architecture,T,3,0,0,3,Computer Science & Engineering
+304,70,2,3,False,False,Unknown,,,Unknown,,CS23311,CS23311,Computer Architecture,T,3,0,0,3,Computer Science & Engineering
 294,70,2,3,False,True,248,CS333,Suba Malai,Rajasekar,,CS23334,CS23334,Fundamentals of Data Science,LoT,3,2,0,4,Computer Science & Engineering
 287,70,2,3,False,True,243,CS322,Dharshini B,S,,CS23333,CS23333,Object Oriented Programming Using JAVA,LoT,1,6,0,4,Computer Science & Engineering
 284,70,2,3,False,True,231,CS298,Divya,M,,CS23333,CS23333,Object Oriented Programming Using JAVA,LoT,1,6,0,4,Computer Science & Engineering
@@ -46,7 +46,7 @@ id,student_count,academic_year,semester,requires_special_scheduling,is_assistant
 207,70,2,3,False,False,191,CS218,V.Murali,Bhaskaran,,CS23311,CS23311,Computer Architecture,T,3,0,0,3,Computer Science & Engineering
 110,70,2,3,False,True,239,CS301,Srinivas,Vadlamani,,CS23334,CS23334,Fundamentals of Data Science,LoT,3,2,0,4,Computer Science & Engineering
 581,65,3,5,False,False,217,CS256,R.Sabitha,,,CS23532,CS23532,Computer Networks,LoT,3,2,0,5,Computer Science & Engineering
-347,70,3,5,False,False,274,CS274,Teacher_274,Unknown,teacher_274@university.edu,CS23512,CS23512,Fundamentals of Mobile Computing,T,3,0,0,3,Computer Science & Engineering
+347,70,3,5,False,False,Unknown,,,Unknown,,CS23512,CS23512,Fundamentals of Mobile Computing,T,3,0,0,3,Computer Science & Engineering
 296,70,3,5,False,True,268,CS334,Kirubhakar T,T,,CS23531,CS23531,Web Programming,LoT,1,6,0,4,Computer Science & Engineering
 295,70,3,5,False,True,268,CS334,Kirubhakar T,T,,CS23531,CS23531,Web Programming,LoT,1,6,0,4,Computer Science & Engineering
 289,70,3,5,False,True,229,CS238,Sathiyavathi,S,,CS23531,CS23531,Web Programming,LoT,1,6,0,4,Computer Science & Engineering

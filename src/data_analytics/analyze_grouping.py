@@ -12,12 +12,31 @@ class CourseGroupingAnalyzer:
         self.schedule_df = pd.read_csv(schedule_csv_path)
         self.courses_df = pd.read_csv(courses_csv_path)
         
-        # Filter only lecture and tutorial slots (not labs)
-        self.schedule_df = self.schedule_df[self.schedule_df['slot_type'].isin(['Lecture', 'Tutorial'])]
+        # Handle different schedule types (lab vs theory)
+        if 'slot_type' in self.schedule_df.columns:
+            # Theory schedule - filter only lecture and tutorial slots
+            self.schedule_df = self.schedule_df[self.schedule_df['slot_type'].isin(['Lecture', 'Tutorial'])]
+            self.schedule_type = 'theory'
+        else:
+            # Lab schedule - use all rows
+            self.schedule_type = 'lab'
         
-        # Check if we have the new group columns
-        self.has_group_data = all(col in self.schedule_df.columns 
-                                 for col in ['group_name', 'group_index', 'department_group', 'semester_group'])
+        # Check if we have the new group columns (handle both naming conventions)
+        group_columns_v1 = ['group_name', 'group_index', 'department_group', 'semester_group']
+        group_columns_v2 = ['group_name', 'group_index', 'department', 'semester']
+        
+        if all(col in self.schedule_df.columns for col in group_columns_v1):
+            self.has_group_data = True
+            self.group_columns = group_columns_v1
+        elif all(col in self.schedule_df.columns for col in group_columns_v2):
+            self.has_group_data = True 
+            self.group_columns = group_columns_v2
+            # Standardize column names for compatibility
+            self.schedule_df['department_group'] = self.schedule_df['department']
+            self.schedule_df['semester_group'] = self.schedule_df['semester']
+        else:
+            self.has_group_data = False
+            self.group_columns = []
         
         if not self.has_group_data:
             print("Warning: New group columns not found in schedule data. Make sure you're using a schedule generated with the updated course group constraint.")
@@ -28,8 +47,10 @@ class CourseGroupingAnalyzer:
         self.output_dir = os.path.join(os.path.dirname(schedule_csv_path), 'grouping_analysis')
         os.makedirs(self.output_dir, exist_ok=True)
         
-        print(f"Loaded {len(self.schedule_df)} theory assignments")
+        print(f"Loaded {len(self.schedule_df)} {self.schedule_type} assignments")
         print(f"Analyzing course grouping constraints...")
+        print(f"Schedule type: {self.schedule_type}")
+        print(f"Group data available: {self.has_group_data}")
 
     def analyze_course_grouping(self):
         """Analyze how teacher-course instances are grouped by semester and department."""
@@ -161,23 +182,69 @@ class CourseGroupingAnalyzer:
         return dept_sem_groups
 
     def analyze_source_course_grouping(self):
-        """Analyze grouping based on source teacher-course assignments, not schedule instances."""
+        """Analyze grouping based on source teacher-course assignments, including ALL courses (theory + lab)."""
         print("\n" + "="*80)
-        print("SOURCE TEACHER-COURSE ASSIGNMENT GROUPING ANALYSIS")
+        print("SOURCE TEACHER-COURSE ASSIGNMENT GROUPING ANALYSIS (ALL COURSES)")
         print("="*80)
         
-        if not self.has_group_data:
-            print("Cannot perform analysis - group data not available in schedule CSV")
-            return {}
+        # IMPORTANT: For comprehensive analysis, we need to create grouping from source data
+        # because lab schedules only contain practical courses, missing theory-only courses
         
-        # Get all schedule assignments and group by source record ID
-        # Each record ID represents a unique course instance (even if same teacher-course)
-        all_assignments = self.schedule_df[['teacher_id', 'course_code', 'course_instance_id', 
-                                          'group_name', 'group_index', 'department_group', 
-                                          'semester_group']].copy()
+        print("🔧 Creating comprehensive course grouping from source data...")
+        
+        # Create a lab scheduler instance to get the grouping logic
+        try:
+            import sys
+            import os
+            sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+            from lab_scheduler import LabScheduler
+            
+            # Get the course file path
+            course_file = os.path.join(os.path.dirname(self.output_dir), '..', '..', 'data', 'cse.csv')
+            room_file = os.path.join(os.path.dirname(self.output_dir), '..', '..', 'data', 'block_wise', 'techlongue.csv')
+            
+            # Create scheduler and run comprehensive grouping
+            scheduler = LabScheduler(course_file, room_file)
+            scheduler.create_course_groups()
+            
+            # Convert the comprehensive grouping to the format expected by this analyzer
+            all_assignments = []
+            
+            for (dept, semester), groups in scheduler.course_groups.items():
+                for group_idx, group in enumerate(groups):
+                    for instance in group:
+                        assignment = {
+                            'teacher_id': instance['teacher_id'],
+                            'course_code': instance['course_code'],
+                            'course_instance_id': instance['id'],
+                            'group_name': f"{dept}_S{semester}_G{group_idx + 1}",
+                            'group_index': group_idx + 1,
+                            'department_group': dept,
+                            'semester_group': semester,
+                            'practical_hours': instance.get('practical_hours', 0),
+                            'is_theory_course': instance.get('practical_hours', 0) == 0
+                        }
+                        all_assignments.append(assignment)
+            
+            all_assignments = pd.DataFrame(all_assignments)
+            
+        except Exception as e:
+            print(f"❌ Error creating comprehensive grouping: {e}")
+            print("Falling back to schedule-based analysis...")
+            
+            if not self.has_group_data:
+                print("Cannot perform analysis - group data not available in schedule CSV")
+                return {}
+            
+            # Fallback to schedule-based analysis
+            all_assignments = self.schedule_df[['teacher_id', 'course_code', 'course_instance_id', 
+                                              'group_name', 'group_index', 'department_group', 
+                                              'semester_group']].copy()
+            all_assignments['practical_hours'] = 0  # Default for lab schedules
+            all_assignments['is_theory_course'] = False
         
         print(f"\nSOURCE DATA SUMMARY (based on course record IDs):")
-        print(f"Total schedule records: {len(all_assignments)}")
+        print(f"Total assignments: {len(all_assignments)}")
         
         # Count unique course instances by their record IDs
         unique_course_instances = all_assignments['course_instance_id'].nunique()
@@ -185,13 +252,33 @@ class CourseGroupingAnalyzer:
         print(f"Unique teacher IDs: {all_assignments['teacher_id'].nunique()}")
         print(f"Unique course codes: {all_assignments['course_code'].nunique()}")
         
-        # Show detailed breakdown for CS23511
-        cs23511_instances = all_assignments[all_assignments['course_code'] == 'CS23511']['course_instance_id'].unique()
-        print(f"\nCS23511 (Theory of Computation) course instances: {len(cs23511_instances)}")
-        for instance_id in cs23511_instances:
-            instance_data = all_assignments[all_assignments['course_instance_id'] == instance_id].iloc[0]
-            teacher_name = self._get_teacher_name(instance_data['teacher_id'])
-            print(f"  - Instance {instance_id}: Teacher {instance_data['teacher_id']} ({teacher_name}) -> Group {instance_data['group_index']}")
+        # Show breakdown by course type
+        if 'practical_hours' in all_assignments.columns:
+            practical_assignments = all_assignments[all_assignments['practical_hours'] > 0]
+            theory_assignments = all_assignments[all_assignments['practical_hours'] == 0]
+            print(f"Practical course assignments: {len(practical_assignments)}")
+            print(f"Theory course assignments: {len(theory_assignments)}")
+        
+        # Show detailed breakdown for all courses in 5th semester
+        fifth_sem_assignments = all_assignments[all_assignments['semester_group'] == 5]
+        if len(fifth_sem_assignments) > 0:
+            print(f"\n5th Semester CSE course breakdown:")
+            for course_code in sorted(fifth_sem_assignments['course_code'].unique()):
+                course_instances = fifth_sem_assignments[fifth_sem_assignments['course_code'] == course_code]
+                course_type = "Theory" if course_instances.iloc[0].get('practical_hours', 0) == 0 else "Practical"
+                print(f"  - {course_code} ({course_type}): {len(course_instances)} instances")
+        
+        # Show detailed breakdown for CS23511 and CS23512 (theory courses)
+        for theory_course in ['CS23511', 'CS23512']:
+            course_instances = all_assignments[all_assignments['course_code'] == theory_course]['course_instance_id'].unique()
+            if len(course_instances) > 0:
+                print(f"\n{theory_course} (Theory) course instances: {len(course_instances)}")
+                for instance_id in course_instances:
+                    instance_data = all_assignments[all_assignments['course_instance_id'] == instance_id].iloc[0]
+                    teacher_name = self._get_teacher_name(instance_data['teacher_id'])
+                    print(f"  - Instance {instance_id}: Teacher {instance_data['teacher_id']} ({teacher_name}) → Group {instance_data['group_index']}")
+            else:
+                print(f"\n{theory_course} (Theory): No instances found in current analysis")
         
         # Group by department and semester
         dept_sem_groups = {}
@@ -2240,35 +2327,56 @@ workload distribution and group balance.
 def main():
     """Main function to run the grouping analysis."""
     
-    # Find the most recent schedule file
-    output_dirs = glob.glob('output/schedule_*')
-    if not output_dirs:
+    # Find the most recent schedule file (try both theory and lab schedules)
+    theory_output_dirs = glob.glob('output/schedule_*')
+    lab_output_dirs = glob.glob('output/lab_schedule_*')
+    
+    all_output_dirs = theory_output_dirs + lab_output_dirs
+    
+    if not all_output_dirs:
         print("No schedule output directories found!")
+        print("Looking for: output/schedule_* or output/lab_schedule_*")
         return
     
-    latest_dir = max(output_dirs, key=os.path.getmtime)
-    schedule_file = os.path.join(latest_dir, 'schedule.csv')
+    latest_dir = max(all_output_dirs, key=os.path.getmtime)
+    
+    # Check for theory schedule first, then lab schedule
+    theory_schedule_file = os.path.join(latest_dir, 'schedule.csv')
+    lab_schedule_file = os.path.join(latest_dir, 'lab_schedule.csv')
+    
+    if os.path.exists(theory_schedule_file):
+        schedule_file = theory_schedule_file
+        schedule_type = "theory"
+    elif os.path.exists(lab_schedule_file):
+        schedule_file = lab_schedule_file
+        schedule_type = "lab"
+    else:
+        print(f"No schedule file found in {latest_dir}")
+        print("Looking for: schedule.csv or lab_schedule.csv")
+        return
     
     # Use the course file
     courses_file = 'data/cse.csv'
-    
-    if not os.path.exists(schedule_file):
-        print(f"Schedule file not found: {schedule_file}")
-        return
     
     if not os.path.exists(courses_file):
         print(f"Courses file not found: {courses_file}")
         return
     
-    print(f"Analyzing schedule from: {schedule_file}")
+    print(f"Analyzing {schedule_type} schedule from: {schedule_file}")
     print(f"Using course data from: {courses_file}")
     
     # Create analyzer
     analyzer = CourseGroupingAnalyzer(schedule_file, courses_file)
     
+    # Check if group data is available
+    if not analyzer.has_group_data:
+        print(f"\n❌ No group data found in {schedule_type} schedule!")
+        print("Make sure the schedule was generated with the updated lab scheduler that includes group information.")
+        return
+    
     # Run SOURCE-based analysis (correct grouping based on teacher-course assignments)
     print("\n" + "="*80)
-    print("ANALYSIS 1: SOURCE TEACHER-COURSE ASSIGNMENTS (CORRECT)")
+    print(f"ANALYSIS 1: SOURCE TEACHER-COURSE ASSIGNMENTS ({schedule_type.upper()} SCHEDULE)")
     print("="*80)
     source_dept_sem_groups = analyzer.analyze_source_course_grouping()
     
@@ -2318,22 +2426,44 @@ def test_cs23511_grouping():
     import glob
     import os
     
-    # Find the most recent schedule file
-    output_dirs = glob.glob('output/schedule_*')
-    if not output_dirs:
+    # Find the most recent schedule file (try both theory and lab schedules)
+    theory_output_dirs = glob.glob('output/schedule_*')
+    lab_output_dirs = glob.glob('output/lab_schedule_*')
+    
+    all_output_dirs = theory_output_dirs + lab_output_dirs
+    
+    if not all_output_dirs:
         print("No schedule output directories found!")
         return
     
-    latest_dir = max(output_dirs, key=os.path.getmtime)
-    schedule_file = os.path.join(latest_dir, 'schedule.csv')
+    latest_dir = max(all_output_dirs, key=os.path.getmtime)
     
-    print("CS23511 GROUPING TEST")
+    # Check for theory schedule first, then lab schedule
+    theory_schedule_file = os.path.join(latest_dir, 'schedule.csv')
+    lab_schedule_file = os.path.join(latest_dir, 'lab_schedule.csv')
+    
+    if os.path.exists(theory_schedule_file):
+        schedule_file = theory_schedule_file
+        schedule_type = "theory"
+    elif os.path.exists(lab_schedule_file):
+        schedule_file = lab_schedule_file
+        schedule_type = "lab"
+    else:
+        print(f"No schedule file found in {latest_dir}")
+        return
+    
+    print(f"CS23511 GROUPING TEST ({schedule_type.upper()} SCHEDULE)")
     print("="*50)
     
     # Load data
     import pandas as pd
     schedule_df = pd.read_csv(schedule_file)
-    theory_df = schedule_df[schedule_df['slot_type'].isin(['Lecture', 'Tutorial'])]
+    
+    # Handle both schedule types
+    if 'slot_type' in schedule_df.columns:
+        theory_df = schedule_df[schedule_df['slot_type'].isin(['Lecture', 'Tutorial'])]
+    else:
+        theory_df = schedule_df  # Lab schedule - use all rows
     
     # Show unique teacher-course assignments (source data)
     cs23511_unique = theory_df[theory_df['course_code'] == 'CS23511'][
