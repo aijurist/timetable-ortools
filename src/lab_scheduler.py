@@ -1244,6 +1244,9 @@ class LabScheduler:
         """Apply group-based lab scheduling constraints with capacity and group conflict rules."""
         self.logger.info("Applying group-based lab scheduling constraints...")
         
+        # Initialize parallelization bonuses list
+        self.parallelization_bonuses = []
+        
         # Constraint 1: Course lab requirements (simplified)
         self.apply_course_lab_requirements_constraint(model, lab_assignments)
         
@@ -1382,8 +1385,8 @@ class LabScheduler:
                     self.logger.info(f"Course {course['course_code']} (practical_hours={practical_hours}) can use any capacity lab")
     
     def apply_group_based_scheduling_constraint(self, model, lab_assignments):
-        """Apply group-based scheduling constraints with teacher conflict prevention."""
-        self.logger.info("Applying group-based teacher time conflict constraint...")
+        """Apply group-based scheduling constraints with teacher conflict prevention and same-group parallelization."""
+        self.logger.info("Applying group-based teacher time conflict constraint with same-group parallelization...")
         
         # Get group information for all course instances
         course_group_info = {}
@@ -1491,13 +1494,63 @@ class LabScheduler:
                         model.Add(sum(session_assignments) <= 1)
                         constraints_applied += 1
         
+        # NEW CONSTRAINT 4: Encourage same-group courses to run in parallel
+        self.apply_same_group_parallelization_preference(model, lab_assignments, semester_groups)
+        
         self.logger.info(f"Group-based scheduling constraints applied successfully: {constraints_applied} constraints")
         self.logger.info("✅ ENHANCED CONSTRAINT RULES:")
-        self.logger.info("  1. Same group courses CAN overlap (students take different courses)")
+        self.logger.info("  1. Same group courses ENCOURAGED to overlap/run parallel (students take different courses)")
         self.logger.info("  2. Different groups in same semester CANNOT overlap (strict enforcement)")
         self.logger.info("  3. Different semesters CAN overlap (different student populations)")
         self.logger.info("  4. Teachers cannot teach multiple labs simultaneously (global constraint)")
         self.logger.info("  5. At most ONE group per semester can be active in any time slot")
+        self.logger.info("  6. Same-group parallelization preference added to objective")
+    
+    def apply_same_group_parallelization_preference(self, model, lab_assignments, semester_groups):
+        """Apply preferences to encourage same-group courses to run in parallel."""
+        self.logger.info("Applying same-group parallelization preferences...")
+        
+        parallelization_bonuses = []
+        
+        for (dept, semester), groups in semester_groups.items():
+            for group_idx, course_instances in groups.items():
+                if group_idx <= 0 or len(course_instances) <= 1:
+                    continue  # Skip invalid groups or groups with only one course
+                
+                # For each time slot, encourage multiple courses from the same group to run together
+                for day_idx in range(self.num_days):
+                    for session_idx in range(len(self.lab_sessions)):
+                        # Collect assignments for all courses in this group at this time slot
+                        group_course_assignments = []
+                        
+                        for course_instance_id in course_instances:
+                            for room_id in self.lab_ids:
+                                group_course_assignments.append(
+                                    lab_assignments[course_instance_id][day_idx][session_idx][room_id]
+                                )
+                        
+                        if len(group_course_assignments) >= 2:
+                            # Create a bonus variable for having multiple courses from same group running together
+                            parallel_bonus = model.NewBoolVar(
+                                f'parallel_bonus_{dept}_S{semester}_G{group_idx}_day{day_idx}_session{session_idx}'
+                            )
+                            
+                            # Bonus activates when 2 or more courses from same group run in parallel
+                            # parallel_bonus = 1 if sum(assignments) >= 2, else 0
+                            model.Add(sum(group_course_assignments) >= 2).OnlyEnforceIf(parallel_bonus)
+                            model.Add(sum(group_course_assignments) <= 1).OnlyEnforceIf(parallel_bonus.Not())
+                            
+                            parallelization_bonuses.append(parallel_bonus)
+                            
+                            self.logger.debug(f"Added parallelization bonus for Group {group_idx} at {self.days[day_idx]} session {session_idx}")
+        
+        # Store parallelization bonuses for use in objective function
+        if not hasattr(self, 'parallelization_bonuses'):
+            self.parallelization_bonuses = []
+        self.parallelization_bonuses.extend(parallelization_bonuses)
+        
+        self.logger.info(f"Applied {len(parallelization_bonuses)} same-group parallelization preferences")
+        self.logger.info("Same-group courses are now encouraged to run simultaneously when possible")
     
     def apply_max_consecutive_lab_slots_constraint(self, model, lab_assignments, lab_sessions):
         """Apply constraint to prevent more than 2 consecutive lab sessions per teacher per day.
@@ -1817,6 +1870,10 @@ class LabScheduler:
         if teacher_compactness_bonus:
             objective_terms.extend(teacher_compactness_bonus)
         
+        # Add same-group parallelization bonuses
+        if hasattr(self, 'parallelization_bonuses') and self.parallelization_bonuses:
+            objective_terms.extend([term * 4 for term in self.parallelization_bonuses])  # High weight for same-group parallelization
+        
         # Subtract penalty terms
         if gap_penalty_terms:
             objective_terms.extend([-term * 3 for term in gap_penalty_terms])  # Heavy penalty for gaps
@@ -1825,7 +1882,10 @@ class LabScheduler:
         if objective_terms:
             model.Maximize(sum(objective_terms))
             self.logger.info(f"Efficiency objective set with {len(objective_terms)} terms")
-            self.logger.info("Objective weights: Room utilization (+1), Consecutive sessions (+2), Teacher compactness (+1), Gap penalty (-3)")
+            weight_info = "Objective weights: Room utilization (+1), Consecutive sessions (+2), Teacher compactness (+1), Gap penalty (-3)"
+            if hasattr(self, 'parallelization_bonuses') and self.parallelization_bonuses:
+                weight_info += f", Same-group parallelization (+4, {len(self.parallelization_bonuses)} terms)"
+            self.logger.info(weight_info)
         else:
             self.logger.warning("No efficiency objective terms found")
     

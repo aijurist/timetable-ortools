@@ -3,7 +3,7 @@ import os
 from collections import defaultdict
 
 def verify_ltp_constraints():
-    """Verify that LTP constraints are satisfied for all courses with updated batching logic."""
+    """Verify that LTP constraints are satisfied for all courses with updated batching logic and theory verification."""
     
     # Load course requirements
     course_file = "data/cse.csv"
@@ -15,90 +15,129 @@ def verify_ltp_constraints():
     print(f"Using course file: {course_file}")
     courses_df = pd.read_csv(course_file)
     
-    # Find the latest schedule from current implementation
+    # Find the latest schedules from current implementation
     output_dir = "output"
     if not os.path.exists(output_dir):
         print("No output directory found!")
         return False
     
-    # Find schedule folders with format: schedule_YYYYMMDD_HHMMSS
-    schedule_folders = [f for f in os.listdir(output_dir) if f.startswith("lab_schedule_")]
-    if not schedule_folders:
+    # Find lab schedule folders
+    lab_schedule_folders = [f for f in os.listdir(output_dir) if f.startswith("lab_schedule_")]
+    # Find theory schedule folders  
+    theory_schedule_folders = [f for f in os.listdir(output_dir) if f.startswith("theory_schedule_")]
+    # Find combined schedule folders
+    combined_schedule_folders = [f for f in os.listdir(output_dir) if f.startswith("combined_schedule_")]
+    
+    if not lab_schedule_folders and not theory_schedule_folders and not combined_schedule_folders:
         print("No schedule folders found!")
         return False
+    
+    # Get latest schedules
+    latest_lab_folder = max(lab_schedule_folders) if lab_schedule_folders else None
+    latest_theory_folder = max(theory_schedule_folders) if theory_schedule_folders else None
+    latest_combined_folder = max(combined_schedule_folders) if combined_schedule_folders else None
+    
+    print(f"Latest lab schedule folder: {latest_lab_folder}")
+    print(f"Latest theory schedule folder: {latest_theory_folder}")
+    print(f"Latest combined schedule folder: {latest_combined_folder}")
+    
+    # Load schedules
+    lab_schedule_df = None
+    theory_schedule_df = None
+    
+    # Load lab schedule
+    if latest_lab_folder:
+        lab_schedule_file = os.path.join(output_dir, latest_lab_folder, "lab_schedule.csv")
+        if os.path.exists(lab_schedule_file):
+            lab_schedule_df = pd.read_csv(lab_schedule_file)
+            print(f"Loaded lab schedule with {len(lab_schedule_df)} assignments")
+        else:
+            print(f"Lab schedule file not found: {lab_schedule_file}")
+    
+    # Load theory schedule
+    if latest_theory_folder:
+        theory_schedule_file = os.path.join(output_dir, latest_theory_folder, "theory_schedule.csv")
+        if os.path.exists(theory_schedule_file):
+            theory_schedule_df = pd.read_csv(theory_schedule_file)
+            print(f"Loaded theory schedule with {len(theory_schedule_df)} assignments")
+        else:
+            print(f"Theory schedule file not found: {theory_schedule_file}")
+    
+    # If no individual schedules found, try combined schedule
+    if lab_schedule_df is None and theory_schedule_df is None and latest_combined_folder:
+        combined_lab_file = os.path.join(output_dir, latest_combined_folder, "lab_schedule", "lab_schedule.csv")
+        combined_theory_file = os.path.join(output_dir, latest_combined_folder, "theory_schedule", "theory_schedule.csv")
         
-    latest_schedule_folder = max(schedule_folders)
-    print(f"Latest schedule folder: {latest_schedule_folder}")
+        if os.path.exists(combined_lab_file):
+            lab_schedule_df = pd.read_csv(combined_lab_file)
+            print(f"Loaded combined lab schedule with {len(lab_schedule_df)} assignments")
+        
+        if os.path.exists(combined_theory_file):
+            theory_schedule_df = pd.read_csv(combined_theory_file)
+            print(f"Loaded combined theory schedule with {len(theory_schedule_df)} assignments")
     
-    # Look for main schedule file
-    schedule_file = os.path.join(output_dir, latest_schedule_folder, "lab_schedule.csv")
-    print(f"Schedule file: {schedule_file}")
-    
-    if not os.path.exists(schedule_file):
-        print(f"Schedule file not found: {schedule_file}")
+    if lab_schedule_df is None and theory_schedule_df is None:
+        print("No valid schedule files found!")
         return False
     
-    # Load the main schedule
-    schedule_df = pd.read_csv(schedule_file)
-    print(f"Loaded schedule with {len(schedule_df)} assignments")
+    # Determine what types of schedules we have
+    has_lab_schedule = lab_schedule_df is not None and not lab_schedule_df.empty
+    has_theory_schedule = theory_schedule_df is not None and not theory_schedule_df.empty
     
-    # Check if this is a lab schedule (from lab_scheduler.py) or combined schedule
-    if 'slot_type' in schedule_df.columns:
-        # This is a combined schedule with slot_type column
-        slot_types = schedule_df['slot_type'].value_counts()
-        print(f"Assignment types found: {dict(slot_types)}")
-        has_lab_schedule = 'Practical' in slot_types
-        if has_lab_schedule:
-            print(f"Lab assignments found: {slot_types.get('Practical', 0)}")
-        else:
-            print("No lab assignments found - theory-only schedule")
-    else:
-        # This is a pure lab schedule (from lab_scheduler.py)
-        has_lab_schedule = True
-        print(f"Pure lab schedule detected - all {len(schedule_df)} assignments are lab/practical")
+    print(f"Schedule types available:")
+    print(f"- Lab schedule: {'✅ Available' if has_lab_schedule else '❌ Not available'}")
+    print(f"- Theory schedule: {'✅ Available' if has_theory_schedule else '❌ Not available'}")
     
-    print("LAB CONSTRAINT VERIFICATION (CURRENT IMPLEMENTATION)")
-    print("=" * 85)
-    print("NOTE: Theory constraints are DISABLED - focusing only on lab/practical verification")
     if has_lab_schedule:
-        print("Lab allocation found - evaluating practical hours")
+        print(f"Lab assignments: {len(lab_schedule_df)}")
+    if has_theory_schedule:
+        print(f"Theory assignments: {len(theory_schedule_df)}")
+    
+    print("COMPREHENSIVE LTP CONSTRAINT VERIFICATION")
+    print("=" * 85)
+    print("Verifying both LAB and THEORY constraints")
+    if has_lab_schedule:
+        print("✅ Lab allocation found - evaluating practical hours")
     else:
-        print("Lab allocation not found - practical hours will be marked as missing")
+        print("❌ Lab allocation not found - practical hours will be marked as missing")
+    if has_theory_schedule:
+        print("✅ Theory allocation found - evaluating lecture/tutorial hours")
+    else:
+        print("❌ Theory allocation not found - lecture/tutorial hours will be marked as missing")
     print("=" * 85)
     
     print(f"SUMMARY:")
     print(f"Total course instances in dataset: {len(courses_df)}")
-    print(f"Total scheduled assignments: {len(schedule_df)}")
-    print(f"Unique courses scheduled: {schedule_df['course_code'].nunique()}")
-    print(f"Unique teachers scheduled: {schedule_df['teacher_id'].nunique()}")
+    
+    total_assignments = 0
+    unique_courses = set()
+    unique_teachers = set()
+    
     if has_lab_schedule:
-        if 'slot_type' in schedule_df.columns:
-            lab_assignments = len(schedule_df[schedule_df['slot_type'] == 'Practical'])
-        else:
-            lab_assignments = len(schedule_df)  # All rows are lab assignments in pure lab schedule
-        print(f"Lab assignments found: {lab_assignments}")
+        total_assignments += len(lab_schedule_df)
+        unique_courses.update(lab_schedule_df['course_code'].unique())
+        unique_teachers.update(lab_schedule_df['teacher_id'].unique())
+        print(f"Lab assignments: {len(lab_schedule_df)}")
         
         # Analyze batching in lab assignments
-        if 'display_course_code' in schedule_df.columns:
-            if 'slot_type' in schedule_df.columns:
-                # Combined schedule
-                batched_assignments = len(schedule_df[(schedule_df['slot_type'] == 'Practical') & 
-                                                    (schedule_df['display_course_code'].str.contains(' B', na=False))])
-            else:
-                # Pure lab schedule
-                batched_assignments = len(schedule_df[schedule_df['display_course_code'].str.contains(' B', na=False)])
-            print(f"Batched lab assignments (with B1/B2): {batched_assignments}")
+        if 'course_code_display' in lab_schedule_df.columns:
+            batched_assignments = len(lab_schedule_df[lab_schedule_df['course_code_display'].str.contains(' Batch', na=False)])
+            print(f"Batched lab assignments: {batched_assignments}")
         
         # Check for capacity information in lab assignments
-        if 'is_batched' in schedule_df.columns:
-            if 'slot_type' in schedule_df.columns:
-                # Combined schedule
-                batched_courses = len(schedule_df[(schedule_df['slot_type'] == 'Practical') & 
-                                                (schedule_df['is_batched'] == True)])
-            else:
-                # Pure lab schedule
-                batched_courses = len(schedule_df[schedule_df['is_batched'] == True])
+        if 'is_batched' in lab_schedule_df.columns:
+            batched_courses = len(lab_schedule_df[lab_schedule_df['is_batched'] == True])
             print(f"Courses using dynamic batching: {batched_courses}")
+    
+    if has_theory_schedule:
+        total_assignments += len(theory_schedule_df)
+        unique_courses.update(theory_schedule_df['course_code'].unique())
+        unique_teachers.update(theory_schedule_df['teacher_id'].unique())
+        print(f"Theory assignments: {len(theory_schedule_df)}")
+    
+    print(f"Total assignments: {total_assignments}")
+    print(f"Unique courses scheduled: {len(unique_courses)}")
+    print(f"Unique teachers scheduled: {len(unique_teachers)}")
     print("=" * 85)
     
     # Create mapping of course requirements - SHOW ALL INSTANCES
@@ -124,24 +163,28 @@ def verify_ltp_constraints():
             'academic_year': row.get('academic_year', 'Unknown')
         }
 
-    # Count scheduled hours per course instance - Enhanced for batching
+    # Count scheduled hours per course instance - Enhanced for batching and theory
     scheduled_hours = defaultdict(lambda: {'lecture': 0, 'tutorial': 0, 'practical': 0, 'batches': set()})
     
-    # THEORY CHECKING DISABLED - Skip theory counting
-    # Note: Theory constraints have been disabled per user request
-    # Only focusing on practical/lab verification
-    
-    # Count lab assignments ONLY from lab schedule (if available)
-    if has_lab_schedule:
-        if 'slot_type' in schedule_df.columns:
-            # Combined schedule - filter for practical assignments
-            lab_rows = schedule_df[schedule_df['slot_type'] == 'Practical']
-        else:
-            # Pure lab schedule - all rows are lab assignments
-            lab_rows = schedule_df
+    # Count theory assignments from theory schedule (if available)
+    if has_theory_schedule:
+        for _, row in theory_schedule_df.iterrows():
+            try:
+                instance_id = str(int(float(row['course_instance_id'])))
+            except:
+                instance_id = str(row['course_instance_id'])
             
+            session_type = row.get('session_type', 'lecture').lower()
+            
+            if session_type in ['lecture', 'theory']:
+                scheduled_hours[instance_id]['lecture'] += 1
+            elif session_type in ['tutorial', 'tut']:
+                scheduled_hours[instance_id]['tutorial'] += 1
+    
+    # Count lab assignments from lab schedule (if available)
+    if has_lab_schedule:
         # Enhanced counting for batched vs non-batched courses
-        for _, row in lab_rows.iterrows():
+        for _, row in lab_schedule_df.iterrows():
             try:
                 instance_id = str(int(float(row['course_instance_id'])))  # Handle float conversion issues
             except:
@@ -302,10 +345,10 @@ def verify_ltp_constraints():
         print(f"    - Teachers with a2-g2 theory blocks → L1-L3 lab sessions only")
         
         # Perform comprehensive lab constraint verification
-        lab_verification_result = verify_lab_constraints(schedule_df, course_requirements)
+        lab_verification_result = verify_lab_constraints(lab_schedule_df, course_requirements)
         
         # Analyze lab efficiency and utilization
-        analyze_lab_efficiency(schedule_df, course_requirements)
+        analyze_lab_efficiency(lab_schedule_df, course_requirements)
         
         # Update final success determination to include lab constraint compliance
         lab_constraints_ok = lab_verification_result['compliant']
@@ -319,9 +362,49 @@ def verify_ltp_constraints():
         lab_constraints_ok = True  # No lab constraints to check
         print(f"  ⚠️  Practical hours not evaluated (lab schedule not found)")
     
-    # Enhanced final validation including lab constraints (theory disabled)
+    # THEORY VERIFICATION
+    theory_constraints_ok = True  # Default to true
+    if has_theory_schedule:
+        print(f"\n🎓 THEORY SCHEDULE FOUND - PERFORMING VERIFICATION")
+        print(f"  ✓ Theory room assignments")
+        print(f"  ✓ Theory teacher conflict detection")
+        print(f"  ✓ Theory capacity verification")
+        print(f"  ✓ Theory requirements fulfillment")
+        print(f"  ✓ Theory efficiency analysis")
+        
+        # Perform comprehensive theory constraint verification
+        theory_verification_result = verify_theory_constraints(theory_schedule_df, course_requirements)
+        
+        # Analyze theory efficiency and utilization
+        analyze_theory_efficiency(theory_schedule_df, course_requirements)
+        
+        # Update final success determination to include theory constraint compliance
+        theory_constraints_ok = len(theory_verification_result) == 0
+        if not theory_constraints_ok:
+            print(f"\n❌ THEORY CONSTRAINT VIOLATIONS DETECTED!")
+            print(f"  - {len(theory_verification_result)} theory constraint violations found")
+            print(f"  - Review detailed violation list above for specific issues")
+        else:
+            print(f"\n✅ ALL THEORY CONSTRAINTS VERIFIED SUCCESSFULLY!")
+    else:
+        print(f"\n⚠️  Theory schedule not found - lecture/tutorial hours not evaluated")
+    
+    # LAB-THEORY CONFLICT VERIFICATION
+    if has_lab_schedule and has_theory_schedule:
+        print(f"\n🔄 CROSS-SCHEDULE CONFLICT VERIFICATION")
+        conflict_violations = verify_lab_theory_conflicts(lab_schedule_df, theory_schedule_df)
+        
+        if len(conflict_violations) == 0:
+            print(f"✅ NO LAB-THEORY CONFLICTS DETECTED!")
+        else:
+            print(f"❌ LAB-THEORY CONFLICTS DETECTED!")
+            print(f"  - {len(conflict_violations)} teacher scheduling conflicts found")
+            theory_constraints_ok = False  # Mark as failed if conflicts exist
+    
+    # Enhanced final validation including both lab and theory constraints
     overall_success = (not_scheduled == 0 and 
-                      (not has_lab_schedule or (practical_violations == 0 and batching_issues == 0 and lab_constraints_ok)))
+                      (not has_lab_schedule or (practical_violations == 0 and batching_issues == 0 and lab_constraints_ok)) and
+                      theory_constraints_ok)
     
     # Practical-only analysis (theory checking disabled)
     print(f"\n📋 ANALYSIS BY PRACTICAL REQUIREMENTS:")
@@ -399,29 +482,42 @@ def verify_ltp_constraints():
         print(f"Practical-heavy compliance rate: {practical_compliant}/{practical_scheduled if practical_scheduled > 0 else 1} ({(practical_compliant/max(practical_scheduled, 1))*100:.1f}%)")
     
     if overall_success:
-        print(f"\n🎉 ALL LAB CONSTRAINTS SATISFIED!")
-        print(f"   ✅ All course instances with practicals scheduled and compliant")
-        print(f"   ✅ Theory constraints DISABLED (as requested)")
-        print(f"   ✅ Focusing only on lab/practical verification")
+        print(f"\n🎉 ALL LTP CONSTRAINTS SATISFIED!")
+        print(f"   ✅ All course instances scheduled and compliant")
         if has_lab_schedule:
-            print(f"   ✅ Practical hours properly allocated in lab sessions")
+            print(f"   ✅ LAB CONSTRAINTS VERIFIED:")
+            print(f"      - Practical hours properly allocated in lab sessions")
             print(f"      - Each lab session = 2 practical hours (L1, L2, L3, L4, L5, L6)")
             print(f"      - HARD CONSTRAINT: Only courses with practical_hours >= 3 can use 70-capacity labs")
             print(f"      - Courses with practical_hours < 3 MUST use 35-capacity labs (forced batching)")
             print(f"      - Dynamic batching: S1 B1/S1 B2 for 70-student courses in 35-capacity labs")
-            print(f"      - 70-student courses with >=3 practical hours: prefer 70-capacity labs")
-            print(f"      - 70-student courses with <3 practical hours: forced to 35-capacity labs")
             print(f"      - Continuous room assignment for multi-slot sessions")
-            print(f"      - No conflicts between theory and lab schedules")
             print(f"      - All batching requirements properly satisfied")
-            print(f"      - All lab constraints verified: ✅ COMPLIANT")
         else:
             print(f"   ⚠️  Practical hours not evaluated (lab schedule not found)")
+        
+        if has_theory_schedule:
+            print(f"   ✅ THEORY CONSTRAINTS VERIFIED:")
+            print(f"      - Lecture and tutorial hours properly allocated")
+            print(f"      - Theory room assignments without conflicts")
+            print(f"      - Theory teacher schedules without overlaps")
+            print(f"      - Room capacity constraints satisfied")
+        else:
+            print(f"   ⚠️  Lecture/tutorial hours not evaluated (theory schedule not found)")
+        
+        if has_lab_schedule and has_theory_schedule:
+            print(f"   ✅ CROSS-SCHEDULE VERIFICATION:")
+            print(f"      - No conflicts between theory and lab schedules")
+            print(f"      - Teacher availability properly managed")
+        
+        print(f"   ✅ COMPLETE LTP VERIFICATION SUCCESSFUL!")
         return True
     else:
-        print(f"\n⚠️  LAB CONSTRAINT ISSUES DETECTED!")
+        print(f"\n⚠️  LTP CONSTRAINT ISSUES DETECTED!")
         if not_scheduled > 0:
             print(f"   🚫 {not_scheduled} course instances not scheduled at all")
+        
+        # Lab issues
         if has_lab_schedule and practical_violations > 0:
             print(f"   ⚠️  {practical_violations} practical-only issues")
         if has_lab_schedule and batching_issues > 0:
@@ -440,11 +536,24 @@ def verify_ltp_constraints():
             if courses_needing_labs > 0:
                 print(f"   🧪 {courses_needing_labs} courses need lab allocation - run lab_scheduler.py")
         
-        # Return success for lab constraints only (theory disabled)
+        # Theory issues
+        if has_theory_schedule and not theory_constraints_ok:
+            print(f"   ❌ Theory constraint violations detected")
+            print(f"       - Review detailed theory constraint verification above")
+            print(f"       - Check theory room assignments")
+            print(f"       - Verify theory teacher conflicts")
+            print(f"       - Check theory capacity constraints")
+        if not has_theory_schedule:
+            courses_needing_theory = len([req for req in course_requirements.values() if req['lecture_hours'] > 0 or req['tutorial_hours'] > 0])
+            if courses_needing_theory > 0:
+                print(f"   📚 {courses_needing_theory} courses need theory allocation - run theory_scheduler.py")
+        
+        # Return success for both lab and theory constraints
+        lab_success = True
         if has_lab_schedule:
-            return not_scheduled == 0 and batching_issues == 0 and lab_constraints_ok and practical_violations == 0
-        else:
-            return not_scheduled == 0  # Only check that courses with practicals are scheduled
+            lab_success = not_scheduled == 0 and batching_issues == 0 and lab_constraints_ok and practical_violations == 0
+        
+        return lab_success and theory_constraints_ok
 
 def verify_lab_constraints(schedule_df, course_requirements):
     """Comprehensive lab constraint verification."""
@@ -975,6 +1084,350 @@ def analyze_lab_efficiency(schedule_df, course_requirements):
     for day in ['tuesday', 'wed', 'thur', 'fri', 'sat']:
         sessions = daily_distribution.get(day, 0)
         print(f"  {day.capitalize()}: {sessions} sessions")
+
+# Theory Schedule Verification Functions
+
+def verify_theory_constraints(theory_schedule_df, course_requirements):
+    """Verify theory scheduling constraints."""
+    violations = []
+    
+    if theory_schedule_df is None or theory_schedule_df.empty:
+        print("❌ No theory schedule data available for verification")
+        return violations
+    
+    print("\n🎓 THEORY CONSTRAINT VERIFICATION")
+    print("=" * 60)
+    
+    # Verify theory requirements fulfillment
+    theory_requirements_violations = verify_theory_requirements_constraint(theory_schedule_df, course_requirements)
+    violations.extend(theory_requirements_violations)
+    
+    # Verify theory room constraints
+    theory_room_violations = verify_theory_room_constraints(theory_schedule_df)
+    violations.extend(theory_room_violations)
+    
+    # Verify theory teacher constraints
+    theory_teacher_violations = verify_theory_teacher_constraints(theory_schedule_df)
+    violations.extend(theory_teacher_violations)
+    
+    # Verify theory capacity constraints
+    theory_capacity_violations = verify_theory_capacity_constraints(theory_schedule_df, course_requirements)
+    violations.extend(theory_capacity_violations)
+    
+    # Verify theory room utilization
+    theory_utilization_violations = verify_theory_room_utilization(theory_schedule_df)
+    violations.extend(theory_utilization_violations)
+    
+    print(f"\n📊 THEORY VERIFICATION SUMMARY:")
+    print(f"Total theory constraint violations: {len(violations)}")
+    
+    return violations
+
+def verify_theory_requirements_constraint(theory_schedule_df, course_requirements):
+    """Verify that theory courses get the required number of lecture and tutorial hours."""
+    violations = []
+    
+    # Count scheduled hours per course instance
+    scheduled_hours = defaultdict(lambda: {'lecture': 0, 'tutorial': 0})
+    
+    for _, row in theory_schedule_df.iterrows():
+        try:
+            instance_id = str(int(float(row['course_instance_id'])))
+        except:
+            instance_id = str(row['course_instance_id'])
+        
+        session_type = row.get('session_type', 'lecture')  # Default to lecture if not specified
+        
+        if session_type.lower() in ['lecture', 'theory']:
+            scheduled_hours[instance_id]['lecture'] += 1
+        elif session_type.lower() in ['tutorial', 'tut']:
+            scheduled_hours[instance_id]['tutorial'] += 1
+    
+    # Check each course instance
+    for instance_id, requirements in course_requirements.items():
+        lecture_required = requirements['lecture_hours']
+        tutorial_required = requirements['tutorial_hours']
+        
+        lecture_scheduled = scheduled_hours[instance_id]['lecture']
+        tutorial_scheduled = scheduled_hours[instance_id]['tutorial']
+        
+        # Only check courses that have theory requirements
+        if lecture_required > 0 or tutorial_required > 0:
+            if lecture_scheduled < lecture_required:
+                violations.append(f"LECTURE SHORTAGE: Course {requirements['course_code']} "
+                                f"(ID: {instance_id}) needs {lecture_required} lecture hours, "
+                                f"only scheduled {lecture_scheduled}")
+            
+            if tutorial_scheduled < tutorial_required:
+                violations.append(f"TUTORIAL SHORTAGE: Course {requirements['course_code']} "
+                                f"(ID: {instance_id}) needs {tutorial_required} tutorial hours, "
+                                f"only scheduled {tutorial_scheduled}")
+    
+    print(f"📚 Theory requirements violations: {len(violations)}")
+    return violations
+
+def verify_theory_room_constraints(theory_schedule_df):
+    """Verify that theory rooms are not double-booked."""
+    violations = []
+    
+    # Group by room, day, and time slot
+    room_schedule = defaultdict(list)
+    
+    for _, row in theory_schedule_df.iterrows():
+        room_id = row['room_id']
+        day = row['day']
+        time_slot = row['time_slot']
+        course_code = row['course_code']
+        teacher_id = row['teacher_id']
+        
+        key = (room_id, day, time_slot)
+        room_schedule[key].append({
+            'course': course_code,
+            'teacher': teacher_id,
+            'room_number': row.get('room_number', f'Room{room_id}')
+        })
+    
+    # Check for conflicts
+    for (room_id, day, time_slot), assignments in room_schedule.items():
+        if len(assignments) > 1:
+            room_number = assignments[0]['room_number']
+            courses = [f"{a['course']}(T{a['teacher']})" for a in assignments]
+            violations.append(f"ROOM CONFLICT: Room {room_number} on {day} at {time_slot} "
+                            f"assigned to multiple courses: {', '.join(courses)}")
+    
+    print(f"🏠 Theory room conflicts: {len(violations)}")
+    return violations
+
+def verify_theory_teacher_constraints(theory_schedule_df):
+    """Verify that teachers are not scheduled for multiple theory sessions simultaneously."""
+    violations = []
+    
+    # Group by teacher, day, and time slot
+    teacher_schedule = defaultdict(list)
+    
+    for _, row in theory_schedule_df.iterrows():
+        teacher_id = row['teacher_id']
+        day = row['day']
+        time_slot = row['time_slot']
+        course_code = row['course_code']
+        room_number = row.get('room_number', f"Room{row['room_id']}")
+        
+        key = (teacher_id, day, time_slot)
+        teacher_schedule[key].append({
+            'course': course_code,
+            'room': room_number
+        })
+    
+    # Check for conflicts
+    for (teacher_id, day, time_slot), assignments in teacher_schedule.items():
+        if len(assignments) > 1:
+            courses = [f"{a['course']} in {a['room']}" for a in assignments]
+            violations.append(f"TEACHER CONFLICT: Teacher {teacher_id} on {day} at {time_slot} "
+                            f"assigned to multiple courses: {', '.join(courses)}")
+    
+    print(f"👨‍🏫 Theory teacher conflicts: {len(violations)}")
+    return violations
+
+def verify_theory_capacity_constraints(theory_schedule_df, course_requirements):
+    """Verify that theory room capacities are sufficient for enrolled students."""
+    violations = []
+    
+    for _, row in theory_schedule_df.iterrows():
+        try:
+            instance_id = str(int(float(row['course_instance_id'])))
+        except:
+            instance_id = str(row['course_instance_id'])
+        
+        room_capacity = row.get('capacity', 0)
+        student_count = row.get('student_count', 0)
+        course_code = row['course_code']
+        room_number = row.get('room_number', f"Room{row['room_id']}")
+        
+        # Get student count from requirements if not in schedule
+        if student_count == 0 and instance_id in course_requirements:
+            student_count = course_requirements[instance_id]['student_count']
+        
+        if student_count > room_capacity:
+            violations.append(f"CAPACITY VIOLATION: Course {course_code} (ID: {instance_id}) "
+                            f"has {student_count} students but assigned to room {room_number} "
+                            f"with capacity {room_capacity}")
+    
+    print(f"🔢 Theory capacity violations: {len(violations)}")
+    return violations
+
+def verify_theory_room_utilization(theory_schedule_df):
+    """Analyze theory room utilization efficiency."""
+    violations = []
+    
+    if theory_schedule_df.empty:
+        return violations
+    
+    # Calculate room utilization
+    room_usage = defaultdict(int)
+    room_info = {}
+    
+    for _, row in theory_schedule_df.iterrows():
+        room_id = row['room_id']
+        room_number = row.get('room_number', f'Room{room_id}')
+        room_capacity = row.get('capacity', 0)
+        
+        room_usage[room_number] += 1
+        room_info[room_number] = {
+            'capacity': room_capacity,
+            'id': room_id
+        }
+    
+    # Check for under-utilization (rooms used very little)
+    max_weekly_slots = 55  # 11 time slots * 5 days
+    
+    for room_number, sessions in room_usage.items():
+        utilization_rate = (sessions / max_weekly_slots) * 100
+        
+        if utilization_rate > 80:
+            violations.append(f"OVER-UTILIZATION: Theory room {room_number} "
+                            f"used {sessions}/{max_weekly_slots} slots ({utilization_rate:.1f}%)")
+    
+    print(f"📈 Theory room utilization issues: {len(violations)}")
+    
+    # Print utilization summary
+    print(f"Theory rooms used: {len(room_usage)}")
+    total_sessions = sum(room_usage.values())
+    print(f"Total theory sessions: {total_sessions}")
+    
+    return violations
+
+def verify_lab_theory_conflicts(lab_schedule_df, theory_schedule_df):
+    """Verify that lab and theory schedules don't have teacher conflicts."""
+    violations = []
+    
+    if lab_schedule_df is None or theory_schedule_df is None:
+        print("⚠️ Cannot verify lab-theory conflicts: missing schedule data")
+        return violations
+    
+    print("\n🔄 LAB-THEORY CONFLICT VERIFICATION")
+    print("=" * 60)
+    
+    # Create combined schedule for conflict detection
+    lab_teacher_schedule = defaultdict(list)
+    theory_teacher_schedule = defaultdict(list)
+    
+    # Process lab schedule
+    for _, row in lab_schedule_df.iterrows():
+        teacher_id = row['teacher_id']
+        day = row['day']
+        
+        # Handle lab session times (convert to individual slots)
+        time_interval = row.get('time_interval', '')
+        session_name = row.get('session_name', '')
+        
+        # Map lab sessions to theory time slots for conflict detection
+        lab_to_theory_slots = {
+            'L1': ['8:00 - 8:50', '8:50 - 9:40'],
+            'L2': ['9:50 - 10:40', '10:40 - 11:30'], 
+            'L3': ['11:50 - 12:40', '12:40 - 1:30'],
+            'L4': ['1:50 - 2:40', '2:40 - 3:30'],
+            'L5': ['3:50 - 4:40', '4:40 - 5:30'],
+            'L6': ['5:30 - 6:20', '6:20 - 7:10']
+        }
+        
+        if session_name in lab_to_theory_slots:
+            for time_slot in lab_to_theory_slots[session_name]:
+                key = (teacher_id, day, time_slot)
+                lab_teacher_schedule[key].append({
+                    'type': 'LAB',
+                    'course': row['course_code'],
+                    'room': row.get('room_number', ''),
+                    'session': session_name
+                })
+    
+    # Process theory schedule
+    for _, row in theory_schedule_df.iterrows():
+        teacher_id = row['teacher_id']
+        day = row['day']
+        time_slot = row['time_slot']
+        
+        key = (teacher_id, day, time_slot)
+        theory_teacher_schedule[key].append({
+            'type': 'THEORY',
+            'course': row['course_code'],
+            'room': row.get('room_number', ''),
+            'session_type': row.get('session_type', 'lecture')
+        })
+    
+    # Check for conflicts
+    conflict_count = 0
+    for key in lab_teacher_schedule.keys():
+        if key in theory_teacher_schedule:
+            teacher_id, day, time_slot = key
+            lab_info = lab_teacher_schedule[key][0]
+            theory_info = theory_teacher_schedule[key][0]
+            
+            violations.append(f"LAB-THEORY CONFLICT: Teacher {teacher_id} on {day} at {time_slot} "
+                            f"has both LAB ({lab_info['course']} in {lab_info['room']}) "
+                            f"and THEORY ({theory_info['course']} in {theory_info['room']})")
+            conflict_count += 1
+    
+    print(f"⚠️ Lab-theory teacher conflicts: {conflict_count}")
+    return violations
+
+def analyze_theory_efficiency(theory_schedule_df, course_requirements):
+    """Analyze theory schedule efficiency and utilization."""
+    if theory_schedule_df is None or theory_schedule_df.empty:
+        print("❌ No theory schedule data for efficiency analysis")
+        return
+    
+    print("\n📊 THEORY EFFICIENCY ANALYSIS")
+    print("=" * 60)
+    
+    # Room utilization analysis
+    room_usage = defaultdict(int)
+    room_capacities = {}
+    total_student_hours = 0
+    total_room_capacity_hours = 0
+    
+    for _, row in theory_schedule_df.iterrows():
+        room_id = row['room_id']
+        room_number = row.get('room_number', f'Room{room_id}')
+        room_capacity = row.get('capacity', 0)
+        student_count = row.get('student_count', 0)
+        
+        room_usage[room_number] += 1
+        room_capacities[room_number] = room_capacity
+        
+        # Each theory slot = 1 hour
+        total_student_hours += student_count * 1
+        total_room_capacity_hours += room_capacity * 1
+    
+    print(f"Theory rooms utilized: {len(room_usage)}")
+    print(f"Total theory sessions: {sum(room_usage.values())}")
+    print(f"Total student-hours: {total_student_hours}")
+    print(f"Total capacity-hours: {total_room_capacity_hours}")
+    
+    if total_room_capacity_hours > 0:
+        utilization_rate = (total_student_hours / total_room_capacity_hours) * 100
+        print(f"Overall capacity utilization: {utilization_rate:.1f}%")
+    
+    # Room-wise utilization
+    print(f"\n🏠 THEORY ROOM-WISE UTILIZATION:")
+    for room, sessions in sorted(room_usage.items()):
+        capacity = room_capacities.get(room, 0)
+        max_weekly_sessions = 55  # 11 time slots * 5 days
+        utilization = (sessions / max_weekly_sessions) * 100
+        print(f"  {room} (Cap: {capacity}): {sessions}/55 sessions ({utilization:.1f}% utilization)")
+    
+    # Daily distribution
+    daily_distribution = theory_schedule_df['day'].value_counts()
+    print(f"\n📅 THEORY DAILY DISTRIBUTION:")
+    for day in ['tuesday', 'wed', 'thur', 'fri', 'sat']:
+        sessions = daily_distribution.get(day, 0)
+        print(f"  {day.capitalize()}: {sessions} sessions")
+    
+    # Session type distribution
+    if 'session_type' in theory_schedule_df.columns:
+        type_distribution = theory_schedule_df['session_type'].value_counts()
+        print(f"\n📚 SESSION TYPE DISTRIBUTION:")
+        for session_type, count in type_distribution.items():
+            print(f"  {session_type.capitalize()}: {count} sessions")
 
 if __name__ == "__main__":
     verify_ltp_constraints() 
