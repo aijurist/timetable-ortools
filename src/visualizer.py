@@ -188,12 +188,21 @@ class ScheduleVisualizer:
                         block_name = b_name
                         break
                 
-                # Get course instance ID for differentiation
+                # Get course instance ID and batch information
                 course_instance_id = row.get('course_instance_id', '')
+                is_batched = row.get('is_batched', False)
+                batch_info = row.get('batch_info', '').strip()
                 
-                # Create display text with block information and course instance ID
+                # Create display text with block information, course instance ID, and batch details
                 block_prefix = f"[{block_name.replace(' Block', '')}]" if block_name != 'Unknown Block' else ""
-                display_text = f"{block_prefix}{course_code}\n(ID:{course_instance_id})\n{teacher_id}\n{room_number}"
+                
+                if is_batched and batch_info:
+                    # Show specific batch information
+                    display_text = f"{block_prefix}{course_code}\n{batch_info}\n(ID:{course_instance_id})\n{teacher_id}\n{room_number}"
+                else:
+                    # Regular course without batching
+                    display_text = f"{block_prefix}{course_code}\n(ID:{course_instance_id})\n{teacher_id}\n{room_number}"
+                
                 grid[day_idx, session_idx] = display_text
                 block_grid[day_idx, session_idx] = block_name
         
@@ -311,44 +320,68 @@ class ScheduleVisualizer:
                 day_idx = self.days.index(day)
                 session_idx = lab_session_names.index(session)
                 
-                # Get course information from the first row (all should be the same course)
-                first_row = group.iloc[0]
-                course_code = first_row['course_code']
-                room_number = first_row['room_number']
-                room_id = first_row.get('room_id', '')
-                capacity = first_row.get('capacity', 'N/A')
-                
-                # Check if this is a batched course
-                is_batched = first_row.get('is_batched', False)
-                total_students = first_row.get('total_students', 0)
-                
-                # Determine which building block this room belongs to
-                block_name = 'Unknown Block'
-                for b_name, rooms in self.building_blocks.items():
-                    if any(r['room_id'] == room_id for r in rooms):
-                        block_name = b_name
-                        break
-                
-                # Create detailed display text
-                block_prefix = f"[{block_name.replace(' Block', '')}]" if block_name != 'Unknown Block' else ""
-                
-                # Get course instance ID for differentiation
-                course_instance_id = first_row.get('course_instance_id', '')
-                
-                if is_batched:
-                    # Count number of batches
-                    batches = group['batch_info'].unique()
-                    num_batches = len([b for b in batches if b and b.strip()])
-                    student_per_batch = first_row.get('student_count', 0)
+                # Handle multiple batches in the same session - show each batch separately
+                if len(group) > 1 or group.iloc[0].get('is_batched', False):
+                    # Multiple entries or batched course - show specific batch details
+                    batch_details = []
+                    total_students_session = 0
+                    
+                    for _, batch_row in group.iterrows():
+                        batch_info = batch_row.get('batch_info', '').strip()
+                        student_count = batch_row.get('student_count', 0)
+                        
+                        if batch_info:
+                            batch_details.append(f"{batch_info}: {student_count} students")
+                        else:
+                            batch_details.append(f"Students: {student_count}")
+                        total_students_session += student_count
+                    
+                    # Get common information from first row
+                    first_row = group.iloc[0]
+                    course_code = first_row['course_code']
+                    room_number = first_row['room_number']
+                    room_id = first_row.get('room_id', '')
+                    capacity = first_row.get('capacity', 'N/A')
+                    course_instance_id = first_row.get('course_instance_id', '')
+                    total_students = first_row.get('total_students', total_students_session)
+                    
+                    # Determine which building block this room belongs to
+                    block_name = 'Unknown Block'
+                    for b_name, rooms in self.building_blocks.items():
+                        if any(r['room_id'] == room_id for r in rooms):
+                            block_name = b_name
+                            break
+                    
+                    # Create detailed display text
+                    block_prefix = f"[{block_name.replace(' Block', '')}]" if block_name != 'Unknown Block' else ""
                     
                     display_text = f"{block_prefix}{course_code}\n"
                     display_text += f"(ID:{course_instance_id})\n"
                     display_text += f"Room: {room_number} (Cap: {capacity})\n"
                     display_text += f"Total Students: {total_students}\n"
-                    display_text += f"Batches: {num_batches} × {student_per_batch} students\n"
-                    display_text += f"Batching: Yes"
+                    display_text += f"{'; '.join(batch_details)}"
+                    
                 else:
-                    student_count = first_row.get('student_count', total_students)
+                    # Single entry, non-batched course
+                    first_row = group.iloc[0]
+                    course_code = first_row['course_code']
+                    room_number = first_row['room_number']
+                    room_id = first_row.get('room_id', '')
+                    capacity = first_row.get('capacity', 'N/A')
+                    course_instance_id = first_row.get('course_instance_id', '')
+                    student_count = first_row.get('student_count', 0)
+                    total_students = first_row.get('total_students', student_count)
+                    
+                    # Determine which building block this room belongs to
+                    block_name = 'Unknown Block'
+                    for b_name, rooms in self.building_blocks.items():
+                        if any(r['room_id'] == room_id for r in rooms):
+                            block_name = b_name
+                            break
+                    
+                    # Create detailed display text
+                    block_prefix = f"[{block_name.replace(' Block', '')}]" if block_name != 'Unknown Block' else ""
+                    
                     display_text = f"{block_prefix}{course_code}\n"
                     display_text += f"(ID:{course_instance_id})\n"
                     display_text += f"Room: {room_number} (Cap: {capacity})\n"
@@ -503,10 +536,17 @@ class ScheduleVisualizer:
                     f.write(f"      Room: {room_number} (Capacity: {room_capacity}, {block})\n")
                     
                     if is_batched:
-                        batches = session_group['batch_info'].unique()
-                        valid_batches = [b for b in batches if b and b.strip()]
-                        students_per_batch = session_group.iloc[0].get('student_count', 0)
-                        f.write(f"      Batches: {len(valid_batches)} × {students_per_batch} students each\n")
+                        # Show detailed batch information
+                        batch_details = []
+                        for _, batch_row in session_group.iterrows():
+                            batch_info = batch_row.get('batch_info', '').strip()
+                            student_count = batch_row.get('student_count', 0)
+                            if batch_info:
+                                batch_details.append(f"{batch_info}: {student_count} students")
+                            else:
+                                batch_details.append(f"Unnamed batch: {student_count} students")
+                        
+                        f.write(f"      Batch Details: {'; '.join(batch_details)}\n")
                     else:
                         student_count = session_group.iloc[0].get('student_count', 0)
                         f.write(f"      Students: {student_count}\n")
@@ -514,8 +554,8 @@ class ScheduleVisualizer:
             # Weekly schedule table
             f.write(f"\n\nWEEKLY SCHEDULE TABLE:\n")
             f.write(f"=" * 80 + "\n")
-            f.write(f"{'Day':<10} {'Session':<8} {'Time':<15} {'Course':<10} {'Room':<10} {'Students':<10} {'Batched':<8}\n")
-            f.write(f"-" * 80 + "\n")
+            f.write(f"{'Day':<10} {'Session':<8} {'Time':<15} {'Course':<10} {'Room':<10} {'Batch Info':<20} {'Students':<10}\n")
+            f.write(f"-" * 95 + "\n")
             
             # Sort by day and session for clean display
             day_order = {day: i for i, day in enumerate(self.days)}
@@ -534,26 +574,35 @@ class ScheduleVisualizer:
                 is_batched = row_info.get('is_batched', False)
                 
                 if is_batched:
-                    batches = group['batch_info'].unique()
-                    valid_batches = [b for b in batches if b and b.strip()]
-                    students_per_batch = row_info.get('student_count', 0)
-                    student_display = f"{len(valid_batches)}×{students_per_batch}"
-                    batched_display = "Yes"
+                    # Show specific batch details
+                    batch_details = []
+                    total_students = 0
+                    for _, batch_row in group.iterrows():
+                        batch_info = batch_row.get('batch_info', '').strip()
+                        student_count = batch_row.get('student_count', 0)
+                        if batch_info:
+                            batch_details.append(f"{batch_info}({student_count})")
+                        else:
+                            batch_details.append(f"Batch({student_count})")
+                        total_students += student_count
+                    
+                    batch_display = "; ".join(batch_details)
+                    student_display = str(total_students)
                 else:
                     student_count = row_info.get('student_count', 0)
+                    batch_display = "No batching"
                     student_display = str(student_count)
-                    batched_display = "No"
                 
                 schedule_rows.append((
                     day_order.get(day, 999),
                     session_order.get(session_display, 999),
-                    day, session_display, time_range, course_code, room_number, student_display, batched_display
+                    day, session_display, time_range, course_code, room_number, batch_display, student_display
                 ))
             
             # Sort and write rows
             schedule_rows.sort(key=lambda x: (x[0], x[1]))
-            for _, _, day, session, time_range, course, room, students, batched in schedule_rows:
-                f.write(f"{day.capitalize():<10} {session:<8} {time_range:<15} {course:<10} {room:<10} {students:<10} {batched:<8}\n")
+            for _, _, day, session, time_range, course, room, batch_info, students in schedule_rows:
+                f.write(f"{day.capitalize():<10} {session:<8} {time_range:<15} {course:<10} {room:<10} {batch_info:<20} {students:<10}\n")
         
         print(f"Generated teacher summary: {summary_filename}")
     
@@ -694,9 +743,15 @@ class ScheduleVisualizer:
                 course_code = row['course_code']
                 teacher_id = row['teacher_id']
                 course_instance_id = row.get('course_instance_id', '')
+                is_batched = row.get('is_batched', False)
+                batch_info = row.get('batch_info', '').strip()
                 
-                # Create display text with course instance ID
-                display_text = f"{course_code}\n(ID:{course_instance_id})\n{teacher_id}"
+                # Create display text with course instance ID and batch information
+                if is_batched and batch_info:
+                    display_text = f"{course_code}\n{batch_info}\n(ID:{course_instance_id})\n{teacher_id}"
+                else:
+                    display_text = f"{course_code}\n(ID:{course_instance_id})\n{teacher_id}"
+                
                 grid[day_idx, session_idx] = display_text
         
         # Plot the grid
