@@ -22,12 +22,12 @@ sys.path.insert(0, parent_dir)
 try:
     from src.lab_scheduler import LabScheduler
     from src.theory_scheduler import TheoryScheduler
-    from src.visualizer import visualize_lab_schedule
+    from src.visualizer import visualize_lab_schedule, visualize_theory_schedule, visualize_combined_schedule
 except ImportError:
     try:
         from timetable_scheduler.src.lab_scheduler import LabScheduler
         from timetable_scheduler.src.theory_scheduler import TheoryScheduler
-        from timetable_scheduler.src.visualizer import visualize_lab_schedule
+        from timetable_scheduler.src.visualizer import visualize_lab_schedule, visualize_theory_schedule, visualize_combined_schedule
     except ImportError:
         print("Error: Cannot import scheduler modules. Please run from the project root directory.")
         sys.exit(1)
@@ -181,8 +181,8 @@ def main():
     if args.mode in ['theory', 'all']:
         logger.info("Starting theory scheduling...")
         
-        # Create theory scheduler with lab schedule data for conflict avoidance
-        theory_scheduler = TheoryScheduler(course_file, room_file, lab_schedule_data)
+        # Create theory scheduler without lab schedule data for now (temporary)
+        theory_scheduler = TheoryScheduler(course_file, room_file, None)
         
         # Generate the theory schedule
         theory_success = theory_scheduler.generate_theory_schedule()
@@ -202,15 +202,15 @@ def main():
                         theory_viz_dir = os.path.join(theory_scheduler.output_dir, 'visualizations')
                         os.makedirs(theory_viz_dir, exist_ok=True)
                         
-                        # Note: We'll need to create a theory visualizer or adapt the existing one
-                        # For now, just log the location
-                        logger.info(f"Theory schedule saved to: {theory_json_file}")
-                        logger.info(f"Theory visualization directory: {theory_viz_dir}")
-                        logger.info("Theory visualizations will be implemented in future updates")
+                        # Generate theory visualizations
+                        viz_result = visualize_theory_schedule(theory_json_file, theory_viz_dir)
+                        logger.info(f"Theory visualizations successfully generated in: {viz_result}")
                     else:
                         logger.warning("Theory JSON file not found for visualization")
                 except Exception as e:
-                    logger.error(f"Theory visualization setup failed: {e}")
+                    logger.error(f"Theory visualization failed: {e}")
+                    import traceback
+                    logger.error(f"Traceback: {traceback.format_exc()}")
         else:
             logger.error("Failed to generate theory schedule")
             
@@ -230,6 +230,32 @@ def main():
             if os.path.exists(theory_scheduler.output_dir):
                 shutil.copytree(theory_scheduler.output_dir, os.path.join(combined_output_dir, 'theory_schedule'))
                 logger.info(f"Theory schedule copied to combined output: {combined_output_dir}")
+            
+            # Generate combined visualizations if visualization is enabled
+            if args.visualize:
+                try:
+                    logger.info("Generating combined schedule visualizations...")
+                    
+                    lab_json_file = os.path.join(lab_output_dir, 'lab_schedule.json') if lab_output_dir else None
+                    theory_json_file = os.path.join(theory_scheduler.output_dir, 'theory_schedule.json')
+                    
+                    if (lab_json_file and os.path.exists(lab_json_file)) or os.path.exists(theory_json_file):
+                        combined_viz_dir = os.path.join(combined_output_dir, 'combined_visualizations')
+                        os.makedirs(combined_viz_dir, exist_ok=True)
+                        
+                        # Generate combined visualizations
+                        viz_result = visualize_combined_schedule(
+                            lab_schedule_file=lab_json_file if lab_json_file and os.path.exists(lab_json_file) else None,
+                            theory_schedule_file=theory_json_file if os.path.exists(theory_json_file) else None,
+                            output_dir=combined_viz_dir
+                        )
+                        logger.info(f"Combined visualizations successfully generated in: {viz_result}")
+                    else:
+                        logger.warning("No schedule JSON files found for combined visualization")
+                except Exception as e:
+                    logger.error(f"Combined visualization failed: {e}")
+                    import traceback
+                    logger.error(f"Traceback: {traceback.format_exc()}")
             
             logger.info(f"Complete timetable (lab + theory) available in: {combined_output_dir}")
     else:

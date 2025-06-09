@@ -2328,7 +2328,7 @@ def main():
     """Main function to run the grouping analysis."""
     
     # Find the most recent schedule file (try both theory and lab schedules)
-    theory_output_dirs = glob.glob('output/schedule_*')
+    theory_output_dirs = glob.glob('output/theory_schedule_*')
     lab_output_dirs = glob.glob('output/lab_schedule_*')
     
     all_output_dirs = theory_output_dirs + lab_output_dirs
@@ -2341,7 +2341,7 @@ def main():
     latest_dir = max(all_output_dirs, key=os.path.getmtime)
     
     # Check for theory schedule first, then lab schedule
-    theory_schedule_file = os.path.join(latest_dir, 'schedule.csv')
+    theory_schedule_file = os.path.join(latest_dir, 'theory_schedule.csv')
     lab_schedule_file = os.path.join(latest_dir, 'lab_schedule.csv')
     
     if os.path.exists(theory_schedule_file):

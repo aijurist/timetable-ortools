@@ -99,3 +99,6 @@ now integrate intelligent lab capacity scheduling  from the  @lab_constraints.py
 all the course instance has max of 70 students 
 practical hour >3 use 70 lab and 140 lab dont need batching
 other use 35 labs in batches simple
+
+
+first schedule all the groups across sem and dept for first 4 slot if it gets filled or others cant fit in extend it to next 4 and next 3 if needed dont make it infeasible it should do it at same time it should not be too restrictive
