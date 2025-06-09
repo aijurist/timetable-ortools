@@ -11,13 +11,22 @@ from ortools.sat.python import cp_model
 class LabScheduler:
     """Schedules lab sessions based on practical hours requirements, following reference implementation approach."""
     
-    def __init__(self, course_file, room_file):
-        """Initialize the lab scheduler with course and room data."""
+    def __init__(self, course_file, room_file, theory_schedule_data=None):
+        """Initialize the lab scheduler with course and room data, and optional theory schedule data."""
         self.logger = logging.getLogger(__name__)
         
         # Load the data
         self.courses_df = pd.read_csv(course_file)
         self.rooms_df = pd.read_csv(room_file)
+        
+        # Store theory schedule data for conflict prevention
+        self.theory_schedule_data = theory_schedule_data
+        if theory_schedule_data:
+            self.logger.info(f"Lab scheduler initialized with theory schedule data: {len(theory_schedule_data)} theory sessions")
+            self._parse_theory_schedule()
+        else:
+            self.logger.info("Lab scheduler initialized without theory schedule data")
+            self.theory_group_timeslots = {}
         
         # Setup time structure (matching reference implementation)
         self.days = ["tuesday", "wed", "thur", "fri", "sat"]  # Excluding Monday
@@ -52,6 +61,57 @@ class LabScheduler:
                                       'output', 
                                       f'lab_schedule_{datetime.now().strftime("%Y%m%d_%H%M%S")}')
         os.makedirs(self.output_dir, exist_ok=True)
+    
+    def _parse_theory_schedule(self):
+        """Parse theory schedule data to extract group-timeslot conflicts."""
+        self.theory_group_timeslots = {}
+        
+        if not self.theory_schedule_data:
+            return
+        
+        self.logger.info("Parsing theory schedule data for conflict prevention...")
+        
+        for session in self.theory_schedule_data:
+            dept = session.get('department', 'Unknown')
+            semester = session.get('semester', 0)
+            group_index = session.get('group_index', 0)
+            day = session.get('day', '')
+            timeslot = session.get('timeslot', '')
+            
+            # Create dept-semester-group key
+            group_key = f"{dept}_S{semester}_G{group_index}"
+            
+            if group_key not in self.theory_group_timeslots:
+                self.theory_group_timeslots[group_key] = set()
+            
+            # Add day-timeslot combination to this group's occupied slots
+            if day and timeslot:
+                day_timeslot = f"{day}_{timeslot}"
+                self.theory_group_timeslots[group_key].add(day_timeslot)
+        
+        # Log theory group conflicts
+        self.logger.info(f"Parsed theory schedule conflicts:")
+        for group_key, timeslots in self.theory_group_timeslots.items():
+            self.logger.info(f"  {group_key}: {len(timeslots)} occupied timeslots")
+            if len(timeslots) <= 5:  # Show details for groups with few timeslots
+                self.logger.info(f"    Occupied: {', '.join(sorted(timeslots))}")
+        
+        total_theory_conflicts = sum(len(slots) for slots in self.theory_group_timeslots.values())
+        self.logger.info(f"Total theory timeslots to avoid: {total_theory_conflicts}")
+    
+    def _map_theory_timeslot_to_lab_session(self, theory_timeslot):
+        """Map theory timeslot to corresponding lab session(s) that would conflict."""
+        # Theory timeslots are typically like "8:00 - 8:50", "8:50 - 9:40", etc.
+        # Lab sessions are 2-hour blocks like L1: ['8:00 - 8:50', '8:50 - 9:40']
+        
+        # Create mapping of individual slots to lab sessions
+        timeslot_to_lab_session = {}
+        for session_name, time_slots in self.lab_sessions.items():
+            for time_slot in time_slots:
+                timeslot_to_lab_session[time_slot] = session_name
+        
+        # Return the lab session that contains this theory timeslot
+        return timeslot_to_lab_session.get(theory_timeslot)
     
     def process_teacher_courses(self):
         """Process the teacher-course assignments from the CSV data, focusing on courses with practical hours."""
@@ -1262,6 +1322,9 @@ class LabScheduler:
         # Constraint 5: Prevent more than 2 consecutive lab sessions per teacher per day
         self.apply_max_consecutive_lab_slots_constraint(model, lab_assignments, lab_sessions)
         
+        # Constraint 6: Prevent theory-lab group overlaps for same semester/department
+        self.apply_theory_lab_group_conflict_constraint(model, lab_assignments, lab_sessions)
+        
         # EFFICIENCY CONSTRAINTS: Maximize lab utilization
         self.apply_lab_efficiency_constraints(model, lab_assignments, lab_sessions)
         
@@ -1616,6 +1679,89 @@ class LabScheduler:
         self.logger.info("  - Maximum 2 consecutive lab sessions per teacher per day")
         self.logger.info("  - Prevents teacher exhaustion from 3 consecutive lab sessions (6 hours)")
         self.logger.info("  - Examples: L4+L5+L6, L1+L2+L3, L2+L3+L4, L3+L4+L5 are forbidden")
+    
+    def apply_theory_lab_group_conflict_constraint(self, model, lab_assignments, lab_sessions):
+        """Apply constraints to prevent lab groups from conflicting with theory groups from same semester/department."""
+        self.logger.info("Applying theory-lab group conflict prevention constraint...")
+        
+        if not self.theory_schedule_data or not self.theory_group_timeslots:
+            self.logger.info("No theory schedule data available - skipping theory-lab conflict constraints")
+            return
+        
+        constraints_applied = 0
+        
+        # Create day name mapping
+        day_name_mapping = {
+            "tuesday": "tuesday",
+            "wed": "wednesday", 
+            "thur": "thursday",
+            "fri": "friday",
+            "sat": "saturday"
+        }
+        
+        # For each lab course instance, check if it conflicts with theory groups
+        for course_instance_id in lab_assignments.keys():
+            # Get group information for this lab course instance
+            group_info = self.get_group_info_for_course_instance(course_instance_id)
+            dept = group_info['department']
+            semester = group_info['semester'] 
+            lab_group_index = group_info['group_index']
+            
+            # Create the theory group key that would conflict (same dept, semester, group)
+            theory_group_key = f"{dept}_S{semester}_G{lab_group_index}"
+            
+            if theory_group_key in self.theory_group_timeslots:
+                occupied_theory_timeslots = self.theory_group_timeslots[theory_group_key]
+                
+                self.logger.info(f"Found theory conflicts for lab course {course_instance_id} (Group {lab_group_index})")
+                self.logger.info(f"  Theory group {theory_group_key} has {len(occupied_theory_timeslots)} occupied timeslots")
+                
+                # For each occupied theory timeslot, prevent lab from using that timeslot
+                for day_timeslot in occupied_theory_timeslots:
+                    try:
+                        day_part, timeslot_part = day_timeslot.split('_', 1)
+                        
+                        # Map theory day to lab day index
+                        lab_day = None
+                        for lab_day_name, lab_day_idx in zip(self.days, range(len(self.days))):
+                            if day_part.lower() == lab_day_name.lower() or day_part.lower() == day_name_mapping.get(lab_day_name, lab_day_name).lower():
+                                lab_day = lab_day_idx
+                                break
+                        
+                        if lab_day is None:
+                            continue
+                        
+                        # Map theory timeslot to lab session
+                        lab_session_name = self._map_theory_timeslot_to_lab_session(timeslot_part)
+                        if lab_session_name is None:
+                            continue
+                        
+                        # Find lab session index
+                        lab_session_idx = None
+                        for idx, session_name in enumerate(lab_sessions):
+                            if session_name == lab_session_name:
+                                lab_session_idx = idx
+                                break
+                        
+                        if lab_session_idx is None:
+                            continue
+                        
+                        # Add constraint: this course cannot be assigned to this conflicting timeslot
+                        for room_id in self.lab_ids:
+                            model.Add(lab_assignments[course_instance_id][lab_day][lab_session_idx][room_id] == 0)
+                            constraints_applied += 1
+                        
+                        self.logger.debug(f"  Blocked: {course_instance_id} from day {self.days[lab_day]} session {lab_session_name} (theory conflict)")
+                    
+                    except (ValueError, IndexError) as e:
+                        self.logger.warning(f"Could not parse theory timeslot {day_timeslot}: {e}")
+                        continue
+        
+        self.logger.info(f"Applied {constraints_applied} theory-lab group conflict constraints")
+        self.logger.info("Theory-Lab Conflict Prevention Rules:")
+        self.logger.info("  - Lab groups CANNOT overlap with theory groups from same semester/department/group")
+        self.logger.info("  - Ensures students can attend both theory and lab sessions")
+        self.logger.info("  - Prevents double-booking of student groups across theory and lab schedules")
     
     def apply_lab_efficiency_constraints(self, model, lab_assignments, lab_sessions):
         """Apply comprehensive lab efficiency constraints to maximize utilization and minimize waste."""
