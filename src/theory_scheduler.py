@@ -665,38 +665,31 @@ class TheoryScheduler:
         """Add objective for optimal group time slot allocation."""
         objective_terms = []
         
-        # Objective 1: Tiered time slot preference (priority-based)
-        tier1_bonus = []  # First 4 slots - highest priority
-        tier2_bonus = []  # Next 4 slots - medium priority  
-        tier3_bonus = []  # Next 3 slots - lowest priority
-        
+        # Sequential slot filling approach:
+        # Give extremely high weights to earlier slots to ensure they're filled first
+        # before considering later slots
         for group_name, day_slots in group_timeslot_vars.items():
             for day_idx in range(self.num_days):
-                # Tier 1: Slots 0-3 (highest priority)
+                # Tier 1: First 4 slots (8:00-11:50) - extremely high weight
                 for slot_idx in range(min(4, len(self.theory_time_slots))):
-                    tier1_bonus.append(day_slots[day_idx][slot_idx])
+                    objective_terms.append(day_slots[day_idx][slot_idx] * 1000)
                 
-                # Tier 2: Slots 4-7 (medium priority)
+                # Tier 2: Next 4 slots (12:00 - 3:50) - high weight, but much lower than Tier 1
                 for slot_idx in range(4, min(8, len(self.theory_time_slots))):
-                    tier2_bonus.append(day_slots[day_idx][slot_idx])
+                    objective_terms.append(day_slots[day_idx][slot_idx] * 100)
                 
-                # Tier 3: Slots 8-10 (lowest priority)
+                # Tier 3: Last 3 slots (4:00 - 6:50) - lowest weight
                 for slot_idx in range(8, min(11, len(self.theory_time_slots))):
-                    tier3_bonus.append(day_slots[day_idx][slot_idx])
-        
-        # Combine objectives with tiered weights
-        if tier1_bonus:
-            objective_terms.extend([term * 10 for term in tier1_bonus])  # Highest weight for first 4 slots
-        if tier2_bonus:
-            objective_terms.extend([term * 5 for term in tier2_bonus])   # Medium weight for next 4 slots
-        if tier3_bonus:
-            objective_terms.extend([term * 2 for term in tier3_bonus])   # Lowest weight for next 3 slots
+                    objective_terms.append(day_slots[day_idx][slot_idx] * 10)
         
         if objective_terms:
             model.Maximize(sum(objective_terms))
             self.logger.info(f"Group allocation objective set with {len(objective_terms)} terms")
-            self.logger.info("Objective weights: Tier 1 slots 0-3 (+10), Tier 2 slots 4-7 (+5), Tier 3 slots 8-10 (+2)")
-            self.logger.info("Tiered priority system: Fill first 4 slots priority, then next 4, then next 3")
+            self.logger.info("SEQUENTIAL SLOT FILLING STRATEGY:")
+            self.logger.info("  Tier 1 slots 0-3 (8:00-11:50): +1000 - Will be filled first")
+            self.logger.info("  Tier 2 slots 4-7 (12:00-3:50): +100 - Will be filled only after Tier 1 slots")
+            self.logger.info("  Tier 3 slots 8-10 (4:00-6:50): +10 - Will be filled only after Tier 1 and 2 slots")
+            self.logger.info("This ensures earlier slots will be completely filled before using later slots")
     
     def extract_group_timeslots(self, solver, group_timeslot_vars):
         """Extract allocated time slots for each group from solver solution."""

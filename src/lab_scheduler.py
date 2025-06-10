@@ -1498,104 +1498,125 @@ class LabScheduler:
                     self.logger.info(f"Course {course['course_code']} (practical_hours={practical_hours}) can use any capacity lab")
     
     def apply_group_based_scheduling_constraint(self, model, lab_assignments):
-        """Apply group-based scheduling constraints with teacher conflict prevention and same-group parallelization."""
-        self.logger.info("Applying group-based teacher time conflict constraint with same-group parallelization...")
+        """Apply group-based scheduling constraints to enforce scheduling by groups."""
+        self.logger.info("Applying group-based scheduling constraints...")
         
-        # Get group information for all course instances
-        course_group_info = {}
+        # Group course instances by department, semester, and group
+        semester_groups = defaultdict(lambda: defaultdict(list))
+        unassigned_instances = []
+        
         for course_instance_id in lab_assignments.keys():
             group_info = self.get_group_info_for_course_instance(course_instance_id)
-            course_group_info[course_instance_id] = {
-                'semester': group_info['semester'],
-                'group_index': group_info['group_index'],
-                'department': group_info['department'],
-                'teacher_id': self.course_to_teacher.get(course_instance_id)
-            }
+            dept = group_info['department']
+            semester = group_info['semester']
+            group_index = group_info['group_index']
+            
+            if group_index > 0:  # Valid group
+                semester_groups[(dept, semester)][group_index].append(course_instance_id)
+            else:  # Unassigned/invalid group
+                unassigned_instances.append(course_instance_id)
         
-        # Group course instances by semester and department
-        semester_groups = {}
-        for course_instance_id, info in course_group_info.items():
-            dept_sem_key = (info['department'], info['semester'])
-            if dept_sem_key not in semester_groups:
-                semester_groups[dept_sem_key] = {}
+        # Create default groups for unassigned instances
+        if unassigned_instances:
+            self.logger.info(f"Creating default groups for {len(unassigned_instances)} unassigned instances")
             
-            group_idx = info['group_index']
-            if group_idx not in semester_groups[dept_sem_key]:
-                semester_groups[dept_sem_key][group_idx] = []
+            # Group instances by course code to keep related courses together
+            course_code_groups = defaultdict(list)
+            for instance_id in unassigned_instances:
+                course_code = None
+                for teacher, courses in self.lab_requirements.items():
+                    for course in courses:
+                        if course['course_instance_id'] == instance_id:
+                            course_code = course['course_code']
+                            break
+                    if course_code:
+                        break
+                
+                if course_code:
+                    course_code_groups[course_code].append(instance_id)
+                else:
+                    # Fallback if course code not found
+                    course_code_groups['unknown'].append(instance_id)
             
-            semester_groups[dept_sem_key][group_idx].append(course_instance_id)
+            # Create more balanced default groups
+            default_dept = "Default"
+            default_groups = []
+            
+            # First, sort course groups by size (descending)
+            sorted_course_groups = sorted(course_code_groups.items(), key=lambda x: len(x[1]), reverse=True)
+            
+            # Group instances with a maximum of 4 instances per group to ensure 4-slot limit
+            current_group = []
+            current_size = 0
+            max_group_size = 4  # Maximum instances per default group
+            
+            for course_code, instances in sorted_course_groups:
+                if current_size + len(instances) <= max_group_size:
+                    # This course can fit in the current group
+                    current_group.extend(instances)
+                    current_size += len(instances)
+                else:
+                    # This course would exceed the max size, start a new group
+                    if current_group:
+                        default_groups.append(current_group)
+                    
+                    # Handle the case where a single course has more than max instances
+                    if len(instances) > max_group_size:
+                        # Split this course into multiple groups
+                        for i in range(0, len(instances), max_group_size):
+                            chunk = instances[i:i+max_group_size]
+                            default_groups.append(chunk)
+                    else:
+                        current_group = instances.copy()
+                        current_size = len(instances)
+            
+            # Add the last group if not empty
+            if current_group:
+                default_groups.append(current_group)
+            
+            # Add the default groups to semester_groups
+            for i, group in enumerate(default_groups):
+                group_index = i + 1
+                semester_id = (i // 5) + 1  # Create different semesters to avoid conflicts
+                semester_groups[(default_dept, semester_id)][group_index] = group
+                self.logger.info(f"Default group {group_index} (semester {semester_id}): {len(group)} instances")
         
         constraints_applied = 0
         
-        # CONSTRAINT 1: Teacher can teach at most ONE lab session at any time (global constraint)
-        for teacher_id in self.teachers:
-            for day_idx in range(self.num_days):
-                for session_idx in range(len(self.lab_sessions)):
-                    teacher_assignments = []
-                    
-                    for course_instance_id in lab_assignments.keys():
-                        if course_group_info[course_instance_id]['teacher_id'] == teacher_id:
-                            for room_id in self.lab_ids:
-                                teacher_assignments.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
-                    
-                    if len(teacher_assignments) > 1:
-                        model.Add(sum(teacher_assignments) <= 1)
-                        constraints_applied += 1
-        
-        # CONSTRAINT 2: Same semester, different groups CANNOT overlap (ENHANCED)
+        # CONSTRAINT 1: Same-semester group non-overlap
         for (dept, semester), groups in semester_groups.items():
-            group_indices = list(groups.keys())
+            self.logger.info(f"Applying group constraints for {dept} Semester {semester}: {len(groups)} groups")
             
-            # Filter out invalid groups (group_index 0 means unassigned/invalid)
-            valid_group_indices = [g for g in group_indices if g > 0]
-            
-            if len(valid_group_indices) <= 1:
-                continue  # Skip if only one or no valid groups
-            
-            # For each time slot, ensure at most ONE group from this semester can be scheduled
+            # For each time slot, ensure at most one group from this semester is active
             for day_idx in range(self.num_days):
                 for session_idx in range(len(self.lab_sessions)):
-                    # Collect all assignments for this semester at this time slot
-                    group_assignments_by_group = {}
+                    # For each time slot, collect usage variables for each group
+                    group_usages = {}
                     
-                    for group_idx in valid_group_indices:
-                        group_assignments_by_group[group_idx] = []
-                        course_instances = groups[group_idx]
+                    for group_idx, course_instances in groups.items():
+                        group_usage_vars = []
                         
                         for course_instance_id in course_instances:
                             for room_id in self.lab_ids:
-                                group_assignments_by_group[group_idx].append(
-                                    lab_assignments[course_instance_id][day_idx][session_idx][room_id]
-                                )
+                                group_usage_vars.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
                     
-                    # Create binary variables for each group being active in this time slot
-                    group_active_vars = {}
-                    for group_idx in valid_group_indices:
-                        group_active_vars[group_idx] = model.NewBoolVar(
-                            f'group_active_{dept}_S{semester}_G{group_idx}_day{day_idx}_session{session_idx}'
-                        )
+                        if group_usage_vars:
+                            # Create a variable indicating if this group uses this time slot
+                            group_usage = model.NewBoolVar(f'group_usage_{dept}_S{semester}_G{group_idx}_day{day_idx}_session{session_idx}')
                     
-                    # Constraint: At most one group can be active in this time slot
-                    if len(group_active_vars) > 1:
-                        model.Add(sum(group_active_vars.values()) <= 1)
-                        constraints_applied += 1
-                    
-                    # Link group activity to actual assignments
-                    for group_idx in valid_group_indices:
-                        group_assignments = group_assignments_by_group[group_idx]
-                        if group_assignments:
-                            # If any assignment in this group is made, the group is active
-                            for assignment in group_assignments:
-                                model.AddImplication(assignment, group_active_vars[group_idx])
+                            # Link usage to the assignment variables
+                            model.Add(group_usage <= sum(group_usage_vars))
+                            # Any assignment makes the group usage 1
+                            model.Add(sum(group_usage_vars) <= len(self.lab_ids) * group_usage)
                             
-                            # If the group is not active, no assignments can be made
-                            # This is equivalent to: group_active OR (sum == 0)
-                            # Which means: if group is not active, then sum must be 0
-                            model.Add(sum(group_assignments) <= len(group_assignments) * group_active_vars[group_idx])
+                            group_usages[group_idx] = group_usage
+                    
+                    # At most one group can use this time slot
+                    if len(group_usages) > 1:
+                        model.Add(sum(group_usages.values()) <= 1)
+                        constraints_applied += 1
             
-            self.logger.info(f"Applied strict non-overlap constraints for {dept} Semester {semester}: {len(valid_group_indices)} valid groups")
-        
-        # CONSTRAINT 3: Each course instance can only be assigned to one room per session
+            # CONSTRAINT 2: Course instance uniqueness
         for course_instance_id in lab_assignments.keys():
             for day_idx in range(self.num_days):
                 for session_idx in range(len(self.lab_sessions)):
@@ -1607,7 +1628,61 @@ class LabScheduler:
                         model.Add(sum(session_assignments) <= 1)
                         constraints_applied += 1
         
-        # NEW CONSTRAINT 4: Encourage same-group courses to run in parallel
+        # CONSTRAINT 3: Group slot limit (max 4 slots per group)
+        for (dept, semester), groups in semester_groups.items():
+            for group_idx, course_instances in groups.items():
+                # Track all used time slots for this group
+                group_slot_usage = []
+                
+                for day_idx in range(self.num_days):
+                    for session_idx in range(len(self.lab_sessions)):
+                        # Create a variable indicating if this group uses this time slot
+                        group_slot_var = model.NewBoolVar(f'group_slot_{dept}_S{semester}_G{group_idx}_day{day_idx}_session{session_idx}')
+                        
+                        # Collect all assignment variables for this group at this time slot
+                        slot_assignments = []
+                        for course_instance_id in course_instances:
+                            for room_id in self.lab_ids:
+                                slot_assignments.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+                        
+                        if slot_assignments:
+                            # group_slot_var = 1 if any course in this group uses this slot
+                            model.Add(group_slot_var <= sum(slot_assignments))
+                            model.Add(sum(slot_assignments) <= len(slot_assignments) * group_slot_var)
+                            
+                            # Add to the list of all used slots for this group
+                            group_slot_usage.append(group_slot_var)
+                
+                # Constraint: At most 4 slots can be used by this group
+                if group_slot_usage:
+                    model.Add(sum(group_slot_usage) <= 4)
+                    constraints_applied += 1
+                    
+                    # Ensure all course instances in this group are assigned
+                    required_instances = 0
+                    for course_instance_id in course_instances:
+                        for teacher, courses in self.lab_requirements.items():
+                            for course in courses:
+                                if course['course_instance_id'] == course_instance_id:
+                                    required_instances += 1
+                    
+                    # Calculate assignments across all slots for this group
+                    group_assignments = []
+                    for day_idx in range(self.num_days):
+                        for session_idx in range(len(self.lab_sessions)):
+                            for course_instance_id in course_instances:
+                                for room_id in self.lab_ids:
+                                    group_assignments.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+                    
+                    # Ensure all required instances are assigned
+                    if group_assignments:
+                        model.Add(sum(group_assignments) >= required_instances)
+                        constraints_applied += 1
+                        
+                    group_type = "Default" if dept == "Default" else "Regular"
+                    self.logger.info(f"{group_type} Group {dept}_S{semester}_G{group_idx}: limited to max 4 slots for {len(course_instances)} courses")
+        
+        # CONSTRAINT 4: Encourage same-group courses to run in parallel
         self.apply_same_group_parallelization_preference(model, lab_assignments, semester_groups)
         
         self.logger.info(f"Group-based scheduling constraints applied successfully: {constraints_applied} constraints")
@@ -1618,52 +1693,111 @@ class LabScheduler:
         self.logger.info("  4. Teachers cannot teach multiple labs simultaneously (global constraint)")
         self.logger.info("  5. At most ONE group per semester can be active in any time slot")
         self.logger.info("  6. Same-group parallelization preference added to objective")
+        self.logger.info("  7. Each group limited to maximum 4 lab slots total (forces parallelization)")
+        self.logger.info("  8. IMPROVED: Unassigned courses are now grouped by course code with balanced groups")
     
     def apply_same_group_parallelization_preference(self, model, lab_assignments, semester_groups):
-        """Apply preferences to encourage same-group courses to run in parallel."""
-        self.logger.info("Applying same-group parallelization preferences...")
+        """Apply a preference for scheduling courses from the same group in parallel."""
+        self.logger.info("Adding same-group parallelization preference to objective...")
         
-        parallelization_bonuses = []
+        # This will store all of our parallelization bonus variables
+        self.group_parallelization_vars = []
+        self.graduated_parallelization_vars = {}
         
+        # For each semester and group, encourage scheduling in parallel
         for (dept, semester), groups in semester_groups.items():
             for group_idx, course_instances in groups.items():
-                if group_idx <= 0 or len(course_instances) <= 1:
-                    continue  # Skip invalid groups or groups with only one course
+                if len(course_instances) <= 1:
+                    continue  # Skip groups with only one course
                 
-                # For each time slot, encourage multiple courses from the same group to run together
+                # For each time slot, check if multiple courses from this group are scheduled
                 for day_idx in range(self.num_days):
                     for session_idx in range(len(self.lab_sessions)):
-                        # Collect assignments for all courses in this group at this time slot
-                        group_course_assignments = []
+                        # Collect all assignment variables for this group at this time slot
+                        course_assignments = []
                         
                         for course_instance_id in course_instances:
-                            for room_id in self.lab_ids:
-                                group_course_assignments.append(
-                                    lab_assignments[course_instance_id][day_idx][session_idx][room_id]
-                                )
-                        
-                        if len(group_course_assignments) >= 2:
-                            # Create a bonus variable for having multiple courses from same group running together
-                            parallel_bonus = model.NewBoolVar(
-                                f'parallel_bonus_{dept}_S{semester}_G{group_idx}_day{day_idx}_session{session_idx}'
+                            # Create a variable indicating if this course is scheduled at this time
+                            course_scheduled = model.NewBoolVar(
+                                f'course_{course_instance_id}_scheduled_day{day_idx}_session{session_idx}'
                             )
                             
-                            # Bonus activates when 2 or more courses from same group run in parallel
-                            # parallel_bonus = 1 if sum(assignments) >= 2, else 0
-                            model.Add(sum(group_course_assignments) >= 2).OnlyEnforceIf(parallel_bonus)
-                            model.Add(sum(group_course_assignments) <= 1).OnlyEnforceIf(parallel_bonus.Not())
+                            # Collect room assignments for this course at this time
+                            room_assignments = []
+                            for room_id in self.lab_ids:
+                                room_assignments.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+                        
+                            # Link course_scheduled to room assignments
+                            if room_assignments:
+                                model.Add(course_scheduled <= sum(room_assignments))
+                                model.Add(sum(room_assignments) <= len(room_assignments) * course_scheduled)
+                                
+                                # Add to the list of courses that might be scheduled at this time
+                                course_assignments.append(course_scheduled)
+                        
+                        # If we have multiple potential courses for this time slot
+                        if len(course_assignments) >= 2:
+                            # Create graduated bonus variables for different levels of parallelization
+                            # We'll give higher bonuses for scheduling more courses in parallel
                             
-                            parallelization_bonuses.append(parallel_bonus)
+                            # Base case: Bonus for scheduling at least 2 courses in parallel
+                            parallel_bonus_2 = model.NewBoolVar(
+                                f'parallel_bonus_2_{dept}_S{semester}_G{group_idx}_day{day_idx}_session{session_idx}'
+                            )
                             
-                            self.logger.debug(f"Added parallelization bonus for Group {group_idx} at {self.days[day_idx]} session {session_idx}")
+                            # This is true if at least 2 courses are scheduled
+                            model.Add(sum(course_assignments) >= 2).OnlyEnforceIf(parallel_bonus_2)
+                            model.Add(sum(course_assignments) < 2).OnlyEnforceIf(parallel_bonus_2.Not())
+                            
+                            # Add to our list of objective terms with higher weight (+8)
+                            self.group_parallelization_vars.append(parallel_bonus_2 * 8)
+                            
+                            # If we have 3+ potential courses, add graduated bonuses
+                            if len(course_assignments) >= 3:
+                                # Bonus for scheduling at least 3 courses in parallel
+                                parallel_bonus_3 = model.NewBoolVar(
+                                    f'parallel_bonus_3_{dept}_S{semester}_G{group_idx}_day{day_idx}_session{session_idx}'
+                                )
+                                
+                                model.Add(sum(course_assignments) >= 3).OnlyEnforceIf(parallel_bonus_3)
+                                model.Add(sum(course_assignments) < 3).OnlyEnforceIf(parallel_bonus_3.Not())
+                            
+                                # Even higher weight for 3+ courses (+12)
+                                self.group_parallelization_vars.append(parallel_bonus_3 * 12)
+                                
+                                # If we have 4+ potential courses, add more graduated bonuses
+                                if len(course_assignments) >= 4:
+                                    # Bonus for scheduling at least 4 courses in parallel
+                                    parallel_bonus_4 = model.NewBoolVar(
+                                        f'parallel_bonus_4_{dept}_S{semester}_G{group_idx}_day{day_idx}_session{session_idx}'
+                                    )
+                                    
+                                    model.Add(sum(course_assignments) >= 4).OnlyEnforceIf(parallel_bonus_4)
+                                    model.Add(sum(course_assignments) < 4).OnlyEnforceIf(parallel_bonus_4.Not())
+                                    
+                                    # Even higher weight for 4+ courses (+16)
+                                    self.group_parallelization_vars.append(parallel_bonus_4 * 16)
+                                    
+                                    # If we have 5+ potential courses, add more graduated bonuses
+                                    if len(course_assignments) >= 5:
+                                        # Bonus for scheduling at least 5 courses in parallel
+                                        parallel_bonus_5 = model.NewBoolVar(
+                                            f'parallel_bonus_5_{dept}_S{semester}_G{group_idx}_day{day_idx}_session{session_idx}'
+                                        )
+                                        
+                                        model.Add(sum(course_assignments) >= 5).OnlyEnforceIf(parallel_bonus_5)
+                                        model.Add(sum(course_assignments) < 5).OnlyEnforceIf(parallel_bonus_5.Not())
+                                        
+                                        # Highest weight for 5+ courses (+20)
+                                        self.group_parallelization_vars.append(parallel_bonus_5 * 20)
         
-        # Store parallelization bonuses for use in objective function
-        if not hasattr(self, 'parallelization_bonuses'):
-            self.parallelization_bonuses = []
-        self.parallelization_bonuses.extend(parallelization_bonuses)
-        
-        self.logger.info(f"Applied {len(parallelization_bonuses)} same-group parallelization preferences")
-        self.logger.info("Same-group courses are now encouraged to run simultaneously when possible")
+        self.logger.info(f"Added {len(self.group_parallelization_vars)} parallelization bonus variables to objective")
+        self.logger.info("📊 Graduated parallelization bonus weights:")
+        self.logger.info("  • 2 courses in parallel: +8 (was +4)")
+        self.logger.info("  • 3 courses in parallel: +12 (was +6)")
+        self.logger.info("  • 4 courses in parallel: +16 (new!)")
+        self.logger.info("  • 5+ courses in parallel: +20 (new!)")
+        self.logger.info("This combined with the 4-slot limit will strongly encourage parallel scheduling")
     
     def apply_max_consecutive_lab_slots_constraint(self, model, lab_assignments, lab_sessions):
         """Apply constraint to prevent more than 2 consecutive lab sessions per teacher per day.
@@ -1939,163 +2073,191 @@ class LabScheduler:
         return constraints_applied
     
     def add_efficiency_objective(self, model, lab_assignments, lab_sessions):
-        """Add efficiency optimization objective to maximize lab utilization."""
-        self.logger.info("Adding efficiency optimization objective...")
+        """Add an objective function to maximize scheduling efficiency."""
+        self.logger.info("Adding efficiency objective function...")
         
         objective_terms = []
         
-        # OBJECTIVE 1: Maximize room utilization density (prefer fewer rooms with higher occupancy)
-        room_utilization_bonus = []
-        for day_idx in range(self.num_days):
-            for session_idx in range(len(lab_sessions)):
-                for room_id in self.lab_ids:
-                    room_assignments = []
-                    for course_instance_id in lab_assignments.keys():
-                        room_assignments.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
-                    
-                    if room_assignments:
-                        # Bonus for using a room (encourages density)
-                        room_used = model.NewBoolVar(f'room_used_bonus_{room_id}_day{day_idx}_session{session_idx}')
-                        model.Add(room_used <= sum(room_assignments))
-                        room_utilization_bonus.append(room_used)
-        
-        # OBJECTIVE 2: Minimize gaps between sessions in same room
-        gap_penalty_terms = []
-        for room_id in self.lab_ids:
-            for day_idx in range(self.num_days):
-                for session_idx in range(len(lab_sessions) - 2):
-                    # Penalty for having gap (session i and i+2 used, but not i+1)
-                    session_i = []
-                    session_i1 = []
-                    session_i2 = []
-                    
-                    for course_instance_id in lab_assignments.keys():
-                        session_i.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
-                        session_i1.append(lab_assignments[course_instance_id][day_idx][session_idx + 1][room_id])
-                        session_i2.append(lab_assignments[course_instance_id][day_idx][session_idx + 2][room_id])
-                    
-                    if session_i and session_i1 and session_i2:
-                        gap_penalty = model.NewBoolVar(f'gap_penalty_obj_{room_id}_day{day_idx}_session{session_idx}')
-                        
-                        # Gap exists if sessions i and i+2 are used but i+1 is not
-                        session_i_used = model.NewBoolVar(f'session_i_used_{room_id}_day{day_idx}_{session_idx}')
-                        session_i1_used = model.NewBoolVar(f'session_i1_used_{room_id}_day{day_idx}_{session_idx}')
-                        session_i2_used = model.NewBoolVar(f'session_i2_used_{room_id}_day{day_idx}_{session_idx}')
-                        
-                        model.Add(session_i_used <= sum(session_i))
-                        model.Add(session_i1_used <= sum(session_i1))
-                        model.Add(session_i2_used <= sum(session_i2))
-                        
-                        # gap_penalty = 1 if (session_i_used AND session_i2_used) AND NOT session_i1_used
-                        model.Add(gap_penalty >= session_i_used + session_i2_used - session_i1_used - 1)
-                        gap_penalty_terms.append(gap_penalty)
-        
-        # OBJECTIVE 3: Consecutive session bonus for same course
-        consecutive_bonus_terms = []
-        course_instances_by_code = {}
+        # PRIORITY 1: Schedule all required lab sessions (HIGH WEIGHT)
+        required_sessions = 0
         for teacher, courses in self.lab_requirements.items():
             for course in courses:
-                course_code = course['course_code']
-                course_instance_id = course['course_instance_id']
-                if course_code not in course_instances_by_code:
-                    course_instances_by_code[course_code] = []
-                course_instances_by_code[course_code].append(course_instance_id)
+                # Fix the key name - using the correct key from lab_scheduler
+                required_sessions += course.get('required_sessions', 0)
         
-        for course_code, instance_ids in course_instances_by_code.items():
-            if len(instance_ids) > 1:
-                for day_idx in range(self.num_days):
-                    for session_idx in range(len(lab_sessions) - 1):
-                        for room_id in self.lab_ids:
-                            current_assignments = []
-                            next_assignments = []
-                            
-                            for instance_id in instance_ids:
-                                if instance_id in lab_assignments:
-                                    current_assignments.append(lab_assignments[instance_id][day_idx][session_idx][room_id])
-                                    next_assignments.append(lab_assignments[instance_id][day_idx][session_idx + 1][room_id])
-                            
-                            if current_assignments and next_assignments:
-                                consecutive_bonus = model.NewBoolVar(
-                                    f'consecutive_bonus_{course_code}_{room_id}_day{day_idx}_session{session_idx}'
-                                )
-                                # Bonus if both current and next sessions are used
-                                current_used = model.NewBoolVar(f'current_used_{course_code}_{room_id}_day{day_idx}_session{session_idx}')
-                                next_used = model.NewBoolVar(f'next_used_{course_code}_{room_id}_day{day_idx}_session{session_idx}')
-                                
-                                model.Add(current_used <= sum(current_assignments))
-                                model.Add(next_used <= sum(next_assignments))
-                                model.Add(consecutive_bonus <= current_used)
-                                model.Add(consecutive_bonus <= next_used)
-                                
-                                consecutive_bonus_terms.append(consecutive_bonus)
+        self.logger.info(f"REQUIREMENT: Schedule {required_sessions} lab sessions across {len(self.lab_requirements)} teachers")
         
-        # OBJECTIVE 4: Teacher compactness bonus
-        teacher_compactness_bonus = []
-        teacher_courses = {}
-        for course_instance_id, teacher_id in self.course_to_teacher.items():
-            if teacher_id not in teacher_courses:
-                teacher_courses[teacher_id] = []
-            teacher_courses[teacher_id].append(course_instance_id)
+        # PRIORITY 2: Use parallelization bonuses to encourage same-group courses to run simultaneously
+        if hasattr(self, 'group_parallelization_vars') and self.group_parallelization_vars:
+            # These are already weighted in the apply_same_group_parallelization_preference method
+            objective_terms.extend(self.group_parallelization_vars)
+            self.logger.info(f"BONUS: Parallelization - {len(self.group_parallelization_vars)} bonus variables with graduated weights")
+            self.logger.info("  • Strongly encourages same-group courses to run in parallel")
+            self.logger.info("  • Higher bonuses for higher degrees of parallelization")
         
-        for teacher_id, course_list in teacher_courses.items():
-            if len(course_list) > 1:
-                for day_idx in range(self.num_days):
-                    for session_idx in range(len(lab_sessions) - 2):
-                        # Bonus for teacher having consecutive active sessions
-                        session_assignments = [[], [], []]
-                        
-                        for i, offset in enumerate([0, 1, 2]):
-                            for course_instance_id in course_list:
-                                if course_instance_id in lab_assignments:
-                                    for room_id in self.lab_ids:
-                                        session_assignments[i].append(
-                                            lab_assignments[course_instance_id][day_idx][session_idx + offset][room_id]
-                                        )
-                        
-                        if all(session_assignments):
-                            teacher_consecutive = model.NewBoolVar(
-                                f'teacher_consecutive_{teacher_id}_day{day_idx}_session{session_idx}'
-                            )
-                            
-                            session_active = []
-                            for i in range(3):
-                                active = model.NewBoolVar(f'teacher_active_{teacher_id}_day{day_idx}_session{session_idx + i}')
-                                model.Add(active <= sum(session_assignments[i]))
-                                session_active.append(active)
-                            
-                            # Bonus if all three consecutive sessions are active
-                            model.Add(teacher_consecutive <= session_active[0])
-                            model.Add(teacher_consecutive <= session_active[1])
-                            model.Add(teacher_consecutive <= session_active[2])
-                            
-                            teacher_compactness_bonus.append(teacher_consecutive)
+        # PRIORITY 3: Minimize "orphaned" sessions on days (encourage compact scheduling)
+        orphaned_session_penalties = []
+        self._add_orphaned_session_penalties(model, lab_assignments, lab_sessions, orphaned_session_penalties)
         
-        # Combine all objective terms
-        if room_utilization_bonus:
-            objective_terms.extend(room_utilization_bonus)
-        if consecutive_bonus_terms:
-            objective_terms.extend([term * 2 for term in consecutive_bonus_terms])  # Weight consecutive sessions higher
-        if teacher_compactness_bonus:
-            objective_terms.extend(teacher_compactness_bonus)
+        # Add penalties with weight (negative in objective function)
+        if orphaned_session_penalties:
+            for penalty in orphaned_session_penalties:
+                objective_terms.append(penalty * -5)  # Weight of -5 per orphaned session
+            self.logger.info(f"PENALTY: Orphaned Sessions - {len(orphaned_session_penalties)} penalty variables")
         
-        # Add same-group parallelization bonuses
-        if hasattr(self, 'parallelization_bonuses') and self.parallelization_bonuses:
-            objective_terms.extend([term * 4 for term in self.parallelization_bonuses])  # High weight for same-group parallelization
+        # PRIORITY 4: Balance room utilization
+        room_utilization_vars = []
+        self._add_room_utilization_balance(model, lab_assignments, room_utilization_vars)
         
-        # Subtract penalty terms
-        if gap_penalty_terms:
-            objective_terms.extend([-term * 3 for term in gap_penalty_terms])  # Heavy penalty for gaps
+        if room_utilization_vars:
+            objective_terms.extend(room_utilization_vars)
+            self.logger.info(f"BONUS: Room Utilization - {len(room_utilization_vars)} bonus variables")
         
-        # Set the objective to maximize efficiency
+        # PRIORITY 5: Teacher schedule compactness
+        teacher_compactness_vars = []
+        self._add_teacher_schedule_compactness(model, lab_assignments, teacher_compactness_vars)
+        
+        if teacher_compactness_vars:
+            objective_terms.extend(teacher_compactness_vars)
+            self.logger.info(f"BONUS: Teacher Compactness - {len(teacher_compactness_vars)} bonus variables")
+        
+        # Create the final objective function
         if objective_terms:
             model.Maximize(sum(objective_terms))
-            self.logger.info(f"Efficiency objective set with {len(objective_terms)} terms")
-            weight_info = "Objective weights: Room utilization (+1), Consecutive sessions (+2), Teacher compactness (+1), Gap penalty (-3)"
-            if hasattr(self, 'parallelization_bonuses') and self.parallelization_bonuses:
-                weight_info += f", Same-group parallelization (+4, {len(self.parallelization_bonuses)} terms)"
-            self.logger.info(weight_info)
+            self.logger.info(f"Efficiency objective created with {len(objective_terms)} terms")
+            self.logger.info("📊 OBJECTIVE PRIORITIES:")
+            self.logger.info("  1. Satisfy all required lab sessions (HARD CONSTRAINT)")
+            self.logger.info("  2. GROUP PARALLELIZATION: Schedule same-group courses in parallel (STRONG PREFERENCE)")
+            self.logger.info("     - Graduated weights from +8 to +20 based on parallelization level")
+            self.logger.info("  3. Avoid orphaned sessions (-5 per orphaned session)")
+            self.logger.info("  4. Balance room utilization (LOW WEIGHT)")
+            self.logger.info("  5. Teacher schedule compactness (LOW WEIGHT)")
         else:
-            self.logger.warning("No efficiency objective terms found")
+            self.logger.warning("No objective terms were added - using solver defaults")
+    
+    def _add_orphaned_session_penalties(self, model, lab_assignments, lab_sessions, penalties):
+        """Add penalties for orphaned sessions (a session with no assignments before/after it)."""
+        for day_idx in range(self.num_days):
+            day_usage = []
+            
+            # Create variables for each session: is it used or not?
+            for session_idx in range(len(lab_sessions)):
+                session_used = model.NewBoolVar(f'day{day_idx}_session{session_idx}_used')
+                
+                # Collect all assignments in this session
+                session_assignments = []
+                for course_instance_id in lab_assignments.keys():
+                    for room_id in self.lab_ids:
+                        session_assignments.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+                
+                # Link session_used to assignments
+                if session_assignments:
+                    model.Add(session_used <= sum(session_assignments))
+                    model.Add(sum(session_assignments) <= len(session_assignments) * session_used)
+                else:
+                    model.Add(session_used == 0)
+                
+                day_usage.append(session_used)
+            
+            # Create orphaned session penalties
+            for session_idx in range(1, len(lab_sessions) - 1):  # Skip first and last sessions
+                orphaned = model.NewBoolVar(f'day{day_idx}_session{session_idx}_orphaned')
+                
+                # An orphaned session is one that's used, but both adjacent sessions are not used
+                adjacent_unused = model.NewBoolVar(f'day{day_idx}_adjacent_to_{session_idx}_unused')
+                model.Add(day_usage[session_idx-1] + day_usage[session_idx+1] == 0).OnlyEnforceIf(adjacent_unused)
+                model.Add(day_usage[session_idx-1] + day_usage[session_idx+1] >= 1).OnlyEnforceIf(adjacent_unused.Not())
+                
+                # orphaned = session_used AND adjacent_unused
+                model.AddBoolAnd([day_usage[session_idx], adjacent_unused]).OnlyEnforceIf(orphaned)
+                model.AddBoolOr([day_usage[session_idx].Not(), adjacent_unused.Not()]).OnlyEnforceIf(orphaned.Not())
+                
+                # Add to penalties list
+                penalties.append(orphaned)
+
+    def _add_room_utilization_balance(self, model, lab_assignments, utilization_vars):
+        """Add variables to encourage balanced room utilization."""
+        for room_id in self.lab_ids:
+            room_usage = []
+            
+            for day_idx in range(self.num_days):
+                for session_idx in range(len(self.lab_sessions)):
+                    # Count assignments to this room
+                    room_session_assignments = []
+                    for course_instance_id in lab_assignments.keys():
+                        room_session_assignments.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+                    
+                    # Create a variable for this room in this session
+                    room_session = model.NewBoolVar(f'room_{room_id}_day{day_idx}_session{session_idx}_used')
+                    
+                    # Link room_session to assignments
+                    if room_session_assignments:
+                        model.Add(room_session <= sum(room_session_assignments))
+                        model.Add(sum(room_session_assignments) <= len(room_session_assignments) * room_session)
+                    else:
+                        model.Add(room_session == 0)
+                    
+                    room_usage.append(room_session)
+            
+            # Create utilization variable for this room
+            room_utilization = model.NewIntVar(0, len(self.lab_sessions) * self.num_days, f'room_{room_id}_utilization')
+            model.Add(room_utilization == sum(room_usage))
+            utilization_vars.append(room_utilization)
+
+    def _add_teacher_schedule_compactness(self, model, lab_assignments, compactness_vars):
+        """Add variables to encourage compact teacher schedules."""
+        # Get unique teachers from lab_requirements
+        unique_teachers = set()
+        for teacher_id, courses in self.lab_requirements.items():
+            unique_teachers.add(teacher_id)
+            
+        for teacher_id in unique_teachers:
+            # For each day, compute consecutive sessions
+            for day_idx in range(self.num_days):
+                # Create a variable for each session: is this teacher teaching in this session?
+                teacher_day_sessions = []
+                
+                for session_idx in range(len(self.lab_sessions)):
+                    teacher_session = model.NewBoolVar(f'teacher{teacher_id}_day{day_idx}_session{session_idx}')
+                    
+                    # Collect all assignments for this teacher in this session
+                    teacher_session_assignments = []
+                    
+                    # Get all course instances taught by this teacher
+                    for course_instance_id in lab_assignments.keys():
+                        # Check if this teacher teaches this course instance
+                        teaches_course = False
+                        for t_id, courses in self.lab_requirements.items():
+                            if t_id == teacher_id:
+                                for course in courses:
+                                    if course['course_instance_id'] == course_instance_id:
+                                        teaches_course = True
+                                        break
+                        
+                        if teaches_course:
+                            for room_id in self.lab_ids:
+                                teacher_session_assignments.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+                    
+                    # Link teacher_session to assignments
+                    if teacher_session_assignments:
+                        model.Add(teacher_session <= sum(teacher_session_assignments))
+                        model.Add(sum(teacher_session_assignments) <= len(teacher_session_assignments) * teacher_session)
+                    else:
+                        model.Add(teacher_session == 0)
+                    
+                    teacher_day_sessions.append(teacher_session)
+                
+                # Create bonuses for consecutive sessions
+                for session_idx in range(len(self.lab_sessions) - 1):
+                    consecutive_bonus = model.NewBoolVar(f'teacher{teacher_id}_day{day_idx}_consecutive_{session_idx}')
+                    
+                    # Bonus if both this session and the next are used
+                    model.Add(consecutive_bonus <= teacher_day_sessions[session_idx])
+                    model.Add(consecutive_bonus <= teacher_day_sessions[session_idx + 1])
+                    model.Add(consecutive_bonus >= teacher_day_sessions[session_idx] + teacher_day_sessions[session_idx + 1] - 1)
+                    
+                    # Add to compactness vars
+                    compactness_vars.append(consecutive_bonus)
     
     def extract_lab_schedule(self, solver, lab_assignments, lab_sessions):
         """Extract the lab schedule from the solver solution with proper batching logic."""

@@ -102,3 +102,8 @@ other use 35 labs in batches simple
 
 
 first schedule all the groups across sem and dept for first 4 slot if it gets filled or others cant fit in extend it to next 4 and next 3 if needed dont make it infeasible it should do it at same time it should not be too restrictive
+
+
+
+
+generate a python code to see where the theory group distribution and lab distribution done for each sem and dept i want in timetable format where are the groups located for both theory and lab generate png
