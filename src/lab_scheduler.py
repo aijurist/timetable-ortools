@@ -76,7 +76,7 @@ class LabScheduler:
             semester = session.get('semester', 0)
             group_index = session.get('group_index', 0)
             day = session.get('day', '')
-            timeslot = session.get('timeslot', '')
+            timeslot = session.get('time_slot', '')  # Fixed: use 'time_slot' not 'timeslot'
             
             # Create dept-semester-group key
             group_key = f"{dept}_S{semester}_G{group_index}"
@@ -101,17 +101,67 @@ class LabScheduler:
     
     def _map_theory_timeslot_to_lab_session(self, theory_timeslot):
         """Map theory timeslot to corresponding lab session(s) that would conflict."""
-        # Theory timeslots are typically like "8:00 - 8:50", "8:50 - 9:40", etc.
-        # Lab sessions are 2-hour blocks like L1: ['8:00 - 8:50', '8:50 - 9:40']
         
-        # Create mapping of individual slots to lab sessions
-        timeslot_to_lab_session = {}
+        def parse_time_range(time_str):
+            """Parse time range string to start and end times in minutes from midnight."""
+            try:
+                # Handle format like "8:00 - 8:50" or "10:00 - 10:50"
+                start_str, end_str = time_str.split(' - ')
+                
+                def time_to_minutes(time_part):
+                    # Handle both "8:00" and "8:00" format
+                    hour, minute = map(int, time_part.split(':'))
+                    return hour * 60 + minute
+                
+                start_minutes = time_to_minutes(start_str)
+                end_minutes = time_to_minutes(end_str)
+                
+                return start_minutes, end_minutes
+            except Exception as e:
+                self.logger.warning(f"Could not parse time range '{time_str}': {e}")
+                return None, None
+        
+        def time_ranges_overlap(start1, end1, start2, end2):
+            """Check if two time ranges overlap (excluding adjacent endpoints)."""
+            if start1 is None or end1 is None or start2 is None or end2 is None:
+                return False
+            
+            # Two ranges overlap if: start1 < end2 AND start2 < end1
+            # This excludes cases where one ends exactly when the other starts
+            return start1 < end2 and start2 < end1
+        
+        # Parse theory timeslot
+        theory_start, theory_end = parse_time_range(theory_timeslot)
+        if theory_start is None or theory_end is None:
+            return None
+        
+        # Check which lab sessions overlap with this theory timeslot
+        conflicting_sessions = []
+        
         for session_name, time_slots in self.lab_sessions.items():
-            for time_slot in time_slots:
-                timeslot_to_lab_session[time_slot] = session_name
+            # Check if theory timeslot overlaps with any slot in this lab session
+            session_has_conflict = False
+            
+            for lab_timeslot in time_slots:
+                lab_start, lab_end = parse_time_range(lab_timeslot)
+                if lab_start is None or lab_end is None:
+                    continue
+                
+                if time_ranges_overlap(theory_start, theory_end, lab_start, lab_end):
+                    session_has_conflict = True
+                    self.logger.debug(f"Theory {theory_timeslot} overlaps with lab {lab_timeslot} in session {session_name}")
+                    break
+            
+            if session_has_conflict:
+                conflicting_sessions.append(session_name)
         
-        # Return the lab session that contains this theory timeslot
-        return timeslot_to_lab_session.get(theory_timeslot)
+        # Return the first conflicting session (there should typically be at most one)
+        if conflicting_sessions:
+            if len(conflicting_sessions) > 1:
+                self.logger.warning(f"Theory timeslot {theory_timeslot} conflicts with multiple lab sessions: {conflicting_sessions}")
+            return conflicting_sessions[0]
+        
+        return None
     
     def process_teacher_courses(self):
         """Process the teacher-course assignments from the CSV data, focusing on courses with practical hours."""
@@ -1681,8 +1731,8 @@ class LabScheduler:
         self.logger.info("  - Examples: L4+L5+L6, L1+L2+L3, L2+L3+L4, L3+L4+L5 are forbidden")
     
     def apply_theory_lab_group_conflict_constraint(self, model, lab_assignments, lab_sessions):
-        """Apply constraints to prevent lab groups from conflicting with theory groups from same semester/department."""
-        self.logger.info("Applying theory-lab group conflict prevention constraint...")
+        """Apply constraints to prevent lab groups from conflicting with ANY theory groups from same semester/department."""
+        self.logger.info("Applying theory-lab group conflict prevention constraint (ALL GROUPS)...")
         
         if not self.theory_schedule_data or not self.theory_group_timeslots:
             self.logger.info("No theory schedule data available - skipping theory-lab conflict constraints")
@@ -1699,7 +1749,7 @@ class LabScheduler:
             "sat": "saturday"
         }
         
-        # For each lab course instance, check if it conflicts with theory groups
+        # For each lab course instance, check if it conflicts with ALL theory groups from same dept/semester
         for course_instance_id in lab_assignments.keys():
             # Get group information for this lab course instance
             group_info = self.get_group_info_for_course_instance(course_instance_id)
@@ -1707,14 +1757,26 @@ class LabScheduler:
             semester = group_info['semester'] 
             lab_group_index = group_info['group_index']
             
-            # Create the theory group key that would conflict (same dept, semester, group)
-            theory_group_key = f"{dept}_S{semester}_G{lab_group_index}"
+            self.logger.debug(f"Checking lab course {course_instance_id} (Dept: {dept}, Semester: {semester}, Lab Group: {lab_group_index})")
             
-            if theory_group_key in self.theory_group_timeslots:
+            # Find ALL theory groups from the same department and semester
+            theory_groups_to_check = []
+            for theory_group_key in self.theory_group_timeslots.keys():
+                # Parse theory group key: "Computer Science & Engineering_S3_G1"
+                if theory_group_key.startswith(f"{dept}_S{semester}_G"):
+                    theory_groups_to_check.append(theory_group_key)
+            
+            if not theory_groups_to_check:
+                self.logger.debug(f"No theory groups found for {dept} Semester {semester}")
+                continue
+            
+            self.logger.info(f"Lab course {course_instance_id} (Group {lab_group_index}) checking against {len(theory_groups_to_check)} theory groups")
+            
+            # Check against ALL theory groups from same dept/semester
+            for theory_group_key in theory_groups_to_check:
                 occupied_theory_timeslots = self.theory_group_timeslots[theory_group_key]
                 
-                self.logger.info(f"Found theory conflicts for lab course {course_instance_id} (Group {lab_group_index})")
-                self.logger.info(f"  Theory group {theory_group_key} has {len(occupied_theory_timeslots)} occupied timeslots")
+                self.logger.debug(f"  Checking against theory group {theory_group_key} with {len(occupied_theory_timeslots)} timeslots")
                 
                 # For each occupied theory timeslot, prevent lab from using that timeslot
                 for day_timeslot in occupied_theory_timeslots:
@@ -1751,17 +1813,17 @@ class LabScheduler:
                             model.Add(lab_assignments[course_instance_id][lab_day][lab_session_idx][room_id] == 0)
                             constraints_applied += 1
                         
-                        self.logger.debug(f"  Blocked: {course_instance_id} from day {self.days[lab_day]} session {lab_session_name} (theory conflict)")
+                        self.logger.debug(f"    Blocked: {course_instance_id} from day {self.days[lab_day]} session {lab_session_name} (conflicts with {theory_group_key})")
                     
                     except (ValueError, IndexError) as e:
                         self.logger.warning(f"Could not parse theory timeslot {day_timeslot}: {e}")
                         continue
         
         self.logger.info(f"Applied {constraints_applied} theory-lab group conflict constraints")
-        self.logger.info("Theory-Lab Conflict Prevention Rules:")
-        self.logger.info("  - Lab groups CANNOT overlap with theory groups from same semester/department/group")
-        self.logger.info("  - Ensures students can attend both theory and lab sessions")
-        self.logger.info("  - Prevents double-booking of student groups across theory and lab schedules")
+        self.logger.info("MAXIMUM STUDENT CHOICE CONSTRAINT ACTIVE:")
+        self.logger.info("  - Lab groups CANNOT overlap with ANY theory groups from same semester/department")
+        self.logger.info("  - Students can freely choose any theory group + any lab group")
+        self.logger.info("  - Prevents conflicts across ALL group combinations within same semester")
     
     def apply_lab_efficiency_constraints(self, model, lab_assignments, lab_sessions):
         """Apply comprehensive lab efficiency constraints to maximize utilization and minimize waste."""

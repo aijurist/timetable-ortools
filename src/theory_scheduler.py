@@ -655,24 +655,11 @@ class TheoryScheduler:
                     model.Add(sum(total_usage_vars) <= len(self.theory_room_ids))
                     constraints_applied += 1
         
-        # CONSTRAINT 4: Encourage consecutive time slots for same group
-        for group_name, day_slots in group_timeslot_vars.items():
-            for day_idx in range(self.num_days):
-                for slot_idx in range(len(self.theory_time_slots) - 1):
-                    # Create consecutive pair bonus
-                    consecutive_pair = model.NewBoolVar(f'consecutive_{group_name}_day_{day_idx}_slot_{slot_idx}')
-                    
-                    # consecutive_pair = 1 if both consecutive slots are used
-                    model.Add(consecutive_pair <= day_slots[day_idx][slot_idx])
-                    model.Add(consecutive_pair <= day_slots[day_idx][slot_idx + 1])
-                    model.Add(consecutive_pair >= day_slots[day_idx][slot_idx] + day_slots[day_idx][slot_idx + 1] - 1)
-        
         self.logger.info(f"Applied {constraints_applied} group-level constraints")
         self.logger.info("✅ GROUP CONSTRAINTS:")
         self.logger.info("  1. Each group gets exactly required time slots")
         self.logger.info("  2. Different groups, same semester → CANNOT overlap")
         self.logger.info("  3. Global room capacity respected")
-        self.logger.info("  4. Consecutive time slots encouraged")
     
     def add_group_allocation_objective(self, model, group_timeslot_vars):
         """Add objective for optimal group time slot allocation."""
@@ -697,17 +684,6 @@ class TheoryScheduler:
                 for slot_idx in range(8, min(11, len(self.theory_time_slots))):
                     tier3_bonus.append(day_slots[day_idx][slot_idx])
         
-        # Objective 2: Encourage consecutive slots
-        consecutive_bonus = []
-        for group_name, day_slots in group_timeslot_vars.items():
-            for day_idx in range(self.num_days):
-                for slot_idx in range(len(self.theory_time_slots) - 1):
-                    consecutive_pair = model.NewBoolVar(f'obj_consecutive_{group_name}_day_{day_idx}_slot_{slot_idx}')
-                    model.Add(consecutive_pair <= day_slots[day_idx][slot_idx])
-                    model.Add(consecutive_pair <= day_slots[day_idx][slot_idx + 1])
-                    model.Add(consecutive_pair >= day_slots[day_idx][slot_idx] + day_slots[day_idx][slot_idx + 1] - 1)
-                    consecutive_bonus.append(consecutive_pair)
-        
         # Combine objectives with tiered weights
         if tier1_bonus:
             objective_terms.extend([term * 10 for term in tier1_bonus])  # Highest weight for first 4 slots
@@ -715,13 +691,11 @@ class TheoryScheduler:
             objective_terms.extend([term * 5 for term in tier2_bonus])   # Medium weight for next 4 slots
         if tier3_bonus:
             objective_terms.extend([term * 2 for term in tier3_bonus])   # Lowest weight for next 3 slots
-        if consecutive_bonus:
-            objective_terms.extend([term * 3 for term in consecutive_bonus])  # Weight for consecutiveness
         
         if objective_terms:
             model.Maximize(sum(objective_terms))
             self.logger.info(f"Group allocation objective set with {len(objective_terms)} terms")
-            self.logger.info("Objective weights: Tier 1 slots 0-3 (+10), Tier 2 slots 4-7 (+5), Tier 3 slots 8-10 (+2), Consecutive slots (+3)")
+            self.logger.info("Objective weights: Tier 1 slots 0-3 (+10), Tier 2 slots 4-7 (+5), Tier 3 slots 8-10 (+2)")
             self.logger.info("Tiered priority system: Fill first 4 slots priority, then next 4, then next 3")
     
     def extract_group_timeslots(self, solver, group_timeslot_vars):
