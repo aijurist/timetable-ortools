@@ -51,10 +51,12 @@ def find_file(filename, search_paths=None):
         search_paths = [
             '',  # Current directory
             'data',  # Data directory
-            'data/block_wise',  # Block-wise data directory
+            'data/block_wise',  # Block-wise data directory,
+            'data/department_data',  # Department data directory,
             os.path.join('..', 'data'),  # Parent data directory
             os.path.join('timetable_scheduler', 'data'),  # Project data directory
-            os.path.join('timetable_scheduler', 'data', 'block_wise')  # Project block-wise directory
+            os.path.join('timetable_scheduler', 'data', 'block_wise'),  # Project block-wise directory,
+            os.path.join('timetable_scheduler', 'data', 'department_data')  # Project block-wise directory
         ]
     
     # First check if the file exists as specified
