@@ -553,28 +553,33 @@ class LabScheduler:
             teacher_count = len(course_to_teachers[course_code])
             self.logger.info(f"  {course_code}: {teacher_count} teachers, {len(course_instances[course_code])} instances")
         
-        # Pre-allocate courses to groups with 2-group-per-course limit
+        # SMARTER PRE-ALLOCATION LOGIC
+        self.logger.info("Performing smarter course pre-allocation to groups to maximize choice...")
         pre_allocation = [set() for _ in range(num_groups)]
-        course_group_assignments = {}  # Track which groups each course is assigned to
-        next_group = 0
-        
-        for course_code in sorted_courses:
-            instances = course_instances[course_code].copy()
-            # CONSTRAINT: Each course can appear in at most 2 groups
-            max_groups_per_course = min(2, len(instances), num_groups)
-            
-            course_group_assignments[course_code] = []
-            
-            for _ in range(max_groups_per_course):
-                pre_allocation[next_group].add(course_code)
-                course_group_assignments[course_code].append(next_group)
-                next_group = (next_group + 1) % num_groups
+        course_group_assignments = {}
+
+        # Create a balanced, chained allocation to ensure all groups are used meaningfully
+        for i, course_code in enumerate(sorted_courses):
+            # Each course should appear in up to 2 groups for choice, if possible and num_groups > 1
+            num_placements = min(2, len(course_instances[course_code])) if num_groups > 1 else 1
+
+            # Place course in a "chained" fashion: e.g., C1 in G1/G2, C2 in G2/G3, C3 in G3/G4...
+            for j in range(num_placements):
+                group_idx = (i + j) % num_groups
+                pre_allocation[group_idx].add(course_code)
+                
+                if course_code not in course_group_assignments:
+                    course_group_assignments[course_code] = []
+                
+                # Ensure we don't add the same group index twice
+                if group_idx not in course_group_assignments[course_code]:
+                    course_group_assignments[course_code].append(group_idx)
         
         # Log course-group pre-allocation
-        self.logger.info("Course pre-allocation (max 2 groups per course):")
-        for course_code, group_indices in course_group_assignments.items():
-            group_names = [f"G{i+1}" for i in group_indices]
-            self.logger.info(f"  {course_code}: {', '.join(group_names)} ({len(group_indices)} groups)")
+        self.logger.info("Course pre-allocation (max 2 groups per course, chained distribution):")
+        for course_code, group_indices in sorted(course_group_assignments.items()):
+            group_names = [f"G{i+1}" for i in sorted(group_indices)]
+            self.logger.info(f"  {course_code}: assigned to groups {', '.join(group_names)}")
         
         # Execute the distribution with strict teacher uniqueness
         for group_idx, target_courses in enumerate(pre_allocation):
@@ -2029,8 +2034,8 @@ class LabScheduler:
         self.logger.info(f"Created {len(self.teacher_exhaustion_penalties)} penalty variables for consecutive labs.")
     
     def apply_theory_lab_group_conflict_constraint(self, model, lab_assignments, lab_sessions):
-        """Apply constraints to prevent lab groups from conflicting with their corresponding theory group."""
-        self.logger.info("Applying theory-lab group conflict prevention (linked by group index)...")
+        """(STRICT) Apply constraints to prevent lab groups from conflicting with ANY theory group in the same semester."""
+        self.logger.info("Applying STRICT theory-lab group conflict prevention (any lab group vs. any theory group)...")
         
         if not self.theory_schedule_data or not self.theory_group_timeslots:
             self.logger.info("No theory schedule data available - skipping theory-lab conflict constraints")
@@ -2038,79 +2043,75 @@ class LabScheduler:
         
         constraints_applied = 0
         
-        # Create day name mapping
+        # Create day name mapping for robustness
         day_name_mapping = {
-            "tuesday": "tuesday",
-            "wed": "wednesday", 
-            "thur": "thursday",
-            "fri": "friday",
-            "sat": "saturday"
+            "tuesday": "tuesday", "wed": "wednesday", "thur": "thursday", 
+            "fri": "friday", "sat": "saturday"
         }
         
-        # For each lab course instance, check for conflicts with its corresponding theory group
+        # For each lab course instance, check for conflicts with ALL theory groups in the same semester
         for course_instance_id in lab_assignments.keys():
             # Get group information for this lab course instance
             group_info = self.get_group_info_for_course_instance(course_instance_id)
             dept = group_info['department']
             semester = group_info['semester'] 
-            lab_group_index = group_info['group_index']
 
-            if lab_group_index == 0:  # Skip unassigned instances
+            if semester == 0:  # Skip unassigned/default groups
                 continue
 
-            # Construct the key for the corresponding theory group
-            theory_group_key = f"{dept}_S{semester}_G{lab_group_index}"
-            
-            # Check if this lab's corresponding theory group has any scheduled sessions
-            if theory_group_key in self.theory_group_timeslots:
-                occupied_theory_timeslots = self.theory_group_timeslots[theory_group_key]
-                self.logger.debug(f"  Lab course {course_instance_id} (Group {lab_group_index}) checking against theory group {theory_group_key}")
+            # Find all theory groups for this lab's department and semester
+            semester_theory_group_keys = [
+                key for key in self.theory_group_timeslots.keys() 
+                if key.startswith(f"{dept}_S{semester}_G")
+            ]
 
-                # For each occupied theory timeslot, prevent lab from using that timeslot
-                for day_timeslot in occupied_theory_timeslots:
-                    try:
-                        day_part, timeslot_part = day_timeslot.split('_', 1)
-                        
-                        # Map theory day to lab day index
-                        lab_day = None
-                        for lab_day_name, lab_day_idx in zip(self.days, range(len(self.days))):
-                            if day_part.lower() == lab_day_name.lower() or day_part.lower() == day_name_mapping.get(lab_day_name, lab_day_name).lower():
-                                lab_day = lab_day_idx
-                                break
-                        
-                        if lab_day is None:
-                            continue
-                        
-                        # Map theory timeslot to lab session
-                        lab_session_name = self._map_theory_timeslot_to_lab_session(timeslot_part)
-                        if lab_session_name is None:
-                            continue
-                        
-                        # Find lab session index
-                        lab_session_idx = None
-                        for idx, session_name in enumerate(lab_sessions):
-                            if session_name == lab_session_name:
-                                lab_session_idx = idx
-                                break
-                        
-                        if lab_session_idx is None:
-                            continue
-                        
-                        # Add constraint: this course cannot be assigned to this conflicting timeslot
-                        for room_id in self.lab_ids:
-                            model.Add(lab_assignments[course_instance_id][lab_day][lab_session_idx][room_id] == 0)
-                            constraints_applied += 1
-                        
-                        self.logger.debug(f"    Blocked: {course_instance_id} from day {self.days[lab_day]} session {lab_session_name} (conflicts with {theory_group_key})")
+            if not semester_theory_group_keys:
+                continue
+
+            self.logger.debug(f"Lab course {course_instance_id} (Dept: {dept}, Sem: {semester}) checking against {len(semester_theory_group_keys)} theory groups.")
+
+            # Collect all occupied timeslots for these theory groups
+            all_conflicting_theory_timeslots = set()
+            for theory_group_key in semester_theory_group_keys:
+                all_conflicting_theory_timeslots.update(self.theory_group_timeslots[theory_group_key])
+            
+            # For each occupied theory timeslot, prevent the lab from using that timeslot
+            for day_timeslot in all_conflicting_theory_timeslots:
+                try:
+                    day_part, timeslot_part = day_timeslot.split('_', 1)
                     
-                    except (ValueError, IndexError) as e:
-                        self.logger.warning(f"Could not parse theory timeslot {day_timeslot}: {e}")
-                        continue
+                    # Map theory day to lab day index
+                    lab_day = None
+                    for lab_day_name, lab_day_idx in zip(self.days, range(len(self.days))):
+                        if day_part.lower() in [lab_day_name.lower(), day_name_mapping.get(lab_day_name.lower())]:
+                            lab_day = lab_day_idx
+                            break
+                    
+                    if lab_day is None: continue
+                    
+                    # Map theory timeslot to conflicting lab session
+                    lab_session_name = self._map_theory_timeslot_to_lab_session(timeslot_part)
+                    if lab_session_name is None: continue
+                    
+                    # Find lab session index
+                    lab_session_idx = lab_sessions.index(lab_session_name) if lab_session_name in lab_sessions else None
+                    if lab_session_idx is None: continue
+                    
+                    # Add constraint: this lab course cannot be assigned to this conflicting timeslot
+                    for room_id in self.lab_ids:
+                        model.Add(lab_assignments[course_instance_id][lab_day][lab_session_idx][room_id] == 0)
+                        constraints_applied += 1
+                    
+                    self.logger.debug(f"    Blocked: {course_instance_id} from day {self.days[lab_day]} session {lab_session_name} (conflicts with theory groups in Sem {semester})")
+                
+                except (ValueError, IndexError) as e:
+                    self.logger.warning(f"Could not parse theory timeslot {day_timeslot}: {e}")
+                    continue
         
-        self.logger.info(f"Applied {constraints_applied} theory-lab group conflict constraints")
-        self.logger.info("RELAXED STUDENT CHOICE CONSTRAINT ACTIVE:")
-        self.logger.info("  - Lab groups only conflict with their corresponding theory group (e.g., Lab G1 vs Theory G1)")
-        self.logger.info("  - This increases feasibility but requires students to take matching group numbers.")
+        self.logger.info(f"Applied {constraints_applied} STRICT theory-lab group conflict constraints")
+        self.logger.info("STRICT STUDENT CHOICE CONSTRAINT RE-ENABLED:")
+        self.logger.info("  - Any lab group CANNOT overlap with ANY theory group from the same semester.")
+        self.logger.info("  - This provides maximum flexibility for student choices.")
     
     def apply_lab_efficiency_constraints(self, model, lab_assignments, lab_sessions):
         """Apply comprehensive lab efficiency constraints to maximize utilization and minimize waste."""

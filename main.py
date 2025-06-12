@@ -141,7 +141,7 @@ def main():
         
         # Generate the theory schedule
         theory_success = theory_scheduler.generate_theory_schedule()
-        
+
         if theory_success:
             logger.info("Theory schedule generated successfully!")
             theory_output_dir = theory_scheduler.output_dir

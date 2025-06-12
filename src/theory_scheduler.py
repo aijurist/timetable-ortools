@@ -88,7 +88,9 @@ class TheoryScheduler:
                 'tutorial_hours': int(row.get('tutorial_hours', 0)),
                 'student_count': int(row['student_count']),
                 'semester': row.get('semester', 1),
-                'course_dept': row.get('course_dept', 'Computer Science & Engineering')
+                'course_dept': row.get('course_dept', 'Computer Science & Engineering'),
+                'student_dept': row.get('student_dept', 'Computer Science & Engineering'),
+                'is_theory_course': int(row.get('lecture_hours', 0)) > 0 or int(row.get('tutorial_hours', 0)) > 0
             })
         
         # Calculate theory requirements for each teacher and course
@@ -180,6 +182,7 @@ class TheoryScheduler:
                 'student_count': int(row['student_count']),
                 'semester': row.get('semester', 1),
                 'course_dept': row.get('course_dept', 'Computer Science & Engineering'),
+                'student_dept': row.get('student_dept', 'Computer Science & Engineering'),
                 'is_theory_course': int(row.get('lecture_hours', 0)) > 0 or int(row.get('tutorial_hours', 0)) > 0
             }
             all_instances.append(instance_with_teacher)
@@ -189,7 +192,7 @@ class TheoryScheduler:
         
         # Group by department and semester
         for instance in all_instances:
-            dept = instance.get('course_dept', 'Computer Science & Engineering')
+            dept = instance.get('student_dept', 'Computer Science & Engineering')
             semester = instance.get('semester', 3)  # Default to semester 3
             dept_sem_courses[(dept, semester)].append(instance)
         
@@ -212,9 +215,9 @@ class TheoryScheduler:
         if total_instances == 0:
             return []
         
-        # Enhanced instance analysis for ALL courses (theory + lab)
-        theory_courses = [inst for inst in courses if inst['lecture_hours'] > 0 or inst.get('is_theory_course', False) == False]
-        lab_courses = [inst for inst in courses if inst.get('is_theory_course', False) == False]
+        # Correctly identify theory and lab courses
+        theory_courses = [inst for inst in courses if inst.get('lecture_hours', 0) > 0 or inst.get('tutorial_hours', 0) > 0]
+        lab_courses = [inst for inst in courses if not (inst.get('lecture_hours', 0) > 0 or inst.get('tutorial_hours', 0) > 0)]
         
         # Calculate dynamic student capacity
         course_instance_counts = {}
@@ -289,22 +292,33 @@ class TheoryScheduler:
         sorted_courses = sorted(course_to_teachers.keys(), 
                               key=lambda c: len(course_to_teachers[c]))
         
-        # Pre-allocate courses to groups with 2-group-per-course limit
+        # SMARTER PRE-ALLOCATION LOGIC
+        self.logger.info("Performing smarter course pre-allocation to groups to maximize choice...")
         pre_allocation = [set() for _ in range(num_groups)]
-        course_group_assignments = {}  # Track which groups each course is assigned to
-        next_group = 0
-        
-        for course_code in sorted_courses:
-            instances = course_instances[course_code].copy()
-            # CONSTRAINT: Each course can appear in at most 2 groups
-            max_groups_per_course = min(2, len(instances), num_groups)
-            
-            course_group_assignments[course_code] = []
-            
-            for _ in range(max_groups_per_course):
-                pre_allocation[next_group].add(course_code)
-                course_group_assignments[course_code].append(next_group)
-                next_group = (next_group + 1) % num_groups
+        course_group_assignments = {}
+
+        # Create a balanced, chained allocation to ensure all groups are used meaningfully
+        for i, course_code in enumerate(sorted_courses):
+            # Each course should appear in up to 2 groups for choice, if possible and num_groups > 1
+            num_placements = min(2, len(course_instances[course_code])) if num_groups > 1 else 1
+
+            # Place course in a "chained" fashion: e.g., C1 in G1/G2, C2 in G2/G3, C3 in G3/G4...
+            for j in range(num_placements):
+                group_idx = (i + j) % num_groups
+                pre_allocation[group_idx].add(course_code)
+                
+                if course_code not in course_group_assignments:
+                    course_group_assignments[course_code] = []
+                
+                # Ensure we don't add the same group index twice
+                if group_idx not in course_group_assignments[course_code]:
+                    course_group_assignments[course_code].append(group_idx)
+
+        # Log course-group pre-allocation
+        self.logger.info("Course pre-allocation (max 2 groups per course, chained distribution):")
+        for course_code, group_indices in sorted(course_group_assignments.items()):
+            group_names = [f"G{i+1}" for i in sorted(group_indices)]
+            self.logger.info(f"  {course_code}: assigned to groups {', '.join(group_names)}")
         
         # Execute the distribution with strict teacher uniqueness
         for group_idx, target_courses in enumerate(pre_allocation):

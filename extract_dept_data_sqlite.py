@@ -20,15 +20,26 @@ def get_db_connection(db_path):
         print(f"Error connecting to database: {e}")
         sys.exit(1)
 
-def get_departments(conn):
-    """Get all departments from the database"""
+def get_student_departments(conn):
+    """Get all departments that have students assigned to courses."""
+    query = """
+    SELECT DISTINCT
+        c.for_dept_id_id as id,
+        dsd.dept_name as dept_name
+    FROM
+        course_course c
+    JOIN
+        department_department dsd ON c.for_dept_id_id = dsd.id
+    ORDER BY
+        dsd.dept_name
+    """
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT id, dept_name FROM department_department")
+        cursor.execute(query)
         departments = cursor.fetchall()
         return departments
     except sqlite3.Error as e:
-        print(f"Error fetching departments: {e}")
+        print(f"Error fetching student departments: {e}")
         return []
 
 def extract_course_data_by_dept(conn, dept_id, dept_name):
@@ -133,10 +144,10 @@ def main():
     conn = get_db_connection(db_path)
     
     try:
-        # Get all departments
-        departments = get_departments(conn)
+        # Get all departments that have students assigned to courses
+        departments = get_student_departments(conn)
         
-        print(f"Found {len(departments)} departments")
+        print(f"Found {len(departments)} departments with assigned students")
         print("NOTE: Excluding 1st year, 1st semester data")
         
         # Extract data for each department
