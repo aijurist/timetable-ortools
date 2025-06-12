@@ -9,44 +9,7 @@ from itertools import combinations
 from ortools.sat.python import cp_model
 
 class LabScheduler:
-    """Schedules lab sessions based on practical hours requirements, following reference implementation approach.
-    
-    PERFORMANCE OPTIMIZATIONS IMPLEMENTED:
-    =====================================
-    
-    1. DATA STRUCTURE OPTIMIZATIONS:
-       - Cached lab capacity analysis to avoid repeated categorization
-       - Pre-computed time slots for reuse across methods
-       - Used sets for faster lookups instead of lists where applicable
-       - Optimized dictionaries with defaultdict for better performance
-    
-    2. ALGORITHM OPTIMIZATIONS:
-       - Single-pass analysis in course distribution algorithm
-       - Eliminated redundant loops in grouping logic
-       - Cached frequently computed values (teacher mappings, course details)
-       - Optimized constraint generation with list comprehensions
-       - Reduced parallelization bonus calculation complexity
-    
-    3. MEMORY OPTIMIZATIONS:
-       - Reduced intermediate data structure creation
-       - Efficient batch tracking with defaultdict
-       - Streamlined group metrics updates
-       - Optimized schedule extraction with pre-computed lookups
-    
-    4. LOGGING OPTIMIZATIONS:
-       - Added logging level checks to avoid expensive string operations
-       - Limited debug logging in performance-critical sections
-       - Optimized final group distribution logging
-       - Reduced redundant log messages in loops
-    
-    5. CONSTRAINT OPTIMIZATIONS:
-       - Simplified parallelization preference logic
-       - Optimized capacity constraint application
-       - Efficient group-based scheduling constraint generation
-       - Reduced redundant constraint calculations
-    
-    These optimizations maintain 100% functional compatibility while significantly improving performance.
-    """
+    """Schedules lab sessions based on practical hours requirements, following reference implementation approach."""
     
     def __init__(self, course_file, room_file, theory_schedule_data=None):
         """Initialize the lab scheduler with course and room data, and optional theory schedule data."""
@@ -491,145 +454,181 @@ class LabScheduler:
         if total_instances == 0:
             return []
         
-        # Enhanced instance analysis for ALL courses (theory + lab) - OPTIMIZED
-        practical_courses = []
-        theory_courses = []
+        # Enhanced instance analysis for ALL courses (theory + lab)
+        practical_courses = [inst for inst in courses if inst['practical_hours'] > 0]
+        theory_courses = [inst for inst in courses if inst['practical_hours'] == 0]
+        
+        # Calculate dynamic student capacity
         course_instance_counts = {}
-        
-        # Single pass through courses for all analysis
         for inst in courses:
-            practical_hours = inst['practical_hours']
             course_code = inst['course_code']
-            
-            if practical_hours > 0:
-                practical_courses.append(inst)
-            else:
-                theory_courses.append(inst)
-                
-            course_instance_counts[course_code] = course_instance_counts.get(course_code, 0) + 1
+            if course_code not in course_instance_counts:
+                course_instance_counts[course_code] = 0
+            course_instance_counts[course_code] += 1
         
-        # Pre-compute frequently used values
         max_instances_per_course = max(course_instance_counts.values()) if course_instance_counts else 1
-        unique_course_codes = len(course_instance_counts)
-        unique_teachers = len(set(inst['teacher_id'] for inst in courses))
-        total_practical_hours = sum(inst['practical_hours'] for inst in practical_courses)
-        avg_student_count = sum(inst.get('student_count', 70) for inst in courses) / total_instances
         dynamic_student_capacity = max_instances_per_course * 70
         
-        # Log analysis results
+        instance_analysis = {
+            'total_instances': total_instances,
+            'practical_instances_count': len(practical_courses),
+            'theory_instances_count': len(theory_courses),
+            'unique_courses': len(set(inst['course_code'] for inst in courses)),
+            'unique_practical_courses': len(set(inst['course_code'] for inst in practical_courses)),
+            'unique_theory_courses': len(set(inst['course_code'] for inst in theory_courses)),
+            'unique_teachers': len(set(inst['teacher_id'] for inst in courses)),
+            'total_practical_hours': sum(inst['practical_hours'] for inst in courses),
+            'avg_student_count': sum(inst.get('student_count', 70) for inst in courses) / total_instances if total_instances > 0 else 0,
+            'max_instances_per_course': max_instances_per_course,
+            'dynamic_student_capacity': dynamic_student_capacity,
+            'course_instance_counts': course_instance_counts
+        }
+        
         self.logger.info(f"Hall-based analysis for {dept} Semester {semester}:")
-        self.logger.info(f"  {total_instances} total instances")
-        self.logger.info(f"  {len(practical_courses)} practical instances, {len(theory_courses)} theory instances")
-        self.logger.info(f"  {unique_course_codes} unique courses ({len(set(inst['course_code'] for inst in practical_courses))} practical + {len(set(inst['course_code'] for inst in theory_courses))} theory)")
-        self.logger.info(f"  {unique_teachers} unique teachers")
-        self.logger.info(f"  Total practical workload: {total_practical_hours} hours")
-        self.logger.info(f"  Max instances per course: {max_instances_per_course}")
-        self.logger.info(f"  Dynamic student capacity: {dynamic_student_capacity} students")
+        self.logger.info(f"  {instance_analysis['total_instances']} total instances")
+        self.logger.info(f"  {instance_analysis['practical_instances_count']} practical instances, {instance_analysis['theory_instances_count']} theory instances")
+        self.logger.info(f"  {instance_analysis['unique_courses']} unique courses ({instance_analysis['unique_practical_courses']} practical + {instance_analysis['unique_theory_courses']} theory)")
+        self.logger.info(f"  {instance_analysis['unique_teachers']} unique teachers")
+        self.logger.info(f"  Total practical workload: {instance_analysis['total_practical_hours']} hours")
+        self.logger.info(f"  Max instances per course: {instance_analysis['max_instances_per_course']}")
+        self.logger.info(f"  Dynamic student capacity: {instance_analysis['dynamic_student_capacity']} students")
         
         # CRITICAL: Number of groups = Number of unique courses in the semester
+        # Each course can appear in at most 2 of these groups for optimal student choice
+        unique_course_codes = instance_analysis['unique_courses']
+        
+        # Always create as many groups as there are unique courses
         num_groups = unique_course_codes
         
         self.logger.info(f"Creating {num_groups} groups (one per unique course: {unique_course_codes})")
-        self.logger.info(f"CONSTRAINT: Each course limited to maximum 2 of the {num_groups} groups for optimal choice balance")
+        self.logger.info(f"📋 CONSTRAINT: Each course limited to maximum 2 of the {num_groups} groups for optimal choice balance")
         
-        # Initialize optimized data structures
+        # Initialize groups
         groups = [[] for _ in range(num_groups)]
-        group_metrics = [{
-            'workload': 0, 'practical_workload': 0, 'student_count': 0,
-            'instance_count': 0, 'practical_instance_count': 0, 'theory_instance_count': 0,
-            'courses': set(), 'teachers': set()
-        } for _ in range(num_groups)]
         
-        # Build optimized course-teacher mappings
+        # Track group metrics
+        group_metrics = []
+        for i in range(num_groups):
+            group_metrics.append({
+                'workload': 0,
+                'practical_workload': 0,
+                'student_count': 0,
+                'instance_count': 0,
+                'practical_instance_count': 0,
+                'theory_instance_count': 0,
+                'courses': set(),
+                'teachers': set()
+            })
+        
+        # Build course-teacher bipartite graph for Hall's theorem (ALL courses)
         course_to_teachers = {}
         teacher_to_courses = {}
-        course_instances = {}
         
-        for instance in courses:
+        for instance in courses:  # Use ALL courses, not just practical
             course_code = instance['course_code']
             teacher_id = instance['teacher_id']
             
-            # Optimize set operations
             if course_code not in course_to_teachers:
                 course_to_teachers[course_code] = set()
-                course_instances[course_code] = []
             course_to_teachers[course_code].add(teacher_id)
-            course_instances[course_code].append(instance)
             
             if teacher_id not in teacher_to_courses:
                 teacher_to_courses[teacher_id] = set()
             teacher_to_courses[teacher_id].add(course_code)
         
-        # Optimized course sorting
-        sorted_courses = sorted(course_to_teachers.keys(), key=lambda c: len(course_to_teachers[c]))
+        # Group instances by course code (ALL courses)
+        course_instances = {}
+        for instance in courses:  # Use ALL courses, not just practical
+            course_code = instance['course_code']
+            if course_code not in course_instances:
+                course_instances[course_code] = []
+            course_instances[course_code].append(instance)
         
-        # Log only first 5 for performance
+        # Sort courses by number of teachers (ascending) for better Hall satisfaction
+        sorted_courses = sorted(course_to_teachers.keys(), 
+                              key=lambda c: len(course_to_teachers[c]))
+        
         self.logger.info("Course-teacher availability analysis:")
-        for course_code in sorted_courses[:5]:
+        for course_code in sorted_courses[:5]:  # Show first 5 courses
             teacher_count = len(course_to_teachers[course_code])
-            instance_count = len(course_instances[course_code])
-            self.logger.info(f"  {course_code}: {teacher_count} teachers, {instance_count} instances")
+            self.logger.info(f"  {course_code}: {teacher_count} teachers, {len(course_instances[course_code])} instances")
         
-        # Pre-allocate courses to groups with 2-group-per-course limit - OPTIMIZED
+        # Pre-allocate courses to groups with 2-group-per-course limit
         pre_allocation = [set() for _ in range(num_groups)]
-        course_group_assignments = {}
+        course_group_assignments = {}  # Track which groups each course is assigned to
         next_group = 0
         
         for course_code in sorted_courses:
-            instances = course_instances[course_code]
+            instances = course_instances[course_code].copy()
+            # CONSTRAINT: Each course can appear in at most 2 groups
             max_groups_per_course = min(2, len(instances), num_groups)
             
-            assigned_groups = []
+            course_group_assignments[course_code] = []
+            
             for _ in range(max_groups_per_course):
                 pre_allocation[next_group].add(course_code)
-                assigned_groups.append(next_group)
+                course_group_assignments[course_code].append(next_group)
                 next_group = (next_group + 1) % num_groups
         
-            course_group_assignments[course_code] = assigned_groups
+        # Log course-group pre-allocation
+        self.logger.info("Course pre-allocation (max 2 groups per course):")
+        for course_code, group_indices in course_group_assignments.items():
+            group_names = [f"G{i+1}" for i in group_indices]
+            self.logger.info(f"  {course_code}: {', '.join(group_names)} ({len(group_indices)} groups)")
         
-        # Log course-group pre-allocation - optimized logging
-        if self.logger.isEnabledFor(logging.INFO):
-            self.logger.info("Course pre-allocation (max 2 groups per course):")
-            for course_code, group_indices in course_group_assignments.items():
-                group_names = [f"G{i+1}" for i in group_indices]
-                self.logger.info(f"  {course_code}: {', '.join(group_names)} ({len(group_indices)} groups)")
-        
-        # Optimized instance assignment tracking
-        assigned_instances = set()
-        
-        # Execute distribution with optimized teacher tracking
+        # Execute the distribution with strict teacher uniqueness
         for group_idx, target_courses in enumerate(pre_allocation):
             used_teachers = set()
             
+            # First, fulfill the pre-allocation plan with teacher uniqueness enforcement
             for course_code in target_courses:
-                available_instances = [inst for inst in course_instances[course_code] 
-                                     if inst['id'] not in assigned_instances]
+                instances = [inst for inst in course_instances[course_code] if inst not in [i for g in groups for i in g]]
                 
-                if not available_instances:
+                if not instances:
                     continue
                 
-                # Find optimal instance with unused teacher
-                for instance in available_instances:
+                # Find an instance with a teacher not yet used in ANY group (global uniqueness)
+                instance_assigned = False
+                for instance in instances:
                     teacher_id = instance['teacher_id']
                     
+                    # Check if teacher is already used in THIS group
                     if teacher_id not in used_teachers:
                         groups[group_idx].append(instance)
                         used_teachers.add(teacher_id)
-                        assigned_instances.add(instance['id'])
+                        instance_assigned = True
                         
-                        # Update metrics efficiently
-                        self._update_group_metrics(group_metrics[group_idx], instance)
+                        # Update metrics
+                        metrics = group_metrics[group_idx]
+                        practical_hrs = instance['practical_hours']
                         
-                        if self.logger.isEnabledFor(logging.DEBUG):
-                            self.logger.debug(f"  Pre-allocated: {course_code} (T{teacher_id}) → Group {group_idx + 1}")
+                        metrics['workload'] += practical_hrs
+                        metrics['practical_workload'] += practical_hrs
+                        metrics['student_count'] += instance.get('student_count', 70)
+                        metrics['instance_count'] += 1
+                        if practical_hrs > 0:
+                            metrics['practical_instance_count'] += 1
+                        else:
+                            metrics['theory_instance_count'] = metrics.get('theory_instance_count', 0) + 1
+                        metrics['courses'].add(instance['course_code'])
+                        metrics['teachers'].add(instance['teacher_id'])
+                        
+                        self.logger.debug(f"  Pre-allocated: {course_code} (T{teacher_id}) → Group {group_idx + 1}")
                         break
+                
+                if not instance_assigned:
+                    self.logger.debug(f"  Could not pre-allocate {course_code} to Group {group_idx + 1} - no teacher available that isn't already in this group")
         
-        # Optimized remaining instance processing
-        remaining_instances = [inst for inst in courses if inst['id'] not in assigned_instances]
+        # Distribute remaining instances
+        remaining_instances = []
+        for course_code, instances in course_instances.items():
+            for instance in instances:
+                if instance not in [i for g in groups for i in g]:
+                    remaining_instances.append(instance)
         
         self.logger.info(f"Distributing {len(remaining_instances)} remaining instances...")
         
-        # Optimized teacher assignment tracking
+        # Track teacher assignments to ensure uniqueness constraint
         teacher_group_assignments = {}
         for group_idx, group in enumerate(groups):
             for instance in group:
@@ -638,151 +637,174 @@ class LabScheduler:
                     teacher_group_assignments[teacher_id] = set()
                 teacher_group_assignments[teacher_id].add(group_idx)
         
-        # Optimized assignment loop
         successfully_assigned = 0
         failed_assignments = []
         
         for instance in remaining_instances:
             teacher_id = instance['teacher_id']
             course_code = instance['course_code']
+            
+            # Find valid groups for this teacher and course
+            valid_groups = []
+            
+            # Get groups where this course is already assigned (from pre-allocation)
             course_assigned_groups = course_group_assignments.get(course_code, [])
             
-            # Find valid groups efficiently
-            valid_groups = []
-            for group_idx in course_assigned_groups:
-                # Check constraints efficiently
-                teacher_in_group = any(inst['teacher_id'] == teacher_id for inst in groups[group_idx])
-                course_instances_in_group = sum(1 for inst in groups[group_idx] if inst['course_code'] == course_code)
-                course_limit_ok = course_instances_in_group < course_instance_counts.get(course_code, 0)
+            for group_idx in range(num_groups):
+                # CONSTRAINT 1: Teacher cannot be in this group already
+                teacher_conflict = teacher_id in {inst['teacher_id'] for inst in groups[group_idx]}
                 
-                if not teacher_in_group and course_limit_ok:
+                # CONSTRAINT 2: Course can only be in groups where it was pre-allocated (max 2 groups)
+                course_allowed = group_idx in course_assigned_groups
+                
+                # CONSTRAINT 3: Check if course already has enough instances in this group
+                course_instances_in_group = [inst for inst in groups[group_idx] if inst['course_code'] == course_code]
+                course_instance_limit_ok = len(course_instances_in_group) < course_instance_counts.get(course_code, 0)
+                
+                if not teacher_conflict and course_allowed and course_instance_limit_ok:
                     valid_groups.append(group_idx)
             
             if not valid_groups:
-                teacher_groups = [i for i in range(num_groups) if any(inst['teacher_id'] == teacher_id for inst in groups[i])]
+                # Determine reason for failure
+                teacher_groups = [i for i in range(num_groups) if teacher_id in {inst['teacher_id'] for inst in groups[i]}]
                 reason = f"Teacher in groups {teacher_groups}, course allowed in groups {course_assigned_groups}"
                 
+                self.logger.error(f"CONSTRAINT VIOLATION: Cannot assign Teacher {teacher_id} ({course_code}) to any group")
+                self.logger.error(f"  Reason: {reason}")
                 failed_assignments.append({
-                    'teacher_id': teacher_id, 'course_code': course_code,
-                    'instance_id': instance['id'], 'reason': reason
+                    'teacher_id': teacher_id,
+                    'course_code': course_code,
+                    'instance_id': instance['id'],
+                    'reason': reason
                 })
                 continue
             
-            # Select best group efficiently
-            best_group = min(valid_groups, key=lambda g: (
-                any(inst['course_code'] == course_code for inst in groups[g]),  # Prefer new course
-                len(groups[g])  # Prefer smaller groups
-            ))
+            # Find the best valid group for this instance
+            best_group = None
+            best_score = -1
             
-            groups[best_group].append(instance)
-            successfully_assigned += 1
-            assigned_instances.add(instance['id'])
+            for group_idx in valid_groups:
+                # Calculate score - prefer groups that don't have this course yet
+                course_in_group = course_code in {inst['course_code'] for inst in groups[group_idx]}
+                group_size = len(groups[group_idx])
+                
+                score = 1000 - group_size * 10
+                if not course_in_group:
+                    score += 500  # Bonus for adding a new course
+                
+                if score > best_score:
+                    best_score = score
+                    best_group = group_idx
             
-            # Update metrics efficiently  
-            self._update_group_metrics(group_metrics[best_group], instance)
-            
-            # Update teacher assignments
-            if teacher_id not in teacher_group_assignments:
-                teacher_group_assignments[teacher_id] = set()
-            teacher_group_assignments[teacher_id].add(best_group)
-            
-            if self.logger.isEnabledFor(logging.DEBUG):
+            # Add instance to the selected group (guaranteed to respect teacher uniqueness)
+            if best_group is not None:
+                groups[best_group].append(instance)
+                successfully_assigned += 1
+                
+                # Update teacher assignments tracking
+                if teacher_id not in teacher_group_assignments:
+                    teacher_group_assignments[teacher_id] = set()
+                teacher_group_assignments[teacher_id].add(best_group)
+                
+                # UPDATE METRICS FOR THE ASSIGNED INSTANCE
+                metrics = group_metrics[best_group]
+                practical_hrs = instance['practical_hours']
+                
+                metrics['workload'] += practical_hrs
+                metrics['practical_workload'] += practical_hrs
+                metrics['student_count'] += instance.get('student_count', 70)
+                metrics['instance_count'] += 1
+                if practical_hrs > 0:
+                    metrics['practical_instance_count'] += 1
+                else:
+                    metrics['theory_instance_count'] = metrics.get('theory_instance_count', 0) + 1
+                metrics['courses'].add(instance['course_code'])
+                metrics['teachers'].add(instance['teacher_id'])
+                
                 self.logger.debug(f"Assigned Teacher {teacher_id} ({course_code}) to Group {best_group + 1}")
+            else:
+                failed_assignments.append({
+                    'teacher_id': teacher_id,
+                    'course_code': course_code,
+                    'instance_id': instance['id'],
+                    'reason': 'No valid group with acceptable score'
+                })
         
-        # Log results
+        # Log assignment results
         self.logger.info(f"Successfully assigned: {successfully_assigned} instances")
         if failed_assignments:
             self.logger.error(f"Failed to assign: {len(failed_assignments)} instances")
-            for failure in failed_assignments[:5]:  # Limit logging for performance
+            for failure in failed_assignments:
                 self.logger.error(f"  Teacher {failure['teacher_id']} ({failure['course_code']}): {failure['reason']}")
         
-        # Final validation and analysis
+        # Log unassigned instances
+        unassigned_count = 0
+        for instance in remaining_instances:
+            if instance not in [i for g in groups for i in g]:
+                unassigned_count += 1
+                self.logger.warning(f"Instance {instance['id']} (Teacher {instance['teacher_id']}, Course {instance['course_code']}) was not assigned to any group")
+        
+        if unassigned_count > 0:
+            self.logger.error(f"TOTAL UNASSIGNED INSTANCES: {unassigned_count}")
+        
+        # Validate and log final group distribution
         self._validate_teacher_uniqueness_constraint(groups, dept, semester)
         self._validate_halls_theorem(groups, dept, semester)
+        
+        # Analyze student choice feasibility for 420 students
         self.analyze_student_choice_feasibility(groups, dept, semester, target_students=420)
         
-        # Optimized final logging
-        self._log_final_group_distribution(groups, dept, semester, course_instance_counts)
-        
-        # Return non-empty groups
-        return [group for group in groups if group]
-    
-    def _update_group_metrics(self, metrics, instance):
-        """Optimized helper to update group metrics."""
-        practical_hrs = instance['practical_hours']
-        
-        metrics['workload'] += practical_hrs
-        metrics['practical_workload'] += practical_hrs
-        metrics['student_count'] += instance.get('student_count', 70)
-        metrics['instance_count'] += 1
-    
-        if practical_hrs > 0:
-            metrics['practical_instance_count'] += 1
-        else:
-            metrics['theory_instance_count'] += 1
-        
-        metrics['courses'].add(instance['course_code'])
-        metrics['teachers'].add(instance['teacher_id'])
-    
-    def _log_final_group_distribution(self, groups, dept, semester, course_instance_counts):
-        """Optimized final group distribution logging."""
-        if not self.logger.isEnabledFor(logging.INFO):
-            return
-        
+        # Log final group distribution with course limit analysis
         self.logger.info(f"Final group distribution for {dept} Semester {semester} (Course Limit: 2 groups max):")
         
-        # Track course distribution efficiently
+        # Track course distribution across groups
         course_distribution_summary = {}
         
         for i, group in enumerate(groups):
-            if not group:
-                continue
-            
-            # Pre-compute values for logging
-            teacher_set = set(instance['teacher_id'] for instance in group)
-            course_set = set(instance['course_code'] for instance in group)
-            practical_courses = set(inst['course_code'] for inst in group if inst['practical_hours'] > 0)
-            theory_courses = set(inst['course_code'] for inst in group if inst['practical_hours'] == 0)
-            total_practical_hours = sum(inst['practical_hours'] for inst in group)
-            practical_count = sum(1 for inst in group if inst['practical_hours'] > 0)
-            theory_count = len(group) - practical_count
-            
-            # Track course distribution
-            for course_code in course_set:
-                if course_code not in course_distribution_summary:
-                    course_distribution_summary[course_code] = []
-                course_distribution_summary[course_code].append(i + 1)
-            
-            # Log group info
-            self.logger.info(f"  Group {i+1}: {len(group)} instances")
-            self.logger.info(f"    Practical: {practical_count} instances, Theory: {theory_count} instances")
-            self.logger.info(f"    Teachers: [{', '.join(sorted(map(str, teacher_set)))}]")
-            self.logger.info(f"    Courses: [{', '.join(sorted(course_set))}]")
-            
-            if practical_courses:
-                self.logger.info(f"    Practical courses: [{', '.join(sorted(practical_courses))}]")
-            if theory_courses:
-                self.logger.info(f"    Theory courses: [{', '.join(sorted(theory_courses))}]")
-            self.logger.info(f"    Total practical hours: {total_practical_hours}")
+            if group:  # Only show non-empty groups
+                metrics = group_metrics[i]
+                teacher_list = sorted(set(str(instance['teacher_id']) for instance in group))
+                course_list = sorted(set(instance['course_code'] for instance in group))
+                practical_courses = [inst['course_code'] for inst in group if inst['practical_hours'] > 0]
+                theory_courses = [inst['course_code'] for inst in group if inst['practical_hours'] == 0]
+                
+                # Track course distribution
+                for course_code in course_list:
+                    if course_code not in course_distribution_summary:
+                        course_distribution_summary[course_code] = []
+                    course_distribution_summary[course_code].append(i + 1)
+                
+                self.logger.info(f"  Group {i+1}: {metrics['instance_count']} instances")
+                self.logger.info(f"    Practical: {metrics['practical_instance_count']} instances, Theory: {metrics.get('theory_instance_count', 0)} instances")
+                self.logger.info(f"    Teachers: [{', '.join(teacher_list)}]")
+                self.logger.info(f"    Courses: [{', '.join(course_list)}]")
+                if practical_courses:
+                    self.logger.info(f"    Practical courses: [{', '.join(set(practical_courses))}]")
+                if theory_courses:
+                    self.logger.info(f"    Theory courses: [{', '.join(set(theory_courses))}]")
+                self.logger.info(f"    Total practical hours: {metrics['practical_workload']}")
         
         # Log course distribution summary
         self.logger.info(f"\nCourse distribution summary (max 2 groups per course):")
         for course_code, group_list in sorted(course_distribution_summary.items()):
             group_names = [f"G{g}" for g in group_list]
-            constraint_status = "OK" if len(group_list) <= 2 else "VIOLATION"
+            constraint_status = "✅" if len(group_list) <= 2 else "❌"
             self.logger.info(f"  {course_code}: {', '.join(group_names)} ({len(group_list)} groups) {constraint_status}")
         
-        # Calculate student choice metrics efficiently
+        # Calculate student choice metrics
         total_courses = len(course_distribution_summary)
-        courses_with_choice = sum(1 for groups_list in course_distribution_summary.values() if len(groups_list) > 1)
+        courses_with_choice = len([course for course, groups in course_distribution_summary.items() if len(groups) > 1])
         choice_percentage = (courses_with_choice / total_courses * 100) if total_courses > 0 else 0
-        dynamic_student_capacity = max(course_instance_counts.values()) * 70 if course_instance_counts else 0
-    
+        
         self.logger.info(f"\nStudent choice analysis:")
         self.logger.info(f"  Total courses: {total_courses}")
         self.logger.info(f"  Courses with multiple group options: {courses_with_choice}")
         self.logger.info(f"  Student choice percentage: {choice_percentage:.1f}%")
-        self.logger.info(f"  Dynamic student capacity: {dynamic_student_capacity} students")
+        self.logger.info(f"  Dynamic student capacity: {instance_analysis['dynamic_student_capacity']} students")
+        
+        # Remove empty groups
+        non_empty_groups = [group for group in groups if group]
+        return non_empty_groups
     
     def _validate_teacher_uniqueness_constraint(self, groups, dept, semester):
         """Validate that no teacher appears multiple times in the same group."""
@@ -1095,9 +1117,9 @@ class LabScheduler:
             strategy['prefer_70_plus_with_batching_fallback'] = True
             strategy['preferred_lab_capacities'] = [70, 140, 35]  # 70+ preferred, 35 as fallback
         elif practical_hours >= 5:
-            # Rule 2: practical_hours >= 5 (but not 6) MUST use 70+ capacity labs (no batching)
-            strategy['force_70_plus_capacity'] = True
-            strategy['preferred_lab_capacities'] = [70, 140]
+            # Rule 2: practical_hours >= 5 (but not 6) PREFERS 70+ capacity labs but allows batching fallback
+            strategy['prefer_70_plus_with_batching_fallback'] = True
+            strategy['preferred_lab_capacities'] = [70, 140, 35]  # 70+ preferred, 35 as fallback
         else:
             # Rule 4: practical_hours 3-4 can use either strategy (solver decides)
             strategy['preferred_lab_capacities'] = [35, 70, 140]
@@ -1240,12 +1262,11 @@ class LabScheduler:
         
         # Create the solver and solve the model
         solver = cp_model.CpSolver()
-        solver.parameters.max_time_in_seconds = 600  # 10 minutes time limit - better chance with flexible constraints
+        solver.parameters.max_time_in_seconds = 1200  # 10 minutes time limit for better solutions
         solver.parameters.num_search_workers = 16  # Use 16 threads for parallel solving
         solver.parameters.log_search_progress = True  # Enable search progress logging
         solver.parameters.cp_model_presolve = True  # Enable presolving
-        solver.parameters.cp_model_probing_level = 1  # Reduced probing for faster solving
-        solver.parameters.search_branching = cp_model.FIXED_SEARCH  # Use fixed search for consistency
+        solver.parameters.cp_model_probing_level = 2  # Enhanced probing
         
         self.logger.info("Solving the lab scheduling model...")
         self.logger.info(f"Solver configuration:")
@@ -1274,7 +1295,7 @@ class LabScheduler:
                 
                 # Stop after finding first feasible solution for now
                 # Remove this if you want to find optimal solution
-                self.StopSearch()
+                self.StopSearch() # Removed to allow searching for optimal solution
         
         solution_callback = SolutionCallback(self.logger)
         
@@ -1311,7 +1332,7 @@ class LabScheduler:
             self.logger.info(f"Solutions found: {solution_callback.solution_count}")
             if solver.ObjectiveValue() is not None:
                 self.logger.info(f"Final objective value: {solver.ObjectiveValue()}")
-            self.logger.info(f"{'OPTIMAL' if status == cp_model.OPTIMAL else 'FEASIBLE'} solution found!")
+            self.logger.info(f"{'🎯 OPTIMAL' if status == cp_model.OPTIMAL else '✅ FEASIBLE'} solution found!")
             
             # Extract the lab schedule
             lab_schedule = self.extract_lab_schedule(solver, lab_assignments, lab_sessions)
@@ -1321,7 +1342,7 @@ class LabScheduler:
             
             return True
         else:
-            self.logger.error(f"ERROR: No solution found. Status: {solver.StatusName(status)}")
+            self.logger.error(f"❌ No solution found. Status: {solver.StatusName(status)}")
             
             # Log additional info for debugging
             if status == cp_model.INFEASIBLE:
@@ -1352,6 +1373,9 @@ class LabScheduler:
         # Constraint 2: Lab room can only have one course at a time (basic)
         self.apply_lab_room_single_assignment_constraint(model, lab_assignments, lab_sessions)
         
+        # NEW: Constraint to prevent teacher clashes
+        self.apply_teacher_clash_constraint(model, lab_assignments, lab_sessions)
+        
         # Constraint 3: Capacity-based assignment (practical hours > 3 for 70+ capacity labs)
         self.apply_capacity_constraint(model, lab_assignments)
         
@@ -1365,7 +1389,7 @@ class LabScheduler:
         self.apply_theory_lab_group_conflict_constraint(model, lab_assignments, lab_sessions)
         
         # EFFICIENCY CONSTRAINTS: Maximize lab utilization
-        self.apply_lab_efficiency_constraints(model, lab_assignments, lab_sessions)
+        # self.apply_lab_efficiency_constraints(model, lab_assignments, lab_sessions)
         
         self.logger.info("Group-based lab constraints applied successfully")
     
@@ -1439,40 +1463,52 @@ class LabScheduler:
                         self.logger.info(f"Course {course['course_code']}: exactly {base_sessions} sessions")
     
     def apply_lab_room_single_assignment_constraint(self, model, lab_assignments, lab_sessions):
-        """Prevent lab room double-booking - OPTIMIZED."""
+        """Prevent lab room double-booking."""
         self.logger.info("Applying lab room single assignment constraint...")
         
-        # Pre-compute all course instance IDs for reuse
-        course_instance_ids = list(lab_assignments.keys())
-        
-        # Optimized constraint generation
         for room_id in self.lab_ids:
             for day_idx in range(self.num_days):
                 for session_idx in range(len(lab_sessions)):
                     # Each lab room can have at most one course per session
-                    room_vars = [lab_assignments[course_instance_id][day_idx][session_idx][room_id]
-                               for course_instance_id in course_instance_ids]
+                    room_vars = []
+                    for course_instance_id in lab_assignments.keys():
+                        room_vars.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
                     model.Add(sum(room_vars) <= 1)
     
+    def apply_teacher_clash_constraint(self, model, lab_assignments, lab_sessions):
+        """Ensure a teacher is not assigned to more than one lab at the same time."""
+        self.logger.info("Applying teacher clash constraint (global)...")
+        
+        # Group course instances by teacher
+        teacher_assignments = defaultdict(list)
+        for course_instance_id, teacher_id in self.course_to_teacher.items():
+            if course_instance_id in lab_assignments:
+                teacher_assignments[teacher_id].append(course_instance_id)
+
+        constraints_applied = 0
+        for teacher_id, courses in teacher_assignments.items():
+            for day_idx in range(self.num_days):
+                for session_idx in range(len(lab_sessions)):
+                    teacher_session_assignments = []
+                    for course_instance_id in courses:
+                        for room_id in self.lab_ids:
+                            teacher_session_assignments.append(
+                                lab_assignments[course_instance_id][day_idx][session_idx][room_id]
+                            )
+                    
+                    if teacher_session_assignments:
+                        model.Add(sum(teacher_session_assignments) <= 1)
+                        constraints_applied += 1
+                        
+        self.logger.info(f"Applied {constraints_applied} global teacher clash constraints")
+    
     def apply_capacity_constraint(self, model, lab_assignments):
-        """Apply capacity-based assignment constraints - OPTIMIZED."""
+        """Apply capacity-based assignment constraints."""
         self.logger.info("Applying capacity-based assignment constraint...")
         
-        # Cache lab room categories for performance
-        if not hasattr(self, '_cached_lab_categories'):
-            self._cached_lab_categories = {
-                'labs_35': [lab['id'] for lab in self.lab_capacity_analysis['labs_35']],
-                'labs_70_plus': ([lab['id'] for lab in self.lab_capacity_analysis['labs_70']] + 
-                               [lab['id'] for lab in self.lab_capacity_analysis['labs_140']])
-            }
-        
-        labs_35 = self._cached_lab_categories['labs_35']
-        labs_70_plus = self._cached_lab_categories['labs_70_plus']
-        
-        # Pre-compute time slot indices for reuse
-        time_slots = [(day_idx, session_idx) 
-                     for day_idx in range(self.num_days) 
-                     for session_idx in range(len(self.lab_sessions))]
+        # Get lab rooms categorized by capacity
+        labs_35 = [lab['id'] for lab in self.lab_capacity_analysis['labs_35']]
+        labs_70_plus = [lab['id'] for lab in self.lab_capacity_analysis['labs_70']] + [lab['id'] for lab in self.lab_capacity_analysis['labs_140']]
         
         for teacher, courses in self.lab_requirements.items():
             for course in courses:
@@ -1482,57 +1518,64 @@ class LabScheduler:
                 force_70_plus_capacity = course.get('force_70_plus_capacity', False)
                 prefer_70_plus_with_batching_fallback = course.get('prefer_70_plus_with_batching_fallback', False)
                 
-                if force_35_capacity or practical_hours <= 2:
-                    # Restrict to 35-capacity labs only
-                    for day_idx, session_idx in time_slots:
+                if force_35_capacity or practical_hours <= 3:
+                    # Courses with 3 or fewer practical hours must use 35-capacity labs only
+                    for day_idx in range(self.num_days):
+                        for session_idx in range(len(self.lab_sessions)):
                             for room_id in labs_70_plus:
                                 model.Add(lab_assignments[course_instance_id][day_idx][session_idx][room_id] == 0)
                     
                     self.logger.info(f"Course {course['course_code']} (practical_hours={practical_hours}) restricted to 35-capacity labs")
-                    
                 elif prefer_70_plus_with_batching_fallback:
                     # Courses with 6 practical hours prefer 70+ but can use 35 with batching
+                    # Create a preference variable to encourage 70+ labs
                     prefer_70_plus = model.NewBoolVar(f'course_{course_instance_id}_prefer_70_plus')
                     
-                    # Collect assignments efficiently
-                    assignments_70_plus = [lab_assignments[course_instance_id][day_idx][session_idx][room_id]
-                                         for day_idx, session_idx in time_slots
-                                         for room_id in labs_70_plus]
-                    assignments_35 = [lab_assignments[course_instance_id][day_idx][session_idx][room_id]
-                                    for day_idx, session_idx in time_slots
-                                    for room_id in labs_35]
+                    # Count assignments in 70+ capacity labs
+                    assignments_70_plus = []
+                    assignments_35 = []
                     
-                    # Preference constraints
+                    for day_idx in range(self.num_days):
+                        for session_idx in range(len(self.lab_sessions)):
+                            for room_id in labs_70_plus:
+                                assignments_70_plus.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+                            for room_id in labs_35:
+                                assignments_35.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+                    
+                    # If prefer_70_plus is true, then all assignments should be in 70+ labs
                     if assignments_70_plus and assignments_35:
                         total_assignments = assignments_70_plus + assignments_35
                         
-                        # If prefer_70_plus = 1, then use only 70+ labs
+                        # Preference constraint: if prefer_70_plus = 1, then use only 70+ labs
                         model.Add(sum(assignments_35) == 0).OnlyEnforceIf(prefer_70_plus)
                         model.Add(sum(assignments_70_plus) == sum(total_assignments)).OnlyEnforceIf(prefer_70_plus)
                         
-                        # Store preference for objective
+                        # If prefer_70_plus = 0, then we can use 35-cap labs (batching allowed)
+                        # No restriction when prefer_70_plus = 0
+                        
+                        # Store preference for objective (encourage 70+ usage)
                         if not hasattr(self, 'capacity_preferences'):
                             self.capacity_preferences = []
-                        self.capacity_preferences.append(prefer_70_plus * 10)
+                        self.capacity_preferences.append(prefer_70_plus * 10)  # Bonus for using 70+ labs
                     
                     self.logger.info(f"Course {course['course_code']} (practical_hours={practical_hours}) PREFERS 70+ capacity labs, allows 35-capacity fallback with batching")
-                    
-                elif force_70_plus_capacity or (practical_hours >= 5 and practical_hours != 6):
-                    # Must use 70+ capacity labs only
-                    for day_idx, session_idx in time_slots:
+                elif force_70_plus_capacity:
+                    # Courses with force_70_plus_capacity flag must use 70+ capacity labs only
+                    for day_idx in range(self.num_days):
+                        for session_idx in range(len(self.lab_sessions)):
                             for room_id in labs_35:
                                 model.Add(lab_assignments[course_instance_id][day_idx][session_idx][room_id] == 0)
                     
                     self.logger.info(f"Course {course['course_code']} (practical_hours={practical_hours}) restricted to 70+ capacity labs")
                 else:
-                    # Can use any lab
+                    # Courses with 4 practical hours can use any lab
                     self.logger.info(f"Course {course['course_code']} (practical_hours={practical_hours}) can use any capacity lab")
     
     def apply_group_based_scheduling_constraint(self, model, lab_assignments):
-        """Apply group-based scheduling constraints to enforce scheduling by groups - OPTIMIZED."""
+        """Apply group-based scheduling constraints to enforce scheduling by groups."""
         self.logger.info("Applying group-based scheduling constraints...")
         
-        # Group course instances by department, semester, and group - OPTIMIZED
+        # Group course instances by department, semester, and group
         semester_groups = defaultdict(lambda: defaultdict(list))
         unassigned_instances = []
         
@@ -1547,345 +1590,447 @@ class LabScheduler:
             else:  # Unassigned/invalid group
                 unassigned_instances.append(course_instance_id)
         
-        # Create optimized default groups for unassigned instances
+        # Create default groups for unassigned instances
         if unassigned_instances:
             self.logger.info(f"Creating default groups for {len(unassigned_instances)} unassigned instances")
-            self._create_default_groups(semester_groups, unassigned_instances)
+            
+            # Group instances by course code to keep related courses together
+            course_code_groups = defaultdict(list)
+            for instance_id in unassigned_instances:
+                course_code = None
+                for teacher, courses in self.lab_requirements.items():
+                    for course in courses:
+                        if course['course_instance_id'] == instance_id:
+                            course_code = course['course_code']
+                            break
+                    if course_code:
+                        break
+                
+                if course_code:
+                    course_code_groups[course_code].append(instance_id)
+                else:
+                    # Fallback if course code not found
+                    course_code_groups['unknown'].append(instance_id)
+            
+            # Create more balanced default groups
+            default_dept = "Default"
+            default_groups = []
+            
+            # First, sort course groups by size (descending)
+            sorted_course_groups = sorted(course_code_groups.items(), key=lambda x: len(x[1]), reverse=True)
+            
+            # Group instances with a maximum of 4 instances per group to ensure 4-slot limit
+            current_group = []
+            current_size = 0
+            max_group_size = 4  # Maximum instances per default group
+            
+            for course_code, instances in sorted_course_groups:
+                if current_size + len(instances) <= max_group_size:
+                    # This course can fit in the current group
+                    current_group.extend(instances)
+                    current_size += len(instances)
+                else:
+                    # This course would exceed the max size, start a new group
+                    if current_group:
+                        default_groups.append(current_group)
+                    
+                    # Handle the case where a single course has more than max instances
+                    if len(instances) > max_group_size:
+                        # Split this course into multiple groups
+                        for i in range(0, len(instances), max_group_size):
+                            chunk = instances[i:i+max_group_size]
+                            default_groups.append(chunk)
+                    else:
+                        current_group = instances.copy()
+                        current_size = len(instances)
+            
+            # Add the last group if not empty
+            if current_group:
+                default_groups.append(current_group)
+            
+            # Add the default groups to semester_groups
+            for i, group in enumerate(default_groups):
+                group_index = i + 1
+                semester_id = (i // 5) + 1  # Create different semesters to avoid conflicts
+                semester_groups[(default_dept, semester_id)][group_index] = group
+                self.logger.info(f"Default group {group_index} (semester {semester_id}): {len(group)} instances")
         
         constraints_applied = 0
         
-        # Pre-compute time slots for reuse
-        time_slots = [(day_idx, session_idx) 
-                     for day_idx in range(self.num_days) 
-                     for session_idx in range(len(self.lab_sessions))]
-        
-        # CONSTRAINT 1: Same-semester group non-overlap - OPTIMIZED
+        # CONSTRAINT 1: Same-semester group non-overlap
         for (dept, semester), groups in semester_groups.items():
             self.logger.info(f"Applying group constraints for {dept} Semester {semester}: {len(groups)} groups")
             
             # For each time slot, ensure at most one group from this semester is active
-            for day_idx, session_idx in time_slots:
-                group_usages = {}
-                for group_idx, course_instances in groups.items():
-                    group_usage_vars = [lab_assignments[course_instance_id][day_idx][session_idx][room_id]
-                                      for course_instance_id in course_instances
-                                      for room_id in self.lab_ids]
-                    if group_usage_vars:
-                        # Create a variable indicating if this group uses this time slot
-                        group_usage = model.NewBoolVar(f'group_usage_{dept}_S{semester}_G{group_idx}_day{day_idx}_session{session_idx}')
-                        # Link usage to the assignment variables efficiently
-                        total_assignments = sum(group_usage_vars)
-                        model.Add(group_usage <= total_assignments)
-                        model.Add(total_assignments <= len(self.lab_ids) * group_usage)
-                        group_usages[group_idx] = group_usage
-                # At most one group can use this time slot
-                if len(group_usages) > 1:
-                    model.Add(sum(group_usages.values()) <= 1)
-                    constraints_applied += 1
-        
-        # CONSTRAINT 2: Course instance uniqueness - OPTIMIZED
+            for day_idx in range(self.num_days):
+                for session_idx in range(len(self.lab_sessions)):
+                    # For each time slot, collect usage variables for each group
+                    group_usages = {}
+                    
+                    for group_idx, course_instances in groups.items():
+                        group_usage_vars = []
+                        
+                        for course_instance_id in course_instances:
+                            for room_id in self.lab_ids:
+                                group_usage_vars.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+                    
+                        if group_usage_vars:
+                            # Create a variable indicating if this group uses this time slot
+                            group_usage = model.NewBoolVar(f'group_usage_{dept}_S{semester}_G{group_idx}_day{day_idx}_session{session_idx}')
+                    
+                            # Link usage to the assignment variables
+                            model.Add(group_usage <= sum(group_usage_vars))
+                            # Any assignment makes the group usage 1
+                            model.Add(sum(group_usage_vars) <= len(self.lab_ids) * group_usage)
+                            
+                            group_usages[group_idx] = group_usage
+                    
+                    # At most one group can use this time slot
+                    if len(group_usages) > 1:
+                        model.Add(sum(group_usages.values()) <= 1)
+                        constraints_applied += 1
+            
+            # CONSTRAINT 2: Course instance uniqueness
         for course_instance_id in lab_assignments.keys():
-            for day_idx, session_idx in time_slots:
-                session_assignments = [lab_assignments[course_instance_id][day_idx][session_idx][room_id]
-                                     for room_id in self.lab_ids]
-                if len(session_assignments) > 1:
-                    model.Add(sum(session_assignments) <= 1)
-                    constraints_applied += 1
+            for day_idx in range(self.num_days):
+                for session_idx in range(len(self.lab_sessions)):
+                    session_assignments = []
+                    for room_id in self.lab_ids:
+                        session_assignments.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+                    
+                    if len(session_assignments) > 1:
+                        model.Add(sum(session_assignments) <= 1)
+                        constraints_applied += 1
         
-        # CONSTRAINT 3: Dynamic group slot limits - OPTIMIZED
+        # CONSTRAINT 3: Dynamic group slot limit based on maximum practical hours and teacher availability
         for (dept, semester), groups in semester_groups.items():
             for group_idx, course_instances in groups.items():
-                # Pre-compute group characteristics
-                group_stats = self._compute_group_stats(course_instances)
-                # Calculate flexible slot limit
-                slot_limit = self._calculate_flexible_slot_limit(group_stats)
-                # Apply slot limit constraint efficiently
+                # Calculate maximum practical hours and analyze teacher distribution
+                max_practical_hours = 0
+                unique_teachers = set()
+                total_courses = len(course_instances)
+                
+                for course_instance_id in course_instances:
+                    for teacher, courses in self.lab_requirements.items():
+                        for course in courses:
+                            if course['course_instance_id'] == course_instance_id:
+                                max_practical_hours = max(max_practical_hours, course['practical_hours'])
+                                unique_teachers.add(teacher)
+                                break
+                
+                # SMART RULE: Apply slot limits based on practical hours and batching requirements
+                if max_practical_hours <= 2:
+                    # Check if parallelization is actually possible
+                    if len(unique_teachers) >= total_courses:
+                        # Each course has a different teacher - parallelization is possible
+                        slot_limit = 2  # Exactly 2 lab slots - forces courses to run in parallel
+                    elif len(unique_teachers) >= 2 and total_courses <= 4:
+                        # Multiple teachers available, manageable number of courses
+                        slot_limit = 2  # Still try 2 slots but may need flexibility
+                    else:
+                        # Too many courses for same teachers - need more slots
+                        slot_limit = min(4, total_courses)  # Flexible slots based on course count
+                elif max_practical_hours == 4:
+                    # For 4-hour practical courses, check if they need 35-capacity labs (batching)
+                    has_4_hour_course_needing_35_labs = False
+                    
+                    # Check if any course in this group has 4 practical hours AND will use 35-capacity labs
+                    for course_instance_id in course_instances:
+                        for teacher, courses in self.lab_requirements.items():
+                            for course in courses:
+                                if course['course_instance_id'] == course_instance_id:
+                                    practical_hours = course.get('practical_hours', 0)
+                                    student_count = course.get('student_count', 70)
+                                    
+                                    # Check if this is a 4-hour course that will use 35-capacity labs (batching)
+                                    if practical_hours == 4 and student_count > 35:
+                                        # Course has >35 students, so it will likely use 35-capacity labs with batching
+                                        has_4_hour_course_needing_35_labs = True
+                                    break
+                    
+                    if has_4_hour_course_needing_35_labs:
+                        # 4-hour courses using 35-capacity labs (batched) need 4 slots
+                        slot_limit = 4  # Allow 4 lab slots for 4-hour courses using 35-capacity labs
+                        strategy_note = "4 slots for 4-hour courses using 35-capacity labs (batched)"
+                    else:
+                        # 4-hour courses using 70+ capacity labs (no batching) get 2 slots
+                        slot_limit = 2  # Standard limit for 4-hour courses in 70+ capacity labs
+                        strategy_note = "2 slots for 4-hour courses using 70+ capacity labs (no batching)"
+                elif max_practical_hours >= 6:
+                    # For 6+ hour practical courses, check if they need 35-capacity labs (batching)
+                    has_6_hour_course_needing_35_labs = False
+                    
+                    # Check if any course in this group has 6 practical hours AND will use 35-capacity labs
+                    for course_instance_id in course_instances:
+                        for teacher, courses in self.lab_requirements.items():
+                            for course in courses:
+                                if course['course_instance_id'] == course_instance_id:
+                                    practical_hours = course.get('practical_hours', 0)
+                                    student_count = course.get('student_count', 70)
+                                    
+                                    # Check if this is a 6-hour course that will use 35-capacity labs (batching)
+                                    if practical_hours == 6 and student_count > 35:
+                                        # Course has >35 students, so it will likely use 35-capacity labs with batching
+                                        has_6_hour_course_needing_35_labs = True
+                                    break
+                    
+                    if has_6_hour_course_needing_35_labs:
+                        # 6-hour courses using 35-capacity labs (batched) need 6 slots
+                        slot_limit = 6  # Allow 6 lab slots for 6-hour courses using 35-capacity labs
+                        strategy_note = "6 slots for 6-hour courses using 35-capacity labs (batched)"
+                    else:
+                        # 6-hour courses using 70+ capacity labs (no batching) get 4 slots
+                        slot_limit = 4  # Standard limit for 6-hour courses in 70+ capacity labs  
+                        strategy_note = "4 slots for 6-hour courses using 70+ capacity labs (no batching)"
+                else:
+                    slot_limit = 4  # Default 4 lab slots for groups with 3-5 practical hours
+                
+                # Track all used time slots for this group
                 group_slot_usage = []
-                for day_idx, session_idx in time_slots:
-                    group_slot_var = model.NewBoolVar(f'group_slot_{dept}_S{semester}_G{group_idx}_day{day_idx}_session{session_idx}')
-                    # Collect all assignment variables for this group at this time slot
-                    slot_assignments = [lab_assignments[course_instance_id][day_idx][session_idx][room_id]
-                                      for course_instance_id in course_instances
-                                      for room_id in self.lab_ids]
-                    if slot_assignments:
-                        # group_slot_var = 1 if any course in this group uses this slot
-                        total_slot_assignments = sum(slot_assignments)
-                        model.Add(group_slot_var <= total_slot_assignments)
-                        model.Add(total_slot_assignments <= len(slot_assignments) * group_slot_var)
-                        group_slot_usage.append(group_slot_var)
-                # Apply dynamic slot limit
+                
+                for day_idx in range(self.num_days):
+                    for session_idx in range(len(self.lab_sessions)):
+                        # Create a variable indicating if this group uses this time slot
+                        group_slot_var = model.NewBoolVar(f'group_slot_{dept}_S{semester}_G{group_idx}_day{day_idx}_session{session_idx}')
+                        
+                        # Collect all assignment variables for this group at this time slot
+                        slot_assignments = []
+                        for course_instance_id in course_instances:
+                            for room_id in self.lab_ids:
+                                slot_assignments.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+                        
+                        if slot_assignments:
+                            # group_slot_var = 1 if any course in this group uses this slot
+                            model.Add(group_slot_var <= sum(slot_assignments))
+                            model.Add(sum(slot_assignments) <= len(slot_assignments) * group_slot_var)
+                            
+                            # Add to the list of all used slots for this group
+                            group_slot_usage.append(group_slot_var)
+                
+                # Constraint: Dynamic slot limit based on max practical hours
                 if group_slot_usage:
                     model.Add(sum(group_slot_usage) <= slot_limit)
                     constraints_applied += 1
-                    # Ensure all course instances are assigned
-                    required_instances = len(course_instances)
-                    total_group_assignments = [lab_assignments[course_instance_id][day_idx][session_idx][room_id]
-                                             for day_idx, session_idx in time_slots
-                                             for course_instance_id in course_instances
-                                             for room_id in self.lab_ids]
-                    if total_group_assignments:
-                        model.Add(sum(total_group_assignments) >= required_instances)
+                    
+                    # Ensure all course instances in this group are assigned
+                    required_instances = 0
+                    for course_instance_id in course_instances:
+                        for teacher, courses in self.lab_requirements.items():
+                            for course in courses:
+                                if course['course_instance_id'] == course_instance_id:
+                                    required_instances += 1
+                    
+                    # Calculate assignments across all slots for this group
+                    group_assignments = []
+                    for day_idx in range(self.num_days):
+                        for session_idx in range(len(self.lab_sessions)):
+                            for course_instance_id in course_instances:
+                                for room_id in self.lab_ids:
+                                    group_assignments.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+                    
+                    # Ensure all required instances are assigned
+                    if group_assignments:
+                        model.Add(sum(group_assignments) >= required_instances)
                         constraints_applied += 1
-                    # Log group constraint details
+                        
                     group_type = "Default" if dept == "Default" else "Regular"
-                    strategy_note = self._get_strategy_note(group_stats, slot_limit)
-                    self.logger.info(f"{group_type} Group {dept}_S{semester}_G{group_idx}: limited to {slot_limit} slots for {group_stats['total_courses']} courses (max practical hours: {group_stats['max_practical_hours']}, teachers: {group_stats['unique_teachers']}) - {strategy_note}")
+                    
+                    # Determine scheduling strategy note
+                    if max_practical_hours <= 2:
+                        if slot_limit == 2:
+                            if len(unique_teachers) >= total_courses:
+                                strategy_note = "FORCES PARALLELIZATION (each course has different teacher)"
+                            else:
+                                strategy_note = "FORCES PARALLELIZATION (multiple teachers available)"
+                        else:
+                            strategy_note = f"FLEXIBLE SCHEDULING (teacher conflicts prevent 2-slot limit)"
+                    elif max_practical_hours >= 6:
+                        # strategy_note already set above in the elif block
+                        pass
+                    else:
+                        strategy_note = "allows flexible scheduling for 3-5 hour courses"
+                    
+                    self.logger.info(f"{group_type} Group {dept}_S{semester}_G{group_idx}: limited to {slot_limit} slots for {total_courses} courses (max practical hours: {max_practical_hours}, teachers: {len(unique_teachers)}) - {strategy_note}")
+        
         # CONSTRAINT 4: Encourage same-group courses to run in parallel
         self.apply_same_group_parallelization_preference(model, lab_assignments, semester_groups)
+        
         self.logger.info(f"Group-based scheduling constraints applied successfully: {constraints_applied} constraints")
-        self._log_constraint_summary()
-    
-    def _create_default_groups(self, semester_groups, unassigned_instances):
-        """Optimized creation of default groups for unassigned instances."""
-        # Group instances by course code efficiently
-        course_code_groups = defaultdict(list)
-        for instance_id in unassigned_instances:
-            course_code = self._get_course_code_for_instance(instance_id)
-            if course_code:
-                course_code_groups[course_code].append(instance_id)
-            else:
-                course_code_groups['unknown'].append(instance_id)
-        
-        # Create balanced default groups
-        default_groups = []
-        current_group = []
-        max_group_size = 4
-        
-        # Sort by size descending for better packing
-        for course_code, instances in sorted(course_code_groups.items(), key=lambda x: len(x[1]), reverse=True):
-            if len(current_group) + len(instances) <= max_group_size:
-                current_group.extend(instances)
-            else:
-                if current_group:
-                    default_groups.append(current_group)
-                
-                # Handle oversized courses
-                if len(instances) > max_group_size:
-                    for i in range(0, len(instances), max_group_size):
-                        default_groups.append(instances[i:i+max_group_size])
-                else:
-                    current_group = instances.copy()
-        
-        if current_group:
-            default_groups.append(current_group)
-        
-        # Add to semester_groups
-        for i, group in enumerate(default_groups):
-            group_index = i + 1
-            semester_id = (i // 5) + 1
-            semester_groups[("Default", semester_id)][group_index] = group
-            self.logger.info(f"Default group {group_index} (semester {semester_id}): {len(group)} instances")
-    
-    def _get_course_code_for_instance(self, instance_id):
-        """Helper to get course code for an instance ID."""
-        for teacher, courses in self.lab_requirements.items():
-            for course in courses:
-                if course['course_instance_id'] == instance_id:
-                    return course['course_code']
-        return None
-    
-    def _compute_group_stats(self, course_instances):
-        """Compute group statistics for slot limit calculation."""
-        max_practical_hours = 0
-        unique_teachers = set()
-        
-        for course_instance_id in course_instances:
-            for teacher, courses in self.lab_requirements.items():
-                for course in courses:
-                    if course['course_instance_id'] == course_instance_id:
-                        max_practical_hours = max(max_practical_hours, course['practical_hours'])
-                        unique_teachers.add(teacher)
-                        break
-        
-        return {
-            'max_practical_hours': max_practical_hours,
-            'unique_teachers': len(unique_teachers),
-            'total_courses': len(course_instances)
-        }
-    
-    def _calculate_flexible_slot_limit(self, group_stats):
-        """Calculate flexible slot limit based on group characteristics."""
-        max_practical_hours = group_stats['max_practical_hours']
-        unique_teachers = group_stats['unique_teachers']
-        total_courses = group_stats['total_courses']
-        
-        if max_practical_hours <= 2:
-            if unique_teachers >= total_courses:
-                return min(4, total_courses + 1)  # Allow flexibility
-            elif unique_teachers >= 2 and total_courses <= 4:
-                return min(4, total_courses + 1)
-            else:
-                return min(6, total_courses + 2)
-        elif max_practical_hours == 4:
-            return min(8, total_courses + 3)  # Flexible for 4-hour courses
-        elif max_practical_hours >= 6:
-            return min(10, total_courses + 4)  # Flexible for 6+ hour courses
-        else:
-            return min(6, total_courses + 2)  # Default flexibility
-    
-    def _get_strategy_note(self, group_stats, slot_limit):
-        """Get strategy description for logging."""
-        max_practical_hours = group_stats['max_practical_hours']
-        unique_teachers = group_stats['unique_teachers']
-        total_courses = group_stats['total_courses']
-        
-        if max_practical_hours <= 2:
-            if unique_teachers >= total_courses and slot_limit <= 4:
-                return "FLEXIBLE SCHEDULING (teacher conflicts prevented)"
-            else:
-                return "FLEXIBLE SCHEDULING (teacher conflicts accommodated)"
-        elif max_practical_hours == 4:
-            return "flexible slots for 4-hour courses (batching adaptable)"
-        elif max_practical_hours >= 6:
-            return "flexible slots for 6+ hour courses (batching adaptable)"
-        else:
-            return "allows flexible scheduling for 3-5 hour courses"
-    
-    def _log_constraint_summary(self):
-        """Log constraint summary efficiently."""
-        self.logger.info("CONSTRAINT RULES:")
+        self.logger.info("✅ ENHANCED CONSTRAINT RULES:")
         self.logger.info("  1. Same group courses ENCOURAGED to overlap/run parallel (students take different courses)")
         self.logger.info("  2. Different groups in same semester CANNOT overlap (strict enforcement)")
         self.logger.info("  3. Different semesters CAN overlap (different student populations)")
         self.logger.info("  4. Teachers cannot teach multiple labs simultaneously (global constraint)")
         self.logger.info("  5. At most ONE group per semester can be active in any time slot")
         self.logger.info("  6. Same-group parallelization preference added to objective")
-        self.logger.info("  7. VERY FLEXIBLE group slot limits: ≤2 hours get 3-6 slots, 4 hours get 4-8 slots, 6+ hours get 5-10 slots based on course count")
+        self.logger.info("  7. SMART group slot limits: 2 slots if ≤2 hours + parallelization, 4 slots if 4 hours + batched, 2 slots if 4 hours + not batched, 6 slots if 6 hours + batched, 4 slots if 6 hours + not batched, else 4 slots")
         self.logger.info("  8. IMPROVED: Unassigned courses are now grouped by course code with balanced groups")
     
     def apply_same_group_parallelization_preference(self, model, lab_assignments, semester_groups):
-        """Apply a preference for scheduling courses from the same group in parallel - OPTIMIZED."""
+        """Apply a preference for scheduling courses from the same group in parallel."""
         self.logger.info("Adding same-group parallelization preference to objective...")
-        # Optimized storage for parallelization bonus variables
+        
+        # This will store all of our parallelization bonus variables
         self.group_parallelization_vars = []
-        # Pre-compute time slots for reuse
-        time_slots = [(day_idx, session_idx) 
-                     for day_idx in range(self.num_days) 
-                     for session_idx in range(len(self.lab_sessions))]
+        self.graduated_parallelization_vars = {}
+        
         # For each semester and group, encourage scheduling in parallel
         for (dept, semester), groups in semester_groups.items():
             for group_idx, course_instances in groups.items():
                 if len(course_instances) <= 1:
                     continue  # Skip groups with only one course
-                # For each time slot, check if multiple courses from this group are scheduled
-                for day_idx, session_idx in time_slots:
-                    # Collect all assignment variables for this group at this time slot
-                    course_assignments = []
-                    for course_instance_id in course_instances:
-                        # Create a variable indicating if this course is scheduled at this time
-                        course_scheduled = model.NewBoolVar(
-                            f'course_{course_instance_id}_scheduled_day{day_idx}_session{session_idx}'
-                        )
-                        # Collect room assignments for this course at this time
-                        room_assignments = [lab_assignments[course_instance_id][day_idx][session_idx][room_id] 
-                                          for room_id in self.lab_ids]
-                        # Link course_scheduled to room assignments efficiently
-                        if room_assignments:
-                            total_assignments = sum(room_assignments)
-                            model.Add(course_scheduled <= total_assignments)
-                            model.Add(total_assignments <= len(room_assignments) * course_scheduled)
-                            course_assignments.append(course_scheduled)
-                    # Create graduated bonus variables for different levels of parallelization
-                    if len(course_assignments) >= 2:
-                        self._add_parallelization_bonuses(model, course_assignments, dept, semester, 
-                                                        group_idx, day_idx, session_idx)
-        # Log results
-        self.logger.info(f"Added {len(self.group_parallelization_vars)} parallelization bonus variables to objective")
-        self.logger.info("PARALLELIZATION: Graduated parallelization bonus weights:")
-        self.logger.info("  • 2 courses in parallel: +4 (moderate)")
-        self.logger.info("  • 3 courses in parallel: +6 (moderate)")
-        self.logger.info("  • 4 courses in parallel: +8 (moderate)")
-        self.logger.info("  • 5+ courses in parallel: +10 (higher)")
-        self.logger.info("This combined with flexible slot limits will gently encourage parallel scheduling")
-    
-    def _add_parallelization_bonuses(self, model, course_assignments, dept, semester, group_idx, day_idx, session_idx):
-        """Optimized helper to add graduated parallelization bonuses."""
-        base_name = f'{dept}_S{semester}_G{group_idx}_day{day_idx}_session{session_idx}'
-        num_courses = len(course_assignments)
-        total_assignments = sum(course_assignments)
-        
-        # Define bonus levels and weights
-        bonus_levels = [(2, 4), (3, 6), (4, 8), (5, 10)]
-        
-        for min_courses, weight in bonus_levels:
-            if num_courses >= min_courses:
-                bonus_var = model.NewBoolVar(f'parallel_bonus_{min_courses}_{base_name}')
                 
-                # Constraint: bonus is true if at least min_courses are scheduled
-                model.Add(total_assignments >= min_courses).OnlyEnforceIf(bonus_var)
-                model.Add(total_assignments < min_courses).OnlyEnforceIf(bonus_var.Not())
+                # For each time slot, check if multiple courses from this group are scheduled
+                for day_idx in range(self.num_days):
+                    for session_idx in range(len(self.lab_sessions)):
+                        # Collect all assignment variables for this group at this time slot
+                        course_assignments = []
+                        
+                        for course_instance_id in course_instances:
+                            # Create a variable indicating if this course is scheduled at this time
+                            course_scheduled = model.NewBoolVar(
+                                f'course_{course_instance_id}_scheduled_day{day_idx}_session{session_idx}'
+                            )
+                            
+                            # Collect room assignments for this course at this time
+                            room_assignments = []
+                            for room_id in self.lab_ids:
+                                room_assignments.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+                        
+                            # Link course_scheduled to room assignments
+                            if room_assignments:
+                                model.Add(course_scheduled <= sum(room_assignments))
+                                model.Add(sum(room_assignments) <= len(room_assignments) * course_scheduled)
+                                
+                                # Add to the list of courses that might be scheduled at this time
+                                course_assignments.append(course_scheduled)
+                        
+                        # If we have multiple potential courses for this time slot
+                        if len(course_assignments) >= 2:
+                            # Create graduated bonus variables for different levels of parallelization
+                            # We'll give higher bonuses for scheduling more courses in parallel
+                            
+                            # Base case: Bonus for scheduling at least 2 courses in parallel
+                            parallel_bonus_2 = model.NewBoolVar(
+                                f'parallel_bonus_2_{dept}_S{semester}_G{group_idx}_day{day_idx}_session{session_idx}'
+                            )
+                            
+                            # This is true if at least 2 courses are scheduled
+                            model.Add(sum(course_assignments) >= 2).OnlyEnforceIf(parallel_bonus_2)
+                            model.Add(sum(course_assignments) < 2).OnlyEnforceIf(parallel_bonus_2.Not())
+                            
+                            # Add to our list of objective terms with higher weight (+8)
+                            self.group_parallelization_vars.append(parallel_bonus_2 * 8)
+                            
+                            # If we have 3+ potential courses, add graduated bonuses
+                            if len(course_assignments) >= 3:
+                                # Bonus for scheduling at least 3 courses in parallel
+                                parallel_bonus_3 = model.NewBoolVar(
+                                    f'parallel_bonus_3_{dept}_S{semester}_G{group_idx}_day{day_idx}_session{session_idx}'
+                                )
+                                
+                                model.Add(sum(course_assignments) >= 3).OnlyEnforceIf(parallel_bonus_3)
+                                model.Add(sum(course_assignments) < 3).OnlyEnforceIf(parallel_bonus_3.Not())
+                            
+                                # Even higher weight for 3+ courses (+12)
+                                self.group_parallelization_vars.append(parallel_bonus_3 * 12)
+                                
+                                # If we have 4+ potential courses, add more graduated bonuses
+                                if len(course_assignments) >= 4:
+                                    # Bonus for scheduling at least 4 courses in parallel
+                                    parallel_bonus_4 = model.NewBoolVar(
+                                        f'parallel_bonus_4_{dept}_S{semester}_G{group_idx}_day{day_idx}_session{session_idx}'
+                                    )
+                                    
+                                    model.Add(sum(course_assignments) >= 4).OnlyEnforceIf(parallel_bonus_4)
+                                    model.Add(sum(course_assignments) < 4).OnlyEnforceIf(parallel_bonus_4.Not())
+                                    
+                                    # Even higher weight for 4+ courses (+16)
+                                    self.group_parallelization_vars.append(parallel_bonus_4 * 16)
+                                    
+                                    # If we have 5+ potential courses, add more graduated bonuses
+                                    if len(course_assignments) >= 5:
+                                        # Bonus for scheduling at least 5 courses in parallel
+                                        parallel_bonus_5 = model.NewBoolVar(
+                                            f'parallel_bonus_5_{dept}_S{semester}_G{group_idx}_day{day_idx}_session{session_idx}'
+                                        )
                                         
-                # Add to objective with appropriate weight
-                self.group_parallelization_vars.append(bonus_var * weight)
+                                        model.Add(sum(course_assignments) >= 5).OnlyEnforceIf(parallel_bonus_5)
+                                        model.Add(sum(course_assignments) < 5).OnlyEnforceIf(parallel_bonus_5.Not())
+                                        
+                                        # Highest weight for 5+ courses (+20)
+                                        self.group_parallelization_vars.append(parallel_bonus_5 * 20)
+        
+        self.logger.info(f"Added {len(self.group_parallelization_vars)} parallelization bonus variables to objective")
+        self.logger.info("📊 Graduated parallelization bonus weights:")
+        self.logger.info("  • 2 courses in parallel: +8 (was +4)")
+        self.logger.info("  • 3 courses in parallel: +12 (was +6)")
+        self.logger.info("  • 4 courses in parallel: +16 (new!)")
+        self.logger.info("  • 5+ courses in parallel: +20 (new!)")
+        self.logger.info("This combined with the 4-slot limit will strongly encourage parallel scheduling")
     
     def apply_max_consecutive_lab_slots_constraint(self, model, lab_assignments, lab_sessions):
-        """Apply constraint to prevent more than 2 consecutive lab sessions per teacher per day.
-        
-        Rules:
-        - If L4 and L5 are allocated, L6 cannot be allocated on the same day
-        - If L1 and L2 are allocated, L3 cannot be allocated on the same day
-        - If L2 and L3 are allocated, L1 and L4 cannot be allocated on the same day
-        - And so on for all consecutive triplets
-        """
-        self.logger.info("Applying max consecutive lab slots constraint (max 2 consecutive sessions per teacher per day)...")
-        
-        # Group course assignments by teacher
+        """Creates penalty variables for teachers having more than 2 consecutive lab sessions."""
+        self.logger.info("Creating penalties for more than 2 consecutive lab slots (teacher exhaustion)...")
+
+        self.teacher_exhaustion_penalties = []
+
         teacher_courses = {}
         for course_instance_id, teacher_id in self.course_to_teacher.items():
             if teacher_id not in teacher_courses:
                 teacher_courses[teacher_id] = []
             teacher_courses[teacher_id].append(course_instance_id)
-        
-        constraints_applied = 0
-        
-        # Define consecutive lab session triplets that are forbidden
-        # Lab sessions: L1, L2, L3, L4, L5, L6 (indices 0, 1, 2, 3, 4, 5)
+
         consecutive_triplets = [
             [0, 1, 2],  # L1, L2, L3
-            [1, 2, 3],  # L2, L3, L4  
+            [1, 2, 3],  # L2, L3, L4
             [2, 3, 4],  # L3, L4, L5
             [3, 4, 5],  # L4, L5, L6
         ]
-        
+
         for teacher_id, course_list in teacher_courses.items():
             for day_idx in range(self.num_days):
-                day_name = self.days[day_idx]
-                
-                # For each consecutive triplet, ensure at most 2 out of 3 sessions are allocated
+                # For each session, determine if the teacher is active
+                teacher_session_active = []
+                for session_idx in range(len(lab_sessions)):
+                    is_active = model.NewBoolVar(f'teacher{teacher_id}_day{day_idx}_session{session_idx}_active')
+                    assignments_in_session = []
+                    if course_list:
+                        for course_instance_id in course_list:
+                            if course_instance_id in lab_assignments:
+                                for room_id in self.lab_ids:
+                                    assignments_in_session.append(
+                                        lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+
+                    if assignments_in_session:
+                        model.Add(sum(assignments_in_session) > 0).OnlyEnforceIf(is_active)
+                        model.Add(sum(assignments_in_session) == 0).OnlyEnforceIf(is_active.Not())
+                    else:
+                        model.Add(is_active == 0)
+                    teacher_session_active.append(is_active)
+
+                # Check for 3 consecutive active sessions
                 for triplet in consecutive_triplets:
-                    session1_idx, session2_idx, session3_idx = triplet
-                    session1_name = lab_sessions[session1_idx]
-                    session2_name = lab_sessions[session2_idx] 
-                    session3_name = lab_sessions[session3_idx]
-                    
-                    # Collect all assignment variables for this teacher in these 3 consecutive sessions
-                    triplet_assignments = []
-                    
-                    for course_instance_id in course_list:
-                        if course_instance_id in lab_assignments:
-                            for room_id in self.lab_ids:
-                                # Add assignments for all 3 consecutive sessions
-                                triplet_assignments.append(lab_assignments[course_instance_id][day_idx][session1_idx][room_id])
-                                triplet_assignments.append(lab_assignments[course_instance_id][day_idx][session2_idx][room_id])
-                                triplet_assignments.append(lab_assignments[course_instance_id][day_idx][session3_idx][room_id])
-                    
-                    # Constraint: at most 2 out of these 3 consecutive sessions can be allocated to this teacher
-                    if triplet_assignments:
-                        model.Add(sum(triplet_assignments) <= 2)
-                        constraints_applied += 1
-                        
-                        self.logger.debug(f"Teacher {teacher_id} on {day_name}: max 2 sessions allowed from "
-                                        f"{session1_name}, {session2_name}, {session3_name}")
-        
-        self.logger.info(f"Applied {constraints_applied} consecutive lab slots constraints")
-        self.logger.info("Consecutive lab slots rules:")
-        self.logger.info("  - Maximum 2 consecutive lab sessions per teacher per day")
-        self.logger.info("  - Prevents teacher exhaustion from 3 consecutive lab sessions (6 hours)")
-        self.logger.info("  - Examples: L4+L5+L6, L1+L2+L3, L2+L3+L4, L3+L4+L5 are forbidden")
+                    session1_active = teacher_session_active[triplet[0]]
+                    session2_active = teacher_session_active[triplet[1]]
+                    session3_active = teacher_session_active[triplet[2]]
+
+                    # A penalty is incurred if all three sessions in the triplet are active
+                    is_exhausting_triplet = model.NewBoolVar(
+                        f'teacher{teacher_id}_day{day_idx}_triplet{triplet[0]}_exhausting')
+                    model.AddBoolAnd([session1_active, session2_active, session3_active]).OnlyEnforceIf(
+                        is_exhausting_triplet)
+                    model.AddImplication(is_exhausting_triplet, session1_active)
+                    model.AddImplication(is_exhausting_triplet, session2_active)
+                    model.AddImplication(is_exhausting_triplet, session3_active)
+
+                    self.teacher_exhaustion_penalties.append(is_exhausting_triplet)
+
+        self.logger.info(f"Created {len(self.teacher_exhaustion_penalties)} penalty variables for consecutive labs.")
     
     def apply_theory_lab_group_conflict_constraint(self, model, lab_assignments, lab_sessions):
-        """Apply constraints to prevent lab groups from conflicting with ANY theory groups from same semester/department."""
-        self.logger.info("Applying theory-lab group conflict prevention constraint (ALL GROUPS)...")
+        """Apply constraints to prevent lab groups from conflicting with their corresponding theory group."""
+        self.logger.info("Applying theory-lab group conflict prevention (linked by group index)...")
         
         if not self.theory_schedule_data or not self.theory_group_timeslots:
             self.logger.info("No theory schedule data available - skipping theory-lab conflict constraints")
@@ -1902,35 +2047,25 @@ class LabScheduler:
             "sat": "saturday"
         }
         
-        # For each lab course instance, check if it conflicts with ALL theory groups from same dept/semester
+        # For each lab course instance, check for conflicts with its corresponding theory group
         for course_instance_id in lab_assignments.keys():
             # Get group information for this lab course instance
             group_info = self.get_group_info_for_course_instance(course_instance_id)
             dept = group_info['department']
             semester = group_info['semester'] 
             lab_group_index = group_info['group_index']
-            
-            self.logger.debug(f"Checking lab course {course_instance_id} (Dept: {dept}, Semester: {semester}, Lab Group: {lab_group_index})")
-            
-            # Find ALL theory groups from the same department and semester
-            theory_groups_to_check = []
-            for theory_group_key in self.theory_group_timeslots.keys():
-                # Parse theory group key: "Computer Science & Engineering_S3_G1"
-                if theory_group_key.startswith(f"{dept}_S{semester}_G"):
-                    theory_groups_to_check.append(theory_group_key)
-            
-            if not theory_groups_to_check:
-                self.logger.debug(f"No theory groups found for {dept} Semester {semester}")
+
+            if lab_group_index == 0:  # Skip unassigned instances
                 continue
+
+            # Construct the key for the corresponding theory group
+            theory_group_key = f"{dept}_S{semester}_G{lab_group_index}"
             
-            self.logger.info(f"Lab course {course_instance_id} (Group {lab_group_index}) checking against {len(theory_groups_to_check)} theory groups")
-            
-            # Check against ALL theory groups from same dept/semester
-            for theory_group_key in theory_groups_to_check:
+            # Check if this lab's corresponding theory group has any scheduled sessions
+            if theory_group_key in self.theory_group_timeslots:
                 occupied_theory_timeslots = self.theory_group_timeslots[theory_group_key]
-                
-                self.logger.debug(f"  Checking against theory group {theory_group_key} with {len(occupied_theory_timeslots)} timeslots")
-                
+                self.logger.debug(f"  Lab course {course_instance_id} (Group {lab_group_index}) checking against theory group {theory_group_key}")
+
                 # For each occupied theory timeslot, prevent lab from using that timeslot
                 for day_timeslot in occupied_theory_timeslots:
                     try:
@@ -1973,10 +2108,9 @@ class LabScheduler:
                         continue
         
         self.logger.info(f"Applied {constraints_applied} theory-lab group conflict constraints")
-        self.logger.info("MAXIMUM STUDENT CHOICE CONSTRAINT ACTIVE:")
-        self.logger.info("  - Lab groups CANNOT overlap with ANY theory groups from same semester/department")
-        self.logger.info("  - Students can freely choose any theory group + any lab group")
-        self.logger.info("  - Prevents conflicts across ALL group combinations within same semester")
+        self.logger.info("RELAXED STUDENT CHOICE CONSTRAINT ACTIVE:")
+        self.logger.info("  - Lab groups only conflict with their corresponding theory group (e.g., Lab G1 vs Theory G1)")
+        self.logger.info("  - This increases feasibility but requires students to take matching group numbers.")
     
     def apply_lab_efficiency_constraints(self, model, lab_assignments, lab_sessions):
         """Apply comprehensive lab efficiency constraints to maximize utilization and minimize waste."""
@@ -2063,8 +2197,8 @@ class LabScheduler:
                         )
             
             if session_assignments_across_days:
-                # Very relaxed constraint: allow up to 95% of labs per time slot
-                max_sessions_per_slot = int(len(self.lab_ids) * 0.95)  # Use at most 95% of labs per time slot
+                # Much more relaxed constraint: allow up to 80% of labs per time slot
+                max_sessions_per_slot = int(len(self.lab_ids) * 0.8)  # Use at most 80% of labs per time slot
                 model.Add(sum(session_assignments_across_days) <= max_sessions_per_slot)
                 constraints_applied += 1
         
@@ -2102,7 +2236,7 @@ class LabScheduler:
         for teacher, courses in self.lab_requirements.items():
             for course in courses:
                 # Fix the key name - using the correct key from lab_scheduler
-                required_sessions += course.get('required_sessions', 0)
+                required_sessions += course.get('base_sessions', 0)
         
         self.logger.info(f"REQUIREMENT: Schedule {required_sessions} lab sessions across {len(self.lab_requirements)} teachers")
         
@@ -2145,11 +2279,18 @@ class LabScheduler:
             objective_terms.extend(self.capacity_preferences)
             self.logger.info(f"BONUS: Capacity Preferences - {len(self.capacity_preferences)} bonus variables for 6-hour courses preferring 70+ labs")
         
+        # NEW PRIORITY: Penalize teacher exhaustion (3 consecutive labs)
+        if hasattr(self, 'teacher_exhaustion_penalties') and self.teacher_exhaustion_penalties:
+            for penalty_var in self.teacher_exhaustion_penalties:
+                objective_terms.append(penalty_var * -100)  # Heavy penalty
+            self.logger.info(
+                f"PENALTY: Teacher Exhaustion - {len(self.teacher_exhaustion_penalties)} penalty variables with high weight")
+        
         # Create the final objective function
         if objective_terms:
             model.Maximize(sum(objective_terms))
             self.logger.info(f"Efficiency objective created with {len(objective_terms)} terms")
-            self.logger.info("OBJECTIVE PRIORITIES:")
+            self.logger.info("📊 OBJECTIVE PRIORITIES:")
             self.logger.info("  1. Satisfy all required lab sessions (HARD CONSTRAINT)")
             self.logger.info("  2. GROUP PARALLELIZATION: Schedule same-group courses in parallel (STRONG PREFERENCE)")
             self.logger.info("     - Graduated weights from +8 to +20 based on parallelization level")
@@ -2612,45 +2753,33 @@ class LabScheduler:
         self.logger.info(f"Overall efficiency score: {efficiency_metrics['overall_efficiency']:.1f}/100 ({efficiency_metrics['efficiency_grade']})")
     
     def _calculate_efficiency_metrics(self, lab_schedule):
-        """Calculate comprehensive efficiency metrics for the lab schedule - OPTIMIZED."""
+        """Calculate comprehensive efficiency metrics for the lab schedule."""
+        metrics = {}
+        
         if not lab_schedule:
             return {'overall_efficiency': 0, 'efficiency_grade': 'F', 'recommendations': ['No schedule data available']}
         
-        # Pre-compute frequently used values
+        # Room utilization metrics
         used_rooms = set(item['room_id'] for item in lab_schedule)
-        total_rooms = len(self.lab_ids)
-        schedule_length = len(lab_schedule)
+        metrics['rooms_used'] = len(used_rooms)
+        metrics['room_utilization_rate'] = (len(used_rooms) / len(self.lab_ids)) * 100
+        metrics['avg_sessions_per_room'] = len(lab_schedule) / len(used_rooms) if used_rooms else 0
         
-        # Room utilization metrics - optimized
-        metrics = {
-            'rooms_used': len(used_rooms),
-            'room_utilization_rate': (len(used_rooms) / total_rooms) * 100,
-            'avg_sessions_per_room': schedule_length / len(used_rooms) if used_rooms else 0
-        }
-        
-        # Time slot distribution - optimized with defaultdict
-        from collections import defaultdict
-        session_counts = defaultdict(int)
+        # Time slot distribution
+        session_counts = {}
         for item in lab_schedule:
-            session_counts[item['session_name']] += 1
+            session = item['session_name']
+            session_counts[session] = session_counts.get(session, 0) + 1
         
-        metrics['session_distribution'] = dict(session_counts)
+        metrics['session_distribution'] = session_counts
         if session_counts:
-            peak_session = max(session_counts, key=session_counts.get)
-            low_session = min(session_counts, key=session_counts.get)
-            peak_count = session_counts[peak_session]
-            low_count = session_counts[low_session]
-            
-            metrics.update({
-                'peak_session': peak_session, 'peak_count': peak_count,
-                'low_session': low_session, 'low_count': low_count,
-                'load_balance_ratio': low_count / peak_count if peak_count > 0 else 0
-            })
+            metrics['peak_session'] = max(session_counts, key=session_counts.get)
+            metrics['peak_count'] = session_counts[metrics['peak_session']]
+            metrics['low_session'] = min(session_counts, key=session_counts.get)
+            metrics['low_count'] = session_counts[metrics['low_session']]
+            metrics['load_balance_ratio'] = metrics['low_count'] / metrics['peak_count'] if metrics['peak_count'] > 0 else 0
         else:
-            metrics.update({
-                'peak_session': 'N/A', 'peak_count': 0,
-                'low_session': 'N/A', 'low_count': 0, 'load_balance_ratio': 0
-            })
+            metrics.update({'peak_session': 'N/A', 'peak_count': 0, 'low_session': 'N/A', 'low_count': 0, 'load_balance_ratio': 0})
         
         # Gap analysis - calculate scheduling gaps in each room
         room_schedules = {}

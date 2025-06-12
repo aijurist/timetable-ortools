@@ -430,7 +430,7 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='Verify lecture and tutorial hours from theory scheduling output.')
     parser.add_argument('--theory-schedule', type=str, help='Path to theory schedule CSV or JSON file')
-    parser.add_argument('--course-file', type=str, default='data/cse.csv', help='Path to course requirements CSV file')
+    parser.add_argument('--course-file', type=str, default='data/department_data/Artificial_Intelligence___Machine_Learning_courses.csv', help='Path to course requirements CSV file')
     
     args = parser.parse_args()
     

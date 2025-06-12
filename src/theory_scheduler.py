@@ -655,11 +655,79 @@ class TheoryScheduler:
                     model.Add(sum(total_usage_vars) <= len(self.theory_room_ids))
                     constraints_applied += 1
         
+        # CONSTRAINT 4: Global teacher clash prevention → Same teacher CANNOT be in multiple groups at same time
+        self.logger.info("Applying global teacher clash prevention constraint...")
+        teacher_clash_constraints = self.apply_global_teacher_clash_constraint(model, group_timeslot_vars)
+        constraints_applied += teacher_clash_constraints
+        
         self.logger.info(f"Applied {constraints_applied} group-level constraints")
         self.logger.info("✅ GROUP CONSTRAINTS:")
         self.logger.info("  1. Each group gets exactly required time slots")
         self.logger.info("  2. Different groups, same semester → CANNOT overlap")
         self.logger.info("  3. Global room capacity respected")
+        self.logger.info("  4. Global teacher clash prevention → Same teacher CANNOT be in multiple groups at same time")
+    
+    def apply_global_teacher_clash_constraint(self, model, group_timeslot_vars):
+        """Apply global teacher clash constraint to prevent same teacher in multiple groups at same time."""
+        self.logger.info("Creating teacher-group mapping for clash prevention...")
+        
+        constraints_applied = 0
+        
+        # Build mapping of teachers to groups they appear in
+        teacher_group_mapping = {}
+        
+        for (dept, semester), groups in self.course_groups.items():
+            for group_idx, group in enumerate(groups):
+                if not group:
+                    continue
+                    
+                group_name = f"{dept}_S{semester}_G{group_idx + 1}"
+                
+                if group_name not in group_timeslot_vars:
+                    continue
+                
+                # Collect all teachers in this group
+                group_teachers = set()
+                for instance in group:
+                    teacher_id = instance['teacher_id']
+                    group_teachers.add(teacher_id)
+                    
+                    # Add to teacher-group mapping
+                    if teacher_id not in teacher_group_mapping:
+                        teacher_group_mapping[teacher_id] = []
+                    teacher_group_mapping[teacher_id].append(group_name)
+        
+        # Log teacher distribution across groups
+        self.logger.info(f"Teacher-group distribution for clash prevention:")
+        teachers_with_multiple_groups = 0
+        for teacher_id, group_list in teacher_group_mapping.items():
+            if len(group_list) > 1:
+                teachers_with_multiple_groups += 1
+                self.logger.info(f"  Teacher {teacher_id}: {len(group_list)} groups ({', '.join(group_list)})")
+        
+        self.logger.info(f"Teachers appearing in multiple groups: {teachers_with_multiple_groups}")
+        
+        # Apply constraints: For each teacher with multiple groups, ensure they're not scheduled simultaneously
+        for teacher_id, group_list in teacher_group_mapping.items():
+            if len(group_list) <= 1:
+                continue  # Skip teachers with only one group
+                
+            # For each time slot, ensure at most one of this teacher's groups is active
+            for day_idx in range(self.num_days):
+                for slot_idx in range(len(self.theory_time_slots)):
+                    teacher_group_vars = []
+                    
+                    for group_name in group_list:
+                        if group_name in group_timeslot_vars:
+                            teacher_group_vars.append(group_timeslot_vars[group_name][day_idx][slot_idx])
+                    
+                    # At most one group for this teacher can be active in this time slot
+                    if len(teacher_group_vars) > 1:
+                        model.Add(sum(teacher_group_vars) <= 1)
+                        constraints_applied += 1
+        
+        self.logger.info(f"Applied {constraints_applied} teacher clash constraints")
+        return constraints_applied
     
     def add_group_allocation_objective(self, model, group_timeslot_vars):
         """Add objective for optimal group time slot allocation."""
