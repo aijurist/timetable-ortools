@@ -1,0 +1,90 @@
+Course Name,Course Code,Course Dept,Teaching Dept,Student Dept,Teacher Count
+3D Printing and Design,CD19741,Computer Science & Design,Mechanical Engineering,Computer Science & Design,1
+ARTIFICIAL INTELLIGENCE,AV23C15,Aeronautical Engineering,Information Technology,Aeronautical Engineering,1
+Algebra and Calculus,MA23112,Mathematics,Humanities & Sciences,Food Technology,1
+Algebra and Calculus,MA23112,Mathematics,Humanities & Sciences,Mechatronics Engineering,2
+Algebra and Calculus,MA23112,Mathematics,Mathematics,Aeronautical Engineering,1
+Algebra and Calculus,MA23112,Mathematics,Mathematics,Automobile Engineering,1
+Algebra and Calculus,MA23112,Mathematics,Mathematics,Biotechnology,3
+Algebra and Calculus,MA23112,Mathematics,Mathematics,Chemical Engineering,1
+Algebra and Calculus,MA23112,Mathematics,Mathematics,Civil Engineering,1
+Algebra and Calculus,MA23112,Mathematics,Mathematics,Mechanical Engineering,2
+Algebra and Calculus,MA23112,Mathematics,Mathematics,Robotics & Automation,1
+Analog and Digital Communication,EC23314,Electronics & Communication Engineering,Electronics & Communication Engineering,Information Technology,5
+Applied Mathematics for Electronics  Engineers,MH23132,Biomedical Engineering,Mathematics,Biomedical Engineering,1
+Basic Electrical and Electronics Engineering,EE23133,Electrical & Electronics Engineering,Electrical & Electronics Engineering,Artificial Intelligence & Data Science,6
+Basic Electrical and Electronics Engineering,EE23133,Electrical & Electronics Engineering,Electrical & Electronics Engineering,Computer Science & Engineering,13
+Basic Electrical and Electronics Engineering,EE23133,Electrical & Electronics Engineering,Electrical & Electronics Engineering,Computer Science & Engineering (Cyber Security),3
+Basic Electrical and Electronics Engineering,EE23133,Electrical & Electronics Engineering,Electrical & Electronics Engineering,Information Technology,5
+Basic Electronics Engineering,EC23111,Electronics & Communication Engineering,Electronics & Communication Engineering,Mechanical Engineering,2
+Chemistry For Electronics Engineering,CY23131,Chemistry,Chemistry,Electrical & Electronics Engineering,2
+Chemistry For Electronics Engineering,CY23131,Chemistry,Chemistry,Electronics & Communication Engineering,8
+Chemistry for Technologists,CY23132,Chemistry,Chemistry,Biotechnology,3
+Chemistry for Technologists,CY23132,Chemistry,Chemistry,Food Technology,1
+Design and Analysis of Algorithms,CS23331,Computer Science & Engineering,Computer Science & Engineering,Information Technology,1
+Discrete Mathematics for AI,MA23313,Mathematics,Humanities & Sciences,Artificial Intelligence & Data Science,5
+Discrete Mathematics for AI,MA23313,Mathematics,Humanities & Sciences,Computer Science & Design,1
+Discrete Mathematics for AI,MA23313,Mathematics,Mathematics,Artificial Intelligence & Machine Learning,4
+ELECTRONIC SYSTEMS (FOR AERO GRADUATES),AV23112,Aeronautical Engineering,Electronics & Communication Engineering,Aeronautical Engineering,1
+Engineering Graphics,GE23111,Mechanical Engineering,Mechanical Engineering,Biomedical Engineering,2
+Engineering Graphics,GE23111,Mechanical Engineering,Mechanical Engineering,Biotechnology,3
+Engineering Graphics,GE23111,Mechanical Engineering,Mechanical Engineering,Chemical Engineering,1
+Engineering Graphics,GE23111,Mechanical Engineering,Mechanical Engineering,Electrical & Electronics Engineering,2
+Engineering Graphics,GE23111,Mechanical Engineering,Mechanical Engineering,Food Technology,1
+Engineering Graphics,GE23111,Mechanical Engineering,Mechanical Engineering,Information Technology,5
+Environmental Science and Engineering,MC23112,Aeronautical Engineering,Humanities & Sciences,Aeronautical Engineering,2
+Environmental Science and Engineering,MC23112,Chemistry,Chemistry,Artificial Intelligence & Machine Learning,4
+Environmental Science and Engineering,MC23112,Chemistry,Chemistry,Automobile Engineering,1
+Environmental Science and Engineering,MC23112,Chemistry,Chemistry,Civil Engineering,1
+Environmental Science and Engineering,MC23112,Chemistry,Chemistry,Food Technology,1
+Environmental Science and Engineering,MC23112,Chemistry,Humanities & Sciences,Artificial Intelligence & Data Science,5
+Environmental Science and Engineering,MC23112,Chemistry,Humanities & Sciences,Biotechnology,3
+Environmental Science and Engineering,MC23112,Chemistry,Humanities & Sciences,Information Technology,5
+Environmental Science and Engineering,MC23112,Chemistry,Humanities & Sciences,Mechanical Engineering,2
+Environmental Sciences,MC23313,Chemistry,Chemistry,Computer Science & Business Systems,2
+Fourier series and Number theory,MA23312,Mathematics,Humanities & Sciences,Information Technology,5
+Fourier series and Number theory,MA23312,Mathematics,Mathematics,Biomedical Engineering,2
+Fourier series and Number theory,MA23312,Mathematics,Mathematics,Computer Science & Engineering,10
+Fourier series and Number theory,MA23312,Mathematics,Mathematics,Computer Science & Engineering (Cyber Security),2
+Fourier series and Number theory,MA23312,Mathematics,Mathematics,Electrical & Electronics Engineering,2
+Fourier series and Number theory,MA23312,Mathematics,Mathematics,Electronics & Communication Engineering,6
+IMAGE PROCESSING FOR AEROSPACE APPLICATIONS,AV23114,Aeronautical Engineering,Electronics & Communication Engineering,Aeronautical Engineering,1
+INTRODUCTION TO ROBOTICS AND SENSORS,AV23312,Aeronautical Engineering,Mechatronics Engineering,Aeronautical Engineering,1
+Linear Algebra and Calculus,MA23111,Mathematics,Humanities & Sciences,Biomedical Engineering,2
+Linear Algebra and Calculus,MA23111,Mathematics,Humanities & Sciences,Information Technology,5
+Linear Algebra and Calculus,MA23111,Mathematics,Mathematics,Computer Science & Engineering,13
+Linear Algebra and Calculus,MA23111,Mathematics,Mathematics,Computer Science & Engineering (Cyber Security),3
+Linear Algebra and Calculus,MA23111,Mathematics,Mathematics,Electrical & Electronics Engineering,2
+Linear Algebra and Calculus,MA23111,Mathematics,Mathematics,Electronics & Communication Engineering,8
+Machine Design,ME23511,Mechanical Engineering,Mechanical Engineering,Robotics & Automation,1
+Mathematical Foundations for AI,MA23116,Mathematics,Humanities & Sciences,Artificial Intelligence & Data Science,6
+Mathematical Foundations for AI,MA23116,Mathematics,Mathematics,Artificial Intelligence & Machine Learning,4
+Mathematical Foundations for Data Science,MH24114,Information Technology,Mathematics,Information Technology,1
+Mathematics for Design,MA23113,Mathematics,Mathematics,Computer Science & Design,1
+Physical and Organic Chemistry,CY23334,Chemistry,Chemistry,Chemical Engineering,1
+Physics for Chemical Engineering,PH23111,Physics,Humanities & Sciences,Chemical Engineering,1
+Physics for Computing Science,PH23133,Physics,Humanities & Sciences,Computer Science & Business Systems,2
+Physics for Information Science,PH23132,Physics,Humanities & Sciences,Artificial Intelligence & Data Science,6
+Physics for Information Science,PH23132,Physics,Physics,Artificial Intelligence & Machine Learning,4
+Physics for Information Science,PH23132,Physics,Physics,Computer Science & Design,1
+Physics for Information Science,PH23132,Physics,Physics,Computer Science & Engineering,13
+Physics for Information Science,PH23132,Physics,Physics,Computer Science & Engineering (Cyber Security),3
+Physics of Materials,PH23131,Automobile Engineering,Physics,Automobile Engineering,1
+Physics of Materials,PH23131,Physics,Humanities & Sciences,Aeronautical Engineering,1
+Physics of Materials,PH23131,Physics,Humanities & Sciences,Mechanical Engineering,2
+Physics of Materials,PH23131,Physics,Physics,Civil Engineering,1
+Principles of Electrical Engineering,EE23131,Electrical & Electronics Engineering,Electrical & Electronics Engineering,Computer Science & Business Systems,2
+Technical Communication -I,HS23111,English,English,Biotechnology,1
+Technical Communication -I,HS23111,English,English,Computer Science & Engineering,12
+Technical Communication -I,HS23111,English,English,Electronics & Communication Engineering,6
+Theory of Mechanisms and Machines-I,RO23312,Robotics & Automation,Mechanical Engineering,Robotics & Automation,1
+Thermodynamics for Food Technologists,FT23303,Food Technology,Mechanical Engineering,Food Technology,2
+Transforms and Applied Partial Differential Equations,MA23311,Mathematics,Humanities & Sciences,Biotechnology,3
+Transforms and Applied Partial Differential Equations,MA23311,Mathematics,Humanities & Sciences,Food Technology,1
+Transforms and Applied Partial Differential Equations,MA23311,Mathematics,Mathematics,Aeronautical Engineering,1
+Transforms and Applied Partial Differential Equations,MA23311,Mathematics,Mathematics,Chemical Engineering,1
+Transforms and Applied Partial Differential Equations,MA23311,Mathematics,Mathematics,Mechatronics Engineering,1
+Transforms and Applied Partial Differential Equations,MA23311,Mathematics,Mathematics,Robotics & Automation,1
+Transforms and Statistics,MA23331,Mathematics,Mathematics,Automobile Engineering,1
+Transforms and Statistics,MA23331,Mathematics,Mathematics,Civil Engineering,1
+Transforms and Statistics,MA23331,Mathematics,Mathematics,Mechanical Engineering,2

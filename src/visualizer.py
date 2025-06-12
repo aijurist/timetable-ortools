@@ -1793,14 +1793,14 @@ class CombinedScheduleVisualizer:
         # Timetable days structure
         self.days = ["tuesday", "wed", "thur", "fri", "sat"]
         
-        # Time slots (11 slots per day - covers both lab and theory times)
+        # Time slots (12 slots per day - CORRECT lab time slots from lab scheduler)
         self.time_slots = [
-            "8:00 - 8:50", "9:00 - 9:50", "10:00 - 10:50", "11:00 - 11:50",
-            "12:00 - 12:50", "1:00 - 1:50", "2:00 - 2:50", "3:00 - 3:50", 
-            "4:00 - 4:50", "5:00 - 5:50", "6:00 - 6:50"
+            "8:00 - 8:50", "8:50 - 9:40", "9:50 - 10:40", "10:40 - 11:30",
+            "11:50 - 12:40", "12:40 - 1:30", "1:50 - 2:40", "2:40 - 3:30", 
+            "3:50 - 4:40", "4:40 - 5:30", "5:30 - 6:20", "6:20 - 7:10"
         ]
         
-        # Lab sessions mapping to time slots
+        # Lab sessions mapping to time slots (FIXED - matches lab scheduler)
         self.lab_sessions = {
             'L1': {'slots': [0, 1], 'time_range': '8:00 - 9:40'},
             'L2': {'slots': [2, 3], 'time_range': '9:50 - 11:30'},
@@ -1836,6 +1836,43 @@ class CombinedScheduleVisualizer:
             'D Block': '#FFDFBA',      # Light orange
             'Unknown Block': '#E6E6E6', # Light gray
         }
+    
+    def _map_theory_to_lab_timeslot(self, theory_slot_idx):
+        """Map theory slot index (0-10, 11 slots) to lab slot index (0-11, 12 slots).
+        
+        Theory slots:  ["8:00-8:50", "9:00-9:50", "10:00-10:50", "11:00-11:50", 
+                        "12:00-12:50", "1:00-1:50", "2:00-2:50", "3:00-3:50", 
+                        "4:00-4:50", "5:00-5:50", "6:00-6:50"]
+        
+        Lab slots:     ["8:00-8:50", "8:50-9:40", "9:50-10:40", "10:40-11:30",
+                        "11:50-12:40", "12:40-1:30", "1:50-2:40", "2:40-3:30", 
+                        "3:50-4:40", "4:40-5:30", "5:30-6:20", "6:20-7:10"]
+        """
+        # Define theory time slots (11 slots) as they are in theory scheduler
+        theory_times = [
+            "8:00 - 8:50", "9:00 - 9:50", "10:00 - 10:50", "11:00 - 11:50",
+            "12:00 - 12:50", "1:00 - 1:50", "2:00 - 2:50", "3:00 - 3:50", 
+            "4:00 - 4:50", "5:00 - 5:50", "6:00 - 6:50"
+        ]
+        
+        # Mapping from theory slot index to lab slot index
+        theory_to_lab_mapping = {
+            0: 0,   # "8:00-8:50" -> "8:00-8:50" (exact match)
+            1: None,  # "9:00-9:50" -> no exact match in lab slots (skip)
+            2: 2,   # "10:00-10:50" -> "9:50-10:40" (closest match)
+            3: 3,   # "11:00-11:50" -> "10:40-11:30" (closest match)
+            4: 4,   # "12:00-12:50" -> "11:50-12:40" (closest match)
+            5: 5,   # "1:00-1:50" -> "12:40-1:30" (closest match)
+            6: 6,   # "2:00-2:50" -> "1:50-2:40" (closest match)
+            7: 7,   # "3:00-3:50" -> "2:40-3:30" (closest match)
+            8: 8,   # "4:00-4:50" -> "3:50-4:40" (closest match)
+            9: 9,   # "5:00-5:50" -> "4:40-5:30" (closest match)
+            10: 10, # "6:00-6:50" -> "5:30-6:20" (closest match)
+        }
+        
+        if 0 <= theory_slot_idx < len(theory_times):
+            return theory_to_lab_mapping.get(theory_slot_idx)
+        return None
     
     def generate_combined_visualizations(self):
         """Generate combined visualizations for lab and theory schedules."""
@@ -1890,21 +1927,25 @@ class CombinedScheduleVisualizer:
         # Then, add theory sessions to the grid (only in free slots)
         for _, row in self.theory_df.iterrows():
             day = row['day']
-            slot_idx = row.get('slot_index', 0)
+            theory_slot_idx = row.get('slot_index', 0)
             
-            if day in self.days and 0 <= slot_idx < len(self.time_slots):
+            if day in self.days:
                 day_idx = self.days.index(day)
                 
-                # Only add if slot is free
-                if grid[day_idx, slot_idx] is None:
-                    course_code = row['course_code']
-                    teacher_id = row['teacher_id']
-                    room_number = row['room_number']
-                    block = row.get('block', 'Unknown Block')
-                    
-                    display_text = f"THEORY: {course_code}\nT{teacher_id} | {room_number}"
-                    grid[day_idx, slot_idx] = display_text
-                    color_grid[day_idx, slot_idx] = ('theory', block)
+                # Map theory slot index to lab time slot index
+                lab_slot_idx = self._map_theory_to_lab_timeslot(theory_slot_idx)
+                
+                if lab_slot_idx is not None and 0 <= lab_slot_idx < len(self.time_slots):
+                    # Only add if slot is free
+                    if grid[day_idx, lab_slot_idx] is None:
+                        course_code = row['course_code']
+                        teacher_id = row['teacher_id']
+                        room_number = row['room_number']
+                        block = row.get('block', 'Unknown Block')
+                        
+                        display_text = f"THEORY: {course_code}\nT{teacher_id} | {room_number}"
+                        grid[day_idx, lab_slot_idx] = display_text
+                        color_grid[day_idx, lab_slot_idx] = ('theory', block)
         
         # Plot the combined grid
         self._plot_combined_grid(ax, grid, color_grid)
@@ -2067,23 +2108,27 @@ class CombinedScheduleVisualizer:
         # Fill the grid with teacher's theory assignments
         for _, row in teacher_theory_df.iterrows():
             day = row['day']
-            slot_idx = row.get('slot_index', 0)
+            theory_slot_idx = row.get('slot_index', 0)
             
-            if day in self.days and 0 <= slot_idx < len(self.time_slots):
+            if day in self.days:
                 day_idx = self.days.index(day)
                 
-                if grid[day_idx, slot_idx] is None:  # Only add if slot is free
-                    course_code = row['course_code']
-                    room_number = row['room_number']
-                    block = row.get('block', 'Unknown Block')
-                    
-                    all_courses.add(course_code)
-                    all_rooms.add(room_number)
-                    theory_hours += 1  # Theory sessions are 1 hour
-                    
-                    display_text = f"THEORY: {course_code}\n{room_number}"
-                    grid[day_idx, slot_idx] = display_text
-                    color_grid[day_idx, slot_idx] = ('theory', block)
+                # Map theory slot index to lab time slot index
+                lab_slot_idx = self._map_theory_to_lab_timeslot(theory_slot_idx)
+                
+                if lab_slot_idx is not None and 0 <= lab_slot_idx < len(self.time_slots):
+                    if grid[day_idx, lab_slot_idx] is None:  # Only add if slot is free
+                        course_code = row['course_code']
+                        room_number = row['room_number']
+                        block = row.get('block', 'Unknown Block')
+                        
+                        all_courses.add(course_code)
+                        all_rooms.add(room_number)
+                        theory_hours += 1  # Theory sessions are 1 hour
+                        
+                        display_text = f"THEORY: {course_code}\n{room_number}"
+                        grid[day_idx, lab_slot_idx] = display_text
+                        color_grid[day_idx, lab_slot_idx] = ('theory', block)
         
         # Plot the grid
         self._plot_combined_grid(ax, grid, color_grid)
@@ -2252,11 +2297,12 @@ class CombinedScheduleVisualizer:
                     if slot_idx < len(self.time_slots):
                         slot_utilization[slot_idx] += 1
         
-        # Count theory sessions
+        # Count theory sessions (with proper mapping)
         for _, row in self.theory_df.iterrows():
-            slot_idx = row.get('slot_index', 0)
-            if 0 <= slot_idx < len(self.time_slots):
-                slot_utilization[slot_idx] += 1
+            theory_slot_idx = row.get('slot_index', 0)
+            lab_slot_idx = self._map_theory_to_lab_timeslot(theory_slot_idx)
+            if lab_slot_idx is not None and 0 <= lab_slot_idx < len(self.time_slots):
+                slot_utilization[lab_slot_idx] += 1
         
         bars = ax.bar(range(len(self.time_slots)), slot_utilization, color='orange', alpha=0.7)
         ax.set_title('Time Slot Utilization', fontweight='bold')

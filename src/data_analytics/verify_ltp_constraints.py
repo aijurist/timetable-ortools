@@ -6,7 +6,7 @@ def verify_ltp_constraints():
     """Verify that LTP constraints are satisfied for all courses with updated batching logic and theory verification."""
     
     # Load course requirements
-    course_file = "data/department_data/Artificial_Intelligence___Machine_Learning_courses.csv"
+    course_file = "data/department_data/Computing_department.csv"
     
     if not os.path.exists(course_file):
         print(f"Course file not found: {course_file}")
