@@ -925,7 +925,8 @@ class LabScheduler:
                     self.logger.info(f"  Group {group_idx + 1}: {len(group_teachers)} unique teachers")
             
             self.logger.info(f"  Total unique teachers across all groups: {len(total_teachers)}")
-            self.logger.info(f"  Average teachers per group: {sum(group_teacher_counts) / len(group_teacher_counts):.1f}")
+            if group_teacher_counts:
+                self.logger.info(f"  Average teachers per group: {sum(group_teacher_counts) / len(group_teacher_counts):.1f}")
         else:
             self.logger.error(f"❌ Teacher uniqueness constraint VIOLATED: {constraint_violations} violations")
             self.logger.error(f"❌ Total violation details: {len(violation_details)} cases")

@@ -90,7 +90,11 @@ class TheoryScheduler:
                 'semester': row.get('semester', 1),
                 'course_dept': row.get('course_dept', 'Computer Science & Engineering'),
                 'student_dept': row.get('student_dept', 'Computer Science & Engineering'),
-                'is_theory_course': int(row.get('lecture_hours', 0)) > 0 or int(row.get('tutorial_hours', 0)) > 0
+                'is_theory_course': int(row.get('lecture_hours', 0)) > 0 or int(row.get('tutorial_hours', 0)) > 0,
+                'has_assistant': row['is_assistant'] == 1,
+                'assistant_teacher_id': row.get('assist_teacher_id'),
+                'assistant_staff_code': row.get('assist_staff_code'),
+                'assistant_teacher_name': f"{row.get('assist_first_name', '')} {row.get('assist_last_name', '')}".strip()
             })
         
         # Calculate theory requirements for each teacher and course
@@ -183,7 +187,11 @@ class TheoryScheduler:
                 'semester': row.get('semester', 1),
                 'course_dept': row.get('course_dept', 'Computer Science & Engineering'),
                 'student_dept': row.get('student_dept', 'Computer Science & Engineering'),
-                'is_theory_course': int(row.get('lecture_hours', 0)) > 0 or int(row.get('tutorial_hours', 0)) > 0
+                'is_theory_course': int(row.get('lecture_hours', 0)) > 0 or int(row.get('tutorial_hours', 0)) > 0,
+                'has_assistant': row['is_assistant'] == 1,
+                'assistant_teacher_id': row.get('assist_teacher_id'),
+                'assistant_staff_code': row.get('assist_staff_code'),
+                'assistant_teacher_name': f"{row.get('assist_first_name', '')} {row.get('assist_last_name', '')}".strip()
             }
             all_instances.append(instance_with_teacher)
             total_instances += 1
@@ -204,20 +212,96 @@ class TheoryScheduler:
         course_groups = {}
         for (dept, semester), courses in dept_sem_courses.items():
             if courses:  # Skip if there are no courses
+                # Analyze teacher distribution challenges before grouping
+                self._analyze_teacher_distribution_challenges(courses, dept, semester)
+                
                 course_groups[(dept, semester)] = self._distribute_course_instances(courses, dept, semester)
         
         return course_groups
     
+    def _analyze_teacher_distribution_challenges(self, courses, dept, semester):
+        """Analyze potential challenges in teacher distribution for Hall's theorem compliance."""
+        self.logger.info(f"Analyzing teacher distribution challenges for {dept} Semester {semester}...")
+        
+        # Count courses per teacher
+        teacher_course_count = {}
+        teacher_instances = {}
+        total_instances = len(courses)
+        
+        for instance in courses:
+            # Main teacher
+            teacher_id = instance['teacher_id']
+            if teacher_id not in teacher_course_count:
+                teacher_course_count[teacher_id] = 0
+                teacher_instances[teacher_id] = []
+            teacher_course_count[teacher_id] += 1
+            teacher_instances[teacher_id].append(instance)
+
+            # Assistant teacher
+            if instance.get('has_assistant') and pd.notna(instance.get('assistant_teacher_id')):
+                assistant_id = instance.get('assistant_teacher_id')
+                if assistant_id not in teacher_course_count:
+                    teacher_course_count[assistant_id] = 0
+                    teacher_instances[assistant_id] = []
+                teacher_course_count[assistant_id] += 1
+                teacher_instances[assistant_id].append(instance)
+        
+        # Identify potential conflicts
+        unique_teachers = len(teacher_course_count)
+        unique_courses = len(set(inst['course_code'] for inst in courses))
+        max_courses_per_teacher = max(teacher_course_count.values()) if teacher_course_count else 0
+        
+        # Calculate optimal number of groups
+        optimal_groups = unique_courses  # One group per unique course for maximum choice
+        
+        # Identify high-load teachers (multiple courses)
+        high_load_teachers = [(t, count) for t, count in teacher_course_count.items() if count > 1]
+        
+        self.logger.info(f"Teacher distribution analysis:")
+        self.logger.info(f"  Total instances: {total_instances}")
+        self.logger.info(f"  Unique teachers: {unique_teachers}")
+        self.logger.info(f"  Unique courses: {unique_courses}")
+        self.logger.info(f"  Optimal groups: {optimal_groups}")
+        self.logger.info(f"  Max courses per teacher: {max_courses_per_teacher}")
+        self.logger.info(f"  High-load teachers: {len(high_load_teachers)}")
+        
+        if high_load_teachers:
+            self.logger.info("  Teachers with multiple courses:")
+            for teacher_id, course_count in sorted(high_load_teachers, key=lambda x: x[1], reverse=True):
+                course_codes = [inst['course_code'] for inst in teacher_instances[teacher_id]]
+                self.logger.info(f"    Teacher {teacher_id}: {course_count} courses ({', '.join(set(course_codes))})")
+        
+        # Check if distribution is theoretically possible
+        if unique_teachers < optimal_groups:
+            self.logger.warning(f"⚠️ Challenge: Only {unique_teachers} teachers for {optimal_groups} optimal groups")
+            self.logger.warning(f"⚠️ Some groups will need to share teachers across different group instances")
+        
+        # Estimate minimum groups needed to satisfy teacher uniqueness
+        if max_courses_per_teacher > optimal_groups:
+            min_groups_needed = max_courses_per_teacher
+            self.logger.warning(f"⚠️ Teacher uniqueness requires at least {min_groups_needed} groups")
+            self.logger.warning(f"⚠️ This exceeds optimal groups ({optimal_groups}) - some compromise may be needed")
+        
+        return {
+            'total_instances': total_instances,
+            'unique_teachers': unique_teachers,
+            'unique_courses': unique_courses,
+            'optimal_groups': optimal_groups,
+            'max_courses_per_teacher': max_courses_per_teacher,
+            'high_load_teachers': high_load_teachers,
+            'distribution_feasible': unique_teachers >= optimal_groups and max_courses_per_teacher <= optimal_groups
+        }
+
     def _distribute_course_instances(self, courses, dept, semester):
-        """Distribute course instances across groups with Hall's theorem optimization (SAME as lab scheduler)."""
+        """Distribute course instances across groups with Hall's theorem optimization and course limit constraints."""
         total_instances = len(courses)
         
         if total_instances == 0:
             return []
         
-        # Correctly identify theory and lab courses
+        # Enhanced instance analysis for ALL courses (theory + lab)
         theory_courses = [inst for inst in courses if inst.get('lecture_hours', 0) > 0 or inst.get('tutorial_hours', 0) > 0]
-        lab_courses = [inst for inst in courses if not (inst.get('lecture_hours', 0) > 0 or inst.get('tutorial_hours', 0) > 0)]
+        practical_courses = [inst for inst in courses if not (inst.get('lecture_hours', 0) > 0 or inst.get('tutorial_hours', 0) > 0) and inst.get('practical_hours', 0) > 0]
         
         # Calculate dynamic student capacity
         course_instance_counts = {}
@@ -233,13 +317,13 @@ class TheoryScheduler:
         instance_analysis = {
             'total_instances': total_instances,
             'theory_instances_count': len(theory_courses),
-            'lab_instances_count': len(lab_courses),
+            'practical_instances_count': len(practical_courses),
             'unique_courses': len(set(inst['course_code'] for inst in courses)),
             'unique_theory_courses': len(set(inst['course_code'] for inst in theory_courses)),
-            'unique_lab_courses': len(set(inst['course_code'] for inst in lab_courses)),
+            'unique_practical_courses': len(set(inst['course_code'] for inst in practical_courses)),
             'unique_teachers': len(set(inst['teacher_id'] for inst in courses)),
-            'total_lecture_hours': sum(inst['lecture_hours'] for inst in courses),
-            'total_tutorial_hours': sum(inst['tutorial_hours'] for inst in courses),
+            'total_lecture_hours': sum(inst.get('lecture_hours', 0) for inst in courses),
+            'total_tutorial_hours': sum(inst.get('tutorial_hours', 0) for inst in courses),
             'avg_student_count': sum(inst.get('student_count', 70) for inst in courses) / total_instances if total_instances > 0 else 0,
             'max_instances_per_course': max_instances_per_course,
             'dynamic_student_capacity': dynamic_student_capacity,
@@ -248,27 +332,44 @@ class TheoryScheduler:
         
         self.logger.info(f"Hall-based analysis for {dept} Semester {semester} (Theory Scheduling):")
         self.logger.info(f"  {instance_analysis['total_instances']} total instances")
-        self.logger.info(f"  {instance_analysis['theory_instances_count']} theory instances, {instance_analysis['lab_instances_count']} lab instances")
-        self.logger.info(f"  {instance_analysis['unique_courses']} unique courses ({instance_analysis['unique_theory_courses']} theory + {instance_analysis['unique_lab_courses']} lab)")
+        self.logger.info(f"  {instance_analysis['theory_instances_count']} theory instances, {instance_analysis['practical_instances_count']} practical instances")
+        self.logger.info(f"  {instance_analysis['unique_courses']} unique courses ({instance_analysis['unique_theory_courses']} theory + {instance_analysis['unique_practical_courses']} practical)")
         self.logger.info(f"  {instance_analysis['unique_teachers']} unique teachers")
         self.logger.info(f"  Total lecture workload: {instance_analysis['total_lecture_hours']} hours")
         self.logger.info(f"  Total tutorial workload: {instance_analysis['total_tutorial_hours']} hours")
         
         # CRITICAL: Number of groups = Number of unique courses in the semester
+        # Each course can appear in at most 2 of these groups for optimal student choice
         unique_course_codes = instance_analysis['unique_courses']
+        
+        # Always create as many groups as there are unique courses
         num_groups = unique_course_codes
         
-        self.logger.info(f"Creating {num_groups} groups (one per unique course: {unique_course_codes}) for theory scheduling")
+        self.logger.info(f"Creating {num_groups} groups (one per unique course: {unique_course_codes})")
         self.logger.info(f"📋 CONSTRAINT: Each course limited to maximum 2 of the {num_groups} groups for optimal choice balance")
         
         # Initialize groups
         groups = [[] for _ in range(num_groups)]
         
+        # Track group metrics
+        group_metrics = []
+        for i in range(num_groups):
+            group_metrics.append({
+                'workload': 0,
+                'theory_workload': 0,
+                'student_count': 0,
+                'instance_count': 0,
+                'practical_instance_count': 0,
+                'theory_instance_count': 0,
+                'courses': set(),
+                'teachers': set()
+            })
+        
         # Build course-teacher bipartite graph for Hall's theorem (ALL courses)
         course_to_teachers = {}
         teacher_to_courses = {}
         
-        for instance in courses:  # Use ALL courses, not just theory
+        for instance in courses:  # Use ALL courses, not just practical
             course_code = instance['course_code']
             teacher_id = instance['teacher_id']
             
@@ -282,7 +383,7 @@ class TheoryScheduler:
         
         # Group instances by course code (ALL courses)
         course_instances = {}
-        for instance in courses:  # Use ALL courses, not just theory
+        for instance in courses:  # Use ALL courses, not just practical
             course_code = instance['course_code']
             if course_code not in course_instances:
                 course_instances[course_code] = []
@@ -291,6 +392,11 @@ class TheoryScheduler:
         # Sort courses by number of teachers (ascending) for better Hall satisfaction
         sorted_courses = sorted(course_to_teachers.keys(), 
                               key=lambda c: len(course_to_teachers[c]))
+        
+        self.logger.info("Course-teacher availability analysis:")
+        for course_code in sorted_courses[:5]:  # Show first 5 courses
+            teacher_count = len(course_to_teachers[course_code])
+            self.logger.info(f"  {course_code}: {teacher_count} teachers, {len(course_instances[course_code])} instances")
         
         # SMARTER PRE-ALLOCATION LOGIC
         self.logger.info("Performing smarter course pre-allocation to groups to maximize choice...")
@@ -313,7 +419,7 @@ class TheoryScheduler:
                 # Ensure we don't add the same group index twice
                 if group_idx not in course_group_assignments[course_code]:
                     course_group_assignments[course_code].append(group_idx)
-
+        
         # Log course-group pre-allocation
         self.logger.info("Course pre-allocation (max 2 groups per course, chained distribution):")
         for course_code, group_indices in sorted(course_group_assignments.items()):
@@ -335,16 +441,36 @@ class TheoryScheduler:
                 instance_assigned = False
                 for instance in instances:
                     teacher_id = instance['teacher_id']
-                    
-                    # Check if teacher is already used in THIS group
-                    if teacher_id not in used_teachers:
+                    assistant_id = instance.get('assistant_teacher_id')
+
+                    # Check if main or assistant teacher is already used in THIS group
+                    if teacher_id not in used_teachers and (not pd.notna(assistant_id) or assistant_id not in used_teachers):
                         groups[group_idx].append(instance)
                         used_teachers.add(teacher_id)
+                        if pd.notna(assistant_id):
+                            used_teachers.add(assistant_id)
                         instance_assigned = True
+                        
+                        # Update metrics
+                        metrics = group_metrics[group_idx]
+                        theory_hrs = instance.get('lecture_hours', 0) + instance.get('tutorial_hours', 0)
+                        
+                        metrics['workload'] += theory_hrs
+                        metrics['theory_workload'] += theory_hrs
+                        metrics['student_count'] += instance.get('student_count', 70)
+                        metrics['instance_count'] += 1
+                        if theory_hrs > 0:
+                            metrics['theory_instance_count'] += 1
+                        else:
+                            metrics['practical_instance_count'] = metrics.get('practical_instance_count', 0) + 1
+                        metrics['courses'].add(instance['course_code'])
+                        metrics['teachers'].add(instance['teacher_id'])
+                        
+                        self.logger.debug(f"  Pre-allocated: {course_code} (T{teacher_id}) → Group {group_idx + 1}")
                         break
                 
                 if not instance_assigned:
-                    self.logger.debug(f"Could not pre-allocate {course_code} to Group {group_idx + 1} - no teacher available that isn't already in this group")
+                    self.logger.debug(f"  Could not pre-allocate {course_code} to Group {group_idx + 1} - no teacher available that isn't already in this group")
         
         # Distribute remaining instances
         remaining_instances = []
@@ -365,6 +491,7 @@ class TheoryScheduler:
                 teacher_group_assignments[teacher_id].add(group_idx)
         
         successfully_assigned = 0
+        failed_assignments = []
         
         for instance in remaining_instances:
             teacher_id = instance['teacher_id']
@@ -378,17 +505,69 @@ class TheoryScheduler:
             
             for group_idx in range(num_groups):
                 # CONSTRAINT 1: Teacher cannot be in this group already
-                teacher_conflict = teacher_id in {inst['teacher_id'] for inst in groups[group_idx]}
+                group_teachers = {inst['teacher_id'] for inst in groups[group_idx]}
+                for inst in groups[group_idx]:
+                    if inst.get('has_assistant') and pd.notna(inst.get('assistant_teacher_id')):
+                        group_teachers.add(inst.get('assistant_teacher_id'))
                 
+                teacher_conflict = teacher_id in group_teachers
+                if pd.notna(instance.get('assistant_teacher_id')):
+                    teacher_conflict = teacher_conflict or (instance['assistant_teacher_id'] in group_teachers)
+
                 # CONSTRAINT 2: Course can only be in groups where it was pre-allocated (max 2 groups)
                 course_allowed = group_idx in course_assigned_groups
                 
-                if not teacher_conflict and course_allowed:
+                # CONSTRAINT 3: Check if course already has enough instances in this group
+                course_instances_in_group = [inst for inst in groups[group_idx] if inst['course_code'] == course_code]
+                course_instance_limit_ok = len(course_instances_in_group) < course_instance_counts.get(course_code, 0)
+                
+                if not teacher_conflict and course_allowed and course_instance_limit_ok:
                     valid_groups.append(group_idx)
             
-            if valid_groups:
-                # Find the best valid group for this instance
-                best_group = min(valid_groups, key=lambda g: len(groups[g]))
+            if not valid_groups:
+                # Determine reason for failure
+                teacher_groups_in_groups = set()
+                for i in range(num_groups):
+                    group_teachers = {inst['teacher_id'] for inst in groups[i]}
+                    for inst in groups[i]:
+                        if inst.get('has_assistant') and pd.notna(inst.get('assistant_teacher_id')):
+                            group_teachers.add(inst.get('assistant_teacher_id'))
+                    if teacher_id in group_teachers:
+                        teacher_groups_in_groups.add(i)
+                    if pd.notna(instance.get('assistant_teacher_id')) and instance['assistant_teacher_id'] in group_teachers:
+                        teacher_groups_in_groups.add(i)
+                
+                reason = f"Teacher in groups {list(teacher_groups_in_groups)}, course allowed in groups {course_assigned_groups}"
+                
+                self.logger.error(f"CONSTRAINT VIOLATION: Cannot assign Teacher {teacher_id} ({course_code}) to any group")
+                self.logger.error(f"  Reason: {reason}")
+                failed_assignments.append({
+                    'teacher_id': teacher_id,
+                    'course_code': course_code,
+                    'instance_id': instance['id'],
+                    'reason': reason
+                })
+                continue
+            
+            # Find the best valid group for this instance
+            best_group = None
+            best_score = -1
+            
+            for group_idx in valid_groups:
+                # Calculate score - prefer groups that don't have this course yet
+                course_in_group = course_code in {inst['course_code'] for inst in groups[group_idx]}
+                group_size = len(groups[group_idx])
+                
+                score = 1000 - group_size * 10
+                if not course_in_group:
+                    score += 500  # Bonus for adding a new course
+                
+                if score > best_score:
+                    best_score = score
+                    best_group = group_idx
+            
+            # Add instance to the selected group (guaranteed to respect teacher uniqueness)
+            if best_group is not None:
                 groups[best_group].append(instance)
                 successfully_assigned += 1
                 
@@ -396,13 +575,349 @@ class TheoryScheduler:
                 if teacher_id not in teacher_group_assignments:
                     teacher_group_assignments[teacher_id] = set()
                 teacher_group_assignments[teacher_id].add(best_group)
+                
+                # UPDATE METRICS FOR THE ASSIGNED INSTANCE
+                metrics = group_metrics[best_group]
+                theory_hrs = instance.get('lecture_hours', 0) + instance.get('tutorial_hours', 0)
+                
+                metrics['workload'] += theory_hrs
+                metrics['theory_workload'] += theory_hrs
+                metrics['student_count'] += instance.get('student_count', 70)
+                metrics['instance_count'] += 1
+                if theory_hrs > 0:
+                    metrics['theory_instance_count'] += 1
+                else:
+                    metrics['practical_instance_count'] = metrics.get('practical_instance_count', 0) + 1
+                metrics['courses'].add(instance['course_code'])
+                metrics['teachers'].add(instance['teacher_id'])
+                
+                self.logger.debug(f"Assigned Teacher {teacher_id} ({course_code}) to Group {best_group + 1}")
+            else:
+                failed_assignments.append({
+                    'teacher_id': teacher_id,
+                    'course_code': course_code,
+                    'instance_id': instance['id'],
+                    'reason': 'No valid group with acceptable score'
+                })
         
+        # Log assignment results
         self.logger.info(f"Successfully assigned: {successfully_assigned} instances")
+        if failed_assignments:
+            self.logger.error(f"Failed to assign: {len(failed_assignments)} instances")
+            for failure in failed_assignments:
+                self.logger.error(f"  Teacher {failure['teacher_id']} ({failure['course_code']}): {failure['reason']}")
+        
+        # Log unassigned instances
+        unassigned_count = 0
+        for instance in remaining_instances:
+            if instance not in [i for g in groups for i in g]:
+                unassigned_count += 1
+                self.logger.warning(f"Instance {instance['id']} (Teacher {instance['teacher_id']}, Course {instance['course_code']}) was not assigned to any group")
+        
+        if unassigned_count > 0:
+            self.logger.error(f"TOTAL UNASSIGNED INSTANCES: {unassigned_count}")
+        
+        # Validate and log final group distribution
+        self._validate_teacher_uniqueness_constraint(groups, dept, semester)
+        self._validate_halls_theorem(groups, dept, semester)
+        
+        # Analyze student choice feasibility for 420 students
+        self.analyze_student_choice_feasibility(groups, dept, semester, target_students=420)
+        
+        # Log final group distribution with course limit analysis
+        self.logger.info(f"Final group distribution for {dept} Semester {semester} (Course Limit: 2 groups max):")
+        
+        # Track course distribution across groups
+        course_distribution_summary = {}
+        
+        for i, group in enumerate(groups):
+            if group:  # Only show non-empty groups
+                metrics = group_metrics[i]
+                teacher_list = sorted(set(str(instance['teacher_id']) for instance in group))
+                course_list = sorted(set(instance['course_code'] for instance in group))
+                theory_courses = [inst['course_code'] for inst in group if inst.get('lecture_hours', 0) > 0 or inst.get('tutorial_hours', 0) > 0]
+                practical_courses = [inst['course_code'] for inst in group if not (inst.get('lecture_hours', 0) > 0 or inst.get('tutorial_hours', 0) > 0) and inst.get('practical_hours', 0) > 0]
+
+                # Track course distribution
+                for course_code in course_list:
+                    if course_code not in course_distribution_summary:
+                        course_distribution_summary[course_code] = []
+                    course_distribution_summary[course_code].append(i + 1)
+                
+                self.logger.info(f"  Group {i+1}: {metrics['instance_count']} instances")
+                self.logger.info(f"    Theory: {metrics['theory_instance_count']} instances, Practical: {metrics.get('practical_instance_count', 0)} instances")
+                self.logger.info(f"    Teachers: [{', '.join(teacher_list)}]")
+                self.logger.info(f"    Courses: [{', '.join(course_list)}]")
+                if theory_courses:
+                    self.logger.info(f"    Theory courses: [{', '.join(set(theory_courses))}]")
+                if practical_courses:
+                    self.logger.info(f"    Practical courses: [{', '.join(set(practical_courses))}]")
+                self.logger.info(f"    Total theory workload: {metrics['theory_workload']} hours")
+        
+        # Log course distribution summary
+        self.logger.info(f"\nCourse distribution summary (max 2 groups per course):")
+        for course_code, group_list in sorted(course_distribution_summary.items()):
+            group_names = [f"G{g}" for g in group_list]
+            constraint_status = "✅" if len(group_list) <= 2 else "❌"
+            self.logger.info(f"  {course_code}: {', '.join(group_names)} ({len(group_list)} groups) {constraint_status}")
+        
+        # Calculate student choice metrics
+        total_courses = len(course_distribution_summary)
+        courses_with_choice = len([course for course, groups in course_distribution_summary.items() if len(groups) > 1])
+        choice_percentage = (courses_with_choice / total_courses * 100) if total_courses > 0 else 0
+        
+        self.logger.info(f"\nStudent choice analysis:")
+        self.logger.info(f"  Total courses: {total_courses}")
+        self.logger.info(f"  Courses with multiple group options: {courses_with_choice}")
+        self.logger.info(f"  Student choice percentage: {choice_percentage:.1f}%")
+        self.logger.info(f"  Dynamic student capacity: {instance_analysis['dynamic_student_capacity']} students")
         
         # Remove empty groups
         non_empty_groups = [group for group in groups if group]
         return non_empty_groups
     
+    def _validate_teacher_uniqueness_constraint(self, groups, dept, semester):
+        """Validate that no teacher appears multiple times in the same group."""
+        constraint_violations = 0
+        violation_details = []
+        
+        for group_idx, group in enumerate(groups):
+            if not group:
+                continue
+                
+            teacher_occurrences = {}
+            for instance in group:
+                # Main teacher
+                teacher_id = instance['teacher_id']
+                if teacher_id not in teacher_occurrences:
+                    teacher_occurrences[teacher_id] = []
+                teacher_occurrences[teacher_id].append({
+                    'course_code': instance['course_code'],
+                    'instance_id': instance['id'],
+                    'role': 'Main'
+                })
+
+                # Assistant teacher
+                if instance.get('has_assistant') and pd.notna(instance.get('assistant_teacher_id')):
+                    assistant_id = instance.get('assistant_teacher_id')
+                    if assistant_id not in teacher_occurrences:
+                        teacher_occurrences[assistant_id] = []
+                    teacher_occurrences[assistant_id].append({
+                        'course_code': instance['course_code'],
+                        'instance_id': instance['id'],
+                        'role': 'Assistant'
+                    })
+            
+            # Check for violations
+            for teacher_id, course_details in teacher_occurrences.items():
+                if len(course_details) > 1:
+                    constraint_violations += 1
+                    violation_info = {
+                        'teacher_id': teacher_id,
+                        'group_idx': group_idx + 1,
+                        'occurrences': len(course_details),
+                        'courses': [detail['course_code'] for detail in course_details],
+                        'instance_ids': [detail['instance_id'] for detail in course_details]
+                    }
+                    violation_details.append(violation_info)
+                    
+                    course_list = ', '.join(violation_info['courses'])
+                    self.logger.error(f"CONSTRAINT VIOLATION: Teacher {teacher_id} appears {len(course_details)} times in Group {group_idx + 1}")
+                    self.logger.error(f"  Courses: {course_list}")
+                    self.logger.error(f"  Instance IDs: {violation_info['instance_ids']}")
+        
+        if constraint_violations == 0:
+            self.logger.info(f"✅ Teacher uniqueness constraint SATISFIED for {dept} Semester {semester}")
+        else:
+            self.logger.error(f"❌ Teacher uniqueness constraint VIOLATED: {constraint_violations} violations")
+            
+        return constraint_violations == 0
+
+    def _analyze_last_student_probability(self, course_group_mapping, course_group_capacities, target_students):
+        """Analyze probability that the last student will have valid choices after random selections."""
+        
+        # Get all possible course-group combinations (32 total for 5 courses, 2 groups each)
+        from itertools import product
+        
+        all_courses = sorted(course_group_mapping.keys())
+        course_group_choices = [course_group_mapping[course] for course in all_courses]
+        all_combinations = list(product(*course_group_choices))
+        
+        total_combinations = len(all_combinations)
+        
+        # For each combination, calculate if it can survive 419 random selections
+        viable_combinations = 0
+        combination_analysis = []
+        
+        for combination in all_combinations:
+            # Calculate total capacity for this specific combination
+            combination_capacity = float('inf')
+            combination_details = []
+            
+            for i, (course, group_idx) in enumerate(zip(all_courses, combination)):
+                capacity = course_group_capacities[(course, group_idx)]
+                combination_capacity = min(combination_capacity, capacity)
+                combination_details.append(f"{course}:G{group_idx+1}({capacity})")
+            
+            # This combination is viable if it can handle at least target_students
+            is_viable = combination_capacity >= target_students
+            if is_viable:
+                viable_combinations += 1
+            
+            combination_analysis.append({
+                'combination': combination_details,
+                'bottleneck_capacity': combination_capacity,
+                'viable': is_viable
+            })
+        
+        # Calculate success probability
+        success_probability = (viable_combinations / total_combinations) * 100
+        
+        # Determine guarantee level
+        if viable_combinations == total_combinations:
+            # ALL combinations can handle 420 students
+            return {
+                'guaranteed_success': True,
+                'high_probability': True,
+                'success_probability': 100.0,
+                'viable_combinations': viable_combinations,
+                'total_combinations': total_combinations,
+                'reason': f"ALL {total_combinations} combinations have sufficient capacity"
+            }
+        elif success_probability >= 90:
+            # Very high probability
+            return {
+                'guaranteed_success': False,
+                'high_probability': True,
+                'success_probability': success_probability,
+                'viable_combinations': viable_combinations,
+                'total_combinations': total_combinations,
+                'reason': f"{viable_combinations}/{total_combinations} combinations are viable"
+            }
+        else:
+            # Lower probability - may need attention
+            # Find bottleneck combinations
+            bottleneck_combinations = [
+                combo for combo in combination_analysis 
+                if not combo['viable']
+            ][:3]  # Show first 3 problematic combinations
+            
+            bottleneck_details = []
+            for combo in bottleneck_combinations:
+                combo_str = ' + '.join(combo['combination'])
+                bottleneck_details.append(f"[{combo_str}] → {combo['bottleneck_capacity']} capacity")
+            
+            return {
+                'guaranteed_success': False,
+                'high_probability': False,
+                'success_probability': success_probability,
+                'viable_combinations': viable_combinations,
+                'total_combinations': total_combinations,
+                'reason': f"Only {viable_combinations}/{total_combinations} combinations viable. Bottlenecks: {'; '.join(bottleneck_details)}"
+            }
+    
+    def _validate_halls_theorem(self, groups, dept, semester):
+        """Validate that groups satisfy Hall's theorem for optimal student choice with course limit constraints."""
+        total_violations = 0
+        
+        # Global validation: Check Hall's theorem across all groups with 2-group-per-course constraint
+        all_courses = set()
+        global_course_teacher_matrix = {}
+        course_group_participation = {}
+        
+        # Build global course-teacher mapping and track course participation
+        for group_idx, group in enumerate(groups):
+            if not group:
+                continue
+                
+            for instance in group:
+                course_code = instance['course_code']
+                teacher_id = instance['teacher_id']
+                
+                all_courses.add(course_code)
+                
+                if course_code not in global_course_teacher_matrix:
+                    global_course_teacher_matrix[course_code] = set()
+                global_course_teacher_matrix[course_code].add(teacher_id)
+                
+                if course_code not in course_group_participation:
+                    course_group_participation[course_code] = set()
+                course_group_participation[course_code].add(group_idx)
+        
+        # Validate 2-group-per-course constraint
+        course_limit_violations = 0
+        for course_code, participating_groups in course_group_participation.items():
+            if len(participating_groups) > 2:
+                course_limit_violations += 1
+                group_names = [f"G{i+1}" for i in participating_groups]
+                self.logger.error(f"COURSE LIMIT VIOLATION: {course_code} appears in {len(participating_groups)} groups: {', '.join(group_names)}")
+        
+        if course_limit_violations == 0:
+            self.logger.info(f"✅ Course limit constraint SATISFIED (max 2 groups per course)")
+        else:
+            self.logger.error(f"❌ Course limit constraint VIOLATED: {course_limit_violations} violations")
+        
+        # Global Hall's theorem validation with course choices consideration
+        self.logger.info(f"Global Hall's theorem validation with course choices:")
+        
+        # For student choice validation: Each course appears in at most 2 groups
+        # Students need to be able to select all courses for their semester
+        course_choice_validation = []
+        
+        for course_code in all_courses:
+            available_groups = course_group_participation.get(course_code, set())
+            available_teachers = global_course_teacher_matrix.get(course_code, set())
+            
+            course_choice_validation.append({
+                'course': course_code,
+                'groups': len(available_groups),
+                'teachers': len(available_teachers),
+                'choice_ratio': len(available_groups) / max(1, len(available_teachers))
+            })
+        
+        # Log course choice availability
+        self.logger.info("Course choice availability analysis:")
+        for choice_info in sorted(course_choice_validation, key=lambda x: x['choice_ratio']):
+            course = choice_info['course']
+            groups = choice_info['groups']
+            teachers = choice_info['teachers']
+            self.logger.info(f"  {course}: {groups} groups, {teachers} teachers (ratio: {choice_info['choice_ratio']:.2f})")
+        
+        # Check global Hall's condition for student choice
+        global_violations = []
+        
+        for r in range(1, min(len(all_courses) + 1, 6)):  # Limit to prevent exponential explosion
+            for course_subset in combinations(all_courses, r):
+                # Calculate total choice combinations available for this subset
+                total_group_choices = 1
+                neighbor_teachers = set()
+                
+                for course in course_subset:
+                    course_groups = len(course_group_participation.get(course, set()))
+                    total_group_choices *= max(1, course_groups)
+                    neighbor_teachers.update(global_course_teacher_matrix.get(course, set()))
+                
+                # Modified Hall's condition: Students need enough choices to select all courses
+                # At minimum, need 1 valid combination (each course available in at least 1 group)
+                if len(neighbor_teachers) < len(course_subset):
+                    global_violations.append({
+                        'subset': list(course_subset),
+                        'subset_size': len(course_subset),
+                        'teacher_count': len(neighbor_teachers),
+                        'group_choices': total_group_choices
+                    })
+        
+        if global_violations:
+            total_violations += len(global_violations)
+            self.logger.warning(f"⚠️ Global Hall's theorem VIOLATED: {len(global_violations)} violations")
+            for violation in global_violations[:3]:  # Show first 3 violations
+                courses_str = ', '.join(violation['subset'])
+                self.logger.warning(f"  Subset [{courses_str}]: {violation['teacher_count']} teachers < {violation['subset_size']} courses")
+        else:
+            self.logger.info(f"✅ Global Hall's theorem SATISFIED with course limit constraints")
+        
+        return total_violations == 0 and course_limit_violations == 0
+
     def _create_instance_group_mapping(self):
         """Create mapping from course instances to their groups."""
         total_mapped_instances = 0
@@ -491,6 +1006,224 @@ class TheoryScheduler:
         
         total_conflicts = sum(len(days.get(day, [])) for days in self.occupied_slots.values() for day in self.days)
         self.logger.info(f"Parsed lab schedule: {len(self.occupied_slots)} teachers with {total_conflicts} occupied time slots")
+    
+    def analyze_student_choice_feasibility(self, groups, dept, semester, target_students=420):
+        """Analyze if target number of students can select all required courses for their semester."""
+        self.logger.info(f"\n" + "="*80)
+        self.logger.info(f"STUDENT CHOICE FEASIBILITY ANALYSIS for {dept} Semester {semester}")
+        self.logger.info(f"Target Students: {target_students}")
+        self.logger.info(f"="*80)
+        
+        if not groups:
+            self.logger.error("No groups available for analysis")
+            return False
+        
+        # Extract all courses and their group distribution
+        all_courses = set()
+        course_group_mapping = {}  # course -> list of group indices where it appears
+        
+        for group_idx, group in enumerate(groups):
+            if not group:
+                continue
+                
+            group_courses = set(instance['course_code'] for instance in group)
+            all_courses.update(group_courses)
+            
+            for course_code in group_courses:
+                if course_code not in course_group_mapping:
+                    course_group_mapping[course_code] = []
+                course_group_mapping[course_code].append(group_idx)
+        
+        total_courses = len(all_courses)
+        total_groups = len([g for g in groups if g])
+        
+        self.logger.info(f"📊 DISTRIBUTION OVERVIEW:")
+        self.logger.info(f"   Total Courses: {total_courses}")
+        self.logger.info(f"   Total Groups: {total_groups}")
+        self.logger.info(f"   Target Students: {target_students}")
+        
+        # Show course distribution across groups
+        self.logger.info(f"\n📋 COURSE-GROUP DISTRIBUTION:")
+        for course_code in sorted(all_courses):
+            group_indices = course_group_mapping.get(course_code, [])
+            group_names = [f"G{i+1}" for i in group_indices]
+            self.logger.info(f"   {course_code}: {', '.join(group_names)} ({len(group_indices)} groups)")
+        
+        # CRITICAL ANALYSIS: Can students select all courses?
+        # For this, we need to check if there's a perfect matching from courses to groups
+        
+        # Build bipartite graph: courses -> available groups
+        from itertools import combinations
+        
+        # Check Hall's Marriage Theorem for perfect matching
+        self.logger.info(f"\n🔍 HALL'S MARRIAGE THEOREM ANALYSIS:")
+        
+        # For every subset of courses, check if they have enough group choices
+        hall_violations = []
+        
+        for r in range(1, min(total_courses + 1, 6)):  # Check subsets up to size 5
+            for course_subset in combinations(all_courses, r):
+                # Find all groups that serve at least one course in this subset
+                available_groups = set()
+                for course in course_subset:
+                    available_groups.update(course_group_mapping.get(course, []))
+                
+                # Hall's condition: |available_groups| >= |course_subset|
+                if len(available_groups) < len(course_subset):
+                    hall_violations.append({
+                        'courses': list(course_subset),
+                        'required_groups': len(course_subset),
+                        'available_groups': len(available_groups),
+                        'deficit': len(course_subset) - len(available_groups)
+                    })
+        
+        if hall_violations:
+            self.logger.error(f"❌ HALL'S THEOREM VIOLATED: {len(hall_violations)} violations")
+            self.logger.error(f"   Students CANNOT select all {total_courses} courses!")
+            
+            for violation in hall_violations[:3]:  # Show first 3 violations
+                courses_str = ', '.join(violation['courses'])
+                self.logger.error(f"   Subset [{courses_str}]: needs {violation['required_groups']} groups, only {violation['available_groups']} available")
+            
+            return False
+        else:
+            self.logger.info(f"✅ HALL'S THEOREM SATISFIED")
+            self.logger.info(f"   Perfect matching EXISTS - students CAN select all {total_courses} courses!")
+        
+        # Find and display valid course-group assignments
+        self.logger.info(f"\n🎯 VALID COURSE-GROUP ASSIGNMENTS:")
+        
+        # Try to find a valid assignment using greedy approach
+        valid_assignment = self._find_perfect_matching(course_group_mapping, total_groups)
+        
+        if valid_assignment:
+            self.logger.info(f"   Example valid assignment for students:")
+            for course, group_idx in valid_assignment.items():
+                self.logger.info(f"     {course} → Group {group_idx + 1}")
+            
+            # Calculate student capacity for this assignment
+            self.logger.info(f"\n👥 STUDENT CAPACITY ANALYSIS:")
+            
+            # Each course appears in 2 groups, so students have some flexibility
+            choice_combinations = 1
+            for course in all_courses:
+                available_groups = len(course_group_mapping.get(course, []))
+                choice_combinations *= available_groups if available_groups > 0 else 1
+                self.logger.info(f"     {course}: {available_groups} group choices")
+            
+            self.logger.info(f"   Total choice combinations: {choice_combinations}")
+            
+            # Estimate capacity based on dynamic student calculation
+            max_instances_per_course = 0
+            for group in groups:
+                if group:
+                    course_counts = {}
+                    for instance in group:
+                        course_code = instance['course_code']
+                        course_counts[course_code] = course_counts.get(course_code, 0) + 1
+                    if course_counts:
+                        max_instances_per_course = max(max_instances_per_course, max(course_counts.values()))
+            
+            dynamic_capacity = max_instances_per_course * 70
+            
+            self.logger.info(f"   Estimated capacity per choice combination: {dynamic_capacity} students")
+            self.logger.info(f"   Total theoretical capacity: {choice_combinations * dynamic_capacity} students")
+            
+            # CRITICAL ANALYSIS: Will the 420th student still have choices after random selections?
+            self.logger.info(f"\n🎲 RANDOM SELECTION ROBUSTNESS ANALYSIS:")
+            self.logger.info(f"   Analyzing worst-case: Will student #{target_students} have choices after {target_students-1} random selections?")
+            
+            # Calculate capacity per course-group combination
+            course_group_capacities = {}
+            for course in all_courses:
+                for group_idx in course_group_mapping.get(course, []):
+                    # Count instances of this course in this group
+                    course_instances_in_group = len([
+                        inst for inst in groups[group_idx] 
+                        if inst['course_code'] == course
+                    ])
+                    capacity = course_instances_in_group * 70  # Each instance can handle 70 students
+                    course_group_capacities[(course, group_idx)] = capacity
+                    
+                    self.logger.info(f"     {course} in Group {group_idx + 1}: {capacity} students ({course_instances_in_group} instances)")
+            
+            # Calculate minimum guaranteed capacity using bottleneck analysis
+            min_capacity_per_course = {}
+            for course in all_courses:
+                available_groups = course_group_mapping.get(course, [])
+                if available_groups:
+                    capacities = [course_group_capacities.get((course, g), 0) for g in available_groups]
+                    min_capacity_per_course[course] = min(capacities) if capacities else 0
+                    total_capacity_for_course = sum(capacities)
+                else:
+                    min_capacity_per_course[course] = 0
+                    total_capacity_for_course = 0
+
+                self.logger.info(f"     {course}: Min capacity = {min_capacity_per_course[course]}, Total capacity = {total_capacity_for_course}")
+            
+            # Bottleneck analysis: Find the most constrained course
+            bottleneck_course = min(all_courses, key=lambda c: min_capacity_per_course.get(c, 0)) if all_courses else "N/A"
+            bottleneck_capacity = min_capacity_per_course.get(bottleneck_course, 0)
+            
+            self.logger.info(f"\n🚨 BOTTLENECK ANALYSIS:")
+            self.logger.info(f"   Most constrained course: {bottleneck_course}")
+            self.logger.info(f"   Minimum capacity for {bottleneck_course}: {bottleneck_capacity} students")
+            
+            # Worst-case scenario: Can the last student still get all courses?
+            # This happens when the bottleneck course-group combinations are nearly full
+            
+            # Calculate probability that last student has choices
+            worst_case_analysis = self._analyze_last_student_probability(
+                course_group_mapping, course_group_capacities, target_students
+            )
+            
+            if worst_case_analysis['guaranteed_success']:
+                self.logger.info(f"✅ LAST STUDENT GUARANTEED SUCCESS!")
+                self.logger.info(f"   Even after {target_students-1} random selections, student #{target_students} will have valid choices")
+                self.logger.info(f"   Reason: {worst_case_analysis['reason']}")
+                final_result = True
+            elif worst_case_analysis['high_probability']:
+                self.logger.info(f"✅ LAST STUDENT HIGH SUCCESS PROBABILITY!")
+                self.logger.info(f"   Student #{target_students} has {worst_case_analysis['success_probability']:.1f}% chance of valid choices")
+                self.logger.info(f"   Reason: {worst_case_analysis['reason']}")
+                final_result = True
+            else:
+                self.logger.warning(f"⚠️ LAST STUDENT MAY FACE DIFFICULTIES!")
+                self.logger.warning(f"   Student #{target_students} has only {worst_case_analysis['success_probability']:.1f}% chance of valid choices")
+                self.logger.warning(f"   Reason: {worst_case_analysis['reason']}")
+                final_result = False
+            
+            return final_result
+        else:
+            self.logger.error(f"❌ NO VALID ASSIGNMENT FOUND")
+            self.logger.error(f"   Students CANNOT select all {total_courses} courses!")
+            return False
+    
+    def _find_perfect_matching(self, course_group_mapping, total_groups):
+        """Find a perfect matching from courses to groups using greedy algorithm."""
+        assignment = {}
+        used_groups = set()
+        
+        # Sort courses by number of available groups (ascending) - handle constrained courses first
+        sorted_courses = sorted(course_group_mapping.keys(), key=lambda c: len(course_group_mapping.get(c, [])))
+        
+        for course in sorted_courses:
+            available_groups = course_group_mapping.get(course, [])
+            
+            # Find an unused group for this course
+            assigned = False
+            for group_idx in available_groups:
+                if group_idx not in used_groups:
+                    assignment[course] = group_idx
+                    used_groups.add(group_idx)
+                    assigned = True
+                    break
+            
+            if not assigned:
+                # Backtrack or return None if no assignment possible
+                return None
+        
+        return assignment
     
     def generate_theory_schedule(self):
         """Generate the theory schedule using group-based time slot allocation."""
