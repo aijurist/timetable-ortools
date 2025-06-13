@@ -191,7 +191,12 @@ class LabScheduler:
                 'practical_hours': int(row['practical_hours']),
                 'student_count': int(row['student_count']),
                 'semester': row.get('semester', 1),
-                'student_dept': row.get('student_dept', 'Computer Science & Engineering')
+                'student_dept': row.get('student_dept', 'Computer Science & Engineering'),
+                'is_lab_course': int(row['practical_hours']) > 0,
+                'has_assistant': row['is_assistant'] == 1,
+                'assistant_teacher_id': row.get('assist_teacher_id'),
+                'assistant_staff_code': row.get('assist_staff_code'),
+                'assistant_teacher_name': f"{row.get('assist_first_name', '')} {row.get('assist_last_name', '')}".strip()
             })
         
         # Calculate lab requirements for each teacher and course
@@ -250,7 +255,11 @@ class LabScheduler:
                         'practical_hours': practical_hours,
                         'students_per_instance': student_count,
                         'base_sessions': lab_allocation_strategy['base_sessions'],
-                        'preferred_lab_capacities': lab_allocation_strategy['preferred_lab_capacities']
+                        'preferred_lab_capacities': lab_allocation_strategy['preferred_lab_capacities'],
+                        'has_assistant': course.get('has_assistant', False),
+                        'assistant_teacher_id': course.get('assistant_teacher_id'),
+                        'assistant_staff_code': course.get('assistant_staff_code'),
+                        'assistant_teacher_name': course.get('assistant_teacher_name')
                     })
         
         # Log lab requirements (using base sessions for now)
@@ -302,7 +311,11 @@ class LabScheduler:
                 'student_count': int(row['student_count']),
                 'semester': row.get('semester', 1),
                 'student_dept': row.get('student_dept', 'Computer Science & Engineering'),
-                'is_lab_course': int(row['practical_hours']) > 0
+                'is_lab_course': int(row['practical_hours']) > 0,
+                'has_assistant': row['is_assistant'] == 1,
+                'assistant_teacher_id': row.get('assist_teacher_id'),
+                'assistant_staff_code': row.get('assist_staff_code'),
+                'assistant_teacher_name': f"{row.get('assist_first_name', '')} {row.get('assist_last_name', '')}".strip()
             }
             all_instances.append(instance_with_teacher)
             total_instances += 1
@@ -340,12 +353,22 @@ class LabScheduler:
         total_instances = len(courses)
         
         for instance in courses:
+            # Main teacher
             teacher_id = instance['teacher_id']
             if teacher_id not in teacher_course_count:
                 teacher_course_count[teacher_id] = 0
                 teacher_instances[teacher_id] = []
             teacher_course_count[teacher_id] += 1
             teacher_instances[teacher_id].append(instance)
+
+            # Assistant teacher
+            if instance.get('has_assistant') and pd.notna(instance.get('assistant_teacher_id')):
+                assistant_id = instance.get('assistant_teacher_id')
+                if assistant_id not in teacher_course_count:
+                    teacher_course_count[assistant_id] = 0
+                    teacher_instances[assistant_id] = []
+                teacher_course_count[assistant_id] += 1
+                teacher_instances[assistant_id].append(instance)
         
         # Identify potential conflicts
         unique_teachers = len(teacher_course_count)
@@ -596,11 +619,14 @@ class LabScheduler:
                 instance_assigned = False
                 for instance in instances:
                     teacher_id = instance['teacher_id']
-                    
-                    # Check if teacher is already used in THIS group
-                    if teacher_id not in used_teachers:
+                    assistant_id = instance.get('assistant_teacher_id')
+
+                    # Check if main or assistant teacher is already used in THIS group
+                    if teacher_id not in used_teachers and (not pd.notna(assistant_id) or assistant_id not in used_teachers):
                         groups[group_idx].append(instance)
                         used_teachers.add(teacher_id)
+                        if pd.notna(assistant_id):
+                            used_teachers.add(assistant_id)
                         instance_assigned = True
                         
                         # Update metrics
@@ -657,8 +683,15 @@ class LabScheduler:
             
             for group_idx in range(num_groups):
                 # CONSTRAINT 1: Teacher cannot be in this group already
-                teacher_conflict = teacher_id in {inst['teacher_id'] for inst in groups[group_idx]}
+                group_teachers = {inst['teacher_id'] for inst in groups[group_idx]}
+                for inst in groups[group_idx]:
+                    if inst.get('has_assistant') and pd.notna(inst.get('assistant_teacher_id')):
+                        group_teachers.add(inst.get('assistant_teacher_id'))
                 
+                teacher_conflict = teacher_id in group_teachers
+                if pd.notna(instance.get('assistant_teacher_id')):
+                    teacher_conflict = teacher_conflict or (instance['assistant_teacher_id'] in group_teachers)
+
                 # CONSTRAINT 2: Course can only be in groups where it was pre-allocated (max 2 groups)
                 course_allowed = group_idx in course_assigned_groups
                 
@@ -671,8 +704,18 @@ class LabScheduler:
             
             if not valid_groups:
                 # Determine reason for failure
-                teacher_groups = [i for i in range(num_groups) if teacher_id in {inst['teacher_id'] for inst in groups[i]}]
-                reason = f"Teacher in groups {teacher_groups}, course allowed in groups {course_assigned_groups}"
+                teacher_groups_in_groups = set()
+                for i in range(num_groups):
+                    group_teachers = {inst['teacher_id'] for inst in groups[i]}
+                    for inst in groups[i]:
+                        if inst.get('has_assistant') and pd.notna(inst.get('assistant_teacher_id')):
+                            group_teachers.add(inst.get('assistant_teacher_id'))
+                    if teacher_id in group_teachers:
+                        teacher_groups_in_groups.add(i)
+                    if pd.notna(instance.get('assistant_teacher_id')) and instance['assistant_teacher_id'] in group_teachers:
+                        teacher_groups_in_groups.add(i)
+                
+                reason = f"Teacher in groups {list(teacher_groups_in_groups)}, course allowed in groups {course_assigned_groups}"
                 
                 self.logger.error(f"CONSTRAINT VIOLATION: Cannot assign Teacher {teacher_id} ({course_code}) to any group")
                 self.logger.error(f"  Reason: {reason}")
@@ -822,14 +865,28 @@ class LabScheduler:
                 
             teacher_occurrences = {}
             for instance in group:
+                # Main teacher
                 teacher_id = instance['teacher_id']
                 if teacher_id not in teacher_occurrences:
                     teacher_occurrences[teacher_id] = []
                 teacher_occurrences[teacher_id].append({
                     'course_code': instance['course_code'],
                     'instance_id': instance['id'],
-                    'practical_hours': instance.get('practical_hours', 0)
+                    'practical_hours': instance.get('practical_hours', 0),
+                    'role': 'Main'
                 })
+
+                # Assistant teacher
+                if instance.get('has_assistant') and pd.notna(instance.get('assistant_teacher_id')):
+                    assistant_id = instance.get('assistant_teacher_id')
+                    if assistant_id not in teacher_occurrences:
+                        teacher_occurrences[assistant_id] = []
+                    teacher_occurrences[assistant_id].append({
+                        'course_code': instance['course_code'],
+                        'instance_id': instance['id'],
+                        'practical_hours': instance.get('practical_hours', 0),
+                        'role': 'Assistant'
+                    })
             
             # Check for violations
             for teacher_id, course_details in teacher_occurrences.items():
@@ -857,7 +914,12 @@ class LabScheduler:
             group_teacher_counts = []
             for group_idx, group in enumerate(groups):
                 if group:
-                    group_teachers = set(instance['teacher_id'] for instance in group)
+                    group_teachers = set()
+                    for instance in group:
+                        group_teachers.add(instance['teacher_id'])
+                        if instance.get('has_assistant') and pd.notna(instance.get('assistant_teacher_id')):
+                            group_teachers.add(instance.get('assistant_teacher_id'))
+                    
                     total_teachers.update(group_teachers)
                     group_teacher_counts.append(len(group_teachers))
                     self.logger.info(f"  Group {group_idx + 1}: {len(group_teachers)} unique teachers")
@@ -1481,31 +1543,43 @@ class LabScheduler:
                     model.Add(sum(room_vars) <= 1)
     
     def apply_teacher_clash_constraint(self, model, lab_assignments, lab_sessions):
-        """Ensure a teacher is not assigned to more than one lab at the same time."""
-        self.logger.info("Applying teacher clash constraint (global)...")
-        
-        # Group course instances by teacher
+        """Ensure a teacher (main or assistant) is not assigned to more than one lab at the same time."""
+        self.logger.info("Applying teacher clash constraint (global for main and assistant teachers)...")
+
+        # Collect all unique teacher IDs (main and assistant)
+        all_teacher_ids = pd.concat([self.courses_df['teacher_id'], self.courses_df['assist_teacher_id']]).dropna().unique()
+
+        # For each teacher, find all course instances they are assigned to
         teacher_assignments = defaultdict(list)
-        for course_instance_id, teacher_id in self.course_to_teacher.items():
-            if course_instance_id in lab_assignments:
-                teacher_assignments[teacher_id].append(course_instance_id)
+        for _, course_row in self.courses_df.iterrows():
+            course_instance_id = str(course_row['id'])
+            if int(course_row['practical_hours']) > 0 and course_instance_id in lab_assignments:
+                main_teacher_id = course_row['teacher_id']
+                teacher_assignments[main_teacher_id].append(course_instance_id)
+
+                if course_row['is_assistant'] == 1 and pd.notna(course_row['assist_teacher_id']):
+                    assistant_teacher_id = course_row['assist_teacher_id']
+                    teacher_assignments[assistant_teacher_id].append(course_instance_id)
 
         constraints_applied = 0
-        for teacher_id, courses in teacher_assignments.items():
-            for day_idx in range(self.num_days):
-                for session_idx in range(len(lab_sessions)):
-                    teacher_session_assignments = []
-                    for course_instance_id in courses:
-                        for room_id in self.lab_ids:
-                            teacher_session_assignments.append(
-                                lab_assignments[course_instance_id][day_idx][session_idx][room_id]
-                            )
-                    
-                    if teacher_session_assignments:
-                        model.Add(sum(teacher_session_assignments) <= 1)
-                        constraints_applied += 1
+        for teacher_id in all_teacher_ids:
+            if teacher_id in teacher_assignments:
+                courses = teacher_assignments[teacher_id]
+                for day_idx in range(self.num_days):
+                    for session_idx in range(len(lab_sessions)):
+                        teacher_session_assignments = []
+                        for course_instance_id in courses:
+                            if course_instance_id in lab_assignments:
+                                for room_id in self.lab_ids:
+                                    teacher_session_assignments.append(
+                                        lab_assignments[course_instance_id][day_idx][session_idx][room_id]
+                                    )
                         
-        self.logger.info(f"Applied {constraints_applied} global teacher clash constraints")
+                        if teacher_session_assignments:
+                            model.Add(sum(teacher_session_assignments) <= 1)
+                            constraints_applied += 1
+                            
+        self.logger.info(f"Applied {constraints_applied} global teacher clash constraints for {len(all_teacher_ids)} teachers (main and assistants)")
     
     def apply_capacity_constraint(self, model, lab_assignments):
         """Apply capacity-based assignment constraints."""
@@ -2526,6 +2600,10 @@ class LabScheduler:
                                     'teacher_id': teacher_id,
                                     'teacher_name': f"{teacher_row.get('first_name', '')} {teacher_row.get('last_name', '')}".strip(),
                                     'staff_code': teacher_row.get('staff_code', ''),
+                                    'has_assistant': course_details.get('has_assistant', False),
+                                    'assistant_teacher_id': course_details.get('assistant_teacher_id'),
+                                    'assistant_teacher_name': course_details.get('assistant_teacher_name'),
+                                    'assistant_staff_code': course_details.get('assistant_staff_code'),
                                     'room_id': int(room_id),
                                     'room_number': room_row['room_number'],
                                     'block': room_row['block'],
@@ -2564,6 +2642,10 @@ class LabScheduler:
                                     'teacher_id': teacher_id,
                                     'teacher_name': f"{teacher_row.get('first_name', '')} {teacher_row.get('last_name', '')}".strip(),
                                     'staff_code': teacher_row.get('staff_code', ''),
+                                    'has_assistant': course_details.get('has_assistant', False),
+                                    'assistant_teacher_id': course_details.get('assistant_teacher_id'),
+                                    'assistant_teacher_name': course_details.get('assistant_teacher_name'),
+                                    'assistant_staff_code': course_details.get('assistant_staff_code'),
                                     'room_id': int(room_id),
                                     'room_number': room_row['room_number'],
                                     'block': room_row['block'],

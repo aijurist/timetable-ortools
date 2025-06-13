@@ -45,7 +45,10 @@ class ScheduleVisualizer:
             
             # Pre-compute unique lists for efficiency - include unknown teachers
             if 'teacher_id' in self.schedule_df.columns:
-                self.teachers = self.schedule_df['teacher_id'].unique()
+                main_teachers = self.schedule_df['teacher_id'].unique()
+                assistant_teachers = self.schedule_df['assistant_teacher_id'].dropna().unique() if 'assistant_teacher_id' in self.schedule_df.columns else []
+                self.teachers = np.union1d(main_teachers, assistant_teachers)
+
                 # Ensure unknown teachers are included
                 if 'Unknown' in self.teachers:
                     print(f"Including Unknown teachers in visualization")
@@ -177,9 +180,18 @@ class ScheduleVisualizer:
                 session_idx = lab_session_names.index(session)
                 
                 course_code = row['course_code']
-                teacher_id = row['teacher_id']
+                teacher_name = row.get('teacher_name', f"T:{row.get('teacher_id')}")
                 room_number = row['room_number']
                 room_id = row.get('room_id', '')
+                
+                # Assistant teacher info
+                has_assistant = row.get('has_assistant', False)
+                assistant_teacher_name = row.get('assistant_teacher_name') if pd.notna(row.get('assistant_teacher_name')) else ''
+
+                # Teacher display
+                teacher_display = teacher_name
+                if has_assistant and assistant_teacher_name:
+                    teacher_display += f"\nASSISTANT: {assistant_teacher_name}"
                 
                 # Determine which building block this room belongs to
                 block_name = 'Unknown Block'
@@ -198,10 +210,10 @@ class ScheduleVisualizer:
                 
                 if is_batched and batch_info:
                     # Show specific batch information
-                    display_text = f"{block_prefix}{course_code}\n{batch_info}\n(ID:{course_instance_id})\n{teacher_id}\n{room_number}"
+                    display_text = f"{block_prefix}{course_code}\n{batch_info}\n(ID:{course_instance_id})\n{teacher_display}\n{room_number}"
                 else:
                     # Regular course without batching
-                    display_text = f"{block_prefix}{course_code}\n(ID:{course_instance_id})\n{teacher_id}\n{room_number}"
+                    display_text = f"{block_prefix}{course_code}\n(ID:{course_instance_id})\n{teacher_display}\n{room_number}"
                 
                 grid[day_idx, session_idx] = display_text
                 block_grid[day_idx, session_idx] = block_name
@@ -278,7 +290,7 @@ class ScheduleVisualizer:
         print(f"Generating detailed teacher schedules for {len(self.teachers)} teachers...")
         
         for teacher in self.teachers:
-            teacher_df = self.schedule_df[self.schedule_df['teacher_id'] == teacher]
+            teacher_df = self.schedule_df[(self.schedule_df['teacher_id'] == teacher) | (self.schedule_df['assistant_teacher_id'] == teacher)]
             if not teacher_df.empty:
                 self._create_teacher_schedule(teacher, teacher_df)
         
@@ -291,11 +303,17 @@ class ScheduleVisualizer:
             return
         
         # Get teacher info
-        teacher_info = teacher_df.iloc[0]
-        teacher_name = f"{teacher_info.get('first_name', '')} {teacher_info.get('last_name', '')}".strip()
-        if not teacher_name and 'teacher_name' in teacher_info:
-            teacher_name = teacher_info['teacher_name']
-        staff_code = teacher_info.get('staff_code', '')
+        main_teacher_rows = teacher_df[teacher_df['teacher_id'] == teacher_id]
+        if not main_teacher_rows.empty:
+            teacher_info = main_teacher_rows.iloc[0]
+            teacher_name = f"{teacher_info.get('first_name', '')} {teacher_info.get('last_name', '')}".strip()
+            if not teacher_name and 'teacher_name' in teacher_info:
+                teacher_name = teacher_info['teacher_name']
+            staff_code = teacher_info.get('staff_code', '')
+        else: # Teacher is only an assistant
+            teacher_info = teacher_df.iloc[0]
+            teacher_name = teacher_info.get('assistant_teacher_name', f'Teacher {teacher_id}')
+            staff_code = teacher_info.get('assistant_staff_code', '')
         
         # Create figure with larger size for detailed information
         fig, ax = plt.subplots(figsize=(20, 12))
@@ -345,6 +363,18 @@ class ScheduleVisualizer:
                     course_instance_id = first_row.get('course_instance_id', '')
                     total_students = first_row.get('total_students', total_students_session)
                     
+                    role = "Main" if first_row['teacher_id'] == teacher_id else "Asst"
+                    main_teacher_name = first_row.get('teacher_name', f"T:{first_row.get('teacher_id')}")
+                    assistant_teacher_name = first_row.get('assistant_teacher_name', '')
+                    has_assistant = first_row.get('has_assistant', False)
+
+                    teacher_display = ""
+                    if role == 'Main':
+                        if has_assistant and assistant_teacher_name:
+                            teacher_display = f"With Asst: {assistant_teacher_name}"
+                    else: # Role is Asst
+                        teacher_display = f"Assisting: {main_teacher_name}"
+
                     # Determine which building block this room belongs to
                     block_name = 'Unknown Block'
                     for b_name, rooms in self.building_blocks.items():
@@ -355,7 +385,9 @@ class ScheduleVisualizer:
                     # Create detailed display text
                     block_prefix = f"[{block_name.replace(' Block', '')}]" if block_name != 'Unknown Block' else ""
                     
-                    display_text = f"{block_prefix}{course_code}\n"
+                    display_text = f"{block_prefix}{course_code} ({role})\n"
+                    if teacher_display:
+                        display_text += f"{teacher_display}\n"
                     display_text += f"(ID:{course_instance_id})\n"
                     display_text += f"Room: {room_number} (Cap: {capacity})\n"
                     display_text += f"Total Students: {total_students}\n"
@@ -371,7 +403,19 @@ class ScheduleVisualizer:
                     course_instance_id = first_row.get('course_instance_id', '')
                     student_count = first_row.get('student_count', 0)
                     total_students = first_row.get('total_students', student_count)
+                    role = "Main" if first_row['teacher_id'] == teacher_id else "Asst"
                     
+                    main_teacher_name = first_row.get('teacher_name', f"T:{first_row.get('teacher_id')}")
+                    assistant_teacher_name = first_row.get('assistant_teacher_name', '')
+                    has_assistant = first_row.get('has_assistant', False)
+
+                    teacher_display = ""
+                    if role == 'Main':
+                        if has_assistant and assistant_teacher_name:
+                            teacher_display = f"With Asst: {assistant_teacher_name}"
+                    else: # Role is Asst
+                        teacher_display = f"Assisting: {main_teacher_name}"
+
                     # Determine which building block this room belongs to
                     block_name = 'Unknown Block'
                     for b_name, rooms in self.building_blocks.items():
@@ -382,7 +426,9 @@ class ScheduleVisualizer:
                     # Create detailed display text
                     block_prefix = f"[{block_name.replace(' Block', '')}]" if block_name != 'Unknown Block' else ""
                     
-                    display_text = f"{block_prefix}{course_code}\n"
+                    display_text = f"{block_prefix}{course_code} ({role})\n"
+                    if teacher_display:
+                        display_text += f"{teacher_display}\n"
                     display_text += f"(ID:{course_instance_id})\n"
                     display_text += f"Room: {room_number} (Cap: {capacity})\n"
                     display_text += f"Students: {student_count}\n"
@@ -511,10 +557,12 @@ class ScheduleVisualizer:
                 
                 # Get course details
                 first_row = course_group.iloc[0]
+                role = "Main" if first_row['teacher_id'] == teacher_id else "Assistant"
                 practical_hours = first_row.get('practical_hours', 'N/A')
                 total_students_course = first_row.get('total_students', 0)
                 is_batched = first_row.get('is_batched', False)
                 
+                f.write(f"  Role: {role}\n")
                 f.write(f"  Practical Hours: {practical_hours}\n")
                 f.write(f"  Total Students: {total_students_course}\n")
                 f.write(f"  Batched: {'Yes' if is_batched else 'No'}\n")
@@ -639,31 +687,38 @@ class ScheduleVisualizer:
             
             teacher_stats = []
             for teacher_id in self.teachers:
-                teacher_df = self.schedule_df[self.schedule_df['teacher_id'] == teacher_id]
+                teacher_df = self.schedule_df[(self.schedule_df['teacher_id'] == teacher_id) | (self.schedule_df['assistant_teacher_id'] == teacher_id)]
                 
                 # Get teacher info
-                teacher_info = teacher_df.iloc[0]
-                teacher_name = f"{teacher_info.get('first_name', '')} {teacher_info.get('last_name', '')}".strip()
-                if not teacher_name and 'teacher_name' in teacher_info:
-                    teacher_name = teacher_info['teacher_name']
-                if not teacher_name:
-                    teacher_name = 'Unknown'
+                if not teacher_df.empty:
+                    main_teacher_rows = teacher_df[teacher_df['teacher_id'] == teacher_id]
+                    if not main_teacher_rows.empty:
+                        teacher_info = main_teacher_rows.iloc[0]
+                        teacher_name = f"{teacher_info.get('first_name', '')} {teacher_info.get('last_name', '')}".strip()
+                        if not teacher_name and 'teacher_name' in teacher_info:
+                            teacher_name = teacher_info['teacher_name']
+                    else: # Teacher is only an assistant
+                        teacher_info = teacher_df.iloc[0]
+                        teacher_name = teacher_info.get('assistant_teacher_name', f'Teacher {teacher_id}')
+                    
+                    if not teacher_name:
+                        teacher_name = 'Unknown'
+                    
+                    # Calculate stats
+                    sessions = len(teacher_df.groupby(['day', session_field]))
+                    students = teacher_df['total_students'].sum() if 'total_students' in teacher_df.columns else 0
+                    courses = teacher_df['course_code'].nunique()
+                    rooms = teacher_df['room_number'].nunique()
+                    
+                    teacher_stats.append((sessions, students, teacher_id, teacher_name, courses, rooms))
+                    
+                    # Truncate name if too long
+                    display_name = teacher_name[:23] + '..' if len(teacher_name) > 25 else teacher_name
+                    
+                    f.write(f"{teacher_id:<12} {display_name:<25} {sessions:<10} {students:<10} {courses:<8} {rooms:<8}\n")
                 
-                # Calculate stats
-                sessions = len(teacher_df.groupby(['day', session_field]))
-                students = teacher_df['total_students'].sum() if 'total_students' in teacher_df.columns else 0
-                courses = teacher_df['course_code'].nunique()
-                rooms = teacher_df['room_number'].nunique()
-                
-                teacher_stats.append((sessions, students, teacher_id, teacher_name, courses, rooms))
-                
-                # Truncate name if too long
-                display_name = teacher_name[:23] + '..' if len(teacher_name) > 25 else teacher_name
-                
-                f.write(f"{teacher_id:<12} {display_name:<25} {sessions:<10} {students:<10} {courses:<8} {rooms:<8}\n")
-            
-            # Sort teachers by number of sessions for additional insights
-            teacher_stats.sort(reverse=True)
+                # Sort teachers by number of sessions for additional insights
+                teacher_stats.sort(reverse=True)
             
             f.write(f"\n\nTOP TEACHERS BY LAB SESSIONS:\n")
             f.write(f"-" * 50 + "\n")
@@ -741,16 +796,23 @@ class ScheduleVisualizer:
                 session_idx = lab_session_names.index(session)
                 
                 course_code = row['course_code']
-                teacher_id = row['teacher_id']
+                teacher_name = row.get('teacher_name', f"T:{row.get('teacher_id')}")
                 course_instance_id = row.get('course_instance_id', '')
                 is_batched = row.get('is_batched', False)
                 batch_info = row.get('batch_info', '').strip()
                 
+                has_assistant = row.get('has_assistant', False)
+                assistant_teacher_name = row.get('assistant_teacher_name', '')
+
+                teacher_display = teacher_name
+                if has_assistant and assistant_teacher_name:
+                    teacher_display += f"\nASST: {assistant_teacher_name}"
+
                 # Create display text with course instance ID and batch information
                 if is_batched and batch_info:
-                    display_text = f"{course_code}\n{batch_info}\n(ID:{course_instance_id})\n{teacher_id}"
+                    display_text = f"{course_code}\n{batch_info}\n(ID:{course_instance_id})\n{teacher_display}"
                 else:
-                    display_text = f"{course_code}\n(ID:{course_instance_id})\n{teacher_id}"
+                    display_text = f"{course_code}\n(ID:{course_instance_id})\n{teacher_display}"
                 
                 grid[day_idx, session_idx] = display_text
         
@@ -1209,7 +1271,7 @@ class TheoryScheduleVisualizer:
         teacher_stats = []
         
         for teacher_id in self.teachers:
-            teacher_df = self.schedule_df[self.schedule_df['teacher_id'] == teacher_id]
+            teacher_df = self.schedule_df[self.schedule_df['teacher_id'] == teacher]
             if not teacher_df.empty:
                 stats = self._create_theory_teacher_schedule(teacher_id, teacher_df)
                 teacher_stats.append(stats)
