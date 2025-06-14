@@ -151,5 +151,3 @@ By using AddAllowedAssignments, you directly express the core logic of the prima
 
 
 2) for 140 lab combine same course of teacher course assingment together with 2 primary teacher into 1 lab assignment that mean two instance of teacher course assingment will run parallely in same time with two primary teacher of same course in 140 capacity lab
-
-@lab_scheduler.py now we have assisst detail in @Computer_Science___Engineering_courses.csv also add them to the lab for course they got assigned for let there be both teacher the main and the assist

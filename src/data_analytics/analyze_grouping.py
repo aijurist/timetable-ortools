@@ -2356,7 +2356,7 @@ def main():
         return
     
     # Use the course file
-    courses_file = 'data/department_data/Computing_department.csv'
+    courses_file = 'data/cse.csv'
     
     if not os.path.exists(courses_file):
         print(f"Courses file not found: {courses_file}")
