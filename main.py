@@ -12,6 +12,7 @@ import logging
 import json
 import shutil
 from datetime import datetime
+import glob
 
 # Add parent directory to path for imports
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -90,7 +91,7 @@ def main():
     parser.add_argument('--mode', type=str, choices=['lab', 'theory', 'all'], default='lab',
                         help='Scheduling mode (lab, theory, or all)')
     
-    parser.add_argument('--course-file', type=str, default='cse.csv',
+    parser.add_argument('--course-file', type=str, default='./department_data/Computing_department.csv',
                         help='Path to the courses CSV file')
     
     parser.add_argument('--room-file', type=str, default='techlongue.csv',
@@ -184,6 +185,27 @@ def main():
     
     if args.mode in ['theory', 'all']:
         logger.info("Starting theory scheduling...")
+        
+        # If we're only doing theory scheduling, load the latest lab schedule data
+        if args.mode == 'theory' and lab_schedule_data is None:
+            logger.info("Loading latest lab schedule data for conflict avoidance...")
+            try:
+                # Find the latest lab schedule directory
+                lab_dirs = glob.glob(os.path.join(args.output_dir, 'lab_schedule_*'))
+                if lab_dirs:
+                    latest_lab_dir = max(lab_dirs)
+                    lab_json_file = os.path.join(latest_lab_dir, 'lab_schedule.json')
+                    if os.path.exists(lab_json_file):
+                        with open(lab_json_file, 'r') as f:
+                            lab_schedule_data = json.load(f)
+                        logger.info(f"Loaded lab schedule data from {lab_json_file}: {len(lab_schedule_data)} lab sessions")
+                    else:
+                        logger.warning(f"Lab schedule JSON not found at {lab_json_file}")
+                else:
+                    logger.warning("No lab schedule directories found - theory scheduling will proceed without lab conflict avoidance")
+            except Exception as e:
+                logger.error(f"Failed to load existing lab schedule data: {e}")
+                logger.warning("Theory scheduling will proceed without lab conflict avoidance")
         
         # Create theory scheduler with lab schedule data to prevent overlaps
         theory_scheduler = TheoryScheduler(course_file, room_file, lab_schedule_data)

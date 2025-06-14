@@ -1482,6 +1482,19 @@ class LabScheduler:
                         num_batches_35 = (student_count + 34) // 35
                         sessions_with_batching = base_sessions * num_batches_35
                         
+                        # APPLY SLOT RESTRICTIONS BASED ON PRACTICAL HOURS
+                        practical_hours = course['practical_hours']
+                        
+                        # Restrict batched sessions based on practical hours
+                        if practical_hours == 6:
+                            # 6 practical hours: Allow up to 6 slots if batched, max 3 if not batched
+                            max_batched_sessions = min(sessions_with_batching, 6)
+                            max_unbatched_sessions = min(base_sessions, 3)
+                        else:
+                            # All other practical hours: Maximum 4 slots (no 5-slot groups)
+                            max_batched_sessions = min(sessions_with_batching, 4)
+                            max_unbatched_sessions = min(base_sessions, 4)
+                        
                         # Boolean variable to choose strategy: True = use 35-cap labs, False = use 70+ cap labs
                         use_35_cap_strategy = model.NewBoolVar(f'course_{course_instance_id}_use_35_cap_strategy')
                         
@@ -1493,15 +1506,24 @@ class LabScheduler:
                         model.Add(total_70_plus_assignments == sum(total_assignments)).OnlyEnforceIf(use_35_cap_strategy.Not())
                         model.Add(total_35_assignments == 0).OnlyEnforceIf(use_35_cap_strategy.Not())
                         
-                        # Constraint 3: Session count depends on chosen strategy
-                        model.Add(sum(total_assignments) == sessions_with_batching).OnlyEnforceIf(use_35_cap_strategy)
-                        model.Add(sum(total_assignments) == base_sessions).OnlyEnforceIf(use_35_cap_strategy.Not())
+                        # Constraint 3: Session count depends on chosen strategy WITH SLOT RESTRICTIONS
+                        model.Add(sum(total_assignments) == max_batched_sessions).OnlyEnforceIf(use_35_cap_strategy)
+                        model.Add(sum(total_assignments) == max_unbatched_sessions).OnlyEnforceIf(use_35_cap_strategy.Not())
                         
-                        self.logger.info(f"Course {course['course_code']}: EITHER {sessions_with_batching} sessions (35 cap batched) OR {base_sessions} sessions (70+ cap) - NOT BOTH")
+                        # ENFORCE MAXIMUM 4 SLOTS CONSTRAINT (except 6 practical hours with batching)
+                        if practical_hours != 6:
+                            model.Add(sum(total_assignments) <= 4)
+                        else:
+                            # For 6 practical hours: max 6 if batched, max 3 if not batched
+                            model.Add(sum(total_assignments) <= 6).OnlyEnforceIf(use_35_cap_strategy)
+                            model.Add(sum(total_assignments) <= 3).OnlyEnforceIf(use_35_cap_strategy.Not())
+                        
+                        self.logger.info(f"Course {course['course_code']} ({practical_hours}h): EITHER {max_batched_sessions} sessions (35 cap batched) OR {max_unbatched_sessions} sessions (70+ cap) - MAX 4 slots (except 6h batched→6 slots)")
                     else:
-                        # Small courses: always base sessions
-                        model.Add(sum(total_assignments) == base_sessions)
-                        self.logger.info(f"Course {course['course_code']}: exactly {base_sessions} sessions")
+                        # Small courses: always base sessions, but enforce max 4 slots
+                        max_sessions = min(base_sessions, 4)
+                        model.Add(sum(total_assignments) == max_sessions)
+                        self.logger.info(f"Course {course['course_code']}: exactly {max_sessions} sessions (max 4 slots enforced)")
     
     def apply_lab_room_single_assignment_constraint(self, model, lab_assignments, lab_sessions):
         """Prevent lab room double-booking."""
@@ -1526,6 +1548,9 @@ class LabScheduler:
             if course_instance_id in lab_assignments:
                 teacher_assignments[teacher_id].append(course_instance_id)
 
+        # Get all teacher IDs that have lab assignments
+        all_teacher_ids = list(teacher_assignments.keys())
+        
         constraints_applied = 0
         for teacher_id in all_teacher_ids:
             if teacher_id in teacher_assignments:
