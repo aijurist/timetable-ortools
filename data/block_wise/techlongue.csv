@@ -82,3 +82,70 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 52,B418,B Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
 157,DG02,D Block,Computer Lab (DG02),1,Laboratory,50,70,1,0,High-tech,13,0,0,0
 158,DG03,D Block,Computer Lab (DG03),1,Laboratory,50,70,1,0,Basic,13,0,0,0
+113,B First Floor,B Block,Immunology Lab,1,Core-Lab,20,35,1,0,Advanced,29,0,0,0
+117,B Ground Floor,B Block,Technical Analysis Lab,1,Core-Lab,20,35,1,0,High-tech,29,0,0,0
+119,B Second Floor,B Block,Downstream Processing Lab,1,Core-Lab,20,35,1,0,,29,0,0,0
+121,B Third Floor,B Block,Computer Application in Chemical Engg Lab,1,Core-Lab,20,35,1,0,Advanced,29,0,0,0
+122,B116,B Block,Communication Systems Lab,1,Core-Lab,20,35,1,0,,29,0,0,0
+123,B117,B Block,Embedded System Laboratory (ECE),1,Core-Lab,20,35,1,0,,29,0,0,0
+124,B118,B Block,Basic Electronics Lab-1,1,Core-Lab,20,35,1,0,High-tech,29,0,0,0
+125,B119,B Block,Basic Electronics Lab-2,1,Core-Lab,20,35,1,0,Basic,29,0,0,0
+126,B120,B Block,Optical and Microwave Lab,1,Core-Lab,20,35,1,0,Advanced,29,0,0,0
+127,B202,B Block,DSP Lab,1,Core-Lab,20,35,1,0,,29,0,0,0
+128,B203,B Block,VLSI Lab,1,Core-Lab,20,35,1,0,,29,0,0,0
+129,B204,B Block,Networks Lab,1,Core-Lab,20,35,1,0,Advanced,29,0,0,0
+130,B205,B Block,Microprocessor Lab-1,1,Core-Lab,20,35,1,0,,29,0,0,0
+131,B206,B Block,Microprocessor Lab-2,1,Core-Lab,20,35,1,0,Advanced,29,0,0,0
+132,B305,B Block,Industrial Automation Lab,1,Core-Lab,20,35,1,0,High-tech,29,0,0,0
+133,B310,B Block,MCT CAD Lab,1,Core-Lab,20,35,1,0,High-tech,29,0,0,0
+134,B311,B Block,Electronic Devices & Circuits Lab,1,Core-Lab,20,35,1,0,High-tech,29,0,0,0
+135,B318,B Block,Power System Simulation Lab,1,Core-Lab,20,35,1,0,High-tech,29,0,0,0
+136,B327,B Block,Digital Lab-2,1,Core-Lab,20,35,1,0,Basic,29,0,0,0
+137,B328,B Block,Digital Lab-1,1,Core-Lab,20,35,1,0,Basic,29,0,0,0
+138,B329,B Block,LIC Lab,1,Core-Lab,20,35,1,0,Basic,29,0,0,0
+139,BG009,B Block,Power Electronics Lab,1,Core-Lab,20,35,1,0,Basic,29,0,0,0
+140,BG010,B Block,Embedded System Laboratory(EEE),1,Core-Lab,0,10,1,0,High-tech,29,0,0,0
+141,BG014,B Block,Electrical Machines I Lab,1,Core-Lab,20,35,1,0,,29,0,0,0
+142,C106,C Block,Microprocessor and Microcontrollers Lab,1,Core-Lab,20,35,1,0,,29,0,0,0
+143,C107,C Block,Mechatronics Lab,1,Core-Lab,20,35,1,0,,29,0,0,0
+144,C401,C Block,Mech CAD Lab,1,Core-Lab,20,35,1,0,Advanced,29,0,0,0
+145,C407,C Block,Dynamics Lab,1,Core-Lab,20,35,1,0,,29,0,0,0
+146,C408,C Block,Metrology & Measurement Lab,1,Core-Lab,20,35,1,0,,29,0,0,0
+147,CG001,C Block,Food Microbiology Lab,1,Core-Lab,20,35,1,0,Advanced,29,0,0,0
+148,CG002,C Block,Baking Lab,1,Core-Lab,20,35,1,0,,29,0,0,0
+149,CG003,C Block,Food Processing and Preservation Lab,1,Core-Lab,20,35,1,0,Advanced,29,0,0,0
+150,CG005,C Block,Avionics Lab,1,Core-Lab,20,35,1,0,Advanced,29,0,0,0
+151,CG006,C Block,Aero CAD Lab,1,Core-Lab,20,35,1,0,,29,0,0,0
+152,D102,D Block,Auto CAD Lab,1,Core-Lab,20,35,1,0,,29,0,0,0
+153,DG,D Block,Food Chemistry Lab,1,Core-Lab,20,35,1,0,High-tech,29,0,0,0
+155,DG004,D Block,Medical Image Processing Lab,1,Core-Lab,20,35,1,0,Advanced,29,0,0,0
+156,DG012,D Block,Electronics and Instrumentation,1,Core-Lab,20,35,1,0,,29,0,0,0
+157,DG013,D Block,Diagnostic and Therapeutic Equipment Lab,1,Core-Lab,20,35,1,0,Basic,29,0,0,0
+191,WBL11,B Block,Electrical Machines II Lab,1,Core-Lab,20,35,0,0,High-tech,29,0,0,0
+192,WS Aero FF1,Workshop,Airframe Repair and Aero Engine Lab,1,Core-Lab,20,35,0,0,,29,0,0,0
+193,WS Aero FF2,Workshop,Aircraft Structures Lab,1,Core-Lab,20,35,0,0,Advanced,29,0,0,0
+194,WS Aero GF,Workshop,Aerodynamics Lab,1,Core-Lab,20,35,0,0,Advanced,29,0,0,0
+195,WS AUTO FF1,Workshop,Mass Transfer Lab,1,Core-Lab,20,35,0,0,High-tech,29,0,0,0
+196,WS AUTO FF2,Workshop,Heat Transfer Lab,1,Core-Lab,20,35,0,0,Basic,29,0,0,0
+197,WS AUTO FF3,Workshop,Process Control Lab,1,Core-Lab,20,35,0,0,High-tech,29,0,0,0
+198,WS AUTO FF4,Workshop,Livestock Lab,1,Core-Lab,20,35,0,0,High-tech,29,0,0,0
+199,WS AUTO GF1,Workshop,Vehicle Maintenance Lab,1,Core-Lab,20,35,0,0,Advanced,29,0,0,0
+200,WS AUTO GF2,Workshop,Automotive Components Lab,1,Core-Lab,20,35,0,0,High-tech,29,0,0,0
+201,WS AUTO GF3,Workshop,Particle Science and Technology Lab,1,Core-Lab,20,35,0,0,Basic,29,0,0,0
+202,WS CIVIL 1,C Block,Concrete & Survey Lab,1,Core-Lab,20,35,0,0,High-tech,29,0,0,0
+203,WS CIVIL 2,C Block,Soil Mechanics & Highway Lab,1,Core-Lab,20,35,0,0,Advanced,29,0,0,0
+204,WS MECH FF1,C Block,Machine Shop FF1 - EPL - 1,1,Core-Lab,50,70,0,0,Advanced,29,0,0,0
+205,WS MECH FF2,C Block,Machine Shop FF2 - EPL - 2,1,Core-Lab,50,70,0,0,,29,0,0,0
+206,WS MECH FF3,C Block,Machine Shop FF3 - EPL - 3,1,Core-Lab,50,70,0,0,High-tech,29,0,0,0
+207,WS MECH FF4,C Block,Thermal Lab 1,1,Core-Lab,20,35,0,0,Advanced,29,0,0,0
+208,WS MECH FF5,C Block,Engineering Practices Lab (Electrical),1,Core-Lab,50,70,0,0,Basic,29,0,0,0
+209,WS MECH FF6,C Block,Engineering Practices Lab (Electronics),1,Core-Lab,50,70,0,0,,29,0,0,0
+210,WS MECH FM,C Block,Fluid Mechanics Lab,1,Core-Lab,20,35,0,0,,29,0,0,0
+211,WS MECH GF1,C Block,Manufacturing Technology I,1,Core-Lab,20,35,0,0,Basic,29,0,0,0
+212,WS MECH GF2,C Block,Manufacturing Technology II,1,Core-Lab,20,35,0,0,High-tech,29,0,0,0
+213,WS MECH SM,C Block,Strength of Materials Lab,1,Core-Lab,20,35,0,0,High-tech,29,0,0,0
+214,WS MECH TL,C Block,Thermal Lab 2,1,Core-Lab,20,35,0,0,Basic,29,0,0,0
+215,TANCAM,Arch Block,,1,Core-Lab,0,25,0,1,High-tech,29,0,0,0
+216,D503,D Block,Chemistry Lab,1,Core-Lab,0,70,0,0,,29,0,0,0
+217,D603,D block,Physics LAB - 1,1,Core-Lab,30,70,0,0,Advanced,29,0,0,0
+218,D403,D block,Physics LAB - 2,1,Core-Lab,30,70,0,0,Advanced,29,0,0,0
