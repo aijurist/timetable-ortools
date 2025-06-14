@@ -1268,13 +1268,13 @@ class TheoryScheduleVisualizer:
         if self.schedule_df.empty or len(self.teachers) == 0:
             return
         
-        teacher_stats = []
+        teacher_stats = {}
         
         for teacher_id in self.teachers:
-            teacher_df = self.schedule_df[self.schedule_df['teacher_id'] == teacher]
-            if not teacher_df.empty:
-                stats = self._create_theory_teacher_schedule(teacher_id, teacher_df)
-                teacher_stats.append(stats)
+            teacher_df = self.schedule_df[self.schedule_df['teacher_id'] == teacher_id]
+            stats = self._create_theory_teacher_schedule(teacher_id, teacher_df)
+            if stats:
+                teacher_stats[teacher_id] = stats
         
         # Generate overall teacher statistics
         if teacher_stats:

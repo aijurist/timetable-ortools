@@ -978,7 +978,8 @@ class TheoryScheduler:
             if teacher_id and day and session_name:
                 # Get the time slots for this lab session
                 if session_name in self.lab_sessions:
-                    time_slots = self.lab_sessions[session_name]['slots']
+                    # Correctly access the 'slots' key from the dictionary
+                    time_slots = self.lab_sessions[session_name].get('slots', [])
                     
                     # Mark teacher as occupied
                     if teacher_id not in self.occupied_slots:
@@ -1243,6 +1244,9 @@ class TheoryScheduler:
         # STEP 2: Apply group-level constraints
         self.apply_group_level_constraints(model, group_timeslot_vars)
         
+        # Apply lab conflict constraint
+        self.apply_lab_conflict_constraint(model, group_timeslot_vars)
+        
         # STEP 3: Add optimization objective for group allocation
         self.add_group_allocation_objective(model, group_timeslot_vars)
         
@@ -1478,33 +1482,8 @@ class TheoryScheduler:
     
     def add_group_allocation_objective(self, model, group_timeslot_vars):
         """Add objective for optimal group time slot allocation."""
-        objective_terms = []
-        
-        # Sequential slot filling approach:
-        # Give extremely high weights to earlier slots to ensure they're filled first
-        # before considering later slots
-        for group_name, day_slots in group_timeslot_vars.items():
-            for day_idx in range(self.num_days):
-                # Tier 1: First 4 slots (8:00-11:50) - extremely high weight
-                for slot_idx in range(min(4, len(self.theory_time_slots))):
-                    objective_terms.append(day_slots[day_idx][slot_idx] * 1000)
-                
-                # Tier 2: Next 4 slots (12:00 - 3:50) - high weight, but much lower than Tier 1
-                for slot_idx in range(4, min(8, len(self.theory_time_slots))):
-                    objective_terms.append(day_slots[day_idx][slot_idx] * 100)
-                
-                # Tier 3: Last 3 slots (4:00 - 6:50) - lowest weight
-                for slot_idx in range(8, min(11, len(self.theory_time_slots))):
-                    objective_terms.append(day_slots[day_idx][slot_idx] * 10)
-        
-        if objective_terms:
-            model.Maximize(sum(objective_terms))
-            self.logger.info(f"Group allocation objective set with {len(objective_terms)} terms")
-            self.logger.info("SEQUENTIAL SLOT FILLING STRATEGY:")
-            self.logger.info("  Tier 1 slots 0-3 (8:00-11:50): +1000 - Will be filled first")
-            self.logger.info("  Tier 2 slots 4-7 (12:00-3:50): +100 - Will be filled only after Tier 1 slots")
-            self.logger.info("  Tier 3 slots 8-10 (4:00-6:50): +10 - Will be filled only after Tier 1 and 2 slots")
-            self.logger.info("This ensures earlier slots will be completely filled before using later slots")
+        # The tiered slot preference has been removed. The solver will find a feasible solution.
+        self.logger.info("No specific group allocation objective set. The solver will find a feasible solution.")
     
     def extract_group_timeslots(self, solver, group_timeslot_vars):
         """Extract allocated time slots for each group from solver solution."""
@@ -1530,7 +1509,7 @@ class TheoryScheduler:
                 time_slot = self.theory_time_slots[slot_idx]
                 slot_details.append(f"{day_name} {time_slot}")
             
-            self.logger.info(f"Group {group_name}: {len(allocated_slots)} slots → {', '.join(slot_details)}")
+            self.logger.info(f"Group {group_name}: {len(allocated_slots)} slots -> {', '.join(slot_details)}")
         
         self.logger.info(f"Total time slots allocated to groups: {total_slots_allocated}")
         return group_timeslots
@@ -1771,3 +1750,48 @@ class TheoryScheduler:
                 f.write(f"  {course}: {count} sessions\n")
         
         self.logger.info(f"Theory summary saved to {summary_path}") 
+
+    def apply_lab_conflict_constraint(self, model, group_timeslot_vars):
+        """(STRICT) Prevent theory groups from being scheduled when a member teacher has a lab."""
+        self.logger.info("Applying lab conflict constraint...")
+        
+        if not self.lab_schedule_data:
+            self.logger.info("No lab schedule data, skipping lab conflict constraint.")
+            return
+
+        constraints_applied = 0
+        
+        # Build teacher -> groups mapping
+        teacher_to_groups = defaultdict(list)
+        for (dept, semester), groups in self.course_groups.items():
+            for group_idx, group in enumerate(groups):
+                if not group: continue
+                group_name = f"{dept}_S{semester}_G{group_idx + 1}"
+                for instance in group:
+                    teacher_id = instance['teacher_id']
+                    if group_name not in teacher_to_groups[teacher_id]:
+                        teacher_to_groups[teacher_id].append(group_name)
+
+        # Apply constraints
+        for teacher_id, occupied_days in self.occupied_slots.items():
+            if teacher_id not in teacher_to_groups:
+                continue
+                
+            groups_for_teacher = teacher_to_groups[teacher_id]
+            
+            for day_name, occupied_slot_indices in occupied_days.items():
+                if day_name not in self.days:
+                    continue
+                day_idx = self.days.index(day_name)
+                
+                for slot_idx in occupied_slot_indices:
+                    # This teacher is busy at day_idx, slot_idx.
+                    # Therefore, any group they belong to cannot be active at this time.
+                    if slot_idx < len(self.theory_time_slots):
+                        for group_name in groups_for_teacher:
+                            if group_name in group_timeslot_vars:
+                                model.Add(group_timeslot_vars[group_name][day_idx][slot_idx] == 0)
+                                constraints_applied += 1
+                                self.logger.debug(f"Blocking group {group_name} at {day_name} slot {slot_idx} due to lab conflict for teacher {teacher_id}")
+
+        self.logger.info(f"Applied {constraints_applied} lab conflict constraints.")
