@@ -1206,7 +1206,7 @@ class TheoryScheduleVisualizer:
         if self.schedule_df.empty or len(self.teachers) == 0:
             return
         
-        teacher_stats = {}
+        teacher_stats = []
         
         for teacher_id in self.teachers:
             teacher_df = self.schedule_df[self.schedule_df['teacher_id'] == teacher_id]
