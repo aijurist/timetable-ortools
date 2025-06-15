@@ -59,10 +59,10 @@ def verify_lecture_tutorial_hours(theory_schedule_file=None, course_file=None):
         
         # Get latest schedules
         latest_theory_folder = max(theory_schedule_folders) if theory_schedule_folders else None
-        latest_combined_folder = max(combined_schedule_folders) if combined_schedule_folders else None
+        # latest_combined_folder = max(combined_schedule_folders) if combined_schedule_folders else None
         
         print(f"Latest theory schedule folder: {latest_theory_folder}")
-        print(f"Latest combined schedule folder: {latest_combined_folder}")
+        # print(f"Latest combined schedule folder: {latest_combined_folder}")
         
         # Try to load theory schedule
         theory_schedule_df = None
