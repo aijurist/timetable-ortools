@@ -797,14 +797,14 @@ class LabScheduler:
                 failed_assignments.append(instance)
         
         # --- END REVISED DISTRIBUTION LOGIC ---
-
+        
         # Log assignment results
         if failed_assignments:
             self.logger.error(f"Failed to assign: {len(failed_assignments)} instances after both phases.")
             for failure in failed_assignments[:5]: # Log first 5
                 self.logger.error(f"  - Instance {failure['id']} (Teacher {failure['teacher_id']}, Course {failure['course_code']}) could not be placed.")
-        
-        # Log final unassigned instances
+
+        # Log unassigned instances
         final_assigned_ids = {inst['id'] for g in groups for inst in g}
         final_unassigned_instances = [
             inst for inst_list in course_instances.values() for inst in inst_list
@@ -814,7 +814,7 @@ class LabScheduler:
         if final_unassigned_instances:
             self.logger.error(f"TOTAL UNASSIGNED INSTANCES: {len(final_unassigned_instances)}")
             for unassigned in final_unassigned_instances[:5]:
-                 self.logger.error(f"  - Unassigned: {unassigned['id']} ({unassigned['course_code']})")
+                self.logger.error(f"  - Unassigned: {unassigned['id']} ({unassigned['course_code']})")
         
         # Validate and log final group distribution
         self._validate_teacher_uniqueness_constraint(groups, dept, semester)
@@ -1485,17 +1485,17 @@ class LabScheduler:
                         
                         # Restrict batched sessions based on practical hours
                         if practical_hours >= 6:
-                            # 6+ practical hours: Allow up to 6 slots if batched, max 3 if not batched
                             max_batched_sessions = min(sessions_with_batching, 6)
-                            max_unbatched_sessions = min(base_sessions, 3)
+                            max_unbatched_sessions = min(base_sessions, 3) # 6h course in 70+ lab -> 3 sessions
                         elif practical_hours >= 4:
-                            # 4+ practical hours: Allow up to 4 slots if batched, max 2 if not batched (70+ lab)
+                             # Courses with 4+ practical hours can use up to 6 slots if they require extensive batching
                             max_batched_sessions = min(sessions_with_batching, 4)
-                            max_unbatched_sessions = min(base_sessions, 2)  # 4h course in 70+ lab -> 2 sessions
+                            # Unbatched (70+ lab) 4h courses are strictly 2 sessions.
+                            max_unbatched_sessions = min(base_sessions, 2)
                         else:
-                            # 2 practical hours: Maximum 2 slots if batched, 1 if not batched
-                            max_batched_sessions = min(sessions_with_batching, 2)
-                            max_unbatched_sessions = min(base_sessions, 1)  # 2h course in 70+ lab -> 1 session
+                            # All other practical hours: Maximum 4 slots
+                            max_batched_sessions = min(sessions_with_batching, 4)
+                            max_unbatched_sessions = min(base_sessions, 4)
                         
                         # Boolean variable to choose strategy: True = use 35-cap labs, False = use 70+ cap labs
                         use_35_cap_strategy = model.NewBoolVar(f'course_{course_instance_id}_use_35_cap_strategy')
@@ -1512,21 +1512,16 @@ class LabScheduler:
                         model.Add(sum(total_assignments) == max_batched_sessions).OnlyEnforceIf(use_35_cap_strategy)
                         model.Add(sum(total_assignments) == max_unbatched_sessions).OnlyEnforceIf(use_35_cap_strategy.Not())
                         
-                        # ENFORCE MAXIMUM SLOT CONSTRAINTS BASED ON PRACTICAL HOURS
-                        if practical_hours >= 6:
-                            # For 6+ practical hours: max 6 if batched, max 3 if not batched
-                            model.Add(sum(total_assignments) <= 6).OnlyEnforceIf(use_35_cap_strategy)
-                            model.Add(sum(total_assignments) <= 3).OnlyEnforceIf(use_35_cap_strategy.Not())
-                        elif practical_hours >= 4:
-                            # For 4+ practical hours: max 4 if batched, max 2 if not batched
-                            model.Add(sum(total_assignments) <= 4).OnlyEnforceIf(use_35_cap_strategy)
-                            model.Add(sum(total_assignments) <= 2).OnlyEnforceIf(use_35_cap_strategy.Not())
+                        # ENFORCE MAXIMUM 4 SLOTS CONSTRAINT (except 4+ practical hours with batching)
+                        if practical_hours < 4:
+                            model.Add(sum(total_assignments) <= 4)
                         else:
-                            # For 2 practical hours: max 2 if batched, max 1 if not batched
-                            model.Add(sum(total_assignments) <= 2).OnlyEnforceIf(use_35_cap_strategy)
-                            model.Add(sum(total_assignments) <= 1).OnlyEnforceIf(use_35_cap_strategy.Not())
+                            # For 4+ practical hours: max 6 if batched, max 3 if not batched
+                            model.Add(sum(total_assignments) <= 6).OnlyEnforceIf(use_35_cap_strategy)
+                            # For 4h course, max_unbatched=2; for 6h course, max_unbatched=3. This is safe.
+                            model.Add(sum(total_assignments) <= max_unbatched_sessions).OnlyEnforceIf(use_35_cap_strategy.Not())
                         
-                        self.logger.info(f"Course {course['course_code']} ({practical_hours}h): EITHER {max_batched_sessions} sessions (35-cap batched) OR {max_unbatched_sessions} sessions (70+ cap unbatched)")
+                        self.logger.info(f"Course {course['course_code']} ({practical_hours}h): EITHER {max_batched_sessions} sessions (35 cap batched) OR {max_unbatched_sessions} sessions (70+ cap) - MAX 4 slots (except 4h+ batched→6 slots)")
                     else:
                         # Small courses: always base sessions, but enforce max 4 slots
                         max_sessions = min(base_sessions, 4)
@@ -2322,14 +2317,14 @@ class LabScheduler:
             self.logger.info("  • Higher bonuses for higher degrees of parallelization")
         
         # PRIORITY 3: Minimize "orphaned" sessions on days (encourage compact scheduling)
-        orphaned_session_penalties = []
-        self._add_orphaned_session_penalties(model, lab_assignments, lab_sessions, orphaned_session_penalties)
+        # orphaned_session_penalties = []
+        # self._add_orphaned_session_penalties(model, lab_assignments, lab_sessions, orphaned_session_penalties)
         
-        # Add penalties with weight (negative in objective function)
-        if orphaned_session_penalties:
-            for penalty in orphaned_session_penalties:
-                objective_terms.append(penalty * -5)  # Weight of -5 per orphaned session
-            self.logger.info(f"PENALTY: Orphaned Sessions - {len(orphaned_session_penalties)} penalty variables")
+        # # Add penalties with weight (negative in objective function)
+        # if orphaned_session_penalties:
+        #     for penalty in orphaned_session_penalties:
+        #         objective_terms.append(penalty * -5)  # Weight of -5 per orphaned session
+        #     self.logger.info(f"PENALTY: Orphaned Sessions - {len(orphaned_session_penalties)} penalty variables")
         
         # PRIORITY 4: Balance room utilization
         room_utilization_vars = []
@@ -2353,11 +2348,11 @@ class LabScheduler:
             self.logger.info(f"BONUS: Capacity Preferences - {len(self.capacity_preferences)} bonus variables for 6-hour courses preferring 70+ labs")
         
         # NEW PRIORITY: Penalize teacher exhaustion (3 consecutive labs)
-        if hasattr(self, 'teacher_exhaustion_penalties') and self.teacher_exhaustion_penalties:
-            for penalty_var in self.teacher_exhaustion_penalties:
-                objective_terms.append(penalty_var * -100)  # Heavy penalty
-            self.logger.info(
-                f"PENALTY: Teacher Exhaustion - {len(self.teacher_exhaustion_penalties)} penalty variables with high weight")
+        # if hasattr(self, 'teacher_exhaustion_penalties') and self.teacher_exhaustion_penalties:
+        #     for penalty_var in self.teacher_exhaustion_penalties:
+        #         objective_terms.append(penalty_var * -100)  # Heavy penalty
+        #     self.logger.info(
+        #         f"PENALTY: Teacher Exhaustion - {len(self.teacher_exhaustion_penalties)} penalty variables with high weight")
         
         # Create the final objective function
         if objective_terms:
@@ -3604,3 +3599,6 @@ class LabScheduler:
             
         except Exception as e:
             self.logger.error(f"❌ Error creating combined overview: {str(e)}")
+
+
+            

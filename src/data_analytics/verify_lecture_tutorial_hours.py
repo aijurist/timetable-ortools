@@ -32,7 +32,7 @@ def verify_lecture_tutorial_hours(theory_schedule_file=None, course_file=None):
     """
     # Setup default file paths
     if course_file is None:
-        course_file = "data/department_data/Computer_Science___Design_courses.csv"
+        course_file = "data/department_data/Artificial_Intelligence___Machine_Learning_courses.csv"
     
     if not os.path.exists(course_file):
         print(f"Course file not found: {course_file}")
@@ -430,7 +430,7 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='Verify lecture and tutorial hours from theory scheduling output.')
     parser.add_argument('--theory-schedule', type=str, help='Path to theory schedule CSV or JSON file')
-    parser.add_argument('--course-file', type=str, default='data/department_data/Computing_department.csv', help='Path to course requirements CSV file')
+    parser.add_argument('--course-file', type=str, help='Path to course requirements CSV file')
     
     args = parser.parse_args()
     

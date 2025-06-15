@@ -67,3 +67,4 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 36,B321,B Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
 37,B322,B Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
 38,B325,B Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+
