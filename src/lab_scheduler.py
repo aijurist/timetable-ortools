@@ -1227,8 +1227,12 @@ class LabScheduler:
             # Rule 2: practical_hours >= 5 (but not 6) PREFERS 70+ capacity labs but allows batching fallback
             strategy['prefer_70_plus_with_batching_fallback'] = True
             strategy['preferred_lab_capacities'] = [70, 140, 35]  # 70+ preferred, 35 as fallback
+        elif practical_hours == 4:
+            # Rule NEW: practical_hours == 4 PREFERS 70+ capacity labs but allows batching fallback
+            strategy['prefer_70_plus_with_batching_fallback'] = True
+            strategy['preferred_lab_capacities'] = [70, 140, 35]  # 70+ preferred, 35 as fallback
         else:
-            # Rule 4: practical_hours 3-4 can use either strategy (solver decides)
+            # Rule 4: practical_hours 3 or less can use either strategy (solver decides)
             strategy['preferred_lab_capacities'] = [35, 70, 140]
         
         return strategy
@@ -1851,10 +1855,10 @@ class LabScheduler:
                     # For 2-hour practical courses, always limit to 2 slots
                     slot_limit = 2  # Always 2 lab slots for 2-hour courses - forces parallelization
                 elif max_practical_hours == 4:
-                    # For 4-hour practical courses, check if they need 35-capacity labs (batching)
-                    has_4_hour_course_needing_35_labs = False
+                    # 4-hour courses prefer 70+ capacity labs but allow batching fallback
+                    # Check if any course in this group might need batching (>35 students and limited 70+ labs)
+                    needs_batching_fallback = False
                     
-                    # Check if any course in this group has 4 practical hours AND will use 35-capacity labs
                     for course_instance_id in course_instances:
                         for teacher, courses in self.lab_requirements.items():
                             for course in courses:
@@ -1862,25 +1866,24 @@ class LabScheduler:
                                     practical_hours = course.get('practical_hours', 0)
                                     student_count = course.get('student_count', 70)
                                     
-                                    # Check if this is a 4-hour course that will use 35-capacity labs (batching)
+                                    # If course has >35 students, it might need batching fallback
                                     if practical_hours == 4 and student_count > 35:
-                                        # Course has >35 students, so it will likely use 35-capacity labs with batching
-                                        has_4_hour_course_needing_35_labs = True
+                                        needs_batching_fallback = True
                                     break
                     
-                    if has_4_hour_course_needing_35_labs:
-                        # 4-hour courses using 35-capacity labs (batched) need 4 slots
-                        slot_limit = 4  # Allow 4 lab slots for 4-hour courses using 35-capacity labs
-                        strategy_note = "4 slots for 4-hour courses using 35-capacity labs (batched)"
+                    if needs_batching_fallback:
+                        # Allow more slots for potential batching, but prefer 2 slots
+                        slot_limit = 4  # Allow up to 4 slots for 4-hour courses with batching fallback
+                        strategy_note = "2-4 slots for 4-hour courses (prefers 70+ labs, batching fallback available)"
                     else:
-                        # 4-hour courses using 70+ capacity labs (no batching) get 2 slots
+                        # Courses with ≤35 students will use 70+ capacity labs (2 slots)
                         slot_limit = 2  # Standard limit for 4-hour courses in 70+ capacity labs
-                        strategy_note = "2 slots for 4-hour courses using 70+ capacity labs (no batching)"
+                        strategy_note = "2 slots for 4-hour courses using 70+ capacity labs"
                 elif max_practical_hours >= 6:
-                    # For 6+ hour practical courses, check if they need 35-capacity labs (batching)
-                    has_6_hour_course_needing_35_labs = False
+                    # 6+ hour courses prefer 70+ capacity labs but allow batching fallback
+                    # Check if any course in this group might need batching (>35 students and limited 70+ labs)
+                    needs_batching_fallback = False
                     
-                    # Check if any course in this group has 6 practical hours AND will use 35-capacity labs
                     for course_instance_id in course_instances:
                         for teacher, courses in self.lab_requirements.items():
                             for course in courses:
@@ -1888,20 +1891,19 @@ class LabScheduler:
                                     practical_hours = course.get('practical_hours', 0)
                                     student_count = course.get('student_count', 70)
                                     
-                                    # Check if this is a 6-hour course that will use 35-capacity labs (batching)
-                                    if practical_hours == 6 and student_count > 35:
-                                        # Course has >35 students, so it will likely use 35-capacity labs with batching
-                                        has_6_hour_course_needing_35_labs = True
+                                    # If course has >35 students, it might need batching fallback
+                                    if practical_hours >= 6 and student_count > 35:
+                                        needs_batching_fallback = True
                                     break
                     
-                    if has_6_hour_course_needing_35_labs:
-                        # 6-hour courses using 35-capacity labs (batched) need 6 slots
-                        slot_limit = 6  # Allow 6 lab slots for 6-hour courses using 35-capacity labs
-                        strategy_note = "6 slots for 6-hour courses using 35-capacity labs (batched)"
+                    if needs_batching_fallback:
+                        # Allow more slots for potential batching, but prefer 3 slots
+                        slot_limit = 6  # Allow up to 6 slots for 6+ hour courses with batching fallback
+                        strategy_note = "3-6 slots for 6+ hour courses (prefers 70+ labs, batching fallback available)"
                     else:
-                        # 6-hour courses using 70+ capacity labs (no batching) get 3 slots
-                        slot_limit = 3  # Standard limit for 6-hour courses in 70+ capacity labs  
-                        strategy_note = "3 slots for 6-hour courses using 70+ capacity labs (no batching)"
+                        # Courses with ≤35 students will use 70+ capacity labs (3 slots)
+                        slot_limit = 3  # Standard limit for 6+ hour courses in 70+ capacity labs
+                        strategy_note = "3 slots for 6+ hour courses using 70+ capacity labs"
                 else:
                     slot_limit = 4  # Default 4 lab slots for groups with 3-5 practical hours
                 
@@ -1981,7 +1983,7 @@ class LabScheduler:
         self.logger.info("  4. Teachers cannot teach multiple labs simultaneously (global constraint)")
         self.logger.info("  5. At most ONE group per semester can be active in any time slot")
         self.logger.info("  6. Same-group parallelization preference added to objective")
-        self.logger.info("  7. SMART group slot limits: NO LIMIT for core lab courses, 2 slots if <=2 hours (strict), 4 slots if 4 hours + batched, 2 slots if 4 hours + not batched, 6 slots if 6 hours + batched, 3 slots if 6 hours + not batched, else 4 slots")
+        self.logger.info("  7. SMART group slot limits: NO LIMIT for core lab courses, 2 slots if <=2 hours (strict), 2-4 slots if 4 hours (prefers 70+ labs, batching fallback), 3-6 slots if 6+ hours (prefers 70+ labs, batching fallback), else 4 slots")
         self.logger.info("  8. IMPROVED: Unassigned courses are now grouped by course code with balanced groups")
     
     def apply_same_group_parallelization_preference(self, model, lab_assignments, semester_groups):
