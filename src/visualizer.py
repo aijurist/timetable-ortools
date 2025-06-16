@@ -1790,24 +1790,24 @@ class CombinedScheduleVisualizer:
         self.theory_df = pd.DataFrame(theory_schedule_data) if theory_schedule_data else pd.DataFrame()
         self.output_dir = output_dir or 'combined_visualizations'
         
-        # Timetable days structure
-        self.days = ["tuesday", "wed", "thur", "fri", "sat"]
+        # Timetable days structure (must match combined scheduler days)
+        self.days = ["tuesday", "wed", "thur", "fri", "sat"]  # EXACTLY as in original schedulers
         
-        # Time slots (12 slots per day - CORRECT lab time slots from lab scheduler)
+        # Time slots (12 slots per day - must match combined scheduler)
         self.time_slots = [
             "8:00 - 8:50", "8:50 - 9:40", "9:50 - 10:40", "10:40 - 11:30",
             "11:50 - 12:40", "12:40 - 1:30", "1:50 - 2:40", "2:40 - 3:30", 
             "3:50 - 4:40", "4:40 - 5:30", "5:30 - 6:20", "6:20 - 7:10"
         ]
         
-        # Lab sessions mapping to time slots (FIXED - matches lab scheduler)
+        # Lab sessions mapping to time slots (must match combined scheduler)
         self.lab_sessions = {
-            'L1': {'slots': [0, 1], 'time_range': '8:00 - 9:40'},
-            'L2': {'slots': [2, 3], 'time_range': '9:50 - 11:30'},
-            'L3': {'slots': [4, 5], 'time_range': '11:50 - 1:30'},
-            'L4': {'slots': [6, 7], 'time_range': '1:50 - 3:30'},
-            'L5': {'slots': [8, 9], 'time_range': '3:50 - 5:30'},
-            'L6': {'slots': [10, 11], 'time_range': '5:30 - 7:10'}
+            'L1': ['8:00 - 8:50', '8:50 - 9:40'],      # 8:00 - 9:40
+            'L2': ['9:50 - 10:40', '10:40 - 11:30'],   # 9:50 - 11:30  
+            'L3': ['11:50 - 12:40', '12:40 - 1:30'],   # 11:50 - 1:30
+            'L4': ['1:50 - 2:40', '2:40 - 3:30'],      # 1:50 - 3:30
+            'L5': ['3:50 - 4:40', '4:40 - 5:30'],      # 3:50 - 5:30
+            'L6': ['5:30 - 6:20', '6:20 - 7:10']       # 5:30 - 7:10
         }
         
         # Initialize color schemes
@@ -1840,38 +1840,40 @@ class CombinedScheduleVisualizer:
     def _map_theory_to_lab_timeslot(self, theory_slot_idx):
         """Map theory slot index (0-10, 11 slots) to lab slot index (0-11, 12 slots).
         
-        Theory slots:  ["8:00-8:50", "9:00-9:50", "10:00-10:50", "11:00-11:50", 
-                        "12:00-12:50", "1:00-1:50", "2:00-2:50", "3:00-3:50", 
-                        "4:00-4:50", "5:00-5:50", "6:00-6:50"]
+        Theory slots (11):  ["8:00 - 8:50", "9:00 - 9:50", "10:00 - 10:50", "11:00 - 11:50",
+                             "12:00 - 12:50", "1:00 - 1:50", "2:00 - 2:50", "3:00 - 3:50", 
+                             "4:00 - 4:50", "5:00 - 5:50", "6:00 - 6:50"]
         
-        Lab slots:     ["8:00-8:50", "8:50-9:40", "9:50-10:40", "10:40-11:30",
-                        "11:50-12:40", "12:40-1:30", "1:50-2:40", "2:40-3:30", 
-                        "3:50-4:40", "4:40-5:30", "5:30-6:20", "6:20-7:10"]
+        Lab slots (12):     ["8:00 - 8:50", "8:50 - 9:40", "9:50 - 10:40", "10:40 - 11:30",
+                             "11:50 - 12:40", "12:40 - 1:30", "1:50 - 2:40", "2:40 - 3:30", 
+                             "3:50 - 4:40", "4:40 - 5:30", "5:30 - 6:20", "6:20 - 7:10"]
         """
-        # Define theory time slots (11 slots) as they are in theory scheduler
-        theory_times = [
+        # Map theory time slots to corresponding lab time slots
+        theory_time_slots = [
             "8:00 - 8:50", "9:00 - 9:50", "10:00 - 10:50", "11:00 - 11:50",
             "12:00 - 12:50", "1:00 - 1:50", "2:00 - 2:50", "3:00 - 3:50", 
             "4:00 - 4:50", "5:00 - 5:50", "6:00 - 6:50"
         ]
         
-        # Mapping from theory slot index to lab slot index
-        theory_to_lab_mapping = {
-            0: 0,   # "8:00-8:50" -> "8:00-8:50" (exact match)
-            1: None,  # "9:00-9:50" -> no exact match in lab slots (skip)
-            2: 2,   # "10:00-10:50" -> "9:50-10:40" (closest match)
-            3: 3,   # "11:00-11:50" -> "10:40-11:30" (closest match)
-            4: 4,   # "12:00-12:50" -> "11:50-12:40" (closest match)
-            5: 5,   # "1:00-1:50" -> "12:40-1:30" (closest match)
-            6: 6,   # "2:00-2:50" -> "1:50-2:40" (closest match)
-            7: 7,   # "3:00-3:50" -> "2:40-3:30" (closest match)
-            8: 8,   # "4:00-4:50" -> "3:50-4:40" (closest match)
-            9: 9,   # "5:00-5:50" -> "4:40-5:30" (closest match)
-            10: 10, # "6:00-6:50" -> "5:30-6:20" (closest match)
-        }
-        
-        if 0 <= theory_slot_idx < len(theory_times):
-            return theory_to_lab_mapping.get(theory_slot_idx)
+        if 0 <= theory_slot_idx < len(theory_time_slots):
+            theory_slot = theory_time_slots[theory_slot_idx]
+            
+            # Map specific theory slots to lab slots with overlap
+            mapping = {
+                "8:00 - 8:50": 0,    # Maps to "8:00 - 8:50"
+                "9:00 - 9:50": 1,    # Maps to "8:50 - 9:40" (close overlap)
+                "10:00 - 10:50": 2,  # Maps to "9:50 - 10:40" (close overlap) 
+                "11:00 - 11:50": 3,  # Maps to "10:40 - 11:30" (close overlap)
+                "12:00 - 12:50": 4,  # Maps to "11:50 - 12:40" (close overlap)
+                "1:00 - 1:50": 5,    # Maps to "12:40 - 1:30" (close overlap)
+                "2:00 - 2:50": 6,    # Maps to "1:50 - 2:40" (close overlap)
+                "3:00 - 3:50": 7,    # Maps to "2:40 - 3:30" (close overlap)
+                "4:00 - 4:50": 8,    # Maps to "3:50 - 4:40" (close overlap)
+                "5:00 - 5:50": 9,    # Maps to "4:40 - 5:30" (close overlap)
+                "6:00 - 6:50": 10    # Maps to "5:30 - 6:20" (close overlap)
+            }
+            
+            return mapping.get(theory_slot)
         return None
     
     def generate_combined_visualizations(self):
@@ -1904,7 +1906,7 @@ class CombinedScheduleVisualizer:
             
             if day in self.days and session_name in self.lab_sessions:
                 day_idx = self.days.index(day)
-                time_slots = self.lab_sessions[session_name]['slots']
+                lab_time_slots = self.lab_sessions[session_name]  # This is now a list of time slot strings
                 
                 course_code = row['course_code']
                 teacher_id = row['teacher_id']
@@ -1919,8 +1921,9 @@ class CombinedScheduleVisualizer:
                     display_text = f"LAB: {course_code}\nT{teacher_id} | {room_number}"
                 
                 # Fill both time slots for lab session
-                for slot_idx in time_slots:
-                    if slot_idx < len(self.time_slots):
+                for lab_time_slot in lab_time_slots:
+                    if lab_time_slot in self.time_slots:
+                        slot_idx = self.time_slots.index(lab_time_slot)
                         grid[day_idx, slot_idx] = display_text
                         color_grid[day_idx, slot_idx] = ('lab', block)
         
@@ -2084,7 +2087,7 @@ class CombinedScheduleVisualizer:
             
             if day in self.days and session_name in self.lab_sessions:
                 day_idx = self.days.index(day)
-                time_slots = self.lab_sessions[session_name]['slots']
+                lab_time_slots = self.lab_sessions[session_name]  # This is now a list of time slot strings
                 
                 course_code = row['course_code']
                 room_number = row['room_number']
@@ -2100,8 +2103,10 @@ class CombinedScheduleVisualizer:
                 else:
                     display_text = f"LAB: {course_code}\n{room_number}"
                 
-                for slot_idx in time_slots:
-                    if slot_idx < len(self.time_slots):
+                # Map lab time slots to time slot indices
+                for lab_time_slot in lab_time_slots:
+                    if lab_time_slot in self.time_slots:
+                        slot_idx = self.time_slots.index(lab_time_slot)
                         grid[day_idx, slot_idx] = display_text
                         color_grid[day_idx, slot_idx] = ('lab', block)
         

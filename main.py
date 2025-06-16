@@ -23,11 +23,13 @@ sys.path.insert(0, parent_dir)
 try:
     from src.lab_scheduler import LabScheduler
     from src.theory_scheduler import TheoryScheduler
+    from src.combined_scheduler import CombinedScheduler
     from src.visualizer import visualize_lab_schedule, visualize_theory_schedule, visualize_combined_schedule
 except ImportError:
     try:
         from timetable_scheduler.src.lab_scheduler import LabScheduler
         from timetable_scheduler.src.theory_scheduler import TheoryScheduler
+        from timetable_scheduler.src.combined_scheduler import CombinedScheduler
         from timetable_scheduler.src.visualizer import visualize_lab_schedule, visualize_theory_schedule, visualize_combined_schedule
     except ImportError:
         print("Error: Cannot import scheduler modules. Please run from the project root directory.")
@@ -88,8 +90,8 @@ def main():
     """Main entry point for the timetable scheduler."""
     parser = argparse.ArgumentParser(description='University Timetable Scheduler')
     
-    parser.add_argument('--mode', type=str, choices=['lab', 'theory', 'all'], default='lab',
-                        help='Scheduling mode (lab, theory, or all)')
+    parser.add_argument('--mode', type=str, choices=['lab', 'theory', 'all', 'combined'], default='lab',
+                        help='Scheduling mode: lab (labs only), theory (theory only), all (lab then theory sequentially), combined (unified lab+theory optimization)')
     
     parser.add_argument('--course-file', type=str, default='./department_data/Computing_department.csv',
                         help='Path to the courses CSV file')
@@ -240,6 +242,47 @@ def main():
                     logger.error(f"Traceback: {traceback.format_exc()}")
         else:
             logger.error("Failed to generate theory schedule")
+
+    # Combined scheduler mode - unified scheduling approach
+    if args.mode == 'combined':
+        logger.info("Starting combined (unified) scheduling...")
+        
+        # Create combined scheduler
+        combined_scheduler = CombinedScheduler(course_file, room_file)
+        
+        # Generate the combined schedule
+        combined_success = combined_scheduler.generate_combined_schedule()
+        
+        if combined_success:
+            logger.info("Combined schedule generated successfully!")
+            combined_output_dir = combined_scheduler.output_dir
+            
+            # Check if visualization should be generated
+            if args.visualize:
+                try:
+                    logger.info("Generating combined schedule visualizations...")
+                    
+                    # Find the JSON files that were created
+                    lab_json_file = os.path.join(combined_scheduler.output_dir, 'combined_lab_schedule.json')
+                    theory_json_file = os.path.join(combined_scheduler.output_dir, 'combined_theory_schedule.json')
+                    
+                    if os.path.exists(lab_json_file) and os.path.exists(theory_json_file):
+                        # Create visualizations directory
+                        combined_viz_dir = os.path.join(combined_scheduler.output_dir, 'visualizations')
+                        os.makedirs(combined_viz_dir, exist_ok=True)
+                        
+                        # Generate combined visualizations
+                        visualize_combined_schedule(lab_json_file, theory_json_file, combined_viz_dir)
+                        logger.info(f"Combined visualizations successfully generated in: {combined_viz_dir}")
+                    else:
+                        logger.warning("Combined JSON files not found for visualization")
+                        
+                except Exception as e:
+                    logger.error(f"Combined visualization failed: {e}")
+                    import traceback
+                    logger.error(f"Traceback: {traceback.format_exc()}")
+        else:
+            logger.error("Failed to generate combined schedule")
 
     # Final combined visualization if both schedules were generated
     if args.visualize and args.mode == 'all' and lab_output_dir and theory_output_dir:

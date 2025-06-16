@@ -15,8 +15,8 @@ from matplotlib.patches import Patch
 import glob
 from collections import defaultdict
 
-# Constants for visualization
-DAYS = ["tuesday", "wed", "thur", "fri", "sat"]
+# Constants for visualization - updated to match original schedulers (EXACTLY)
+DAYS = ["tuesday", "wed", "thur", "fri", "sat"]  # Excluding Monday - EXACTLY as in original
 THEORY_SLOTS = [
     "8:00 - 8:50", "9:00 - 9:50", "10:00 - 10:50", "11:00 - 11:50",
     "12:00 - 12:50", "1:00 - 1:50", "2:00 - 2:50", "3:00 - 3:50", 
@@ -47,16 +47,33 @@ def find_schedule_files():
     theory_file = None
     lab_file = None
     
-    # if combined_dirs:
-    #     combined_dir = combined_dirs[0]
-    #     # Look for JSON files in the combined directory structure
-    #     theory_file = os.path.join(combined_dir, 'theory_schedule', 'theory_schedule.json')
-    #     lab_file = os.path.join(combined_dir, 'lab_schedule', 'lab_schedule.json')
+    if combined_dirs:
+        combined_dir = combined_dirs[0]
+        print(f"Looking in directory: {combined_dir}")
         
-    #     if not os.path.exists(theory_file):
-    #         theory_file = None
-    #     if not os.path.exists(lab_file):
-    #         lab_file = None
+        # Look for CSV files first (combined scheduler output)
+        theory_csv = os.path.join(combined_dir, 'combined_theory_schedule.csv')
+        lab_csv = os.path.join(combined_dir, 'combined_lab_schedule.csv')
+        
+        if os.path.exists(theory_csv):
+            theory_file = theory_csv
+            print(f"Found theory CSV: {theory_csv}")
+        if os.path.exists(lab_csv):
+            lab_file = lab_csv
+            print(f"Found lab CSV: {lab_csv}")
+        
+        # Fallback to JSON files if CSV not found
+        if not theory_file:
+            theory_json = os.path.join(combined_dir, 'combined_theory_schedule.json')
+            if os.path.exists(theory_json):
+                theory_file = theory_json
+                print(f"Found theory JSON: {theory_json}")
+        
+        if not lab_file:
+            lab_json = os.path.join(combined_dir, 'combined_lab_schedule.json')
+            if os.path.exists(lab_json):
+                lab_file = lab_json
+                print(f"Found lab JSON: {lab_json}")
     
     # If not found in combined dir, look for individual schedule dirs
     if not theory_file:
@@ -76,14 +93,24 @@ def find_schedule_files():
     return theory_file, lab_file
 
 def load_schedule_data(file_path):
-    """Load schedule data from a JSON file."""
+    """Load schedule data from a JSON or CSV file."""
     if not file_path or not os.path.exists(file_path):
         print(f"Schedule file not found: {file_path}")
         return None
     
     try:
-        with open(file_path, 'r') as f:
-            return json.load(f)
+        if file_path.endswith('.csv'):
+            # Load CSV file and convert to list of dictionaries
+            import pandas as pd
+            df = pd.read_csv(file_path)
+            print(f"Loaded CSV with {len(df)} rows and columns: {list(df.columns)}")
+            return df.to_dict('records')
+        else:
+            # Load JSON file
+            with open(file_path, 'r') as f:
+                data = json.load(f)
+                print(f"Loaded JSON with {len(data)} entries")
+                return data
     except Exception as e:
         print(f"Error loading schedule data from {file_path}: {e}")
         return None

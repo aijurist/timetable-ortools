@@ -923,6 +923,43 @@ class TheoryScheduler:
                 'course_code': 'Unknown'
             }
     
+    def _parse_time(self, time_str):
+        """Parse time string like '8:00' or '1:30' into minutes from midnight."""
+        h, m = map(int, time_str.split(':'))
+        # Heuristic for AM/PM: 8-11 are AM, 12 and 1-7 are PM.
+        if h <= 7 or h == 12:
+            if h != 12:
+                h += 12
+        return h * 60 + m
+
+    def _parse_time_range(self, time_range_str):
+        """Parse a time range string like '8:00 - 9:40' into start and end minutes."""
+        try:
+            start_str, end_str = time_range_str.split(' - ')
+            start_minutes = self._parse_time(start_str)
+            end_minutes = self._parse_time(end_str)
+            return start_minutes, end_minutes
+        except (ValueError, AttributeError) as e:
+            self.logger.warning(f"Could not parse time range '{time_range_str}': {e}")
+            return None, None
+
+    def _get_conflicting_theory_slots(self, lab_session_range_str):
+        """Find all theory slots that conflict with a given lab session time range string."""
+        lab_start, lab_end = self._parse_time_range(lab_session_range_str)
+        if lab_start is None:
+            return []
+
+        conflicting_slots = []
+        for theory_slot_str in self.theory_time_slots:
+            theory_start, theory_end = self._parse_time_range(theory_slot_str)
+            if theory_start is None:
+                continue
+
+            # Check for overlap: (StartA < EndB) and (EndA > StartB)
+            if lab_start < theory_end and lab_end > theory_start:
+                conflicting_slots.append(theory_slot_str)
+        return conflicting_slots
+    
     def parse_lab_schedule(self):
         """Parse existing lab schedule to identify occupied time slots for conflict detection."""
         self.occupied_slots = {}  # Format: {teacher_id: {day: [time_slots]}}
@@ -935,17 +972,14 @@ class TheoryScheduler:
         
         self.logger.info(f"DEBUG: Parsing lab schedule with {len(self.lab_schedule_data)} lab sessions")
         
-        # Define lab session to theory time slot mapping
-        # Lab sessions are 1h 40min each, theory slots are 50min each
-        # Need to map lab sessions to ALL overlapping theory slots
-        lab_session_mapping = {
-            'L1': ['8:00 - 8:50', '9:00 - 9:50'],      # 8:00 - 9:40 overlaps with slots 0,1
-            'L2': ['10:00 - 10:50', '11:00 - 11:50'],  # 9:50 - 11:30 overlaps with slots 2,3  
-            'L3': ['12:00 - 12:50', '1:00 - 1:50'],    # 11:50 - 1:30 overlaps with slots 4,5
-            'L4': ['2:00 - 2:50', '3:00 - 3:50'],      # 1:50 - 3:30 overlaps with slots 6,7
-            'L5': ['4:00 - 4:50', '5:00 - 5:50'],      # 3:50 - 5:30 overlaps with slots 8,9
-            'L6': ['6:00 - 6:50']                       # 5:30 - 7:10 overlaps with slot 10
-        }
+        # Dynamically build the lab session to theory time slot mapping
+        self.logger.info("Dynamically mapping lab sessions to conflicting theory time slots...")
+        lab_session_mapping = {}
+        for session_name, session_info in self.lab_sessions.items():
+            lab_range = session_info['time_range']
+            conflicting_slots = self._get_conflicting_theory_slots(lab_range)
+            lab_session_mapping[session_name] = conflicting_slots
+            self.logger.info(f"  Lab Session {session_name} ({lab_range}) conflicts with Theory Slots: {conflicting_slots}")
         
         for lab_session in self.lab_schedule_data:
             teacher_id = lab_session.get('teacher_id')
