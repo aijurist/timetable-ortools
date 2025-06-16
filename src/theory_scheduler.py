@@ -4,12 +4,14 @@ import numpy as np
 import logging
 import json
 from datetime import datetime
-from collections import defaultdict
+from collections import defaultdict, Counter
 from itertools import combinations
 from ortools.sat.python import cp_model
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 class TheoryScheduler:
-    """Schedules theory sessions after lab sessions, avoiding conflicts with existing lab schedule."""
+    """Schedules theory sessions based on lecture and tutorial hours, following a group-based approach."""
     
     def __init__(self, course_file, room_file, lab_schedule_data=None):
         """Initialize the theory scheduler with course and room data."""
@@ -148,8 +150,8 @@ class TheoryScheduler:
         self.logger.info(f"Teachers with theory courses: {len(self.theory_requirements)}")
     
     def create_course_groups(self):
-        """Create course groups based on semester and department for Hall's theorem distribution (SAME as lab scheduler)."""
-        self.logger.info("Creating course groups for Hall's theorem distribution (theory scheduling)...")
+        """Create course groups based on semester and department for Hall's theorem distribution."""
+        self.logger.info("Creating course groups for Hall's theorem distribution...")
         
         # Create course groups by department and semester
         self.course_groups = self._create_course_groups_by_dept_semester()
@@ -157,8 +159,11 @@ class TheoryScheduler:
         # Create instance-group mapping for CSV output
         self.instance_group_mapping = {}
         self._create_instance_group_mapping()
+
+        # Generate course-to-group distribution heatmap BEFORE applying constraints
+        self.generate_course_group_distribution_heatmap()
         
-        self.logger.info("Course grouping completed successfully for theory scheduling")
+        self.logger.info("Course grouping completed successfully")
         self.logger.info("✅ TEACHER UNIQUENESS CONSTRAINT: Each teacher appears at most once per group per semester")
         self.logger.info("✅ HALL'S THEOREM COMPLIANCE: Optimized for maximum student choice while respecting teacher constraints")
     
@@ -343,9 +348,12 @@ class TheoryScheduler:
         unique_course_codes = instance_analysis['unique_courses']
         
         # Always create as many groups as there are unique courses
-        num_groups = unique_course_codes
-        
+        num_groups = len(set(inst['course_code'] for inst in courses))
+
         self.logger.info(f"Creating {num_groups} groups (one per unique course: {unique_course_codes})")
+        if unique_course_codes != num_groups:
+            self.logger.warning(f"Mismatch between unique course codes ({unique_course_codes}) and group count ({num_groups}). Using {num_groups} groups.")
+
         self.logger.info(f"📋 CONSTRAINT: Each course limited to maximum 2 of the {num_groups} groups for optimal choice balance")
         
         # Initialize groups
@@ -472,150 +480,105 @@ class TheoryScheduler:
                 if not instance_assigned:
                     self.logger.debug(f"  Could not pre-allocate {course_code} to Group {group_idx + 1} - no teacher available that isn't already in this group")
         
-        # Distribute remaining instances
-        remaining_instances = []
-        for course_code, instances in course_instances.items():
-            for instance in instances:
-                if instance not in [i for g in groups for i in g]:
-                    remaining_instances.append(instance)
-        
-        self.logger.info(f"Distributing {len(remaining_instances)} remaining instances...")
-        
-        # Track teacher assignments to ensure uniqueness constraint
-        teacher_group_assignments = {}
-        for group_idx, group in enumerate(groups):
-            for instance in group:
-                teacher_id = instance['teacher_id']
-                if teacher_id not in teacher_group_assignments:
-                    teacher_group_assignments[teacher_id] = set()
-                teacher_group_assignments[teacher_id].add(group_idx)
-        
-        successfully_assigned = 0
+        # --- START REVISED DISTRIBUTION LOGIC ---
+        self.logger.info("Phase 1 distribution complete. Now starting Phase 2: Bottleneck Repair & Remainder Placement.")
+
+        # Identify courses that are under-represented (in fewer than 2 groups) after the first pass
+        course_placements = defaultdict(set)
+        for i, g in enumerate(groups):
+            for inst in g:
+                course_placements[inst['course_code']].add(i)
+
+        under_represented_courses = {
+            c for c, placements in course_placements.items() if len(placements) < 2
+        }
+        if under_represented_courses:
+            self.logger.warning(f"Found {len(under_represented_courses)} under-represented courses (in < 2 groups): {', '.join(sorted(list(under_represented_courses)))}")
+            self.logger.info("Attempting to find a second group for them...")
+        else:
+            self.logger.info("All courses are in at least two groups after initial placement.")
+
+        # Get all remaining instances that were not placed in the first pass
+        all_assigned_instances = {inst['id'] for g in groups for inst in g}
+        remaining_instances = [
+            inst for inst_list in course_instances.values() for inst in inst_list 
+            if inst['id'] not in all_assigned_instances
+        ]
+
+        # Prioritize placing instances from under-represented courses first
+        instances_to_assign = sorted(
+            remaining_instances,
+            key=lambda x: (x['course_code'] not in under_represented_courses, x['course_code'])
+        )
+        self.logger.info(f"Distributing {len(instances_to_assign)} remaining instances (prioritizing under-represented ones).")
+
         failed_assignments = []
-        
-        for instance in remaining_instances:
+        for instance in instances_to_assign:
             teacher_id = instance['teacher_id']
             course_code = instance['course_code']
-            
-            # Find valid groups for this teacher and course
-            valid_groups = []
-            
-            # Get groups where this course is already assigned (from pre-allocation)
-            course_assigned_groups = course_group_assignments.get(course_code, [])
-            
-            for group_idx in range(num_groups):
-                # CONSTRAINT 1: Teacher cannot be in this group already
-                group_teachers = {inst['teacher_id'] for inst in groups[group_idx]}
-                for inst in groups[group_idx]:
-                    if inst.get('has_assistant') and pd.notna(inst.get('assistant_teacher_id')):
-                        group_teachers.add(inst.get('assistant_teacher_id'))
-                
-                teacher_conflict = teacher_id in group_teachers
-                if pd.notna(instance.get('assistant_teacher_id')):
-                    teacher_conflict = teacher_conflict or (instance['assistant_teacher_id'] in group_teachers)
-                
-                # CONSTRAINT 2: Course can only be in groups where it was pre-allocated (max 2 groups)
-                course_allowed = group_idx in course_assigned_groups
-                
-                # CONSTRAINT 3: Check if course already has enough instances in this group
-                course_instances_in_group = [inst for inst in groups[group_idx] if inst['course_code'] == course_code]
-                course_instance_limit_ok = len(course_instances_in_group) < course_instance_counts.get(course_code, 0)
-                
-                if not teacher_conflict and course_allowed and course_instance_limit_ok:
-                    valid_groups.append(group_idx)
-            
-            if not valid_groups:
-                # Determine reason for failure
-                teacher_groups_in_groups = set()
-                for i in range(num_groups):
-                    group_teachers = {inst['teacher_id'] for inst in groups[i]}
-                    for inst in groups[i]:
-                        if inst.get('has_assistant') and pd.notna(inst.get('assistant_teacher_id')):
-                            group_teachers.add(inst.get('assistant_teacher_id'))
-                    if teacher_id in group_teachers:
-                        teacher_groups_in_groups.add(i)
-                    if pd.notna(instance.get('assistant_teacher_id')) and instance['assistant_teacher_id'] in group_teachers:
-                        teacher_groups_in_groups.add(i)
-                
-                reason = f"Teacher in groups {list(teacher_groups_in_groups)}, course allowed in groups {course_assigned_groups}"
-                
-                self.logger.error(f"CONSTRAINT VIOLATION: Cannot assign Teacher {teacher_id} ({course_code}) to any group")
-                self.logger.error(f"  Reason: {reason}")
-                failed_assignments.append({
-                    'teacher_id': teacher_id,
-                    'course_code': course_code,
-                    'instance_id': instance['id'],
-                    'reason': reason
-                })
-                continue
-            
-                # Find the best valid group for this instance
-            best_group = None
+
+            # Find the best valid group for this instance
+            best_group_idx = -1
             best_score = -1
             
-            for group_idx in valid_groups:
-                # Calculate score - prefer groups that don't have this course yet
-                course_in_group = course_code in {inst['course_code'] for inst in groups[group_idx]}
-                group_size = len(groups[group_idx])
+            # Re-check current placements for the course inside the loop
+            current_placements = {i for i, g in enumerate(groups) for inst in g if inst['course_code'] == course_code}
+
+            for group_idx in range(num_groups):
+                # --- Constraint Checks ---
+                # 1. Teacher Uniqueness: Teacher cannot already be in this group.
+                group_teachers = {inst['teacher_id'] for inst in groups[group_idx]}
+                if pd.notna(instance.get('assistant_teacher_id')):
+                    group_teachers.add(instance['assistant_teacher_id'])
+                if teacher_id in group_teachers:
+                    continue
+
+                # 2. Max 2 Groups per Course: Prevent a course from being in more than two distinct groups.
+                #    A course can be added to a new group only if it's currently in less than 2 groups.
+                #    It can always be added to a group it's already in (if teacher is unique).
+                if group_idx not in current_placements and len(current_placements) >= 2:
+                    continue
                 
-                score = 1000 - group_size * 10
-                if not course_in_group:
-                    score += 500  # Bonus for adding a new course
+                # --- Scoring ---
+                # Base score prefers smaller groups.
+                score = 1000 - len(groups[group_idx])
                 
                 if score > best_score:
                     best_score = score
-                    best_group = group_idx
+                    best_group_idx = group_idx
             
-            # Add instance to the selected group (guaranteed to respect teacher uniqueness)
-            if best_group is not None:
-                groups[best_group].append(instance)
-                successfully_assigned += 1
-                
-                # Update teacher assignments tracking
-                if teacher_id not in teacher_group_assignments:
-                    teacher_group_assignments[teacher_id] = set()
-                teacher_group_assignments[teacher_id].add(best_group)
-        
-                # UPDATE METRICS FOR THE ASSIGNED INSTANCE
-                metrics = group_metrics[best_group]
-                theory_hrs = instance.get('lecture_hours', 0) + instance.get('tutorial_hours', 0)
-                
-                metrics['workload'] += theory_hrs
-                metrics['theory_workload'] += theory_hrs
-                metrics['student_count'] += instance.get('student_count', 70)
+            # Place the instance in the best found group
+            if best_group_idx != -1:
+                groups[best_group_idx].append(instance)
+                self.logger.info(f"✅ Placed instance {instance['id']} ({course_code}) in Group {best_group_idx + 1} to improve student choice.")
+                # Update metrics for the newly added instance
+                metrics = group_metrics[best_group_idx]
                 metrics['instance_count'] += 1
-                if theory_hrs > 0:
-                    metrics['theory_instance_count'] += 1
-                else:
-                    metrics['practical_instance_count'] = metrics.get('practical_instance_count', 0) + 1
-                metrics['courses'].add(instance['course_code'])
-                metrics['teachers'].add(instance['teacher_id'])
-                
-                self.logger.debug(f"Assigned Teacher {teacher_id} ({course_code}) to Group {best_group + 1}")
+                metrics['courses'].add(course_code)
+                metrics['teachers'].add(teacher_id)
+                # Note: other metrics like workload are not as critical for theory scheduler
             else:
-                failed_assignments.append({
-                    'teacher_id': teacher_id,
-                    'course_code': course_code,
-                    'instance_id': instance['id'],
-                    'reason': 'No valid group with acceptable score'
-                })
+                failed_assignments.append(instance)
         
+        # --- END REVISED DISTRIBUTION LOGIC ---
+
         # Log assignment results
-        self.logger.info(f"Successfully assigned: {successfully_assigned} instances")
         if failed_assignments:
-            self.logger.error(f"Failed to assign: {len(failed_assignments)} instances")
-            for failure in failed_assignments:
-                self.logger.error(f"  Teacher {failure['teacher_id']} ({failure['course_code']}): {failure['reason']}")
+            self.logger.error(f"Failed to assign: {len(failed_assignments)} instances after both phases.")
+            for failure in failed_assignments[:5]: # Log first 5
+                self.logger.error(f"  - Instance {failure['id']} (Teacher {failure['teacher_id']}, Course {failure['course_code']}) could not be placed.")
+
+        # Log final unassigned instances
+        final_assigned_ids = {inst['id'] for g in groups for inst in g}
+        final_unassigned_instances = [
+            inst for inst_list in course_instances.values() for inst in inst_list
+            if inst['id'] not in final_assigned_ids
+        ]
         
-        # Log unassigned instances
-        unassigned_count = 0
-        for instance in remaining_instances:
-            if instance not in [i for g in groups for i in g]:
-                unassigned_count += 1
-                self.logger.warning(f"Instance {instance['id']} (Teacher {instance['teacher_id']}, Course {instance['course_code']}) was not assigned to any group")
-        
-        if unassigned_count > 0:
-            self.logger.error(f"TOTAL UNASSIGNED INSTANCES: {unassigned_count}")
+        if final_unassigned_instances:
+            self.logger.error(f"TOTAL UNASSIGNED INSTANCES: {len(final_unassigned_instances)}")
+            for unassigned in final_unassigned_instances[:5]:
+                 self.logger.error(f"  - Unassigned: {unassigned['id']} ({unassigned['course_code']})")
         
         # Validate and log final group distribution
         self._validate_teacher_uniqueness_constraint(groups, dept, semester)
@@ -1614,25 +1577,26 @@ class TheoryScheduler:
         for group_name, day_slots in group_timeslot_vars.items():
             for day_idx in range(self.num_days):
                 # Tier 1: First 4 slots (8:00-11:50) - extremely high weight
-                for slot_idx in range(min(4, len(self.theory_time_slots))):
-                    objective_terms.append(day_slots[day_idx][slot_idx] * 1000)
+                # for slot_idx in range(min(4, len(self.theory_time_slots))):
+                #     objective_terms.append(day_slots[day_idx][slot_idx] * 1000)
                 
                 # Tier 2: Next 4 slots (12:00 - 3:50) - high weight, but much lower than Tier 1
-                for slot_idx in range(4, min(8, len(self.theory_time_slots))):
-                    objective_terms.append(day_slots[day_idx][slot_idx] * 100)
+                # for slot_idx in range(4, min(8, len(self.theory_time_slots))):
+                #     objective_terms.append(day_slots[day_idx][slot_idx] * 100)
                 
                 # Tier 3: Last 3 slots (4:00 - 6:50) - lowest weight
-                for slot_idx in range(8, min(11, len(self.theory_time_slots))):
-                    objective_terms.append(day_slots[day_idx][slot_idx] * 10)
+                # for slot_idx in range(8, min(11, len(self.theory_time_slots))):
+                #     objective_terms.append(day_slots[day_idx][slot_idx] * 10)
+                pass
         
         if objective_terms:
             model.Maximize(sum(objective_terms))
             self.logger.info(f"Group allocation objective set with {len(objective_terms)} terms")
-            self.logger.info("SEQUENTIAL SLOT FILLING STRATEGY:")
-            self.logger.info("  Tier 1 slots 0-3 (8:00-11:50): +1000 - Will be filled first")
-            self.logger.info("  Tier 2 slots 4-7 (12:00-3:50): +100 - Will be filled only after Tier 1 slots")
-            self.logger.info("  Tier 3 slots 8-10 (4:00-6:50): +10 - Will be filled only after Tier 1 and 2 slots")
-            self.logger.info("This ensures earlier slots will be completely filled before using later slots")
+            # self.logger.info("SEQUENTIAL SLOT FILLING STRATEGY:")
+            # self.logger.info("  Tier 1 slots 0-3 (8:00-11:50): +1000 - Will be filled first")
+            # self.logger.info("  Tier 2 slots 4-7 (12:00-3:50): +100 - Will be filled only after Tier 1 slots")
+            # self.logger.info("  Tier 3 slots 8-10 (4:00-6:50): +10 - Will be filled only after Tier 1 and 2 slots")
+            # self.logger.info("This ensures earlier slots will be completely filled before using later slots")
     
     def extract_group_timeslots(self, solver, group_timeslot_vars):
         """Extract allocated time slots for each group from solver solution."""
@@ -1899,3 +1863,271 @@ class TheoryScheduler:
                 f.write(f"  {course}: {count} sessions\n")
         
         self.logger.info(f"Theory summary saved to {summary_path}") 
+
+    def generate_course_group_distribution_heatmap(self):
+        """Generate heatmap visualization of course-to-group distribution before applying constraints."""
+        self.logger.info("🎨 Generating course-to-group distribution heatmap for Theory Scheduler...")
+        
+        try:
+            # Create output directory for visualizations
+            viz_output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
+                                         'output', 
+                                         f'theory_grouping_viz_{datetime.now().strftime("%Y%m%d_%H%M%S")}')
+            os.makedirs(viz_output_dir, exist_ok=True)
+            
+            # Process each department-semester combination
+            total_dept_sem = len(self.course_groups)
+            processed_count = 0
+            
+            self.logger.info(f"📊 Processing {total_dept_sem} department-semester combinations for heatmaps...")
+            
+            for (dept, semester), groups in self.course_groups.items():
+                processed_count += 1
+                
+                if not groups:
+                    self.logger.warning(f"⚠️ Skipping {dept} S{semester} - no groups")
+                    continue
+                    
+                self.logger.info(f"🎨 Creating heatmap {processed_count}/{total_dept_sem}: {dept} Semester {semester}...")
+                
+                try:
+                    # Collect course-group data
+                    course_group_matrix = {}
+                    all_courses = set()
+                    group_names = []
+                    
+                    for group_idx, group in enumerate(groups):
+                        if not group:
+                            continue
+                            
+                        group_name = f"G{group_idx + 1}"
+                        group_names.append(group_name)
+                        
+                        # Count teacher assignments per course per group
+                        course_teacher_counts = {}
+                        for instance in group:
+                            course_code = instance['course_code']
+                            teacher_id = instance['teacher_id']
+                            all_courses.add(course_code)
+                            
+                            if course_code not in course_teacher_counts:
+                                course_teacher_counts[course_code] = set()
+                            course_teacher_counts[course_code].add(teacher_id)
+                        
+                        # Store teacher assignment counts
+                        for course_code, teachers in course_teacher_counts.items():
+                            if course_code not in course_group_matrix:
+                                course_group_matrix[course_code] = {}
+                            course_group_matrix[course_code][group_name] = len(teachers)
+                    
+                    if not all_courses or not group_names:
+                        self.logger.warning(f"No data to visualize for {dept} Semester {semester}")
+                        continue
+                    
+                    # Create matrix for heatmap
+                    courses_list = sorted(list(all_courses))
+                    matrix_data = []
+                    
+                    for course in courses_list:
+                        row = []
+                        for group_name in group_names:
+                            count = course_group_matrix.get(course, {}).get(group_name, 0)
+                            row.append(count)
+                        matrix_data.append(row)
+                    
+                    # Create the heatmap
+                    plt.figure(figsize=(max(8, len(group_names) * 1.2), max(6, len(courses_list) * 0.4)))
+                    
+                    # Convert to numpy array for better handling
+                    matrix_array = np.array(matrix_data)
+                    
+                    # Create heatmap with custom colormap
+                    ax = sns.heatmap(matrix_array, 
+                                   xticklabels=group_names,
+                                   yticklabels=courses_list,
+                                   annot=True, 
+                                   fmt='d',
+                                   cmap='YlGnBu',
+                                   cbar_kws={'label': 'Number of Teacher Assignments'},
+                                   linewidths=0.5)
+                    
+                    # Customize the plot
+                    plt.title(f'Theory Course-Group Distribution\n{dept} - Semester {semester}\n(Number shows teacher assignments per course per group)', 
+                             fontsize=14, fontweight='bold', pad=20)
+                    plt.xlabel('Groups', fontsize=12, fontweight='bold')
+                    plt.ylabel('Courses', fontsize=12, fontweight='bold')
+                    
+                    # Rotate labels for better readability
+                    plt.xticks(rotation=0, ha='center')
+                    plt.yticks(rotation=0)
+                    
+                    # Add grid for better readability
+                    ax.set_facecolor('white')
+                    
+                    # Add summary statistics as text
+                    total_assignments = np.sum(matrix_array)
+                    max_assignments = np.max(matrix_array) if matrix_array.size > 0 else 0
+                    
+                    # Calculate course distribution stats
+                    courses_with_choice = sum(1 for course in courses_list 
+                                            if sum(course_group_matrix.get(course, {}).values()) > 1)
+                    choice_percentage = (courses_with_choice / len(courses_list) * 100) if courses_list else 0
+                    
+                    stats_text = f'Stats: {len(courses_list)} courses, {len(group_names)} groups\n'
+                    stats_text += f'Total assignments: {total_assignments}, Max per cell: {max_assignments}\n'
+                    stats_text += f'Courses with multiple groups: {courses_with_choice} ({choice_percentage:.1f}%)'
+                    
+                    plt.figtext(0.02, 0.02, stats_text, fontsize=9, 
+                               bbox=dict(boxstyle="round,pad=0.3", facecolor="lightgray", alpha=0.8))
+                    
+                    plt.tight_layout()
+                    
+                    # Save the heatmap - handle special characters in filename
+                    safe_dept_name = dept.replace(" ", "_").replace("&", "and").replace("(", "").replace(")", "")
+                    filename = f'theory_course_group_heatmap_{safe_dept_name}_S{semester}.png'
+                    filepath = os.path.join(viz_output_dir, filename)
+                    plt.savefig(filepath, dpi=300, bbox_inches='tight')
+                    plt.close()
+                    
+                    self.logger.info(f"✅ Heatmap saved: {filepath}")
+                    
+                except Exception as dept_error:
+                    self.logger.error(f"❌ Error processing {dept} S{semester} for theory heatmap: {str(dept_error)}")
+                    import traceback
+                    self.logger.error(f"Traceback: {traceback.format_exc()}")
+                    continue
+
+            # Create a combined overview heatmap if multiple department-semesters exist
+            if len(self.course_groups) > 1:
+                self._create_combined_overview_heatmap(viz_output_dir)
+            
+            self.logger.info(f"🎨 All theory course-group distribution visualizations saved to: {viz_output_dir}")
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error generating theory course-group heatmap: {str(e)}")
+            import traceback
+            self.logger.error(f"Traceback: {traceback.format_exc()}")
+
+    def _create_combined_overview_heatmap(self, viz_output_dir):
+        """Create a combined overview heatmap showing all department-semester combinations for theory courses."""
+        self.logger.info("Creating combined overview heatmap for theory scheduler...")
+        
+        try:
+            # Collect data from all department-semester combinations
+            all_data = []
+            dept_sem_labels = []
+            
+            for (dept, semester), groups in self.course_groups.items():
+                if not groups:
+                    continue
+                    
+                dept_sem_key = f"{dept} S{semester}"
+                dept_sem_labels.append(dept_sem_key)
+                
+                # Count courses and groups
+                all_courses = set()
+                total_assignments = 0
+                
+                for group in groups:
+                    if group:
+                        group_courses = set(inst['course_code'] for inst in group)
+                        all_courses.update(group_courses)
+                        total_assignments += len(group)
+                
+                courses_with_choice = 0
+                course_group_counts = {}
+                
+                # Count how many groups each course appears in
+                for course in all_courses:
+                    groups_with_course = 0
+                    for group in groups:
+                        if group and any(inst['course_code'] == course for inst in group):
+                            groups_with_course += 1
+                    course_group_counts[course] = groups_with_course
+                    if groups_with_course > 1:
+                        courses_with_choice += 1
+                
+                choice_percentage = (courses_with_choice / len(all_courses) * 100) if all_courses else 0
+                
+                all_data.append({
+                    'dept_sem': dept_sem_key,
+                    'total_courses': len(all_courses),
+                    'total_groups': len([g for g in groups if g]),
+                    'total_assignments': total_assignments,
+                    'courses_with_choice': courses_with_choice,
+                    'choice_percentage': choice_percentage,
+                    'avg_groups_per_course': sum(course_group_counts.values()) / len(all_courses) if all_courses else 0
+                })
+            
+            if not all_data:
+                return
+            
+            # Create overview visualization
+            fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
+            fig.suptitle('Theory Scheduler: Course-Group Distribution Overview\n(Before Constraint Application)', 
+                        fontsize=16, fontweight='bold')
+            
+            # Chart 1: Courses and Groups per Department-Semester
+            dept_sems = [d['dept_sem'] for d in all_data]
+            courses_counts = [d['total_courses'] for d in all_data]
+            groups_counts = [d['total_groups'] for d in all_data]
+            
+            x = np.arange(len(dept_sems))
+            width = 0.35
+            
+            ax1.bar(x - width/2, courses_counts, width, label='Courses', color='skyblue', alpha=0.8)
+            ax1.bar(x + width/2, groups_counts, width, label='Groups', color='lightcoral', alpha=0.8)
+            ax1.set_xlabel('Department-Semester')
+            ax1.set_ylabel('Count')
+            ax1.set_title('Courses vs Groups Distribution')
+            ax1.set_xticks(x)
+            ax1.set_xticklabels(dept_sems, rotation=45, ha='right')
+            ax1.legend()
+            ax1.grid(True, alpha=0.3)
+            
+            # Chart 2: Student Choice Percentage
+            choice_percentages = [d['choice_percentage'] for d in all_data]
+            bars = ax2.bar(dept_sems, choice_percentages, color='lightgreen', alpha=0.8)
+            ax2.set_xlabel('Department-Semester')
+            ax2.set_ylabel('Percentage (%)')
+            ax2.set_title('Student Choice Availability\n(% of courses with multiple group options)')
+            ax2.set_xticklabels(dept_sems, rotation=45, ha='right')
+            ax2.grid(True, alpha=0.3)
+            
+            # Add percentage labels on bars
+            for bar, pct in zip(bars, choice_percentages):
+                height = bar.get_height()
+                ax2.text(bar.get_x() + bar.get_width()/2., height + 1,
+                        f'{pct:.1f}%', ha='center', va='bottom', fontweight='bold')
+            
+            # Chart 3: Total Assignments
+            assignments = [d['total_assignments'] for d in all_data]
+            ax3.bar(dept_sems, assignments, color='gold', alpha=0.8)
+            ax3.set_xlabel('Department-Semester')
+            ax3.set_ylabel('Total Assignments')
+            ax3.set_title('Total Teacher-Course Assignments')
+            ax3.set_xticklabels(dept_sems, rotation=45, ha='right')
+            ax3.grid(True, alpha=0.3)
+            
+            # Chart 4: Average Groups per Course
+            avg_groups = [d['avg_groups_per_course'] for d in all_data]
+            ax4.bar(dept_sems, avg_groups, color='mediumpurple', alpha=0.8)
+            ax4.set_xlabel('Department-Semester')
+            ax4.set_ylabel('Average Groups per Course')
+            ax4.set_title('Course Distribution Efficiency')
+            ax4.set_xticklabels(dept_sems, rotation=45, ha='right')
+            ax4.grid(True, alpha=0.3)
+            ax4.axhline(y=2.0, color='red', linestyle='--', alpha=0.7, label='Max Limit (2)')
+            ax4.legend()
+            
+            plt.tight_layout()
+            
+            # Save combined overview
+            overview_filepath = os.path.join(viz_output_dir, 'theory_combined_overview_heatmap.png')
+            plt.savefig(overview_filepath, dpi=300, bbox_inches='tight')
+            plt.close()
+            
+            self.logger.info(f"✅ Combined overview saved: {overview_filepath}")
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error creating combined theory overview: {str(e)}")

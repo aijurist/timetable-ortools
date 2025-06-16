@@ -33,25 +33,25 @@ class LabScheduler:
         # Load core mapping data for specific lab assignments
         self.core_mapping_df = None
         try:
-            # The path to combined_lab_mapping.csv. This assumes it's in the same directory as the other data files.
+            # The path to core_mapping_cleaned.csv. This assumes it's in the same directory as the other data files.
             base_data_dir = os.path.dirname(course_file)
             # A more robust path might be:
-            core_mapping_file_path = os.path.join(os.path.dirname(base_data_dir), 'combined_lab_mapping.csv')
+            core_mapping_file_path = os.path.join(os.path.dirname(base_data_dir), 'core_mapping_cleaned.csv')
             
             if not os.path.exists(core_mapping_file_path):
-                 core_mapping_file_path = os.path.join(base_data_dir, 'combined_lab_mapping.csv')
+                 core_mapping_file_path = os.path.join(base_data_dir, 'core_mapping_cleaned.csv')
             
             if not os.path.exists(core_mapping_file_path):
-                 core_mapping_file_path = os.path.join(base_data_dir, '..', 'data', 'combined_lab_mapping.csv')
+                 core_mapping_file_path = os.path.join(base_data_dir, '..', 'data', 'core_mapping_cleaned.csv')
 
             if os.path.exists(core_mapping_file_path):
                 self.core_mapping_df = pd.read_csv(core_mapping_file_path)
                 self.logger.info(f"Successfully loaded core lab mapping from {core_mapping_file_path}")
             else:
-                self.logger.warning(f"Core lab mapping file 'combined_lab_mapping.csv' not found.")
+                self.logger.warning(f"Core lab mapping file 'core_mapping_cleaned.csv' not found.")
 
         except Exception as e:
-            self.logger.error(f"Error loading combined_lab_mapping.csv: {e}")
+            self.logger.error(f"Error loading core_mapping_cleaned.csv: {e}")
             self.core_mapping_df = None
         
         # Setup time structure (matching reference implementation)
@@ -83,7 +83,7 @@ class LabScheduler:
         
         self.course_to_room_mapping = {}
         if self.core_mapping_df is not None:
-            # We need to map (course_code, course_name) -> list of room_ids
+            # We need to map (course_code, course_name) -> room_id
             self.rooms_df['block'] = self.rooms_df['block'].fillna('Unknown').astype(str).str.strip()
             self.rooms_df['room_number'] = self.rooms_df['room_number'].astype(str).str.strip()
             self.rooms_df['room_identifier'] = self.rooms_df['room_number'] + "_" + self.rooms_df['block']
@@ -92,62 +92,25 @@ class LabScheduler:
             # Clean data in core_mapping_df
             self.core_mapping_df['course_code'] = self.core_mapping_df['course_code'].astype(str).str.strip()
             self.core_mapping_df['course_name'] = self.core_mapping_df['course_name'].astype(str).str.strip()
+            self.core_mapping_df['room_number'] = self.core_mapping_df['room_number'].astype(str).str.strip()
+            self.core_mapping_df['block'] = self.core_mapping_df['block'].astype(str).str.strip()
             
             for _, row in self.core_mapping_df.iterrows():
                 course_code = row['course_code']
                 course_name = row['course_name']
-                total_labs = int(row.get('total_labs', 1))
+                room_number = row['room_number']
+                block = row['block']
                 
-                mapped_rooms = []
+                room_identifier = room_number + "_" + block
                 
-                # Process each lab (lab_1, lab_2, lab_3, etc.)
-                for lab_num in range(1, total_labs + 1):
-                    room_col = f'lab_{lab_num}_room'
-                    block_col = f'lab_{lab_num}_block'
-                    
-                    if room_col in row and block_col in row:
-                        room_number = str(row[room_col]).strip()
-                        block = str(row[block_col]).strip()
-                        
-                        # Skip if room_number is 'nan' or empty
-                        if room_number.lower() in ['nan', ''] or pd.isna(row[room_col]):
-                            continue
-                            
-                        room_identifier = room_number + "_" + block
-                        
-                        if room_identifier in room_lookup:
-                            room_id = room_lookup[room_identifier]
-                            mapped_rooms.append(room_id)
-                            self.logger.info(f"Mapped course '{course_code}' - '{course_name}' to lab {lab_num}: '{room_number}' (ID: {room_id})")
-                        else:
-                            self.logger.warning(f"Room '{room_number}' in block '{block}' for course '{course_code}' lab {lab_num} not found in rooms file. Identifier: '{room_identifier}'")
-                
-                # Store the mapping with all available rooms for this course
-                if mapped_rooms:
-                    self.course_to_room_mapping[(course_code, course_name)] = mapped_rooms
-                    self.logger.info(f"Course '{course_code}' mapped to {len(mapped_rooms)} lab(s): {mapped_rooms}")
+                if room_identifier in room_lookup:
+                    room_id = room_lookup[room_identifier]
+                    self.course_to_room_mapping[(course_code, course_name)] = room_id
+                    self.logger.info(f"Mapped course '{course_code}' - '{course_name}' to room '{room_number}' (ID: {room_id})")
                 else:
-                    self.logger.warning(f"No valid labs found for course '{course_code}' - '{course_name}'")
+                    self.logger.warning(f"Room '{room_number}' in block '{block}' for course '{course_code}' not found in rooms file. Identifier: '{room_identifier}'")
 
         
-        # Identify all instance IDs that are considered "core labs"
-        self.core_lab_instance_ids = set()
-        if self.core_mapping_df is not None:
-            # Create a lookup from (course_code, course_name) to a list of instance IDs from the main courses_df
-            course_name_to_ids = defaultdict(list)
-            for _, row in self.courses_df.iterrows():
-                course_code = row['course_code']
-                course_name = row['course_name']
-                instance_id = str(row['id'])
-                course_name_to_ids[(course_code, course_name)].append(instance_id)
-
-            # Use the lookup to find all instance IDs corresponding to the core lab mapping
-            for course_tuple in self.course_to_room_mapping.keys():
-                if course_tuple in course_name_to_ids:
-                    self.core_lab_instance_ids.update(course_name_to_ids[course_tuple])
-
-            self.logger.info(f"Identified {len(self.core_lab_instance_ids)} core lab instances that will be exempt from the 18-slot weekly limit.")
-
         # Process teacher-course assignments for lab sessions
         self.process_teacher_courses()
         
@@ -591,44 +554,14 @@ class LabScheduler:
         self.logger.info(f"  Max instances per course: {instance_analysis['max_instances_per_course']}")
         self.logger.info(f"  Dynamic student capacity: {instance_analysis['dynamic_student_capacity']} students")
         
-        # CRITICAL: Number of groups determination based on core lab presence
+        # CRITICAL: Number of groups = Number of unique courses in the semester
         # Each course can appear in at most 2 of these groups for optimal student choice
         unique_course_codes = instance_analysis['unique_courses']
         
-        # Check if this semester/department has core lab courses
-        sem_dept_has_core_labs = False
-        unique_practical_courses = set()
+        # Always create as many groups as there are unique courses
+        num_groups = unique_course_codes
         
-        for instance in courses:
-            instance_id = instance['id']
-            practical_hours = instance.get('practical_hours', 0)
-            
-            # Check if this instance is a core lab
-            if instance_id in self.core_lab_instance_ids:
-                sem_dept_has_core_labs = True
-            
-            # Collect unique courses with practical hours
-            if practical_hours > 0:
-                unique_practical_courses.add(instance['course_code'])
-        
-        # Log core lab detection results
-        if sem_dept_has_core_labs:
-            self.logger.info(f"  🧪 CORE LAB SEMESTER: Will create {len(unique_practical_courses)} groups (practical courses only)")
-            self.logger.info(f"  🧪 Unique practical courses: {', '.join(sorted(unique_practical_courses))}")
-        else:
-            self.logger.info(f"  📚 STANDARD SEMESTER: Will create {unique_course_codes} groups (all courses)")
-        
-        # Determine number of groups based on core lab presence
-        if sem_dept_has_core_labs:
-            # If semester has core labs, limit groups to unique courses with practical hours
-            num_groups = len(unique_practical_courses)
-            self.logger.info(f"🧪 CORE LAB DETECTED: Creating {num_groups} groups (limited to unique practical courses: {len(unique_practical_courses)})")
-            self.logger.info(f"📋 Core lab courses present - using practical course count instead of total course count")
-        else:
-            # Otherwise, use the standard logic (all unique courses)
-            num_groups = unique_course_codes
-            self.logger.info(f"Creating {num_groups} groups (one per unique course: {unique_course_codes})")
-        
+        self.logger.info(f"Creating {num_groups} groups (one per unique course: {unique_course_codes})")
         self.logger.info(f"📋 CONSTRAINT: Each course limited to maximum 2 of the {num_groups} groups for optimal choice balance")
         
         # Initialize groups
@@ -864,14 +797,14 @@ class LabScheduler:
                 failed_assignments.append(instance)
         
         # --- END REVISED DISTRIBUTION LOGIC ---
-
+        
         # Log assignment results
         if failed_assignments:
             self.logger.error(f"Failed to assign: {len(failed_assignments)} instances after both phases.")
             for failure in failed_assignments[:5]: # Log first 5
                 self.logger.error(f"  - Instance {failure['id']} (Teacher {failure['teacher_id']}, Course {failure['course_code']}) could not be placed.")
-        
-        # Log final unassigned instances
+
+        # Log unassigned instances
         final_assigned_ids = {inst['id'] for g in groups for inst in g}
         final_unassigned_instances = [
             inst for inst_list in course_instances.values() for inst in inst_list
@@ -881,7 +814,7 @@ class LabScheduler:
         if final_unassigned_instances:
             self.logger.error(f"TOTAL UNASSIGNED INSTANCES: {len(final_unassigned_instances)}")
             for unassigned in final_unassigned_instances[:5]:
-                 self.logger.error(f"  - Unassigned: {unassigned['id']} ({unassigned['course_code']})")
+                self.logger.error(f"  - Unassigned: {unassigned['id']} ({unassigned['course_code']})")
         
         # Validate and log final group distribution
         self._validate_teacher_uniqueness_constraint(groups, dept, semester)
@@ -1257,12 +1190,8 @@ class LabScheduler:
             # Rule 2: practical_hours >= 5 (but not 6) PREFERS 70+ capacity labs but allows batching fallback
             strategy['prefer_70_plus_with_batching_fallback'] = True
             strategy['preferred_lab_capacities'] = [70, 140, 35]  # 70+ preferred, 35 as fallback
-        elif practical_hours == 4:
-            # Rule NEW: practical_hours == 4 PREFERS 70+ capacity labs but allows batching fallback
-            strategy['prefer_70_plus_with_batching_fallback'] = True
-            strategy['preferred_lab_capacities'] = [70, 140, 35]  # 70+ preferred, 35 as fallback
         else:
-            # Rule 4: practical_hours 3 or less can use either strategy (solver decides)
+            # Rule 4: practical_hours 3-4 can use either strategy (solver decides)
             strategy['preferred_lab_capacities'] = [35, 70, 140]
         
         return strategy
@@ -1556,17 +1485,17 @@ class LabScheduler:
                         
                         # Restrict batched sessions based on practical hours
                         if practical_hours >= 6:
-                            # 6+ practical hours: Allow up to 6 slots if batched, max 3 if not batched
                             max_batched_sessions = min(sessions_with_batching, 6)
-                            max_unbatched_sessions = min(base_sessions, 3)
+                            max_unbatched_sessions = min(base_sessions, 3) # 6h course in 70+ lab -> 3 sessions
                         elif practical_hours >= 4:
-                            # 4+ practical hours: Allow up to 4 slots if batched, max 2 if not batched (70+ lab)
+                             # Courses with 4+ practical hours can use up to 6 slots if they require extensive batching
                             max_batched_sessions = min(sessions_with_batching, 4)
-                            max_unbatched_sessions = min(base_sessions, 2)  # 4h course in 70+ lab -> 2 sessions
+                            # Unbatched (70+ lab) 4h courses are strictly 2 sessions.
+                            max_unbatched_sessions = min(base_sessions, 2)
                         else:
-                            # 2 practical hours: Maximum 2 slots if batched, 1 if not batched
-                            max_batched_sessions = min(sessions_with_batching, 2)
-                            max_unbatched_sessions = min(base_sessions, 1)  # 2h course in 70+ lab -> 1 session
+                            # All other practical hours: Maximum 4 slots
+                            max_batched_sessions = min(sessions_with_batching, 4)
+                            max_unbatched_sessions = min(base_sessions, 4)
                         
                         # Boolean variable to choose strategy: True = use 35-cap labs, False = use 70+ cap labs
                         use_35_cap_strategy = model.NewBoolVar(f'course_{course_instance_id}_use_35_cap_strategy')
@@ -1583,21 +1512,16 @@ class LabScheduler:
                         model.Add(sum(total_assignments) == max_batched_sessions).OnlyEnforceIf(use_35_cap_strategy)
                         model.Add(sum(total_assignments) == max_unbatched_sessions).OnlyEnforceIf(use_35_cap_strategy.Not())
                         
-                        # ENFORCE MAXIMUM SLOT CONSTRAINTS BASED ON PRACTICAL HOURS
-                        if practical_hours >= 6:
-                            # For 6+ practical hours: max 6 if batched, max 3 if not batched
-                            model.Add(sum(total_assignments) <= 6).OnlyEnforceIf(use_35_cap_strategy)
-                            model.Add(sum(total_assignments) <= 3).OnlyEnforceIf(use_35_cap_strategy.Not())
-                        elif practical_hours >= 4:
-                            # For 4+ practical hours: max 4 if batched, max 2 if not batched
-                            model.Add(sum(total_assignments) <= 4).OnlyEnforceIf(use_35_cap_strategy)
-                            model.Add(sum(total_assignments) <= 2).OnlyEnforceIf(use_35_cap_strategy.Not())
+                        # ENFORCE MAXIMUM 4 SLOTS CONSTRAINT (except 4+ practical hours with batching)
+                        if practical_hours < 4:
+                            model.Add(sum(total_assignments) <= 4)
                         else:
-                            # For 2 practical hours: max 2 if batched, max 1 if not batched
-                            model.Add(sum(total_assignments) <= 2).OnlyEnforceIf(use_35_cap_strategy)
-                            model.Add(sum(total_assignments) <= 1).OnlyEnforceIf(use_35_cap_strategy.Not())
+                            # For 4+ practical hours: max 6 if batched, max 3 if not batched
+                            model.Add(sum(total_assignments) <= 6).OnlyEnforceIf(use_35_cap_strategy)
+                            # For 4h course, max_unbatched=2; for 6h course, max_unbatched=3. This is safe.
+                            model.Add(sum(total_assignments) <= max_unbatched_sessions).OnlyEnforceIf(use_35_cap_strategy.Not())
                         
-                        self.logger.info(f"Course {course['course_code']} ({practical_hours}h): EITHER {max_batched_sessions} sessions (35-cap batched) OR {max_unbatched_sessions} sessions (70+ cap unbatched)")
+                        self.logger.info(f"Course {course['course_code']} ({practical_hours}h): EITHER {max_batched_sessions} sessions (35 cap batched) OR {max_unbatched_sessions} sessions (70+ cap) - MAX 4 slots (except 4h+ batched→6 slots)")
                     else:
                         # Small courses: always base sessions, but enforce max 4 slots
                         max_sessions = min(base_sessions, 4)
@@ -1882,13 +1806,21 @@ class LabScheduler:
                     slot_limit = None  # No slot limit for groups with core lab courses
                     strategy_note = f"NO SLOT LIMIT for group with {core_lab_courses} core lab courses"
                 elif max_practical_hours <= 2:
-                    # For 2-hour practical courses, always limit to 2 slots
-                    slot_limit = 2  # Always 2 lab slots for 2-hour courses - forces parallelization
+                    # Check if parallelization is actually possible
+                    if len(unique_teachers) >= total_courses:
+                        # Each course has a different teacher - parallelization is possible
+                        slot_limit = 2  # Exactly 2 lab slots - forces courses to run in parallel
+                    elif len(unique_teachers) >= 2 and total_courses <= 4:
+                        # Multiple teachers available, manageable number of courses
+                        slot_limit = 2  # Still try 2 slots but may need flexibility
+                    else:
+                        # Too many courses for same teachers - need more slots
+                        slot_limit = min(4, total_courses)  # Flexible slots based on course count
                 elif max_practical_hours == 4:
-                    # 4-hour courses prefer 70+ capacity labs but allow batching fallback
-                    # Check if any course in this group might need batching (>35 students and limited 70+ labs)
-                    needs_batching_fallback = False
+                    # For 4-hour practical courses, check if they need 35-capacity labs (batching)
+                    has_4_hour_course_needing_35_labs = False
                     
+                    # Check if any course in this group has 4 practical hours AND will use 35-capacity labs
                     for course_instance_id in course_instances:
                         for teacher, courses in self.lab_requirements.items():
                             for course in courses:
@@ -1896,24 +1828,25 @@ class LabScheduler:
                                     practical_hours = course.get('practical_hours', 0)
                                     student_count = course.get('student_count', 70)
                                     
-                                    # If course has >35 students, it might need batching fallback
+                                    # Check if this is a 4-hour course that will use 35-capacity labs (batching)
                                     if practical_hours == 4 and student_count > 35:
-                                        needs_batching_fallback = True
+                                        # Course has >35 students, so it will likely use 35-capacity labs with batching
+                                        has_4_hour_course_needing_35_labs = True
                                     break
                     
-                    if needs_batching_fallback:
-                        # Allow more slots for potential batching, but prefer 2 slots
-                        slot_limit = 4  # Allow up to 4 slots for 4-hour courses with batching fallback
-                        strategy_note = "2-4 slots for 4-hour courses (prefers 70+ labs, batching fallback available)"
+                    if has_4_hour_course_needing_35_labs:
+                        # 4-hour courses using 35-capacity labs (batched) need 4 slots
+                        slot_limit = 4  # Allow 4 lab slots for 4-hour courses using 35-capacity labs
+                        strategy_note = "4 slots for 4-hour courses using 35-capacity labs (batched)"
                     else:
-                        # Courses with ≤35 students will use 70+ capacity labs (2 slots)
+                        # 4-hour courses using 70+ capacity labs (no batching) get 2 slots
                         slot_limit = 2  # Standard limit for 4-hour courses in 70+ capacity labs
-                        strategy_note = "2 slots for 4-hour courses using 70+ capacity labs"
+                        strategy_note = "2 slots for 4-hour courses using 70+ capacity labs (no batching)"
                 elif max_practical_hours >= 6:
-                    # 6+ hour courses prefer 70+ capacity labs but allow batching fallback
-                    # Check if any course in this group might need batching (>35 students and limited 70+ labs)
-                    needs_batching_fallback = False
+                    # For 6+ hour practical courses, check if they need 35-capacity labs (batching)
+                    has_6_hour_course_needing_35_labs = False
                     
+                    # Check if any course in this group has 6 practical hours AND will use 35-capacity labs
                     for course_instance_id in course_instances:
                         for teacher, courses in self.lab_requirements.items():
                             for course in courses:
@@ -1921,19 +1854,20 @@ class LabScheduler:
                                     practical_hours = course.get('practical_hours', 0)
                                     student_count = course.get('student_count', 70)
                                     
-                                    # If course has >35 students, it might need batching fallback
-                                    if practical_hours >= 6 and student_count > 35:
-                                        needs_batching_fallback = True
+                                    # Check if this is a 6-hour course that will use 35-capacity labs (batching)
+                                    if practical_hours == 6 and student_count > 35:
+                                        # Course has >35 students, so it will likely use 35-capacity labs with batching
+                                        has_6_hour_course_needing_35_labs = True
                                     break
                     
-                    if needs_batching_fallback:
-                        # Allow more slots for potential batching, but prefer 3 slots
-                        slot_limit = 6  # Allow up to 6 slots for 6+ hour courses with batching fallback
-                        strategy_note = "3-6 slots for 6+ hour courses (prefers 70+ labs, batching fallback available)"
+                    if has_6_hour_course_needing_35_labs:
+                        # 6-hour courses using 35-capacity labs (batched) need 6 slots
+                        slot_limit = 6  # Allow 6 lab slots for 6-hour courses using 35-capacity labs
+                        strategy_note = "6 slots for 6-hour courses using 35-capacity labs (batched)"
                     else:
-                        # Courses with ≤35 students will use 70+ capacity labs (3 slots)
-                        slot_limit = 3  # Standard limit for 6+ hour courses in 70+ capacity labs
-                        strategy_note = "3 slots for 6+ hour courses using 70+ capacity labs"
+                        # 6-hour courses using 70+ capacity labs (no batching) get 4 slots
+                        slot_limit = 4  # Standard limit for 6-hour courses in 70+ capacity labs  
+                        strategy_note = "4 slots for 6-hour courses using 70+ capacity labs (no batching)"
                 else:
                     slot_limit = 4  # Default 4 lab slots for groups with 3-5 practical hours
                 
@@ -1990,7 +1924,13 @@ class LabScheduler:
                     # Determine scheduling strategy note if not already set
                     if slot_limit is not None and 'strategy_note' not in locals():
                         if max_practical_hours <= 2:
-                            strategy_note = "STRICT 2-SLOT LIMIT (forces parallelization)"
+                            if slot_limit == 2:
+                                if len(unique_teachers) >= total_courses:
+                                    strategy_note = "FORCES PARALLELIZATION (each course has different teacher)"
+                                else:
+                                    strategy_note = "FORCES PARALLELIZATION (multiple teachers available)"
+                            else:
+                                strategy_note = f"FLEXIBLE SCHEDULING (teacher conflicts prevent 2-slot limit)"
                         elif max_practical_hours >= 6:
                             # strategy_note already set above in the elif block
                             pass
@@ -2013,7 +1953,7 @@ class LabScheduler:
         self.logger.info("  4. Teachers cannot teach multiple labs simultaneously (global constraint)")
         self.logger.info("  5. At most ONE group per semester can be active in any time slot")
         self.logger.info("  6. Same-group parallelization preference added to objective")
-        self.logger.info("  7. SMART group slot limits: NO LIMIT for core lab courses, 2 slots if <=2 hours (strict), 2-4 slots if 4 hours (prefers 70+ labs, batching fallback), 3-6 slots if 6+ hours (prefers 70+ labs, batching fallback), else 4 slots")
+        self.logger.info("  7. SMART group slot limits: NO LIMIT for core lab courses, 2 slots if <=2 hours + parallelization, 4 slots if 4 hours + batched, 2 slots if 4 hours + not batched, 6 slots if 6 hours + batched, 4 slots if 6 hours + not batched, else 4 slots")
         self.logger.info("  8. IMPROVED: Unassigned courses are now grouped by course code with balanced groups")
     
     def apply_same_group_parallelization_preference(self, model, lab_assignments, semester_groups):
@@ -2026,9 +1966,6 @@ class LabScheduler:
         
         # For each semester and group, encourage scheduling in parallel
         for (dept, semester), groups in semester_groups.items():
-            # Check if this department/semester has core labs
-            has_core_labs = self._check_if_dept_semester_has_core_labs(groups)
-            
             for group_idx, course_instances in groups.items():
                 if len(course_instances) <= 1:
                     continue  # Skip groups with only one course
@@ -2072,37 +2009,8 @@ class LabScheduler:
                             model.Add(sum(course_assignments) >= 2).OnlyEnforceIf(parallel_bonus_2)
                             model.Add(sum(course_assignments) < 2).OnlyEnforceIf(parallel_bonus_2.Not())
                             
-                            # Check if this specific group contains core lab courses
-                            group_has_core_labs = any(
-                                isinstance(inst, dict) and inst.get('id') in self.core_lab_instance_ids or
-                                isinstance(inst, str) and inst in self.core_lab_instance_ids
-                                for inst in course_instances
-                            )
-                            
-                            # Determine weights based on core lab presence in this specific group
-                            if group_has_core_labs:
-                                # CORE LAB GROUPS: EXTREMELY high weights for maximum parallelization priority
-                                weight_2 = 200  # 25x higher than standard - CRITICAL PRIORITY
-                                weight_3 = 400  # 33x higher than standard - CRITICAL PRIORITY
-                                weight_4 = 800  # 50x higher than standard - CRITICAL PRIORITY
-                                weight_5 = 1500 # 75x higher than standard - CRITICAL PRIORITY
-                                self.logger.debug(f"🧪 CORE LAB GROUP: Using CRITICAL parallelization weights for {dept} S{semester} G{group_idx+1}")
-                            elif has_core_labs:
-                                # CORE LAB DEPARTMENTS (non-core groups): Enhanced weights
-                                weight_2 = 25  # 3x higher than standard
-                                weight_3 = 40  # 3x higher than standard  
-                                weight_4 = 60  # 3x higher than standard
-                                weight_5 = 100 # 5x higher than standard
-                                self.logger.debug(f"🧪 CORE LAB DEPT: Using enhanced parallelization weights for {dept} S{semester} G{group_idx+1}")
-                            else:
-                                # STANDARD DEPARTMENTS: Normal weights
-                                weight_2 = 8
-                                weight_3 = 12
-                                weight_4 = 16
-                                weight_5 = 20
-                            
-                            # Add to our list of objective terms with appropriate weight
-                            self.group_parallelization_vars.append(parallel_bonus_2 * weight_2)
+                            # Add to our list of objective terms with higher weight (+8)
+                            self.group_parallelization_vars.append(parallel_bonus_2 * 8)
                             
                             # If we have 3+ potential courses, add graduated bonuses
                             if len(course_assignments) >= 3:
@@ -2114,8 +2022,8 @@ class LabScheduler:
                                 model.Add(sum(course_assignments) >= 3).OnlyEnforceIf(parallel_bonus_3)
                                 model.Add(sum(course_assignments) < 3).OnlyEnforceIf(parallel_bonus_3.Not())
                             
-                                # Higher weight for 3+ courses
-                                self.group_parallelization_vars.append(parallel_bonus_3 * weight_3)
+                                # Even higher weight for 3+ courses (+12)
+                                self.group_parallelization_vars.append(parallel_bonus_3 * 12)
                                 
                                 # If we have 4+ potential courses, add more graduated bonuses
                                 if len(course_assignments) >= 4:
@@ -2127,8 +2035,8 @@ class LabScheduler:
                                     model.Add(sum(course_assignments) >= 4).OnlyEnforceIf(parallel_bonus_4)
                                     model.Add(sum(course_assignments) < 4).OnlyEnforceIf(parallel_bonus_4.Not())
                                     
-                                    # Higher weight for 4+ courses
-                                    self.group_parallelization_vars.append(parallel_bonus_4 * weight_4)
+                                    # Even higher weight for 4+ courses (+16)
+                                    self.group_parallelization_vars.append(parallel_bonus_4 * 16)
                                     
                                     # If we have 5+ potential courses, add more graduated bonuses
                                     if len(course_assignments) >= 5:
@@ -2140,114 +2048,16 @@ class LabScheduler:
                                         model.Add(sum(course_assignments) >= 5).OnlyEnforceIf(parallel_bonus_5)
                                         model.Add(sum(course_assignments) < 5).OnlyEnforceIf(parallel_bonus_5.Not())
                                         
-                                        # Highest weight for 5+ courses
-                                        self.group_parallelization_vars.append(parallel_bonus_5 * weight_5)
-                            
-                            # SPECIAL CORE LAB PARALLELIZATION: Add extra constraints for core lab courses
-                            if group_has_core_labs:
-                                self._add_core_lab_parallelization_constraints(
-                                    model, course_instances, day_idx, session_idx, 
-                                    dept, semester, group_idx, lab_assignments
-                                )
-        
-        # Count core lab vs standard departments
-        core_lab_depts = sum(1 for (dept, semester), groups in semester_groups.items() 
-                           if self._check_if_dept_semester_has_core_labs(groups))
-        standard_depts = len(semester_groups) - core_lab_depts
+                                        # Highest weight for 5+ courses (+20)
+                                        self.group_parallelization_vars.append(parallel_bonus_5 * 20)
         
         self.logger.info(f"Added {len(self.group_parallelization_vars)} parallelization bonus variables to objective")
         self.logger.info("📊 Graduated parallelization bonus weights:")
-        self.logger.info("  🔥 CORE LAB GROUPS (CRITICAL PRIORITY - Maximum Parallelization):")
-        self.logger.info("    • 2 core labs in parallel: +200 (25x enhanced)")
-        self.logger.info("    • 3 core labs in parallel: +400 (33x enhanced)")
-        self.logger.info("    • 4 core labs in parallel: +800 (50x enhanced)")
-        self.logger.info("    • 5+ core labs in parallel: +1500 (75x enhanced)")
-        self.logger.info("    • ALL core labs parallel: +5000 (MAXIMUM PRIORITY)")
-        self.logger.info("  🧪 CORE LAB DEPARTMENTS (Enhanced Parallelization):")
-        self.logger.info("    • 2 courses in parallel: +25 (3x enhanced)")
-        self.logger.info("    • 3 courses in parallel: +40 (3x enhanced)")
-        self.logger.info("    • 4 courses in parallel: +60 (3x enhanced)")
-        self.logger.info("    • 5+ courses in parallel: +100 (5x enhanced)")
-        self.logger.info("  📚 STANDARD DEPARTMENTS:")
-        self.logger.info("    • 2 courses in parallel: +8")
-        self.logger.info("    • 3 courses in parallel: +12")
-        self.logger.info("    • 4 courses in parallel: +16")
-        self.logger.info("    • 5+ courses in parallel: +20")
-        self.logger.info(f"Distribution: {core_lab_depts} core lab depts, {standard_depts} standard depts")
-        self.logger.info("🎯 CORE LAB STRATEGY: EXTREMELY HIGH PRIORITY for core lab parallel scheduling")
-        self.logger.info("🔥 CRITICAL: Core lab courses will be scheduled in parallel whenever possible")
-    
-    def _add_core_lab_parallelization_constraints(self, model, course_instances, day_idx, session_idx, dept, semester, group_idx, lab_assignments):
-        """Add special high-priority constraints to force core lab courses to run in parallel."""
-        
-        # Identify core lab courses in this group
-        core_lab_courses = []
-        for instance in course_instances:
-            instance_id = None
-            if isinstance(instance, dict):
-                instance_id = instance.get('id')
-            elif isinstance(instance, str):
-                instance_id = instance
-                
-            if instance_id and instance_id in self.core_lab_instance_ids:
-                core_lab_courses.append(instance_id)
-        
-        if len(core_lab_courses) >= 2:
-            # Create variables for each core lab course being scheduled at this time
-            core_lab_scheduled = []
-            
-            for course_instance_id in core_lab_courses:
-                if course_instance_id in lab_assignments:
-                    course_scheduled = model.NewBoolVar(
-                        f'core_lab_{course_instance_id}_scheduled_day{day_idx}_session{session_idx}'
-                    )
-                    
-                    # Link to actual lab assignments
-                    room_assignments = []
-                    for room_id in self.lab_room_ids:
-                        room_assignments.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
-                    
-                    if room_assignments:
-                        # course_scheduled = 1 if any room assignment = 1
-                        model.Add(course_scheduled <= sum(room_assignments))
-                        model.Add(sum(room_assignments) <= len(room_assignments) * course_scheduled)
-                        core_lab_scheduled.append(course_scheduled)
-            
-            if len(core_lab_scheduled) >= 2:
-                # CRITICAL CONSTRAINT: Strong preference for ALL core labs to run together
-                all_core_parallel = model.NewBoolVar(
-                    f'all_core_parallel_{dept}_S{semester}_G{group_idx}_day{day_idx}_session{session_idx}'
-                )
-                
-                # all_core_parallel = 1 if ALL core lab courses are scheduled at this time
-                model.Add(sum(core_lab_scheduled) >= len(core_lab_scheduled)).OnlyEnforceIf(all_core_parallel)
-                model.Add(sum(core_lab_scheduled) < len(core_lab_scheduled)).OnlyEnforceIf(all_core_parallel.Not())
-                
-                # MASSIVE bonus for all core labs running in parallel (10x more than regular parallelization)
-                self.group_parallelization_vars.append(all_core_parallel * 5000)
-                
-                self.logger.debug(f"🧪 CRITICAL: Added parallel constraint for {len(core_lab_courses)} core labs in {dept} S{semester} G{group_idx+1}")
-    
-    def _check_if_dept_semester_has_core_labs(self, groups):
-        """Check if any group in this department/semester contains core lab instances."""
-        # groups is a dictionary {group_idx: group_instances}
-        for group_idx, group in groups.items():
-            if not group:
-                continue
-            for instance in group:
-                # Handle both string IDs and dictionary instances
-                if isinstance(instance, dict):
-                    instance_id = instance['id']
-                elif isinstance(instance, str):
-                    instance_id = instance
-                else:
-                    # Log unexpected type and skip
-                    self.logger.warning(f"Unexpected instance type in group {group_idx}: {type(instance)} - {instance}")
-                    continue
-                    
-                if instance_id in self.core_lab_instance_ids:
-                    return True
-        return False
+        self.logger.info("  • 2 courses in parallel: +8 (was +4)")
+        self.logger.info("  • 3 courses in parallel: +12 (was +6)")
+        self.logger.info("  • 4 courses in parallel: +16 (new!)")
+        self.logger.info("  • 5+ courses in parallel: +20 (new!)")
+        self.logger.info("This combined with the 4-slot limit will strongly encourage parallel scheduling")
     
     def apply_max_consecutive_lab_slots_constraint(self, model, lab_assignments, lab_sessions):
         """Creates penalty variables for teachers having more than 2 consecutive lab sessions."""
@@ -2356,8 +2166,8 @@ class LabScheduler:
         self.logger.info(f"Applied {constraints_applied} theory-lab conflict constraints")
 
     def apply_semester_lab_slot_limit_constraint(self, model, lab_assignments):
-        """CONSTRAINT: Limit the total number of lab slots used by any single semester/department to 18 (excluding core labs)."""
-        self.logger.info("Applying semester lab slot limit constraint (max 18 slots per sem/dept, core labs exempt)...")
+        """CONSTRAINT: Limit the total number of lab slots used by any single semester/department to 18."""
+        self.logger.info("Applying semester lab slot limit constraint (max 18 slots per sem/dept)...")
         
         # Group course instances by department and semester
         semester_courses = defaultdict(list)
@@ -2370,21 +2180,10 @@ class LabScheduler:
 
         # Apply constraint for each semester/department
         for (dept, semester), instance_ids in semester_courses.items():
-            # Exclude core lab instances from this constraint (they get unlimited slots)
-            non_core_instance_ids = [
-                inst_id for inst_id in instance_ids 
-                if inst_id not in self.core_lab_instance_ids
-            ]
-            core_instance_ids = [
-                inst_id for inst_id in instance_ids 
-                if inst_id in self.core_lab_instance_ids
-            ]
-
-            if not non_core_instance_ids:
-                self.logger.info(f"  - Skipping 18-slot limit for {dept} S{semester}: all its labs are core labs and thus exempt.")
+            if not instance_ids:
                 continue
 
-            # Create boolean variables for each time slot to check if it's used by this semester/dept's non-core labs
+            # Create boolean variables for each time slot to check if it's used by this semester/dept
             slot_used_vars = {}
             for day_idx in range(self.num_days):
                 for session_idx in range(len(self.lab_sessions)):
@@ -2395,11 +2194,11 @@ class LabScheduler:
             # Link these variables to the main assignment variables
             for day_idx in range(self.num_days):
                 for session_idx in range(len(self.lab_sessions)):
-                    # Slot is used if ANY non-core lab from this semester/dept is scheduled in it
+                    # Slot is used if ANY lab from this semester/dept is scheduled in it
                     
-                    # Get all assignment variables for this slot for this semester/dept (non-core labs only)
+                    # Get all assignment variables for this slot for this semester/dept
                     slot_assignments = []
-                    for instance_id in non_core_instance_ids:
+                    for instance_id in instance_ids:
                         slot_assignments.extend(
                             lab_assignments[instance_id][day_idx][session_idx].values()
                         )
@@ -2409,12 +2208,11 @@ class LabScheduler:
                         model.Add(sum(slot_assignments) >= 1).OnlyEnforceIf(slot_used_vars[(day_idx, session_idx)])
                         model.Add(sum(slot_assignments) == 0).OnlyEnforceIf(slot_used_vars[(day_idx, session_idx)].Not())
 
-            # The sum of used slots for this semester/dept's non-core labs must be <= 18
+            # The sum of used slots for this semester/dept must be <= 18
             total_slots_used = sum(slot_used_vars.values())
             model.Add(total_slots_used <= 18)
             
-            self.logger.info(f"  - Constraint for {dept} Semester {semester}: non-core lab slots <= 18")
-            self.logger.info(f"    ({len(non_core_instance_ids)} regular labs limited, {len(core_instance_ids)} core labs exempt)")
+            self.logger.info(f"  - Constraint for {dept} Semester {semester}: total used lab slots <= 18")
 
     def apply_lab_efficiency_constraints(self, model, lab_assignments, lab_sessions):
         """Applies various constraints to improve the efficiency and quality of the lab schedule."""
@@ -2519,14 +2317,14 @@ class LabScheduler:
             self.logger.info("  • Higher bonuses for higher degrees of parallelization")
         
         # PRIORITY 3: Minimize "orphaned" sessions on days (encourage compact scheduling)
-        orphaned_session_penalties = []
-        self._add_orphaned_session_penalties(model, lab_assignments, lab_sessions, orphaned_session_penalties)
+        # orphaned_session_penalties = []
+        # self._add_orphaned_session_penalties(model, lab_assignments, lab_sessions, orphaned_session_penalties)
         
-        # Add penalties with weight (negative in objective function)
-        if orphaned_session_penalties:
-            for penalty in orphaned_session_penalties:
-                objective_terms.append(penalty * -5)  # Weight of -5 per orphaned session
-            self.logger.info(f"PENALTY: Orphaned Sessions - {len(orphaned_session_penalties)} penalty variables")
+        # # Add penalties with weight (negative in objective function)
+        # if orphaned_session_penalties:
+        #     for penalty in orphaned_session_penalties:
+        #         objective_terms.append(penalty * -5)  # Weight of -5 per orphaned session
+        #     self.logger.info(f"PENALTY: Orphaned Sessions - {len(orphaned_session_penalties)} penalty variables")
         
         # PRIORITY 4: Balance room utilization
         room_utilization_vars = []
@@ -2550,11 +2348,11 @@ class LabScheduler:
             self.logger.info(f"BONUS: Capacity Preferences - {len(self.capacity_preferences)} bonus variables for 6-hour courses preferring 70+ labs")
         
         # NEW PRIORITY: Penalize teacher exhaustion (3 consecutive labs)
-        if hasattr(self, 'teacher_exhaustion_penalties') and self.teacher_exhaustion_penalties:
-            for penalty_var in self.teacher_exhaustion_penalties:
-                objective_terms.append(penalty_var * -100)  # Heavy penalty
-            self.logger.info(
-                f"PENALTY: Teacher Exhaustion - {len(self.teacher_exhaustion_penalties)} penalty variables with high weight")
+        # if hasattr(self, 'teacher_exhaustion_penalties') and self.teacher_exhaustion_penalties:
+        #     for penalty_var in self.teacher_exhaustion_penalties:
+        #         objective_terms.append(penalty_var * -100)  # Heavy penalty
+        #     self.logger.info(
+        #         f"PENALTY: Teacher Exhaustion - {len(self.teacher_exhaustion_penalties)} penalty variables with high weight")
         
         # Create the final objective function
         if objective_terms:
@@ -3439,7 +3237,7 @@ class LabScheduler:
         return assignment 
 
     def apply_core_lab_mapping_constraint(self, model, lab_assignments):
-        """Applies constraint that courses in core_mapping must be assigned to their specified lab(s)."""
+        """Applies constraint that courses in core_mapping must be assigned to their specified lab."""
         if not self.course_to_room_mapping:
             self.logger.info("No core lab mapping found, skipping this constraint.")
             return
@@ -3461,28 +3259,24 @@ class LabScheduler:
                 course_name = course_row.iloc[0]['course_name']
                 
                 if (course_code, course_name) in self.course_to_room_mapping:
-                    required_room_ids = self.course_to_room_mapping[(course_code, course_name)]
+                    required_room_id = self.course_to_room_mapping[(course_code, course_name)]
                     
-                    # Ensure all required rooms are valid lab rooms
-                    valid_required_rooms = [room_id for room_id in required_room_ids if room_id in self.lab_room_ids]
-                    
-                    if not valid_required_rooms:
-                        self.logger.warning(f"No valid lab rooms found for course {course_code}. Skipping constraint for this course.")
+                    if required_room_id not in self.lab_room_ids:
+                        self.logger.warning(f"Room ID {required_room_id} for course {course_code} is not a valid lab room. Skipping constraint for this course.")
                         continue
                         
-                    # This course must be assigned ONLY to one of its specified rooms
-                    # Constrain it to NOT use any other rooms
-                    forbidden_rooms = set(self.lab_room_ids) - set(valid_required_rooms)
-                    
+                    # This course must be assigned to the specific room
+                    # Use the correct structure for lab_assignments which is nested by course_instance_id, day, session, room
                     for day_idx in range(self.num_days):
                         for session_idx in range(len(self.lab_sessions)):
-                            for room_id in forbidden_rooms:
-                                # This lab session cannot be assigned to forbidden rooms
-                                if course_instance_id in lab_assignments:
-                                    model.Add(lab_assignments[course_instance_id][day_idx][session_idx][room_id] == 0)
-                                    constraints_applied += 1
+                            for room_id in self.lab_room_ids:
+                                if room_id != required_room_id:
+                                    # This lab session cannot be assigned to any other room
+                                    if course_instance_id in lab_assignments:
+                                        model.Add(lab_assignments[course_instance_id][day_idx][session_idx][room_id] == 0)
+                                        constraints_applied += 1
                     
-                    self.logger.info(f"Constraining course '{course_code}' - '{course_name}' to {len(valid_required_rooms)} specific room(s): {valid_required_rooms}")
+                    self.logger.info(f"Constraining course '{course_code}' - '{course_name}' to room ID {required_room_id}")
                 else:
                     # This course is NOT in the core mapping.
                     # Constrain it to rooms of type 'Laboratory'.
@@ -3805,3 +3599,6 @@ class LabScheduler:
             
         except Exception as e:
             self.logger.error(f"❌ Error creating combined overview: {str(e)}")
+
+
+            
