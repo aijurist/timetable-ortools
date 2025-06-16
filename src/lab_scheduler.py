@@ -591,14 +591,44 @@ class LabScheduler:
         self.logger.info(f"  Max instances per course: {instance_analysis['max_instances_per_course']}")
         self.logger.info(f"  Dynamic student capacity: {instance_analysis['dynamic_student_capacity']} students")
         
-        # CRITICAL: Number of groups = Number of unique courses in the semester
+        # CRITICAL: Number of groups determination based on core lab presence
         # Each course can appear in at most 2 of these groups for optimal student choice
         unique_course_codes = instance_analysis['unique_courses']
         
-        # Always create as many groups as there are unique courses
-        num_groups = unique_course_codes
+        # Check if this semester/department has core lab courses
+        sem_dept_has_core_labs = False
+        unique_practical_courses = set()
         
-        self.logger.info(f"Creating {num_groups} groups (one per unique course: {unique_course_codes})")
+        for instance in courses:
+            instance_id = instance['id']
+            practical_hours = instance.get('practical_hours', 0)
+            
+            # Check if this instance is a core lab
+            if instance_id in self.core_lab_instance_ids:
+                sem_dept_has_core_labs = True
+            
+            # Collect unique courses with practical hours
+            if practical_hours > 0:
+                unique_practical_courses.add(instance['course_code'])
+        
+        # Log core lab detection results
+        if sem_dept_has_core_labs:
+            self.logger.info(f"  🧪 CORE LAB SEMESTER: Will create {len(unique_practical_courses)} groups (practical courses only)")
+            self.logger.info(f"  🧪 Unique practical courses: {', '.join(sorted(unique_practical_courses))}")
+        else:
+            self.logger.info(f"  📚 STANDARD SEMESTER: Will create {unique_course_codes} groups (all courses)")
+        
+        # Determine number of groups based on core lab presence
+        if sem_dept_has_core_labs:
+            # If semester has core labs, limit groups to unique courses with practical hours
+            num_groups = len(unique_practical_courses)
+            self.logger.info(f"🧪 CORE LAB DETECTED: Creating {num_groups} groups (limited to unique practical courses: {len(unique_practical_courses)})")
+            self.logger.info(f"📋 Core lab courses present - using practical course count instead of total course count")
+        else:
+            # Otherwise, use the standard logic (all unique courses)
+            num_groups = unique_course_codes
+            self.logger.info(f"Creating {num_groups} groups (one per unique course: {unique_course_codes})")
+        
         self.logger.info(f"📋 CONSTRAINT: Each course limited to maximum 2 of the {num_groups} groups for optimal choice balance")
         
         # Initialize groups
@@ -1996,6 +2026,9 @@ class LabScheduler:
         
         # For each semester and group, encourage scheduling in parallel
         for (dept, semester), groups in semester_groups.items():
+            # Check if this department/semester has core labs
+            has_core_labs = self._check_if_dept_semester_has_core_labs(groups)
+            
             for group_idx, course_instances in groups.items():
                 if len(course_instances) <= 1:
                     continue  # Skip groups with only one course
@@ -2039,8 +2072,23 @@ class LabScheduler:
                             model.Add(sum(course_assignments) >= 2).OnlyEnforceIf(parallel_bonus_2)
                             model.Add(sum(course_assignments) < 2).OnlyEnforceIf(parallel_bonus_2.Not())
                             
-                            # Add to our list of objective terms with higher weight (+8)
-                            self.group_parallelization_vars.append(parallel_bonus_2 * 8)
+                            # Determine weights based on whether this is a core lab department
+                            if has_core_labs:
+                                # CORE LAB DEPARTMENTS: Much higher weights to maximize parallelization
+                                weight_2 = 25  # 3x higher than standard
+                                weight_3 = 40  # 3x higher than standard  
+                                weight_4 = 60  # 3x higher than standard
+                                weight_5 = 100 # 5x higher than standard
+                                self.logger.debug(f"🧪 CORE LAB: Using enhanced parallelization weights for {dept} S{semester} G{group_idx+1}")
+                            else:
+                                # STANDARD DEPARTMENTS: Normal weights
+                                weight_2 = 8
+                                weight_3 = 12
+                                weight_4 = 16
+                                weight_5 = 20
+                            
+                            # Add to our list of objective terms with appropriate weight
+                            self.group_parallelization_vars.append(parallel_bonus_2 * weight_2)
                             
                             # If we have 3+ potential courses, add graduated bonuses
                             if len(course_assignments) >= 3:
@@ -2052,8 +2100,8 @@ class LabScheduler:
                                 model.Add(sum(course_assignments) >= 3).OnlyEnforceIf(parallel_bonus_3)
                                 model.Add(sum(course_assignments) < 3).OnlyEnforceIf(parallel_bonus_3.Not())
                             
-                                # Even higher weight for 3+ courses (+12)
-                                self.group_parallelization_vars.append(parallel_bonus_3 * 12)
+                                # Higher weight for 3+ courses
+                                self.group_parallelization_vars.append(parallel_bonus_3 * weight_3)
                                 
                                 # If we have 4+ potential courses, add more graduated bonuses
                                 if len(course_assignments) >= 4:
@@ -2065,8 +2113,8 @@ class LabScheduler:
                                     model.Add(sum(course_assignments) >= 4).OnlyEnforceIf(parallel_bonus_4)
                                     model.Add(sum(course_assignments) < 4).OnlyEnforceIf(parallel_bonus_4.Not())
                                     
-                                    # Even higher weight for 4+ courses (+16)
-                                    self.group_parallelization_vars.append(parallel_bonus_4 * 16)
+                                    # Higher weight for 4+ courses
+                                    self.group_parallelization_vars.append(parallel_bonus_4 * weight_4)
                                     
                                     # If we have 5+ potential courses, add more graduated bonuses
                                     if len(course_assignments) >= 5:
@@ -2078,16 +2126,49 @@ class LabScheduler:
                                         model.Add(sum(course_assignments) >= 5).OnlyEnforceIf(parallel_bonus_5)
                                         model.Add(sum(course_assignments) < 5).OnlyEnforceIf(parallel_bonus_5.Not())
                                         
-                                        # Highest weight for 5+ courses (+20)
-                                        self.group_parallelization_vars.append(parallel_bonus_5 * 20)
+                                        # Highest weight for 5+ courses
+                                        self.group_parallelization_vars.append(parallel_bonus_5 * weight_5)
+        
+        # Count core lab vs standard departments
+        core_lab_depts = sum(1 for (dept, semester), groups in semester_groups.items() 
+                           if self._check_if_dept_semester_has_core_labs(groups))
+        standard_depts = len(semester_groups) - core_lab_depts
         
         self.logger.info(f"Added {len(self.group_parallelization_vars)} parallelization bonus variables to objective")
         self.logger.info("📊 Graduated parallelization bonus weights:")
-        self.logger.info("  • 2 courses in parallel: +8 (was +4)")
-        self.logger.info("  • 3 courses in parallel: +12 (was +6)")
-        self.logger.info("  • 4 courses in parallel: +16 (new!)")
-        self.logger.info("  • 5+ courses in parallel: +20 (new!)")
-        self.logger.info("This combined with the 4-slot limit will strongly encourage parallel scheduling")
+        self.logger.info("  🧪 CORE LAB DEPARTMENTS (Enhanced Parallelization):")
+        self.logger.info("    • 2 courses in parallel: +25 (3x enhanced)")
+        self.logger.info("    • 3 courses in parallel: +40 (3x enhanced)")
+        self.logger.info("    • 4 courses in parallel: +60 (3x enhanced)")
+        self.logger.info("    • 5+ courses in parallel: +100 (5x enhanced)")
+        self.logger.info("  📚 STANDARD DEPARTMENTS:")
+        self.logger.info("    • 2 courses in parallel: +8")
+        self.logger.info("    • 3 courses in parallel: +12")
+        self.logger.info("    • 4 courses in parallel: +16")
+        self.logger.info("    • 5+ courses in parallel: +20")
+        self.logger.info(f"Distribution: {core_lab_depts} core lab depts, {standard_depts} standard depts")
+        self.logger.info("🎯 CORE LAB STRATEGY: Maximizing parallel scheduling for optimal lab utilization")
+    
+    def _check_if_dept_semester_has_core_labs(self, groups):
+        """Check if any group in this department/semester contains core lab instances."""
+        # groups is a dictionary {group_idx: group_instances}
+        for group_idx, group in groups.items():
+            if not group:
+                continue
+            for instance in group:
+                # Handle both string IDs and dictionary instances
+                if isinstance(instance, dict):
+                    instance_id = instance['id']
+                elif isinstance(instance, str):
+                    instance_id = instance
+                else:
+                    # Log unexpected type and skip
+                    self.logger.warning(f"Unexpected instance type in group {group_idx}: {type(instance)} - {instance}")
+                    continue
+                    
+                if instance_id in self.core_lab_instance_ids:
+                    return True
+        return False
     
     def apply_max_consecutive_lab_slots_constraint(self, model, lab_assignments, lab_sessions):
         """Creates penalty variables for teachers having more than 2 consecutive lab sessions."""
@@ -2196,8 +2277,8 @@ class LabScheduler:
         self.logger.info(f"Applied {constraints_applied} theory-lab conflict constraints")
 
     def apply_semester_lab_slot_limit_constraint(self, model, lab_assignments):
-        """CONSTRAINT: Limit the total number of lab slots used by any single semester/department to 18."""
-        self.logger.info("Applying semester lab slot limit constraint (max 18 slots per sem/dept)...")
+        """CONSTRAINT: Limit the total number of lab slots used by any single semester/department to 18 (excluding core labs)."""
+        self.logger.info("Applying semester lab slot limit constraint (max 18 slots per sem/dept, core labs exempt)...")
         
         # Group course instances by department and semester
         semester_courses = defaultdict(list)
@@ -2210,10 +2291,14 @@ class LabScheduler:
 
         # Apply constraint for each semester/department
         for (dept, semester), instance_ids in semester_courses.items():
-            # Exclude core lab instances from this constraint
+            # Exclude core lab instances from this constraint (they get unlimited slots)
             non_core_instance_ids = [
                 inst_id for inst_id in instance_ids 
                 if inst_id not in self.core_lab_instance_ids
+            ]
+            core_instance_ids = [
+                inst_id for inst_id in instance_ids 
+                if inst_id in self.core_lab_instance_ids
             ]
 
             if not non_core_instance_ids:
@@ -2233,7 +2318,7 @@ class LabScheduler:
                 for session_idx in range(len(self.lab_sessions)):
                     # Slot is used if ANY non-core lab from this semester/dept is scheduled in it
                     
-                    # Get all assignment variables for this slot for this semester/dept
+                    # Get all assignment variables for this slot for this semester/dept (non-core labs only)
                     slot_assignments = []
                     for instance_id in non_core_instance_ids:
                         slot_assignments.extend(
@@ -2249,7 +2334,8 @@ class LabScheduler:
             total_slots_used = sum(slot_used_vars.values())
             model.Add(total_slots_used <= 18)
             
-            self.logger.info(f"  - Constraint for {dept} Semester {semester}: total used non-core lab slots <= 18")
+            self.logger.info(f"  - Constraint for {dept} Semester {semester}: non-core lab slots <= 18")
+            self.logger.info(f"    ({len(non_core_instance_ids)} regular labs limited, {len(core_instance_ids)} core labs exempt)")
 
     def apply_lab_efficiency_constraints(self, model, lab_assignments, lab_sessions):
         """Applies various constraints to improve the efficiency and quality of the lab schedule."""
