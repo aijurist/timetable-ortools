@@ -2072,14 +2072,28 @@ class LabScheduler:
                             model.Add(sum(course_assignments) >= 2).OnlyEnforceIf(parallel_bonus_2)
                             model.Add(sum(course_assignments) < 2).OnlyEnforceIf(parallel_bonus_2.Not())
                             
-                            # Determine weights based on whether this is a core lab department
-                            if has_core_labs:
-                                # CORE LAB DEPARTMENTS: Much higher weights to maximize parallelization
+                            # Check if this specific group contains core lab courses
+                            group_has_core_labs = any(
+                                isinstance(inst, dict) and inst.get('id') in self.core_lab_instance_ids or
+                                isinstance(inst, str) and inst in self.core_lab_instance_ids
+                                for inst in course_instances
+                            )
+                            
+                            # Determine weights based on core lab presence in this specific group
+                            if group_has_core_labs:
+                                # CORE LAB GROUPS: EXTREMELY high weights for maximum parallelization priority
+                                weight_2 = 200  # 25x higher than standard - CRITICAL PRIORITY
+                                weight_3 = 400  # 33x higher than standard - CRITICAL PRIORITY
+                                weight_4 = 800  # 50x higher than standard - CRITICAL PRIORITY
+                                weight_5 = 1500 # 75x higher than standard - CRITICAL PRIORITY
+                                self.logger.debug(f"🧪 CORE LAB GROUP: Using CRITICAL parallelization weights for {dept} S{semester} G{group_idx+1}")
+                            elif has_core_labs:
+                                # CORE LAB DEPARTMENTS (non-core groups): Enhanced weights
                                 weight_2 = 25  # 3x higher than standard
                                 weight_3 = 40  # 3x higher than standard  
                                 weight_4 = 60  # 3x higher than standard
                                 weight_5 = 100 # 5x higher than standard
-                                self.logger.debug(f"🧪 CORE LAB: Using enhanced parallelization weights for {dept} S{semester} G{group_idx+1}")
+                                self.logger.debug(f"🧪 CORE LAB DEPT: Using enhanced parallelization weights for {dept} S{semester} G{group_idx+1}")
                             else:
                                 # STANDARD DEPARTMENTS: Normal weights
                                 weight_2 = 8
@@ -2128,6 +2142,13 @@ class LabScheduler:
                                         
                                         # Highest weight for 5+ courses
                                         self.group_parallelization_vars.append(parallel_bonus_5 * weight_5)
+                            
+                            # SPECIAL CORE LAB PARALLELIZATION: Add extra constraints for core lab courses
+                            if group_has_core_labs:
+                                self._add_core_lab_parallelization_constraints(
+                                    model, course_instances, day_idx, session_idx, 
+                                    dept, semester, group_idx, lab_assignments
+                                )
         
         # Count core lab vs standard departments
         core_lab_depts = sum(1 for (dept, semester), groups in semester_groups.items() 
@@ -2136,6 +2157,12 @@ class LabScheduler:
         
         self.logger.info(f"Added {len(self.group_parallelization_vars)} parallelization bonus variables to objective")
         self.logger.info("📊 Graduated parallelization bonus weights:")
+        self.logger.info("  🔥 CORE LAB GROUPS (CRITICAL PRIORITY - Maximum Parallelization):")
+        self.logger.info("    • 2 core labs in parallel: +200 (25x enhanced)")
+        self.logger.info("    • 3 core labs in parallel: +400 (33x enhanced)")
+        self.logger.info("    • 4 core labs in parallel: +800 (50x enhanced)")
+        self.logger.info("    • 5+ core labs in parallel: +1500 (75x enhanced)")
+        self.logger.info("    • ALL core labs parallel: +5000 (MAXIMUM PRIORITY)")
         self.logger.info("  🧪 CORE LAB DEPARTMENTS (Enhanced Parallelization):")
         self.logger.info("    • 2 courses in parallel: +25 (3x enhanced)")
         self.logger.info("    • 3 courses in parallel: +40 (3x enhanced)")
@@ -2147,7 +2174,59 @@ class LabScheduler:
         self.logger.info("    • 4 courses in parallel: +16")
         self.logger.info("    • 5+ courses in parallel: +20")
         self.logger.info(f"Distribution: {core_lab_depts} core lab depts, {standard_depts} standard depts")
-        self.logger.info("🎯 CORE LAB STRATEGY: Maximizing parallel scheduling for optimal lab utilization")
+        self.logger.info("🎯 CORE LAB STRATEGY: EXTREMELY HIGH PRIORITY for core lab parallel scheduling")
+        self.logger.info("🔥 CRITICAL: Core lab courses will be scheduled in parallel whenever possible")
+    
+    def _add_core_lab_parallelization_constraints(self, model, course_instances, day_idx, session_idx, dept, semester, group_idx, lab_assignments):
+        """Add special high-priority constraints to force core lab courses to run in parallel."""
+        
+        # Identify core lab courses in this group
+        core_lab_courses = []
+        for instance in course_instances:
+            instance_id = None
+            if isinstance(instance, dict):
+                instance_id = instance.get('id')
+            elif isinstance(instance, str):
+                instance_id = instance
+                
+            if instance_id and instance_id in self.core_lab_instance_ids:
+                core_lab_courses.append(instance_id)
+        
+        if len(core_lab_courses) >= 2:
+            # Create variables for each core lab course being scheduled at this time
+            core_lab_scheduled = []
+            
+            for course_instance_id in core_lab_courses:
+                if course_instance_id in lab_assignments:
+                    course_scheduled = model.NewBoolVar(
+                        f'core_lab_{course_instance_id}_scheduled_day{day_idx}_session{session_idx}'
+                    )
+                    
+                    # Link to actual lab assignments
+                    room_assignments = []
+                    for room_id in self.lab_room_ids:
+                        room_assignments.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+                    
+                    if room_assignments:
+                        # course_scheduled = 1 if any room assignment = 1
+                        model.Add(course_scheduled <= sum(room_assignments))
+                        model.Add(sum(room_assignments) <= len(room_assignments) * course_scheduled)
+                        core_lab_scheduled.append(course_scheduled)
+            
+            if len(core_lab_scheduled) >= 2:
+                # CRITICAL CONSTRAINT: Strong preference for ALL core labs to run together
+                all_core_parallel = model.NewBoolVar(
+                    f'all_core_parallel_{dept}_S{semester}_G{group_idx}_day{day_idx}_session{session_idx}'
+                )
+                
+                # all_core_parallel = 1 if ALL core lab courses are scheduled at this time
+                model.Add(sum(core_lab_scheduled) >= len(core_lab_scheduled)).OnlyEnforceIf(all_core_parallel)
+                model.Add(sum(core_lab_scheduled) < len(core_lab_scheduled)).OnlyEnforceIf(all_core_parallel.Not())
+                
+                # MASSIVE bonus for all core labs running in parallel (10x more than regular parallelization)
+                self.group_parallelization_vars.append(all_core_parallel * 5000)
+                
+                self.logger.debug(f"🧪 CRITICAL: Added parallel constraint for {len(core_lab_courses)} core labs in {dept} S{semester} G{group_idx+1}")
     
     def _check_if_dept_semester_has_core_labs(self, groups):
         """Check if any group in this department/semester contains core lab instances."""
