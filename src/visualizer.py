@@ -2087,7 +2087,7 @@ class CombinedScheduleVisualizer:
             
             if day in self.days and session_name in self.lab_sessions:
                 day_idx = self.days.index(day)
-                lab_time_slots = self.lab_sessions[session_name]  # This is now a list of time slot strings
+                time_slots = self.lab_sessions[session_name]['slots']
                 
                 course_code = row['course_code']
                 room_number = row['room_number']
@@ -2103,10 +2103,8 @@ class CombinedScheduleVisualizer:
                 else:
                     display_text = f"LAB: {course_code}\n{room_number}"
                 
-                # Map lab time slots to time slot indices
-                for lab_time_slot in lab_time_slots:
-                    if lab_time_slot in self.time_slots:
-                        slot_idx = self.time_slots.index(lab_time_slot)
+                for slot_idx in time_slots:
+                    if slot_idx < len(self.time_slots):
                         grid[day_idx, slot_idx] = display_text
                         color_grid[day_idx, slot_idx] = ('lab', block)
         
