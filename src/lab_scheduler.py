@@ -33,25 +33,25 @@ class LabScheduler:
         # Load core mapping data for specific lab assignments
         self.core_mapping_df = None
         try:
-            # The path to core_mapping_cleaned.csv. This assumes it's in the same directory as the other data files.
+            # The path to combined_lab_mapping.csv. This assumes it's in the same directory as the other data files.
             base_data_dir = os.path.dirname(course_file)
             # A more robust path might be:
-            core_mapping_file_path = os.path.join(os.path.dirname(base_data_dir), 'core_mapping_cleaned.csv')
+            core_mapping_file_path = os.path.join(os.path.dirname(base_data_dir), 'combined_lab_mapping.csv')
             
             if not os.path.exists(core_mapping_file_path):
-                 core_mapping_file_path = os.path.join(base_data_dir, 'core_mapping_cleaned.csv')
+                 core_mapping_file_path = os.path.join(base_data_dir, 'combined_lab_mapping.csv')
             
             if not os.path.exists(core_mapping_file_path):
-                 core_mapping_file_path = os.path.join(base_data_dir, '..', 'data', 'core_mapping_cleaned.csv')
+                 core_mapping_file_path = os.path.join(base_data_dir, '..', 'data', 'combined_lab_mapping.csv')
 
             if os.path.exists(core_mapping_file_path):
                 self.core_mapping_df = pd.read_csv(core_mapping_file_path)
                 self.logger.info(f"Successfully loaded core lab mapping from {core_mapping_file_path}")
             else:
-                self.logger.warning(f"Core lab mapping file 'core_mapping_cleaned.csv' not found.")
+                self.logger.warning(f"Core lab mapping file 'combined_lab_mapping.csv' not found.")
 
         except Exception as e:
-            self.logger.error(f"Error loading core_mapping_cleaned.csv: {e}")
+            self.logger.error(f"Error loading combined_lab_mapping.csv: {e}")
             self.core_mapping_df = None
         
         # Setup time structure (matching reference implementation)
@@ -83,7 +83,7 @@ class LabScheduler:
         
         self.course_to_room_mapping = {}
         if self.core_mapping_df is not None:
-            # We need to map (course_code, course_name) -> room_id
+            # We need to map (course_code, course_name) -> list of room_ids
             self.rooms_df['block'] = self.rooms_df['block'].fillna('Unknown').astype(str).str.strip()
             self.rooms_df['room_number'] = self.rooms_df['room_number'].astype(str).str.strip()
             self.rooms_df['room_identifier'] = self.rooms_df['room_number'] + "_" + self.rooms_df['block']
@@ -92,25 +92,62 @@ class LabScheduler:
             # Clean data in core_mapping_df
             self.core_mapping_df['course_code'] = self.core_mapping_df['course_code'].astype(str).str.strip()
             self.core_mapping_df['course_name'] = self.core_mapping_df['course_name'].astype(str).str.strip()
-            self.core_mapping_df['room_number'] = self.core_mapping_df['room_number'].astype(str).str.strip()
-            self.core_mapping_df['block'] = self.core_mapping_df['block'].astype(str).str.strip()
             
             for _, row in self.core_mapping_df.iterrows():
                 course_code = row['course_code']
                 course_name = row['course_name']
-                room_number = row['room_number']
-                block = row['block']
+                total_labs = int(row.get('total_labs', 1))
                 
-                room_identifier = room_number + "_" + block
+                mapped_rooms = []
                 
-                if room_identifier in room_lookup:
-                    room_id = room_lookup[room_identifier]
-                    self.course_to_room_mapping[(course_code, course_name)] = room_id
-                    self.logger.info(f"Mapped course '{course_code}' - '{course_name}' to room '{room_number}' (ID: {room_id})")
+                # Process each lab (lab_1, lab_2, lab_3, etc.)
+                for lab_num in range(1, total_labs + 1):
+                    room_col = f'lab_{lab_num}_room'
+                    block_col = f'lab_{lab_num}_block'
+                    
+                    if room_col in row and block_col in row:
+                        room_number = str(row[room_col]).strip()
+                        block = str(row[block_col]).strip()
+                        
+                        # Skip if room_number is 'nan' or empty
+                        if room_number.lower() in ['nan', ''] or pd.isna(row[room_col]):
+                            continue
+                            
+                        room_identifier = room_number + "_" + block
+                        
+                        if room_identifier in room_lookup:
+                            room_id = room_lookup[room_identifier]
+                            mapped_rooms.append(room_id)
+                            self.logger.info(f"Mapped course '{course_code}' - '{course_name}' to lab {lab_num}: '{room_number}' (ID: {room_id})")
+                        else:
+                            self.logger.warning(f"Room '{room_number}' in block '{block}' for course '{course_code}' lab {lab_num} not found in rooms file. Identifier: '{room_identifier}'")
+                
+                # Store the mapping with all available rooms for this course
+                if mapped_rooms:
+                    self.course_to_room_mapping[(course_code, course_name)] = mapped_rooms
+                    self.logger.info(f"Course '{course_code}' mapped to {len(mapped_rooms)} lab(s): {mapped_rooms}")
                 else:
-                    self.logger.warning(f"Room '{room_number}' in block '{block}' for course '{course_code}' not found in rooms file. Identifier: '{room_identifier}'")
+                    self.logger.warning(f"No valid labs found for course '{course_code}' - '{course_name}'")
 
         
+        # Identify all instance IDs that are considered "core labs"
+        self.core_lab_instance_ids = set()
+        if self.core_mapping_df is not None:
+            # Create a lookup from (course_code, course_name) to a list of instance IDs from the main courses_df
+            course_name_to_ids = defaultdict(list)
+            for _, row in self.courses_df.iterrows():
+                course_code = row['course_code']
+                course_name = row['course_name']
+                instance_id = str(row['id'])
+                course_name_to_ids[(course_code, course_name)].append(instance_id)
+
+            # Use the lookup to find all instance IDs corresponding to the core lab mapping
+            for course_tuple in self.course_to_room_mapping.keys():
+                if course_tuple in course_name_to_ids:
+                    self.core_lab_instance_ids.update(course_name_to_ids[course_tuple])
+
+            self.logger.info(f"Identified {len(self.core_lab_instance_ids)} core lab instances that will be exempt from the 18-slot weekly limit.")
+
         # Process teacher-course assignments for lab sessions
         self.process_teacher_courses()
         
@@ -1811,16 +1848,8 @@ class LabScheduler:
                     slot_limit = None  # No slot limit for groups with core lab courses
                     strategy_note = f"NO SLOT LIMIT for group with {core_lab_courses} core lab courses"
                 elif max_practical_hours <= 2:
-                    # Check if parallelization is actually possible
-                    if len(unique_teachers) >= total_courses:
-                        # Each course has a different teacher - parallelization is possible
-                        slot_limit = 2  # Exactly 2 lab slots - forces courses to run in parallel
-                    elif len(unique_teachers) >= 2 and total_courses <= 4:
-                        # Multiple teachers available, manageable number of courses
-                        slot_limit = 2  # Still try 2 slots but may need flexibility
-                    else:
-                        # Too many courses for same teachers - need more slots
-                        slot_limit = min(4, total_courses)  # Flexible slots based on course count
+                    # For 2-hour practical courses, always limit to 2 slots
+                    slot_limit = 2  # Always 2 lab slots for 2-hour courses - forces parallelization
                 elif max_practical_hours == 4:
                     # For 4-hour practical courses, check if they need 35-capacity labs (batching)
                     has_4_hour_course_needing_35_labs = False
@@ -1870,9 +1899,9 @@ class LabScheduler:
                         slot_limit = 6  # Allow 6 lab slots for 6-hour courses using 35-capacity labs
                         strategy_note = "6 slots for 6-hour courses using 35-capacity labs (batched)"
                     else:
-                        # 6-hour courses using 70+ capacity labs (no batching) get 4 slots
-                        slot_limit = 4  # Standard limit for 6-hour courses in 70+ capacity labs  
-                        strategy_note = "4 slots for 6-hour courses using 70+ capacity labs (no batching)"
+                        # 6-hour courses using 70+ capacity labs (no batching) get 3 slots
+                        slot_limit = 3  # Standard limit for 6-hour courses in 70+ capacity labs  
+                        strategy_note = "3 slots for 6-hour courses using 70+ capacity labs (no batching)"
                 else:
                     slot_limit = 4  # Default 4 lab slots for groups with 3-5 practical hours
                 
@@ -1929,13 +1958,7 @@ class LabScheduler:
                     # Determine scheduling strategy note if not already set
                     if slot_limit is not None and 'strategy_note' not in locals():
                         if max_practical_hours <= 2:
-                            if slot_limit == 2:
-                                if len(unique_teachers) >= total_courses:
-                                    strategy_note = "FORCES PARALLELIZATION (each course has different teacher)"
-                                else:
-                                    strategy_note = "FORCES PARALLELIZATION (multiple teachers available)"
-                            else:
-                                strategy_note = f"FLEXIBLE SCHEDULING (teacher conflicts prevent 2-slot limit)"
+                            strategy_note = "STRICT 2-SLOT LIMIT (forces parallelization)"
                         elif max_practical_hours >= 6:
                             # strategy_note already set above in the elif block
                             pass
@@ -1958,7 +1981,7 @@ class LabScheduler:
         self.logger.info("  4. Teachers cannot teach multiple labs simultaneously (global constraint)")
         self.logger.info("  5. At most ONE group per semester can be active in any time slot")
         self.logger.info("  6. Same-group parallelization preference added to objective")
-        self.logger.info("  7. SMART group slot limits: NO LIMIT for core lab courses, 2 slots if <=2 hours + parallelization, 4 slots if 4 hours + batched, 2 slots if 4 hours + not batched, 6 slots if 6 hours + batched, 4 slots if 6 hours + not batched, else 4 slots")
+        self.logger.info("  7. SMART group slot limits: NO LIMIT for core lab courses, 2 slots if <=2 hours (strict), 4 slots if 4 hours + batched, 2 slots if 4 hours + not batched, 6 slots if 6 hours + batched, 3 slots if 6 hours + not batched, else 4 slots")
         self.logger.info("  8. IMPROVED: Unassigned courses are now grouped by course code with balanced groups")
     
     def apply_same_group_parallelization_preference(self, model, lab_assignments, semester_groups):
@@ -2185,10 +2208,17 @@ class LabScheduler:
 
         # Apply constraint for each semester/department
         for (dept, semester), instance_ids in semester_courses.items():
-            if not instance_ids:
+            # Exclude core lab instances from this constraint
+            non_core_instance_ids = [
+                inst_id for inst_id in instance_ids 
+                if inst_id not in self.core_lab_instance_ids
+            ]
+
+            if not non_core_instance_ids:
+                self.logger.info(f"  - Skipping 18-slot limit for {dept} S{semester}: all its labs are core labs and thus exempt.")
                 continue
 
-            # Create boolean variables for each time slot to check if it's used by this semester/dept
+            # Create boolean variables for each time slot to check if it's used by this semester/dept's non-core labs
             slot_used_vars = {}
             for day_idx in range(self.num_days):
                 for session_idx in range(len(self.lab_sessions)):
@@ -2199,11 +2229,11 @@ class LabScheduler:
             # Link these variables to the main assignment variables
             for day_idx in range(self.num_days):
                 for session_idx in range(len(self.lab_sessions)):
-                    # Slot is used if ANY lab from this semester/dept is scheduled in it
+                    # Slot is used if ANY non-core lab from this semester/dept is scheduled in it
                     
                     # Get all assignment variables for this slot for this semester/dept
                     slot_assignments = []
-                    for instance_id in instance_ids:
+                    for instance_id in non_core_instance_ids:
                         slot_assignments.extend(
                             lab_assignments[instance_id][day_idx][session_idx].values()
                         )
@@ -2213,11 +2243,11 @@ class LabScheduler:
                         model.Add(sum(slot_assignments) >= 1).OnlyEnforceIf(slot_used_vars[(day_idx, session_idx)])
                         model.Add(sum(slot_assignments) == 0).OnlyEnforceIf(slot_used_vars[(day_idx, session_idx)].Not())
 
-            # The sum of used slots for this semester/dept must be <= 18
+            # The sum of used slots for this semester/dept's non-core labs must be <= 18
             total_slots_used = sum(slot_used_vars.values())
             model.Add(total_slots_used <= 18)
             
-            self.logger.info(f"  - Constraint for {dept} Semester {semester}: total used lab slots <= 18")
+            self.logger.info(f"  - Constraint for {dept} Semester {semester}: total used non-core lab slots <= 18")
 
     def apply_lab_efficiency_constraints(self, model, lab_assignments, lab_sessions):
         """Applies various constraints to improve the efficiency and quality of the lab schedule."""
@@ -3242,7 +3272,7 @@ class LabScheduler:
         return assignment 
 
     def apply_core_lab_mapping_constraint(self, model, lab_assignments):
-        """Applies constraint that courses in core_mapping must be assigned to their specified lab."""
+        """Applies constraint that courses in core_mapping must be assigned to their specified lab(s)."""
         if not self.course_to_room_mapping:
             self.logger.info("No core lab mapping found, skipping this constraint.")
             return
@@ -3264,24 +3294,28 @@ class LabScheduler:
                 course_name = course_row.iloc[0]['course_name']
                 
                 if (course_code, course_name) in self.course_to_room_mapping:
-                    required_room_id = self.course_to_room_mapping[(course_code, course_name)]
+                    required_room_ids = self.course_to_room_mapping[(course_code, course_name)]
                     
-                    if required_room_id not in self.lab_room_ids:
-                        self.logger.warning(f"Room ID {required_room_id} for course {course_code} is not a valid lab room. Skipping constraint for this course.")
+                    # Ensure all required rooms are valid lab rooms
+                    valid_required_rooms = [room_id for room_id in required_room_ids if room_id in self.lab_room_ids]
+                    
+                    if not valid_required_rooms:
+                        self.logger.warning(f"No valid lab rooms found for course {course_code}. Skipping constraint for this course.")
                         continue
                         
-                    # This course must be assigned to the specific room
-                    # Use the correct structure for lab_assignments which is nested by course_instance_id, day, session, room
+                    # This course must be assigned ONLY to one of its specified rooms
+                    # Constrain it to NOT use any other rooms
+                    forbidden_rooms = set(self.lab_room_ids) - set(valid_required_rooms)
+                    
                     for day_idx in range(self.num_days):
                         for session_idx in range(len(self.lab_sessions)):
-                            for room_id in self.lab_room_ids:
-                                if room_id != required_room_id:
-                                    # This lab session cannot be assigned to any other room
-                                    if course_instance_id in lab_assignments:
-                                        model.Add(lab_assignments[course_instance_id][day_idx][session_idx][room_id] == 0)
-                                        constraints_applied += 1
+                            for room_id in forbidden_rooms:
+                                # This lab session cannot be assigned to forbidden rooms
+                                if course_instance_id in lab_assignments:
+                                    model.Add(lab_assignments[course_instance_id][day_idx][session_idx][room_id] == 0)
+                                    constraints_applied += 1
                     
-                    self.logger.info(f"Constraining course '{course_code}' - '{course_name}' to room ID {required_room_id}")
+                    self.logger.info(f"Constraining course '{course_code}' - '{course_name}' to {len(valid_required_rooms)} specific room(s): {valid_required_rooms}")
                 else:
                     # This course is NOT in the core mapping.
                     # Constrain it to rooms of type 'Laboratory'.

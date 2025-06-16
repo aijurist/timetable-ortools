@@ -208,7 +208,7 @@ def main():
                 logger.warning("Theory scheduling will proceed without lab conflict avoidance")
         
         # Create theory scheduler with lab schedule data to prevent overlaps
-        theory_scheduler = TheoryScheduler(course_file, room_file, None)
+        theory_scheduler = TheoryScheduler(course_file, room_file, lab_schedule_data)
         
         # Generate the theory schedule
         theory_success = theory_scheduler.generate_theory_schedule()

@@ -1577,25 +1577,26 @@ class TheoryScheduler:
         for group_name, day_slots in group_timeslot_vars.items():
             for day_idx in range(self.num_days):
                 # Tier 1: First 4 slots (8:00-11:50) - extremely high weight
-                for slot_idx in range(min(4, len(self.theory_time_slots))):
-                    objective_terms.append(day_slots[day_idx][slot_idx] * 1000)
+                # for slot_idx in range(min(4, len(self.theory_time_slots))):
+                #     objective_terms.append(day_slots[day_idx][slot_idx] * 1000)
                 
                 # Tier 2: Next 4 slots (12:00 - 3:50) - high weight, but much lower than Tier 1
-                for slot_idx in range(4, min(8, len(self.theory_time_slots))):
-                    objective_terms.append(day_slots[day_idx][slot_idx] * 100)
+                # for slot_idx in range(4, min(8, len(self.theory_time_slots))):
+                #     objective_terms.append(day_slots[day_idx][slot_idx] * 100)
                 
                 # Tier 3: Last 3 slots (4:00 - 6:50) - lowest weight
-                for slot_idx in range(8, min(11, len(self.theory_time_slots))):
-                    objective_terms.append(day_slots[day_idx][slot_idx] * 10)
+                # for slot_idx in range(8, min(11, len(self.theory_time_slots))):
+                #     objective_terms.append(day_slots[day_idx][slot_idx] * 10)
+                pass
         
         if objective_terms:
             model.Maximize(sum(objective_terms))
             self.logger.info(f"Group allocation objective set with {len(objective_terms)} terms")
-            self.logger.info("SEQUENTIAL SLOT FILLING STRATEGY:")
-            self.logger.info("  Tier 1 slots 0-3 (8:00-11:50): +1000 - Will be filled first")
-            self.logger.info("  Tier 2 slots 4-7 (12:00-3:50): +100 - Will be filled only after Tier 1 slots")
-            self.logger.info("  Tier 3 slots 8-10 (4:00-6:50): +10 - Will be filled only after Tier 1 and 2 slots")
-            self.logger.info("This ensures earlier slots will be completely filled before using later slots")
+            # self.logger.info("SEQUENTIAL SLOT FILLING STRATEGY:")
+            # self.logger.info("  Tier 1 slots 0-3 (8:00-11:50): +1000 - Will be filled first")
+            # self.logger.info("  Tier 2 slots 4-7 (12:00-3:50): +100 - Will be filled only after Tier 1 slots")
+            # self.logger.info("  Tier 3 slots 8-10 (4:00-6:50): +10 - Will be filled only after Tier 1 and 2 slots")
+            # self.logger.info("This ensures earlier slots will be completely filled before using later slots")
     
     def extract_group_timeslots(self, solver, group_timeslot_vars):
         """Extract allocated time slots for each group from solver solution."""
