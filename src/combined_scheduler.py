@@ -97,6 +97,9 @@ class CombinedScheduler:
         self.laboratory_room_ids = self.lab_rooms[self.lab_rooms['room_type'] == 'Laboratory']['id'].tolist()
         self.logger.info(f"Found {len(self.laboratory_room_ids)} rooms of type 'Laboratory'.")
         
+        # CORE LAB MAPPING PROCESSING
+        self._load_core_lab_mapping()
+        
         # COURSE PROCESSING
         self.process_courses()
         
@@ -220,6 +223,225 @@ class CombinedScheduler:
             return 'Monday-Friday'  # Default
         
         return self.dept_day_patterns[dept_name]['pattern']
+    
+    def _load_core_lab_mapping(self):
+        """Load core lab mapping file for specialized lab course assignments."""
+        self.logger.info("Loading core lab mapping configuration...")
+        
+        # Initialize core mapping variables
+        self.core_mapping_df = None
+        self.course_to_room_mapping = {}
+        self.core_lab_instance_ids = set()
+        
+        # Try to find core mapping file in various locations
+        possible_paths = [
+            'data/og-final.csv',
+            './data/og-final.csv',
+            '../data/og-final.csv',
+            'timetable_scheduler/data/og-final.csv',
+            'data/combined_lab_mapping.csv',
+            './data/combined_lab_mapping.csv',
+            '../data/combined_lab_mapping.csv',
+            'timetable_scheduler/data/combined_lab_mapping.csv',
+            'data/core_mapping_cleaned.csv',
+            './data/core_mapping_cleaned.csv',
+            '../data/core_mapping_cleaned.csv',
+            'timetable_scheduler/data/core_mapping_cleaned.csv'
+        ]
+        
+        core_mapping_file_path = None
+        for path in possible_paths:
+            if os.path.exists(path):
+                core_mapping_file_path = path
+                break
+        
+        if core_mapping_file_path:
+            try:
+                self.core_mapping_df = pd.read_csv(core_mapping_file_path)
+                self.logger.info(f"Successfully loaded core lab mapping from {core_mapping_file_path}")
+                self.logger.info(f"Core mapping contains {len(self.core_mapping_df)} course-lab assignments")
+            except Exception as e:
+                self.logger.error(f"Error loading core lab mapping file: {e}")
+                self.core_mapping_df = None
+        else:
+            self.logger.warning("Core lab mapping file not found. Proceeding without specialized lab assignments.")
+            self.core_mapping_df = None
+        
+        # Process core mapping if available
+        if self.core_mapping_df is not None:
+            self._process_core_lab_mapping()
+        else:
+            self.logger.info("No core lab mapping available - all courses will use general lab assignment rules")
+    
+    def _process_core_lab_mapping(self):
+        """Process the core lab mapping to create course-to-room assignments."""
+        if self.core_mapping_df is None:
+            return
+        
+        self.logger.info("Processing core lab mapping...")
+        
+        # Check the file structure to determine processing method
+        columns = self.core_mapping_df.columns.tolist()
+        
+        if 'lab_1' in columns and 'lab_2' in columns:
+            # This is og-final.csv format
+            self._process_og_final_format()
+        elif 'lab_1_room' in columns and 'lab_1_block' in columns:
+            # This is the old combined_lab_mapping.csv format
+            self._process_combined_lab_mapping_format()
+        else:
+            self.logger.error(f"Unknown core mapping file format. Columns: {columns}")
+            return
+        
+        # Identify all instance IDs that are considered "core labs"
+        if self.core_mapping_df is not None:
+            # Create a lookup from (course_code, course_name) to a list of instance IDs from the main courses_df
+            course_name_to_ids = defaultdict(list)
+            for _, row in self.courses_df.iterrows():
+                course_code = row['course_code']
+                course_name = row['course_name']
+                instance_id = str(row['id'])
+                course_name_to_ids[(course_code, course_name)].append(instance_id)
+
+            # Use the lookup to find all instance IDs corresponding to the core lab mapping
+            for course_tuple in self.course_to_room_mapping.keys():
+                if course_tuple in course_name_to_ids:
+                    self.core_lab_instance_ids.update(course_name_to_ids[course_tuple])
+
+            self.logger.info(f"Identified {len(self.core_lab_instance_ids)} core lab instances that will be exempt from the 18-slot weekly limit.")
+        
+        self.logger.info(f"Core lab mapping processing complete: {len(self.course_to_room_mapping)} course mappings created")
+    
+    def _process_og_final_format(self):
+        """Process og-final.csv format: course_code, course_name, department, total_labs, lab_1, lab_2, lab_3, lab_4, lab_5"""
+        self.logger.info("Processing og-final.csv format core lab mapping...")
+        
+        # Create room name lookup (room name -> room ID)
+        room_name_lookup = {}
+        for _, room in self.rooms_df.iterrows():
+            room_names = []
+            
+            # Add different possible room name formats
+            if pd.notna(room.get('room_number')):
+                room_names.append(str(room['room_number']).strip())
+            
+            if pd.notna(room.get('description')):
+                room_names.append(str(room['description']).strip())
+            
+            # Add room_number + block combination if available
+            if pd.notna(room.get('room_number')) and pd.notna(room.get('block')):
+                room_names.append(f"{room['room_number']}_{room['block']}")
+            
+            # Map all possible names to this room ID
+            for name in room_names:
+                if name and name.lower() != 'nan':
+                    room_name_lookup[name.lower()] = room['id']
+        
+        # Clean data in core_mapping_df
+        self.core_mapping_df['course_code'] = self.core_mapping_df['course_code'].astype(str).str.strip()
+        self.core_mapping_df['course_name'] = self.core_mapping_df['course_name'].astype(str).str.strip()
+        
+        # Process each course mapping
+        mapped_courses = 0
+        for _, row in self.core_mapping_df.iterrows():
+            course_code = row['course_code']
+            course_name = row['course_name']
+            department = row.get('department', 'Unknown')
+            total_labs = int(row.get('total_labs', 1))
+            
+            mapped_rooms = []
+            
+            # Process each lab (lab_1, lab_2, lab_3, lab_4, lab_5)
+            for lab_num in range(1, min(total_labs + 1, 6)):  # Max 5 labs (lab_1 to lab_5)
+                lab_col = f'lab_{lab_num}'
+                
+                if lab_col in row and pd.notna(row[lab_col]):
+                    lab_name = str(row[lab_col]).strip()
+                    
+                    # Skip if lab_name is empty
+                    if not lab_name or lab_name.lower() in ['nan', '']:
+                        continue
+                    
+                    # Try to find matching room ID
+                    room_id = None
+                    lab_name_lower = lab_name.lower()
+                    
+                    # Direct match
+                    if lab_name_lower in room_name_lookup:
+                        room_id = room_name_lookup[lab_name_lower]
+                    else:
+                        # Fuzzy matching for partial matches
+                        for room_name, rid in room_name_lookup.items():
+                            if lab_name_lower in room_name or room_name in lab_name_lower:
+                                room_id = rid
+                                break
+                    
+                    if room_id is not None:
+                        mapped_rooms.append(room_id)
+                        self.logger.info(f"OG-Final mapping: '{course_code}' - '{course_name}' lab {lab_num} → '{lab_name}' (ID: {room_id})")
+                    else:
+                        self.logger.warning(f"OG-Final mapping: Lab '{lab_name}' for course '{course_code}' lab {lab_num} not found in rooms")
+            
+            # Store the mapping with all available rooms for this course
+            if mapped_rooms:
+                self.course_to_room_mapping[(course_code, course_name)] = mapped_rooms
+                mapped_courses += 1
+                self.logger.info(f"OG-Final complete: '{course_code}' ({department}) → {len(mapped_rooms)} lab(s): {mapped_rooms}")
+            else:
+                self.logger.warning(f"OG-Final failed: No valid labs found for course '{course_code}' - '{course_name}' ({department})")
+        
+        self.logger.info(f"OG-Final processing complete: {mapped_courses} courses mapped to specific labs")
+    
+    def _process_combined_lab_mapping_format(self):
+        """Process combined_lab_mapping.csv format with lab_1_room, lab_1_block columns"""
+        self.logger.info("Processing combined_lab_mapping.csv format core lab mapping...")
+        
+        # Prepare room identifier lookup
+        self.rooms_df['block'] = self.rooms_df['block'].fillna('Unknown').astype(str).str.strip()
+        self.rooms_df['room_number'] = self.rooms_df['room_number'].astype(str).str.strip()
+        self.rooms_df['room_identifier'] = self.rooms_df['room_number'] + "_" + self.rooms_df['block']
+        room_lookup = pd.Series(self.rooms_df.id.values, index=self.rooms_df.room_identifier).to_dict()
+        
+        # Clean data in core_mapping_df
+        self.core_mapping_df['course_code'] = self.core_mapping_df['course_code'].astype(str).str.strip()
+        self.core_mapping_df['course_name'] = self.core_mapping_df['course_name'].astype(str).str.strip()
+        
+        # Process each course mapping
+        for _, row in self.core_mapping_df.iterrows():
+            course_code = row['course_code']
+            course_name = row['course_name']
+            total_labs = int(row.get('total_labs', 1))
+            
+            mapped_rooms = []
+            
+            # Process each lab (lab_1, lab_2, lab_3, etc.)
+            for lab_num in range(1, total_labs + 1):
+                room_col = f'lab_{lab_num}_room'
+                block_col = f'lab_{lab_num}_block'
+                
+                if room_col in row and block_col in row:
+                    room_number = str(row[room_col]).strip()
+                    block = str(row[block_col]).strip()
+                    
+                    # Skip if room_number is 'nan' or empty
+                    if room_number.lower() in ['nan', ''] or pd.isna(row[room_col]):
+                        continue
+                        
+                    room_identifier = room_number + "_" + block
+                    
+                    if room_identifier in room_lookup:
+                        room_id = room_lookup[room_identifier]
+                        mapped_rooms.append(room_id)
+                        self.logger.info(f"Combined mapping: '{course_code}' - '{course_name}' lab {lab_num} → '{room_number}' (ID: {room_id})")
+                    else:
+                        self.logger.warning(f"Combined mapping: Room '{room_number}' in block '{block}' for course '{course_code}' lab {lab_num} not found. Identifier: '{room_identifier}'")
+            
+            # Store the mapping with all available rooms for this course
+            if mapped_rooms:
+                self.course_to_room_mapping[(course_code, course_name)] = mapped_rooms
+                self.logger.info(f"Combined mapping complete: '{course_code}' → {len(mapped_rooms)} lab(s): {mapped_rooms}")
+            else:
+                self.logger.warning(f"Combined mapping failed: No valid labs found for course '{course_code}' - '{course_name}'")
     
     def _compute_group_requirements(self):
         """Compute theory time slot requirements for each group."""
@@ -1267,6 +1489,7 @@ class CombinedScheduler:
         # REMOVED: apply_teacher_clash_constraint - handled by unified constraint
         # REMOVED: apply_capacity_constraint - redundant with course_lab_requirements_constraint
         constraints_applied += self.apply_group_based_scheduling_constraint(model, lab_variables)
+        constraints_applied += self.apply_core_lab_mapping_constraint(model, lab_variables)
         # REMOVED: apply_theory_lab_group_conflict_constraint - redundant with cross-system constraints
         # REMOVED: This constraint was too restrictive and prevented the full scheduling of required practical hours.
         constraints_applied += self.apply_semester_lab_slot_limit_constraint(model, lab_variables)
@@ -1573,9 +1796,95 @@ class CombinedScheduler:
         self.logger.info(f"Applied {constraints_applied} group-based scheduling constraints")
         return constraints_applied
     
+    def apply_core_lab_mapping_constraint(self, model, lab_variables):
+        """Apply constraint that courses in core_mapping must be assigned to their specified lab(s)."""
+        if not self.course_to_room_mapping:
+            self.logger.info("No core lab mapping found, skipping this constraint.")
+            return 0
+
+        self.logger.info("Applying core lab mapping constraint...")
+        constraints_applied = 0
+        
+        for teacher_id, lab_courses in self.lab_requirements.items():
+            for course_req in lab_courses:
+                course_code = course_req['course_code']
+                course_instance_id = course_req['course_instance_id']
+                
+                # Get course name from the original courses data
+                course_row = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
+                if course_row.empty:
+                    self.logger.warning(f"Course instance {course_instance_id} not found in courses data")
+                    continue
+                    
+                course_name = course_row.iloc[0]['course_name']
+                
+                if teacher_id not in lab_variables or course_instance_id not in lab_variables[teacher_id]:
+                    continue
+                
+                if (course_code, course_name) in self.course_to_room_mapping:
+                    required_room_ids = self.course_to_room_mapping[(course_code, course_name)]
+                    
+                    # Ensure all required rooms are valid lab rooms
+                    valid_required_rooms = [room_id for room_id in required_room_ids if room_id in self.lab_room_ids]
+                    
+                    if not valid_required_rooms:
+                        self.logger.warning(f"No valid lab rooms found for course {course_code}. Skipping constraint for this course.")
+                        continue
+                        
+                    # This course must be assigned ONLY to one of its specified rooms
+                    # Constrain it to NOT use any other rooms
+                    forbidden_rooms = set(self.lab_room_ids) - set(valid_required_rooms)
+                    
+                    # Get department for this course to determine number of days
+                    dept_name = "Computer Science & Engineering"  # Default
+                    if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
+                        dept_name = self.instance_group_mapping[course_instance_id]['department']
+                    else:
+                        # Fallback: look up in courses_df
+                        dept_name = course_row.iloc[0].get('student_dept', 'Computer Science & Engineering')
+                    
+                    dept_days = self._get_days_for_department(dept_name)
+                    num_dept_days = len(dept_days)
+                    
+                    for day_idx in range(num_dept_days):
+                        for session_name in self.lab_sessions.keys():
+                            for room_id in forbidden_rooms:
+                                # This lab session cannot be assigned to forbidden rooms
+                                if room_id in lab_variables[teacher_id][course_instance_id][day_idx][session_name]:
+                                    model.Add(lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id] == 0)
+                                    constraints_applied += 1
+                    
+                    self.logger.info(f"Core constraint: Course '{course_code}' - '{course_name}' restricted to {len(valid_required_rooms)} specific room(s): {valid_required_rooms}")
+                else:
+                    # This course is NOT in the core mapping.
+                    # Constrain it to rooms of type 'Laboratory'.
+                    self.logger.debug(f"Course '{course_code}' not in core mapping. Constraining to 'Laboratory' type rooms.")
+                    non_laboratory_rooms = set(self.lab_room_ids) - set(self.laboratory_room_ids)
+                    
+                    # Get department for this course to determine number of days
+                    dept_name = "Computer Science & Engineering"  # Default
+                    if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
+                        dept_name = self.instance_group_mapping[course_instance_id]['department']
+                    else:
+                        # Fallback: look up in courses_df
+                        dept_name = course_row.iloc[0].get('student_dept', 'Computer Science & Engineering')
+                    
+                    dept_days = self._get_days_for_department(dept_name)
+                    num_dept_days = len(dept_days)
+                    
+                    for day_idx in range(num_dept_days):
+                        for session_name in self.lab_sessions.keys():
+                            for room_id in non_laboratory_rooms:
+                                if room_id in lab_variables[teacher_id][course_instance_id][day_idx][session_name]:
+                                    model.Add(lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id] == 0)
+                                    constraints_applied += 1
+
+        self.logger.info(f"Applied {constraints_applied} core lab mapping constraints.")
+        return constraints_applied
+    
     def apply_semester_lab_slot_limit_constraint(self, model, lab_variables):
-        """CONSTRAINT: Limit the total number of lab slots used by any single semester/department."""
-        self.logger.info("Applying semester lab slot limit constraint...")
+        """CONSTRAINT: Limit the total number of lab slots used by any single semester/department to 18 (excluding core labs)."""
+        self.logger.info("Applying semester lab slot limit constraint (max 18 slots per sem/dept, core labs exempt)...")
         constraints_applied = 0
         
         # Group course instances by department and semester
@@ -1593,7 +1902,21 @@ class CombinedScheduler:
             if len(instance_info) == 0:
                 continue
             
-            # Create boolean variables for each time slot to check if it's used by this semester/dept
+            # Separate core lab instances from regular instances
+            non_core_instances = []
+            core_instances = []
+            
+            for teacher_id, course_instance_id in instance_info:
+                if course_instance_id in self.core_lab_instance_ids:
+                    core_instances.append((teacher_id, course_instance_id))
+                else:
+                    non_core_instances.append((teacher_id, course_instance_id))
+            
+            if not non_core_instances:
+                self.logger.info(f"  - Skipping 18-slot limit for {dept} S{semester}: all its labs are core labs and thus exempt.")
+                continue
+            
+            # Create boolean variables for each time slot to check if it's used by this semester/dept's non-core labs
             slot_used_vars = {}
             for day_idx in range(self.num_days):
                 for session_name in self.lab_sessions.keys():
@@ -1601,12 +1924,12 @@ class CombinedScheduler:
                         f'slot_used_{dept}_S{semester}_d{day_idx}_s{session_name}'
                     )
             
-            # Link these variables to the main assignment variables
+            # Link these variables to the main assignment variables (non-core labs only)
             for day_idx in range(self.num_days):
                 for session_name in self.lab_sessions.keys():
-                    # Slot is used if ANY lab from this semester/dept is scheduled in it
+                    # Slot is used if ANY non-core lab from this semester/dept is scheduled in it
                     slot_assignments = []
-                    for teacher_id, course_instance_id in instance_info:
+                    for teacher_id, course_instance_id in non_core_instances:
                         for room_id in self.lab_room_ids:
                             slot_assignments.append(lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id])
                     
@@ -1616,12 +1939,13 @@ class CombinedScheduler:
                         model.Add(sum(slot_assignments) == 0).OnlyEnforceIf(slot_used_vars[(day_idx, session_name)].Not())
                         constraints_applied += 2
             
-            # The sum of used slots for this semester/dept must be <= 18
+            # The sum of used slots for this semester/dept's non-core labs must be <= 18
             total_slots_used = sum(slot_used_vars.values())
             model.Add(total_slots_used <= 18)
             constraints_applied += 1
-        
-            self.logger.info(f"Constraint for {dept} Semester {semester}: lab slots <= 18 ({len(instance_info)} lab courses)")
+            
+            self.logger.info(f"  - Constraint for {dept} Semester {semester}: non-core lab slots <= 18")
+            self.logger.info(f"    ({len(non_core_instances)} regular labs limited, {len(core_instances)} core labs exempt)")
         
         self.logger.info(f"Applied {constraints_applied} semester lab slot limit constraints")
         return constraints_applied
