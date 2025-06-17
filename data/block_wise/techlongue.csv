@@ -77,6 +77,12 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 50,B416,B Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
 51,B417,B Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
 52,B418,B Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+53,B419,B Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+54,B422,B Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+55,B423,B Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+56,B424,B Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+57,B425,B Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+58,B426,B Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
 157,DG02,D Block,Computer Lab (DG02),1,Laboratory,50,70,1,0,High-tech,13,0,0,0
 158,DG03,D Block,Computer Lab (DG03),1,Laboratory,50,70,1,0,Basic,13,0,0,0
 
