@@ -203,12 +203,20 @@ def visualize_group_timetable(timetable, groups, title, filename, is_theory=True
                     # For simplicity, we'll just use the first group's color with higher alpha
                     group = next(iter(present_groups))
                     color = list(group_colors[group])
-                    color[3] = 0.7  # Higher alpha
+                    # Ensure color has 4 elements (RGBA), add alpha if not present
+                    if len(color) == 3:
+                        color.append(0.7)  # Add alpha
+                    else:
+                        color[3] = 0.7  # Set alpha
                     viz_matrix[slot_idx, day_idx] = color
                 else:
                     # Just one group, use its color
                     group = next(iter(present_groups))
-                    viz_matrix[slot_idx, day_idx] = list(group_colors[group]) + [0.5]  # Add alpha
+                    color = list(group_colors[group])
+                    # Ensure color has alpha channel
+                    if len(color) == 3:
+                        color.append(0.5)  # Add alpha
+                    viz_matrix[slot_idx, day_idx] = color
     
     # Create subplot for the timetable
     gs = plt.GridSpec(3, 1, height_ratios=[6, 1, 3])
@@ -415,7 +423,10 @@ def generate_group_distribution_visualizations():
                                 
                             # Use the first group's color
                             group = next(iter(present_groups))
-                            viz_theory_matrix[slot_idx, day_idx] = list(group_colors[group]) + [0.5]
+                            color = list(group_colors[group])
+                            if len(color) == 3:
+                                color.append(0.5)  # Add alpha
+                            viz_theory_matrix[slot_idx, day_idx] = color
                 
                 # Create lab visualization
                 viz_lab_matrix = np.zeros((len(LAB_SLOTS), len(DAYS), 4))  # RGBA values
@@ -432,7 +443,10 @@ def generate_group_distribution_visualizations():
                                 
                             # Use the first group's color
                             group = next(iter(present_groups))
-                            viz_lab_matrix[slot_idx, day_idx] = list(group_colors[group]) + [0.5]
+                            color = list(group_colors[group])
+                            if len(color) == 3:
+                                color.append(0.5)  # Add alpha
+                            viz_lab_matrix[slot_idx, day_idx] = color
                 
                 # Plot theory matrix
                 ax1.imshow(viz_theory_matrix, aspect='auto')

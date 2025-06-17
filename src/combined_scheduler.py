@@ -63,6 +63,14 @@ class CombinedScheduler:
             'L5': ['3:50 - 4:40', '4:40 - 5:30'],      # 3:50 - 5:30
             'L6': ['5:30 - 6:20', '6:20 - 7:10']       # 5:30 - 7:10
         }
+        self.num_lab_sessions = len(self.lab_sessions)
+
+        # Create detailed lab session info with slot indices for conflict mapping
+        self.lab_sessions_details = {}
+        lab_time_slot_map = {slot: i for i, slot in enumerate(self.lab_time_slots)}
+        for session_name, time_slots in self.lab_sessions.items():
+            slot_indices = [lab_time_slot_map[ts] for ts in time_slots if ts in lab_time_slot_map]
+            self.lab_sessions_details[session_name] = {'slots': slot_indices}
         
         # THEORY TIME CONFIGURATION - EXACTLY as in theory_scheduler.py
         self.theory_time_slots = [
@@ -72,7 +80,7 @@ class CombinedScheduler:
         ]
         self.num_theory_slots = len(self.theory_time_slots)
         
-        # Build time slot mapping between lab and theory
+        # Build time slot mapping between lab and theory (now that both are defined)
         self._build_time_mapping()
         
         # ROOM PROCESSING
@@ -161,7 +169,7 @@ class CombinedScheduler:
                 h += 12
             return h * 60 + m
         
-        # Helper function to parse time range  
+        # Helper function to parse time range
         def parse_time_range(time_range_str):
             try:
                 # Handle format like "8:00 - 8:50" or "1:00 - 1:50"
@@ -222,13 +230,13 @@ class CombinedScheduler:
         self.num_teachers = len(self.teachers)
         
         # Create unified teacher-course assignments
-        self.teacher_course_assignments = {}
-        self.lab_requirements = {}
-        self.theory_requirements = {}
+        self.teacher_course_assignments = defaultdict(list)
         self.course_to_teacher = {}
+        self.lab_requirements = defaultdict(list)
+        self.theory_requirements = defaultdict(list)
         
         for _, row in self.courses_df.iterrows():
-            teacher_id = row['teacher_id']
+            teacher_id = str(row['teacher_id']) # Enforce string type
             course_id = row['course_id']
             course_instance_id = str(row['id'])
             
@@ -1051,9 +1059,8 @@ class CombinedScheduler:
         return group_timeslot_vars
     
     def _create_group_timeslot_variables(self, model):
-        """Create variables for group time slot allocation (Phase 1 of two-phase approach)."""
-        self.logger.info("Creating group time slot allocation variables...")
-        
+        """Create binary variables for theory group timeslot assignments."""
+        self.logger.info("Creating group timeslot variables...")
         group_timeslot_vars = {}
         
         # Use pre-computed group requirements
@@ -1076,14 +1083,17 @@ class CombinedScheduler:
         """Apply unified constraints for both lab and theory scheduling."""
         constraints_applied = 0
         
-        # 1. Lab-specific constraints
+        # 1. Lab-specific constraints (excluding the old teacher clash)
         constraints_applied += self._apply_lab_constraints(model, lab_variables)
         
-        # 2. Theory-specific constraints (group-based)
+        # 2. Theory-specific constraints (excluding the old teacher clash)
         constraints_applied += self._apply_theory_constraints(model, theory_variables)
         
-        # 3. Cross-system constraints (lab-theory conflicts)
+        # 3. Cross-system constraints (now only for dept/semester group conflicts)
         constraints_applied += self._apply_cross_system_constraints(model, lab_variables, theory_variables)
+
+        # 4. UNIFIED Teacher Clash Constraint (NEW)
+        constraints_applied += self._apply_unified_teacher_clash_constraint(model, lab_variables, theory_variables)
         
         self.logger.info(f"Applied {constraints_applied} unified constraints")
     
@@ -1098,7 +1108,7 @@ class CombinedScheduler:
         # Apply CORE lab constraints (optimized - removed redundancies)
         constraints_applied += self.apply_course_lab_requirements_constraint(model, lab_variables)
         constraints_applied += self.apply_lab_room_single_assignment_constraint(model, lab_variables)
-        constraints_applied += self.apply_teacher_clash_constraint(model, lab_variables)
+        # REMOVED: apply_teacher_clash_constraint - handled by unified constraint
         # REMOVED: apply_capacity_constraint - redundant with course_lab_requirements_constraint
         constraints_applied += self.apply_group_based_scheduling_constraint(model, lab_variables)
         # REMOVED: apply_theory_lab_group_conflict_constraint - redundant with cross-system constraints
@@ -1155,7 +1165,7 @@ class CombinedScheduler:
                         # CRITICAL: Either ALL sessions in 35-cap (with batching) OR ALL sessions in 70+ cap (no batching)
                         total_35_assignments = sum(assignments_in_35_cap)
                         total_70_plus_assignments = sum(assignments_in_70_plus_cap)
-                        
+                    
                         # Calculate sessions needed for batching in 35-cap labs
                         num_batches_35 = (student_count + 34) // 35
                         sessions_with_batching = base_sessions * num_batches_35
@@ -1185,7 +1195,7 @@ class CombinedScheduler:
                             # Constraint 2: If using 70+ cap strategy, ALL sessions must be in 70+ cap labs  
                             model.Add(total_70_plus_assignments == sum(total_assignments)).OnlyEnforceIf(use_35_cap_strategy.Not())
                             model.Add(total_35_assignments == 0).OnlyEnforceIf(use_35_cap_strategy.Not())
-                            
+                    
                             # Constraint 3: Session count depends on chosen strategy WITH SLOT RESTRICTIONS
                             model.Add(sum(total_assignments) == max_batched_sessions).OnlyEnforceIf(use_35_cap_strategy)
                             model.Add(sum(total_assignments) == max_unbatched_sessions).OnlyEnforceIf(use_35_cap_strategy.Not())
@@ -1196,8 +1206,7 @@ class CombinedScheduler:
                             required_sessions = min(max_batched_sessions, len(total_assignments))
                             model.Add(sum(total_assignments) == required_sessions)
                             constraints_applied += 1
-                        
-                        self.logger.info(f"Course {course_req['course_code']} ({practical_hours}h): EITHER {max_batched_sessions} sessions (35-cap batched) OR {max_unbatched_sessions} sessions (70+ cap unbatched)")
+                            self.logger.info(f"Course {course_req['course_code']} ({practical_hours}h): EITHER {max_batched_sessions} sessions (35-cap batched) OR {max_unbatched_sessions} sessions (70+ cap unbatched)")
                     else:
                         # Small courses: always base sessions, but enforce max 4 slots
                         max_sessions = min(base_sessions, 4)
@@ -1230,32 +1239,6 @@ class CombinedScheduler:
         
         self.logger.info(f"Applied {constraints_applied} lab room single assignment constraints")
         return constraints_applied
-
-    def apply_teacher_clash_constraint(self, model, lab_variables):
-        """Ensure a teacher is not assigned to more than one lab at the same time."""
-        self.logger.info("Applying teacher clash constraint (global)...")
-        constraints_applied = 0
-        
-        for teacher_id in lab_variables:
-            courses = list(lab_variables[teacher_id].keys())
-            
-            for day_idx in range(self.num_days):
-                for session_name in self.lab_sessions.keys():
-                    teacher_session_assignments = []
-                    for course_instance_id in courses:
-                        for room_id in self.lab_room_ids:
-                            teacher_session_assignments.append(
-                                lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id]
-                            )
-                    
-                    if teacher_session_assignments:
-                        model.Add(sum(teacher_session_assignments) <= 1)
-                        constraints_applied += 1
-                        
-        self.logger.info(f"Applied {constraints_applied} global teacher clash constraints for {len(lab_variables)} teachers")
-        return constraints_applied
-
-
     
     def apply_group_based_scheduling_constraint(self, model, lab_variables):
         """Apply group-based scheduling constraints to enforce scheduling by groups."""
@@ -1334,8 +1317,6 @@ class CombinedScheduler:
         self.logger.info(f"Applied {constraints_applied} group-based scheduling constraints")
         return constraints_applied
     
-    # REMOVED: apply_theory_lab_group_conflict_constraint method - was redundant with cross-system constraints
-    
     def apply_semester_lab_slot_limit_constraint(self, model, lab_variables):
         """CONSTRAINT: Limit the total number of lab slots used by any single semester/department."""
         self.logger.info("Applying semester lab slot limit constraint...")
@@ -1389,8 +1370,6 @@ class CombinedScheduler:
         self.logger.info(f"Applied {constraints_applied} semester lab slot limit constraints")
         return constraints_applied
     
-    # REMOVED: apply_lab_efficiency_constraints and _apply_peak_time_balancing methods - were over-constraining
-    
     def _apply_theory_constraints(self, model, group_timeslot_vars):
         """Apply theory-specific constraints using group-based approach."""
         self.logger.info("Applying group-based theory constraints...")
@@ -1406,29 +1385,33 @@ class CombinedScheduler:
                 for slot_idx in range(self.num_theory_slots):
                     timeslot_vars.append(group_timeslot_vars[group_name][day_idx][slot_idx])
             
-            model.Add(sum(timeslot_vars) == required_slots)
-            constraints_applied += 1
-            self.logger.debug(f"Group {group_name}: exactly {required_slots} time slots required")
+            if timeslot_vars:
+                model.Add(sum(timeslot_vars) == required_slots)
+                constraints_applied += 1
+                self.logger.debug(f"Group {group_name}: exactly {required_slots} time slots required")
         
         # CONSTRAINT 2: Different groups in same semester CANNOT overlap
         semester_groups = {}
         for group_name in group_timeslot_vars.keys():
-            # Parse group name to get semester info
-            parts = group_name.split('_')
-            if len(parts) >= 2:
+            # Parse group name properly: "Computer Science & Engineering_S3_G1"
+            parts = group_name.split('_S')
+            if len(parts) == 2:
                 dept = parts[0]
-                semester_part = parts[1]  # e.g., "S3" 
-                semester = semester_part[1:] if semester_part.startswith('S') else semester_part
-                
-                semester_key = f"{dept}_S{semester}"
-                if semester_key not in semester_groups:
-                    semester_groups[semester_key] = []
-                semester_groups[semester_key].append(group_name)
+                semester_and_group = parts[1]
+                semester_part = semester_and_group.split('_G')[0]
+                try:
+                    semester = int(semester_part)
+                    semester_key = f"{dept}_S{semester}"
+                    if semester_key not in semester_groups:
+                        semester_groups[semester_key] = []
+                    semester_groups[semester_key].append(group_name)
+                except ValueError:
+                    self.logger.warning(f"Could not parse semester from group name: {group_name}")
+                    continue
         
         for semester_key, groups in semester_groups.items():
             if len(groups) <= 1:
                 continue
-                
             self.logger.debug(f"Applying non-overlap constraints for {semester_key}: {len(groups)} groups")
             
             for day_idx in range(self.num_days):
@@ -1456,10 +1439,7 @@ class CombinedScheduler:
                     model.Add(sum(total_usage_vars) <= len(self.theory_room_ids))
                     constraints_applied += 1
         
-        # REMOVED: _apply_global_teacher_clash_constraint - redundant with cross-system teacher constraints
-        # REMOVED: _apply_lab_theory_conflict_constraint - redundant with cross-system group constraints
-        
-        self.logger.info(f"Applied {constraints_applied} theory-specific constraints (optimized)")
+        self.logger.info(f"Applied {constraints_applied} theory-specific constraints")
         return constraints_applied
     
     def _apply_cross_system_constraints(self, model, lab_variables, group_timeslot_vars):
@@ -1469,236 +1449,182 @@ class CombinedScheduler:
         
         # CONSTRAINT 1: Department/Semester Group Conflict Prevention
         # Lab groups and theory groups from the same dept/semester CANNOT overlap in time
+        # This is the only remaining cross-system constraint after unification.
         constraints_applied += self._apply_dept_semester_group_conflict_constraint(model, lab_variables, group_timeslot_vars)
-        
-        # CONSTRAINT 2: Teacher clash prevention (same teacher cannot be in lab and theory at overlapping times)
-        constraints_applied += self._apply_teacher_cross_system_conflict_constraint(model, lab_variables, group_timeslot_vars)
         
         self.logger.info(f"Applied {constraints_applied} cross-system constraints")
         return constraints_applied
     
     def _apply_dept_semester_group_conflict_constraint(self, model, lab_variables, group_timeslot_vars):
-        """Prevent lab groups and theory groups from same dept/semester from overlapping in time."""
-        self.logger.info("Applying department/semester group conflict prevention...")
+        """
+        Prevents ANY lab group and ANY theory group from the SAME dept/semester from overlapping in time.
+        This is a semester-wide exclusion constraint.
+        """
+        self.logger.info("Applying department/semester-wide lab-theory exclusion constraint...")
         constraints_applied = 0
         
-        # Build mapping of dept/semester to their lab and theory groups
-        dept_semester_groups = {}
-        
-        # Collect theory groups by dept/semester
-        for group_name in group_timeslot_vars.keys():
-            parts = group_name.split('_')
-            if len(parts) >= 3:
+        # 1. Group lab instances and theory groups by (dept, semester)
+        semester_map = defaultdict(lambda: {'lab_instances': [], 'theory_groups': []})
+
+        # Group lab instances
+        if hasattr(self, 'instance_group_mapping'):
+            for teacher_id in lab_variables:
+                for course_instance_id in lab_variables[teacher_id]:
+                    if course_instance_id in self.instance_group_mapping:
+                        mapping = self.instance_group_mapping[course_instance_id]
+                        key = (mapping['department'], mapping['semester'])
+                        semester_map[key]['lab_instances'].append((teacher_id, course_instance_id))
+
+        # Group theory groups by parsing their names
+        for theory_group_name in group_timeslot_vars.keys():
+            # Example name: "Computer Science & Engineering_S3_G1"
+            parts = theory_group_name.split('_S')
+            if len(parts) == 2:
                 dept = parts[0]
-                semester_part = parts[1]  # e.g., "S3" 
-                semester = semester_part[1:] if semester_part.startswith('S') else semester_part
+                semester_part = parts[1].split('_G')[0]
+                try:
+                    semester = int(semester_part)
+                    key = (dept, semester)
+                    semester_map[key]['theory_groups'].append(theory_group_name)
+                except ValueError:
+                    self.logger.warning(f"Could not parse semester from group name: {theory_group_name}")
+                    continue
+
+        # 2. Apply semester-wide exclusion for each time slot
+        for (dept, semester), data in semester_map.items():
+            if not data['lab_instances'] or not data['theory_groups']:
+                continue
                 
-                dept_sem_key = f"{dept}_S{semester}"
-                if dept_sem_key not in dept_semester_groups:
-                    dept_semester_groups[dept_sem_key] = {'theory_groups': [], 'lab_groups': []}
-                dept_semester_groups[dept_sem_key]['theory_groups'].append(group_name)
-        
-        # Collect lab groups by dept/semester (from lab course instances)
-        lab_groups_by_dept_sem = {}
-        for teacher_id in lab_variables:
-            for course_instance_id in lab_variables[teacher_id]:
-                # Get group info for this lab course instance
-                if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
-                    group_mapping = self.instance_group_mapping[course_instance_id]
-                    dept = group_mapping['department']
-                    semester = group_mapping['semester']
-                    group_index = group_mapping['group_index']
+            self.logger.debug(f"Applying semester-wide conflicts for {dept} S{semester}...")
+
+            # For each time point (day, theory_slot)
+            for day_idx in range(self.num_days):
+                for theory_slot_idx in range(self.num_theory_slots):
                     
-                    dept_sem_key = f"{dept}_S{semester}"
-                    lab_group_name = f"{dept}_S{semester}_G{group_index}"
-                    
-                    if dept_sem_key not in lab_groups_by_dept_sem:
-                        lab_groups_by_dept_sem[dept_sem_key] = set()
-                    lab_groups_by_dept_sem[dept_sem_key].add((lab_group_name, teacher_id, course_instance_id))
-        
-        # Add lab groups to dept_semester_groups
-        for dept_sem_key, lab_group_info in lab_groups_by_dept_sem.items():
-            if dept_sem_key not in dept_semester_groups:
-                dept_semester_groups[dept_sem_key] = {'theory_groups': [], 'lab_groups': []}
-            dept_semester_groups[dept_sem_key]['lab_groups'] = list(lab_group_info)
-        
-        self.logger.info(f"Dept/Semester group conflict analysis:")
-        for dept_sem_key, groups in dept_semester_groups.items():
-            theory_count = len(groups['theory_groups'])
-            lab_count = len(groups['lab_groups'])
-            self.logger.info(f"  {dept_sem_key}: {theory_count} theory groups, {lab_count} lab groups")
-        
-        # Apply constraints: For each dept/semester, ensure SAME GROUPS don't conflict between lab and theory
-        # Fixed: Apply constraint per individual group, not all groups from dept/semester  
-        for dept_sem_key, groups in dept_semester_groups.items():
-            theory_groups = groups['theory_groups']
-            lab_groups = groups['lab_groups']
-            
-            if not theory_groups or not lab_groups:
-                continue  # No conflict if one type is missing
-            
-            self.logger.info(f"Applying individual group conflict constraints for {dept_sem_key}...")
-            
-            # Extract group numbers from theory and lab group names
-            theory_group_numbers = {}
-            for theory_group_name in theory_groups:
-                # Extract group number from name like "Computer Science & Engineering_S3_G1"
-                parts = theory_group_name.split('_G')
-                if len(parts) == 2:
-                    try:
-                        group_num = int(parts[1])
-                        theory_group_numbers[group_num] = theory_group_name
-                    except ValueError:
+                    # A. Determine if any theory class for this semester is active
+                    theory_vars_at_slot = [
+                        group_timeslot_vars[group_name][day_idx][theory_slot_idx]
+                        for group_name in data['theory_groups'] if group_name in group_timeslot_vars
+                    ]
+                    if not theory_vars_at_slot:
                         continue
-            
-            lab_group_numbers = {}
-            for lab_group_name, teacher_id, course_instance_id in lab_groups:
-                # Extract group number from lab group info
-                parts = lab_group_name.split('_G')
-                if len(parts) == 2:
-                    try:
-                        group_num = int(parts[1])
-                        if group_num not in lab_group_numbers:
-                            lab_group_numbers[group_num] = []
-                        lab_group_numbers[group_num].append((lab_group_name, teacher_id, course_instance_id))
-                    except ValueError:
-                        continue
-            
-            # Apply constraints ONLY for groups with the SAME group number
-            for group_num in theory_group_numbers.keys():
-                if group_num not in lab_group_numbers:
-                    continue  # No matching lab group, no conflict
-                
-                theory_group_name = theory_group_numbers[group_num]
-                lab_group_instances = lab_group_numbers[group_num]
-                
-                self.logger.debug(f"Applying constraints for group {group_num} in {dept_sem_key}")
-                
-                # For each day and time slot, ensure THIS SPECIFIC GROUP doesn't conflict between lab and theory
-                for day_idx in range(self.num_days):
-                    for theory_slot_idx in range(self.num_theory_slots):
-                        # Get theory variable for this specific group
-                        theory_var = None
-                        if theory_group_name in group_timeslot_vars:
-                            theory_var = group_timeslot_vars[theory_group_name][day_idx][theory_slot_idx]
+
+                    is_theory_active_for_sem = model.NewBoolVar(f'theory_active_{dept}_S{semester}_d{day_idx}_ts{theory_slot_idx}')
+                    model.Add(sum(theory_vars_at_slot) > 0).OnlyEnforceIf(is_theory_active_for_sem)
+                    model.Add(sum(theory_vars_at_slot) == 0).OnlyEnforceIf(is_theory_active_for_sem.Not())
+
+                    # B. Determine if any lab class for this semester is active in an overlapping lab session
+                    lab_vars_at_overlapping_slot = []
+                    if theory_slot_idx in self.theory_to_lab_mapping:
+                        # Find which lab sessions overlap with this theory time slot
+                        overlapping_lab_sessions = set()
+                        for lab_time_slot_idx in self.theory_to_lab_mapping[theory_slot_idx]:
+                            for session_name, session_details in self.lab_sessions_details.items():
+                                if lab_time_slot_idx in session_details['slots']:
+                                    overlapping_lab_sessions.add(session_name)
+                                    break
                         
-                        if theory_var is None:
+                        if not overlapping_lab_sessions:
                             continue
-                        
-                        # Find overlapping lab sessions for this theory time slot
-                        overlapping_lab_slots = self.theory_to_lab_mapping.get(theory_slot_idx, [])
-                        
-                        if not overlapping_lab_slots:
-                            continue  # No overlap, no constraint needed
-                        
-                        # For each overlapping lab session, get lab variables for this specific group
-                        for lab_slot_idx in overlapping_lab_slots:
-                            # Map lab slot index to session name
-                            lab_session_name = None
-                            for session_name, session_slots in self.lab_sessions.items():
-                                if lab_slot_idx < len(self.lab_time_slots):
-                                    # Check if this lab slot corresponds to this session
-                                    slot_in_session = False
-                                    for slot_time in session_slots:
-                                        if slot_time == self.lab_time_slots[lab_slot_idx]:
-                                            slot_in_session = True
-                                            break
-                                    if slot_in_session:
-                                        lab_session_name = session_name
-                                        break
                             
-                            if not lab_session_name:
-                                continue
-                            
-                            # Collect lab variables for this specific group
-                            lab_vars = []
-                            for lab_group_name, teacher_id, course_instance_id in lab_group_instances:
-                                if teacher_id in lab_variables and course_instance_id in lab_variables[teacher_id]:
-                                    if day_idx < len(lab_variables[teacher_id][course_instance_id]) and \
-                                       lab_session_name in lab_variables[teacher_id][course_instance_id][day_idx]:
-                                        for room_id in self.lab_room_ids:
-                                            if room_id in lab_variables[teacher_id][course_instance_id][day_idx][lab_session_name]:
-                                                lab_vars.append(
-                                                    lab_variables[teacher_id][course_instance_id][day_idx][lab_session_name][room_id]
-                                                )
-                            
-                            # Apply constraint: this specific theory group and corresponding lab group cannot be active simultaneously
-                            if lab_vars:
-                                # At most one of theory or lab can be active for this specific group
-                                model.Add(theory_var + sum(lab_vars) <= 1)
-                                constraints_applied += 1
+                        # Get all lab variables for this semester in the overlapping sessions
+                        for session_name in overlapping_lab_sessions:
+                            for teacher_id, course_instance_id in data['lab_instances']:
+                                if (teacher_id in lab_variables and
+                                    course_instance_id in lab_variables[teacher_id] and
+                                    day_idx < len(lab_variables[teacher_id][course_instance_id]) and
+                                    session_name in lab_variables[teacher_id][course_instance_id][day_idx]):
+                                    lab_vars_at_overlapping_slot.extend(
+                                        lab_variables[teacher_id][course_instance_id][day_idx][session_name].values()
+                                    )
+                        
+                        if not lab_vars_at_overlapping_slot:
+                            continue
+
+                        is_lab_active_for_sem = model.NewBoolVar(f'lab_active_{dept}_S{semester}_d{day_idx}_ts{theory_slot_idx}')
+                        model.Add(sum(lab_vars_at_overlapping_slot) > 0).OnlyEnforceIf(is_lab_active_for_sem)
+                        model.Add(sum(lab_vars_at_overlapping_slot) == 0).OnlyEnforceIf(is_lab_active_for_sem.Not())
+
+                        # C. Add the exclusion constraint: At most one can be active
+                        model.Add(is_theory_active_for_sem + is_lab_active_for_sem <= 1)
+                        constraints_applied += 1
         
-        self.logger.info(f"Applied {constraints_applied} department/semester group conflict constraints")
+        self.logger.info(f"Applied {constraints_applied} department/semester-wide lab-theory exclusion constraints.")
         return constraints_applied
     
-    def _apply_teacher_cross_system_conflict_constraint(self, model, lab_variables, group_timeslot_vars):
-        """Prevent same teacher from being in lab and theory at overlapping times."""
-        self.logger.info("Applying teacher-level cross-system conflict prevention...")
+    def _apply_unified_teacher_clash_constraint(self, model, lab_variables, group_timeslot_vars):
+        """
+        Ensures a teacher is not assigned to more than one activity (lab or theory) at the same time.
+        This is the single source of truth for all teacher-related time conflicts.
+        """
+        self.logger.info("Applying unified teacher clash constraint...")
         constraints_applied = 0
         
-        # Build teacher-group mapping for theory
-        teacher_theory_groups = {}
-        for (dept, semester), groups in self.course_groups.items():
-            for group_idx, group in enumerate(groups):
-                if not group:
-                    continue
+        # 1. Map teachers to all their activities (lab courses and theory groups)
+        teacher_activities = defaultdict(lambda: {'lab_courses': [], 'theory_groups': []})
+
+        # Map lab courses to teachers
+        for teacher_id, courses in self.lab_requirements.items():
+            for course in courses:
+                teacher_activities[str(teacher_id)]['lab_courses'].append(course['course_instance_id'])
+
+        # Map theory groups to teachers
+        for (dept, sem), groups in self.course_groups.items():
+            for group_idx, group_instances in enumerate(groups):
+                group_name = f"{dept}_S{sem}_G{group_idx + 1}"
+                for instance in group_instances:
+                    teacher_id = str(instance['teacher_id'])
+                    if group_name not in teacher_activities[teacher_id]['theory_groups']:
+                        teacher_activities[teacher_id]['theory_groups'].append(group_name)
+
+        # 2. Iterate through each teacher and each time point to enforce the constraint
+        for teacher_id, activities in teacher_activities.items():
+            # Skip if teacher has no activities to schedule
+            if not activities['lab_courses'] and not activities['theory_groups']:
+                continue
+
+            # Iterate through each day and each theory time slot (the finest-grained unit)
+            for day_idx in range(self.num_days):
+                for theory_slot_idx in range(self.num_theory_slots):
                     
-                group_name = f"{dept}_S{semester}_G{group_idx + 1}"
-                
-                for instance in group:
-                    teacher_id = instance['teacher_id']
-                    if teacher_id not in teacher_theory_groups:
-                        teacher_theory_groups[teacher_id] = []
-                    if group_name not in teacher_theory_groups[teacher_id]:
-                        teacher_theory_groups[teacher_id].append(group_name)
-        
-        # Apply teacher-level cross-system constraints
-        for teacher_id in self.teachers:
-            teacher_has_lab = teacher_id in lab_variables
-            teacher_has_theory = teacher_id in teacher_theory_groups
-            
-            if teacher_has_lab and teacher_has_theory:
-                for day_idx in range(self.num_days):
-                    # Check each lab session against overlapping theory slots
-                    for session_name, session_time_slots in self.lab_sessions.items():
-                        # Convert session time slots to indices
-                        lab_slot_indices = []
-                        for time_slot in session_time_slots:
-                            if time_slot in self.lab_time_slots:
-                                lab_slot_indices.append(self.lab_time_slots.index(time_slot))
-                        
-                        # Find theory slots that overlap with this lab session
-                        overlapping_theory_slots = set()
-                        for lab_slot_idx in lab_slot_indices:
-                            if lab_slot_idx in self.lab_to_theory_mapping:
-                                overlapping_theory_slots.update(self.lab_to_theory_mapping[lab_slot_idx])
-                        
-                        # Constraint: teacher cannot be in lab session and overlapping theory group slots simultaneously
-                        for theory_slot_idx in overlapping_theory_slots:
-                            lab_vars = []
-                            theory_vars = []
-                            
-                            # Collect all lab assignments for this teacher in this session
-                            if teacher_id in lab_variables:
-                                for course_instance_id in lab_variables[teacher_id]:
-                                    for room_id in self.lab_room_ids:
-                                        lab_vars.append(
+                    # This will hold all of the teacher's potential activities at this specific time
+                    all_activities_at_this_time = []
+
+                    # A. Find all THEORY activities for this teacher at this time
+                    for group_name in activities['theory_groups']:
+                        if group_name in group_timeslot_vars:
+                            all_activities_at_this_time.append(
+                                group_timeslot_vars[group_name][day_idx][theory_slot_idx]
+                            )
+                    
+                    # B. Find all LAB activities for this teacher at this time
+                    # Find which lab sessions overlap with the current theory_slot_idx
+                    overlapping_lab_sessions = set()
+                    if theory_slot_idx in self.theory_to_lab_mapping:
+                        for lab_time_slot_idx in self.theory_to_lab_mapping[theory_slot_idx]:
+                            for session_name, session_details in self.lab_sessions_details.items():
+                                if lab_time_slot_idx in session_details['slots']:
+                                    overlapping_lab_sessions.add(session_name)
+                                    break
+                    
+                    # Collect lab variables for the overlapping sessions
+                    for session_name in overlapping_lab_sessions:
+                        for course_instance_id in activities['lab_courses']:
+                            if (teacher_id in lab_variables and
+                                course_instance_id in lab_variables.get(teacher_id, {}) and
+                                day_idx < len(lab_variables[teacher_id][course_instance_id]) and
+                                session_name in lab_variables[teacher_id][course_instance_id][day_idx]):
+                                for room_id in self.lab_room_ids:
+                                    all_activities_at_this_time.append(
                                         lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id]
-                                        )
-                            
-                            # Collect all theory group assignments for this teacher in overlapping slot
-                            for group_name in teacher_theory_groups[teacher_id]:
-                                if group_name in group_timeslot_vars:
-                                    theory_vars.append(
-                                        group_timeslot_vars[group_name][day_idx][theory_slot_idx]
                                     )
                             
-                            # Add constraint: at most one of lab or theory can be active
-                            if lab_vars and theory_vars:
-                                model.Add(sum(lab_vars) + sum(theory_vars) <= 1)
-                                constraints_applied += 1
+                    # C. Add the unified constraint: sum of all activities <= 1
+                    if len(all_activities_at_this_time) > 1:
+                        model.Add(sum(all_activities_at_this_time) <= 1)
+                        constraints_applied += 1
         
-        self.logger.info(f"Applied {constraints_applied} teacher-level cross-system constraints")
+        self.logger.info(f"Applied {constraints_applied} unified teacher clash constraints.")
         return constraints_applied
     
     def _add_combined_objectives(self, model, lab_variables, group_timeslot_vars):
@@ -1715,14 +1641,30 @@ class CombinedScheduler:
                         for room_id in self.lab_room_ids:
                             objective_terms.append(lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id])
         
-        # Theory objective: maximize group timeslot allocations with preference for earlier slots
+        # Theory objective: maximize group timeslot allocations with balanced day distribution
         for group_name, day_slots in group_timeslot_vars.items():
-                for day_idx in range(self.num_days):
-                    # Give higher weight to earlier slots to encourage compact scheduling
-                    for slot_idx in range(self.num_theory_slots):
-                        # Weight decreases as slot gets later (earlier slots preferred)
-                        weight = self.num_theory_slots - slot_idx
-                        objective_terms.append(day_slots[day_idx][slot_idx] * weight)
+            for day_idx in range(self.num_days):
+                # Give higher weight to earlier slots to encourage compact scheduling
+                for slot_idx in range(self.num_theory_slots):
+                    # Base weight decreases as slot gets later (earlier slots preferred)
+                    slot_weight = self.num_theory_slots - slot_idx
+                    
+                    # Add day distribution balance: 
+                    # - Prefer Tuesday (1.0), Thursday (0.9) over Wednesday (0.7) to reduce concentration
+                    # - Encourage spreading across multiple days
+                    day_weights = {
+                        0: 0.8,   # Monday
+                        1: 1.0,   # Tuesday (preferred)
+                        2: 0.7,   # Wednesday (discouraged due to overuse)
+                        3: 0.9,   # Thursday (preferred)
+                        4: 0.8,   # Friday
+                        5: 0.6    # Saturday (least preferred)
+                    }
+                    day_weight = day_weights.get(day_idx, 0.5)
+                    
+                    # Combined weight: slot preference × day distribution balance
+                    combined_weight = int(slot_weight * day_weight * 10)  # Scale up for integer weights
+                    objective_terms.append(day_slots[day_idx][slot_idx] * combined_weight)
         
         # Add capacity preferences for lab room assignments
         if hasattr(self, 'capacity_preferences') and self.capacity_preferences:
@@ -1736,48 +1678,46 @@ class CombinedScheduler:
             self.logger.info(f"Combined objective set with {len(objective_terms)} terms")
             self.logger.info("Objective strategy:")
             self.logger.info("  1. Lab assignments (base priority)")
-            self.logger.info("  2. Group timeslots (prefer earlier slots)")
+            self.logger.info("  2. Group timeslots with balanced day distribution")
+            self.logger.info("     - Tuesday/Thursday preferred (weights: 1.0/0.9)")
+            self.logger.info("     - Wednesday discouraged (weight: 0.7)")
+            self.logger.info("     - Earlier time slots preferred within each day")
             self.logger.info("  3. Room capacity optimization (prefer appropriate room sizes)")
     
     def _solve_combined_model(self, model, lab_variables, group_timeslot_vars):
         """Solve the combined scheduling model using two-phase approach."""
         # Create the solver
         solver = cp_model.CpSolver()
-        solver.parameters.max_time_in_seconds = 1200  # 3 minutes for group allocation
+        solver.parameters.max_time_in_seconds = 1200
         solver.parameters.num_search_workers = 16
         solver.parameters.log_search_progress = True
-        solver.parameters.stop_after_first_solution = True
+        solver.parameters.stop_after_first_solution= True
         
-        self.logger.info("Solving combined scheduling model (Phase 1: Group allocation)...")
+        self.logger.info("Solving combined scheduling model...")
         status = solver.Solve(model)
         
-        # Log solver results
-        self.logger.info("="*60)
-        self.logger.info("COMBINED SOLVER RESULTS (PHASE 1)")
-        self.logger.info("="*60)
-        self.logger.info(f"Status: {solver.StatusName(status)}")
-        self.logger.info(f"Wall time: {solver.WallTime():.2f} seconds")
-        
         if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-            self.logger.info(f"{'[OPTIMAL]' if status == cp_model.OPTIMAL else '[FEASIBLE]'} group allocation found!")
+            self.logger.info("Solution found for combined model!")
             
-            # PHASE 1: Extract lab schedule and group timeslots
-            lab_schedule = self._extract_lab_schedule(solver, lab_variables)
             group_timeslots = self._extract_group_timeslots(solver, group_timeslot_vars)
-            
-            # PHASE 2: Distribute theory sessions within allocated group timeslots
             theory_schedule = self._distribute_theory_sessions_in_groups(group_timeslots)
+            lab_schedule = self._extract_lab_schedule(solver, lab_variables)
             
-            # Save schedules
             self._save_combined_schedules(lab_schedule, theory_schedule)
+            
+            if lab_schedule or theory_schedule:
+                combined_schedule = lab_schedule + theory_schedule
+                self._generate_combined_summary(lab_schedule, theory_schedule, combined_schedule)
+            else:
+                self.logger.warning("Both lab and theory schedules are empty, skipping summary generation.")
             
             return True
         else:
-            self.logger.error(f"[ERROR] No combined solution found. Status: {solver.StatusName(status)}")
+            self.logger.error(f"No solution found for combined model. Status: {solver.StatusName(status)}")
             return False
     
     def _extract_group_timeslots(self, solver, group_timeslot_vars):
-        """Extract allocated time slots for each group from solver solution."""
+        """Extract the allocated group time slots from the solver solution."""
         self.logger.info("Extracting group time slot allocations...")
         
         group_timeslots = {}
@@ -1904,7 +1844,15 @@ class CombinedScheduler:
                 for session in assigned_sessions:
                     # Get teacher and course details
                     instance = session['instance']
-                    teacher_row = self.courses_df[self.courses_df['teacher_id'] == session['teacher_id']].iloc[0]
+                    # Get teacher details with proper error handling  
+                    teacher_matches = self.courses_df[self.courses_df['teacher_id'] == session['teacher_id']]
+                    if teacher_matches.empty:
+                        # Try with different data types
+                        teacher_matches = self.courses_df[self.courses_df['teacher_id'] == int(session['teacher_id'])]
+                        if teacher_matches.empty:
+                            self.logger.error(f"Teacher ID {session['teacher_id']} not found in courses dataframe for theory schedule")
+                            continue
+                    teacher_row = teacher_matches.iloc[0]
                     
                     # Assign rooms in round-robin fashion
                     room_idx = len([s for s in theory_schedule if s['day'] == self.days[day_idx] and s['time_slot'] == self.theory_time_slots[time_slot_idx]]) % len(self.theory_room_ids)
@@ -1966,9 +1914,21 @@ class CombinedScheduler:
                                 room_row = self.rooms_df[self.rooms_df['id'] == room_id].iloc[0]
                                 room_capacity = int(room_row['room_max_cap'])
                                 
-                                # Get teacher details
-                                teacher_row = self.courses_df[self.courses_df['teacher_id'] == teacher_id].iloc[0]
-                                course_row = self.courses_df[self.courses_df['id'] == int(course_instance_id)].iloc[0]
+                                # Get teacher details with proper error handling
+                                teacher_matches = self.courses_df[self.courses_df['teacher_id'] == teacher_id]
+                                if teacher_matches.empty:
+                                    # Try with different data types
+                                    teacher_matches = self.courses_df[self.courses_df['teacher_id'] == int(teacher_id)]
+                                    if teacher_matches.empty:
+                                        self.logger.error(f"Teacher ID {teacher_id} not found in courses dataframe")
+                                        continue
+                                teacher_row = teacher_matches.iloc[0]
+                                
+                                course_matches = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
+                                if course_matches.empty:
+                                    self.logger.error(f"Course instance ID {course_instance_id} not found in courses dataframe")
+                                    continue
+                                course_row = course_matches.iloc[0]
                                 
                                 # Rule 1: Simple batching rule - batch if using 35-capacity lab and have more students
                                 student_count = int(course_row['student_count'])
@@ -2027,7 +1987,7 @@ class CombinedScheduler:
                                     lab_schedule.append({
                                     'day': self.days[day_idx],
                                     'session_name': session_name,
-                                    'time_range': self.lab_sessions[session_name]['time_range'],
+                                    'time_range': f"{self.lab_sessions[session_name][0]} to {self.lab_sessions[session_name][-1]}",
                                     'course_instance_id': course_instance_id,
                                         'course_code': course_details['course_code'],
                                         'course_code_display': course_code_display,
@@ -2076,7 +2036,7 @@ class CombinedScheduler:
                                     lab_schedule.append({
                                         'day': self.days[day_idx],
                                         'session_name': session_name,
-                                        'time_range': self.lab_sessions[session_name]['time_range'],
+                                        'time_range': f"{self.lab_sessions[session_name][0]} to {self.lab_sessions[session_name][-1]}",
                                         'course_instance_id': course_instance_id,
                                         'course_code': course_details['course_code'],
                                         'course_code_display': course_code_display,
@@ -2111,41 +2071,76 @@ class CombinedScheduler:
         return lab_schedule
     
     def _save_combined_schedules(self, lab_schedule, theory_schedule):
-        """Save both lab and theory schedules."""
-        # Save lab schedule
-        lab_df = pd.DataFrame(lab_schedule)
+        """Save the lab and theory schedules to files."""
+        self.logger.info("Saving combined schedules...")
+
+        # Use custom JSON encoder to handle numpy types and NaN values
+        def convert_numpy_types(obj):
+            if isinstance(obj, np.integer):
+                return int(obj)
+            elif isinstance(obj, np.floating):
+                if np.isnan(obj) or np.isinf(obj):
+                    return None  # Convert NaN/inf to null
+                return float(obj)
+            elif isinstance(obj, np.ndarray):
+                return obj.tolist()
+            elif isinstance(obj, (np.bool_, bool)):
+                return bool(obj)
+            elif obj != obj:  # Check for NaN (NaN != NaN is True)
+                return None
+            elif obj == float('inf') or obj == float('-inf'):
+                return None
+            return obj
+
+        # Clean data before saving (replace NaN values)
+        def clean_data(data):
+            """Recursively clean data by replacing NaN/None values with appropriate defaults."""
+            if isinstance(data, list):
+                return [clean_data(item) for item in data]
+            elif isinstance(data, dict):
+                cleaned = {}
+                for key, value in data.items():
+                    cleaned[key] = clean_data(value)
+                return cleaned
+            elif pd.isna(data) or data != data:  # Check for NaN
+                return None
+            elif isinstance(data, (np.floating, float)) and (np.isnan(data) or np.isinf(data)):
+                return None
+            else:
+                return data
+        
+        # Clean the schedules
+        clean_lab_schedule = clean_data(lab_schedule)
+        clean_theory_schedule = clean_data(theory_schedule)
+
+        # --- Save Lab Schedule ---
+        lab_df = pd.DataFrame(clean_lab_schedule)
         lab_csv_path = os.path.join(self.output_dir, 'combined_lab_schedule.csv')
-        lab_json_path = os.path.join(self.output_dir, 'combined_lab_schedule.json')
-        
         lab_df.to_csv(lab_csv_path, index=False)
+        self.logger.info(f"Combined lab schedule saved to {lab_csv_path}")
+
+        lab_json_path = os.path.join(self.output_dir, 'combined_lab_schedule.json')
         with open(lab_json_path, 'w') as f:
-            json.dump(lab_schedule, f, indent=2)
+            json.dump(clean_lab_schedule, f, indent=2, default=convert_numpy_types)
+        self.logger.info(f"Combined lab schedule saved to {lab_json_path}")
         
-        # Save theory schedule
-        theory_df = pd.DataFrame(theory_schedule)
+        # --- Save Theory Schedule ---
+        theory_df = pd.DataFrame(clean_theory_schedule)
         theory_csv_path = os.path.join(self.output_dir, 'combined_theory_schedule.csv')
-        theory_json_path = os.path.join(self.output_dir, 'combined_theory_schedule.json')
-        
         theory_df.to_csv(theory_csv_path, index=False)
+        self.logger.info(f"Combined theory schedule saved to {theory_csv_path}")
+
+        theory_json_path = os.path.join(self.output_dir, 'combined_theory_schedule.json')
         with open(theory_json_path, 'w') as f:
-            json.dump(theory_schedule, f, indent=2)
+            json.dump(clean_theory_schedule, f, indent=2, default=convert_numpy_types)
+        self.logger.info(f"Combined theory schedule saved to {theory_json_path}")
         
-        # Save combined schedule
-        combined_schedule = lab_schedule + theory_schedule
-        combined_df = pd.DataFrame(combined_schedule)
-        combined_csv_path = os.path.join(self.output_dir, 'combined_full_schedule.csv')
-        combined_json_path = os.path.join(self.output_dir, 'combined_full_schedule.json')
-        
-        combined_df.to_csv(combined_csv_path, index=False)
-        with open(combined_json_path, 'w') as f:
-            json.dump(combined_schedule, f, indent=2)
-        
-        self.logger.info(f"Lab schedule saved: {lab_csv_path}")
-        self.logger.info(f"Theory schedule saved: {theory_csv_path}")
-        self.logger.info(f"Combined schedule saved: {combined_csv_path}")
-        
-        # Generate summary
-        self._generate_combined_summary(lab_schedule, theory_schedule, combined_schedule)
+        # --- Generate Summary ---
+        if lab_schedule or theory_schedule:
+            combined_schedule = lab_schedule + theory_schedule
+            self._generate_combined_summary(lab_schedule, theory_schedule, combined_schedule)
+        else:
+            self.logger.warning("Both lab and theory schedules are empty, skipping summary generation.")
     
     def _generate_combined_summary(self, lab_schedule, theory_schedule, combined_schedule):
         """Generate a summary of the combined schedule."""
@@ -2323,92 +2318,7 @@ class CombinedScheduler:
         
         return strategy
     
-    def apply_capacity_constraint(self, model, lab_variables):
-        """Apply capacity-based assignment constraints for lab scheduling."""
-        self.logger.info("Applying capacity-based assignment constraint...")
-        constraints_applied = 0
-        
-        # Run capacity analysis if not already done
-        if not hasattr(self, 'lab_capacity_analysis'):
-            self.analyze_lab_capacity()
-        
-        # Get lab rooms categorized by capacity
-        labs_35 = [lab['id'] for lab in self.lab_capacity_analysis['labs_35']]
-        labs_70_plus = [lab['id'] for lab in self.lab_capacity_analysis['labs_70']] + [lab['id'] for lab in self.lab_capacity_analysis['labs_140']]
-        
-        # Initialize capacity preferences list
-        self.capacity_preferences = []
-        
-        for teacher_id, courses in self.lab_requirements.items():
-            for course in courses:
-                course_instance_id = course['course_instance_id']
-                practical_hours = course['practical_hours']
-                students_per_instance = course['students_per_instance']
-                
-                # Determine allocation strategy using the same logic as lab scheduler
-                strategy = self._determine_lab_allocation_strategy(practical_hours, students_per_instance)
-                force_35_capacity = strategy['force_35_capacity']
-                force_70_plus_capacity = strategy.get('force_70_plus_capacity', False)
-                prefer_70_plus_with_batching_fallback = strategy.get('prefer_70_plus_with_batching_fallback', False)
-                
-                if force_35_capacity or practical_hours <= 3:
-                    # Courses with 3 or fewer practical hours must use 35-capacity labs only
-                    for day_idx in range(self.num_days):
-                        for session_name in self.lab_sessions.keys():
-                            for room_id in labs_70_plus:
-                                if teacher_id in lab_variables and course_instance_id in lab_variables[teacher_id]:
-                                    model.Add(lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id] == 0)
-                                    constraints_applied += 1
-                    
-                    self.logger.info(f"Course {course['course_code']} (practical_hours={practical_hours}) restricted to 35-capacity labs")
-                    
-                elif prefer_70_plus_with_batching_fallback:
-                    # Courses with 4-6 practical hours prefer 70+ but can use 35 with batching
-                    # Create a preference variable to encourage 70+ labs
-                    prefer_70_plus = model.NewBoolVar(f'course_{course_instance_id}_prefer_70_plus')
-                    
-                    # Count assignments in 70+ capacity labs
-                    assignments_70_plus = []
-                    assignments_35 = []
-                    
-                    if teacher_id in lab_variables and course_instance_id in lab_variables[teacher_id]:
-                        for day_idx in range(self.num_days):
-                            for session_name in self.lab_sessions.keys():
-                                for room_id in labs_70_plus:
-                                    assignments_70_plus.append(lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id])
-                                for room_id in labs_35:
-                                    assignments_35.append(lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id])
-                    
-                    # If prefer_70_plus is true, then all assignments should be in 70+ labs
-                    if assignments_70_plus and assignments_35:
-                        total_assignments = assignments_70_plus + assignments_35
-                        
-                        # Preference constraint: if prefer_70_plus = 1, then use only 70+ labs
-                        model.Add(sum(assignments_35) == 0).OnlyEnforceIf(prefer_70_plus)
-                        model.Add(sum(assignments_70_plus) == sum(total_assignments)).OnlyEnforceIf(prefer_70_plus)
-                        constraints_applied += 2
-                        
-                        # Store preference for objective (encourage 70+ usage)
-                        self.capacity_preferences.append(prefer_70_plus * 10)  # Bonus for using 70+ labs
-                    
-                    self.logger.info(f"Course {course['course_code']} (practical_hours={practical_hours}) PREFERS 70+ capacity labs, allows 35-capacity fallback with batching")
-                    
-                elif force_70_plus_capacity:
-                    # Courses with force_70_plus_capacity flag must use 70+ capacity labs only
-                    for day_idx in range(self.num_days):
-                        for session_name in self.lab_sessions.keys():
-                            for room_id in labs_35:
-                                if teacher_id in lab_variables and course_instance_id in lab_variables[teacher_id]:
-                                    model.Add(lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id] == 0)
-                                    constraints_applied += 1
-                    
-                    self.logger.info(f"Course {course['course_code']} (practical_hours={practical_hours}) restricted to 70+ capacity labs")
-                else:
-                    # Courses with other practical hours can use any lab
-                    self.logger.info(f"Course {course['course_code']} (practical_hours={practical_hours}) can use any capacity lab")
-        
-        self.logger.info(f"Applied {constraints_applied} capacity-based constraints")
-        return constraints_applied
+
 
     def analyze_theory_feasibility(self):
         """Analyze if theory scheduling is feasible with current constraints."""
@@ -2454,11 +2364,11 @@ class CombinedScheduler:
         return semester_feasible
 
     def add_group_allocation_objective(self, model, group_timeslot_vars):
-        """Add objective for optimal group time slot allocation."""
-        self.logger.info("Setting up group allocation objective...")
+        """Add an objective function to improve the theory schedule quality."""
+        self.logger.info("Adding theory group allocation objective...")
+        
         objective_terms = []
         
-        # Strategy: Prefer earlier time slots to create compact schedules
         for group_name, day_slots in group_timeslot_vars.items():
             for day_idx in range(self.num_days):
                 for slot_idx in range(self.num_theory_slots):

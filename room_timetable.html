@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room-wise Timetable - University Schedule</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --lab-color: #e8f4fd;
+            --theory-color: #f8f9fa;
+            --header-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .navbar {
+            background: var(--header-bg) !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
+
+        .room-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .room-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .room-header {
+            border-radius: 15px 15px 0 0 !important;
+            font-weight: 600;
+            padding: 1rem 1.5rem;
+        }
+
+        .lab-room .room-header {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+        }
+
+        .theory-room .room-header {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            color: white;
+        }
+
+        .room-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .room-details {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .room-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .schedule-table {
+            font-size: 0.85rem;
+        }
+
+        .schedule-table th {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            font-weight: 600;
+            text-align: center;
+            padding: 10px 6px;
+            font-size: 0.8rem;
+        }
+
+        .schedule-table td {
+            border: 1px solid #dee2e6;
+            padding: 6px 4px;
+            text-align: center;
+            vertical-align: middle;
+            min-height: 50px;
+        }
+
+        .time-slot {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: var(--primary-color);
+            width: 120px;
+            text-align: center;
+            padding: 8px 4px;
+            font-size: 0.9rem;
+            border: 1px solid #dee2e6;
+        }
+
+        .session {
+            background-color: var(--lab-color);
+            border-left: 4px solid var(--secondary-color);
+            margin: 1px 0;
+            padding: 3px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            position: relative;
+        }
+
+        .theory-session {
+            background-color: var(--theory-color);
+            border-left: 4px solid var(--success-color);
+        }
+
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1px;
+        }
+
+        .session-code {
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 0.7rem;
+        }
+
+        .group-number {
+            font-size: 0.6rem;
+            font-weight: bold;
+            color: white;
+            padding: 1px 3px;
+            border-radius: 2px;
+            min-width: 15px;
+            text-align: center;
+        }
+
+        .session-details {
+            font-size: 0.65rem;
+            color: #666;
+            line-height: 1.1;
+        }
+
+        /* Group colors */
+        .group-g1 { background-color: #FF6B6B !important; }
+        .group-g2 { background-color: #4ECDC4 !important; }
+        .group-g3 { background-color: #45B7D1 !important; }
+        .group-g4 { background-color: #F9CA24 !important; color: #333 !important; }
+        .group-g5 { background-color: #6C5CE7 !important; }
+
+        .filter-section {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .room-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+        }
+
+        .utilization-bar {
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .utilization-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60, #f39c12, #e74c3c);
+            transition: width 0.3s ease;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .block-filter {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .block-btn {
+            padding: 0.25rem 0.75rem;
+            border: 2px solid #dee2e6;
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .block-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .empty-slot {
+            background-color: #f8f9fa;
+            color: #adb5bd;
+            font-style: italic;
+            font-size: 0.7rem;
+            padding: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .room-grid {
+                grid-template-columns: 1fr;
+            }
+            .schedule-table {
+                font-size: 0.7rem;
+            }
+            .room-details {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand">
+                <i class="fas fa-door-open me-2"></i>
+                Room-wise Timetable
+            </span>
+            <div class="navbar-nav ms-auto">
+                <a href="schedule_website.html" class="nav-link">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Back to Main Schedule
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Statistics Overview -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-number text-primary" id="totalRooms">0</div>
+                <div>Total Rooms</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number text-info" id="labRooms">0</div>
+                <div>Lab Rooms</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number text-success" id="theoryRooms">0</div>
+                <div>Theory Rooms</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number text-warning" id="avgUtilization">0%</div>
+                <div>Avg Utilization</div>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="row">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-building me-1"></i>Block Filter
+                    </label>
+                    <div class="block-filter" id="blockFilter">
+                        <!-- Block buttons will be populated by JavaScript -->
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-flask me-1"></i>Room Type
+                    </label>
+                    <select class="form-select" id="roomTypeFilter">
+                        <option value="">All Room Types</option>
+                        <option value="lab">Lab Rooms Only</option>
+                        <option value="theory">Theory Rooms Only</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-users me-1"></i>Capacity Range
+                    </label>
+                    <select class="form-select" id="capacityFilter">
+                        <option value="">All Capacities</option>
+                        <option value="small">Small (1-40)</option>
+                        <option value="medium">Medium (41-80)</option>
+                        <option value="large">Large (80+)</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-search me-1"></i>Search Room
+                    </label>
+                    <input type="text" class="form-control" id="roomSearch" placeholder="Enter room number...">
+                </div>
+            </div>
+        </div>
+
+        <!-- Room Timetables -->
+        <div id="roomContainer">
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status"></div>
+                <div class="mt-3">Loading room timetables...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="room_timetable.js"></script>
+</body>
+</html> 

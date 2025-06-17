@@ -1,0 +1,8 @@
+THEORY-LAB CONFLICT ANALYSIS REPORT
+==================================================
+
+Total Department-Semester combinations checked: 3
+Combinations with conflicts: 0
+Total conflicts found: 0
+
+CONFLICTS:

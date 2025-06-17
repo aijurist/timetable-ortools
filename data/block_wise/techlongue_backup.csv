@@ -136,3 +136,17 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 217,D603,D block,Physics LAB - 1,1,Core-Lab,30,70,0,0,Advanced,29,0,0,0
 218,D403,D block,Physics LAB - 2,1,Core-Lab,30,70,0,0,Advanced,29,0,0,0
 
+
+174,TLFL1,Techlounge,Computer Lab (TLFL1),1,Laboratory,20,35,1,0,High-tech,3,0,0,0
+175,TLFL2,Techlounge,Computer Lab (TLFL2),1,Laboratory,20,35,1,0,Basic,11,0,0,0
+176,TLFL3,Techlounge,Computer Lab (TLFL3),1,Laboratory,20,35,1,0,Basic,13,0,0,0
+177,TLFL4,Techlounge,Computer Lab (TLFL4),1,Laboratory,20,35,1,0,,4,0,0,0
+178,TLFL5,Techlounge,Computer Lab (TLFL5),1,Laboratory,20,35,1,0,Basic,13,0,0,0
+179,TLFR1,Techlounge,Computer Lab (TLFR1),1,Laboratory,20,35,1,0,,13,0,0,0
+180,TLFR2,Techlounge,Computer Lab (TLFR2),1,Laboratory,20,35,1,0,High-tech,20,0,0,0
+181,TLFR3,Techlounge,Computer Lab (TLFR3),1,Laboratory,20,35,1,0,Basic,4,0,0,0
+182,TLFR4,Techlounge,Computer Lab (TLFR4),1,Laboratory,20,35,1,0,,3,0,0,0
+183,TLFR5,Techlounge,Computer Lab (TLFR5),1,Laboratory,20,35,1,0,Advanced,20,0,0,0
+188,TLSL1,Techlounge,Computer Lab (TLSL1),1,Laboratory,50,70,1,0,Basic,28,0,0,0
+189,TLSL2,Techlounge,Computer Lab (TLSL2),1,Laboratory,50,70,1,0,,28,0,0,0
+190,TLSR1,Techlounge,Computer Lab (TLSR1),1,Laboratory,50,70,1,0,Advanced,28,0,0,0

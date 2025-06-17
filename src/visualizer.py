@@ -1871,8 +1871,8 @@ class CombinedScheduleVisualizer:
                 "4:00 - 4:50": 8,    # Maps to "3:50 - 4:40" (close overlap)
                 "5:00 - 5:50": 9,    # Maps to "4:40 - 5:30" (close overlap)
                 "6:00 - 6:50": 10    # Maps to "5:30 - 6:20" (close overlap)
-            }
-            
+        }
+        
             return mapping.get(theory_slot)
         return None
     
@@ -2087,7 +2087,7 @@ class CombinedScheduleVisualizer:
             
             if day in self.days and session_name in self.lab_sessions:
                 day_idx = self.days.index(day)
-                time_slots = self.lab_sessions[session_name]['slots']
+                lab_time_slots = self.lab_sessions[session_name]  # This is now a list of time slot strings
                 
                 course_code = row['course_code']
                 room_number = row['room_number']
@@ -2103,8 +2103,10 @@ class CombinedScheduleVisualizer:
                 else:
                     display_text = f"LAB: {course_code}\n{room_number}"
                 
-                for slot_idx in time_slots:
-                    if slot_idx < len(self.time_slots):
+                # Map lab time slots to time slot indices
+                for lab_time_slot in lab_time_slots:
+                    if lab_time_slot in self.time_slots:
+                        slot_idx = self.time_slots.index(lab_time_slot)
                         grid[day_idx, slot_idx] = display_text
                         color_grid[day_idx, slot_idx] = ('lab', block)
         
