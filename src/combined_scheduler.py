@@ -41,9 +41,15 @@ class CombinedScheduler:
         self.courses_df = pd.read_csv(course_file)
         self.rooms_df = pd.read_csv(room_file)
         
-        # Set up time configurations - MATCHING ORIGINAL SCHEDULERS
-        # Using the EXACT same configuration as lab_scheduler.py and theory_scheduler.py
-        self.days = ["tuesday", "wed", "thur", "fri", "sat"]  # Excluding Monday - EXACTLY as in original
+        # Load day order information
+        self.day_order_df = self._load_day_order()
+        
+        # Set up time configurations based on day order
+        self._setup_department_day_patterns()
+        
+        # Set up time configurations - WILL BE CUSTOMIZED PER DEPARTMENT
+        # For now, use the most common pattern (Monday-Friday) as default
+        self.days = ["monday", "tuesday", "wed", "thur", "fri"]  # Monday-Friday as default
         self.num_days = len(self.days)
         
         # LAB TIME CONFIGURATION - EXACTLY as in lab_scheduler.py
@@ -115,11 +121,105 @@ class CombinedScheduler:
         self.output_dir = f"output/combined_schedule_{timestamp}"
         os.makedirs(self.output_dir, exist_ok=True)
         
+        # Initialize capacity preferences for priority system
+        self.capacity_preferences = []
+        
         self.logger.info("Combined Scheduler initialized successfully")
         self.logger.info(f"Theory time slots: {self.num_theory_slots}")
         self.logger.info(f"Lab time slots: {self.num_lab_slots}")
         self.logger.info(f"Lab rooms: {len(self.lab_room_ids)}")
         self.logger.info(f"Theory rooms: {len(self.theory_room_ids)}")
+    
+    def _load_day_order(self):
+        """Load day order information from day_order.csv."""
+        try:
+            # Try to find day_order.csv in various locations
+            day_order_paths = [
+                'data/day_order.csv',
+                './data/day_order.csv',
+                '../data/day_order.csv',
+                'timetable_scheduler/data/day_order.csv'
+            ]
+            
+            day_order_file = None
+            for path in day_order_paths:
+                if os.path.exists(path):
+                    day_order_file = path
+                    break
+            
+            if day_order_file is None:
+                self.logger.warning("day_order.csv not found. Using default Monday-Friday schedule for all departments.")
+                return None
+            
+            day_order_df = pd.read_csv(day_order_file)
+            self.logger.info(f"Loaded day order information from {day_order_file}")
+            self.logger.info(f"Found {len(day_order_df)} department entries")
+            
+            # Log day pattern distribution
+            monday_friday_count = len(day_order_df[day_order_df['ODD'].str.contains('Monday - Friday', na=False)])
+            tuesday_saturday_count = len(day_order_df[day_order_df['ODD'].str.contains('Tuesday - Saturday', na=False)])
+            
+            self.logger.info(f"Day pattern distribution:")
+            self.logger.info(f"  - Monday-Friday: {monday_friday_count} departments")
+            self.logger.info(f"  - Tuesday-Saturday: {tuesday_saturday_count} departments")
+            
+            return day_order_df
+            
+        except Exception as e:
+            self.logger.error(f"Error loading day_order.csv: {e}")
+            self.logger.warning("Using default Monday-Friday schedule for all departments.")
+            return None
+    
+    def _setup_department_day_patterns(self):
+        """Set up day patterns for different departments based on day_order.csv."""
+        if self.day_order_df is None:
+            self.dept_day_patterns = {}
+            return
+        
+        self.dept_day_patterns = {}
+        
+        # Map department names to day patterns
+        for _, row in self.day_order_df.iterrows():
+            if pd.isna(row['Department']) or pd.isna(row['ODD']):
+                continue
+                
+            dept_name = str(row['Department']).strip()
+            day_pattern = str(row['ODD']).strip()
+            
+            if 'Monday - Friday' in day_pattern:
+                self.dept_day_patterns[dept_name] = {
+                    'days': ["monday", "tuesday", "wed", "thur", "fri"],
+                    'pattern': 'Monday-Friday'
+                }
+            elif 'Tuesday - Saturday' in day_pattern:
+                self.dept_day_patterns[dept_name] = {
+                    'days': ["tuesday", "wed", "thur", "fri", "saturday"],
+                    'pattern': 'Tuesday-Saturday'
+                }
+        
+        self.logger.info(f"Set up day patterns for {len(self.dept_day_patterns)} departments")
+        
+        # Log some examples
+        monday_friday_depts = [dept for dept, pattern in self.dept_day_patterns.items() if pattern['pattern'] == 'Monday-Friday']
+        tuesday_saturday_depts = [dept for dept, pattern in self.dept_day_patterns.items() if pattern['pattern'] == 'Tuesday-Saturday']
+        
+        self.logger.info(f"Monday-Friday departments: {monday_friday_depts[:5]}..." if len(monday_friday_depts) > 5 else f"Monday-Friday departments: {monday_friday_depts}")
+        self.logger.info(f"Tuesday-Saturday departments: {tuesday_saturday_depts[:5]}..." if len(tuesday_saturday_depts) > 5 else f"Tuesday-Saturday departments: {tuesday_saturday_depts}")
+    
+    def _get_days_for_department(self, dept_name):
+        """Get the working days for a specific department."""
+        if not hasattr(self, 'dept_day_patterns') or dept_name not in self.dept_day_patterns:
+            # Default to Monday-Friday if department not found
+            return ["monday", "tuesday", "wed", "thur", "fri"]
+        
+        return self.dept_day_patterns[dept_name]['days']
+    
+    def _get_day_pattern_for_department(self, dept_name):
+        """Get the day pattern (Monday-Friday or Tuesday-Saturday) for a specific department."""
+        if not hasattr(self, 'dept_day_patterns') or dept_name not in self.dept_day_patterns:
+            return 'Monday-Friday'  # Default
+        
+        return self.dept_day_patterns[dept_name]['pattern']
     
     def _compute_group_requirements(self):
         """Compute theory time slot requirements for each group."""
@@ -1049,8 +1149,8 @@ class CombinedScheduler:
         return success
     
     def _create_lab_variables(self, model):
-        """Create CP-SAT variables for lab scheduling."""
-        self.logger.info("Creating lab scheduling variables...")
+        """Create CP-SAT variables for lab scheduling with department-specific day patterns."""
+        self.logger.info("Creating lab scheduling variables with department-specific day patterns...")
         
         # Lab assignment variables: lab_assignments[teacher][course][day][session][room]
         lab_assignments = {}
@@ -1062,9 +1162,26 @@ class CombinedScheduler:
                 course_instance_id = course_req['course_instance_id']
                 lab_sessions_needed = course_req['lab_sessions_needed']
                 
+                # Get department for this course instance to determine day pattern
+                dept_name = "Computer Science & Engineering"  # Default
+                if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
+                    dept_name = self.instance_group_mapping[course_instance_id]['department']
+                else:
+                    # Fallback: look up in courses_df
+                    course_matches = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
+                    if not course_matches.empty:
+                        dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
+                
+                # Get department-specific days
+                dept_days = self._get_days_for_department(dept_name)
+                dept_pattern = self._get_day_pattern_for_department(dept_name)
+                num_dept_days = len(dept_days)
+                
+                self.logger.debug(f"Lab variables for course {course_instance_id}: using {dept_pattern} pattern ({num_dept_days} days)")
+                
                 lab_assignments[teacher_id][course_instance_id] = {}
                 
-                for day_idx in range(self.num_days):
+                for day_idx in range(num_dept_days):  # Use department-specific days
                     lab_assignments[teacher_id][course_instance_id][day_idx] = {}
                     
                     for session_name in self.lab_sessions.keys():
@@ -1075,7 +1192,7 @@ class CombinedScheduler:
                             lab_assignments[teacher_id][course_instance_id][day_idx][session_name][room_id] = \
                                 model.NewBoolVar(var_name)
         
-        self.logger.info("Lab variables created successfully")
+        self.logger.info("Lab variables created successfully with department-specific day patterns")
         return lab_assignments
     
     def _create_theory_variables(self, model):
@@ -1089,24 +1206,33 @@ class CombinedScheduler:
         return group_timeslot_vars
     
     def _create_group_timeslot_variables(self, model):
-        """Create binary variables for theory group timeslot assignments."""
-        self.logger.info("Creating group timeslot variables...")
+        """Create binary variables for theory group timeslot assignments with department-specific day patterns."""
+        self.logger.info("Creating group timeslot variables with department-specific day patterns...")
         group_timeslot_vars = {}
         
         # Use pre-computed group requirements
         for group_name, required_slots in self.group_requirements.items():
-            self.logger.info(f"Creating variables for {group_name}: {required_slots} time slots required")
+            # Extract department from group name
+            # Group name format: "Computer Science & Engineering_S3_G1"
+            dept_name = group_name.split('_S')[0] if '_S' in group_name else "Computer Science & Engineering"
+            
+            # Get department-specific days
+            dept_days = self._get_days_for_department(dept_name)
+            dept_pattern = self._get_day_pattern_for_department(dept_name)
+            num_dept_days = len(dept_days)
+            
+            self.logger.info(f"Creating variables for {group_name}: {required_slots} time slots required, using {dept_pattern} pattern ({num_dept_days} days)")
             
             # Create binary variables for each possible time slot
             group_timeslot_vars[group_name] = {}
-            for day_idx in range(self.num_days):
+            for day_idx in range(num_dept_days):  # Use department-specific number of days
                 group_timeslot_vars[group_name][day_idx] = {}
                 for slot_idx in range(self.num_theory_slots):
                     group_timeslot_vars[group_name][day_idx][slot_idx] = model.NewBoolVar(
                         f'group_{group_name}_day_{day_idx}_slot_{slot_idx}'
                     )
         
-        self.logger.info(f"Created group timeslot variables for {len(group_timeslot_vars)} groups")
+        self.logger.info(f"Created group timeslot variables for {len(group_timeslot_vars)} groups with department-specific day patterns")
         return group_timeslot_vars
     
     def _apply_unified_constraints(self, model, lab_variables, theory_variables):
@@ -1142,6 +1268,7 @@ class CombinedScheduler:
         # REMOVED: apply_capacity_constraint - redundant with course_lab_requirements_constraint
         constraints_applied += self.apply_group_based_scheduling_constraint(model, lab_variables)
         # REMOVED: apply_theory_lab_group_conflict_constraint - redundant with cross-system constraints
+        # REMOVED: This constraint was too restrictive and prevented the full scheduling of required practical hours.
         constraints_applied += self.apply_semester_lab_slot_limit_constraint(model, lab_variables)
         # REMOVED: apply_lab_efficiency_constraints - too restrictive and redundant with other constraints
         
@@ -1200,22 +1327,25 @@ class CombinedScheduler:
                         num_batches_35 = (student_count + 34) // 35
                         sessions_with_batching = base_sessions * num_batches_35
                         
-                        # APPLY SLOT RESTRICTIONS BASED ON PRACTICAL HOURS
+                        # APPLY SLOT RESTRICTIONS BASED ON PRACTICAL HOURS WITH PRIORITY SYSTEM
                         if practical_hours >= 6:
-                            # 6+ practical hours: Allow up to 6 slots if batched, max 3 if not batched
+                            # 6+ practical hours: HIGHEST PRIORITY for 70+ capacity labs
                             max_batched_sessions = min(sessions_with_batching, 6)
                             max_unbatched_sessions = min(base_sessions, 3)
                             absolute_max_sessions = 6  # Hard limit for 6+ hour courses
+                            priority_level = 1  # Highest priority
                         elif practical_hours >= 4:
-                            # 4+ practical hours: Allow up to 4 slots if batched, max 2 if not batched
+                            # 4+ practical hours: SECOND PRIORITY for 70+ capacity labs
                             max_batched_sessions = min(sessions_with_batching, 4)
                             max_unbatched_sessions = min(base_sessions, 2)
                             absolute_max_sessions = 4  # Hard limit for 4+ hour courses
+                            priority_level = 2  # Second priority
                         else:
-                            # 2 practical hours: Maximum 2 slots if batched, 1 if not batched
+                            # 2 practical hours: Lower priority for 70+ capacity labs
                             max_batched_sessions = min(sessions_with_batching, 2)
                             max_unbatched_sessions = min(base_sessions, 1)
                             absolute_max_sessions = 2  # Hard limit for 2 hour courses
+                            priority_level = 3  # Lower priority
                         
                         # CRITICAL FIX: 2-hour courses CANNOT use 70+ capacity labs
                         if practical_hours <= 2:
@@ -1245,8 +1375,19 @@ class CombinedScheduler:
                                 model.Add(sum(total_assignments) == max_batched_sessions).OnlyEnforceIf(use_35_cap_strategy)
                                 model.Add(sum(total_assignments) == max_unbatched_sessions).OnlyEnforceIf(use_35_cap_strategy.Not())
                                 
+                                # PRIORITY SYSTEM: Add preference for 70+ capacity labs based on practical hours
+                                if priority_level == 1:  # 6+ hours: HIGHEST priority for 70+ labs
+                                    # Strong preference for 70+ capacity labs (weight = 1000)
+                                    self._add_capacity_preference(model, use_35_cap_strategy, 1000, course_req['course_code'], "6+ hours HIGHEST priority")
+                                elif priority_level == 2:  # 4+ hours: SECOND priority for 70+ labs
+                                    # Medium preference for 70+ capacity labs (weight = 500)
+                                    self._add_capacity_preference(model, use_35_cap_strategy, 500, course_req['course_code'], "4+ hours SECOND priority")
+                                else:  # 2-3 hours: Lower priority
+                                    # Slight preference for 35-capacity labs (weight = 100)
+                                    self._add_capacity_preference(model, use_35_cap_strategy, -100, course_req['course_code'], "2-3 hours lower priority")
+                                
                                 constraints_applied += 6
-                                self.logger.info(f"Course {course_req['course_code']} ({practical_hours}h): EITHER {max_batched_sessions} sessions (35-cap batched) OR {max_unbatched_sessions} sessions (70+ cap unbatched)")
+                                self.logger.info(f"Course {course_req['course_code']} ({practical_hours}h, Priority {priority_level}): EITHER {max_batched_sessions} sessions (35-cap batched) OR {max_unbatched_sessions} sessions (70+ cap unbatched)")
                             else:
                                 # Fallback to simple assignment if capacity separation not possible
                                 required_sessions = min(max_batched_sessions, len(total_assignments), absolute_max_sessions)
@@ -1269,28 +1410,90 @@ class CombinedScheduler:
         
         self.logger.info(f"Applied {constraints_applied} course lab requirements constraints")
         return constraints_applied
+    
+    def _add_capacity_preference(self, model, use_35_cap_strategy, weight, course_code, description):
+        """Add capacity preference to the objective function for priority-based lab allocation."""
+        # Positive weight favors 70+ capacity labs (use_35_cap_strategy = False)
+        # Negative weight favors 35 capacity labs (use_35_cap_strategy = True)
+        
+        if weight > 0:
+            # Prefer 70+ capacity labs: reward when use_35_cap_strategy is False
+            preference_var = model.NewBoolVar(f'prefer_70plus_{course_code}')
+            model.Add(preference_var == 1).OnlyEnforceIf(use_35_cap_strategy.Not())
+            model.Add(preference_var == 0).OnlyEnforceIf(use_35_cap_strategy)
+            self.capacity_preferences.append(preference_var * weight)
+            self.logger.info(f"  → {course_code}: {description} - 70+ capacity preference (weight: +{weight})")
+        else:
+            # Prefer 35 capacity labs: reward when use_35_cap_strategy is True
+            preference_var = model.NewBoolVar(f'prefer_35_{course_code}')
+            model.Add(preference_var == 1).OnlyEnforceIf(use_35_cap_strategy)
+            model.Add(preference_var == 0).OnlyEnforceIf(use_35_cap_strategy.Not())
+            self.capacity_preferences.append(preference_var * abs(weight))
+            self.logger.info(f"  → {course_code}: {description} - 35 capacity preference (weight: +{abs(weight)})")
 
     def apply_lab_room_single_assignment_constraint(self, model, lab_variables):
-        """Prevent lab room double-booking."""
-        self.logger.info("Applying lab room single assignment constraint...")
+        """Prevent lab room double-booking with department-specific day patterns."""
+        self.logger.info("Applying lab room single assignment constraint with department-specific day patterns...")
         constraints_applied = 0
         
-        for day_idx in range(self.num_days):
-            for session_name in self.lab_sessions.keys():
-                for room_id in self.lab_room_ids:
-                    room_usage_vars = []
-                    
-                    for teacher_id in lab_variables:
-                        for course_instance_id in lab_variables[teacher_id]:
-                            room_usage_vars.append(
-                                lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id]
-                            )
-                    
-                    if room_usage_vars:
-                        model.Add(sum(room_usage_vars) <= 1)
-                        constraints_applied += 1
+        # Group courses by day pattern to handle room conflicts appropriately
+        courses_by_day_pattern = {}
         
-        self.logger.info(f"Applied {constraints_applied} lab room single assignment constraints")
+        for teacher_id in lab_variables:
+            for course_instance_id in lab_variables[teacher_id]:
+                # Get department for this course instance
+                dept_name = "Computer Science & Engineering"  # Default
+                if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
+                    dept_name = self.instance_group_mapping[course_instance_id]['department']
+                else:
+                    # Fallback: look up in courses_df
+                    course_matches = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
+                    if not course_matches.empty:
+                        dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
+                
+                day_pattern = self._get_day_pattern_for_department(dept_name)
+                
+                if day_pattern not in courses_by_day_pattern:
+                    courses_by_day_pattern[day_pattern] = []
+                courses_by_day_pattern[day_pattern].append((teacher_id, course_instance_id))
+        
+        # Apply constraints for each day pattern separately
+        for day_pattern, course_list in courses_by_day_pattern.items():
+            # Get representative department for this pattern
+            representative_course = course_list[0]
+            teacher_id, course_instance_id = representative_course
+            
+            dept_name = "Computer Science & Engineering"  # Default
+            if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
+                dept_name = self.instance_group_mapping[course_instance_id]['department']
+            else:
+                # Fallback: look up in courses_df
+                course_matches = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
+                if not course_matches.empty:
+                    dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
+            
+            dept_days = self._get_days_for_department(dept_name)
+            num_dept_days = len(dept_days)
+            
+            self.logger.debug(f"Applying room constraints for {day_pattern} pattern ({num_dept_days} days, {len(course_list)} courses)")
+            
+            for day_idx in range(num_dept_days):
+                for session_name in self.lab_sessions.keys():
+                    for room_id in self.lab_room_ids:
+                        room_usage_vars = []
+                        
+                        for teacher_id, course_instance_id in course_list:
+                            if (day_idx < len(lab_variables[teacher_id][course_instance_id]) and
+                                session_name in lab_variables[teacher_id][course_instance_id][day_idx]):
+                                room_usage_vars.append(
+                                    lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id]
+                                )
+                        
+                        if room_usage_vars:
+                            model.Add(sum(room_usage_vars) <= 1)
+                            constraints_applied += 1
+        
+        self.logger.info(f"Applied {constraints_applied} lab room single assignment constraints with department-specific day patterns")
         return constraints_applied
     
     def apply_group_based_scheduling_constraint(self, model, lab_variables):
@@ -1424,27 +1627,32 @@ class CombinedScheduler:
         return constraints_applied
     
     def _apply_theory_constraints(self, model, group_timeslot_vars):
-        """Apply theory-specific constraints using group-based approach."""
-        self.logger.info("Applying group-based theory constraints...")
+        """Apply theory-specific constraints using group-based approach with department-specific day patterns."""
+        self.logger.info("Applying group-based theory constraints with department-specific day patterns...")
         constraints_applied = 0
         
         # CONSTRAINT 1: Each group must have exactly the required number of time slots
         for group_name, required_slots in self.group_requirements.items():
             if group_name not in group_timeslot_vars:
                 continue
+            
+            # Get department-specific days
+            dept_name = group_name.split('_S')[0] if '_S' in group_name else "Computer Science & Engineering"
+            dept_days = self._get_days_for_department(dept_name)
+            num_dept_days = len(dept_days)
                 
             timeslot_vars = []
-            for day_idx in range(self.num_days):
+            for day_idx in range(num_dept_days):  # Use department-specific days
                 for slot_idx in range(self.num_theory_slots):
                     timeslot_vars.append(group_timeslot_vars[group_name][day_idx][slot_idx])
             
             if timeslot_vars:
                 model.Add(sum(timeslot_vars) == required_slots)
                 constraints_applied += 1
-                self.logger.debug(f"Group {group_name}: exactly {required_slots} time slots required")
+                self.logger.debug(f"Group {group_name}: exactly {required_slots} time slots required (using {len(dept_days)} days)")
         
-        # CONSTRAINT 2: Different groups in same semester CANNOT overlap
-        semester_groups = {}
+        # CONSTRAINT 2: Different groups in same semester CANNOT overlap (but only within same day pattern)
+        semester_groups_by_pattern = {}
         for group_name in group_timeslot_vars.keys():
             # Parse group name properly: "Computer Science & Engineering_S3_G1"
             parts = group_name.split('_S')
@@ -1454,20 +1662,26 @@ class CombinedScheduler:
                 semester_part = semester_and_group.split('_G')[0]
                 try:
                     semester = int(semester_part)
-                    semester_key = f"{dept}_S{semester}"
-                    if semester_key not in semester_groups:
-                        semester_groups[semester_key] = []
-                    semester_groups[semester_key].append(group_name)
+                    day_pattern = self._get_day_pattern_for_department(dept)
+                    semester_key = f"{dept}_S{semester}_{day_pattern}"
+                    if semester_key not in semester_groups_by_pattern:
+                        semester_groups_by_pattern[semester_key] = []
+                    semester_groups_by_pattern[semester_key].append(group_name)
                 except ValueError:
                     self.logger.warning(f"Could not parse semester from group name: {group_name}")
                     continue
         
-        for semester_key, groups in semester_groups.items():
+        for semester_key, groups in semester_groups_by_pattern.items():
             if len(groups) <= 1:
                 continue
             self.logger.debug(f"Applying non-overlap constraints for {semester_key}: {len(groups)} groups")
             
-            for day_idx in range(self.num_days):
+            # Get representative department for day pattern
+            representative_dept = groups[0].split('_S')[0]
+            dept_days = self._get_days_for_department(representative_dept)
+            num_dept_days = len(dept_days)
+            
+            for day_idx in range(num_dept_days):  # Use department-specific days
                 for slot_idx in range(self.num_theory_slots):
                     # At most one group from this semester can use this time slot
                     slot_usage_vars = []
@@ -1482,15 +1696,15 @@ class CombinedScheduler:
         # CONSTRAINT 3: FIXED Room capacity constraint - based on actual course instances, not groups
         constraints_applied += self._apply_proper_theory_room_capacity_constraint(model, group_timeslot_vars)
         
-        self.logger.info(f"Applied {constraints_applied} theory-specific constraints")
+        self.logger.info(f"Applied {constraints_applied} theory-specific constraints with department-specific day patterns")
         return constraints_applied
     
     def _apply_proper_theory_room_capacity_constraint(self, model, group_timeslot_vars):
         """
         Apply proper room capacity constraint that considers the actual number of course instances
-        within each group, not just the number of groups.
+        within each group, not just the number of groups. Now handles department-specific day patterns.
         """
-        self.logger.info("Applying proper theory room capacity constraint based on course instances...")
+        self.logger.info("Applying proper theory room capacity constraint based on course instances with department-specific day patterns...")
         constraints_applied = 0
         
         # Pre-calculate the number of theory sessions each group will need per time slot
@@ -1539,31 +1753,51 @@ class CombinedScheduler:
             group_session_counts[group_name] = total_sessions_per_slot
             self.logger.debug(f"Group {group_name}: {len(theory_instances)} theory instances = {total_sessions_per_slot} rooms needed per time slot")
         
-        # Now apply the constraint: for each time slot, total rooms needed <= available rooms
-        for day_idx in range(self.num_days):
-            for slot_idx in range(self.num_theory_slots):
-                # Calculate total rooms needed at this time slot
-                total_rooms_needed = []
-                
-                for group_name in group_timeslot_vars.keys():
-                    sessions_count = group_session_counts.get(group_name, 0)
-                    if sessions_count > 0:
-                        # If group is scheduled at this time slot, it needs 'sessions_count' rooms
-                        group_active = group_timeslot_vars[group_name][day_idx][slot_idx]
-                        total_rooms_needed.append(group_active * sessions_count)
-                
-                if total_rooms_needed:
-                    # Total rooms needed cannot exceed available theory rooms
-                    model.Add(sum(total_rooms_needed) <= len(self.theory_room_ids))
-                    constraints_applied += 1
+        # Group constraints by day pattern to handle different department schedules
+        groups_by_day_pattern = {}
+        for group_name in group_timeslot_vars.keys():
+            dept_name = group_name.split('_S')[0] if '_S' in group_name else "Computer Science & Engineering"
+            day_pattern = self._get_day_pattern_for_department(dept_name)
+            
+            if day_pattern not in groups_by_day_pattern:
+                groups_by_day_pattern[day_pattern] = []
+            groups_by_day_pattern[day_pattern].append(group_name)
+        
+        # Apply constraints for each day pattern separately
+        for day_pattern, pattern_groups in groups_by_day_pattern.items():
+            # Get representative department for this pattern
+            representative_dept = pattern_groups[0].split('_S')[0]
+            dept_days = self._get_days_for_department(representative_dept)
+            num_dept_days = len(dept_days)
+            
+            self.logger.info(f"Applying room capacity constraints for {day_pattern} pattern ({num_dept_days} days, {len(pattern_groups)} groups)")
+            
+            # Now apply the constraint: for each time slot in this pattern, total rooms needed <= available rooms
+            for day_idx in range(num_dept_days):
+                for slot_idx in range(self.num_theory_slots):
+                    # Calculate total rooms needed at this time slot for this day pattern
+                    total_rooms_needed = []
                     
-                    # Log constraint details for debugging
-                    if len(total_rooms_needed) > 0:
-                        max_possible_rooms = sum(group_session_counts.get(gn, 0) for gn in group_timeslot_vars.keys())
-                        if max_possible_rooms > len(self.theory_room_ids):
-                            self.logger.debug(f"Time slot {self.days[day_idx]} {self.theory_time_slots[slot_idx]}: "
-                                           f"constraint applied - max {max_possible_rooms} rooms possible, "
-                                           f"{len(self.theory_room_ids)} available")
+                    for group_name in pattern_groups:
+                        sessions_count = group_session_counts.get(group_name, 0)
+                        if sessions_count > 0:
+                            # If group is scheduled at this time slot, it needs 'sessions_count' rooms
+                            group_active = group_timeslot_vars[group_name][day_idx][slot_idx]
+                            total_rooms_needed.append(group_active * sessions_count)
+                    
+                    if total_rooms_needed:
+                        # Total rooms needed cannot exceed available theory rooms
+                        model.Add(sum(total_rooms_needed) <= len(self.theory_room_ids))
+                        constraints_applied += 1
+                        
+                        # Log constraint details for debugging
+                        if len(total_rooms_needed) > 0:
+                            max_possible_rooms = sum(group_session_counts.get(gn, 0) for gn in pattern_groups)
+                            if max_possible_rooms > len(self.theory_room_ids):
+                                day_name = dept_days[day_idx] if day_idx < len(dept_days) else f"day_{day_idx}"
+                                self.logger.debug(f"Time slot {day_name} {self.theory_time_slots[slot_idx]} ({day_pattern}): "
+                                               f"constraint applied - max {max_possible_rooms} rooms possible, "
+                                               f"{len(self.theory_room_ids)} available")
         
         # Log summary of group session requirements
         total_max_sessions = sum(group_session_counts.values())
@@ -1573,14 +1807,16 @@ class CombinedScheduler:
         
         for group_name, sessions_count in group_session_counts.items():
             if sessions_count > 0:
-                self.logger.info(f"  - {group_name}: {sessions_count} rooms needed when active")
+                dept_name = group_name.split('_S')[0] if '_S' in group_name else "Computer Science & Engineering"
+                day_pattern = self._get_day_pattern_for_department(dept_name)
+                self.logger.info(f"  - {group_name} ({day_pattern}): {sessions_count} rooms needed when active")
         
         if total_max_sessions > len(self.theory_room_ids):
             self.logger.warning(f"POTENTIAL ISSUE: Maximum possible sessions ({total_max_sessions}) "
                               f"exceeds available rooms ({len(self.theory_room_ids)}) - "
                               f"but constraint system will prevent over-allocation")
         
-        self.logger.info(f"Applied {constraints_applied} proper theory room capacity constraints")
+        self.logger.info(f"Applied {constraints_applied} proper theory room capacity constraints with department-specific day patterns")
         return constraints_applied
     
     def _apply_cross_system_constraints(self, model, lab_variables, group_timeslot_vars):
@@ -1842,8 +2078,8 @@ class CombinedScheduler:
             return False
     
     def _extract_group_timeslots(self, solver, group_timeslot_vars):
-        """Extract the allocated group time slots from the solver solution."""
-        self.logger.info("Extracting group time slot allocations...")
+        """Extract the allocated group time slots from the solver solution with department-specific day patterns."""
+        self.logger.info("Extracting group time slot allocations with department-specific day patterns...")
         
         group_timeslots = {}
         total_slots_allocated = 0
@@ -1851,21 +2087,27 @@ class CombinedScheduler:
         for group_name, day_slots in group_timeslot_vars.items():
             group_timeslots[group_name] = []
             
-            for day_idx in range(self.num_days):
+            # Get department-specific days for this group
+            dept_name = group_name.split('_S')[0] if '_S' in group_name else "Computer Science & Engineering"
+            dept_days = self._get_days_for_department(dept_name)
+            dept_pattern = self._get_day_pattern_for_department(dept_name)
+            num_dept_days = len(dept_days)
+            
+            for day_idx in range(num_dept_days):  # Use department-specific days
                 for slot_idx in range(self.num_theory_slots):
                     if solver.Value(day_slots[day_idx][slot_idx]) == 1:
                         group_timeslots[group_name].append((day_idx, slot_idx))
                         total_slots_allocated += 1
             
-            # Log allocated slots
+            # Log allocated slots with actual day names
             allocated_slots = group_timeslots[group_name]
             slot_details = []
             for day_idx, slot_idx in sorted(allocated_slots):
-                day_name = self.days[day_idx]
+                day_name = dept_days[day_idx] if day_idx < len(dept_days) else f"day_{day_idx}"
                 time_slot = self.theory_time_slots[slot_idx]
                 slot_details.append(f"{day_name} {time_slot}")
             
-            self.logger.info(f"Group {group_name}: {len(allocated_slots)} slots → {', '.join(slot_details)}")
+            self.logger.info(f"Group {group_name} ({dept_pattern}): {len(allocated_slots)} slots → {', '.join(slot_details)}")
         
         self.logger.info(f"Total time slots allocated to groups: {total_slots_allocated}")
         return group_timeslots
@@ -1990,6 +2232,9 @@ class CombinedScheduler:
             sessions_skipped_no_room = 0
             sessions_successfully_scheduled = 0
             
+            # Get department-specific days for this group
+            dept_days = self._get_days_for_department(group_info['dept'])
+            
             for slot_idx, assigned_sessions in slot_assignments.items():
                 if not assigned_sessions:
                     continue
@@ -2032,7 +2277,7 @@ class CombinedScheduler:
                     
                     # Create schedule entry
                     theory_schedule.append({
-                        'day': self.days[day_idx],
+                        'day': dept_days[day_idx] if day_idx < len(dept_days) else f"day_{day_idx}",
                         'time_slot': self.theory_time_slots[time_slot_idx],
                         'slot_index': time_slot_idx,
                         'course_instance_id': session['course_instance_id'],
@@ -2054,7 +2299,9 @@ class CombinedScheduler:
                         'group_name': group_name,
                         'group_index': int(group_name.split('_G')[1]) if '_G' in group_name else 1,
                         'department': group_info['dept'],
-                        'semester': group_info['semester']
+                        'semester': group_info['semester'],
+                        # Day pattern information
+                        'day_pattern': self._get_day_pattern_for_department(group_info['dept'])
                     })
             
             # Log session scheduling summary for this group
@@ -2175,6 +2422,18 @@ class CombinedScheduler:
                     for session_name in self.lab_sessions.keys():
                         for room_id in self.lab_room_ids:
                             if solver.Value(lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id]) == 1:
+                                # Get department for this course instance to get day names
+                                dept_name = "Computer Science & Engineering"  # Default
+                                if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
+                                    dept_name = self.instance_group_mapping[course_instance_id]['department']
+                                else:
+                                    # Fallback: look up in courses_df
+                                    course_matches = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
+                                    if not course_matches.empty:
+                                        dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
+                                
+                                dept_days = self._get_days_for_department(dept_name)
+                                
                                 # Get room details
                                 room_row = self.rooms_df[self.rooms_df['id'] == room_id].iloc[0]
                                 room_capacity = int(room_row['room_max_cap'])
@@ -2250,7 +2509,7 @@ class CombinedScheduler:
                                     
                                     # Add this session to the current batch
                                     lab_schedule.append({
-                                    'day': self.days[day_idx],
+                                    'day': dept_days[day_idx] if day_idx < len(dept_days) else f"day_{day_idx}",
                                     'session_name': session_name,
                                     'time_range': f"{self.lab_sessions[session_name][0]} to {self.lab_sessions[session_name][-1]}",
                                     'course_instance_id': course_instance_id,
@@ -2275,7 +2534,9 @@ class CombinedScheduler:
                                         'group_name': group_name,
                                         'group_index': group_index,
                                         'department': department,
-                                        'semester': semester
+                                        'semester': semester,
+                                        # Day pattern information
+                                        'day_pattern': self._get_day_pattern_for_department(department)
                                     })
                                     
                                     # Log assignment
@@ -2299,7 +2560,7 @@ class CombinedScheduler:
                                         semester = group_mapping['semester']
                                     
                                     lab_schedule.append({
-                                        'day': self.days[day_idx],
+                                        'day': dept_days[day_idx] if day_idx < len(dept_days) else f"day_{day_idx}",
                                         'session_name': session_name,
                                         'time_range': f"{self.lab_sessions[session_name][0]} to {self.lab_sessions[session_name][-1]}",
                                         'course_instance_id': course_instance_id,
@@ -2324,7 +2585,9 @@ class CombinedScheduler:
                                         'group_name': group_name,
                                         'group_index': group_index,
                                         'department': department,
-                                        'semester': semester
+                                        'semester': semester,
+                                        # Day pattern information
+                                        'day_pattern': self._get_day_pattern_for_department(department)
                                     })
                                     
                                     # Log assignment
