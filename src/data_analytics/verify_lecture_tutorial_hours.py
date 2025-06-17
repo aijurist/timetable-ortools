@@ -32,7 +32,7 @@ def verify_lecture_tutorial_hours(theory_schedule_file=None, course_file=None):
     """
     # Setup default file paths
     if course_file is None:
-        course_file = "data/department_data/Artificial_Intelligence___Machine_Learning_courses.csv"
+        course_file = "data/department_data/Computing_department.csv"
     
     if not os.path.exists(course_file):
         print(f"Course file not found: {course_file}")
@@ -59,10 +59,10 @@ def verify_lecture_tutorial_hours(theory_schedule_file=None, course_file=None):
         
         # Get latest schedules
         latest_theory_folder = max(theory_schedule_folders) if theory_schedule_folders else None
-        # latest_combined_folder = max(combined_schedule_folders) if combined_schedule_folders else None
+        latest_combined_folder = max(combined_schedule_folders) if combined_schedule_folders else None
         
         print(f"Latest theory schedule folder: {latest_theory_folder}")
-        # print(f"Latest combined schedule folder: {latest_combined_folder}")
+        print(f"Latest combined schedule folder: {latest_combined_folder}")
         
         # Try to load theory schedule
         theory_schedule_df = None
@@ -84,13 +84,13 @@ def verify_lecture_tutorial_hours(theory_schedule_file=None, course_file=None):
         
         # If not found, try combined folder
         if theory_schedule_df is None and latest_combined_folder:
-            combined_theory_file = os.path.join(output_dir, latest_combined_folder, "theory_schedule", "theory_schedule.csv")
+            combined_theory_file = os.path.join(output_dir, latest_combined_folder,"combined_theory_schedule.csv")
             if os.path.exists(combined_theory_file):
                 theory_schedule_df = pd.read_csv(combined_theory_file)
                 print(f"Loaded combined theory schedule with {len(theory_schedule_df)} assignments")
             else:
                 # Try JSON version
-                combined_theory_file = os.path.join(output_dir, latest_combined_folder, "theory_schedule", "theory_schedule.json")
+                combined_theory_file = os.path.join(output_dir, latest_combined_folder,"combined_theory_schedule.json")
                 if os.path.exists(combined_theory_file):
                     with open(combined_theory_file, 'r') as f:
                         theory_schedule_data = json.load(f)

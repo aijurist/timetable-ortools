@@ -13,6 +13,7 @@ import json
 import shutil
 from datetime import datetime
 import glob
+import io
 
 # Add parent directory to path for imports
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -35,14 +36,27 @@ except ImportError:
         print("Error: Cannot import scheduler modules. Please run from the project root directory.")
         sys.exit(1)
 
-# Configure logging
+# Configure logging with proper encoding for Windows compatibility
+import sys
+import locale
+
+# Create handlers with proper encoding
+file_handler = logging.FileHandler("timetable_scheduler.log", encoding='utf-8')
+console_handler = logging.StreamHandler(sys.stdout)
+
+# Set encoding for console handler to handle Unicode on Windows
+if sys.platform.startswith('win'):
+    try:
+        # Try to reconfigure stdout with UTF-8 encoding
+        sys.stdout.reconfigure(encoding='utf-8')
+    except (AttributeError, io.UnsupportedOperation):
+        # Fallback for older Python versions or unsupported operations
+        pass
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler("timetable_scheduler.log"),
-        logging.StreamHandler()
-    ]
+    handlers=[file_handler, console_handler]
 )
 
 logger = logging.getLogger(__name__)

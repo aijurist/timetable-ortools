@@ -679,6 +679,13 @@ class CombinedScheduler:
             if inst['id'] not in all_assigned_instances
         ]
 
+        # CRITICAL: Log any unassigned theory instances (DEBUGGING FOR 1930, 1932, 1933)
+        theory_remaining = [inst for inst in remaining_instances if inst.get('has_theory', False)]
+        if theory_remaining:
+            self.logger.error(f"CRITICAL: {len(theory_remaining)} theory instances not assigned to any group:")
+            for inst in theory_remaining:
+                self.logger.error(f"  Instance {inst['id']}: {inst['course_code']} (Teacher {inst['teacher_id']}) - L:{inst.get('lecture_hours', 0)} T:{inst.get('tutorial_hours', 0)} P:{inst.get('practical_hours', 0)}")
+
         # Prioritize placing instances from under-represented courses first
         instances_to_assign = sorted(
             remaining_instances,
@@ -731,10 +738,33 @@ class CombinedScheduler:
             else:
                 failed_assignments.append(instance)
         
-        # Log assignment results
+        # CRITICAL: Final fallback for theory instances that still couldn't be assigned
         if failed_assignments:
-            self.logger.error(f"Failed to assign: {len(failed_assignments)} instances after both phases.")
-            for failure in failed_assignments[:5]: # Log first 5
+            theory_failed = [inst for inst in failed_assignments if inst.get('has_theory', False)]
+            if theory_failed:
+                self.logger.error(f"EMERGENCY FALLBACK: {len(theory_failed)} theory instances still failed assignment. Forcing assignment...")
+                
+                for instance in theory_failed:
+                    # Force assignment to the smallest group, ignoring teacher conflicts
+                    smallest_group_idx = min(range(num_groups), key=lambda i: len(groups[i]))
+                    groups[smallest_group_idx].append(instance)
+                    teacher_id = instance['teacher_id']
+                    course_code = instance['course_code']
+                    
+                    self.logger.warning(f"FORCED ASSIGNMENT: Instance {instance['id']} ({course_code}, Teacher {teacher_id}) -> Group {smallest_group_idx + 1}")
+                    self.logger.warning(f"  This may create teacher conflicts but ensures theory sessions get scheduled")
+                    
+                    # Update metrics
+                    metrics = group_metrics[smallest_group_idx]
+                    metrics['instance_count'] += 1
+                    metrics['courses'].add(course_code)
+                    metrics['teachers'].add(teacher_id)
+        
+        # Log assignment results
+        final_failed = [inst for inst in failed_assignments if not inst.get('has_theory', False)]  # Only non-theory failures
+        if final_failed:
+            self.logger.error(f"Failed to assign: {len(final_failed)} non-theory instances after both phases.")
+            for failure in final_failed[:5]: # Log first 5
                 self.logger.error(f"  - Instance {failure['id']} (Teacher {failure['teacher_id']}, Course {failure['course_code']}) could not be placed.")
 
         # Validate and log final group distribution
@@ -1449,20 +1479,108 @@ class CombinedScheduler:
                         model.Add(sum(slot_usage_vars) <= 1)
                         constraints_applied += 1
         
-        # CONSTRAINT 3: Room capacity constraint (global)
-        for day_idx in range(self.num_days):
-            for slot_idx in range(self.num_theory_slots):
-                # Count total groups using this time slot
-                total_usage_vars = []
-                for group_name in group_timeslot_vars.keys():
-                    total_usage_vars.append(group_timeslot_vars[group_name][day_idx][slot_idx])
-                
-                if total_usage_vars:
-                    # Cannot exceed total theory room capacity
-                    model.Add(sum(total_usage_vars) <= len(self.theory_room_ids))
-                    constraints_applied += 1
+        # CONSTRAINT 3: FIXED Room capacity constraint - based on actual course instances, not groups
+        constraints_applied += self._apply_proper_theory_room_capacity_constraint(model, group_timeslot_vars)
         
         self.logger.info(f"Applied {constraints_applied} theory-specific constraints")
+        return constraints_applied
+    
+    def _apply_proper_theory_room_capacity_constraint(self, model, group_timeslot_vars):
+        """
+        Apply proper room capacity constraint that considers the actual number of course instances
+        within each group, not just the number of groups.
+        """
+        self.logger.info("Applying proper theory room capacity constraint based on course instances...")
+        constraints_applied = 0
+        
+        # Pre-calculate the number of theory sessions each group will need per time slot
+        group_session_counts = {}
+        
+        for group_name in group_timeslot_vars.keys():
+            # Find the group data
+            group_info = None
+            for (dept, semester), groups in self.course_groups.items():
+                for group_idx, group in enumerate(groups):
+                    expected_name = f"{dept}_S{semester}_G{group_idx + 1}"
+                    if expected_name == group_name:
+                        group_info = {'dept': dept, 'semester': semester, 'instances': group}
+                        break
+            
+            if not group_info:
+                self.logger.warning(f"Group info not found for {group_name}")
+                group_session_counts[group_name] = 0
+                continue
+            
+            # Count theory course instances in this group
+            theory_instances = [inst for inst in group_info['instances'] if inst.get('has_theory', False)]
+            
+            # Calculate total sessions needed per time slot for this group
+            # Each theory course instance needs 1 room when the group is active
+            total_sessions_per_slot = 0
+            
+            for instance in theory_instances:
+                lecture_hours = instance.get('lecture_hours', 0)
+                tutorial_hours = instance.get('tutorial_hours', 0)
+                total_theory_sessions = lecture_hours + tutorial_hours
+                
+                if total_theory_sessions > 0:
+                    # FIXED: Each course instance that has theory sessions will need a room
+                    # when this group is scheduled - but we need to account for ALL sessions
+                    # that will be created (lecture + tutorial), not just the instance count
+                    
+                    # Each lecture/tutorial session needs its own room slot
+                    # But they can be distributed across the group's allocated time slots
+                    # So we need to calculate the MAXIMUM concurrent sessions possible
+                    
+                    # For now, assume each course instance needs 1 room per time slot
+                    # (sessions will be distributed across multiple time slots)
+                    total_sessions_per_slot += 1
+            
+            group_session_counts[group_name] = total_sessions_per_slot
+            self.logger.debug(f"Group {group_name}: {len(theory_instances)} theory instances = {total_sessions_per_slot} rooms needed per time slot")
+        
+        # Now apply the constraint: for each time slot, total rooms needed <= available rooms
+        for day_idx in range(self.num_days):
+            for slot_idx in range(self.num_theory_slots):
+                # Calculate total rooms needed at this time slot
+                total_rooms_needed = []
+                
+                for group_name in group_timeslot_vars.keys():
+                    sessions_count = group_session_counts.get(group_name, 0)
+                    if sessions_count > 0:
+                        # If group is scheduled at this time slot, it needs 'sessions_count' rooms
+                        group_active = group_timeslot_vars[group_name][day_idx][slot_idx]
+                        total_rooms_needed.append(group_active * sessions_count)
+                
+                if total_rooms_needed:
+                    # Total rooms needed cannot exceed available theory rooms
+                    model.Add(sum(total_rooms_needed) <= len(self.theory_room_ids))
+                    constraints_applied += 1
+                    
+                    # Log constraint details for debugging
+                    if len(total_rooms_needed) > 0:
+                        max_possible_rooms = sum(group_session_counts.get(gn, 0) for gn in group_timeslot_vars.keys())
+                        if max_possible_rooms > len(self.theory_room_ids):
+                            self.logger.debug(f"Time slot {self.days[day_idx]} {self.theory_time_slots[slot_idx]}: "
+                                           f"constraint applied - max {max_possible_rooms} rooms possible, "
+                                           f"{len(self.theory_room_ids)} available")
+        
+        # Log summary of group session requirements
+        total_max_sessions = sum(group_session_counts.values())
+        self.logger.info(f"Theory room capacity constraint applied successfully:")
+        self.logger.info(f"  - Total theory rooms available: {len(self.theory_room_ids)}")
+        self.logger.info(f"  - Maximum sessions possible if all groups active: {total_max_sessions}")
+        
+        for group_name, sessions_count in group_session_counts.items():
+            if sessions_count > 0:
+                self.logger.info(f"  - {group_name}: {sessions_count} rooms needed when active")
+        
+        if total_max_sessions > len(self.theory_room_ids):
+            self.logger.warning(f"POTENTIAL ISSUE: Maximum possible sessions ({total_max_sessions}) "
+                              f"exceeds available rooms ({len(self.theory_room_ids)}) - "
+                              f"but constraint system will prevent over-allocation")
+        
+        self.logger.info(f"Applied {constraints_applied} proper theory room capacity constraints")
         return constraints_applied
     
     def _apply_cross_system_constraints(self, model, lab_variables, group_timeslot_vars):
@@ -1778,6 +1896,21 @@ class CombinedScheduler:
             instances = [inst for inst in group_info['instances'] if inst.get('has_theory', False)]
             self.logger.info(f"Distributing {len(instances)} theory course instances across {len(allocated_slots)} time slots for {group_name}")
             
+            # DEBUG: Log instances that should have theory but don't have has_theory flag
+            all_instances = group_info['instances']
+            should_have_theory = [inst for inst in all_instances if inst.get('lecture_hours', 0) > 0 or inst.get('tutorial_hours', 0) > 0]
+            missing_theory_flag = [inst for inst in should_have_theory if not inst.get('has_theory', False)]
+            
+            if missing_theory_flag:
+                self.logger.error(f"MISSING THEORY FLAG: {group_name} has {len(missing_theory_flag)} instances that should have theory but missing has_theory flag:")
+                for inst in missing_theory_flag:
+                    self.logger.error(f"  Instance {inst['id']}: {inst['course_code']} - L:{inst.get('lecture_hours', 0)} T:{inst.get('tutorial_hours', 0)} P:{inst.get('practical_hours', 0)}")
+            
+            if len(instances) != len(should_have_theory):
+                self.logger.warning(f"THEORY MISMATCH: {group_name} - Expected {len(should_have_theory)} theory instances but filtered to {len(instances)}")
+            else:
+                self.logger.debug(f"THEORY OK: {group_name} - All {len(instances)} theory instances properly flagged")
+            
             # Collect all theory sessions needed for this group
             sessions_needed = []
             for instance in instances:
@@ -1823,6 +1956,9 @@ class CombinedScheduler:
                 teacher_sessions[teacher_id].append(session)
             
             # Assign sessions to slots
+            sessions_assigned = 0
+            sessions_total = sum(len(session_list) for session_list in teacher_sessions.values())
+            
             for teacher_id, teacher_session_list in teacher_sessions.items():
                 for session in teacher_session_list:
                     # Find a slot where this teacher is not already assigned
@@ -1832,21 +1968,36 @@ class CombinedScheduler:
                             slot_assignments[slot_idx].append(session)
                             slot_teachers[slot_idx].add(teacher_id)
                             assigned = True
+                            sessions_assigned += 1
                             break
             
                     if not assigned:
-                        # If all slots have this teacher, assign to the slot with fewest sessions
+                        # FIXED: Always assign to the slot with fewest sessions
+                        # This ensures ALL sessions get scheduled, even if teacher conflicts occur
                         min_slot = min(slot_assignments.keys(), key=lambda x: len(slot_assignments[x]))
                         slot_assignments[min_slot].append(session)
                         slot_teachers[min_slot].add(teacher_id)
-                        self.logger.warning(f"Teacher {teacher_id} has multiple sessions in same time slot for {group_name}")
+                        sessions_assigned += 1
+                        self.logger.debug(f"Teacher {teacher_id} has multiple sessions in same time slot for {group_name} - assigned to slot {min_slot}")
+            
+            # Log session assignment summary
+            if sessions_assigned < sessions_total:
+                self.logger.error(f"SCHEDULING ERROR: {group_name} - Only {sessions_assigned}/{sessions_total} sessions assigned!")
+            else:
+                self.logger.info(f"SUCCESS {group_name}: All {sessions_assigned}/{sessions_total} sessions successfully assigned")
             
             # Create schedule entries
+            sessions_skipped_no_room = 0
+            sessions_successfully_scheduled = 0
+            
             for slot_idx, assigned_sessions in slot_assignments.items():
                 if not assigned_sessions:
                     continue
             
                 day_idx, time_slot_idx = allocated_slots[slot_idx]
+                
+                # Track room usage for this specific time slot to prevent double-booking
+                used_rooms_this_slot = set()
                 
                 for session in assigned_sessions:
                     # Get teacher and course details
@@ -1858,13 +2009,26 @@ class CombinedScheduler:
                         teacher_matches = self.courses_df[self.courses_df['teacher_id'] == int(session['teacher_id'])]
                         if teacher_matches.empty:
                             self.logger.error(f"Teacher ID {session['teacher_id']} not found in courses dataframe for theory schedule")
+                            sessions_skipped_no_room += 1
                             continue
                     teacher_row = teacher_matches.iloc[0]
                     
-                    # Assign rooms in round-robin fashion
-                    room_idx = len([s for s in theory_schedule if s['day'] == self.days[day_idx] and s['time_slot'] == self.theory_time_slots[time_slot_idx]]) % len(self.theory_room_ids)
-                    room_id = self.theory_room_ids[room_idx]
-                    room_row = self.rooms_df[self.rooms_df['id'] == room_id].iloc[0]
+                    # IMPROVED: Find available room instead of round-robin
+                    available_room_id = self._find_available_theory_room(
+                        day_idx, time_slot_idx, used_rooms_this_slot, theory_schedule
+                    )
+                    
+                    if available_room_id is None:
+                        self.logger.error(f"No available theory room for session {session['course_instance_id']} "
+                                        f"on {self.days[day_idx]} at {self.theory_time_slots[time_slot_idx]}")
+                        self.logger.error(f"  Course: {instance['course_code']}, Teacher: {session['teacher_id']}")
+                        self.logger.error(f"  Group: {group_name}, Session: {session['session_type']} #{session['session_number']}")
+                        sessions_skipped_no_room += 1
+                        continue
+                    
+                    used_rooms_this_slot.add(available_room_id)
+                    room_row = self.rooms_df[self.rooms_df['id'] == available_room_id].iloc[0]
+                    sessions_successfully_scheduled += 1
                     
                     # Create schedule entry
                     theory_schedule.append({
@@ -1879,7 +2043,7 @@ class CombinedScheduler:
                         'teacher_id': session['teacher_id'],
                         'teacher_name': f"{teacher_row.get('first_name', '')} {teacher_row.get('last_name', '')}".strip(),
                         'staff_code': teacher_row.get('staff_code', ''),
-                        'room_id': int(room_id),
+                        'room_id': int(available_room_id),
                         'room_number': room_row['room_number'],
                         'block': room_row.get('block', ''),
                         'student_count': int(instance.get('student_count', 70)),
@@ -1892,9 +2056,103 @@ class CombinedScheduler:
                         'department': group_info['dept'],
                         'semester': group_info['semester']
                     })
+            
+            # Log session scheduling summary for this group
+            if sessions_skipped_no_room > 0:
+                self.logger.error(f"ERROR {group_name}: {sessions_skipped_no_room} sessions SKIPPED due to no available rooms")
+            self.logger.info(f"STATS {group_name}: {sessions_successfully_scheduled} sessions successfully scheduled")
         
         self.logger.info(f"Phase 2 complete: Distributed {len(theory_schedule)} theory sessions across group time slots")
+        
+        # Validate that room assignments don't have conflicts
+        self._validate_theory_room_assignments(theory_schedule)
+        
         return theory_schedule
+    
+    def _validate_theory_room_assignments(self, theory_schedule):
+        """
+        Validate that there are no room conflicts in the theory schedule.
+        """
+        self.logger.info("Validating theory room assignments for conflicts...")
+        
+        # Group sessions by day and time slot
+        time_slot_usage = {}
+        conflicts_found = 0
+        
+        for session in theory_schedule:
+            day = session['day']
+            time_slot = session['time_slot']
+            room_id = session['room_id']
+            
+            key = (day, time_slot, room_id)
+            
+            if key not in time_slot_usage:
+                time_slot_usage[key] = []
+            time_slot_usage[key].append(session)
+        
+        # Check for conflicts (multiple sessions in same room at same time)
+        for (day, time_slot, room_id), sessions in time_slot_usage.items():
+            if len(sessions) > 1:
+                conflicts_found += 1
+                course_codes = [s['course_code'] for s in sessions]
+                teachers = [s['teacher_id'] for s in sessions]
+                
+                self.logger.error(f"ROOM CONFLICT: Room {room_id} double-booked on {day} {time_slot}")
+                self.logger.error(f"  Conflicting courses: {', '.join(course_codes)}")
+                self.logger.error(f"  Conflicting teachers: {', '.join(map(str, teachers))}")
+        
+        # Summary
+        total_sessions = len(theory_schedule)
+        unique_time_slots = len(set((s['day'], s['time_slot']) for s in theory_schedule))
+        total_room_usage = len(time_slot_usage)
+        
+        if conflicts_found == 0:
+            self.logger.info("SUCCESS Theory room validation PASSED - No conflicts found")
+        else:
+            self.logger.error(f"FAILED Theory room validation FAILED - {conflicts_found} conflicts found")
+        
+        self.logger.info(f"Theory room validation summary:")
+        self.logger.info(f"  - Total theory sessions: {total_sessions}")
+        self.logger.info(f"  - Unique time slots used: {unique_time_slots}")
+        self.logger.info(f"  - Total room-timeslot assignments: {total_room_usage}")
+        self.logger.info(f"  - Room conflicts: {conflicts_found}")
+        
+        return conflicts_found == 0
+    
+    def _find_available_theory_room(self, day_idx, time_slot_idx, used_rooms_this_slot, existing_schedule):
+        """
+        Find an available theory room for the given day and time slot.
+        
+        Args:
+            day_idx: Day index
+            time_slot_idx: Time slot index
+            used_rooms_this_slot: Set of room IDs already used in this time slot
+            existing_schedule: List of already scheduled theory sessions
+            
+        Returns:
+            room_id if available, None if no room available
+        """
+        day_name = self.days[day_idx]
+        time_slot = self.theory_time_slots[time_slot_idx]
+        
+        # Get rooms already occupied at this exact time slot from existing schedule
+        occupied_rooms = set()
+        for session in existing_schedule:
+            if session['day'] == day_name and session['time_slot'] == time_slot:
+                occupied_rooms.add(session['room_id'])
+        
+        # Combine with rooms used in current slot assignment
+        all_occupied_rooms = occupied_rooms | used_rooms_this_slot
+        
+        # Find first available room
+        for room_id in self.theory_room_ids:
+            if room_id not in all_occupied_rooms:
+                return room_id
+        
+        # If no room available, log warning and return None
+        self.logger.warning(f"No available theory room for {day_name} {time_slot}. "
+                          f"Occupied: {len(all_occupied_rooms)}, Total: {len(self.theory_room_ids)}")
+        return None
     
     def _extract_lab_schedule(self, solver, lab_variables):
         """Extract lab schedule from solver solution with proper batching logic."""

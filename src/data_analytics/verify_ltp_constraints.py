@@ -6,7 +6,7 @@ def verify_ltp_constraints():
     """Verify that LTP constraints are satisfied for all courses with updated batching logic and theory verification."""
     
     # Load course requirements
-    course_file = "data/department_data/Electronics___Communication_Engineering_courses.csv"
+    course_file = "data/department_data/Computing_department.csv"
     
     if not os.path.exists(course_file):
         print(f"Course file not found: {course_file}")
@@ -65,8 +65,8 @@ def verify_ltp_constraints():
     
     # If no individual schedules found, try combined schedule
     if lab_schedule_df is None and theory_schedule_df is None and latest_combined_folder:
-        combined_lab_file = os.path.join(output_dir, latest_combined_folder, "lab_schedule", "lab_schedule.csv")
-        combined_theory_file = os.path.join(output_dir, latest_combined_folder, "theory_schedule", "theory_schedule.csv")
+        combined_lab_file = os.path.join(output_dir, latest_combined_folder,"combined_lab_schedule.csv")
+        combined_theory_file = os.path.join(output_dir, latest_combined_folder,"combined_theory_schedule.csv")
         
         if os.path.exists(combined_lab_file):
             lab_schedule_df = pd.read_csv(combined_lab_file)
