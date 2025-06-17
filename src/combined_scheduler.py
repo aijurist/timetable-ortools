@@ -1175,44 +1175,67 @@ class CombinedScheduler:
                             # 6+ practical hours: Allow up to 6 slots if batched, max 3 if not batched
                             max_batched_sessions = min(sessions_with_batching, 6)
                             max_unbatched_sessions = min(base_sessions, 3)
+                            absolute_max_sessions = 6  # Hard limit for 6+ hour courses
                         elif practical_hours >= 4:
                             # 4+ practical hours: Allow up to 4 slots if batched, max 2 if not batched
                             max_batched_sessions = min(sessions_with_batching, 4)
                             max_unbatched_sessions = min(base_sessions, 2)
+                            absolute_max_sessions = 4  # Hard limit for 4+ hour courses
                         else:
                             # 2 practical hours: Maximum 2 slots if batched, 1 if not batched
                             max_batched_sessions = min(sessions_with_batching, 2)
                             max_unbatched_sessions = min(base_sessions, 1)
+                            absolute_max_sessions = 2  # Hard limit for 2 hour courses
                         
-                        # Boolean variable to choose strategy: True = use 35-cap labs, False = use 70+ cap labs
-                        use_35_cap_strategy = model.NewBoolVar(f'course_{course_instance_id}_use_35_cap_strategy')
-                        
-                        # Constraint 1: If using 35-cap strategy, ALL sessions must be in 35-cap labs
-                        if assignments_in_35_cap and assignments_in_70_plus_cap:
-                            model.Add(total_35_assignments == sum(total_assignments)).OnlyEnforceIf(use_35_cap_strategy)
-                            model.Add(total_70_plus_assignments == 0).OnlyEnforceIf(use_35_cap_strategy)
-                            
-                            # Constraint 2: If using 70+ cap strategy, ALL sessions must be in 70+ cap labs  
-                            model.Add(total_70_plus_assignments == sum(total_assignments)).OnlyEnforceIf(use_35_cap_strategy.Not())
-                            model.Add(total_35_assignments == 0).OnlyEnforceIf(use_35_cap_strategy.Not())
-                    
-                            # Constraint 3: Session count depends on chosen strategy WITH SLOT RESTRICTIONS
-                            model.Add(sum(total_assignments) == max_batched_sessions).OnlyEnforceIf(use_35_cap_strategy)
-                            model.Add(sum(total_assignments) == max_unbatched_sessions).OnlyEnforceIf(use_35_cap_strategy.Not())
-                            
-                            constraints_applied += 6
+                        # CRITICAL FIX: 2-hour courses CANNOT use 70+ capacity labs
+                        if practical_hours <= 2:
+                            # FORCE 35-capacity labs ONLY for 2-hour courses
+                            if assignments_in_35_cap:
+                                model.Add(total_35_assignments == sum(total_assignments))
+                                model.Add(total_70_plus_assignments == 0)
+                                model.Add(sum(total_assignments) == max_batched_sessions)
+                                constraints_applied += 3
+                                self.logger.info(f"Course {course_req['course_code']} ({practical_hours}h): FORCED to use 35-capacity labs only with {max_batched_sessions} sessions")
+                            else:
+                                self.logger.error(f"Course {course_req['course_code']} ({practical_hours}h): No 35-capacity labs available - scheduling impossible")
                         else:
-                            # Fallback to simple assignment if capacity separation not possible
-                            required_sessions = min(max_batched_sessions, len(total_assignments))
-                            model.Add(sum(total_assignments) == required_sessions)
-                            constraints_applied += 1
-                            self.logger.info(f"Course {course_req['course_code']} ({practical_hours}h): EITHER {max_batched_sessions} sessions (35-cap batched) OR {max_unbatched_sessions} sessions (70+ cap unbatched)")
+                            # Boolean variable to choose strategy: True = use 35-cap labs, False = use 70+ cap labs
+                            use_35_cap_strategy = model.NewBoolVar(f'course_{course_instance_id}_use_35_cap_strategy')
+                            
+                            # Constraint 1: If using 35-cap strategy, ALL sessions must be in 35-cap labs
+                            if assignments_in_35_cap and assignments_in_70_plus_cap:
+                                model.Add(total_35_assignments == sum(total_assignments)).OnlyEnforceIf(use_35_cap_strategy)
+                                model.Add(total_70_plus_assignments == 0).OnlyEnforceIf(use_35_cap_strategy)
+                                
+                                # Constraint 2: If using 70+ cap strategy, ALL sessions must be in 70+ cap labs  
+                                model.Add(total_70_plus_assignments == sum(total_assignments)).OnlyEnforceIf(use_35_cap_strategy.Not())
+                                model.Add(total_35_assignments == 0).OnlyEnforceIf(use_35_cap_strategy.Not())
+                        
+                                # Constraint 3: Session count depends on chosen strategy WITH SLOT RESTRICTIONS
+                                model.Add(sum(total_assignments) == max_batched_sessions).OnlyEnforceIf(use_35_cap_strategy)
+                                model.Add(sum(total_assignments) == max_unbatched_sessions).OnlyEnforceIf(use_35_cap_strategy.Not())
+                                
+                                constraints_applied += 6
+                                self.logger.info(f"Course {course_req['course_code']} ({practical_hours}h): EITHER {max_batched_sessions} sessions (35-cap batched) OR {max_unbatched_sessions} sessions (70+ cap unbatched)")
+                            else:
+                                # Fallback to simple assignment if capacity separation not possible
+                                required_sessions = min(max_batched_sessions, len(total_assignments), absolute_max_sessions)
+                                model.Add(sum(total_assignments) == required_sessions)
+                                constraints_applied += 1
+                                self.logger.info(f"Course {course_req['course_code']} ({practical_hours}h): fallback assignment with {required_sessions} sessions (max {absolute_max_sessions} enforced)")
                     else:
-                        # Small courses: always base sessions, but enforce max 4 slots
-                        max_sessions = min(base_sessions, 4)
+                        # Small courses: always base sessions, but apply same absolute limits based on practical hours
+                        if practical_hours >= 6:
+                            absolute_max_sessions = 6
+                        elif practical_hours >= 4:
+                            absolute_max_sessions = 4
+                        else:
+                            absolute_max_sessions = 2
+                        
+                        max_sessions = min(base_sessions, absolute_max_sessions)
                         model.Add(sum(total_assignments) == max_sessions)
                         constraints_applied += 1
-                        self.logger.info(f"Course {course_req['course_code']}: exactly {max_sessions} sessions (max 4 slots enforced)")
+                        self.logger.info(f"Course {course_req['course_code']} ({practical_hours}h): exactly {max_sessions} sessions (max {absolute_max_sessions} slots enforced)")
         
         self.logger.info(f"Applied {constraints_applied} course lab requirements constraints")
         return constraints_applied
@@ -1544,7 +1567,7 @@ class CombinedScheduler:
                         is_lab_active_for_sem = model.NewBoolVar(f'lab_active_{dept}_S{semester}_d{day_idx}_ts{theory_slot_idx}')
                         model.Add(sum(lab_vars_at_overlapping_slot) > 0).OnlyEnforceIf(is_lab_active_for_sem)
                         model.Add(sum(lab_vars_at_overlapping_slot) == 0).OnlyEnforceIf(is_lab_active_for_sem.Not())
-
+                            
                         # C. Add the exclusion constraint: At most one can be active
                         model.Add(is_theory_active_for_sem + is_lab_active_for_sem <= 1)
                         constraints_applied += 1
@@ -1576,7 +1599,7 @@ class CombinedScheduler:
                     teacher_id = str(instance['teacher_id'])
                     if group_name not in teacher_activities[teacher_id]['theory_groups']:
                         teacher_activities[teacher_id]['theory_groups'].append(group_name)
-
+        
         # 2. Iterate through each teacher and each time point to enforce the constraint
         for teacher_id, activities in teacher_activities.items():
             # Skip if teacher has no activities to schedule
@@ -1614,10 +1637,10 @@ class CombinedScheduler:
                                 course_instance_id in lab_variables.get(teacher_id, {}) and
                                 day_idx < len(lab_variables[teacher_id][course_instance_id]) and
                                 session_name in lab_variables[teacher_id][course_instance_id][day_idx]):
-                                for room_id in self.lab_room_ids:
-                                    all_activities_at_this_time.append(
+                                    for room_id in self.lab_room_ids:
+                                        all_activities_at_this_time.append(
                                         lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id]
-                                    )
+                                        )
                             
                     # C. Add the unified constraint: sum of all activities <= 1
                     if len(all_activities_at_this_time) > 1:
@@ -1641,30 +1664,13 @@ class CombinedScheduler:
                         for room_id in self.lab_room_ids:
                             objective_terms.append(lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id])
         
-        # Theory objective: maximize group timeslot allocations with balanced day distribution
+        # Theory objective: maximize group timeslot allocations with time slot preference
         for group_name, day_slots in group_timeslot_vars.items():
             for day_idx in range(self.num_days):
-                # Give higher weight to earlier slots to encourage compact scheduling
                 for slot_idx in range(self.num_theory_slots):
                     # Base weight decreases as slot gets later (earlier slots preferred)
                     slot_weight = self.num_theory_slots - slot_idx
-                    
-                    # Add day distribution balance: 
-                    # - Prefer Tuesday (1.0), Thursday (0.9) over Wednesday (0.7) to reduce concentration
-                    # - Encourage spreading across multiple days
-                    day_weights = {
-                        0: 0.8,   # Monday
-                        1: 1.0,   # Tuesday (preferred)
-                        2: 0.7,   # Wednesday (discouraged due to overuse)
-                        3: 0.9,   # Thursday (preferred)
-                        4: 0.8,   # Friday
-                        5: 0.6    # Saturday (least preferred)
-                    }
-                    day_weight = day_weights.get(day_idx, 0.5)
-                    
-                    # Combined weight: slot preference × day distribution balance
-                    combined_weight = int(slot_weight * day_weight * 10)  # Scale up for integer weights
-                    objective_terms.append(day_slots[day_idx][slot_idx] * combined_weight)
+                    objective_terms.append(day_slots[day_idx][slot_idx] * slot_weight)
         
         # Add capacity preferences for lab room assignments
         if hasattr(self, 'capacity_preferences') and self.capacity_preferences:
@@ -1678,18 +1684,19 @@ class CombinedScheduler:
             self.logger.info(f"Combined objective set with {len(objective_terms)} terms")
             self.logger.info("Objective strategy:")
             self.logger.info("  1. Lab assignments (base priority)")
-            self.logger.info("  2. Group timeslots with balanced day distribution")
-            self.logger.info("     - Tuesday/Thursday preferred (weights: 1.0/0.9)")
-            self.logger.info("     - Wednesday discouraged (weight: 0.7)")
+            self.logger.info("  2. Group timeslots with time slot preference")
             self.logger.info("     - Earlier time slots preferred within each day")
             self.logger.info("  3. Room capacity optimization (prefer appropriate room sizes)")
+        else:
+            self.logger.warning("No objective terms created for group allocation")
     
     def _solve_combined_model(self, model, lab_variables, group_timeslot_vars):
         """Solve the combined scheduling model using two-phase approach."""
         # Create the solver
         solver = cp_model.CpSolver()
-        solver.parameters.max_time_in_seconds = 1200
+        solver.parameters.max_time_in_seconds = 600
         solver.parameters.num_search_workers = 16
+        solver.parameters.max_memory_in_mb = 30000
         solver.parameters.log_search_progress = True
         solver.parameters.stop_after_first_solution= True
         
@@ -2297,9 +2304,10 @@ class CombinedScheduler:
         
         # Simple capacity rules based on practical hours
         if practical_hours <= 2:
-            # Rule: practical_hours <= 2 should always use 35-capacity labs (with batching if needed)
+            # Rule: practical_hours <= 2 should ONLY use 35-capacity labs (NO 70+ capacity labs allowed)
             strategy['force_35_capacity'] = True
-            strategy['preferred_lab_capacities'] = [35]
+            strategy['preferred_lab_capacities'] = [35]  # Only 35-capacity labs allowed
+            self.logger.info(f"Course with {practical_hours}h practical RESTRICTED to 35-capacity labs only")
         elif practical_hours == 6:
             # Rule: practical_hours == 6 PREFERS 70+ capacity labs but allows batching fallback
             strategy['prefer_70_plus_with_batching_fallback'] = True
@@ -2313,7 +2321,7 @@ class CombinedScheduler:
             strategy['prefer_70_plus_with_batching_fallback'] = True
             strategy['preferred_lab_capacities'] = [70, 140, 35]  # 70+ preferred, 35 as fallback
         else:
-            # Rule: practical_hours 3 or less can use either strategy (solver decides)
+            # Rule: practical_hours 3 can use either strategy (solver decides)
             strategy['preferred_lab_capacities'] = [35, 70, 140]
         
         return strategy

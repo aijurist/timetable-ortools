@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Selection - University Timetable</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --lab-color: #e8f4fd;
+            --theory-color: #e8f6f3;
+            --header-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: var(--header-bg) !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .dept-card {
+            margin-bottom: 2rem;
+        }
+
+        .dept-header {
+            background: var(--header-bg);
+            color: white;
+            padding: 1rem;
+            border-radius: 15px 15px 0 0;
+            font-weight: bold;
+        }
+
+        .semester-section {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .semester-section:last-child {
+            border-bottom: none;
+        }
+
+        .semester-title {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--secondary-color);
+        }
+
+        .group-section {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .group-title {
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .course-option {
+            margin-bottom: 0.5rem;
+            padding: 0.75rem;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .course-option:hover {
+            border-color: var(--secondary-color);
+            background-color: #f8f9fa;
+        }
+
+        .course-option.selected {
+            border-color: var(--success-color);
+            background-color: var(--theory-color);
+        }
+
+        .course-option.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background-color: #f8f9fa;
+        }
+
+        .course-option.course-taken {
+            opacity: 0.5;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            cursor: not-allowed;
+            position: relative;
+        }
+
+        .taken-indicator {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #dc3545;
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+
+        .course-option input[type="radio"] {
+            margin-right: 0.75rem;
+        }
+
+        .course-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .course-info {
+            flex: 1;
+        }
+
+        .course-code {
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+
+        .course-name {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+
+        .course-meta {
+            font-size: 0.8rem;
+            color: #888;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .teacher-info {
+            text-align: right;
+            font-size: 0.9rem;
+        }
+
+        .teacher-name {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .staff-code {
+            color: #888;
+            font-size: 0.8rem;
+        }
+
+        .selection-summary {
+            position: sticky;
+            top: 100px;
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .summary-title {
+            color: var(--primary-color);
+            font-weight: bold;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .selected-course {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: var(--theory-color);
+            border-radius: 8px;
+            border-left: 4px solid var(--success-color);
+        }
+
+        .selected-course-code {
+            font-weight: bold;
+            color: var(--success-color);
+        }
+
+        .selected-course-name {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            border-radius: 25px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary-color);
+            transform: translateY(-1px);
+        }
+
+        .alert-info {
+            background: var(--lab-color);
+            border: 1px solid var(--secondary-color);
+            color: var(--primary-color);
+        }
+
+        .badge {
+            font-size: 0.75rem;
+        }
+
+        .group-stats {
+            font-size: 0.8rem;
+            color: #666;
+            margin-left: auto;
+        }
+
+        .filter-section {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .dept-card.hidden {
+            display: none;
+        }
+
+        .semester-section.hidden {
+            display: none;
+        }
+
+        .course-option.hidden {
+            display: none;
+        }
+
+        .group-section.hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .course-details {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            
+            .teacher-info {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand">
+                <i class="fas fa-graduation-cap me-2"></i>
+                Course Selection System
+            </span>
+            <div class="navbar-nav ms-auto">
+                <a href="schedule_website.html" class="nav-link">
+                    <i class="fas fa-calendar me-1"></i>
+                    View Schedule
+                </a>
+                <a href="room_timetable.html" class="nav-link">
+                    <i class="fas fa-door-open me-1"></i>
+                    Room Timetable
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Course Selection Rules:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>You can select <strong>only one course per group</strong></li>
+                        <li>Once you select a course, <strong>all instances of that course (even with different teachers) become unavailable</strong></li>
+                        <li>Once you select a course in a group, other courses in that group become unavailable</li>
+                        <li>You can change your selection at any time before submitting</li>
+                        <li>Review your selections in the summary panel before finalizing</li>
+                    </ul>
+                </div>
+
+                <!-- Filter Section -->
+                <div class="filter-section">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-building me-1"></i>Filter by Department
+                            </label>
+                            <select class="form-select" id="departmentFilter">
+                                <option value="">All Departments</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-graduation-cap me-1"></i>Filter by Semester
+                            </label>
+                            <select class="form-select" id="semesterFilter">
+                                <option value="">All Semesters</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-search me-1"></i>Search Courses
+                            </label>
+                            <input type="text" class="form-control" id="courseSearch" placeholder="Search by course code or name...">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <button class="btn btn-outline-secondary btn-sm" id="clearFilters">
+                                <i class="fas fa-times me-1"></i>
+                                Clear Filters
+                            </button>
+                            <span class="ms-3 text-muted" id="filterStatus">Showing all courses</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="courseContainer">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading courses...</span>
+                        </div>
+                        <p class="mt-2">Loading course information...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="selection-summary">
+                    <h5 class="summary-title">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Your Selections
+                    </h5>
+                    
+                    <div id="selectionCount" class="text-center mb-3">
+                        <span class="badge bg-primary">0 courses selected</span>
+                    </div>
+
+                    <div id="selectedCourses">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-clipboard-list fa-2x mb-2"></i>
+                            <p>No courses selected yet</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 d-grid">
+                        <button class="btn btn-primary" id="submitSelection" disabled>
+                            <i class="fas fa-paper-plane me-2"></i>
+                            Submit Selection
+                        </button>
+                    </div>
+
+                    <div class="mt-3">
+                        <button class="btn btn-outline-secondary w-100" id="clearAll">
+                            <i class="fas fa-trash me-2"></i>
+                            Clear All Selections
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="course_selection.js"></script>
+</body>
+</html> 
