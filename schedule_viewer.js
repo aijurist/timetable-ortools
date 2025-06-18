@@ -92,16 +92,46 @@ function getSemesterFromGroupName(groupName) {
 // Load and parse data
 async function loadData() {
     try {
+        // Get the latest folder path from the server
+        console.log('Fetching latest folder from API...');
+        const folderResponse = await fetch('/api/latest-folder');
+        
+        if (!folderResponse.ok) {
+            throw new Error(`API request failed: ${folderResponse.status} ${folderResponse.statusText}`);
+        }
+        
+        const folderResponseText = await folderResponse.text();
+        console.log('Raw API response:', folderResponseText);
+        
+        const folderData = JSON.parse(folderResponseText);
+        console.log('Parsed API response:', folderData);
+        
+        if (folderData.error) {
+            throw new Error(folderData.error);
+        }
+        
+        const latestFolder = folderData.latestFolder;
+        console.log('Using latest schedule folder:', latestFolder);
+        
         // Load lab data
-        const labResponse = await fetch('output/combined_schedule_20250617_133148/combined_lab_schedule.json');
+        const labResponse = await fetch(`${latestFolder}/combined_lab_schedule.json`);
+        if (!labResponse.ok) {
+            throw new Error(`Failed to load lab schedule: ${labResponse.status} ${labResponse.statusText}`);
+        }
         labData = await labResponse.json();
         
         // Load theory data
-        const theoryResponse = await fetch('output/combined_schedule_20250617_133148/combined_theory_schedule.json');
+        const theoryResponse = await fetch(`${latestFolder}/combined_theory_schedule.json`);
+        if (!theoryResponse.ok) {
+            throw new Error(`Failed to load theory schedule: ${theoryResponse.status} ${theoryResponse.statusText}`);
+        }
         theoryData = await theoryResponse.json();
         
         // Combine data
         allData = [...labData, ...theoryData];
+        
+        // Show success message with folder info
+        console.log(`Successfully loaded ${labData.length} lab sessions and ${theoryData.length} theory sessions from ${latestFolder}`);
         
         // Initialize UI
         initializeFilters();
@@ -115,6 +145,7 @@ async function loadData() {
                 <i class="fas fa-exclamation-triangle me-2"></i>
                 Error loading schedule data. Please ensure the data files are available.
                 <br><small>Error: ${error.message}</small>
+                <br><small class="text-muted">Try refreshing the page or check if the timetable scheduler has been run recently.</small>
             </div>
         `;
     }

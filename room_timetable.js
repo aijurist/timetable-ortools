@@ -48,11 +48,22 @@ function getGroupNumber(groupName) {
 async function loadData() {
     try {
         // Load lab data
-        const labResponse = await fetch('output/combined_schedule_20250617_133148/combined_lab_schedule.json');
+        // Get the latest folder path from the server
+        const folderResponse = await fetch('/api/latest-folder');
+        const folderData = await folderResponse.json();
+        
+        if (folderData.error) {
+            throw new Error(folderData.error);
+        }
+        
+        const latestFolder = folderData.latestFolder;
+        console.log('Room timetable using latest schedule folder:', latestFolder);
+        
+        const labResponse = await fetch(`${latestFolder}/combined_lab_schedule.json`);
         labData = await labResponse.json();
         
         // Load theory data
-        const theoryResponse = await fetch('output/combined_schedule_20250617_133148/combined_theory_schedule.json');
+        const theoryResponse = await fetch(`${latestFolder}/combined_theory_schedule.json`);
         theoryData = await theoryResponse.json();
         
         // Combine data

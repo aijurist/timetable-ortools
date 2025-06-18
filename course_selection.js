@@ -11,8 +11,19 @@ let currentFilters = {
 // Load and process course data
 async function loadCourseData() {
     try {
+        // Get the latest folder path from the server
+        const folderResponse = await fetch('/api/latest-folder');
+        const folderData = await folderResponse.json();
+        
+        if (folderData.error) {
+            throw new Error(folderData.error);
+        }
+        
+        const latestFolder = folderData.latestFolder;
+        console.log('Course selection using latest schedule folder:', latestFolder);
+        
         // Load theory data (contains course information)
-        const theoryResponse = await fetch('output/combined_schedule_20250617_133148/combined_theory_schedule.json');
+        const theoryResponse = await fetch(`${latestFolder}/combined_theory_schedule.json`);
         const theoryData = await theoryResponse.json();
         
         // Process and group courses

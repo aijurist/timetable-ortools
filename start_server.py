@@ -11,7 +11,19 @@ import socketserver
 import webbrowser
 import os
 import sys
+import glob
+import json
 from pathlib import Path
+
+def find_latest_schedule_folder():
+    """Find the latest combined_schedule folder."""
+    pattern = "output/combined_schedule_*"
+    folders = glob.glob(pattern)
+    if not folders:
+        return None
+    # Sort by folder name (which includes timestamp) and get the latest
+    latest_folder = sorted(folders)[-1]
+    return latest_folder
 
 def start_server():
     """Start the HTTP server."""
@@ -21,12 +33,21 @@ def start_server():
     script_dir = Path(__file__).parent.absolute()
     os.chdir(script_dir)
     
+    # Find the latest schedule folder
+    latest_folder = find_latest_schedule_folder()
+    if not latest_folder:
+        print("❌ Error: No combined_schedule folders found in output directory.")
+        print("   Please run the timetable scheduler first to generate schedules.")
+        return False
+    
+    print(f"📁 Using latest schedule folder: {latest_folder}")
+    
     # Check if required files exist
     required_files = [
         'schedule_website.html',
         'schedule_viewer.js',
-        'output/combined_schedule_20250617_133148/combined_lab_schedule.json',
-        'output/combined_schedule_20250617_133148/combined_theory_schedule.json'
+        f'{latest_folder}/combined_lab_schedule.json',
+        f'{latest_folder}/combined_theory_schedule.json'
     ]
     
     missing_files = []
@@ -45,19 +66,42 @@ def start_server():
         # Create server
         Handler = http.server.SimpleHTTPRequestHandler
         
-        # Enable CORS for local development
+        # Enable CORS for local development and inject latest folder path
         class CORSRequestHandler(Handler):
             def end_headers(self):
                 self.send_header('Access-Control-Allow-Origin', '*')
                 self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
                 self.send_header('Access-Control-Allow-Headers', 'Content-Type')
                 super().end_headers()
+            
+            def do_GET(self):
+                # Special endpoint to provide the latest folder path
+                if self.path == '/api/latest-folder':
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    latest = find_latest_schedule_folder()
+                    if latest:
+                        # Use forward slashes for web paths and proper JSON encoding
+                        latest_web_path = latest.replace('\\', '/')
+                        response_data = {"latestFolder": latest_web_path}
+                    else:
+                        response_data = {"error": "No schedule folder found"}
+                    
+                    # Use proper JSON encoding to avoid escape character issues
+                    response = json.dumps(response_data)
+                    self.wfile.write(response.encode())
+                    return
+                
+                # Default behavior for other requests
+                super().do_GET()
         
         with socketserver.TCPServer(("", PORT), CORSRequestHandler) as httpd:
             print(f"🚀 Starting University Timetable Schedule Website")
             print(f"📁 Serving from: {script_dir}")
             print(f"🌐 Server running at: http://localhost:{PORT}")
             print(f"📄 Website URL: http://localhost:{PORT}/schedule_website.html")
+            print(f"🔄 Latest folder API: http://localhost:{PORT}/api/latest-folder")
             print(f"\n💡 Press Ctrl+C to stop the server")
             
             # Try to open browser automatically
