@@ -239,14 +239,6 @@ class CombinedScheduler:
             './data/og-final.csv',
             '../data/og-final.csv',
             'timetable_scheduler/data/og-final.csv',
-            'data/combined_lab_mapping.csv',
-            './data/combined_lab_mapping.csv',
-            '../data/combined_lab_mapping.csv',
-            'timetable_scheduler/data/combined_lab_mapping.csv',
-            'data/core_mapping_cleaned.csv',
-            './data/core_mapping_cleaned.csv',
-            '../data/core_mapping_cleaned.csv',
-            'timetable_scheduler/data/core_mapping_cleaned.csv'
         ]
         
         core_mapping_file_path = None
@@ -1883,8 +1875,8 @@ class CombinedScheduler:
         return constraints_applied
     
     def apply_semester_lab_slot_limit_constraint(self, model, lab_variables):
-        """CONSTRAINT: Limit the total number of lab slots used by any single semester/department to 18 (excluding core labs)."""
-        self.logger.info("Applying semester lab slot limit constraint (max 18 slots per sem/dept, core labs exempt)...")
+        """CONSTRAINT: Limit the total number of lab slots used by any single semester/department to 18 (COMPLETELY EXCLUDING core labs)."""
+        self.logger.info("Applying semester lab slot limit constraint (max 18 slots per sem/dept, core labs get UNLIMITED slots)...")
         constraints_applied = 0
         
         # Group course instances by department and semester
@@ -1902,7 +1894,7 @@ class CombinedScheduler:
             if len(instance_info) == 0:
                 continue
             
-            # Separate core lab instances from regular instances
+            # COMPLETELY SEPARATE core lab instances from regular instances
             non_core_instances = []
             core_instances = []
             
@@ -1912,26 +1904,36 @@ class CombinedScheduler:
                 else:
                     non_core_instances.append((teacher_id, course_instance_id))
             
+            # Log the separation clearly
+            self.logger.info(f"  - {dept} S{semester}: {len(core_instances)} CORE LABS (unlimited), {len(non_core_instances)} regular labs (18-slot limit)")
+            
             if not non_core_instances:
-                self.logger.info(f"  - Skipping 18-slot limit for {dept} S{semester}: all its labs are core labs and thus exempt.")
+                self.logger.info(f"  - COMPLETE EXEMPTION for {dept} S{semester}: ALL labs are core labs - NO SLOT LIMITS APPLIED!")
                 continue
             
-            # Create boolean variables for each time slot to check if it's used by this semester/dept's non-core labs
+            # Get department-specific day pattern for accurate slot counting
+            dept_days = self._get_days_for_department(dept)
+            num_dept_days = len(dept_days)
+            
+            # Create boolean variables for each time slot used by NON-CORE labs ONLY
             slot_used_vars = {}
-            for day_idx in range(self.num_days):
+            for day_idx in range(num_dept_days):  # Use department-specific days
                 for session_name in self.lab_sessions.keys():
                     slot_used_vars[(day_idx, session_name)] = model.NewBoolVar(
-                        f'slot_used_{dept}_S{semester}_d{day_idx}_s{session_name}'
+                        f'non_core_slot_used_{dept}_S{semester}_d{day_idx}_s{session_name}'
                     )
             
-            # Link these variables to the main assignment variables (non-core labs only)
-            for day_idx in range(self.num_days):
+            # Link these variables to ONLY non-core lab assignments
+            for day_idx in range(num_dept_days):  # Use department-specific days
                 for session_name in self.lab_sessions.keys():
-                    # Slot is used if ANY non-core lab from this semester/dept is scheduled in it
+                    # Slot is used if ANY NON-CORE lab from this semester/dept is scheduled in it
+                    # CORE LABS ARE COMPLETELY IGNORED IN THIS CALCULATION
                     slot_assignments = []
                     for teacher_id, course_instance_id in non_core_instances:
-                        for room_id in self.lab_room_ids:
-                            slot_assignments.append(lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id])
+                        if day_idx < len(lab_variables[teacher_id][course_instance_id]) and session_name in lab_variables[teacher_id][course_instance_id][day_idx]:
+                            for room_id in self.lab_room_ids:
+                                if room_id in lab_variables[teacher_id][course_instance_id][day_idx][session_name]:
+                                    slot_assignments.append(lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id])
                     
                     if slot_assignments:
                         # Reification: slot_used_vars is true iff sum(slot_assignments) > 0
@@ -1939,15 +1941,16 @@ class CombinedScheduler:
                         model.Add(sum(slot_assignments) == 0).OnlyEnforceIf(slot_used_vars[(day_idx, session_name)].Not())
                         constraints_applied += 2
             
-            # The sum of used slots for this semester/dept's non-core labs must be <= 18
-            total_slots_used = sum(slot_used_vars.values())
-            model.Add(total_slots_used <= 18)
+            # The sum of used slots for this semester/dept's NON-CORE labs ONLY must be <= 18
+            # CORE LABS DO NOT COUNT TOWARDS THIS LIMIT AT ALL
+            total_non_core_slots_used = sum(slot_used_vars.values())
+            model.Add(total_non_core_slots_used <= 18)
             constraints_applied += 1
             
-            self.logger.info(f"  - Constraint for {dept} Semester {semester}: non-core lab slots <= 18")
-            self.logger.info(f"    ({len(non_core_instances)} regular labs limited, {len(core_instances)} core labs exempt)")
+            self.logger.info(f"  - ENFORCED LIMIT: {dept} Semester {semester} regular labs <= 18 slots ({num_dept_days} days pattern)")
+            self.logger.info(f"  - UNLIMITED ACCESS: {len(core_instances)} core labs can use ANY number of slots without restriction")
         
-        self.logger.info(f"Applied {constraints_applied} semester lab slot limit constraints")
+        self.logger.info(f"Applied {constraints_applied} semester lab slot limit constraints (core labs completely exempt)")
         return constraints_applied
     
     def _apply_theory_constraints(self, model, group_timeslot_vars):

@@ -219,8 +219,9 @@ def main():
     
     # List of possible department files to process
     department_files = [
-        'Computing_department.csv',
-        'Artificial_Intelligence___Machine_Learning_courses.csv'
+        'Mechanical_Engineering_courses.csv',
+        # 'Computing_department.csv',
+        # 'Artificial_Intelligence___Machine_Learning_courses.csv'
         # Add more department files as needed
     ]
     
