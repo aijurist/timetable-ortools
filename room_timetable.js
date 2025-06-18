@@ -19,7 +19,8 @@ let theoryData = [];
 let allData = [];
 let roomData = {};
 
-const days = ['tuesday', 'wed', 'thur', 'fri', 'sat'];
+// Days will be dynamically determined from the data
+let days = [];
 
 // Group color mapping
 const groupColors = {
@@ -93,6 +94,36 @@ async function loadData() {
 function processRoomData() {
     roomData = {};
     
+    // Dynamically determine days from the actual data
+    const daysInData = new Set();
+    allData.forEach(session => {
+        if (session.day) {
+            daysInData.add(session.day);
+        }
+    });
+    
+    // Convert to sorted array - handle both day patterns
+    days = Array.from(daysInData).sort((a, b) => {
+        // Custom sort order for proper day sequence
+        const dayOrder = {
+            'monday': 1, 'tuesday': 2, 'wed': 3, 'thur': 4, 
+            'fri': 5, 'saturday': 6, 'sat': 6
+        };
+        return (dayOrder[a] || 999) - (dayOrder[b] || 999);
+    });
+    
+    console.log('Days found in data:', days);
+    console.log('Total sessions in data:', allData.length);
+    
+    // Debug: Check what days are actually in the data
+    const dayCount = {};
+    allData.forEach(session => {
+        if (session.day) {
+            dayCount[session.day] = (dayCount[session.day] || 0) + 1;
+        }
+    });
+    console.log('Day distribution:', dayCount);
+    
     allData.forEach(session => {
         const roomKey = `${session.room_number}_${session.block}`;
         
@@ -126,7 +157,11 @@ function processRoomData() {
                 roomData[roomKey].schedule[session.day][timeKey] = [];
             }
             roomData[roomKey].schedule[session.day][timeKey].push(session);
-            console.log(`Added session: ${session.course_code} in room ${session.room_number} on ${session.day} at ${timeKey}`);
+            if (session.day === 'monday') {
+                console.log(`MONDAY session added: ${session.course_code} in room ${session.room_number} on ${session.day} at ${timeKey}`);
+            }
+        } else {
+            console.warn(`No schedule grid for day ${session.day} in room ${roomKey}. Available days:`, Object.keys(roomData[roomKey].schedule));
         }
     });
 }
@@ -316,6 +351,12 @@ function calculateRoomUtilization(room) {
 
 // Generate schedule table for a room
 function generateRoomScheduleTable(room) {
+    // Debug: Log which days are being rendered for each room
+    if (room.room_number === 'A102') { // Just log for one room to avoid spam
+        console.log('Rendering table for room A102 with days:', days);
+        console.log('Room schedule has days:', Object.keys(room.schedule));
+    }
+    
     let html = `
         <div class="table-responsive">
             <table class="table table-bordered schedule-table">

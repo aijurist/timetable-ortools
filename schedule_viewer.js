@@ -19,22 +19,31 @@ const labSessions = {
     'L6': '5:30 - 7:10'
 };
 
-// Extended time slots to include all possible times
+// Extended time slots to include all possible times (properly ordered)
 const allTimeSlots = [
-    "8:00 - 8:50", "8:00 - 9:40", "8:50 - 9:40",
-    "9:00 - 9:50", "9:50 - 10:40", "9:50 - 11:30",
-    "10:00 - 10:50", "10:40 - 11:30", 
-    "11:00 - 11:50", "11:50 - 12:40", "11:50 - 1:30",
-    "12:00 - 12:50", "12:40 - 1:30",
-    "1:00 - 1:50", "1:50 - 2:40", "1:50 - 3:30", 
-    "2:00 - 2:50", "2:40 - 3:30",
-    "3:00 - 3:50", "3:50 - 4:40", "3:50 - 5:30",
-    "4:00 - 4:50", "4:40 - 5:30",
-    "5:00 - 5:50", "5:30 - 6:20", "5:30 - 7:10",
-    "6:00 - 6:50", "6:20 - 7:10"
+    // Morning theory slots
+    "8:00 - 8:50", "8:50 - 9:40", "8:00 - 9:40",      // 8 AM
+    "9:00 - 9:50", "9:50 - 10:40", "9:50 - 11:30",    // 9 AM  
+    "10:00 - 10:50", "10:40 - 11:30",                  // 10 AM
+    "11:00 - 11:50", "11:50 - 12:40", "11:50 - 1:30", // 11 AM
+    "12:00 - 12:50", "12:40 - 1:30",                   // 12 PM
+    // Afternoon slots
+    "1:00 - 1:50", "1:50 - 2:40", "1:50 - 3:30",      // 1 PM
+    "2:00 - 2:50", "2:40 - 3:30",                      // 2 PM
+    "3:00 - 3:50", "3:50 - 4:40", "3:50 - 5:30",      // 3 PM
+    "4:00 - 4:50", "4:40 - 5:30",                      // 4 PM
+    "5:00 - 5:50", "5:30 - 6:20", "5:30 - 7:10",      // 5 PM
+    "6:00 - 6:50", "6:20 - 7:10"                       // 6 PM
 ];
 
-const days = ['tuesday', 'wed', 'thur', 'fri', 'sat'];
+// Default days - will be dynamically updated based on data
+let days = ['tuesday', 'wed', 'thur', 'fri', 'sat'];
+
+// Day pattern mappings
+const dayPatternMappings = {
+    'Monday-Friday': ['monday', 'tuesday', 'wed', 'thur', 'fri'],
+    'Tuesday-Saturday': ['tuesday', 'wed', 'thur', 'fri', 'saturday']
+};
 
 // Group color mapping
 const groupColors = {
@@ -183,6 +192,9 @@ function initializeFilters() {
         groupSelect.appendChild(option);
     });
 
+    // Update global days array based on available day patterns in data
+    updateDaysFromData();
+
     // Add event listeners
     document.getElementById('viewType').addEventListener('change', renderContent);
     document.getElementById('departmentFilter').addEventListener('change', renderContent);
@@ -190,11 +202,26 @@ function initializeFilters() {
     document.getElementById('dayFilter').addEventListener('change', renderContent);
     document.getElementById('sessionTypeFilter').addEventListener('change', renderContent);
     document.getElementById('groupFilter').addEventListener('change', renderContent);
+    document.getElementById('dayPatternFilter').addEventListener('change', renderContent);
     
     // Add search filters
     document.getElementById('courseSearch').addEventListener('input', debounce(renderContent, 300));
     document.getElementById('teacherSearch').addEventListener('input', debounce(renderContent, 300));
     document.getElementById('roomSearch').addEventListener('input', debounce(renderContent, 300));
+}
+
+// Update days array based on available day patterns in the data
+function updateDaysFromData() {
+    const dayPatterns = [...new Set(allData.map(item => item.day_pattern).filter(Boolean))];
+    const allDaysInData = [...new Set(allData.map(item => item.day))];
+    
+    // Use all unique days found in the data, ordered properly
+    const dayOrder = ['monday', 'tuesday', 'wed', 'thur', 'fri', 'saturday'];
+    days = dayOrder.filter(day => allDaysInData.includes(day));
+    
+    console.log('Available day patterns:', dayPatterns);
+    console.log('Available days in data:', allDaysInData);
+    console.log('Updated days array:', days);
 }
 
 // Update summary statistics
@@ -221,6 +248,7 @@ function getFilteredData() {
     const day = document.getElementById('dayFilter').value;
     const sessionType = document.getElementById('sessionTypeFilter').value;
     const group = document.getElementById('groupFilter').value;
+    const dayPattern = document.getElementById('dayPatternFilter').value;
     const courseSearch = document.getElementById('courseSearch').value.toLowerCase();
     const teacherSearch = document.getElementById('teacherSearch').value.toLowerCase();
     const roomSearch = document.getElementById('roomSearch').value.toLowerCase();
@@ -239,6 +267,9 @@ function getFilteredData() {
     }
     if (group) {
         filtered = filtered.filter(item => item.group_name === group);
+    }
+    if (dayPattern) {
+        filtered = filtered.filter(item => item.day_pattern === dayPattern);
     }
     if (courseSearch) {
         filtered = filtered.filter(item => 
@@ -292,6 +323,7 @@ function renderDepartmentView(data) {
     departments.forEach(dept => {
         const deptData = data.filter(item => item.department === dept);
         const semesters = [...new Set(deptData.map(item => item.semester))].sort((a, b) => a - b);
+        const deptDayPattern = deptData.length > 0 ? deptData[0].day_pattern : '';
 
         html += `
             <div class="card mb-4">
@@ -300,6 +332,7 @@ function renderDepartmentView(data) {
                         <i class="fas fa-building me-2"></i>
                         ${dept}
                         <span class="badge bg-light text-dark ms-2">${deptData.length} sessions</span>
+                        ${deptDayPattern ? `<span class="badge bg-info ms-2">${deptDayPattern}</span>` : ''}
                     </h5>
                 </div>
                 <div class="card-body">
@@ -472,11 +505,19 @@ function generateScheduleTable(data) {
         return '<div class="alert alert-info">No sessions found for the selected filters.</div>';
     }
 
+    // Determine which days to use based on the data being displayed
+    const daysInData = [...new Set(data.map(item => item.day))];
+    const dayOrder = ['monday', 'tuesday', 'wed', 'thur', 'fri', 'saturday'];
+    const currentDays = dayOrder.filter(day => daysInData.includes(day));
+    
+    // Show day pattern information if available
+    const dayPatterns = [...new Set(data.map(item => item.day_pattern).filter(Boolean))];
+    
     // Create time slot mapping
     const scheduleGrid = {};
     
-    // Initialize grid with all possible time slots
-    days.forEach(day => {
+    // Initialize grid with all possible time slots for the current days
+    currentDays.forEach(day => {
         scheduleGrid[day] = {};
         // Use extended time slots that include both theory and lab times
         allTimeSlots.forEach(slot => {
@@ -510,8 +551,25 @@ function generateScheduleTable(data) {
         }
     });
 
-    // Generate table HTML
-    let html = `
+    // Generate table HTML with day pattern info
+    let html = '';
+    
+    // Add day pattern information header if available
+    if (dayPatterns.length > 0) {
+        html += `
+            <div class="alert alert-info mb-3">
+                <i class="fas fa-calendar-week me-2"></i>
+                <strong>Day Pattern${dayPatterns.length > 1 ? 's' : ''}:</strong> 
+                ${dayPatterns.join(', ')}
+                <span class="ms-3">
+                    <i class="fas fa-calendar-day me-1"></i>
+                    <strong>Days:</strong> ${currentDays.map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(', ')}
+                </span>
+            </div>
+        `;
+    }
+    
+    html += `
         <div class="table-responsive">
             <table class="table table-bordered schedule-table">
                 <thead>
@@ -519,7 +577,7 @@ function generateScheduleTable(data) {
                         <th style="width: 120px;">Time</th>
     `;
 
-    days.forEach(day => {
+    currentDays.forEach(day => {
         html += `<th>${day.charAt(0).toUpperCase() + day.slice(1)}</th>`;
     });
 
@@ -529,27 +587,64 @@ function generateScheduleTable(data) {
                 <tbody>
     `;
 
-    // Get all unique time slots from data
-    const usedTimeSlots = new Set();
+    // Get all unique time slots from data and separate theory and lab slots
+    const usedTheorySlots = new Set();
+    const usedLabSlots = new Set();
+    
     Object.values(scheduleGrid).forEach(daySchedule => {
         Object.keys(daySchedule).forEach(timeSlot => {
             if (daySchedule[timeSlot].length > 0) {
-                usedTimeSlots.add(timeSlot);
+                const hasTheorySession = daySchedule[timeSlot].some(session => session.schedule_type === 'theory');
+                const hasLabSession = daySchedule[timeSlot].some(session => session.schedule_type === 'lab');
+                
+                if (hasTheorySession) {
+                    usedTheorySlots.add(timeSlot);
+                }
+                if (hasLabSession) {
+                    usedLabSlots.add(timeSlot);
+                }
             }
         });
     });
 
-    // Sort time slots
-    const sortedTimeSlots = Array.from(usedTimeSlots).sort((a, b) => {
-        const timeA = a.split(' - ')[0];
-        const timeB = b.split(' - ')[0];
-        return timeA.localeCompare(timeB);
+    // Sort theory and lab slots separately, then combine (theory first)
+    const sortedTheorySlots = Array.from(usedTheorySlots).sort((a, b) => {
+        return parseTimeSlot(a) - parseTimeSlot(b);
     });
+    
+    const sortedLabSlots = Array.from(usedLabSlots).sort((a, b) => {
+        return parseTimeSlot(a) - parseTimeSlot(b);
+    });
+    
+    // Combine with theory slots first, then lab slots
+    const sortedTimeSlots = [...sortedTheorySlots, ...sortedLabSlots];
 
-    sortedTimeSlots.forEach(timeSlot => {
+    sortedTimeSlots.forEach((timeSlot, index) => {
+        // Add section separator between theory and lab slots
+        if (index === sortedTheorySlots.length && sortedLabSlots.length > 0) {
+            html += `
+                <tr class="table-section-divider">
+                    <td colspan="${currentDays.length + 1}" class="text-center" style="background-color: #f8f9fa; font-weight: bold; padding: 10px;">
+                        <i class="fas fa-flask me-2"></i>LAB SESSIONS
+                    </td>
+                </tr>
+            `;
+        }
+        
+        // Add theory section header if this is the first theory slot
+        if (index === 0 && sortedTheorySlots.length > 0) {
+            html += `
+                <tr class="table-section-header">
+                    <td colspan="${currentDays.length + 1}" class="text-center" style="background-color: #e8f4fd; font-weight: bold; padding: 10px;">
+                        <i class="fas fa-chalkboard me-2"></i>THEORY SESSIONS
+                    </td>
+                </tr>
+            `;
+        }
+        
         html += `<tr><td class="time-header"><strong>${timeSlot}</strong></td>`;
         
-        days.forEach(day => {
+        currentDays.forEach(day => {
             const sessions = scheduleGrid[day][timeSlot] || [];
             html += '<td>';
             
@@ -602,6 +697,28 @@ function generateScheduleTable(data) {
     `;
 
     return html;
+}
+
+// Helper function to parse time slot for chronological sorting
+function parseTimeSlot(timeSlot) {
+    // Extract the start time from time slot (e.g., "8:00 - 8:50" -> "8:00")
+    const startTime = timeSlot.split(' - ')[0].trim();
+    
+    // Convert time to minutes since midnight for comparison
+    const [hours, minutes] = startTime.split(':').map(num => parseInt(num));
+    
+    // Convert to 24-hour format for proper sorting
+    let adjustedHours = hours;
+    
+    // Handle afternoon times (1:00 - 7:10 are PM times based on the schedule)
+    if (hours >= 1 && hours <= 7) {
+        // Check if this is actually afternoon time by looking at context
+        // Times 1:00 to 7:10 in the schedule are afternoon (13:00 to 19:10)
+        adjustedHours = hours + 12;
+    }
+    // Morning times 8:00 to 12:00 stay as is
+    
+    return adjustedHours * 60 + minutes;
 }
 
 // Debounce function for search performance
