@@ -3235,3 +3235,453 @@ class CombinedScheduler:
             self.logger.info("Objective strategy: Prefer earlier time slots for compact scheduling")
         else:
             self.logger.warning("No objective terms created for group allocation")
+
+    def generate_course_group_distribution_heatmap(self):
+        """Generate heatmap visualization of course-to-group distribution for combined scheduler."""
+        self.logger.info("🎨 Generating combined course-to-group distribution heatmap...")
+        
+        try:
+            import matplotlib.pyplot as plt
+            import seaborn as sns
+            import numpy as np
+            
+            # Create output directory for visualizations
+            viz_output_dir = os.path.join(self.output_dir, 'grouping_visualizations')
+            os.makedirs(viz_output_dir, exist_ok=True)
+            
+            # Process each department-semester combination
+            total_dept_sem = len(self.course_groups)
+            processed_count = 0
+            
+            self.logger.info(f"📊 Processing {total_dept_sem} department-semester combinations for combined heatmaps...")
+            
+            for (dept, semester), groups in self.course_groups.items():
+                processed_count += 1
+                
+                if not groups:
+                    self.logger.warning(f"⚠️ Skipping {dept} S{semester} - no groups")
+                    continue
+                    
+                self.logger.info(f"🎨 Creating combined heatmap {processed_count}/{total_dept_sem}: {dept} Semester {semester}...")
+                
+                try:
+                    # Collect course-group data
+                    course_group_matrix = {}
+                    all_courses = set()
+                    group_names = []
+                    
+                    # Separate lab and theory courses for analysis
+                    lab_courses = set()
+                    theory_courses = set()
+                    
+                    for group_idx, group in enumerate(groups):
+                        if not group:
+                            continue
+                            
+                        group_name = f"G{group_idx + 1}"
+                        group_names.append(group_name)
+                        
+                        # Count teacher assignments per course per group
+                        course_teacher_counts = {}
+                        for instance in group:
+                            course_code = instance['course_code']
+                            teacher_id = instance['teacher_id']
+                            all_courses.add(course_code)
+                            
+                            # Categorize course type
+                            if instance.get('has_lab', False):
+                                lab_courses.add(course_code)
+                            if instance.get('has_theory', False):
+                                theory_courses.add(course_code)
+                            
+                            if course_code not in course_teacher_counts:
+                                course_teacher_counts[course_code] = set()
+                            course_teacher_counts[course_code].add(teacher_id)
+                        
+                        # Store teacher assignment counts
+                        for course_code, teachers in course_teacher_counts.items():
+                            if course_code not in course_group_matrix:
+                                course_group_matrix[course_code] = {}
+                            course_group_matrix[course_code][group_name] = len(teachers)
+                    
+                    if not all_courses or not group_names:
+                        self.logger.warning(f"No data to visualize for {dept} Semester {semester}")
+                        continue
+                    
+                    # Create matrix for heatmap
+                    courses_list = sorted(list(all_courses))
+                    matrix_data = []
+                    
+                    for course in courses_list:
+                        row = []
+                        for group_name in group_names:
+                            count = course_group_matrix.get(course, {}).get(group_name, 0)
+                            row.append(count)
+                        matrix_data.append(row)
+                    
+                    # Create the heatmap
+                    plt.figure(figsize=(max(8, len(group_names) * 1.2), max(6, len(courses_list) * 0.4)))
+                    
+                    # Convert to numpy array for better handling
+                    matrix_array = np.array(matrix_data)
+                    
+                    # Create heatmap with custom colormap (using a combined color scheme)
+                    ax = sns.heatmap(matrix_array, 
+                                   xticklabels=group_names,
+                                   yticklabels=courses_list,
+                                   annot=True, 
+                                   fmt='d',
+                                   cmap='viridis',  # Combined color scheme
+                                   cbar_kws={'label': 'Number of Teacher Assignments'},
+                                   linewidths=0.5)
+                    
+                    # Customize the plot
+                    plt.title(f'Combined Course-Group Distribution\n{dept} - Semester {semester}\n(Number shows teacher assignments per course per group)', 
+                             fontsize=14, fontweight='bold', pad=20)
+                    plt.xlabel('Groups', fontsize=12, fontweight='bold')
+                    plt.ylabel('Courses', fontsize=12, fontweight='bold')
+                    
+                    # Add course type annotations
+                    for i, course in enumerate(courses_list):
+                        course_types = []
+                        if course in lab_courses:
+                            course_types.append('L')
+                        if course in theory_courses:
+                            course_types.append('T')
+                        
+                        if course_types:
+                            type_str = '+'.join(course_types)
+                            plt.text(-0.5, i + 0.5, f'[{type_str}]', 
+                                   ha='right', va='center', fontsize=8, 
+                                   bbox=dict(boxstyle="round,pad=0.2", facecolor="lightblue", alpha=0.7))
+                    
+                    # Rotate labels for better readability
+                    plt.xticks(rotation=0, ha='center')
+                    plt.yticks(rotation=0)
+                    
+                    # Add grid for better readability
+                    ax.set_facecolor('white')
+                    
+                    # Add summary statistics as text
+                    total_assignments = np.sum(matrix_array)
+                    max_assignments = np.max(matrix_array) if matrix_array.size > 0 else 0
+                    
+                    # Calculate course distribution stats
+                    courses_with_choice = sum(1 for course in courses_list 
+                                            if sum(course_group_matrix.get(course, {}).values()) > 1)
+                    choice_percentage = (courses_with_choice / len(courses_list) * 100) if courses_list else 0
+                    
+                    stats_text = f'Stats: {len(courses_list)} courses ({len(lab_courses)} lab, {len(theory_courses)} theory), {len(group_names)} groups\n'
+                    stats_text += f'Total assignments: {total_assignments}, Max per cell: {max_assignments}\n'
+                    stats_text += f'Courses with multiple groups: {courses_with_choice} ({choice_percentage:.1f}%)\n'
+                    stats_text += f'[L] = Lab courses, [T] = Theory courses, [L+T] = Both'
+                    
+                    plt.figtext(0.02, 0.02, stats_text, fontsize=9, 
+                               bbox=dict(boxstyle="round,pad=0.3", facecolor="lightgray", alpha=0.8))
+                    
+                    plt.tight_layout()
+                    
+                    # Save the heatmap - handle special characters in filename
+                    safe_dept_name = dept.replace(" ", "_").replace("&", "and").replace("(", "").replace(")", "")
+                    filename = f'combined_course_group_heatmap_{safe_dept_name}_S{semester}.png'
+                    filepath = os.path.join(viz_output_dir, filename)
+                    plt.savefig(filepath, dpi=300, bbox_inches='tight')
+                    plt.close()
+                    
+                    self.logger.info(f"✅ Combined heatmap saved: {filepath}")
+                    
+                    # Also create a detailed text summary
+                    summary_filename = f'combined_course_group_summary_{safe_dept_name}_S{semester}.txt'
+                    summary_filepath = os.path.join(viz_output_dir, summary_filename)
+                    
+                    with open(summary_filepath, 'w', encoding='utf-8') as f:
+                        f.write(f"Combined Course-Group Distribution Summary\n")
+                        f.write(f"Department: {dept}\n")
+                        f.write(f"Semester: {semester}\n")
+                        f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+                        f.write(f"="*60 + "\n\n")
+                        
+                        f.write(f"OVERVIEW:\n")
+                        f.write(f"- Total Courses: {len(courses_list)}\n")
+                        f.write(f"  └─ Lab Courses: {len(lab_courses)}\n")
+                        f.write(f"  └─ Theory Courses: {len(theory_courses)}\n")
+                        f.write(f"  └─ Overlap (Both): {len(lab_courses & theory_courses)}\n")
+                        f.write(f"- Total Groups: {len(group_names)}\n")
+                        f.write(f"- Total Teacher Assignments: {total_assignments}\n")
+                        f.write(f"- Courses with Multiple Group Options: {courses_with_choice} ({choice_percentage:.1f}%)\n\n")
+                        
+                        f.write(f"COURSE DISTRIBUTION BY TYPE:\n")
+                        for course in courses_list:
+                            course_data = course_group_matrix.get(course, {})
+                            groups_with_course = [g for g, count in course_data.items() if count > 0]
+                            total_teachers = sum(course_data.values())
+                            
+                            # Determine course type
+                            course_type = []
+                            if course in lab_courses:
+                                course_type.append("Lab")
+                            if course in theory_courses:
+                                course_type.append("Theory")
+                            type_str = " + ".join(course_type) if course_type else "Unknown"
+                            
+                            f.write(f"- {course} [{type_str}]: {len(groups_with_course)} groups, {total_teachers} teacher assignments\n")
+                            for group_name in groups_with_course:
+                                f.write(f"  └─ {group_name}: {course_data[group_name]} teachers\n")
+                        
+                        f.write(f"\nGROUP COMPOSITION:\n")
+                        for group_idx, group in enumerate(groups):
+                            if not group:
+                                continue
+                            group_name = f"G{group_idx + 1}"
+                            courses_in_group = set(inst['course_code'] for inst in group)
+                            teachers_in_group = set(inst['teacher_id'] for inst in group)
+                            
+                            # Count course types in this group
+                            group_lab_courses = {inst['course_code'] for inst in group if inst.get('has_lab', False)}
+                            group_theory_courses = {inst['course_code'] for inst in group if inst.get('has_theory', False)}
+                            
+                            f.write(f"- {group_name}: {len(courses_in_group)} courses, {len(teachers_in_group)} teachers\n")
+                            f.write(f"  └─ Lab courses: {len(group_lab_courses)}\n")
+                            f.write(f"  └─ Theory courses: {len(group_theory_courses)}\n")
+                            for course in sorted(courses_in_group):
+                                course_teachers = set(inst['teacher_id'] for inst in group if inst['course_code'] == course)
+                                course_instances = [inst for inst in group if inst['course_code'] == course]
+                                
+                                # Determine instance types for this course in this group
+                                has_lab = any(inst.get('has_lab', False) for inst in course_instances)
+                                has_theory = any(inst.get('has_theory', False) for inst in course_instances)
+                                
+                                type_indicators = []
+                                if has_lab:
+                                    type_indicators.append("L")
+                                if has_theory:
+                                    type_indicators.append("T")
+                                type_str = "+".join(type_indicators) if type_indicators else ""
+                                
+                                f.write(f"    └─ {course} [{type_str}]: {len(course_teachers)} teachers, {len(course_instances)} instances\n")
+                    
+                    self.logger.info(f"✅ Combined summary saved: {summary_filepath}")
+                    
+                except Exception as dept_error:
+                    self.logger.error(f"❌ Error processing {dept} S{semester} for combined heatmap: {str(dept_error)}")
+                    import traceback
+                    self.logger.error(f"Traceback: {traceback.format_exc()}")
+                    continue
+
+            # Create a combined overview heatmap if multiple department-semesters exist
+            if len(self.course_groups) > 1:
+                self._create_combined_overview_heatmap(viz_output_dir)
+            
+            self.logger.info(f"🎨 All combined course-group distribution visualizations saved to: {viz_output_dir}")
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error generating combined course-group heatmap: {str(e)}")
+            import traceback
+            self.logger.error(f"Traceback: {traceback.format_exc()}")
+
+    def _create_combined_overview_heatmap(self, viz_output_dir):
+        """Create a combined overview heatmap showing all department-semester combinations for combined scheduler."""
+        self.logger.info("Creating combined overview heatmap for combined scheduler...")
+        
+        try:
+            import matplotlib.pyplot as plt
+            import seaborn as sns
+            import numpy as np
+            
+            # Collect data from all department-semester combinations
+            all_data = []
+            dept_sem_labels = []
+            
+            for (dept, semester), groups in self.course_groups.items():
+                if not groups:
+                    continue
+                    
+                dept_sem_key = f"{dept} S{semester}"
+                dept_sem_labels.append(dept_sem_key)
+                
+                # Count courses and groups
+                all_courses = set()
+                lab_courses = set()
+                theory_courses = set()
+                total_assignments = 0
+                
+                for group in groups:
+                    if group:
+                        for instance in group:
+                            course_code = instance['course_code']
+                            all_courses.add(course_code)
+                            if instance.get('has_lab', False):
+                                lab_courses.add(course_code)
+                            if instance.get('has_theory', False):
+                                theory_courses.add(course_code)
+                        total_assignments += len(group)
+                
+                courses_with_choice = 0
+                course_group_counts = {}
+                
+                # Count how many groups each course appears in
+                for course in all_courses:
+                    groups_with_course = 0
+                    for group in groups:
+                        if group and any(inst['course_code'] == course for inst in group):
+                            groups_with_course += 1
+                    course_group_counts[course] = groups_with_course
+                    if groups_with_course > 1:
+                        courses_with_choice += 1
+                
+                choice_percentage = (courses_with_choice / len(all_courses) * 100) if all_courses else 0
+                overlap_courses = len(lab_courses & theory_courses)
+                
+                all_data.append({
+                    'dept_sem': dept_sem_key,
+                    'total_courses': len(all_courses),
+                    'lab_courses': len(lab_courses),
+                    'theory_courses': len(theory_courses),
+                    'overlap_courses': overlap_courses,
+                    'total_groups': len([g for g in groups if g]),
+                    'total_assignments': total_assignments,
+                    'courses_with_choice': courses_with_choice,
+                    'choice_percentage': choice_percentage,
+                    'avg_groups_per_course': sum(course_group_counts.values()) / len(all_courses) if all_courses else 0
+                })
+            
+            if not all_data:
+                return
+            
+            # Create overview visualization
+            fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
+            
+            # Extract data for plotting
+            dept_sems = [d['dept_sem'] for d in all_data]
+            total_courses = [d['total_courses'] for d in all_data]
+            lab_courses = [d['lab_courses'] for d in all_data]
+            theory_courses = [d['theory_courses'] for d in all_data]
+            overlap_courses = [d['overlap_courses'] for d in all_data]
+            total_groups = [d['total_groups'] for d in all_data]
+            choice_percentages = [d['choice_percentage'] for d in all_data]
+            avg_groups_per_course = [d['avg_groups_per_course'] for d in all_data]
+            
+            # Plot 1: Course distribution by type
+            x_pos = np.arange(len(dept_sems))
+            width = 0.25
+            
+            ax1.bar(x_pos - width, lab_courses, width, label='Lab Courses', color='orange', alpha=0.8)
+            ax1.bar(x_pos, theory_courses, width, label='Theory Courses', color='blue', alpha=0.8)
+            ax1.bar(x_pos + width, overlap_courses, width, label='Both Lab+Theory', color='green', alpha=0.8)
+            
+            ax1.set_xlabel('Department-Semester')
+            ax1.set_ylabel('Number of Courses')
+            ax1.set_title('Course Distribution by Type')
+            ax1.set_xticks(x_pos)
+            ax1.set_xticklabels(dept_sems, rotation=45, ha='right')
+            ax1.legend()
+            ax1.grid(True, alpha=0.3)
+            
+            # Plot 2: Groups per department-semester
+            bars2 = ax2.bar(dept_sems, total_groups, color='purple', alpha=0.7)
+            ax2.set_xlabel('Department-Semester')
+            ax2.set_ylabel('Number of Groups')
+            ax2.set_title('Groups per Department-Semester')
+            ax2.tick_params(axis='x', rotation=45)
+            ax2.grid(True, alpha=0.3)
+            
+            # Add value labels on bars
+            for bar in bars2:
+                height = bar.get_height()
+                ax2.text(bar.get_x() + bar.get_width()/2., height,
+                        f'{int(height)}', ha='center', va='bottom')
+            
+            # Plot 3: Student choice percentage
+            bars3 = ax3.bar(dept_sems, choice_percentages, color='teal', alpha=0.7)
+            ax3.set_xlabel('Department-Semester')
+            ax3.set_ylabel('Choice Percentage (%)')
+            ax3.set_title('Student Choice Availability\n(% of courses with multiple group options)')
+            ax3.tick_params(axis='x', rotation=45)
+            ax3.set_ylim(0, 100)
+            ax3.grid(True, alpha=0.3)
+            
+            # Add percentage labels
+            for bar in bars3:
+                height = bar.get_height()
+                ax3.text(bar.get_x() + bar.get_width()/2., height,
+                        f'{height:.1f}%', ha='center', va='bottom')
+            
+            # Plot 4: Average groups per course
+            bars4 = ax4.bar(dept_sems, avg_groups_per_course, color='red', alpha=0.7)
+            ax4.set_xlabel('Department-Semester')
+            ax4.set_ylabel('Average Groups per Course')
+            ax4.set_title('Group Distribution Density')
+            ax4.tick_params(axis='x', rotation=45)
+            ax4.grid(True, alpha=0.3)
+            
+            # Add value labels
+            for bar in bars4:
+                height = bar.get_height()
+                ax4.text(bar.get_x() + bar.get_width()/2., height,
+                        f'{height:.2f}', ha='center', va='bottom')
+            
+            plt.suptitle('Combined Scheduler: Course-Group Distribution Overview', 
+                        fontsize=16, fontweight='bold', y=0.98)
+            plt.tight_layout()
+            
+            # Save the overview
+            overview_path = os.path.join(viz_output_dir, 'combined_course_group_overview.png')
+            plt.savefig(overview_path, dpi=300, bbox_inches='tight')
+            plt.close()
+            
+            # Create summary table
+            summary_table_path = os.path.join(viz_output_dir, 'combined_distribution_summary.txt')
+            with open(summary_table_path, 'w', encoding='utf-8') as f:
+                f.write("COMBINED SCHEDULER - COURSE-GROUP DISTRIBUTION SUMMARY\n")
+                f.write("="*70 + "\n\n")
+                f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+                
+                f.write("DEPARTMENT-SEMESTER BREAKDOWN:\n")
+                f.write("-"*70 + "\n")
+                f.write(f"{'Dept-Sem':<20} {'Total':<6} {'Lab':<4} {'Theory':<6} {'Both':<4} {'Groups':<6} {'Choice%':<7} {'Avg Groups':<10}\n")
+                f.write("-"*70 + "\n")
+                
+                for data in all_data:
+                    f.write(f"{data['dept_sem']:<20} "
+                           f"{data['total_courses']:<6} "
+                           f"{data['lab_courses']:<4} "
+                           f"{data['theory_courses']:<6} "
+                           f"{data['overlap_courses']:<4} "
+                           f"{data['total_groups']:<6} "
+                           f"{data['choice_percentage']:<7.1f} "
+                           f"{data['avg_groups_per_course']:<10.2f}\n")
+                
+                f.write("-"*70 + "\n")
+                
+                # Summary totals
+                total_courses_all = sum(d['total_courses'] for d in all_data)
+                total_lab_courses_all = sum(d['lab_courses'] for d in all_data)
+                total_theory_courses_all = sum(d['theory_courses'] for d in all_data)
+                total_overlap_all = sum(d['overlap_courses'] for d in all_data)
+                total_groups_all = sum(d['total_groups'] for d in all_data)
+                avg_choice_all = sum(d['choice_percentage'] for d in all_data) / len(all_data) if all_data else 0
+                
+                f.write(f"{'TOTALS':<20} "
+                       f"{total_courses_all:<6} "
+                       f"{total_lab_courses_all:<4} "
+                       f"{total_theory_courses_all:<6} "
+                       f"{total_overlap_all:<4} "
+                       f"{total_groups_all:<6} "
+                       f"{avg_choice_all:<7.1f} "
+                       f"{'N/A':<10}\n")
+                
+                f.write("\nKEY METRICS:\n")
+                f.write(f"- Total unique courses across all semesters: {total_courses_all}\n")
+                f.write(f"- Total groups created: {total_groups_all}\n")
+                f.write(f"- Average student choice percentage: {avg_choice_all:.1f}%\n")
+                f.write(f"- Lab-only courses: {total_lab_courses_all - total_overlap_all}\n")
+                f.write(f"- Theory-only courses: {total_theory_courses_all - total_overlap_all}\n")
+                f.write(f"- Courses with both lab and theory: {total_overlap_all}\n")
+            
+            self.logger.info(f"✅ Combined overview saved: {overview_path}")
+            self.logger.info(f"✅ Combined summary table saved: {summary_table_path}")
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error creating combined overview heatmap: {str(e)}")
+            import traceback
+            self.logger.error(f"Traceback: {traceback.format_exc()}")

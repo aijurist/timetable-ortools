@@ -163,6 +163,16 @@ def main():
             logger.info("Lab schedule generated successfully!")
             lab_output_dir = lab_scheduler.output_dir
             
+            # Generate course-group distribution heatmap for lab scheduler
+            try:
+                logger.info("Generating lab course-group distribution heatmap...")
+                lab_scheduler.generate_course_group_distribution_heatmap()
+                logger.info("Lab course-group distribution heatmap generated successfully!")
+            except Exception as e:
+                logger.error(f"Lab course-group distribution heatmap generation failed: {e}")
+                import traceback
+                logger.error(f"Traceback: {traceback.format_exc()}")
+            
             # Load lab schedule data for theory scheduling
             try:
                 lab_json_file = os.path.join(lab_scheduler.output_dir, 'lab_schedule.json')
@@ -233,6 +243,16 @@ def main():
             logger.info("Theory schedule generated successfully!")
             theory_output_dir = theory_scheduler.output_dir
             
+            # Generate course-group distribution heatmap for theory scheduler
+            try:
+                logger.info("Generating theory course-group distribution heatmap...")
+                theory_scheduler.generate_course_group_distribution_heatmap()
+                logger.info("Theory course-group distribution heatmap generated successfully!")
+            except Exception as e:
+                logger.error(f"Theory course-group distribution heatmap generation failed: {e}")
+                import traceback
+                logger.error(f"Traceback: {traceback.format_exc()}")
+            
             # Check if visualization should be generated
             if args.visualize:
                 try:
@@ -270,6 +290,16 @@ def main():
         if combined_success:
             logger.info("Combined schedule generated successfully!")
             combined_output_dir = combined_scheduler.output_dir
+            
+            # Generate course-group distribution heatmap
+            try:
+                logger.info("Generating combined course-group distribution heatmap...")
+                combined_scheduler.generate_course_group_distribution_heatmap()
+                logger.info("Combined course-group distribution heatmap generated successfully!")
+            except Exception as e:
+                logger.error(f"Combined course-group distribution heatmap generation failed: {e}")
+                import traceback
+                logger.error(f"Traceback: {traceback.format_exc()}")
             
             # Check if visualization should be generated
             if args.visualize:
