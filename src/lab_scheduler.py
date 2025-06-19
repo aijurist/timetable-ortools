@@ -31,28 +31,7 @@ class LabScheduler:
             self.theory_group_timeslots = {}
         
         # Load core mapping data for specific lab assignments
-        self.core_mapping_df = None
-        try:
-            # The path to combined_lab_mapping.csv. This assumes it's in the same directory as the other data files.
-            base_data_dir = os.path.dirname(course_file)
-            # A more robust path might be:
-            core_mapping_file_path = os.path.join(os.path.dirname(base_data_dir), 'combined_lab_mapping.csv')
-            
-            if not os.path.exists(core_mapping_file_path):
-                 core_mapping_file_path = os.path.join(base_data_dir, 'combined_lab_mapping.csv')
-            
-            if not os.path.exists(core_mapping_file_path):
-                 core_mapping_file_path = os.path.join(base_data_dir, '..', 'data', 'combined_lab_mapping.csv')
-
-            if os.path.exists(core_mapping_file_path):
-                self.core_mapping_df = pd.read_csv(core_mapping_file_path)
-                self.logger.info(f"Successfully loaded core lab mapping from {core_mapping_file_path}")
-            else:
-                self.logger.warning(f"Core lab mapping file 'combined_lab_mapping.csv' not found.")
-
-        except Exception as e:
-            self.logger.error(f"Error loading combined_lab_mapping.csv: {e}")
-            self.core_mapping_df = None
+        self._load_core_lab_mapping()
         
         # Setup time structure (matching reference implementation)
         self.days = ["tuesday", "wed", "thur", "fri", "sat"]  # Excluding Monday
@@ -81,72 +60,11 @@ class LabScheduler:
         self.laboratory_room_ids = self.lab_rooms[self.lab_rooms['room_type'] == 'Laboratory']['id'].tolist()
         self.logger.info(f"Found {len(self.laboratory_room_ids)} rooms of type 'Laboratory'.")
         
-        self.course_to_room_mapping = {}
+        # Process core mapping if available
         if self.core_mapping_df is not None:
-            # We need to map (course_code, course_name) -> list of room_ids
-            self.rooms_df['block'] = self.rooms_df['block'].fillna('Unknown').astype(str).str.strip()
-            self.rooms_df['room_number'] = self.rooms_df['room_number'].astype(str).str.strip()
-            self.rooms_df['room_identifier'] = self.rooms_df['room_number'] + "_" + self.rooms_df['block']
-            room_lookup = pd.Series(self.rooms_df.id.values, index=self.rooms_df.room_identifier).to_dict()
-
-            # Clean data in core_mapping_df
-            self.core_mapping_df['course_code'] = self.core_mapping_df['course_code'].astype(str).str.strip()
-            self.core_mapping_df['course_name'] = self.core_mapping_df['course_name'].astype(str).str.strip()
-            
-            for _, row in self.core_mapping_df.iterrows():
-                course_code = row['course_code']
-                course_name = row['course_name']
-                total_labs = int(row.get('total_labs', 1))
-                
-                mapped_rooms = []
-                
-                # Process each lab (lab_1, lab_2, lab_3, etc.)
-                for lab_num in range(1, total_labs + 1):
-                    room_col = f'lab_{lab_num}_room'
-                    block_col = f'lab_{lab_num}_block'
-                    
-                    if room_col in row and block_col in row:
-                        room_number = str(row[room_col]).strip()
-                        block = str(row[block_col]).strip()
-                        
-                        # Skip if room_number is 'nan' or empty
-                        if room_number.lower() in ['nan', ''] or pd.isna(row[room_col]):
-                            continue
-                            
-                        room_identifier = room_number + "_" + block
-                        
-                        if room_identifier in room_lookup:
-                            room_id = room_lookup[room_identifier]
-                            mapped_rooms.append(room_id)
-                            self.logger.info(f"Mapped course '{course_code}' - '{course_name}' to lab {lab_num}: '{room_number}' (ID: {room_id})")
-                        else:
-                            self.logger.warning(f"Room '{room_number}' in block '{block}' for course '{course_code}' lab {lab_num} not found in rooms file. Identifier: '{room_identifier}'")
-                
-                # Store the mapping with all available rooms for this course
-                if mapped_rooms:
-                    self.course_to_room_mapping[(course_code, course_name)] = mapped_rooms
-                    self.logger.info(f"Course '{course_code}' mapped to {len(mapped_rooms)} lab(s): {mapped_rooms}")
-                else:
-                    self.logger.warning(f"No valid labs found for course '{course_code}' - '{course_name}'")
-
-        
-        # Identify all instance IDs that are considered "core labs"
-        self.core_lab_instance_ids = set()
-        if self.core_mapping_df is not None:
-            # Create a lookup from (course_code, course_name) to a list of instance IDs from the main courses_df
-            course_name_to_ids = defaultdict(list)
-            for _, row in self.courses_df.iterrows():
-                course_code = row['course_code']
-                course_name = row['course_name']
-                instance_id = str(row['id'])
-                course_name_to_ids[(course_code, course_name)].append(instance_id)
-
-            # Use the lookup to find all instance IDs corresponding to the core lab mapping
-            for course_tuple in self.course_to_room_mapping.keys():
-                if course_tuple in course_name_to_ids:
-                    self.core_lab_instance_ids.update(course_name_to_ids[course_tuple])
-
-            self.logger.info(f"Identified {len(self.core_lab_instance_ids)} core lab instances that will be exempt from the 18-slot weekly limit.")
+            self._process_core_lab_mapping()
+        else:
+            self.logger.info("No core lab mapping available - all courses will use general lab assignment rules")
 
         # Process teacher-course assignments for lab sessions
         self.process_teacher_courses()
@@ -194,6 +112,230 @@ class LabScheduler:
         total_theory_conflicts = sum(len(slots) for slots in self.theory_group_timeslots.values())
         self.logger.info(f"Total theory timeslots to avoid: {total_theory_conflicts}")
     
+    def _load_core_lab_mapping(self):
+        """Load core lab mapping file for specialized lab course assignments."""
+        self.logger.info("Loading core lab mapping configuration...")
+        
+        # Initialize core mapping variables
+        self.core_mapping_df = None
+        self.course_to_room_mapping = {}
+        self.core_lab_instance_ids = set()
+        self.departments_with_core_labs = set()
+        
+        # Try to find core mapping file in various locations
+        possible_paths = [
+            'data/og-final.csv',
+            './data/og-final.csv',
+            '../data/og-final.csv',
+            'timetable_scheduler/data/og-final.csv',
+        ]
+        
+        core_mapping_file_path = None
+        for path in possible_paths:
+            if os.path.exists(path):
+                core_mapping_file_path = path
+                break
+        
+        if core_mapping_file_path:
+            try:
+                self.core_mapping_df = pd.read_csv(core_mapping_file_path)
+                self.logger.info(f"Successfully loaded core lab mapping from {core_mapping_file_path}")
+                self.logger.info(f"Core mapping contains {len(self.core_mapping_df)} course-lab assignments")
+            except Exception as e:
+                self.logger.error(f"Error loading core lab mapping file: {e}")
+                self.core_mapping_df = None
+        else:
+            self.logger.warning("Core lab mapping file not found. Proceeding without specialized lab assignments.")
+            self.core_mapping_df = None
+    
+    def _process_core_lab_mapping(self):
+        """Process the core lab mapping to create course-to-room assignments."""
+        if self.core_mapping_df is None:
+            return
+        
+        self.logger.info("Processing core lab mapping...")
+        
+        # Check the file structure to determine processing method
+        columns = self.core_mapping_df.columns.tolist()
+        
+        if 'lab_1' in columns and 'lab_2' in columns:
+            # This is og-final.csv format
+            self._process_og_final_format()
+        elif 'lab_1_room' in columns and 'lab_1_block' in columns:
+            # This is the old combined_lab_mapping.csv format
+            self._process_combined_lab_mapping_format()
+        else:
+            self.logger.error(f"Unknown core mapping file format. Columns: {columns}")
+            return
+        
+        # Identify all instance IDs that are considered "core labs"
+        if self.core_mapping_df is not None:
+            # Create a lookup from (course_code, course_name) to a list of instance IDs from the main courses_df
+            course_name_to_ids = defaultdict(list)
+            for _, row in self.courses_df.iterrows():
+                course_code = row['course_code']
+                course_name = row['course_name']
+                instance_id = str(row['id'])
+                course_name_to_ids[(course_code, course_name)].append(instance_id)
+
+            # Use the lookup to find all instance IDs corresponding to the core lab mapping
+            for course_tuple in self.course_to_room_mapping.keys():
+                if course_tuple in course_name_to_ids:
+                    self.core_lab_instance_ids.update(course_name_to_ids[course_tuple])
+
+            self.logger.info(f"Identified {len(self.core_lab_instance_ids)} core lab instances that will be exempt from the 18-slot weekly limit.")
+        
+        self.logger.info(f"Core lab mapping processing complete: {len(self.course_to_room_mapping)} course mappings created")
+    
+    def _process_og_final_format(self):
+        """Process og-final.csv format: course_code, course_name, department, total_labs, lab_1, lab_2, lab_3, lab_4, lab_5"""
+        self.logger.info("Processing og-final.csv format core lab mapping...")
+        
+        # Create room name lookup (room name -> room ID)
+        room_name_lookup = {}
+        for _, room in self.rooms_df.iterrows():
+            room_names = []
+            
+            # Add different possible room name formats
+            if pd.notna(room.get('room_number')):
+                room_names.append(str(room['room_number']).strip())
+            
+            if pd.notna(room.get('description')):
+                room_names.append(str(room['description']).strip())
+            
+            # Add room_number + block combination if available
+            if pd.notna(room.get('room_number')) and pd.notna(room.get('block')):
+                room_names.append(f"{room['room_number']}_{room['block']}")
+            
+            # Map all possible names to this room ID
+            for name in room_names:
+                if name and name.lower() != 'nan':
+                    room_name_lookup[name.lower()] = room['id']
+        
+        # Clean data in core_mapping_df
+        self.core_mapping_df['course_code'] = self.core_mapping_df['course_code'].astype(str).str.strip()
+        self.core_mapping_df['course_name'] = self.core_mapping_df['course_name'].astype(str).str.strip()
+        
+        # Process each course mapping
+        mapped_courses = 0
+        for _, row in self.core_mapping_df.iterrows():
+            course_code = row['course_code']
+            course_name = row['course_name']
+            department = row.get('department', 'Unknown')
+            total_labs = int(row.get('total_labs', 1))
+            
+            mapped_rooms = []
+            
+            # Process each lab (lab_1, lab_2, lab_3, lab_4, lab_5)
+            for lab_num in range(1, min(total_labs + 1, 6)):  # Max 5 labs (lab_1 to lab_5)
+                lab_col = f'lab_{lab_num}'
+                
+                if lab_col in row and pd.notna(row[lab_col]):
+                    lab_name = str(row[lab_col]).strip()
+                    
+                    # Skip if lab_name is empty
+                    if not lab_name or lab_name.lower() in ['nan', '']:
+                        continue
+                    
+                    # Try to find matching room ID
+                    room_id = None
+                    lab_name_lower = lab_name.lower()
+                    
+                    # Direct match
+                    if lab_name_lower in room_name_lookup:
+                        room_id = room_name_lookup[lab_name_lower]
+                    else:
+                        # Fuzzy matching for partial matches
+                        for room_name, rid in room_name_lookup.items():
+                            if lab_name_lower in room_name or room_name in lab_name_lower:
+                                room_id = rid
+                                break
+                    
+                    if room_id is not None:
+                        mapped_rooms.append(room_id)
+                        self.logger.info(f"OG-Final mapping: '{course_code}' - '{course_name}' lab {lab_num} → '{lab_name}' (ID: {room_id})")
+                    else:
+                        self.logger.warning(f"OG-Final mapping: Lab '{lab_name}' for course '{course_code}' lab {lab_num} not found in rooms")
+            
+            # Store the mapping with all available rooms for this course
+            if mapped_rooms:
+                self.course_to_room_mapping[(course_code, course_name)] = mapped_rooms
+                mapped_courses += 1
+                self.logger.info(f"OG-Final complete: '{course_code}' ({department}) → {len(mapped_rooms)} lab(s): {mapped_rooms}")
+            else:
+                self.logger.warning(f"OG-Final failed: No valid labs found for course '{course_code}' - '{course_name}' ({department})")
+        
+        self.logger.info(f"OG-Final processing complete: {mapped_courses} courses mapped to specific labs")
+        
+        # Track departments that have core labs
+        self._identify_departments_with_core_labs()
+    
+    def _identify_departments_with_core_labs(self):
+        """Define which departments should use core lab behavior (practical courses only)."""
+        # MANUAL CONFIGURATION: Add departments that should use practical-courses-only distribution
+        self.departments_with_core_labs = {
+            "Aeronautical Engineering",
+            "Biotechnology",
+            "Biomedical Engineering"
+        }
+        
+        self.logger.info(f"🧪 Departments configured for core lab behavior (practical courses only): {sorted(list(self.departments_with_core_labs))}")
+        self.logger.info(f"📚 All other departments will use standard behavior (all courses)")
+    
+    def _process_combined_lab_mapping_format(self):
+        """Process combined_lab_mapping.csv format with lab_1_room, lab_1_block columns"""
+        self.logger.info("Processing combined_lab_mapping.csv format core lab mapping...")
+        
+        # Prepare room identifier lookup
+        self.rooms_df['block'] = self.rooms_df['block'].fillna('Unknown').astype(str).str.strip()
+        self.rooms_df['room_number'] = self.rooms_df['room_number'].astype(str).str.strip()
+        self.rooms_df['room_identifier'] = self.rooms_df['room_number'] + "_" + self.rooms_df['block']
+        room_lookup = pd.Series(self.rooms_df.id.values, index=self.rooms_df.room_identifier).to_dict()
+        
+        # Clean data in core_mapping_df
+        self.core_mapping_df['course_code'] = self.core_mapping_df['course_code'].astype(str).str.strip()
+        self.core_mapping_df['course_name'] = self.core_mapping_df['course_name'].astype(str).str.strip()
+        
+        # Process each course mapping
+        for _, row in self.core_mapping_df.iterrows():
+            course_code = row['course_code']
+            course_name = row['course_name']
+            total_labs = int(row.get('total_labs', 1))
+            
+            mapped_rooms = []
+            
+            # Process each lab (lab_1, lab_2, lab_3, etc.)
+            for lab_num in range(1, total_labs + 1):
+                room_col = f'lab_{lab_num}_room'
+                block_col = f'lab_{lab_num}_block'
+                
+                if room_col in row and block_col in row:
+                    room_number = str(row[room_col]).strip()
+                    block = str(row[block_col]).strip()
+                    
+                    # Skip if room_number is 'nan' or empty
+                    if room_number.lower() in ['nan', ''] or pd.isna(row[room_col]):
+                        continue
+                        
+                    room_identifier = room_number + "_" + block
+                    
+                    if room_identifier in room_lookup:
+                        room_id = room_lookup[room_identifier]
+                        mapped_rooms.append(room_id)
+                        self.logger.info(f"Mapped course '{course_code}' - '{course_name}' to lab {lab_num}: '{room_number}' (ID: {room_id})")
+                    else:
+                        self.logger.warning(f"Room '{room_number}' in block '{block}' for course '{course_code}' lab {lab_num} not found in rooms file. Identifier: '{room_identifier}'")
+            
+            # Store the mapping with all available rooms for this course
+            if mapped_rooms:
+                self.course_to_room_mapping[(course_code, course_name)] = mapped_rooms
+                self.logger.info(f"Course '{course_code}' mapped to {len(mapped_rooms)} lab(s): {mapped_rooms}")
+            else:
+                self.logger.warning(f"No valid labs found for course '{course_code}' - '{course_name}'")
+        
+        # Track departments that have core labs
+        self._identify_departments_with_core_labs()
+
     def _map_theory_timeslot_to_lab_session(self, theory_timeslot):
         """Map theory timeslot to corresponding lab session(s) that would conflict."""
         
@@ -595,39 +737,41 @@ class LabScheduler:
         # Each course can appear in at most 2 of these groups for optimal student choice
         unique_course_codes = instance_analysis['unique_courses']
         
-        # Check if this semester/department has core lab courses
-        sem_dept_has_core_labs = False
+        # Check if this DEPARTMENT has core lab mappings (department-based detection)
+        dept_has_core_labs = dept in self.departments_with_core_labs
         unique_practical_courses = set()
         
         for instance in courses:
-            instance_id = instance['id']
             practical_hours = instance.get('practical_hours', 0)
-            
-            # Check if this instance is a core lab
-            if instance_id in self.core_lab_instance_ids:
-                sem_dept_has_core_labs = True
             
             # Collect unique courses with practical hours
             if practical_hours > 0:
                 unique_practical_courses.add(instance['course_code'])
         
         # Log core lab detection results
-        if sem_dept_has_core_labs:
-            self.logger.info(f"  🧪 CORE LAB SEMESTER: Will create {len(unique_practical_courses)} groups (practical courses only)")
+        if dept_has_core_labs:
+            self.logger.info(f"  🧪 CORE LAB DEPARTMENT ({dept}): Will create {len(unique_practical_courses)} groups (practical courses only)")
             self.logger.info(f"  🧪 Unique practical courses: {', '.join(sorted(unique_practical_courses))}")
+            self.logger.info(f"  🧪 Department '{dept}' is in core lab departments: {sorted(list(self.departments_with_core_labs))}")
         else:
-            self.logger.info(f"  📚 STANDARD SEMESTER: Will create {unique_course_codes} groups (all courses)")
+            self.logger.info(f"  📚 STANDARD DEPARTMENT ({dept}): Will create {unique_course_codes} groups (all courses)")
+            self.logger.info(f"  📚 Department '{dept}' not in core lab departments: {sorted(list(self.departments_with_core_labs))}")
         
-        # Determine number of groups based on core lab presence
-        if sem_dept_has_core_labs:
-            # If semester has core labs, limit groups to unique courses with practical hours
-            num_groups = len(unique_practical_courses)
-            self.logger.info(f"🧪 CORE LAB DETECTED: Creating {num_groups} groups (limited to unique practical courses: {len(unique_practical_courses)})")
-            self.logger.info(f"📋 Core lab courses present - using practical course count instead of total course count")
+        self.logger.info(f"  ℹ️  Total unique courses (theory + practical): {unique_course_codes}")
+        self.logger.info(f"  ℹ️  Unique practical courses only: {len(unique_practical_courses)}")
+        
+        # Determine number of groups based on DEPARTMENT core lab presence
+        if dept_has_core_labs:
+            # If DEPARTMENT has core labs, limit groups to unique courses with practical hours
+            num_groups = len(unique_practical_courses) if unique_practical_courses else 1
+            self.logger.info(f"🧪 CORE LAB DEPARTMENT DETECTED: Creating {num_groups} groups (limited to unique practical courses: {len(unique_practical_courses)})")
+            self.logger.info(f"📋 Department '{dept}' has core labs - using practical course count instead of total course count")
+            self.logger.info(f"📋 Example: If 3 courses have practical hours → 3 groups (excluding non-practical courses)")
         else:
             # Otherwise, use the standard logic (all unique courses)
             num_groups = unique_course_codes
-            self.logger.info(f"Creating {num_groups} groups (one per unique course: {unique_course_codes})")
+            self.logger.info(f"📚 STANDARD DEPARTMENT: Creating {num_groups} groups (one per unique course: {unique_course_codes})")
+            self.logger.info(f"📋 Department '{dept}' has no core labs - using total course count (theory + practical courses)")
         
         self.logger.info(f"📋 CONSTRAINT: Each course limited to maximum 2 of the {num_groups} groups for optimal choice balance")
         
@@ -648,11 +792,25 @@ class LabScheduler:
                 'teachers': set()
             })
         
-        # Build course-teacher bipartite graph for Hall's theorem (ALL courses)
+        # Filter courses based on department core lab status
+        if dept_has_core_labs:
+            # For core lab departments: ONLY include courses with practical hours
+            filtered_courses = [instance for instance in courses if instance.get('practical_hours', 0) > 0]
+            self.logger.info(f"🧪 CORE LAB DEPARTMENT: Filtered {len(courses)} total courses → {len(filtered_courses)} practical courses")
+            excluded_courses = [instance for instance in courses if instance.get('practical_hours', 0) == 0]
+            if excluded_courses:
+                excluded_course_codes = {inst['course_code'] for inst in excluded_courses}
+                self.logger.info(f"🧪 EXCLUDED non-practical courses: {', '.join(sorted(excluded_course_codes))}")
+        else:
+            # For standard departments: Include ALL courses
+            filtered_courses = courses
+            self.logger.info(f"📚 STANDARD DEPARTMENT: Using all {len(filtered_courses)} courses")
+        
+        # Build course-teacher bipartite graph for Hall's theorem (filtered courses only)
         course_to_teachers = {}
         teacher_to_courses = {}
         
-        for instance in courses:  # Use ALL courses, not just practical
+        for instance in filtered_courses:  # Use filtered courses only
             course_code = instance['course_code']
             teacher_id = instance['teacher_id']
             
@@ -664,45 +822,56 @@ class LabScheduler:
                 teacher_to_courses[teacher_id] = set()
             teacher_to_courses[teacher_id].add(course_code)
         
-        # Group instances by course code (ALL courses)
+        # Group instances by course code (filtered courses only)
         course_instances = {}
-        for instance in courses:  # Use ALL courses, not just practical
+        for instance in filtered_courses:  # Use filtered courses only
             course_code = instance['course_code']
             if course_code not in course_instances:
                 course_instances[course_code] = []
             course_instances[course_code].append(instance)
         
-        # LAB-FIRST SORTING STRATEGY:
-        # Prioritize courses with practical hours to fill initial groups with labs
-        self.logger.info("🧪 Applying LAB-FIRST sorting strategy to prioritize practical courses in initial groups...")
-        
-        # 1. Separate lab and theory course codes
-        lab_course_codes = {c for c, instances in course_instances.items() if any(i['practical_hours'] > 0 for i in instances)}
-        theory_course_codes = {c for c in course_to_teachers if c not in lab_course_codes}
-        
-        self.logger.info(f"  - Found {len(lab_course_codes)} lab courses and {len(theory_course_codes)} theory-only courses.")
+        # COURSE SORTING STRATEGY:
+        if dept_has_core_labs:
+            # For core lab departments: All filtered courses are practical courses already
+            self.logger.info("🧪 Core lab department: All filtered courses have practical hours - applying equal distribution strategy...")
+            sorted_courses = sorted(list(course_instances.keys()), key=lambda c: len(course_to_teachers.get(c, set())))
+            lab_course_codes = set(sorted_courses)
+            theory_course_codes = set()
+            
+            self.logger.info(f"  - All {len(sorted_courses)} courses are practical courses")
+        else:
+            # For standard departments: Apply LAB-FIRST sorting strategy
+            self.logger.info("📚 Standard department: Applying LAB-FIRST sorting strategy to prioritize practical courses...")
+            
+            # 1. Separate lab and theory course codes
+            lab_course_codes = {c for c, instances in course_instances.items() if any(i['practical_hours'] > 0 for i in instances)}
+            theory_course_codes = {c for c in course_to_teachers if c not in lab_course_codes}
+            
+            self.logger.info(f"  - Found {len(lab_course_codes)} lab courses and {len(theory_course_codes)} theory-only courses.")
 
-        # 2. Sort both lists independently by teacher availability (for Hall's theorem)
-        sorted_lab_courses = sorted(list(lab_course_codes), key=lambda c: len(course_to_teachers.get(c, set())))
-        sorted_theory_courses = sorted(list(theory_course_codes), key=lambda c: len(course_to_teachers.get(c, set())))
+            # 2. Sort both lists independently by teacher availability (for Hall's theorem)
+            sorted_lab_courses = sorted(list(lab_course_codes), key=lambda c: len(course_to_teachers.get(c, set())))
+            sorted_theory_courses = sorted(list(theory_course_codes), key=lambda c: len(course_to_teachers.get(c, set())))
 
-        # 3. Combine the lists, with lab courses first
-        sorted_courses = sorted_lab_courses + sorted_theory_courses
+            # 3. Combine the lists, with lab courses first
+            sorted_courses = sorted_lab_courses + sorted_theory_courses
         
-        self.logger.info(f"  - Final sorted order: {len(sorted_courses)} total courses (labs first).")
+        self.logger.info(f"  - Final sorted order: {len(sorted_courses)} total courses")
 
-        self.logger.info("Course-teacher availability analysis (Lab-First):")
-        # Log first few lab courses
-        self.logger.info("  Lab courses (up to 5):")
-        for course_code in sorted_lab_courses[:5]:
-            teacher_count = len(course_to_teachers.get(course_code, set()))
-            self.logger.info(f"    - {course_code}: {teacher_count} teachers, {len(course_instances.get(course_code, []))} instances")
+        self.logger.info("Course-teacher availability analysis:")
+        # Log practical courses
+        if lab_course_codes:
+            self.logger.info(f"  Practical courses ({len(lab_course_codes)}):")
+            for course_code in sorted(list(lab_course_codes))[:5]:
+                teacher_count = len(course_to_teachers.get(course_code, set()))
+                self.logger.info(f"    - {course_code}: {teacher_count} teachers, {len(course_instances.get(course_code, []))} instances")
         
-        # Log first few theory courses
-        self.logger.info("  Theory courses (up to 5):")
-        for course_code in sorted_theory_courses[:5]:
-            teacher_count = len(course_to_teachers.get(course_code, set()))
-            self.logger.info(f"    - {course_code}: {teacher_count} teachers, {len(course_instances.get(course_code, []))} instances")
+        # Log theory courses (only for standard departments)
+        if theory_course_codes:
+            self.logger.info(f"  Theory-only courses ({len(theory_course_codes)}):")
+            for course_code in sorted(list(theory_course_codes))[:5]:
+                teacher_count = len(course_to_teachers.get(course_code, set()))
+                self.logger.info(f"    - {course_code}: {teacher_count} teachers, {len(course_instances.get(course_code, []))} instances")
 
         # SMARTER PRE-ALLOCATION LOGIC
         self.logger.info("Performing smarter course pre-allocation to groups to maximize choice...")

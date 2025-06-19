@@ -1682,17 +1682,48 @@ class CombinedScheduler:
                             absolute_max_sessions = 2  # Hard limit for 2 hour courses
                             priority_level = 3  # Lower priority
                         
-                        # CRITICAL FIX: 2-hour courses CANNOT use 70+ capacity labs
+                        # CRITICAL FIX: 2-hour courses CANNOT use 70+ capacity labs (EXCEPT core labs)
                         if practical_hours <= 2:
-                            # FORCE 35-capacity labs ONLY for 2-hour courses
-                            if assignments_in_35_cap:
-                                model.Add(total_35_assignments == sum(total_assignments))
-                                model.Add(total_70_plus_assignments == 0)
-                                model.Add(sum(total_assignments) == max_batched_sessions)
-                                constraints_applied += 3
-                                self.logger.info(f"Course {course_req['course_code']} ({practical_hours}h): FORCED to use 35-capacity labs only with {max_batched_sessions} sessions")
+                            # Check if this is a core lab that should be exempted from the 35-capacity restriction
+                            is_core_lab = course_instance_id in self.core_lab_instance_ids
+                            
+                            if is_core_lab:
+                                # Core labs with 2 practical hours can use both 35 and 70 capacity labs
+                                # Allow the same flexible strategy as other courses
+                                use_35_cap_strategy = model.NewBoolVar(f'course_{course_instance_id}_use_35_cap_strategy')
+                                
+                                # Constraint 1: If using 35-cap strategy, ALL sessions must be in 35-cap labs
+                                if assignments_in_35_cap and assignments_in_70_plus_cap:
+                                    model.Add(total_35_assignments == sum(total_assignments)).OnlyEnforceIf(use_35_cap_strategy)
+                                    model.Add(total_70_plus_assignments == 0).OnlyEnforceIf(use_35_cap_strategy)
+                                    
+                                    # Constraint 2: If using 70+ cap strategy, ALL sessions must be in 70+ cap labs  
+                                    model.Add(total_70_plus_assignments == sum(total_assignments)).OnlyEnforceIf(use_35_cap_strategy.Not())
+                                    model.Add(total_35_assignments == 0).OnlyEnforceIf(use_35_cap_strategy.Not())
+                            
+                                    # Constraint 3: Session count depends on chosen strategy
+                                    model.Add(sum(total_assignments) == max_batched_sessions).OnlyEnforceIf(use_35_cap_strategy)
+                                    model.Add(sum(total_assignments) == max_unbatched_sessions).OnlyEnforceIf(use_35_cap_strategy.Not())
+                                    
+                                    # Neutral preference for core labs with 2 hours (let solver decide)
+                                    constraints_applied += 6
+                                    self.logger.info(f"CORE LAB {course_req['course_code']} ({practical_hours}h): ALLOWED to use BOTH 35-cap ({max_batched_sessions} sessions) OR 70+ cap ({max_unbatched_sessions} sessions)")
+                                else:
+                                    # Fallback assignment for core labs
+                                    required_sessions = min(max_batched_sessions, len(total_assignments), absolute_max_sessions)
+                                    model.Add(sum(total_assignments) == required_sessions)
+                                    constraints_applied += 1
+                                    self.logger.info(f"CORE LAB {course_req['course_code']} ({practical_hours}h): fallback assignment with {required_sessions} sessions")
                             else:
-                                self.logger.error(f"Course {course_req['course_code']} ({practical_hours}h): No 35-capacity labs available - scheduling impossible")
+                                # FORCE 35-capacity labs ONLY for non-core 2-hour courses
+                                if assignments_in_35_cap:
+                                    model.Add(total_35_assignments == sum(total_assignments))
+                                    model.Add(total_70_plus_assignments == 0)
+                                    model.Add(sum(total_assignments) == max_batched_sessions)
+                                    constraints_applied += 3
+                                    self.logger.info(f"NON-CORE Course {course_req['course_code']} ({practical_hours}h): FORCED to use 35-capacity labs only with {max_batched_sessions} sessions")
+                                else:
+                                    self.logger.error(f"NON-CORE Course {course_req['course_code']} ({practical_hours}h): No 35-capacity labs available - scheduling impossible")
                         else:
                             # Boolean variable to choose strategy: True = use 35-cap labs, False = use 70+ cap labs
                             use_35_cap_strategy = model.NewBoolVar(f'course_{course_instance_id}_use_35_cap_strategy')
@@ -3713,7 +3744,7 @@ class CombinedScheduler:
         self.logger.info(f"  - 70 capacity labs: {len(labs_70)}")
         self.logger.info(f"  - 140 capacity labs: {len(labs_140)}")
     
-    def _determine_lab_allocation_strategy(self, practical_hours, students_per_instance):
+    def _determine_lab_allocation_strategy(self, practical_hours, students_per_instance, course_instance_id=None):
         """Determine the optimal lab allocation strategy based on practical hours and student count."""
         # Calculate base lab sessions needed (2 practical hours = 1 lab session)
         base_sessions = (practical_hours + 1) // 2
@@ -3726,15 +3757,27 @@ class CombinedScheduler:
             'preferred_lab_capacities': [],
             'force_35_capacity': False,
             'force_70_plus_capacity': False,
-            'prefer_70_plus_with_batching_fallback': False
+            'prefer_70_plus_with_batching_fallback': False,
+            'allow_core_lab_flexibility': False
         }
+        
+        # Check if this is a core lab
+        is_core_lab = course_instance_id and course_instance_id in self.core_lab_instance_ids
         
         # Simple capacity rules based on practical hours
         if practical_hours <= 2:
-            # Rule: practical_hours <= 2 should ONLY use 35-capacity labs (NO 70+ capacity labs allowed)
-            strategy['force_35_capacity'] = True
-            strategy['preferred_lab_capacities'] = [35]  # Only 35-capacity labs allowed
-            self.logger.info(f"Course with {practical_hours}h practical RESTRICTED to 35-capacity labs only")
+            if is_core_lab:
+                # Core labs with 2 practical hours can use both 35 and 70 capacity labs
+                strategy['force_35_capacity'] = False
+                strategy['prefer_70_plus_with_batching_fallback'] = True  # Allow flexible choice
+                strategy['preferred_lab_capacities'] = [35, 70, 140]  # All capacities allowed
+                strategy['allow_core_lab_flexibility'] = True
+                self.logger.info(f"CORE LAB with {practical_hours}h practical: ALLOWED to use both 35 and 70+ capacity labs")
+            else:
+                # Non-core labs with 2 practical hours must use 35-capacity labs only
+                strategy['force_35_capacity'] = True
+                strategy['preferred_lab_capacities'] = [35]  # Only 35-capacity labs allowed
+                self.logger.info(f"NON-CORE course with {practical_hours}h practical: RESTRICTED to 35-capacity labs only")
         elif practical_hours == 6:
             # Rule: practical_hours == 6 PREFERS 70+ capacity labs but allows batching fallback
             strategy['prefer_70_plus_with_batching_fallback'] = True

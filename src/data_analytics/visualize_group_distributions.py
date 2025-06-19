@@ -46,7 +46,7 @@ def find_schedule_files():
     
     theory_file = None
     lab_file = None
-    
+
     if combined_dirs:
         combined_dir = combined_dirs[0]
         print(f"Looking in directory: {combined_dir}")
