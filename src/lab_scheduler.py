@@ -2046,10 +2046,10 @@ class LabScheduler:
                                 break
                 
                 # SMART RULE: Apply slot limits based on practical hours and batching requirements
-                # EXCEPTION: If group contains core lab courses, don't limit slots
+                # UPDATED: Groups with core lab courses are limited to 8 slots
                 if core_lab_courses > 0:
-                    slot_limit = None  # No slot limit for groups with core lab courses
-                    strategy_note = f"NO SLOT LIMIT for group with {core_lab_courses} core lab courses"
+                    slot_limit = 8  # 8 slot limit for groups with core lab courses
+                    strategy_note = f"8-SLOT LIMIT for group with {core_lab_courses} core lab courses"
                 elif max_practical_hours <= 2:
                     # For 2-hour practical courses, always limit to 2 slots
                     slot_limit = 2  # Always 2 lab slots for 2-hour courses - forces parallelization
@@ -2182,7 +2182,7 @@ class LabScheduler:
         self.logger.info("  4. Teachers cannot teach multiple labs simultaneously (global constraint)")
         self.logger.info("  5. At most ONE group per semester can be active in any time slot")
         self.logger.info("  6. Same-group parallelization preference added to objective")
-        self.logger.info("  7. SMART group slot limits: NO LIMIT for core lab courses, 2 slots if <=2 hours (strict), 2-4 slots if 4 hours (prefers 70+ labs, batching fallback), 3-6 slots if 6+ hours (prefers 70+ labs, batching fallback), else 4 slots")
+        self.logger.info("  7. SMART group slot limits: 8 SLOTS for core lab courses, 2 slots if <=2 hours (strict), 2-4 slots if 4 hours (prefers 70+ labs, batching fallback), 3-6 slots if 6+ hours (prefers 70+ labs, batching fallback), else 4 slots")
         self.logger.info("  8. IMPROVED: Unassigned courses are now grouped by course code with balanced groups")
     
     def apply_same_group_parallelization_preference(self, model, lab_assignments, semester_groups):
@@ -2250,12 +2250,12 @@ class LabScheduler:
                             
                             # Determine weights based on core lab presence in this specific group
                             if group_has_core_labs:
-                                # CORE LAB GROUPS: EXTREMELY high weights for maximum parallelization priority
-                                weight_2 = 200  # 25x higher than standard - CRITICAL PRIORITY
-                                weight_3 = 400  # 33x higher than standard - CRITICAL PRIORITY
-                                weight_4 = 800  # 50x higher than standard - CRITICAL PRIORITY
-                                weight_5 = 1500 # 75x higher than standard - CRITICAL PRIORITY
-                                self.logger.debug(f"🧪 CORE LAB GROUP: Using CRITICAL parallelization weights for {dept} S{semester} G{group_idx+1}")
+                                # CORE LAB GROUPS: MAXIMUM priority weights for absolute parallelization priority
+                                weight_2 = 500   # 62x higher than standard - MAXIMUM PRIORITY
+                                weight_3 = 1000  # 83x higher than standard - MAXIMUM PRIORITY
+                                weight_4 = 2000  # 125x higher than standard - MAXIMUM PRIORITY
+                                weight_5 = 4000  # 200x higher than standard - MAXIMUM PRIORITY
+                                self.logger.debug(f"🧪 CORE LAB GROUP: Using MAXIMUM parallelization weights for {dept} S{semester} G{group_idx+1}")
                             elif has_core_labs:
                                 # CORE LAB DEPARTMENTS (non-core groups): Enhanced weights
                                 weight_2 = 25  # 3x higher than standard
@@ -2326,12 +2326,12 @@ class LabScheduler:
         
         self.logger.info(f"Added {len(self.group_parallelization_vars)} parallelization bonus variables to objective")
         self.logger.info("📊 Graduated parallelization bonus weights:")
-        self.logger.info("  🔥 CORE LAB GROUPS (CRITICAL PRIORITY - Maximum Parallelization):")
-        self.logger.info("    • 2 core labs in parallel: +200 (25x enhanced)")
-        self.logger.info("    • 3 core labs in parallel: +400 (33x enhanced)")
-        self.logger.info("    • 4 core labs in parallel: +800 (50x enhanced)")
-        self.logger.info("    • 5+ core labs in parallel: +1500 (75x enhanced)")
-        self.logger.info("    • ALL core labs parallel: +5000 (MAXIMUM PRIORITY)")
+        self.logger.info("  🔥 CORE LAB GROUPS (MAXIMUM PRIORITY - Absolute Parallelization):")
+        self.logger.info("    • 2 core labs in parallel: +500 (62x enhanced)")
+        self.logger.info("    • 3 core labs in parallel: +1000 (83x enhanced)")
+        self.logger.info("    • 4 core labs in parallel: +2000 (125x enhanced)")
+        self.logger.info("    • 5+ core labs in parallel: +4000 (200x enhanced)")
+        self.logger.info("    • ALL core labs parallel: +5000 (ABSOLUTE MAXIMUM PRIORITY)")
         self.logger.info("  🧪 CORE LAB DEPARTMENTS (Enhanced Parallelization):")
         self.logger.info("    • 2 courses in parallel: +25 (3x enhanced)")
         self.logger.info("    • 3 courses in parallel: +40 (3x enhanced)")
@@ -2725,6 +2725,17 @@ class LabScheduler:
             self.logger.info(
                 f"PENALTY: Teacher Exhaustion - {len(self.teacher_exhaustion_penalties)} penalty variables with high weight")
         
+        # CORE LAB PRIORITY: Minimize slots used by core lab groups (encourage maximum parallelization)
+        core_lab_slot_penalties = []
+        self._add_core_lab_slot_minimization_objective(model, lab_assignments, core_lab_slot_penalties)
+        
+        if core_lab_slot_penalties:
+            for penalty in core_lab_slot_penalties:
+                objective_terms.append(penalty * -50)  # Strong penalty for using more slots
+            self.logger.info(f"PRIORITY: Core Lab Slot Minimization - {len(core_lab_slot_penalties)} penalty variables")
+            self.logger.info("  • STRONGLY encourages core lab groups to use MINIMUM number of slots")
+            self.logger.info("  • Forces maximum parallelization within core lab groups")
+        
         # Create the final objective function
         if objective_terms:
             model.Maximize(sum(objective_terms))
@@ -2732,11 +2743,16 @@ class LabScheduler:
             self.logger.info("📊 OBJECTIVE PRIORITIES:")
             self.logger.info("  1. Satisfy all required lab sessions (HARD CONSTRAINT)")
             self.logger.info("  2. GROUP PARALLELIZATION: Schedule same-group courses in parallel (STRONG PREFERENCE)")
-            self.logger.info("     - Graduated weights from +8 to +20 based on parallelization level")
-            self.logger.info("  3. Avoid orphaned sessions (-5 per orphaned session)")
-            self.logger.info("  4. Balance room utilization (LOW WEIGHT)")
-            self.logger.info("  5. Teacher schedule compactness (LOW WEIGHT)")
-            self.logger.info("  6. CAPACITY PREFERENCE: 6-hour courses prefer 70+ labs (+10 bonus)")
+            self.logger.info("     - CORE LABS: +500 to +4000 (MAXIMUM PRIORITY - Absolute Parallelization)")
+            self.logger.info("     - Regular groups: +8 to +20 based on parallelization level")
+            self.logger.info("  3. 🧪 CORE LAB SLOT MINIMIZATION: Force core lab groups to use minimum slots (-50 per extra slot)")
+            self.logger.info("     - Quadratic penalty - gets exponentially worse for more excess slots")
+            self.logger.info("     - Calculated based on maximum practical hours in the group")
+            self.logger.info("  4. Avoid orphaned sessions (-5 per orphaned session)")
+            self.logger.info("  5. Balance room utilization (LOW WEIGHT)")
+            self.logger.info("  6. Teacher schedule compactness (LOW WEIGHT)")
+            self.logger.info("  7. CAPACITY PREFERENCE: 6-hour courses prefer 70+ labs (+10 bonus)")
+            self.logger.info("  8. Prevent teacher exhaustion (-100 per 3 consecutive labs)")
         else:
             self.logger.warning("No objective terms were added - using solver defaults")
     
@@ -2792,6 +2808,109 @@ class LabScheduler:
                 
                 # Add penalty to the list
                 penalties.append(orphaned)
+
+    def _add_core_lab_slot_minimization_objective(self, model, lab_assignments, penalties):
+        """Add penalties to minimize the number of slots used by core lab groups."""
+        self.logger.info("Creating slot minimization objective for core lab groups...")
+        
+        # Group course instances by department, semester, and group
+        semester_groups = defaultdict(lambda: defaultdict(list))
+        
+        for course_instance_id in lab_assignments.keys():
+            group_info = self.get_group_info_for_course_instance(course_instance_id)
+            dept = group_info['department']
+            semester = group_info['semester']
+            group_index = group_info['group_index']
+            
+            if group_index > 0:  # Valid group
+                semester_groups[(dept, semester)][group_index].append(course_instance_id)
+        
+        # For each group that contains core lab courses
+        for (dept, semester), groups in semester_groups.items():
+            for group_idx, course_instances in groups.items():
+                if len(course_instances) <= 1:
+                    continue  # Skip groups with only one course
+                
+                # Check if this group contains core lab courses
+                group_has_core_labs = any(
+                    isinstance(inst, dict) and inst.get('id') in self.core_lab_instance_ids or
+                    isinstance(inst, str) and inst in self.core_lab_instance_ids
+                    for inst in course_instances
+                )
+                
+                if not group_has_core_labs:
+                    continue  # Only apply to groups with core labs
+                
+                # Count the number of core lab courses in this group
+                core_lab_count = sum(1 for inst in course_instances 
+                                   if (isinstance(inst, dict) and inst.get('id') in self.core_lab_instance_ids) or
+                                      (isinstance(inst, str) and inst in self.core_lab_instance_ids))
+                
+                self.logger.info(f"🧪 Processing core lab group {dept} S{semester} G{group_idx}: {core_lab_count} core labs, {len(course_instances)} total courses")
+                
+                # Create variables for each time slot used by this group
+                group_slot_vars = []
+                
+                for day_idx in range(self.num_days):
+                    for session_idx in range(len(self.lab_sessions)):
+                        # Create a variable indicating if this group uses this time slot
+                        group_slot_var = model.NewBoolVar(
+                            f'core_group_slot_{dept}_S{semester}_G{group_idx}_day{day_idx}_session{session_idx}'
+                        )
+                        
+                        # Collect all assignment variables for this group at this time slot
+                        slot_assignments = []
+                        for course_instance_id in course_instances:
+                            for room_id in self.lab_room_ids:
+                                slot_assignments.append(lab_assignments[course_instance_id][day_idx][session_idx][room_id])
+                        
+                        if slot_assignments:
+                            # group_slot_var = 1 if any course in this group uses this slot
+                            model.Add(group_slot_var <= sum(slot_assignments))
+                            model.Add(sum(slot_assignments) <= len(slot_assignments) * group_slot_var)
+                            
+                            # Add to the list of all used slots for this group
+                            group_slot_vars.append(group_slot_var)
+                
+                # Calculate the minimum theoretical slots needed if everything runs in parallel
+                # This equals the maximum practical hours among all courses in the group
+                max_practical_hours = 0
+                for course_instance_id in course_instances:
+                    for teacher, courses in self.lab_requirements.items():
+                        for course in courses:
+                            if course['course_instance_id'] == course_instance_id:
+                                max_practical_hours = max(max_practical_hours, course.get('practical_hours', 0))
+                                break
+                
+                # Convert practical hours to minimum slots needed (assuming 2-hour sessions)
+                min_theoretical_slots = max(1, (max_practical_hours + 1) // 2)  # Round up
+                
+                # Create penalty variables for each slot used beyond the minimum
+                if group_slot_vars and min_theoretical_slots > 0:
+                    total_slots_used = sum(group_slot_vars)
+                    
+                    # For each possible "extra" slot beyond the minimum
+                    for extra_slot in range(1, len(group_slot_vars) - min_theoretical_slots + 1):
+                        # Create a penalty variable that's 1 if we use min_theoretical_slots + extra_slot or more
+                        excess_penalty = model.NewBoolVar(
+                            f'core_excess_penalty_{dept}_S{semester}_G{group_idx}_extra{extra_slot}'
+                        )
+                        
+                        # excess_penalty = 1 if total_slots_used >= min_theoretical_slots + extra_slot
+                        model.Add(total_slots_used >= min_theoretical_slots + extra_slot).OnlyEnforceIf(excess_penalty)
+                        model.Add(total_slots_used < min_theoretical_slots + extra_slot).OnlyEnforceIf(excess_penalty.Not())
+                        
+                        # Weight penalty based on how far beyond minimum we are
+                        penalty_weight = extra_slot * extra_slot  # Quadratic penalty - gets worse quickly
+                        penalties.append(excess_penalty * penalty_weight)
+                        
+                        self.logger.debug(f"🧪 Added excess slot penalty for {dept} S{semester} G{group_idx}: "
+                                        f"min_slots={min_theoretical_slots}, extra_slot={extra_slot}, weight={penalty_weight}")
+                
+                self.logger.info(f"🧪 Core lab group {dept} S{semester} G{group_idx}: "
+                               f"min_theoretical_slots={min_theoretical_slots}, max_practical_hours={max_practical_hours}")
+        
+        self.logger.info(f"Created {len(penalties)} slot minimization penalty variables for core lab groups")
 
     def _add_room_utilization_balance(self, model, lab_assignments, utilization_vars):
         """Add variables to encourage balanced room utilization."""

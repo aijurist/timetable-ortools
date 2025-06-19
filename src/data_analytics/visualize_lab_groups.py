@@ -38,6 +38,7 @@ def find_lab_schedule_file():
     """Find the most recent lab schedule CSV file."""
     # Look for lab schedule files in order of preference
     possible_paths = [
+        # 'lab_schedule_output/lab_schedule.csv'
         'output/lab_schedule_*/lab_schedule.csv',
         'output/combined_schedule_*/combined_lab_schedule.csv',
         'lab_schedule.csv',

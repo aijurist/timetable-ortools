@@ -178,55 +178,130 @@ class CombinedScheduler:
             return None
     
     def _setup_department_day_patterns(self):
-        """Set up day patterns for different departments based on day_order.csv."""
+        """Set up day patterns for different departments and specific semester overrides."""
         if self.day_order_df is None:
             self.dept_day_patterns = {}
-            return
-        
-        self.dept_day_patterns = {}
-        
-        # Map department names to day patterns
-        for _, row in self.day_order_df.iterrows():
-            if pd.isna(row['Department']) or pd.isna(row['ODD']):
-                continue
-                
-            dept_name = str(row['Department']).strip()
-            day_pattern = str(row['ODD']).strip()
+        else:
+            self.dept_day_patterns = {}
             
-            if 'Monday - Friday' in day_pattern:
-                self.dept_day_patterns[dept_name] = {
-                    'days': ["monday", "tuesday", "wed", "thur", "fri"],
-                    'pattern': 'Monday-Friday'
-                }
-            elif 'Tuesday - Saturday' in day_pattern:
-                self.dept_day_patterns[dept_name] = {
-                    'days': ["tuesday", "wed", "thur", "fri", "saturday"],
-                    'pattern': 'Tuesday-Saturday'
-                }
+            # Map department names to day patterns
+            for _, row in self.day_order_df.iterrows():
+                if pd.isna(row['Department']) or pd.isna(row['ODD']):
+                    continue
+                    
+                dept_name = str(row['Department']).strip()
+                day_pattern = str(row['ODD']).strip()
+                
+                if 'Monday - Friday' in day_pattern:
+                    self.dept_day_patterns[dept_name] = {
+                        'days': ["monday", "tuesday", "wed", "thur", "fri"],
+                        'pattern': 'Monday-Friday'
+                    }
+                elif 'Tuesday - Saturday' in day_pattern:
+                    self.dept_day_patterns[dept_name] = {
+                        'days': ["tuesday", "wed", "thur", "fri", "saturday"],
+                        'pattern': 'Tuesday-Saturday'
+                    }
         
-        self.logger.info(f"Set up day patterns for {len(self.dept_day_patterns)} departments")
+        # Set up semester-specific overrides for Monday-Saturday scheduling
+        self.semester_day_overrides = {
+            # Format: (dept_name, semester) -> day_pattern_config
+            ('Biotechnology', 5): {
+                'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
+                'pattern': 'Monday-Saturday'
+            },
+            # Electronics & Communication Engineering Monday-Saturday semesters
+            ('Electronics & Communication Engineering', 3): {
+                'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
+                'pattern': 'Monday-Saturday'
+            },
+            ('Electronics & Communication Engineering', 5): {
+                'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
+                'pattern': 'Monday-Saturday'
+            },
+            ('Electronics & Communication Engineering', 7): {
+                'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
+                'pattern': 'Monday-Saturday'
+            },
+            # Add more semester-specific overrides here as needed
+            # ('Department Name', semester_number): {'days': [...], 'pattern': 'Monday-Saturday'}
+        }
         
-        # Log some examples
-        monday_friday_depts = [dept for dept, pattern in self.dept_day_patterns.items() if pattern['pattern'] == 'Monday-Friday']
-        tuesday_saturday_depts = [dept for dept, pattern in self.dept_day_patterns.items() if pattern['pattern'] == 'Tuesday-Saturday']
+        total_patterns = len(self.dept_day_patterns) + len(self.semester_day_overrides)
+        self.logger.info(f"Set up day patterns for {len(self.dept_day_patterns)} departments and {len(self.semester_day_overrides)} semester-specific overrides")
         
-        self.logger.info(f"Monday-Friday departments: {monday_friday_depts[:5]}..." if len(monday_friday_depts) > 5 else f"Monday-Friday departments: {monday_friday_depts}")
-        self.logger.info(f"Tuesday-Saturday departments: {tuesday_saturday_depts[:5]}..." if len(tuesday_saturday_depts) > 5 else f"Tuesday-Saturday departments: {tuesday_saturday_depts}")
+        # Log department patterns
+        if self.dept_day_patterns:
+            monday_friday_depts = [dept for dept, pattern in self.dept_day_patterns.items() if pattern['pattern'] == 'Monday-Friday']
+            tuesday_saturday_depts = [dept for dept, pattern in self.dept_day_patterns.items() if pattern['pattern'] == 'Tuesday-Saturday']
+            
+            self.logger.info(f"Monday-Friday departments: {monday_friday_depts[:5]}..." if len(monday_friday_depts) > 5 else f"Monday-Friday departments: {monday_friday_depts}")
+            self.logger.info(f"Tuesday-Saturday departments: {tuesday_saturday_depts[:5]}..." if len(tuesday_saturday_depts) > 5 else f"Tuesday-Saturday departments: {tuesday_saturday_depts}")
+        
+        # Log semester-specific overrides
+        if self.semester_day_overrides:
+            self.logger.info("Semester-specific day pattern overrides:")
+            for (dept, sem), pattern in self.semester_day_overrides.items():
+                self.logger.info(f"  {dept} Semester {sem}: {pattern['pattern']} ({len(pattern['days'])} days)")
+                self.logger.info(f"    Days: {', '.join(pattern['days']).title()}")
     
-    def _get_days_for_department(self, dept_name):
-        """Get the working days for a specific department."""
-        if not hasattr(self, 'dept_day_patterns') or dept_name not in self.dept_day_patterns:
-            # Default to Monday-Friday if department not found
-            return ["monday", "tuesday", "wed", "thur", "fri"]
+    def _get_days_for_department(self, dept_name, semester=None):
+        """Get the working days for a specific department, with optional semester override."""
+        # Check for semester-specific override first
+        if (semester is not None and 
+            hasattr(self, 'semester_day_overrides') and 
+            (dept_name, semester) in self.semester_day_overrides):
+            return self.semester_day_overrides[(dept_name, semester)]['days']
         
-        return self.dept_day_patterns[dept_name]['days']
+        # Check department-level pattern
+        if hasattr(self, 'dept_day_patterns') and dept_name in self.dept_day_patterns:
+            return self.dept_day_patterns[dept_name]['days']
+        
+        # Default to Monday-Friday if no specific pattern found
+        return ["monday", "tuesday", "wed", "thur", "fri"]
     
-    def _get_day_pattern_for_department(self, dept_name):
-        """Get the day pattern (Monday-Friday or Tuesday-Saturday) for a specific department."""
-        if not hasattr(self, 'dept_day_patterns') or dept_name not in self.dept_day_patterns:
-            return 'Monday-Friday'  # Default
+    def _get_day_pattern_for_department(self, dept_name, semester=None):
+        """Get the day pattern for a specific department, with optional semester override."""
+        # Check for semester-specific override first
+        if (semester is not None and 
+            hasattr(self, 'semester_day_overrides') and 
+            (dept_name, semester) in self.semester_day_overrides):
+            return self.semester_day_overrides[(dept_name, semester)]['pattern']
         
-        return self.dept_day_patterns[dept_name]['pattern']
+        # Check department-level pattern
+        if hasattr(self, 'dept_day_patterns') and dept_name in self.dept_day_patterns:
+            return self.dept_day_patterns[dept_name]['pattern']
+        
+        # Default to Monday-Friday
+        return 'Monday-Friday'
+    
+    def add_semester_day_override(self, dept_name, semester, day_pattern):
+        """Add a semester-specific day pattern override.
+        
+        Args:
+            dept_name (str): Department name
+            semester (int): Semester number
+            day_pattern (str): One of 'Monday-Friday', 'Tuesday-Saturday', or 'Monday-Saturday'
+        """
+        if not hasattr(self, 'semester_day_overrides'):
+            self.semester_day_overrides = {}
+        
+        if day_pattern == 'Monday-Friday':
+            days = ["monday", "tuesday", "wed", "thur", "fri"]
+        elif day_pattern == 'Tuesday-Saturday':
+            days = ["tuesday", "wed", "thur", "fri", "saturday"]
+        elif day_pattern == 'Monday-Saturday':
+            days = ["monday", "tuesday", "wed", "thur", "fri", "saturday"]
+        else:
+            raise ValueError(f"Invalid day pattern: {day_pattern}. Must be one of: 'Monday-Friday', 'Tuesday-Saturday', 'Monday-Saturday'")
+        
+        self.semester_day_overrides[(dept_name, semester)] = {
+            'days': days,
+            'pattern': day_pattern
+        }
+        
+        self.logger.info(f"Added semester override: {dept_name} Semester {semester} -> {day_pattern} ({len(days)} days)")
+        self.logger.info(f"  Days: {', '.join(days).title()}")
     
     def _load_core_lab_mapping(self):
         """Load core lab mapping file for specialized lab course assignments."""
@@ -998,25 +1073,40 @@ class CombinedScheduler:
         pre_allocation = [set() for _ in range(num_groups)]
         course_group_assignments = {}
 
-        # Create a balanced, chained allocation to ensure all groups are used meaningfully
-        for i, course_code in enumerate(sorted_courses):
-            # Each course should appear in up to 2 groups for choice, if possible and num_groups > 1
-            num_placements = min(2, len(course_instances[course_code])) if num_groups > 1 else 1
-            
-            # Place course in a "chained" fashion: e.g., C1 in G1/G2, C2 in G2/G3, C3 in G3/G4...
+        # Separate lab and theory courses
+        lab_course_codes_list = [c for c in sorted_courses if c in lab_course_codes]
+        theory_course_codes_list = [c for c in sorted_courses if c not in lab_course_codes]
+        num_lab_groups = len(lab_course_codes_list)
+
+        self.logger.info(f"Prioritizing {len(lab_course_codes_list)} lab courses into the first {num_lab_groups} groups.")
+
+        # 1. Allocate lab courses to the first `num_lab_groups` groups in a chained fashion
+        if num_lab_groups > 0:
+            for i, course_code in enumerate(lab_course_codes_list):
+                num_placements = min(2, len(course_instances.get(course_code, []))) if num_lab_groups > 1 else 1
+                for j in range(num_placements):
+                    group_idx = (i + j) % num_lab_groups
+                    pre_allocation[group_idx].add(course_code)
+                    
+                    if course_code not in course_group_assignments:
+                        course_group_assignments[course_code] = []
+                    if group_idx not in course_group_assignments[course_code]:
+                        course_group_assignments[course_code].append(group_idx)
+
+        # 2. Allocate theory courses to all available groups, starting after lab groups
+        for i, course_code in enumerate(theory_course_codes_list):
+            num_placements = min(2, len(course_instances.get(course_code, []))) if num_groups > 1 else 1
             for j in range(num_placements):
-                group_idx = (i + j) % num_groups
+                group_idx = (num_lab_groups + i + j) % num_groups
                 pre_allocation[group_idx].add(course_code)
                 
                 if course_code not in course_group_assignments:
                     course_group_assignments[course_code] = []
-                
-                # Ensure we don't add the same group index twice
                 if group_idx not in course_group_assignments[course_code]:
                     course_group_assignments[course_code].append(group_idx)
 
         # Log course-group pre-allocation
-        self.logger.info("Course pre-allocation (max 2 groups per course, chained distribution):")
+        self.logger.info("Course pre-allocation (lab courses prioritized into dedicated groups):")
         for course_code, group_indices in sorted(course_group_assignments.items()):
             group_names = [f"G{i+1}" for i in sorted(group_indices)]
             self.logger.info(f"  {course_code}: assigned to groups {', '.join(group_names)}")
@@ -1477,19 +1567,22 @@ class CombinedScheduler:
                 course_instance_id = course_req['course_instance_id']
                 lab_sessions_needed = course_req['lab_sessions_needed']
                 
-                # Get department for this course instance to determine day pattern
+                # Get department and semester for this course instance to determine day pattern
                 dept_name = "Computer Science & Engineering"  # Default
+                semester = None
                 if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
                     dept_name = self.instance_group_mapping[course_instance_id]['department']
+                    semester = self.instance_group_mapping[course_instance_id]['semester']
                 else:
                     # Fallback: look up in courses_df
                     course_matches = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
                     if not course_matches.empty:
                         dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
+                        semester = course_matches.iloc[0].get('semester')
                 
-                # Get department-specific days
-                dept_days = self._get_days_for_department(dept_name)
-                dept_pattern = self._get_day_pattern_for_department(dept_name)
+                # Get department-specific days (with semester override)
+                dept_days = self._get_days_for_department(dept_name, semester)
+                dept_pattern = self._get_day_pattern_for_department(dept_name, semester)
                 num_dept_days = len(dept_days)
                 
                 self.logger.debug(f"Lab variables for course {course_instance_id}: using {dept_pattern} pattern ({num_dept_days} days)")
@@ -1527,13 +1620,22 @@ class CombinedScheduler:
         
         # Use pre-computed group requirements
         for group_name, required_slots in self.group_requirements.items():
-            # Extract department from group name
+            # Extract department and semester from group name
             # Group name format: "Computer Science & Engineering_S3_G1"
             dept_name = group_name.split('_S')[0] if '_S' in group_name else "Computer Science & Engineering"
             
-            # Get department-specific days
-            dept_days = self._get_days_for_department(dept_name)
-            dept_pattern = self._get_day_pattern_for_department(dept_name)
+            # Extract semester for semester-specific overrides
+            semester = None
+            if '_S' in group_name:
+                try:
+                    semester_part = group_name.split('_S')[1].split('_G')[0]
+                    semester = int(semester_part)
+                except (ValueError, IndexError):
+                    pass
+            
+            # Get department-specific days (with semester override)
+            dept_days = self._get_days_for_department(dept_name, semester)
+            dept_pattern = self._get_day_pattern_for_department(dept_name, semester)
             num_dept_days = len(dept_days)
             
             self.logger.info(f"Creating variables for {group_name}: {required_slots} time slots required, using {dept_pattern} pattern ({num_dept_days} days)")
@@ -1808,18 +1910,20 @@ class CombinedScheduler:
         # Process all courses and map them to absolute time slots
         for teacher_id in lab_variables:
             for course_instance_id in lab_variables[teacher_id]:
-                # Get department for this course instance
+                # Get department and semester for this course instance
                 dept_name = "Computer Science & Engineering"  # Default
+                semester = None
                 if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
                     dept_name = self.instance_group_mapping[course_instance_id]['department']
+                    semester = self.instance_group_mapping[course_instance_id].get('semester')
                 else:
                     # Fallback: look up in courses_df
                     course_matches = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
                     if not course_matches.empty:
                         dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
                 
-                dept_days = self._get_days_for_department(dept_name)
-                day_pattern = self._get_day_pattern_for_department(dept_name)
+                dept_days = self._get_days_for_department(dept_name, semester)
+                day_pattern = self._get_day_pattern_for_department(dept_name, semester)
                 
                 # Process each day index for this department
                 for day_idx in range(len(dept_days)):
@@ -1831,52 +1935,59 @@ class CombinedScheduler:
                         
                         for session_name in self.lab_sessions.keys():
                             if session_name in lab_variables[teacher_id][course_instance_id][day_idx]:
-                                # Each lab session consists of multiple time slots
-                                for time_slot in self.lab_sessions[session_name]:
-                                    for room_id in self.lab_room_ids:
-                                        if room_id in lab_variables[teacher_id][course_instance_id][day_idx][session_name]:
-                                            key = (absolute_day, time_slot, room_id)
-                                            
-                                            if key not in time_slot_assignments:
-                                                time_slot_assignments[key] = []
-                                            
-                                            time_slot_assignments[key].append({
-                                                'variable': lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id],
-                                                'teacher_id': teacher_id,
-                                                'course_instance_id': course_instance_id,
-                                                'dept_name': dept_name,
-                                                'day_pattern': day_pattern,
-                                                'session_name': session_name
-                                            })
+                                # Work with SESSIONS, not individual time slots
+                                for room_id in self.lab_room_ids:
+                                    if room_id in lab_variables[teacher_id][course_instance_id][day_idx][session_name]:
+                                        key = (absolute_day, session_name, room_id)
+                                        
+                                        if key not in time_slot_assignments:
+                                            time_slot_assignments[key] = []
+                                        
+                                        time_slot_assignments[key].append({
+                                            'variable': lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id],
+                                            'teacher_id': teacher_id,
+                                            'course_instance_id': course_instance_id,
+                                            'dept_name': dept_name,
+                                            'day_pattern': day_pattern,
+                                            'session_name': session_name
+                                        })
         
-        # Apply room conflict constraints for each absolute time slot
-        for (absolute_day, time_slot, room_id), assignments in time_slot_assignments.items():
+        # Apply room conflict constraints for each absolute session slot
+        for (absolute_day, session_name, room_id), assignments in time_slot_assignments.items():
             if len(assignments) > 1:
-                # Multiple courses want this room at the same absolute time
+                # Multiple courses want this room at the same absolute session time
                 assignment_vars = [assignment['variable'] for assignment in assignments]
                 
-                # At most one course can use this room at this time
+                # At most one course can use this room at this session
                 model.Add(sum(assignment_vars) <= 1)
                 constraints_applied += 1
                 
                 # Log potential conflict points
                 dept_patterns = set(assignment['day_pattern'] for assignment in assignments)
                 if len(dept_patterns) > 1:
-                    self.logger.debug(f"Cross-pattern constraint applied for room {room_id} on {absolute_day} {time_slot}")
+                    self.logger.debug(f"Cross-pattern constraint applied for room {room_id} on {absolute_day} {session_name}")
                     self.logger.debug(f"  Patterns involved: {dept_patterns}")
+                
+                # Log conflicts for debugging
+                if len(assignments) > 1:
+                    course_codes = [assignment.get('course_instance_id', 'Unknown') for assignment in assignments]
+                    self.logger.debug(f"  Room conflict prevention: {len(assignments)} courses competing for room {room_id} on {absolute_day} {session_name}")
+                    self.logger.debug(f"  Competing courses: {course_codes}")
         
         # Additional constraint: Prevent same course from being scheduled multiple times in same session
         for teacher_id in lab_variables:
             for course_instance_id in lab_variables[teacher_id]:
                 dept_name = "Computer Science & Engineering"  # Default
+                semester = None
                 if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
                     dept_name = self.instance_group_mapping[course_instance_id]['department']
+                    semester = self.instance_group_mapping[course_instance_id].get('semester')
                 else:
                     course_matches = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
                     if not course_matches.empty:
                         dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
                 
-                dept_days = self._get_days_for_department(dept_name)
+                dept_days = self._get_days_for_department(dept_name, semester)
                 
                 for day_idx in range(len(dept_days)):
                     if day_idx < len(lab_variables[teacher_id][course_instance_id]):
@@ -1893,7 +2004,7 @@ class CombinedScheduler:
                                     constraints_applied += 1
         
         self.logger.info(f"Applied {constraints_applied} enhanced lab room single assignment constraints")
-        self.logger.info(f"Processed {len(time_slot_assignments)} unique time-room combinations")
+        self.logger.info(f"Processed {len(time_slot_assignments)} unique session-room combinations")
         return constraints_applied
     
     def apply_group_based_scheduling_constraint(self, model, lab_variables):
@@ -1920,8 +2031,8 @@ class CombinedScheduler:
         for (dept, semester), groups in semester_groups.items():
             self.logger.info(f"Applying group constraints for {dept} Semester {semester}: {len(groups)} groups")
             
-            # Get department-specific days for this constraint
-            dept_days = self._get_days_for_department(dept)
+            # Get department-specific days for this constraint (with semester override)
+            dept_days = self._get_days_for_department(dept, semester)
             num_dept_days = len(dept_days)
             
             # For each time slot, ensure at most one group from this semester is active
@@ -1966,17 +2077,19 @@ class CombinedScheduler:
         # CONSTRAINT 2: Course instance uniqueness
         for teacher_id in lab_variables:
             for course_instance_id in lab_variables[teacher_id]:
-                # Get department for this course instance
+                # Get department and semester for this course instance
                 dept_name = "Computer Science & Engineering"  # Default
+                semester = None
                 if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
                     dept_name = self.instance_group_mapping[course_instance_id]['department']
+                    semester = self.instance_group_mapping[course_instance_id].get('semester')
                 else:
                     # Fallback: look up in courses_df
                     course_matches = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
                     if not course_matches.empty:
                         dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
                 
-                dept_days = self._get_days_for_department(dept_name)
+                dept_days = self._get_days_for_department(dept_name, semester)
                 num_dept_days = len(dept_days)
                 
                 for day_idx in range(num_dept_days):
@@ -2034,15 +2147,17 @@ class CombinedScheduler:
                     # Constrain it to NOT use any other rooms
                     forbidden_rooms = set(self.lab_room_ids) - set(valid_required_rooms)
                     
-                    # Get department for this course to determine number of days
+                    # Get department and semester for this course to determine number of days
                     dept_name = "Computer Science & Engineering"  # Default
+                    semester = None
                     if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
                         dept_name = self.instance_group_mapping[course_instance_id]['department']
+                        semester = self.instance_group_mapping[course_instance_id].get('semester')
                     else:
                         # Fallback: look up in courses_df
                         dept_name = course_row.iloc[0].get('student_dept', 'Computer Science & Engineering')
                     
-                    dept_days = self._get_days_for_department(dept_name)
+                    dept_days = self._get_days_for_department(dept_name, semester)
                     num_dept_days = len(dept_days)
                     
                     for day_idx in range(num_dept_days):
@@ -2060,15 +2175,17 @@ class CombinedScheduler:
                     self.logger.debug(f"Course '{course_code}' not in core mapping. Constraining to 'Laboratory' type rooms.")
                     non_laboratory_rooms = set(self.lab_room_ids) - set(self.laboratory_room_ids)
                     
-                    # Get department for this course to determine number of days
+                    # Get department and semester for this course to determine number of days
                     dept_name = "Computer Science & Engineering"  # Default
+                    semester = None
                     if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
                         dept_name = self.instance_group_mapping[course_instance_id]['department']
+                        semester = self.instance_group_mapping[course_instance_id].get('semester')
                     else:
                         # Fallback: look up in courses_df
                         dept_name = course_row.iloc[0].get('student_dept', 'Computer Science & Engineering')
                     
-                    dept_days = self._get_days_for_department(dept_name)
+                    dept_days = self._get_days_for_department(dept_name, semester)
                     num_dept_days = len(dept_days)
                     
                     for day_idx in range(num_dept_days):
@@ -2118,8 +2235,8 @@ class CombinedScheduler:
                 self.logger.info(f"  - COMPLETE EXEMPTION for {dept} S{semester}: ALL labs are core labs - NO SLOT LIMITS APPLIED!")
                 continue
             
-            # Get department-specific day pattern for accurate slot counting
-            dept_days = self._get_days_for_department(dept)
+            # Get department-specific day pattern for accurate slot counting (with semester override)
+            dept_days = self._get_days_for_department(dept, semester)
             num_dept_days = len(dept_days)
             
             # Create boolean variables for each time slot used by NON-CORE labs ONLY
@@ -2170,9 +2287,19 @@ class CombinedScheduler:
             if group_name not in group_timeslot_vars:
                 continue
             
-            # Get department-specific days
+            # Get department-specific days (with semester override if available)
             dept_name = group_name.split('_S')[0] if '_S' in group_name else "Computer Science & Engineering"
-            dept_days = self._get_days_for_department(dept_name)
+            
+            # Extract semester from group name for semester-specific overrides
+            semester = None
+            if '_S' in group_name:
+                try:
+                    semester_part = group_name.split('_S')[1].split('_G')[0]
+                    semester = int(semester_part)
+                except (ValueError, IndexError):
+                    pass
+            
+            dept_days = self._get_days_for_department(dept_name, semester)
             num_dept_days = len(dept_days)
                 
             timeslot_vars = []
@@ -2198,7 +2325,7 @@ class CombinedScheduler:
                 semester_part = semester_and_group.split('_G')[0]
                 try:
                     semester = int(semester_part)
-                    day_pattern = self._get_day_pattern_for_department(dept)
+                    day_pattern = self._get_day_pattern_for_department(dept, semester)
                     semester_key = f"{dept}_S{semester}_{day_pattern}"
                     if semester_key not in semester_groups_by_pattern:
                         semester_groups_by_pattern[semester_key] = []
@@ -2212,9 +2339,18 @@ class CombinedScheduler:
                 continue
             self.logger.debug(f"Applying non-overlap constraints for {semester_key}: {len(groups)} groups")
             
-            # Get representative department for day pattern
+            # Get representative department for day pattern with semester override
             representative_dept = groups[0].split('_S')[0]
-            dept_days = self._get_days_for_department(representative_dept)
+            # Extract semester from first group for semester-specific overrides
+            semester = None
+            if '_S' in groups[0]:
+                try:
+                    semester_part = groups[0].split('_S')[1].split('_G')[0]
+                    semester = int(semester_part)
+                except (ValueError, IndexError):
+                    pass
+            
+            dept_days = self._get_days_for_department(representative_dept, semester)
             num_dept_days = len(dept_days)
             
             for day_idx in range(num_dept_days):  # Use department-specific days
@@ -2295,7 +2431,17 @@ class CombinedScheduler:
         groups_by_day_pattern = {}
         for group_name in group_timeslot_vars.keys():
             dept_name = group_name.split('_S')[0] if '_S' in group_name else "Computer Science & Engineering"
-            day_pattern = self._get_day_pattern_for_department(dept_name)
+            
+            # Extract semester for semester-specific overrides
+            semester = None
+            if '_S' in group_name:
+                try:
+                    semester_part = group_name.split('_S')[1].split('_G')[0]
+                    semester = int(semester_part)
+                except (ValueError, IndexError):
+                    pass
+            
+            day_pattern = self._get_day_pattern_for_department(dept_name, semester)
             
             if day_pattern not in groups_by_day_pattern:
                 groups_by_day_pattern[day_pattern] = []
@@ -2303,9 +2449,19 @@ class CombinedScheduler:
         
         # Apply constraints for each day pattern separately
         for day_pattern, pattern_groups in groups_by_day_pattern.items():
-            # Get representative department for this pattern
+            # Get representative department for this pattern with semester override
             representative_dept = pattern_groups[0].split('_S')[0]
-            dept_days = self._get_days_for_department(representative_dept)
+            
+            # Extract semester from first group for semester-specific overrides
+            semester = None
+            if '_S' in pattern_groups[0]:
+                try:
+                    semester_part = pattern_groups[0].split('_S')[1].split('_G')[0]
+                    semester = int(semester_part)
+                except (ValueError, IndexError):
+                    pass
+            
+            dept_days = self._get_days_for_department(representative_dept, semester)
             num_dept_days = len(dept_days)
             
             self.logger.info(f"Applying room capacity constraints for {day_pattern} pattern ({num_dept_days} days, {len(pattern_groups)} groups)")
@@ -2348,7 +2504,17 @@ class CombinedScheduler:
         for group_name, sessions_count in group_session_counts.items():
             if sessions_count > 0:
                 dept_name = group_name.split('_S')[0] if '_S' in group_name else "Computer Science & Engineering"
-                day_pattern = self._get_day_pattern_for_department(dept_name)
+                
+                # Extract semester for semester-specific overrides
+                semester = None
+                if '_S' in group_name:
+                    try:
+                        semester_part = group_name.split('_S')[1].split('_G')[0]
+                        semester = int(semester_part)
+                    except (ValueError, IndexError):
+                        pass
+                
+                day_pattern = self._get_day_pattern_for_department(dept_name, semester)
                 self.logger.info(f"  - {group_name} ({day_pattern}): {sessions_count} rooms needed when active")
         
         if total_max_sessions > len(self.theory_room_ids):
@@ -2506,27 +2672,44 @@ class CombinedScheduler:
             if not activities['lab_courses'] and not activities['theory_groups']:
                 continue
 
-            # Get department from first activity for this teacher to determine day pattern
-            dept_name = "Computer Science & Engineering"  # Default
+            # Get the maximum day range across all activities for this teacher
+            # This ensures we consider all possible scheduling days for conflict detection
+            all_dept_days = set()
             
-            # Try to get department from first course
-            if activities['lab_courses']:
-                first_course_id = activities['lab_courses'][0]
-                if hasattr(self, 'instance_group_mapping') and first_course_id in self.instance_group_mapping:
-                    dept_name = self.instance_group_mapping[first_course_id]['department']
-                else:
-                    # Fallback: look up in courses_df
-                    course_matches = self.courses_df[self.courses_df['id'] == int(first_course_id)]
-                    if not course_matches.empty:
-                        dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
-            elif activities['theory_groups']:
-                # Try to get department from first theory group
-                first_group = activities['theory_groups'][0]
-                dept_name = first_group.split('_S')[0] if '_S' in first_group else "Computer Science & Engineering"
+            # Collect days from all lab activities
+            for course_instance_id in activities['lab_courses']:
+                if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
+                    mapping = self.instance_group_mapping[course_instance_id]
+                    dept_name = mapping['department']
+                    semester = mapping.get('semester')
+                    course_days = self._get_days_for_department(dept_name, semester)
+                    all_dept_days.update(course_days)
             
-            # Get department-specific days for teacher clash constraints
-            dept_days = self._get_days_for_department(dept_name)
-            num_dept_days = len(dept_days)
+            # Collect days from all theory group activities
+            for group_name in activities['theory_groups']:
+                if '_S' in group_name:
+                    parts = group_name.split('_S')
+                    dept_name = parts[0]
+                    sem_part = parts[1].split('_G')[0] if '_G' in parts[1] else parts[1]
+                    try:
+                        semester = int(sem_part)
+                        course_days = self._get_days_for_department(dept_name, semester)
+                        all_dept_days.update(course_days)
+                    except ValueError:
+                        # Fallback to default department days
+                        course_days = self._get_days_for_department(dept_name)
+                        all_dept_days.update(course_days)
+            
+            # Use the maximum day range to ensure we check all possible conflicts
+            if all_dept_days:
+                # Sort days to maintain consistent day indexing
+                dept_days = sorted(list(all_dept_days), key=lambda d: 
+                    {'monday': 1, 'tuesday': 2, 'wed': 3, 'thur': 4, 'fri': 5, 'saturday': 6}.get(d, 999))
+                num_dept_days = len(dept_days)
+            else:
+                # Fallback to default
+                dept_days = self._get_days_for_department("Computer Science & Engineering")
+                num_dept_days = len(dept_days)
 
             # Iterate through each day and each theory time slot (the finest-grained unit)
             for day_idx in range(num_dept_days):
@@ -2537,12 +2720,36 @@ class CombinedScheduler:
 
                     # A. Find all THEORY activities for this teacher at this time
                     for group_name in activities['theory_groups']:
-                        if (group_name in group_timeslot_vars and
-                            day_idx in group_timeslot_vars[group_name] and
-                            theory_slot_idx in group_timeslot_vars[group_name][day_idx]):
-                            all_activities_at_this_time.append(
-                                group_timeslot_vars[group_name][day_idx][theory_slot_idx]
-                            )
+                        if group_name in group_timeslot_vars:
+                            # Map unified day_idx to group-specific day_idx
+                            group_day_idx = None
+                            if '_S' in group_name:
+                                parts = group_name.split('_S')
+                                group_dept_name = parts[0]
+                                sem_part = parts[1].split('_G')[0] if '_G' in parts[1] else parts[1]
+                                try:
+                                    group_semester = int(sem_part)
+                                    group_days = self._get_days_for_department(group_dept_name, group_semester)
+                                    
+                                    # Find the actual day name for the unified day_idx
+                                    if day_idx < len(dept_days):
+                                        unified_day_name = dept_days[day_idx]
+                                        
+                                        # Find the index of this day in the group's specific day pattern
+                                        if unified_day_name in group_days:
+                                            group_day_idx = group_days.index(unified_day_name)
+                                except ValueError:
+                                    # Fallback to unified day_idx if semester parsing fails
+                                    group_day_idx = day_idx
+                            else:
+                                group_day_idx = day_idx
+                            
+                            if (group_day_idx is not None and
+                                group_day_idx in group_timeslot_vars[group_name] and
+                                theory_slot_idx in group_timeslot_vars[group_name][group_day_idx]):
+                                all_activities_at_this_time.append(
+                                    group_timeslot_vars[group_name][group_day_idx][theory_slot_idx]
+                                )
                     
                     # B. Find all LAB activities for this teacher at this time
                     # Find which lab sessions overlap with the current theory_slot_idx
@@ -2552,19 +2759,38 @@ class CombinedScheduler:
                             for session_name, session_details in self.lab_sessions_details.items():
                                 if lab_time_slot_idx in session_details['slots']:
                                     overlapping_lab_sessions.add(session_name)
-                                    break
+                                    # Don't break - need to check ALL sessions for this lab time slot
                     
                     # Collect lab variables for the overlapping sessions
                     for session_name in overlapping_lab_sessions:
                         for course_instance_id in activities['lab_courses']:
                             if (teacher_id in lab_variables and
-                                course_instance_id in lab_variables.get(teacher_id, {}) and
-                                day_idx < len(lab_variables[teacher_id][course_instance_id]) and
-                                session_name in lab_variables[teacher_id][course_instance_id][day_idx]):
-                                    for room_id in self.lab_room_ids:
-                                        all_activities_at_this_time.append(
-                                        lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id]
-                                        )
+                                course_instance_id in lab_variables.get(teacher_id, {})):
+                                
+                                # Map unified day_idx to course-specific day_idx
+                                course_day_idx = None
+                                if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
+                                    mapping = self.instance_group_mapping[course_instance_id]
+                                    course_dept_name = mapping['department']
+                                    course_semester = mapping.get('semester')
+                                    course_days = self._get_days_for_department(course_dept_name, course_semester)
+                                    
+                                    # Find the actual day name for the unified day_idx
+                                    if day_idx < len(dept_days):
+                                        unified_day_name = dept_days[day_idx]
+                                        
+                                        # Find the index of this day in the course's specific day pattern
+                                        if unified_day_name in course_days:
+                                            course_day_idx = course_days.index(unified_day_name)
+                                
+                                if (course_day_idx is not None and
+                                    course_day_idx < len(lab_variables[teacher_id][course_instance_id]) and
+                                    session_name in lab_variables[teacher_id][course_instance_id][course_day_idx]):
+                                        for room_id in self.lab_room_ids:
+                                            if room_id in lab_variables[teacher_id][course_instance_id][course_day_idx][session_name]:
+                                                all_activities_at_this_time.append(
+                                                    lab_variables[teacher_id][course_instance_id][course_day_idx][session_name][room_id]
+                                                )
                             
                     # C. Add the unified constraint: sum of all activities <= 1
                     if len(all_activities_at_this_time) > 1:
@@ -2585,15 +2811,18 @@ class CombinedScheduler:
             for course_instance_id in lab_variables[teacher_id]:
                 # Get department for this course instance
                 dept_name = "Computer Science & Engineering"  # Default
+                semester = None
                 if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
-                    dept_name = self.instance_group_mapping[course_instance_id]['department']
+                    mapping = self.instance_group_mapping[course_instance_id]
+                    dept_name = mapping['department']
+                    semester = mapping.get('semester')
                 else:
                     # Fallback: look up in courses_df
                     course_matches = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
                     if not course_matches.empty:
                         dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
                 
-                dept_days = self._get_days_for_department(dept_name)
+                dept_days = self._get_days_for_department(dept_name, semester)
                 num_dept_days = len(dept_days)
                 
                 for day_idx in range(num_dept_days):
@@ -2606,9 +2835,16 @@ class CombinedScheduler:
         
         # Theory objective: maximize group timeslot allocations with time slot preference
         for group_name, day_slots in group_timeslot_vars.items():
-            # Get department for this group
+            # Get department and semester for this group
             dept_name = group_name.split('_S')[0] if '_S' in group_name else "Computer Science & Engineering"
-            dept_days = self._get_days_for_department(dept_name)
+            semester = None
+            if '_S' in group_name:
+                sem_part = group_name.split('_S')[1].split('_G')[0] if '_G' in group_name else group_name.split('_S')[1]
+                try:
+                    semester = int(sem_part)
+                except ValueError:
+                    semester = None
+            dept_days = self._get_days_for_department(dept_name, semester)
             num_dept_days = len(dept_days)
             
             for day_idx in range(num_dept_days):
@@ -2645,7 +2881,7 @@ class CombinedScheduler:
         solver.parameters.num_search_workers = 16
         solver.parameters.max_memory_in_mb = 30000
         solver.parameters.log_search_progress = True
-        # solver.parameters.stop_after_first_solution= True
+        solver.parameters.stop_after_first_solution= True
         
         self.logger.info("Solving combined scheduling model...")
         status = solver.Solve(model)
@@ -2689,8 +2925,15 @@ class CombinedScheduler:
             
             # Get department-specific days for this group
             dept_name = group_name.split('_S')[0] if '_S' in group_name else "Computer Science & Engineering"
-            dept_days = self._get_days_for_department(dept_name)
-            dept_pattern = self._get_day_pattern_for_department(dept_name)
+            semester = None
+            if '_S' in group_name:
+                sem_part = group_name.split('_S')[1].split('_G')[0] if '_G' in group_name else group_name.split('_S')[1]
+                try:
+                    semester = int(sem_part)
+                except ValueError:
+                    semester = None
+            dept_days = self._get_days_for_department(dept_name, semester)
+            dept_pattern = self._get_day_pattern_for_department(dept_name, semester)
             num_dept_days = len(dept_days)
             
             for day_idx in range(num_dept_days):  # Use department-specific days
@@ -2845,8 +3088,8 @@ class CombinedScheduler:
             sessions_skipped_no_room = 0
             sessions_successfully_scheduled = 0
             
-            # Get department-specific days for this group
-            dept_days = self._get_days_for_department(group_info['dept'])
+            # Get department-specific days for this group (with semester override if available)
+            dept_days = self._get_days_for_department(group_info['dept'], group_info['semester'])
             
             for slot_idx, assigned_sessions in slot_assignments.items():
                 if not assigned_sessions:
@@ -2872,7 +3115,6 @@ class CombinedScheduler:
                     teacher_row = teacher_matches.iloc[0]
                     
                     # IMPROVED: Find available room with cross-schedule validation
-                    dept_days = self._get_days_for_department(group_info['dept'])
                     available_room_id = self._find_available_theory_room_with_cross_validation(
                         day_idx, time_slot_idx, used_rooms_this_slot, theory_schedule, dept_days, lab_schedule
                     )
@@ -2915,7 +3157,7 @@ class CombinedScheduler:
                         'department': group_info['dept'],
                         'semester': group_info['semester'],
                         # Day pattern information
-                        'day_pattern': self._get_day_pattern_for_department(group_info['dept'])
+                        'day_pattern': self._get_day_pattern_for_department(group_info['dept'], group_info['semester'])
                     }
                     
                     # Register room usage in global registry
@@ -3111,11 +3353,12 @@ class CombinedScheduler:
         # Check if sessions are scheduled on appropriate days for their departments
         for session in lab_schedule + theory_schedule:
             dept = session.get('department', '')
+            semester = session.get('semester')
             day = session.get('day', '')
             day_pattern = session.get('day_pattern', '')
             
             if dept and day:
-                expected_days = self._get_days_for_department(dept)
+                expected_days = self._get_days_for_department(dept, semester)
                 day_normalized = self._normalize_day_name(day)
                 expected_days_normalized = [self._normalize_day_name(d) for d in expected_days]
                 
@@ -3297,17 +3540,19 @@ class CombinedScheduler:
                 if not course_details:
                     continue
                 
-                # Get department for this course instance first to determine correct number of days
+                # Get department and semester for this course instance first to determine correct number of days
                 dept_name = "Computer Science & Engineering"  # Default
+                semester = None
                 if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
                     dept_name = self.instance_group_mapping[course_instance_id]['department']
+                    semester = self.instance_group_mapping[course_instance_id].get('semester')
                 else:
                     # Fallback: look up in courses_df
                     course_matches = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
                     if not course_matches.empty:
                         dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
                 
-                dept_days = self._get_days_for_department(dept_name)
+                dept_days = self._get_days_for_department(dept_name, semester)
                 num_dept_days = len(dept_days)
                 
                 # Only iterate over days relevant to this department
@@ -3422,7 +3667,7 @@ class CombinedScheduler:
                                         'department': department,
                                         'semester': semester,
                                         # Day pattern information
-                                        'day_pattern': self._get_day_pattern_for_department(department)
+                                        'day_pattern': self._get_day_pattern_for_department(department, semester)
                                     }
                                     
                                     # Check and register room usage in global registry
@@ -3453,7 +3698,7 @@ class CombinedScheduler:
                                     
                                     # Log assignment
                                     self.logger.info(f"Lab assignment: Course {course_details['course_code']} Batch {current_batch} → "
-                                                   f"{session_name} on {self.days[day_idx]} in "
+                                                   f"{session_name} on {dept_days[day_idx]} in "
                                                    f"Lab {room_row['room_number']} ({students_per_batch} students)")
                                 else:
                                     # Single assignment, no batching
@@ -3500,7 +3745,7 @@ class CombinedScheduler:
                                         'department': department,
                                         'semester': semester,
                                         # Day pattern information
-                                        'day_pattern': self._get_day_pattern_for_department(department)
+                                        'day_pattern': self._get_day_pattern_for_department(department, semester)
                                     }
                                     
                                     # Check and register room usage in global registry
@@ -3529,7 +3774,7 @@ class CombinedScheduler:
                                     
                                     # Log assignment
                                     self.logger.info(f"Lab assignment: Course {course_code_display} → "
-                                                   f"{session_name} on {self.days[day_idx]} in "
+                                                   f"{session_name} on {dept_days[day_idx]} in "
                                                    f"Lab {room_row['room_number']} (capacity: {room_capacity})")
         
         self.logger.info(f"Extracted {len(lab_schedule)} lab sessions with proper batching")

@@ -125,10 +125,11 @@ function processRoomData() {
     console.log('Day distribution:', dayCount);
     
     allData.forEach(session => {
-        const roomKey = `${session.room_number}_${session.block}`;
+        const roomKey = `${session.room_id}`;
         
         if (!roomData[roomKey]) {
             roomData[roomKey] = {
+                room_id: session.room_id,
                 room_number: session.room_number,
                 block: session.block,
                 capacity: session.capacity || 'N/A',
@@ -262,6 +263,7 @@ function getFilteredRooms() {
     const search = document.getElementById('roomSearch').value.toLowerCase();
     if (search) {
         filtered = filtered.filter(room => 
+            room.room_id.toString().includes(search) ||
             room.room_number.toLowerCase().includes(search) ||
             room.block.toLowerCase().includes(search)
         );
@@ -285,12 +287,12 @@ function renderRooms() {
         return;
     }
     
-    // Sort rooms by block and room number
+    // Sort rooms by block and room ID
     filteredRooms.sort((a, b) => {
         if (a.block !== b.block) {
             return a.block.localeCompare(b.block);
         }
-        return a.room_number.localeCompare(b.room_number);
+        return parseInt(a.room_id) - parseInt(b.room_id);
     });
     
     let html = '<div class="room-grid">';
@@ -306,7 +308,7 @@ function renderRooms() {
                         <div>
                             <h5 class="mb-0">
                                 <i class="fas ${isLab ? 'fa-flask' : 'fa-chalkboard'} me-2"></i>
-                                ${room.room_number}
+                                Room ${room.room_id}: ${room.room_number}
                             </h5>
                             <div class="room-details">
                                 <span class="room-badge">
@@ -352,8 +354,8 @@ function calculateRoomUtilization(room) {
 // Generate schedule table for a room
 function generateRoomScheduleTable(room) {
     // Debug: Log which days are being rendered for each room
-    if (room.room_number === 'A102') { // Just log for one room to avoid spam
-        console.log('Rendering table for room A102 with days:', days);
+    if (room.room_id === '113') { // Just log for room 113 to avoid spam
+        console.log('Rendering table for room 113 (B First Floor) with days:', days);
         console.log('Room schedule has days:', Object.keys(room.schedule));
     }
     
