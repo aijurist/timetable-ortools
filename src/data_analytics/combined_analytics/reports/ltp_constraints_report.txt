@@ -1,9 +1,115 @@
 LTP CONSTRAINT VERIFICATION REPORT
 ==================================================
 
-Total Courses: 482
-Compliant Courses: 481
-Compliance Rate: 99.8%
+Total Courses: 751
+Compliant Courses: 675
+Compliance Rate: 89.9%
 
 VIOLATIONS:
-- Course MT19712 (ID: 475): Practical shortage - need 3, got 2
+- Course AD19751 (ID: 1868): Lecture shortage - need 3, got 0
+- Course CS23331 (ID: 1080): Lecture shortage - need 3, got 0
+- Course CS23331 (ID: 1080): Practical shortage - need 2, got 0
+- Course CS23332 (ID: 1869): Lecture shortage - need 3, got 0
+- Course CS23332 (ID: 1869): Practical shortage - need 4, got 0
+- Course CS23333 (ID: 966): Lecture shortage - need 3, got 0
+- Course CS23333 (ID: 966): Practical shortage - need 4, got 0
+- Course CS23532 (ID: 1041): Lecture shortage - need 3, got 0
+- Course CS23532 (ID: 1041): Practical shortage - need 4, got 0
+- Course CS23532 (ID: 1149): Lecture shortage - need 3, got 0
+- Course CS23532 (ID: 1149): Practical shortage - need 4, got 0
+- Course IT23A11 (ID: 1117): Lecture shortage - need 3, got 0
+- Course IT23A11 (ID: 1183): Lecture shortage - need 3, got 0
+- Course AI23A37 (ID: 506): Lecture shortage - need 2, got 0
+- Course AI23A37 (ID: 506): Practical shortage - need 2, got 0
+- Course AI23A37 (ID: 1312): Lecture shortage - need 2, got 0
+- Course AI23A37 (ID: 1312): Practical shortage - need 2, got 0
+- Course MA23313 (ID: 1228): Lecture shortage - need 3, got 0
+- Course MA23313 (ID: 1228): Tutorial shortage - need 1, got 0
+- Course AI23A35 (ID: 974): Lecture shortage - need 2, got 0
+- Course AI23A35 (ID: 974): Practical shortage - need 2, got 0
+- Course CB23331 (ID: 1293): Lecture shortage - need 3, got 0
+- Course CB23331 (ID: 1293): Practical shortage - need 2, got 0
+- Course IT19P78 (ID: 783): Lecture shortage - need 3, got 0
+- Course IT19P78 (ID: 785): Lecture shortage - need 3, got 0
+- Course IT23511 (ID: 802): Lecture shortage - need 3, got 0
+- Course IT23511 (ID: 803): Lecture shortage - need 3, got 0
+- Course IT23511 (ID: 804): Lecture shortage - need 3, got 0
+- Course Professional Elective-II (ID: 798): Lecture shortage - need 3, got 0
+- Course CS23332 (ID: 813): Lecture shortage - need 3, got 0
+- Course CS23332 (ID: 813): Practical shortage - need 4, got 0
+- Course CS23332 (ID: 814): Lecture shortage - need 3, got 0
+- Course CS23332 (ID: 814): Practical shortage - need 4, got 0
+- Course CS23332 (ID: 815): Lecture shortage - need 3, got 0
+- Course CS23332 (ID: 815): Practical shortage - need 4, got 0
+- Course CS23332 (ID: 816): Lecture shortage - need 3, got 0
+- Course CS23332 (ID: 816): Practical shortage - need 4, got 0
+- Course IT23331 (ID: 937): Lecture shortage - need 3, got 0
+- Course IT23331 (ID: 937): Practical shortage - need 2, got 0
+- Course IT23331 (ID: 938): Lecture shortage - need 3, got 0
+- Course IT23331 (ID: 938): Practical shortage - need 2, got 0
+- Course AI23231 (ID: 996): Lecture shortage - need 3, got 0
+- Course AI23231 (ID: 996): Practical shortage - need 2, got 0
+- Course AI23231 (ID: 998): Lecture shortage - need 3, got 0
+- Course AI23231 (ID: 998): Practical shortage - need 2, got 0
+- Course AI23231 (ID: 999): Lecture shortage - need 3, got 0
+- Course AI23231 (ID: 999): Practical shortage - need 2, got 0
+- Course CS19P18 (ID: 1908): Lecture shortage - need 2, got 0
+- Course CS19P18 (ID: 1908): Practical shortage - need 2, got 0
+- Course CS19P18 (ID: 1909): Lecture shortage - need 2, got 0
+- Course CS19P18 (ID: 1909): Practical shortage - need 2, got 0
+- Course CS19P18 (ID: 1910): Lecture shortage - need 2, got 0
+- Course CS19P18 (ID: 1910): Practical shortage - need 2, got 0
+- Course CS19P18 (ID: 1911): Lecture shortage - need 2, got 0
+- Course CS19P18 (ID: 1911): Practical shortage - need 2, got 0
+- Course CS19P18 (ID: 1912): Lecture shortage - need 2, got 0
+- Course CS19P18 (ID: 1912): Practical shortage - need 2, got 0
+- Course CS19P14 (ID: 1906): Lecture shortage - need 2, got 0
+- Course CS19P14 (ID: 1906): Practical shortage - need 6, got 0
+- Course CS19P14 (ID: 1907): Lecture shortage - need 2, got 0
+- Course CS19P14 (ID: 1907): Practical shortage - need 6, got 0
+- Course CS19P14 (ID: 876): Lecture shortage - need 2, got 0
+- Course CS19P14 (ID: 876): Practical shortage - need 6, got 0
+- Course CS19P14 (ID: 877): Lecture shortage - need 2, got 0
+- Course CS19P14 (ID: 877): Practical shortage - need 6, got 0
+- Course CS19P14 (ID: 1913): Lecture shortage - need 2, got 0
+- Course CS19P14 (ID: 1913): Practical shortage - need 6, got 0
+- Course EE23321 (ID: 645): Practical shortage - need 2, got 0
+- Course EE23321 (ID: 646): Practical shortage - need 2, got 0
+- Course EE23521 (ID: 628): Practical shortage - need 2, got 0
+- Course EE23521 (ID: 629): Practical shortage - need 2, got 0
+- Course GE23627 (ID: 640): Practical shortage - need 4, got 0
+- Course GE23627 (ID: 641): Practical shortage - need 4, got 0
+- Course EE19P73 (ID: 760): Lecture shortage - need 3, got 0
+- Course ET23311 (ID: 653): Lecture shortage - need 3, got 0
+- Course ET23D11 (ID: 649): Lecture shortage - need 3, got 0
+- Course EE23B21 (ID: 1143): Practical shortage - need 6, got 0
+- Course ET23322 (ID: 663): Practical shortage - need 4, got 0
+- Course FT23512 (ID: 438): Practical shortage - need 4, got 0
+- Course FT23303 (ID: 990): Lecture shortage - need 3, got 0
+- Course ME19B18 (ID: 708): Lecture shortage - need 3, got 0
+- Course ME19B18 (ID: 711): Lecture shortage - need 3, got 0
+- Course ME19D17 (ID: 712): Lecture shortage - need 3, got 0
+- Course CH19713 (ID: 857): Practical shortage - need 3, got 2
+- Course BM23C11 (ID: 1184): Lecture shortage - need 3, got 0
+- Course BT19P71 (ID: 1179): Lecture shortage - need 3, got 0
+- Course BT19P71 (ID: 1246): Lecture shortage - need 3, got 0
+- Course BT19P74 (ID: 201): Lecture shortage - need 3, got 0
+- Course BT19P74 (ID: 529): Lecture shortage - need 3, got 0
+- Course BT19P76 (ID: 185): Lecture shortage - need 3, got 0
+- Course BT19P76 (ID: 544): Lecture shortage - need 3, got 0
+- Course EC23321 (ID: 588): Practical shortage - need 4, got 0
+- Course EC19P74 (ID: 143): Lecture shortage - need 3, got 0
+- Course EC19P74 (ID: 144): Lecture shortage - need 3, got 0
+- Course EC19P76 (ID: 145): Lecture shortage - need 3, got 0
+- Course EC19P76 (ID: 146): Lecture shortage - need 3, got 0
+- Course EC23A11 (ID: 127): Lecture shortage - need 3, got 0
+- Course EC23A11 (ID: 128): Lecture shortage - need 3, got 0
+- Course EC23E11 (ID: 129): Lecture shortage - need 3, got 0
+- Course EC23E11 (ID: 130): Lecture shortage - need 3, got 0
+- Course MA23312 (ID: 1207): Lecture shortage - need 3, got 0
+- Course MA23312 (ID: 1207): Tutorial shortage - need 1, got 0
+- Course CE23321 (ID: 264): Practical shortage - need 4, got 0
+- Course CE23521 (ID: 330): Practical shortage - need 4, got 0
+- Course CE23531 (ID: 333): Lecture shortage - need 3, got 0
+- Course CE23531 (ID: 333): Practical shortage - need 2, got 0
+- Course CS23422 (ID: 340): Practical shortage - need 4, got 0
