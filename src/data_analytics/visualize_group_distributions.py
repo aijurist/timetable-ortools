@@ -15,8 +15,16 @@ from matplotlib.patches import Patch
 import glob
 from collections import defaultdict
 
-# Constants for visualization - updated to match original schedulers (EXACTLY)
-DAYS = ["tuesday", "wed", "thur", "fri", "sat"]  # Excluding Monday - EXACTLY as in original
+# Constants for visualization - supports multiple day patterns
+DAY_PATTERNS = {
+    'Monday-Friday': ["monday", "tuesday", "wed", "thur", "fri"],
+    'Tuesday-Saturday': ["tuesday", "wed", "thur", "fri", "saturday"],
+    'Monday-Saturday': ["monday", "tuesday", "wed", "thur", "fri", "saturday"]
+}
+
+# Default day pattern (maintained for backward compatibility)
+DAYS = ["tuesday", "wed", "thur", "fri", "saturday"]  # Default to Tuesday-Saturday
+
 THEORY_SLOTS = [
     "8:00 - 8:50", "9:00 - 9:50", "10:00 - 10:50", "11:00 - 11:50",
     "12:00 - 12:50", "1:00 - 1:50", "2:00 - 2:50", "3:00 - 3:50", 
@@ -115,9 +123,41 @@ def load_schedule_data(file_path):
         print(f"Error loading schedule data from {file_path}: {e}")
         return None
 
+def get_day_pattern_from_schedule(schedule_data):
+    """Determine the day pattern from schedule data."""
+    if not schedule_data:
+        return 'Tuesday-Saturday'  # Default fallback
+    
+    # Check if day_pattern is explicitly provided in the data
+    for session in schedule_data:
+        day_pattern = session.get('day_pattern')
+        if day_pattern and day_pattern in DAY_PATTERNS:
+            return day_pattern
+    
+    # Infer from the days actually used in the schedule
+    days_used = set()
+    for session in schedule_data:
+        day = session.get('day', '').lower()
+        if day:
+            days_used.add(day)
+    
+    # Match against known patterns
+    for pattern_name, pattern_days in DAY_PATTERNS.items():
+        if days_used.issubset(set(pattern_days)):
+            return pattern_name
+    
+    # Fallback based on which days are present
+    if 'monday' in days_used and 'saturday' in days_used:
+        return 'Monday-Saturday'
+    elif 'monday' in days_used and 'saturday' not in days_used:
+        return 'Monday-Friday'
+    else:
+        return 'Tuesday-Saturday'
+
 def group_sessions_by_dept_semester(schedule_data, is_theory=True):
-    """Group sessions by department and semester."""
+    """Group sessions by department and semester, including day pattern information."""
     dept_sem_groups = defaultdict(lambda: defaultdict(list))
+    dept_sem_patterns = {}
     
     for session in schedule_data:
         dept = session.get('department', 'Unknown')
@@ -127,14 +167,35 @@ def group_sessions_by_dept_semester(schedule_data, is_theory=True):
         # Create unique key for the group
         group_key = f"{dept}_S{semester}_G{group_index}"
         
+        # Track day pattern for this dept/semester
+        dept_sem_key = (dept, semester)
+        if dept_sem_key not in dept_sem_patterns:
+            # Try to get pattern from the session
+            day_pattern = session.get('day_pattern')
+            if day_pattern and day_pattern in DAY_PATTERNS:
+                dept_sem_patterns[dept_sem_key] = day_pattern
+            else:
+                dept_sem_patterns[dept_sem_key] = None  # Will be inferred later
+        
         # Add to the appropriate dept/semester collection
-        dept_sem_groups[(dept, semester)][group_key].append(session)
+        dept_sem_groups[dept_sem_key][group_key].append(session)
     
-    return dept_sem_groups
+    # Infer missing day patterns
+    for dept_sem_key in dept_sem_patterns:
+        if dept_sem_patterns[dept_sem_key] is None:
+            # Get all sessions for this dept/semester
+            all_sessions = []
+            for group_sessions in dept_sem_groups[dept_sem_key].values():
+                all_sessions.extend(group_sessions)
+            dept_sem_patterns[dept_sem_key] = get_day_pattern_from_schedule(all_sessions)
+    
+    return dept_sem_groups, dept_sem_patterns
 
-def create_group_timetable_matrix(groups, is_theory=True):
+def create_group_timetable_matrix(groups, day_pattern='Tuesday-Saturday', is_theory=True):
     """Create a matrix showing which groups are scheduled in each time slot."""
-    num_days = len(DAYS)
+    # Get the appropriate days for this pattern
+    pattern_days = DAY_PATTERNS.get(day_pattern, DAYS)
+    num_days = len(pattern_days)
     num_slots = len(THEORY_SLOTS) if is_theory else len(LAB_SLOTS)
     
     # Initialize matrix: [days, slots, group_present]
@@ -143,28 +204,28 @@ def create_group_timetable_matrix(groups, is_theory=True):
     
     for group_key, sessions in groups.items():
         for session in sessions:
-            day = session.get('day', '')
+            day = session.get('day', '').lower()
             
             if is_theory:
                 # For theory, use the time_slot field
                 time_slot = session.get('time_slot', '')
-                if day in DAYS and time_slot in THEORY_SLOTS:
-                    day_idx = DAYS.index(day)
+                if day in pattern_days and time_slot in THEORY_SLOTS:
+                    day_idx = pattern_days.index(day)
                     slot_idx = THEORY_SLOTS.index(time_slot)
                     timetable[day_idx][slot_idx].add(group_key)
             else:
                 # For lab, use the session_name field (L1, L2, etc.)
                 session_name = session.get('session_name', '')
-                if day in DAYS and session_name in LAB_SLOTS:
-                    day_idx = DAYS.index(day)
+                if day in pattern_days and session_name in LAB_SLOTS:
+                    day_idx = pattern_days.index(day)
                     slot_idx = LAB_SLOTS.index(session_name)
                     timetable[day_idx][slot_idx].add(group_key)
     
-    return timetable
+    return timetable, pattern_days
 
-def visualize_group_timetable(timetable, groups, title, filename, is_theory=True):
+def visualize_group_timetable(timetable, groups, title, filename, pattern_days, is_theory=True):
     """Create a visualization of the group timetable."""
-    num_days = len(DAYS)
+    num_days = len(pattern_days)
     num_slots = len(THEORY_SLOTS) if is_theory else len(LAB_SLOTS)
     
     # Create a new figure
@@ -180,7 +241,7 @@ def visualize_group_timetable(timetable, groups, title, filename, is_theory=True
     
     # Track occupancy stats
     group_slot_counts = {group: 0 for group in group_keys}
-    day_counts = {day: 0 for day in DAYS}
+    day_counts = {day: 0 for day in pattern_days}
     slot_counts = {slot_idx: 0 for slot_idx in range(num_slots)}
     total_sessions = 0
     
@@ -192,7 +253,7 @@ def visualize_group_timetable(timetable, groups, title, filename, is_theory=True
             if present_groups:
                 # Count occupancy
                 total_sessions += len(present_groups)
-                day_counts[DAYS[day_idx]] += len(present_groups)
+                day_counts[pattern_days[day_idx]] += len(present_groups)
                 slot_counts[slot_idx] += len(present_groups)
                 for group in present_groups:
                     group_slot_counts[group] += 1
@@ -232,7 +293,7 @@ def visualize_group_timetable(timetable, groups, title, filename, is_theory=True
     
     # Set x-axis labels (days)
     ax1.set_xticks(range(num_days))
-    ax1.set_xticklabels([day.capitalize() for day in DAYS], rotation=0)
+    ax1.set_xticklabels([day.capitalize() for day in pattern_days], rotation=0)
     
     # Set y-axis labels (time slots)
     if is_theory:
@@ -267,8 +328,8 @@ def visualize_group_timetable(timetable, groups, title, filename, is_theory=True
     ax2 = plt.subplot(gs[1])
     
     # Day utilization
-    day_labels = [day.capitalize() for day in DAYS]
-    ax2.bar(day_labels, [day_counts[day] for day in DAYS], color='skyblue')
+    day_labels = [day.capitalize() for day in pattern_days]
+    ax2.bar(day_labels, [day_counts[day] for day in pattern_days], color='skyblue')
     ax2.set_title("Sessions per Day", fontsize=12)
     ax2.set_ylim(0, max(day_counts.values()) + 1)
     
@@ -324,44 +385,52 @@ def generate_group_distribution_visualizations():
         theory_data = load_schedule_data(theory_file)
         if theory_data:
             # Group by department and semester
-            theory_groups = group_sessions_by_dept_semester(theory_data, is_theory=True)
+            theory_groups, theory_patterns = group_sessions_by_dept_semester(theory_data, is_theory=True)
             
             # Generate visualizations for each department and semester
             for (dept, semester), groups in theory_groups.items():
                 if not groups:
                     continue
                 
+                # Get day pattern for this department/semester
+                day_pattern = theory_patterns.get((dept, semester), 'Tuesday-Saturday')
+                
                 # Create timetable matrix
-                timetable = create_group_timetable_matrix(groups, is_theory=True)
+                timetable, pattern_days = create_group_timetable_matrix(groups, day_pattern, is_theory=True)
                 
                 # Generate title and filename
-                title = f"Theory Group Distribution - {dept} Semester {semester}"
-                filename = os.path.join(output_dir, f"theory_groups_{dept}_S{semester}.png")
+                title = f"Theory Group Distribution - {dept} Semester {semester} ({day_pattern})"
+                safe_dept = dept.replace(' ', '_').replace('&', 'and')
+                filename = os.path.join(output_dir, f"theory_groups_{safe_dept}_S{semester}.png")
                 
                 # Create visualization
-                visualize_group_timetable(timetable, groups, title, filename, is_theory=True)
+                visualize_group_timetable(timetable, groups, title, filename, pattern_days, is_theory=True)
     
     # Process lab schedule
     if lab_file:
         lab_data = load_schedule_data(lab_file)
         if lab_data:
             # Group by department and semester
-            lab_groups = group_sessions_by_dept_semester(lab_data, is_theory=False)
+            lab_groups, lab_patterns = group_sessions_by_dept_semester(lab_data, is_theory=False)
             
             # Generate visualizations for each department and semester
             for (dept, semester), groups in lab_groups.items():
                 if not groups:
                     continue
                 
+                # Get day pattern for this department/semester
+                day_pattern = lab_patterns.get((dept, semester), 'Tuesday-Saturday')
+                
                 # Create timetable matrix
-                timetable = create_group_timetable_matrix(groups, is_theory=False)
+                timetable, pattern_days = create_group_timetable_matrix(groups, day_pattern, is_theory=False)
                 
                 # Generate title and filename
-                title = f"Lab Group Distribution - {dept} Semester {semester}"
-                filename = os.path.join(output_dir, f"lab_groups_{dept}_S{semester}.png")
+                title = f"Lab Group Distribution - {dept} Semester {semester} ({day_pattern})"
+                safe_dept = dept.replace(' ', '_').replace('&', 'and')
+                filename = os.path.join(output_dir, f"lab_groups_{safe_dept}_S{semester}.png")
                 
                 # Create visualization
-                visualize_group_timetable(timetable, groups, title, filename, is_theory=False)
+                visualize_group_timetable(timetable, groups, title, filename, pattern_days, is_theory=False)
     
     # Generate combined visualization for each department and semester
     if theory_file and lab_file:
@@ -369,8 +438,8 @@ def generate_group_distribution_visualizations():
         lab_data = load_schedule_data(lab_file)
         
         if theory_data and lab_data:
-            theory_groups = group_sessions_by_dept_semester(theory_data, is_theory=True)
-            lab_groups = group_sessions_by_dept_semester(lab_data, is_theory=False)
+            theory_groups, theory_patterns = group_sessions_by_dept_semester(theory_data, is_theory=True)
+            lab_groups, lab_patterns = group_sessions_by_dept_semester(lab_data, is_theory=False)
             
             # Find common department/semesters
             common_dept_sems = set(theory_groups.keys()) & set(lab_groups.keys())
@@ -378,14 +447,17 @@ def generate_group_distribution_visualizations():
             for dept_sem in common_dept_sems:
                 dept, semester = dept_sem
                 
+                # Get day pattern (use theory pattern, fallback to lab pattern)
+                day_pattern = theory_patterns.get(dept_sem) or lab_patterns.get(dept_sem, 'Tuesday-Saturday')
+                
                 # Create combined visualization
                 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(15, 18))  # Increased height
                 
                 # Theory timetable
-                theory_timetable = create_group_timetable_matrix(theory_groups[dept_sem], is_theory=True)
+                theory_timetable, theory_pattern_days = create_group_timetable_matrix(theory_groups[dept_sem], day_pattern, is_theory=True)
                 
                 # Lab timetable
-                lab_timetable = create_group_timetable_matrix(lab_groups[dept_sem], is_theory=False)
+                lab_timetable, lab_pattern_days = create_group_timetable_matrix(lab_groups[dept_sem], day_pattern, is_theory=False)
                 
                 # Generate group colors
                 all_groups = set(theory_groups[dept_sem].keys()) | set(lab_groups[dept_sem].keys())
@@ -393,30 +465,30 @@ def generate_group_distribution_visualizations():
                 colors = generate_colors(len(all_groups))
                 group_colors = {group: colors[i % len(colors)] for i, group in enumerate(all_groups)}
                 
-                # Track statistics
+                # Track statistics  
                 theory_stats = {
                     'total_sessions': 0,
-                    'day_counts': {day: 0 for day in DAYS},
+                    'day_counts': {day: 0 for day in theory_pattern_days},
                     'slot_counts': {slot_idx: 0 for slot_idx in range(len(THEORY_SLOTS))},
                     'group_counts': {group: 0 for group in theory_groups[dept_sem].keys()}
                 }
                 
                 lab_stats = {
                     'total_sessions': 0,
-                    'day_counts': {day: 0 for day in DAYS},
+                    'day_counts': {day: 0 for day in lab_pattern_days},
                     'slot_counts': {slot_idx: 0 for slot_idx in range(len(LAB_SLOTS))},
                     'group_counts': {group: 0 for group in lab_groups[dept_sem].keys()}
                 }
                 
                 # Create theory visualization
-                viz_theory_matrix = np.zeros((len(THEORY_SLOTS), len(DAYS), 4))  # RGBA values
-                for day_idx in range(len(DAYS)):
+                viz_theory_matrix = np.zeros((len(THEORY_SLOTS), len(theory_pattern_days), 4))  # RGBA values
+                for day_idx in range(len(theory_pattern_days)):
                     for slot_idx in range(len(THEORY_SLOTS)):
                         present_groups = theory_timetable[day_idx][slot_idx]
                         if present_groups:
                             # Count stats
                             theory_stats['total_sessions'] += len(present_groups)
-                            theory_stats['day_counts'][DAYS[day_idx]] += len(present_groups)
+                            theory_stats['day_counts'][theory_pattern_days[day_idx]] += len(present_groups)
                             theory_stats['slot_counts'][slot_idx] += len(present_groups)
                             for group in present_groups:
                                 theory_stats['group_counts'][group] += 1
@@ -429,14 +501,14 @@ def generate_group_distribution_visualizations():
                             viz_theory_matrix[slot_idx, day_idx] = color
                 
                 # Create lab visualization
-                viz_lab_matrix = np.zeros((len(LAB_SLOTS), len(DAYS), 4))  # RGBA values
-                for day_idx in range(len(DAYS)):
+                viz_lab_matrix = np.zeros((len(LAB_SLOTS), len(lab_pattern_days), 4))  # RGBA values
+                for day_idx in range(len(lab_pattern_days)):
                     for slot_idx in range(len(LAB_SLOTS)):
                         present_groups = lab_timetable[day_idx][slot_idx]
                         if present_groups:
                             # Count stats
                             lab_stats['total_sessions'] += len(present_groups)
-                            lab_stats['day_counts'][DAYS[day_idx]] += len(present_groups)
+                            lab_stats['day_counts'][lab_pattern_days[day_idx]] += len(present_groups)
                             lab_stats['slot_counts'][slot_idx] += len(present_groups)
                             for group in present_groups:
                                 lab_stats['group_counts'][group] += 1
@@ -450,17 +522,17 @@ def generate_group_distribution_visualizations():
                 
                 # Plot theory matrix
                 ax1.imshow(viz_theory_matrix, aspect='auto')
-                ax1.set_title(f"Theory Group Distribution - {dept} Semester {semester}", fontsize=14)
+                ax1.set_title(f"Theory Group Distribution - {dept} Semester {semester} ({day_pattern})", fontsize=14)
                 ax1.set_xlabel("Day", fontsize=12)
                 ax1.set_ylabel("Time Slot", fontsize=12)
-                ax1.set_xticks(range(len(DAYS)))
-                ax1.set_xticklabels([day.capitalize() for day in DAYS], rotation=0)
+                ax1.set_xticks(range(len(theory_pattern_days)))
+                ax1.set_xticklabels([day.capitalize() for day in theory_pattern_days], rotation=0)
                 ax1.set_yticks(range(len(THEORY_SLOTS)))
                 ax1.set_yticklabels(THEORY_SLOTS)
                 ax1.grid(True, color='gray', linestyle='-', linewidth=0.5, alpha=0.3)
                 
                 # Add annotations to theory matrix
-                for day_idx in range(len(DAYS)):
+                for day_idx in range(len(theory_pattern_days)):
                     for slot_idx in range(len(THEORY_SLOTS)):
                         present_groups = theory_timetable[day_idx][slot_idx]
                         if len(present_groups) > 0:
@@ -470,17 +542,17 @@ def generate_group_distribution_visualizations():
                 
                 # Plot lab matrix
                 ax2.imshow(viz_lab_matrix, aspect='auto')
-                ax2.set_title(f"Lab Group Distribution - {dept} Semester {semester}", fontsize=14)
+                ax2.set_title(f"Lab Group Distribution - {dept} Semester {semester} ({day_pattern})", fontsize=14)
                 ax2.set_xlabel("Day", fontsize=12)
                 ax2.set_ylabel("Lab Session", fontsize=12)
-                ax2.set_xticks(range(len(DAYS)))
-                ax2.set_xticklabels([day.capitalize() for day in DAYS], rotation=0)
+                ax2.set_xticks(range(len(lab_pattern_days)))
+                ax2.set_xticklabels([day.capitalize() for day in lab_pattern_days], rotation=0)
                 ax2.set_yticks(range(len(LAB_SLOTS)))
                 ax2.set_yticklabels([f"{slot} ({LAB_SESSIONS[slot]['time_range']})" for slot in LAB_SLOTS])
                 ax2.grid(True, color='gray', linestyle='-', linewidth=0.5, alpha=0.3)
                 
                 # Add annotations to lab matrix
-                for day_idx in range(len(DAYS)):
+                for day_idx in range(len(lab_pattern_days)):
                     for slot_idx in range(len(LAB_SLOTS)):
                         present_groups = lab_timetable[day_idx][slot_idx]
                         if len(present_groups) > 0:
@@ -502,7 +574,7 @@ def generate_group_distribution_visualizations():
                 ax_text.axis('off')
                 
                 # Create summary text
-                summary_text = f"COMBINED SUMMARY - {dept} SEMESTER {semester}\n\n"
+                summary_text = f"COMBINED SUMMARY - {dept} SEMESTER {semester} ({day_pattern})\n\n"
                 summary_text += f"Total Groups: {len(all_groups)}\n"
                 summary_text += f"Theory Groups: {len(theory_groups[dept_sem])}, Lab Groups: {len(lab_groups[dept_sem])}\n"
                 summary_text += f"Theory Sessions: {theory_stats['total_sessions']}, Lab Sessions: {lab_stats['total_sessions']}\n\n"
@@ -536,7 +608,8 @@ def generate_group_distribution_visualizations():
                 plt.tight_layout(rect=[0, 0.15, 1, 1])  # Leave space for the text at the bottom
                 
                 # Save the figure
-                filename = os.path.join(output_dir, f"combined_groups_{dept}_S{semester}.png")
+                safe_dept = dept.replace(' ', '_').replace('&', 'and')
+                filename = os.path.join(output_dir, f"combined_groups_{safe_dept}_S{semester}.png")
                 plt.savefig(filename, dpi=150, bbox_inches='tight')
                 print(f"Saved combined visualization to {filename}")
                 plt.close()
