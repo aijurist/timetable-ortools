@@ -16,6 +16,7 @@ from itertools import combinations
 from ortools.sat.python import cp_model
 import matplotlib.pyplot as plt
 import seaborn as sns
+from .course_group_optimizer import CourseGroupOptimizer
 
 class CombinedScheduler:
     """
@@ -802,24 +803,26 @@ class CombinedScheduler:
         self.logger.info(f"  Total theory sessions needed: {total_theory_sessions}")
     
     def create_course_groups(self):
-        """Create unified course groups for both lab and theory using Hall's theorem distribution."""
-        self.logger.info("Creating unified course groups for combined scheduling...")
+        """Create unified course groups for both lab and theory using OR-Tools optimized distribution."""
+        self.logger.info("Creating unified course groups using OR-Tools optimization...")
         
-        # Use the same group creation logic as the individual schedulers
-        # This ensures consistency and optimal student choice
+        # Use the new OR-Tools based group creation logic
+        # This ensures optimal constraint satisfaction and student choice
         self.course_groups = self._create_course_groups_by_dept_semester()
         
         # Create instance-group mapping for both lab and theory
         self.instance_group_mapping = {}
         self._create_instance_group_mapping()
         
-        self.logger.info("Unified course grouping completed successfully")
+        # Filter lab requirements to only include instances present in groups
+        self._filter_lab_requirements_by_groups()
+        
+        self.logger.info("OR-Tools unified course grouping completed successfully")
         self.logger.info("[OK] UNIFIED CONSTRAINTS: Both lab and theory respect same group structure")
-        self.logger.info("[OK] HALL'S THEOREM COMPLIANCE: Optimized for maximum student choice")
+        self.logger.info("[OK] OR-TOOLS OPTIMIZATION: Maximized student choice with constraint satisfaction")
     
     def _create_course_groups_by_dept_semester(self):
-        """Group course instances by department and semester with Hall's theorem optimization (unified for lab and theory)."""
-        # This uses the SAME logic as both individual schedulers to ensure consistency
+        """Group course instances by department and semester using OR-Tools optimization (unified for lab and theory)."""
         # Collect ALL course instances by department and semester (theory + lab)
         dept_sem_courses = defaultdict(list)
         total_instances = 0
@@ -832,7 +835,7 @@ class CombinedScheduler:
             
             instance_with_teacher = {
                 'id': course_instance_id,
-                'teacher_id': teacher_id,
+                'teacher_id': str(teacher_id),
                 'course_id': row['course_id'],
                 'course_code': row['course_code'],
                 'course_name': row['course_name'],
@@ -847,7 +850,7 @@ class CombinedScheduler:
                 'has_lab': int(row.get('practical_hours', 0)) > 0,
                 'has_theory': int(row.get('lecture_hours', 0)) > 0 or int(row.get('tutorial_hours', 0)) > 0,
                 'has_assistant': row['is_assistant'] == 1,
-                'assistant_teacher_id': row.get('assist_teacher_id'),
+                'assistant_teacher_id': str(row.get('assist_teacher_id')),
                 'assistant_staff_code': row.get('assist_staff_code'),
                 'assistant_teacher_name': f"{row.get('assist_first_name', '')} {row.get('assist_last_name', '')}".strip()
             }
@@ -868,465 +871,61 @@ class CombinedScheduler:
             theory_instances = [i for i in instances if i['has_theory']]
             self.logger.info(f"Dept: {dept}, Semester: {semester}: {len(instances)} instances ({len(lab_instances)} lab, {len(theory_instances)} theory)")
         
-        # Create groups for each department and semester
+        # Create groups for each department and semester using OR-Tools optimization
         course_groups = {}
         for (dept, semester), courses in dept_sem_courses.items():
             if courses:  # Skip if there are no courses
-                # Analyze teacher distribution challenges before grouping
-                self._analyze_teacher_distribution_challenges(courses, dept, semester)
-                
-                course_groups[(dept, semester)] = self._distribute_course_instances(courses, dept, semester)
+                course_groups[(dept, semester)] = self._distribute_course_instances_optimized(courses, dept, semester)
         
         return course_groups
     
-    def _analyze_teacher_distribution_challenges(self, courses, dept, semester):
-        """Analyze potential challenges in teacher distribution for Hall's theorem compliance."""
-        self.logger.info(f"Analyzing teacher distribution challenges for {dept} Semester {semester}...")
+    def _distribute_course_instances_optimized(self, courses, dept, semester):
+        """Distribute course instances across groups using OR-Tools CourseGroupOptimizer."""
+        self.logger.info(f"Using OR-Tools optimization for {dept} Semester {semester}...")
         
-        # Count courses per teacher
-        teacher_course_count = {}
-        teacher_instances = {}
-        total_instances = len(courses)
-        
-        for instance in courses:
-            # Main teacher
-            teacher_id = instance['teacher_id']
-            if teacher_id not in teacher_course_count:
-                teacher_course_count[teacher_id] = 0
-                teacher_instances[teacher_id] = []
-            teacher_course_count[teacher_id] += 1
-            teacher_instances[teacher_id].append(instance)
-
-            # Assistant teacher
-            if instance.get('has_assistant') and pd.notna(instance.get('assistant_teacher_id')):
-                assistant_id = instance.get('assistant_teacher_id')
-                if assistant_id not in teacher_course_count:
-                    teacher_course_count[assistant_id] = 0
-                    teacher_instances[assistant_id] = []
-                teacher_course_count[assistant_id] += 1
-                teacher_instances[assistant_id].append(instance)
-        
-        # Identify potential conflicts
-        unique_teachers = len(teacher_course_count)
-        unique_courses = len(set(inst['course_code'] for inst in courses))
-        max_courses_per_teacher = max(teacher_course_count.values()) if teacher_course_count else 0
-        
-        # Calculate optimal number of groups
-        optimal_groups = unique_courses  # One group per unique course for maximum choice
-        
-        # Identify high-load teachers (multiple courses)
-        high_load_teachers = [(t, count) for t, count in teacher_course_count.items() if count > 1]
-        
-        self.logger.info(f"Teacher distribution analysis:")
-        self.logger.info(f"  Total instances: {total_instances}")
-        self.logger.info(f"  Unique teachers: {unique_teachers}")
-        self.logger.info(f"  Unique courses: {unique_courses}")
-        self.logger.info(f"  Optimal groups: {optimal_groups}")
-        self.logger.info(f"  Max courses per teacher: {max_courses_per_teacher}")
-        self.logger.info(f"  High-load teachers: {len(high_load_teachers)}")
-        
-        if high_load_teachers:
-            self.logger.info("  Teachers with multiple courses:")
-            for teacher_id, course_count in sorted(high_load_teachers, key=lambda x: x[1], reverse=True):
-                course_codes = [inst['course_code'] for inst in teacher_instances[teacher_id]]
-                self.logger.info(f"    Teacher {teacher_id}: {course_count} courses ({', '.join(set(course_codes))})")
-        
-        # Check if distribution is theoretically possible
-        if unique_teachers < optimal_groups:
-            self.logger.warning(f"[WARNING] Challenge: Only {unique_teachers} teachers for {optimal_groups} optimal groups")
-            self.logger.warning(f"[WARNING] Some groups will need to share teachers across different group instances")
-        
-        # Estimate minimum groups needed to satisfy teacher uniqueness
-        if max_courses_per_teacher > optimal_groups:
-            min_groups_needed = max_courses_per_teacher
-            self.logger.warning(f"[WARNING] Teacher uniqueness requires at least {min_groups_needed} groups")
-            self.logger.warning(f"[WARNING] This exceeds optimal groups ({optimal_groups}) - some compromise may be needed")
-        
-        return {
-            'total_instances': total_instances,
-            'unique_teachers': unique_teachers,
-            'unique_courses': unique_courses,
-            'optimal_groups': optimal_groups,
-            'max_courses_per_teacher': max_courses_per_teacher,
-            'high_load_teachers': high_load_teachers,
-            'distribution_feasible': unique_teachers >= optimal_groups and max_courses_per_teacher <= optimal_groups
-        }
-    
-    def _distribute_course_instances(self, courses, dept, semester):
-        """Distribute course instances across groups with Hall's theorem optimization and course limit constraints (unified for lab and theory)."""
-        total_instances = len(courses)
-        
-        if total_instances == 0:
-            return []
-        
-        # Enhanced instance analysis for ALL courses (theory + lab)
-        lab_courses = [inst for inst in courses if inst['has_lab']]
-        theory_courses = [inst for inst in courses if inst['has_theory']]
-        
-        # Calculate dynamic student capacity
-        course_instance_counts = {}
-        for inst in courses:
-            course_code = inst['course_code']
-            if course_code not in course_instance_counts:
-                course_instance_counts[course_code] = 0
-            course_instance_counts[course_code] += 1
-        
-        max_instances_per_course = max(course_instance_counts.values()) if course_instance_counts else 1
-        dynamic_student_capacity = max_instances_per_course * 70
-        
-        instance_analysis = {
-            'total_instances': total_instances,
-            'lab_instances_count': len(lab_courses),
-            'theory_instances_count': len(theory_courses),
-            'unique_courses': len(set(inst['course_code'] for inst in courses)),
-            'unique_lab_courses': len(set(inst['course_code'] for inst in lab_courses)),
-            'unique_theory_courses': len(set(inst['course_code'] for inst in theory_courses)),
-            'unique_teachers': len(set(inst['teacher_id'] for inst in courses)),
-            'total_practical_hours': sum(inst.get('practical_hours', 0) for inst in courses),
-            'total_lecture_hours': sum(inst.get('lecture_hours', 0) for inst in courses),
-            'total_tutorial_hours': sum(inst.get('tutorial_hours', 0) for inst in courses),
-            'avg_student_count': sum(inst.get('student_count', 70) for inst in courses) / total_instances if total_instances > 0 else 0,
-            'max_instances_per_course': max_instances_per_course,
-            'dynamic_student_capacity': dynamic_student_capacity,
-            'course_instance_counts': course_instance_counts
-        }
-        
-        self.logger.info(f"Hall-based analysis for {dept} Semester {semester} (Combined Scheduling):")
-        self.logger.info(f"  {instance_analysis['total_instances']} total instances")
-        self.logger.info(f"  {instance_analysis['lab_instances_count']} lab instances, {instance_analysis['theory_instances_count']} theory instances")
-        self.logger.info(f"  {instance_analysis['unique_courses']} unique courses ({instance_analysis['unique_lab_courses']} lab + {instance_analysis['unique_theory_courses']} theory)")
-        self.logger.info(f"  {instance_analysis['unique_teachers']} unique teachers")
-        self.logger.info(f"  Total practical workload: {instance_analysis['total_practical_hours']} hours")
-        self.logger.info(f"  Total lecture workload: {instance_analysis['total_lecture_hours']} hours")
-        self.logger.info(f"  Total tutorial workload: {instance_analysis['total_tutorial_hours']} hours")
-        
-        # CRITICAL: Number of groups = Number of unique courses in the semester
-        # Each course can appear in at most 2 of these groups for optimal student choice
-        unique_course_codes = instance_analysis['unique_courses']
-        
-        # Always create as many groups as there are unique courses
-        num_groups = len(set(inst['course_code'] for inst in courses))
-
-        self.logger.info(f"Creating {num_groups} groups (one per unique course: {unique_course_codes})")
-        if unique_course_codes != num_groups:
-            self.logger.warning(f"Mismatch between unique course codes ({unique_course_codes}) and group count ({num_groups}). Using {num_groups} groups.")
-
-        self.logger.info(f"[CONSTRAINT] Each course limited to maximum 2 of the {num_groups} groups for optimal choice balance")
-        
-        # Initialize groups
-        groups = [[] for _ in range(num_groups)]
-        
-        # Track group metrics
-        group_metrics = []
-        for i in range(num_groups):
-            group_metrics.append({
-                'workload': 0,
-                'lab_workload': 0,
-                'theory_workload': 0,
-                'student_count': 0,
-                'instance_count': 0,
-                'lab_instance_count': 0,
-                'theory_instance_count': 0,
-                'courses': set(),
-                'teachers': set()
-            })
-        
-        # Build course-teacher bipartite graph for Hall's theorem (ALL courses)
-        course_to_teachers = {}
-        teacher_to_courses = {}
-        
-        for instance in courses:  # Use ALL courses, not just lab or theory
-            course_code = instance['course_code']
-            teacher_id = instance['teacher_id']
-            
-            if course_code not in course_to_teachers:
-                course_to_teachers[course_code] = set()
-            course_to_teachers[course_code].add(teacher_id)
-            
-            if teacher_id not in teacher_to_courses:
-                teacher_to_courses[teacher_id] = set()
-            teacher_to_courses[teacher_id].add(course_code)
-        
-        # Group instances by course code (ALL courses)
-        course_instances = {}
-        for instance in courses:  # Use ALL courses
-            course_code = instance['course_code']
-            if course_code not in course_instances:
-                course_instances[course_code] = []
-            course_instances[course_code].append(instance)
-        
-        # Identify lab courses to prioritize them in group allocation
-        lab_course_codes = {inst['course_code'] for inst in courses if inst.get('has_lab', False)}
-        self.logger.info(f"Prioritizing {len(lab_course_codes)} lab courses in group distribution.")
-        
-        # Sort courses: lab courses first, then by number of teachers (ascending)
-        sorted_courses = sorted(course_to_teachers.keys(), 
-                              key=lambda c: (c not in lab_course_codes, len(course_to_teachers[c])))
-        
-        self.logger.info("Course-teacher availability analysis:")
-        for course_code in sorted_courses[:5]:  # Show first 5 courses
-            teacher_count = len(course_to_teachers[course_code])
-            self.logger.info(f"  {course_code}: {teacher_count} teachers, {len(course_instances[course_code])} instances")
-        
-        # SMARTER PRE-ALLOCATION LOGIC
-        self.logger.info("Performing smarter course pre-allocation to groups to maximize choice...")
-        pre_allocation = [set() for _ in range(num_groups)]
-        course_group_assignments = {}
-
-        # Separate lab and theory courses
-        lab_course_codes_list = [c for c in sorted_courses if c in lab_course_codes]
-        theory_course_codes_list = [c for c in sorted_courses if c not in lab_course_codes]
-        num_lab_groups = len(lab_course_codes_list)
-
-        self.logger.info(f"Prioritizing {len(lab_course_codes_list)} lab courses into the first {num_lab_groups} groups.")
-
-        # 1. Allocate lab courses to the first `num_lab_groups` groups in a chained fashion
-        if num_lab_groups > 0:
-            for i, course_code in enumerate(lab_course_codes_list):
-                num_placements = min(2, len(course_instances.get(course_code, []))) if num_lab_groups > 1 else 1
-                for j in range(num_placements):
-                    group_idx = (i + j) % num_lab_groups
-                    pre_allocation[group_idx].add(course_code)
-                    
-                    if course_code not in course_group_assignments:
-                        course_group_assignments[course_code] = []
-                    if group_idx not in course_group_assignments[course_code]:
-                        course_group_assignments[course_code].append(group_idx)
-
-        # 2. Allocate theory courses to all available groups, starting after lab groups
-        for i, course_code in enumerate(theory_course_codes_list):
-            num_placements = min(2, len(course_instances.get(course_code, []))) if num_groups > 1 else 1
-            for j in range(num_placements):
-                group_idx = (num_lab_groups + i + j) % num_groups
-                pre_allocation[group_idx].add(course_code)
-                
-                if course_code not in course_group_assignments:
-                    course_group_assignments[course_code] = []
-                if group_idx not in course_group_assignments[course_code]:
-                    course_group_assignments[course_code].append(group_idx)
-
-        # Log course-group pre-allocation
-        self.logger.info("Course pre-allocation (lab courses prioritized into dedicated groups):")
-        for course_code, group_indices in sorted(course_group_assignments.items()):
-            group_names = [f"G{i+1}" for i in sorted(group_indices)]
-            self.logger.info(f"  {course_code}: assigned to groups {', '.join(group_names)}")
-        
-        # Execute the distribution with strict teacher uniqueness
-        for group_idx, target_courses in enumerate(pre_allocation):
-            used_teachers = set()
-            
-            # First, fulfill the pre-allocation plan with teacher uniqueness enforcement
-            for course_code in target_courses:
-                instances = [inst for inst in course_instances[course_code] if inst not in [i for g in groups for i in g]]
-                
-                if not instances:
-                    continue
-                
-                # Find an instance with a teacher not yet used in THIS group
-                instance_assigned = False
-                for instance in instances:
-                    teacher_id = instance['teacher_id']
-                    assistant_id = instance.get('assistant_teacher_id')
-                    
-                    # Check if main or assistant teacher is already used in THIS group
-                    if teacher_id not in used_teachers and (not pd.notna(assistant_id) or assistant_id not in used_teachers):
-                        groups[group_idx].append(instance)
-                        used_teachers.add(teacher_id)
-                        if pd.notna(assistant_id):
-                            used_teachers.add(assistant_id)
-                        instance_assigned = True
-                        
-                        # Update metrics
-                        metrics = group_metrics[group_idx]
-                        practical_hrs = instance.get('practical_hours', 0)
-                        theory_hrs = instance.get('lecture_hours', 0) + instance.get('tutorial_hours', 0)
-                        
-                        metrics['workload'] += practical_hrs + theory_hrs
-                        metrics['lab_workload'] += practical_hrs
-                        metrics['theory_workload'] += theory_hrs
-                        metrics['student_count'] += instance.get('student_count', 70)
-                        metrics['instance_count'] += 1
-                        if practical_hrs > 0:
-                            metrics['lab_instance_count'] += 1
-                        if theory_hrs > 0:
-                            metrics['theory_instance_count'] += 1
-                        metrics['courses'].add(instance['course_code'])
-                        metrics['teachers'].add(instance['teacher_id'])
-                        
-                        self.logger.debug(f"  Pre-allocated: {course_code} (T{teacher_id}) → Group {group_idx + 1}")
-                        break
-                
-                if not instance_assigned:
-                    self.logger.debug(f"  Could not pre-allocate {course_code} to Group {group_idx + 1} - no teacher available that isn't already in this group")
-        
-        # Phase 2: Remainder placement (similar to theory scheduler)
-        self.logger.info("Phase 1 distribution complete. Now starting Phase 2: Bottleneck Repair & Remainder Placement.")
-
-        # Identify courses that are under-represented (in fewer than 2 groups) after the first pass
-        course_placements = defaultdict(set)
-        for i, g in enumerate(groups):
-            for inst in g:
-                course_placements[inst['course_code']].add(i)
-
-        under_represented_courses = {
-            c for c, placements in course_placements.items() if len(placements) < 2
-        }
-        if under_represented_courses:
-            self.logger.warning(f"Found {len(under_represented_courses)} under-represented courses (in < 2 groups): {', '.join(sorted(list(under_represented_courses)))}")
-            self.logger.info("Attempting to find a second group for them...")
-        else:
-            self.logger.info("All courses are in at least two groups after initial placement.")
-
-        # Get all remaining instances that were not placed in the first pass
-        all_assigned_instances = {inst['id'] for g in groups for inst in g}
-        remaining_instances = [
-            inst for inst_list in course_instances.values() for inst in inst_list 
-            if inst['id'] not in all_assigned_instances
-        ]
-
-        # CRITICAL: Log any unassigned theory instances (DEBUGGING FOR 1930, 1932, 1933)
-        theory_remaining = [inst for inst in remaining_instances if inst.get('has_theory', False)]
-        if theory_remaining:
-            self.logger.error(f"CRITICAL: {len(theory_remaining)} theory instances not assigned to any group:")
-            for inst in theory_remaining:
-                self.logger.error(f"  Instance {inst['id']}: {inst['course_code']} (Teacher {inst['teacher_id']}) - L:{inst.get('lecture_hours', 0)} T:{inst.get('tutorial_hours', 0)} P:{inst.get('practical_hours', 0)}")
-
-        # Prioritize placing instances from under-represented courses first
-        instances_to_assign = sorted(
-            remaining_instances,
-            key=lambda x: (x['course_code'] not in under_represented_courses, x['course_code'])
+        # Create CourseGroupOptimizer instance
+        optimizer = CourseGroupOptimizer(
+            courses=courses,
+            dept=dept,
+            semester=semester,
+            logger=self.logger
         )
-        self.logger.info(f"Distributing {len(instances_to_assign)} remaining instances (prioritizing under-represented ones).")
-
-        failed_assignments = []
-        for instance in instances_to_assign:
-            teacher_id = instance['teacher_id']
-            course_code = instance['course_code']
-
-            # Find the best valid group for this instance
-            best_group_idx = -1
-            best_score = -1
-            
-            # Re-check current placements for the course inside the loop
-            current_placements = {i for i, g in enumerate(groups) for inst in g if inst['course_code'] == course_code}
-
-            for group_idx in range(num_groups):
-                # --- Constraint Checks ---
-                # 1. Teacher Uniqueness: Teacher cannot already be in this group.
-                group_teachers = {inst['teacher_id'] for inst in groups[group_idx]}
-                if pd.notna(instance.get('assistant_teacher_id')):
-                    group_teachers.add(instance['assistant_teacher_id'])
-                if teacher_id in group_teachers:
-                    continue
-
-                # 2. Max 2 Groups per Course: Prevent a course from being in more than two distinct groups.
-                if group_idx not in current_placements and len(current_placements) >= 2:
-                    continue
+        
+        # Run optimization
+        if optimizer.optimize_distribution():
+            # Validate solution
+            if optimizer.validate_solution():
+                self.logger.info(f"OR-Tools optimization successful for {dept} Semester {semester}")
+                self.logger.info(f"Objective value: {optimizer.objective_value}")
                 
-                # --- Scoring ---
-                # Base score prefers smaller groups.
-                score = 1000 - len(groups[group_idx])
+                # Get optimized groups
+                optimized_groups = optimizer.get_groups()
                 
-                if score > best_score:
-                    best_score = score
-                    best_group_idx = group_idx
-            
-            # Place the instance in the best found group
-            if best_group_idx != -1:
-                groups[best_group_idx].append(instance)
-                self.logger.debug(f"[OK] Placed instance {instance['id']} ({course_code}) in Group {best_group_idx + 1} to improve student choice.")
-                # Update metrics
-                metrics = group_metrics[best_group_idx]
-                metrics['instance_count'] += 1
-                metrics['courses'].add(course_code)
-                metrics['teachers'].add(teacher_id)
+                # Log optimization results
+                self.logger.info(f"Created {len(optimized_groups)} optimized groups")
+                for i, group in enumerate(optimized_groups):
+                    if group:
+                        lab_instances = [inst for inst in group if inst.get('has_lab', False)]
+                        theory_instances = [inst for inst in group if inst.get('has_theory', False)]
+                        courses_in_group = set(inst['course_code'] for inst in group)
+                        teachers_in_group = set(inst['teacher_id'] for inst in group)
+                        
+                        self.logger.info(f"  Group {i+1}: {len(group)} instances")
+                        self.logger.info(f"    Lab: {len(lab_instances)}, Theory: {len(theory_instances)}")
+                        self.logger.info(f"    Courses: {sorted(courses_in_group)}")
+                        self.logger.info(f"    Teachers: {sorted(teachers_in_group)}")
+                
+                return optimized_groups
             else:
-                failed_assignments.append(instance)
+                self.logger.error(f"OR-Tools solution validation failed for {dept} Semester {semester}")
+        else:
+            self.logger.error(f"OR-Tools optimization failed for {dept} Semester {semester}")
         
-        # CRITICAL: Final fallback for theory instances that still couldn't be assigned
-        if failed_assignments:
-            theory_failed = [inst for inst in failed_assignments if inst.get('has_theory', False)]
-            if theory_failed:
-                self.logger.error(f"EMERGENCY FALLBACK: {len(theory_failed)} theory instances still failed assignment. Forcing assignment...")
-                
-                for instance in theory_failed:
-                    # Force assignment to the smallest group, ignoring teacher conflicts
-                    smallest_group_idx = min(range(num_groups), key=lambda i: len(groups[i]))
-                    groups[smallest_group_idx].append(instance)
-                    teacher_id = instance['teacher_id']
-                    course_code = instance['course_code']
-                    
-                    self.logger.warning(f"FORCED ASSIGNMENT: Instance {instance['id']} ({course_code}, Teacher {teacher_id}) -> Group {smallest_group_idx + 1}")
-                    self.logger.warning(f"  This may create teacher conflicts but ensures theory sessions get scheduled")
-                    
-                    # Update metrics
-                    metrics = group_metrics[smallest_group_idx]
-                    metrics['instance_count'] += 1
-                    metrics['courses'].add(course_code)
-                    metrics['teachers'].add(teacher_id)
-        
-        # Log assignment results
-        final_failed = [inst for inst in failed_assignments if not inst.get('has_theory', False)]  # Only non-theory failures
-        if final_failed:
-            self.logger.error(f"Failed to assign: {len(final_failed)} non-theory instances after both phases.")
-            for failure in final_failed[:5]: # Log first 5
-                self.logger.error(f"  - Instance {failure['id']} (Teacher {failure['teacher_id']}, Course {failure['course_code']}) could not be placed.")
+        # Fallback: return empty groups if optimization fails
+        self.logger.warning(f"Falling back to empty groups for {dept} Semester {semester}")
+        return []
+    
 
-        # Validate and log final group distribution
-        self._validate_teacher_uniqueness_constraint(groups, dept, semester)
-        self._validate_halls_theorem(groups, dept, semester)
-        
-        # Log final group distribution
-        self.logger.info(f"Final unified group distribution for {dept} Semester {semester}:")
-        
-        # Track course distribution across groups
-        course_distribution_summary = {}
-        
-        for i, group in enumerate(groups):
-            if group:  # Only show non-empty groups
-                metrics = group_metrics[i]
-                teacher_list = sorted(set(str(instance['teacher_id']) for instance in group))
-                course_list = sorted(set(instance['course_code'] for instance in group))
-                lab_courses = [inst['course_code'] for inst in group if inst['has_lab']]
-                theory_courses = [inst['course_code'] for inst in group if inst['has_theory']]
-
-                # Track course distribution
-                for course_code in course_list:
-                    if course_code not in course_distribution_summary:
-                        course_distribution_summary[course_code] = []
-                    course_distribution_summary[course_code].append(i + 1)
-                
-                self.logger.info(f"  Group {i+1}: {metrics['instance_count']} instances")
-                self.logger.info(f"    Lab: {metrics['lab_instance_count']} instances, Theory: {metrics['theory_instance_count']} instances")
-                self.logger.info(f"    Teachers: [{', '.join(teacher_list)}]")
-                self.logger.info(f"    Courses: [{', '.join(course_list)}]")
-                if lab_courses:
-                    self.logger.info(f"    Lab courses: [{', '.join(set(lab_courses))}]")
-                if theory_courses:
-                    self.logger.info(f"    Theory courses: [{', '.join(set(theory_courses))}]")
-                self.logger.info(f"    Total workload: {metrics['workload']} hours ({metrics['lab_workload']} lab + {metrics['theory_workload']} theory)")
-        
-        # Log course distribution summary
-        self.logger.info(f"\nCourse distribution summary (max 2 groups per course):")
-        for course_code, group_list in sorted(course_distribution_summary.items()):
-            group_names = [f"G{g}" for g in group_list]
-            constraint_status = "[OK]" if len(group_list) <= 2 else "[ERROR]"
-            self.logger.info(f"  {course_code}: {', '.join(group_names)} ({len(group_list)} groups) {constraint_status}")
-        
-        # Calculate student choice metrics
-        total_courses = len(course_distribution_summary)
-        courses_with_choice = len([course for course, groups_list in course_distribution_summary.items() if len(groups_list) > 1])
-        choice_percentage = (courses_with_choice / total_courses * 100) if total_courses > 0 else 0
-        
-        self.logger.info(f"\nStudent choice analysis:")
-        self.logger.info(f"  Total courses: {total_courses}")
-        self.logger.info(f"  Courses with multiple group options: {courses_with_choice}")
-        self.logger.info(f"  Student choice percentage: {choice_percentage:.1f}%")
-        self.logger.info(f"  Dynamic student capacity: {instance_analysis['dynamic_student_capacity']} students")
-        
-        # Remove empty groups
-        non_empty_groups = [group for group in groups if group]
-        return non_empty_groups
     
     def _validate_teacher_uniqueness_constraint(self, groups, dept, semester):
         """Validate that no teacher appears multiple times in the same group."""
@@ -1516,6 +1115,58 @@ class CombinedScheduler:
         
         self.logger.info(f"Instance-group mapping created: {total_mapped_instances} instances mapped")
     
+    def _filter_lab_requirements_by_groups(self):
+        """Filter lab requirements to only include course instances that are present in groups."""
+        self.logger.info("Filtering lab requirements to only include instances present in groups...")
+        
+        original_lab_count = sum(len(courses) for courses in self.lab_requirements.values())
+        filtered_lab_requirements = defaultdict(list)
+        skipped_lab_instances = []
+        
+        for teacher_id, lab_courses in self.lab_requirements.items():
+            for course_req in lab_courses:
+                course_instance_id = course_req['course_instance_id']
+                
+                # Check if this course instance is present in any group
+                if course_instance_id in self.instance_group_mapping:
+                    # Instance is in a group, keep it in lab requirements
+                    filtered_lab_requirements[teacher_id].append(course_req)
+                else:
+                    # Instance is not in any group, skip it for lab scheduling
+                    skipped_lab_instances.append({
+                        'course_instance_id': course_instance_id,
+                        'teacher_id': teacher_id,
+                        'course_code': course_req.get('course_code', 'Unknown'),
+                        'practical_hours': course_req.get('practical_hours', 0),
+                        'lab_sessions_needed': course_req.get('lab_sessions_needed', 0)
+                    })
+        
+        # Update lab requirements with filtered data
+        self.lab_requirements = filtered_lab_requirements
+        
+        # Remove teachers with no lab courses after filtering
+        teachers_to_remove = []
+        for teacher_id in self.lab_requirements:
+            if not self.lab_requirements[teacher_id]:
+                teachers_to_remove.append(teacher_id)
+        
+        for teacher_id in teachers_to_remove:
+            del self.lab_requirements[teacher_id]
+        
+        # Log filtering results
+        filtered_lab_count = sum(len(courses) for courses in self.lab_requirements.values())
+        
+        if skipped_lab_instances:
+            self.logger.warning(f"Filtered out {len(skipped_lab_instances)} lab course instances not present in any group:")
+            for skipped in skipped_lab_instances:
+                self.logger.warning(f"  - Course {skipped['course_code']} (ID: {skipped['course_instance_id']}, Teacher: {skipped['teacher_id']}) - {skipped['practical_hours']} practical hours, {skipped['lab_sessions_needed']} sessions")
+        
+        self.logger.info(f"Lab requirements filtering completed:")
+        self.logger.info(f"  Original lab instances: {original_lab_count}")
+        self.logger.info(f"  Filtered lab instances: {filtered_lab_count}")
+        self.logger.info(f"  Skipped lab instances: {len(skipped_lab_instances)}")
+        self.logger.info(f"  Active teachers with lab requirements: {len(self.lab_requirements)}")
+    
     def generate_combined_schedule(self):
         """Generate the combined schedule for both lab and theory sessions."""
         self.logger.info("="*80)
@@ -1567,18 +1218,12 @@ class CombinedScheduler:
                 course_instance_id = course_req['course_instance_id']
                 lab_sessions_needed = course_req['lab_sessions_needed']
                 
+                # All course instances in lab_requirements are guaranteed to be in groups
+                # (filtered by _filter_lab_requirements_by_groups)
+                
                 # Get department and semester for this course instance to determine day pattern
-                dept_name = "Computer Science & Engineering"  # Default
-                semester = None
-                if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
-                    dept_name = self.instance_group_mapping[course_instance_id]['department']
-                    semester = self.instance_group_mapping[course_instance_id]['semester']
-                else:
-                    # Fallback: look up in courses_df
-                    course_matches = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
-                    if not course_matches.empty:
-                        dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
-                        semester = course_matches.iloc[0].get('semester')
+                dept_name = self.instance_group_mapping[course_instance_id]['department']
+                semester = self.instance_group_mapping[course_instance_id]['semester']
                 
                 # Get department-specific days (with semester override)
                 dept_days = self._get_days_for_department(dept_name, semester)
@@ -1600,7 +1245,10 @@ class CombinedScheduler:
                             lab_assignments[teacher_id][course_instance_id][day_idx][session_name][room_id] = \
                                 model.NewBoolVar(var_name)
         
-        self.logger.info("Lab variables created successfully with department-specific day patterns")
+        total_lab_courses = sum(len(courses) for courses in lab_assignments.values())
+        self.logger.info(f"Lab variables created successfully with department-specific day patterns")
+        self.logger.info(f"Created lab variables for {total_lab_courses} course instances across {len(lab_assignments)} teachers")
+        
         return lab_assignments
     
     def _create_theory_variables(self, model):
