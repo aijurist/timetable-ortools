@@ -2370,7 +2370,72 @@ class CombinedScheduler:
         # CONSTRAINT 3: FIXED Room capacity constraint - based on actual course instances, not groups
         constraints_applied += self._apply_proper_theory_room_capacity_constraint(model, group_timeslot_vars)
         
+        # CONSTRAINT 4: Soft constraint - avoid more than 2 consecutive time slots per group per day
+        constraints_applied += self._apply_consecutive_slots_soft_constraint(model, group_timeslot_vars)
+        
         self.logger.info(f"Applied {constraints_applied} theory-specific constraints with department-specific day patterns")
+        return constraints_applied
+
+    def _apply_consecutive_slots_soft_constraint(self, model, group_timeslot_vars):
+        """
+        Apply soft constraint to discourage groups from having more than 2 consecutive time slots per day.
+        This creates penalty variables that will be minimized in the objective function.
+        """
+        self.logger.info("Applying soft constraint to avoid more than 2 consecutive group time slots...")
+        constraints_applied = 0
+        
+        # Initialize penalty variables list if not exists
+        if not hasattr(self, 'consecutive_slot_penalties'):
+            self.consecutive_slot_penalties = []
+        
+        for group_name in group_timeslot_vars.keys():
+            # Get department-specific days for this group
+            dept_name = group_name.split('_S')[0] if '_S' in group_name else "Computer Science & Engineering"
+            
+            # Extract semester for semester-specific overrides
+            semester = None
+            if '_S' in group_name:
+                try:
+                    semester_part = group_name.split('_S')[1].split('_G')[0]
+                    semester = int(semester_part)
+                except (ValueError, IndexError):
+                    pass
+            
+            dept_days = self._get_days_for_department(dept_name, semester)
+            num_dept_days = len(dept_days)
+            
+            # Apply constraint for each day
+            for day_idx in range(num_dept_days):
+                if day_idx not in group_timeslot_vars[group_name]:
+                    continue
+                
+                # Check all possible sequences of 3 consecutive slots
+                for start_slot in range(self.num_theory_slots - 2):
+                    consecutive_slots = []
+                    for offset in range(3):  # Check 3 consecutive slots
+                        slot_idx = start_slot + offset
+                        if slot_idx in group_timeslot_vars[group_name][day_idx]:
+                            consecutive_slots.append(group_timeslot_vars[group_name][day_idx][slot_idx])
+                    
+                    # If we have 3 consecutive slot variables, create a penalty
+                    if len(consecutive_slots) == 3:
+                        # Create a penalty variable that equals 1 if all 3 consecutive slots are assigned
+                        penalty_var = model.NewBoolVar(f'penalty_{group_name}_day_{day_idx}_slots_{start_slot}_{start_slot+2}')
+                        
+                        # If all 3 slots are assigned, penalty = 1; otherwise penalty = 0
+                        # penalty_var >= sum(consecutive_slots) - 2 (so if sum=3, penalty>=1, forcing penalty=1)
+                        # penalty_var <= sum(consecutive_slots) / 3 (so if sum<3, penalty<=0, forcing penalty=0)
+                        model.Add(penalty_var >= sum(consecutive_slots) - 2)
+                        model.Add(penalty_var * 3 <= sum(consecutive_slots))
+                        
+                        # Add to penalties list to be minimized in objective
+                        self.consecutive_slot_penalties.append(penalty_var)
+                        constraints_applied += 2
+                        
+                        self.logger.debug(f"Added consecutive slot penalty for {group_name} day {day_idx} slots {start_slot}-{start_slot+2}")
+        
+        self.logger.info(f"Created {len(self.consecutive_slot_penalties)} consecutive slot penalty variables")
+        self.logger.info(f"Applied {constraints_applied} consecutive slot soft constraints")
         return constraints_applied
     
     def _apply_proper_theory_room_capacity_constraint(self, model, group_timeslot_vars):
@@ -2862,6 +2927,15 @@ class CombinedScheduler:
             self.logger.info("  • Encourages 70+ capacity labs for courses with 4-6 practical hours")
             self.logger.info("  • Allows 35-capacity labs with batching as fallback")
         
+        # Add penalty for consecutive slots (soft constraint - minimize penalties)
+        if hasattr(self, 'consecutive_slot_penalties') and self.consecutive_slot_penalties:
+            # Subtract penalties (since we're maximizing, subtracting penalties minimizes them)
+            penalty_weight = 100  # Adjust weight as needed - higher weight = stronger penalty
+            for penalty_var in self.consecutive_slot_penalties:
+                objective_terms.append(-penalty_weight * penalty_var)
+            self.logger.info(f"Added {len(self.consecutive_slot_penalties)} consecutive slot penalty terms (weight: {penalty_weight})")
+            self.logger.info("  • Discourages groups from having more than 2 consecutive time slots")
+        
         if objective_terms:
             model.Maximize(sum(objective_terms))
             self.logger.info(f"Combined objective set with {len(objective_terms)} terms")
@@ -2870,6 +2944,7 @@ class CombinedScheduler:
             self.logger.info("  2. Group timeslots with time slot preference")
             self.logger.info("     - Earlier time slots preferred within each day")
             self.logger.info("  3. Room capacity optimization (prefer appropriate room sizes)")
+            self.logger.info("  4. Consecutive slot penalty (avoid >2 consecutive slots per group per day)")
         else:
             self.logger.warning("No objective terms created for group allocation")
     
