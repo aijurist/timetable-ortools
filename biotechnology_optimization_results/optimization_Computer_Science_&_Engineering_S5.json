@@ -14,7 +14,7 @@
           "course_code": "CS23532",
           "course_name": "Computer Networks",
           "course_type": "LoT",
-          "teacher_id": "211",
+          "teacher_id": "211.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -23,7 +23,9 @@
           "practical_hours": 4,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
           "id": 267,
@@ -31,7 +33,7 @@
           "course_code": "CS23531",
           "course_name": "Web Programming",
           "course_type": "LoT",
-          "teacher_id": "244",
+          "teacher_id": "244.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -40,7 +42,9 @@
           "practical_hours": 4,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
           "id": 289,
@@ -48,7 +52,7 @@
           "course_code": "CS23531",
           "course_name": "Web Programming",
           "course_type": "LoT",
-          "teacher_id": "229",
+          "teacher_id": "229.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -57,7 +61,9 @@
           "practical_hours": 4,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
           "id": 1930,
@@ -65,7 +71,7 @@
           "course_code": "CS23531",
           "course_name": "Web Programming",
           "course_type": "LoT",
-          "teacher_id": "234",
+          "teacher_id": "234.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -74,7 +80,9 @@
           "practical_hours": 4,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
           "id": 1931,
@@ -82,7 +90,7 @@
           "course_code": "CS23531",
           "course_name": "Web Programming",
           "course_type": "LoT",
-          "teacher_id": "1756",
+          "teacher_id": "1756.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -91,7 +99,9 @@
           "practical_hours": 4,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
           "id": 1932,
@@ -99,7 +109,7 @@
           "course_code": "CS23531",
           "course_name": "Web Programming",
           "course_type": "LoT",
-          "teacher_id": "199",
+          "teacher_id": "199.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -108,16 +118,18 @@
           "practical_hours": 4,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "1756",
-        "229",
-        "211",
-        "234",
-        "199",
-        "244"
+        "1756.0",
+        "229.0",
+        "199.0",
+        "234.0",
+        "244.0",
+        "211.0"
       ],
       "courses": [
         "CS23532",
@@ -134,7 +146,7 @@
           "course_code": "CS23533",
           "course_name": "Foundations of Artificial Intelligence",
           "course_type": "LoT",
-          "teacher_id": "187",
+          "teacher_id": "187.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -143,7 +155,9 @@
           "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
           "id": 243,
@@ -151,7 +165,7 @@
           "course_code": "CS23533",
           "course_name": "Foundations of Artificial Intelligence",
           "course_type": "LoT",
-          "teacher_id": "188",
+          "teacher_id": "188.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -160,7 +174,9 @@
           "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
           "id": 275,
@@ -168,7 +184,7 @@
           "course_code": "CS23533",
           "course_name": "Foundations of Artificial Intelligence",
           "course_type": "LoT",
-          "teacher_id": "195",
+          "teacher_id": "195.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -177,7 +193,9 @@
           "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
           "id": 1934,
@@ -185,7 +203,7 @@
           "course_code": "CS23533",
           "course_name": "Foundations of Artificial Intelligence",
           "course_type": "LoT",
-          "teacher_id": "218",
+          "teacher_id": "218.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -194,7 +212,9 @@
           "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
           "id": 1935,
@@ -202,7 +222,7 @@
           "course_code": "CS23533",
           "course_name": "Foundations of Artificial Intelligence",
           "course_type": "LoT",
-          "teacher_id": "236",
+          "teacher_id": "236.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -211,7 +231,9 @@
           "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
           "id": 1933,
@@ -219,7 +241,7 @@
           "course_code": "CS23531",
           "course_name": "Web Programming",
           "course_type": "LoT",
-          "teacher_id": "1754",
+          "teacher_id": "1754.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -228,20 +250,22 @@
           "practical_hours": 4,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "187",
-        "1754",
-        "188",
-        "218",
-        "195",
-        "236"
+        "188.0",
+        "236.0",
+        "187.0",
+        "218.0",
+        "195.0",
+        "1754.0"
       ],
       "courses": [
-        "CS23533",
-        "CS23531"
+        "CS23531",
+        "CS23533"
       ],
       "total_workload": 32
     },
@@ -254,7 +278,7 @@
           "course_code": "CS23532",
           "course_name": "Computer Networks",
           "course_type": "LoT",
-          "teacher_id": "217",
+          "teacher_id": "217.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -263,7 +287,9 @@
           "practical_hours": 4,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
           "id": 255,
@@ -271,7 +297,7 @@
           "course_code": "CS23532",
           "course_name": "Computer Networks",
           "course_type": "LoT",
-          "teacher_id": "245",
+          "teacher_id": "245.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -280,7 +306,9 @@
           "practical_hours": 4,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
           "id": 1928,
@@ -288,7 +316,7 @@
           "course_code": "CS23532",
           "course_name": "Computer Networks",
           "course_type": "LoT",
-          "teacher_id": "211",
+          "teacher_id": "211.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -297,7 +325,9 @@
           "practical_hours": 4,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
           "id": 1929,
@@ -305,7 +335,7 @@
           "course_code": "CS23532",
           "course_name": "Computer Networks",
           "course_type": "LoT",
-          "teacher_id": "1756",
+          "teacher_id": "1756.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -314,7 +344,9 @@
           "practical_hours": 4,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
           "id": 2021,
@@ -322,7 +354,7 @@
           "course_code": "CS23532",
           "course_name": "Computer Networks",
           "course_type": "LoT",
-          "teacher_id": "1853",
+          "teacher_id": "1853.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -331,7 +363,9 @@
           "practical_hours": 4,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
           "id": 283,
@@ -339,7 +373,7 @@
           "course_code": "CS23533",
           "course_name": "Foundations of Artificial Intelligence",
           "course_type": "LoT",
-          "teacher_id": "231",
+          "teacher_id": "231.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -348,16 +382,18 @@
           "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "1853",
-        "1756",
-        "217",
-        "245",
-        "211",
-        "231"
+        "1756.0",
+        "245.0",
+        "231.0",
+        "1853.0",
+        "217.0",
+        "211.0"
       ],
       "courses": [
         "CS23532",
@@ -369,46 +405,12 @@
       "group_id": 4,
       "instances": [
         {
-          "id": 256,
-          "course_id": 268,
-          "course_code": "CS23512",
-          "course_name": "Fundamentals of Mobile Computing",
-          "course_type": "T",
-          "teacher_id": "245",
-          "semester": 5,
-          "course_dept": "Computer Science & Engineering",
-          "student_dept": "Computer Science & Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70
-        },
-        {
-          "id": 1925,
-          "course_id": 268,
-          "course_code": "CS23512",
-          "course_name": "Fundamentals of Mobile Computing",
-          "course_type": "T",
-          "teacher_id": "216",
-          "semester": 5,
-          "course_dept": "Computer Science & Engineering",
-          "student_dept": "Computer Science & Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70
-        },
-        {
           "id": 1920,
           "course_id": 267,
           "course_code": "CS23511",
           "course_name": "Theory of Computation",
           "course_type": "T",
-          "teacher_id": "222",
+          "teacher_id": "222.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -417,7 +419,9 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 1,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
           "id": 1922,
@@ -425,7 +429,7 @@
           "course_code": "CS23511",
           "course_name": "Theory of Computation",
           "course_type": "T",
-          "teacher_id": "223",
+          "teacher_id": "223.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -434,7 +438,9 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 1,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
           "id": 1923,
@@ -442,7 +448,7 @@
           "course_code": "CS23511",
           "course_name": "Theory of Computation",
           "course_type": "T",
-          "teacher_id": "234",
+          "teacher_id": "234.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -451,7 +457,9 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 1,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
           "id": 1924,
@@ -459,7 +467,7 @@
           "course_code": "CS23511",
           "course_name": "Theory of Computation",
           "course_type": "T",
-          "teacher_id": "1755",
+          "teacher_id": "1755.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -468,20 +476,60 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 1,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 256,
+          "course_id": 268,
+          "course_code": "CS23512",
+          "course_name": "Fundamentals of Mobile Computing",
+          "course_type": "T",
+          "teacher_id": "245.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Engineering",
+          "student_dept": "Computer Science & Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1925,
+          "course_id": 268,
+          "course_code": "CS23512",
+          "course_name": "Fundamentals of Mobile Computing",
+          "course_type": "T",
+          "teacher_id": "216.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Engineering",
+          "student_dept": "Computer Science & Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "1755",
-        "216",
-        "223",
-        "245",
-        "234",
-        "222"
+        "245.0",
+        "222.0",
+        "1755.0",
+        "234.0",
+        "216.0",
+        "223.0"
       ],
       "courses": [
-        "CS23511",
-        "CS23512"
+        "CS23512",
+        "CS23511"
       ],
       "total_workload": 22
     },
@@ -489,80 +537,12 @@
       "group_id": 5,
       "instances": [
         {
-          "id": 259,
-          "course_id": 268,
-          "course_code": "CS23512",
-          "course_name": "Fundamentals of Mobile Computing",
-          "course_type": "T",
-          "teacher_id": "196",
-          "semester": 5,
-          "course_dept": "Computer Science & Engineering",
-          "student_dept": "Computer Science & Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70
-        },
-        {
-          "id": 1926,
-          "course_id": 268,
-          "course_code": "CS23512",
-          "course_name": "Fundamentals of Mobile Computing",
-          "course_type": "T",
-          "teacher_id": "192",
-          "semester": 5,
-          "course_dept": "Computer Science & Engineering",
-          "student_dept": "Computer Science & Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70
-        },
-        {
-          "id": 1927,
-          "course_id": 268,
-          "course_code": "CS23512",
-          "course_name": "Fundamentals of Mobile Computing",
-          "course_type": "T",
-          "teacher_id": "1757",
-          "semester": 5,
-          "course_dept": "Computer Science & Engineering",
-          "student_dept": "Computer Science & Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70
-        },
-        {
-          "id": 2020,
-          "course_id": 268,
-          "course_code": "CS23512",
-          "course_name": "Fundamentals of Mobile Computing",
-          "course_type": "T",
-          "teacher_id": "2",
-          "semester": 5,
-          "course_dept": "Computer Science & Engineering",
-          "student_dept": "Computer Science & Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70
-        },
-        {
           "id": 1919,
           "course_id": 267,
           "course_code": "CS23511",
           "course_name": "Theory of Computation",
           "course_type": "T",
-          "teacher_id": "222",
+          "teacher_id": "222.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -571,7 +551,9 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 1,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
           "id": 1921,
@@ -579,7 +561,7 @@
           "course_code": "CS23511",
           "course_name": "Theory of Computation",
           "course_type": "T",
-          "teacher_id": "203",
+          "teacher_id": "203.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -588,20 +570,98 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 1,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 259,
+          "course_id": 268,
+          "course_code": "CS23512",
+          "course_name": "Fundamentals of Mobile Computing",
+          "course_type": "T",
+          "teacher_id": "196.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Engineering",
+          "student_dept": "Computer Science & Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1926,
+          "course_id": 268,
+          "course_code": "CS23512",
+          "course_name": "Fundamentals of Mobile Computing",
+          "course_type": "T",
+          "teacher_id": "192.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Engineering",
+          "student_dept": "Computer Science & Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1927,
+          "course_id": 268,
+          "course_code": "CS23512",
+          "course_name": "Fundamentals of Mobile Computing",
+          "course_type": "T",
+          "teacher_id": "1757.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Engineering",
+          "student_dept": "Computer Science & Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 2020,
+          "course_id": 268,
+          "course_code": "CS23512",
+          "course_name": "Fundamentals of Mobile Computing",
+          "course_type": "T",
+          "teacher_id": "2.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Engineering",
+          "student_dept": "Computer Science & Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "196",
-        "203",
-        "1757",
-        "222",
-        "2",
-        "192"
+        "196.0",
+        "1757.0",
+        "222.0",
+        "203.0",
+        "192.0",
+        "2.0"
       ],
       "courses": [
-        "CS23511",
-        "CS23512"
+        "CS23512",
+        "CS23511"
       ],
       "total_workload": 20
     }

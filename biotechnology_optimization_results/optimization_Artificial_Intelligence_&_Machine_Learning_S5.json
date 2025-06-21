@@ -2,8 +2,8 @@
   "department": "Artificial Intelligence & Machine Learning",
   "semester": "5",
   "solution_found": true,
-  "objective_value": 150.0,
-  "num_groups": 5,
+  "objective_value": 180.0,
+  "num_groups": 6,
   "groups": [
     {
       "group_id": 1,
@@ -14,7 +14,7 @@
           "course_code": "CS23532",
           "course_name": "Computer Networks",
           "course_type": "LoT",
-          "teacher_id": "47",
+          "teacher_id": "47.0",
           "semester": 5,
           "course_dept": "Artificial Intelligence & Machine Learning",
           "student_dept": "Artificial Intelligence & Machine Learning",
@@ -23,15 +23,17 @@
           "practical_hours": 4,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
-          "id": 979,
+          "id": 517,
           "course_id": 270,
           "course_code": "CS23532",
           "course_name": "Computer Networks",
           "course_type": "LoT",
-          "teacher_id": "52",
+          "teacher_id": "38.0",
           "semester": 5,
           "course_dept": "Artificial Intelligence & Machine Learning",
           "student_dept": "Artificial Intelligence & Machine Learning",
@@ -40,15 +42,17 @@
           "practical_hours": 4,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
-          "id": 1202,
+          "id": 1203,
           "course_id": 707,
           "course_code": "AI23512",
           "course_name": "DataEngineering",
           "course_type": "T",
-          "teacher_id": "40",
+          "teacher_id": "36.0",
           "semester": 5,
           "course_dept": "Artificial Intelligence & Machine Learning",
           "student_dept": "Artificial Intelligence & Machine Learning",
@@ -57,13 +61,15 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "52",
-        "40",
-        "47"
+        "47.0",
+        "36.0",
+        "38.0"
       ],
       "courses": [
         "CS23532",
@@ -75,12 +81,228 @@
       "group_id": 2,
       "instances": [
         {
-          "id": 517,
+          "id": 1202,
+          "course_id": 707,
+          "course_code": "AI23512",
+          "course_name": "DataEngineering",
+          "course_type": "T",
+          "teacher_id": "40.0",
+          "semester": 5,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1313,
+          "course_id": 707,
+          "course_code": "AI23512",
+          "course_name": "DataEngineering",
+          "course_type": "T",
+          "teacher_id": "63.0",
+          "semester": 5,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 506,
+          "course_id": 752,
+          "course_code": "AI23PE1",
+          "course_name": "Computer Vision and Applications",
+          "course_type": "LoT",
+          "teacher_id": "39.0",
+          "semester": 5,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "63.0",
+        "40.0",
+        "39.0"
+      ],
+      "courses": [
+        "AI23512",
+        "AI23PE1"
+      ],
+      "total_workload": 10
+    },
+    {
+      "group_id": 3,
+      "instances": [
+        {
+          "id": 1248,
+          "course_id": 900,
+          "course_code": "AD23632",
+          "course_name": "Framework for data and visual Analytics",
+          "course_type": "LoT",
+          "teacher_id": "50.0",
+          "semester": 5,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1042,
+          "course_id": 38,
+          "course_code": "AI23521",
+          "course_name": "Build and Deploy Machine Learning Applications",
+          "course_type": "L",
+          "teacher_id": "1793.0",
+          "semester": 5,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1045,
+          "course_id": 38,
+          "course_code": "AI23521",
+          "course_name": "Build and Deploy Machine Learning Applications",
+          "course_type": "L",
+          "teacher_id": "1794.0",
+          "semester": 5,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "1793.0",
+        "1794.0",
+        "50.0"
+      ],
+      "courses": [
+        "AI23521",
+        "AD23632"
+      ],
+      "total_workload": 9
+    },
+    {
+      "group_id": 4,
+      "instances": [
+        {
+          "id": 1249,
+          "course_id": 900,
+          "course_code": "AD23632",
+          "course_name": "Framework for data and visual Analytics",
+          "course_type": "LoT",
+          "teacher_id": "54.0",
+          "semester": 5,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1250,
+          "course_id": 900,
+          "course_code": "AD23632",
+          "course_name": "Framework for data and visual Analytics",
+          "course_type": "LoT",
+          "teacher_id": "63.0",
+          "semester": 5,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 500,
+          "course_id": 39,
+          "course_code": "AI23531",
+          "course_name": "Deep Learning",
+          "course_type": "LoT",
+          "teacher_id": "67.0",
+          "semester": 5,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "63.0",
+        "54.0",
+        "67.0"
+      ],
+      "courses": [
+        "AI23531",
+        "AD23632"
+      ],
+      "total_workload": 15
+    },
+    {
+      "group_id": 5,
+      "instances": [
+        {
+          "id": 979,
           "course_id": 270,
           "course_code": "CS23532",
           "course_name": "Computer Networks",
           "course_type": "LoT",
-          "teacher_id": "38",
+          "teacher_id": "52.0",
           "semester": 5,
           "course_dept": "Artificial Intelligence & Machine Learning",
           "student_dept": "Artificial Intelligence & Machine Learning",
@@ -89,130 +311,89 @@
           "practical_hours": 4,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
-          "id": 1248,
-          "course_id": 900,
-          "course_code": "AD23632",
-          "course_name": "Framework for data and visual Analytics",
+          "id": 1312,
+          "course_id": 752,
+          "course_code": "AI23PE1",
+          "course_name": "Computer Vision and Applications",
           "course_type": "LoT",
-          "teacher_id": "50",
+          "teacher_id": "90.0",
           "semester": 5,
           "course_dept": "Artificial Intelligence & Machine Learning",
           "student_dept": "Artificial Intelligence & Machine Learning",
           "has_lab": true,
           "has_theory": true,
           "practical_hours": 2,
-          "lecture_hours": 3,
+          "lecture_hours": 2,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
-          "id": 1249,
-          "course_id": 900,
-          "course_code": "AD23632",
-          "course_name": "Framework for data and visual Analytics",
+          "id": 974,
+          "course_id": 753,
+          "course_code": "AI23PE1",
+          "course_name": "Recommendation Systems (Professional Elective I)",
           "course_type": "LoT",
-          "teacher_id": "54",
+          "teacher_id": "1782.0",
           "semester": 5,
           "course_dept": "Artificial Intelligence & Machine Learning",
           "student_dept": "Artificial Intelligence & Machine Learning",
           "has_lab": true,
           "has_theory": true,
           "practical_hours": 2,
-          "lecture_hours": 3,
+          "lecture_hours": 2,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "54",
-        "38",
-        "50"
+        "90.0",
+        "1782.0",
+        "52.0"
       ],
       "courses": [
         "CS23532",
-        "AD23632"
+        "AI23PE1"
       ],
-      "total_workload": 17
+      "total_workload": 15
     },
     {
-      "group_id": 3,
+      "group_id": 6,
       "instances": [
         {
-          "id": 1203,
-          "course_id": 707,
-          "course_code": "AI23512",
-          "course_name": "DataEngineering",
-          "course_type": "T",
-          "teacher_id": "36",
-          "semester": 5,
-          "course_dept": "Artificial Intelligence & Machine Learning",
-          "student_dept": "Artificial Intelligence & Machine Learning",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70
-        },
-        {
-          "id": 1313,
-          "course_id": 707,
-          "course_code": "AI23512",
-          "course_name": "DataEngineering",
-          "course_type": "T",
-          "teacher_id": "63",
-          "semester": 5,
-          "course_dept": "Artificial Intelligence & Machine Learning",
-          "student_dept": "Artificial Intelligence & Machine Learning",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70
-        },
-        {
-          "id": 500,
-          "course_id": 39,
-          "course_code": "AI23531",
-          "course_name": "Deep Learning",
-          "course_type": "LoT",
-          "teacher_id": "67",
+          "id": 514,
+          "course_id": 38,
+          "course_code": "AI23521",
+          "course_name": "Build and Deploy Machine Learning Applications",
+          "course_type": "L",
+          "teacher_id": "46.0",
           "semester": 5,
           "course_dept": "Artificial Intelligence & Machine Learning",
           "student_dept": "Artificial Intelligence & Machine Learning",
           "has_lab": true,
-          "has_theory": true,
+          "has_theory": false,
           "practical_hours": 2,
-          "lecture_hours": 3,
+          "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 70
-        }
-      ],
-      "teachers": [
-        "63",
-        "36",
-        "67"
-      ],
-      "courses": [
-        "AI23531",
-        "AI23512"
-      ],
-      "total_workload": 11
-    },
-    {
-      "group_id": 4,
-      "instances": [
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
         {
           "id": 508,
           "course_id": 39,
           "course_code": "AI23531",
           "course_name": "Deep Learning",
           "course_type": "LoT",
-          "teacher_id": "33",
+          "teacher_id": "33.0",
           "semester": 5,
           "course_dept": "Artificial Intelligence & Machine Learning",
           "student_dept": "Artificial Intelligence & Machine Learning",
@@ -221,7 +402,9 @@
           "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
           "id": 510,
@@ -229,7 +412,7 @@
           "course_code": "AI23531",
           "course_name": "Deep Learning",
           "course_type": "LoT",
-          "teacher_id": "53",
+          "teacher_id": "53.0",
           "semester": 5,
           "course_dept": "Artificial Intelligence & Machine Learning",
           "student_dept": "Artificial Intelligence & Machine Learning",
@@ -238,109 +421,28 @@
           "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
-        },
-        {
-          "id": 1042,
-          "course_id": 38,
-          "course_code": "AI23521",
-          "course_name": "Build and Deploy Machine Learning Applications",
-          "course_type": "L",
-          "teacher_id": "1793",
-          "semester": 5,
-          "course_dept": "Artificial Intelligence & Machine Learning",
-          "student_dept": "Artificial Intelligence & Machine Learning",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 2,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "53",
-        "33",
-        "1793"
+        "53.0",
+        "33.0",
+        "46.0"
       ],
       "courses": [
         "AI23531",
         "AI23521"
       ],
       "total_workload": 12
-    },
-    {
-      "group_id": 5,
-      "instances": [
-        {
-          "id": 1250,
-          "course_id": 900,
-          "course_code": "AD23632",
-          "course_name": "Framework for data and visual Analytics",
-          "course_type": "LoT",
-          "teacher_id": "63",
-          "semester": 5,
-          "course_dept": "Artificial Intelligence & Machine Learning",
-          "student_dept": "Artificial Intelligence & Machine Learning",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70
-        },
-        {
-          "id": 514,
-          "course_id": 38,
-          "course_code": "AI23521",
-          "course_name": "Build and Deploy Machine Learning Applications",
-          "course_type": "L",
-          "teacher_id": "46",
-          "semester": 5,
-          "course_dept": "Artificial Intelligence & Machine Learning",
-          "student_dept": "Artificial Intelligence & Machine Learning",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 2,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70
-        },
-        {
-          "id": 1045,
-          "course_id": 38,
-          "course_code": "AI23521",
-          "course_name": "Build and Deploy Machine Learning Applications",
-          "course_type": "L",
-          "teacher_id": "1794",
-          "semester": 5,
-          "course_dept": "Artificial Intelligence & Machine Learning",
-          "student_dept": "Artificial Intelligence & Machine Learning",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 2,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70
-        }
-      ],
-      "teachers": [
-        "1794",
-        "63",
-        "46"
-      ],
-      "courses": [
-        "AD23632",
-        "AI23521"
-      ],
-      "total_workload": 9
     }
   ],
   "summary": {
-    "total_instances": 15,
-    "lab_instances": 12,
-    "theory_instances": 12,
-    "unique_courses": 5,
-    "unique_teachers": 14
+    "total_instances": 18,
+    "lab_instances": 15,
+    "theory_instances": 15,
+    "unique_courses": 6,
+    "unique_teachers": 17
   }
 }

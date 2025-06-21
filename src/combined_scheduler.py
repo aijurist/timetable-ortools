@@ -1697,15 +1697,15 @@ class CombinedScheduler:
                     day_sessions = lab_variables[teacher_id][course_instance_id][day_idx]
                     for session_name in day_sessions:
                         for room_id in day_sessions[session_name]:
-                            key = (absolute_day, session_name, room_id)
-                            
-                            if key not in time_slot_assignments:
-                                time_slot_assignments[key] = []
-                            
-                            time_slot_assignments[key].append({
+                                        key = (absolute_day, session_name, room_id)
+                                        
+                                        if key not in time_slot_assignments:
+                                            time_slot_assignments[key] = []
+                                        
+                                        time_slot_assignments[key].append({
                                 'variable': day_sessions[session_name][room_id],
-                                'teacher_id': teacher_id,
-                                'course_instance_id': course_instance_id,
+                                            'teacher_id': teacher_id,
+                                            'course_instance_id': course_instance_id,
                                 'dept_name': dept_info['dept_name'],
                                 'day_pattern': dept_info['day_pattern'],
                                 'session_name': session_name,
@@ -1719,7 +1719,7 @@ class CombinedScheduler:
                 continue  # Skip if no conflicts
             
             assignment_vars = [assignment['variable'] for assignment in assignments]
-            
+                
             # Special handling for 140-capacity labs - ONLY allow co-scheduling
             if room_id in labs_140:
                 # Group assignments by (group_name, course_code) - optimized
@@ -2622,7 +2622,7 @@ class CombinedScheduler:
         
         # 1. Pre-build optimized teacher activities mapping
         teacher_activities = {}
-        
+
         # Map lab courses to teachers (optimized)
         for teacher_id, courses in self.lab_requirements.items():
             teacher_key = str(teacher_id)
@@ -2750,10 +2750,10 @@ class CombinedScheduler:
                             if unified_day_name in group_info['days']:
                                 group_day_idx = group_info['days'].index(unified_day_name)
                                 if (group_day_idx in group_timeslot_vars[group_name] and
-                                    theory_slot_idx in group_timeslot_vars[group_name][group_day_idx]):
+                                theory_slot_idx in group_timeslot_vars[group_name][group_day_idx]):
                                     all_activities_at_this_time.append(
-                                        group_timeslot_vars[group_name][group_day_idx][theory_slot_idx]
-                                    )
+                                    group_timeslot_vars[group_name][group_day_idx][theory_slot_idx]
+                                )
                     
                     # B. Collect LAB activities (optimized with cached sessions)
                     overlapping_lab_sessions = theory_to_lab_sessions_cache[theory_slot_idx]
@@ -2765,12 +2765,12 @@ class CombinedScheduler:
                                 if unified_day_name in course_info['days']:
                                     course_day_idx = course_info['days'].index(unified_day_name)
                                     if (course_day_idx < len(lab_variables[teacher_id][course_instance_id]) and
-                                        session_name in lab_variables[teacher_id][course_instance_id][course_day_idx]):
+                                    session_name in lab_variables[teacher_id][course_instance_id][course_day_idx]):
                                         for room_id in lab_variables[teacher_id][course_instance_id][course_day_idx][session_name]:
-                                            all_activities_at_this_time.append(
-                                                lab_variables[teacher_id][course_instance_id][course_day_idx][session_name][room_id]
-                                            )
-                    
+                                                all_activities_at_this_time.append(
+                                                    lab_variables[teacher_id][course_instance_id][course_day_idx][session_name][room_id]
+                                                )
+                            
                     # C. Apply constraint with co-scheduling exception (optimized)
                     if len(all_activities_at_this_time) > 1:
                         can_co_schedule = False
@@ -3887,8 +3887,8 @@ class CombinedScheduler:
                                                            f"Lab {room_row['room_number']} (capacity: {room_capacity})")
                                     else:
                                         self.logger.info(f"Lab assignment: Course {course_code_display} → "
-                                                       f"{session_name} on {dept_days[day_idx]} in "
-                                                       f"Lab {room_row['room_number']} (capacity: {room_capacity})")
+                                                   f"{session_name} on {dept_days[day_idx]} in "
+                                                   f"Lab {room_row['room_number']} (capacity: {room_capacity})")
         
         # Add co-scheduling identification
         lab_schedule = self._identify_and_mark_co_scheduled_sessions(lab_schedule)

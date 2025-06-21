@@ -9,30 +9,32 @@
       "group_id": 1,
       "instances": [
         {
-          "id": 992,
-          "course_id": 582,
-          "course_code": "AD7P3",
-          "course_name": "ETHICS OF ARTIFICIAL INTELLIGENCE",
-          "course_type": "T",
-          "teacher_id": "14",
+          "id": 965,
+          "course_id": 586,
+          "course_code": "AD19P72",
+          "course_name": "Predictive Analytics",
+          "course_type": "LoT",
+          "teacher_id": "30.0",
           "semester": 7,
           "course_dept": "Artificial Intelligence & Data Science",
           "student_dept": "Artificial Intelligence & Data Science",
-          "has_lab": false,
+          "has_lab": true,
           "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
+          "practical_hours": 2,
+          "lecture_hours": 2,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "14"
+        "30.0"
       ],
       "courses": [
-        "AD7P3"
+        "AD19P72"
       ],
-      "total_workload": 3
+      "total_workload": 4
     },
     {
       "group_id": 2,
@@ -43,7 +45,7 @@
           "course_code": "AI19741",
           "course_name": "Big Data Technology",
           "course_type": "LoT",
-          "teacher_id": "22",
+          "teacher_id": "22.0",
           "semester": 7,
           "course_dept": "Artificial Intelligence & Data Science",
           "student_dept": "Artificial Intelligence & Data Science",
@@ -52,11 +54,13 @@
           "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "22"
+        "22.0"
       ],
       "courses": [
         "AI19741"
@@ -67,65 +71,69 @@
       "group_id": 3,
       "instances": [
         {
-          "id": 965,
-          "course_id": 586,
-          "course_code": "AD7P4",
-          "course_name": "Predictive Analytics",
-          "course_type": "LoT",
-          "teacher_id": "30",
+          "id": 1868,
+          "course_id": 575,
+          "course_code": "AD19751",
+          "course_name": "Basics of Computer Vision",
+          "course_type": "T",
+          "teacher_id": "1843.0",
           "semester": 7,
           "course_dept": "Artificial Intelligence & Data Science",
           "student_dept": "Artificial Intelligence & Data Science",
-          "has_lab": true,
+          "has_lab": false,
           "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 2,
+          "practical_hours": 0,
+          "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "30"
+        "1843.0"
       ],
       "courses": [
-        "AD7P4"
+        "AD19751"
       ],
-      "total_workload": 4
+      "total_workload": 3
     },
     {
       "group_id": 4,
       "instances": [
         {
-          "id": 368,
-          "course_id": 577,
-          "course_code": "AD19711",
-          "course_name": "Project Phase-I",
-          "course_type": "L",
-          "teacher_id": "26",
+          "id": 992,
+          "course_id": 582,
+          "course_code": "AD19P74",
+          "course_name": "ETHICS OF ARTIFICIAL INTELLIGENCE",
+          "course_type": "T",
+          "teacher_id": "14.0",
           "semester": 7,
           "course_dept": "Artificial Intelligence & Data Science",
           "student_dept": "Artificial Intelligence & Data Science",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 6,
-          "lecture_hours": 0,
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 70
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "26"
+        "14.0"
       ],
       "courses": [
-        "AD19711"
+        "AD19P74"
       ],
-      "total_workload": 6
+      "total_workload": 3
     }
   ],
   "summary": {
     "total_instances": 4,
-    "lab_instances": 3,
-    "theory_instances": 3,
+    "lab_instances": 2,
+    "theory_instances": 4,
     "unique_courses": 4,
     "unique_teachers": 4
   }

@@ -12,9 +12,9 @@
           "id": 2034,
           "course_id": 389,
           "course_code": "GE23521",
-          "course_name": "Soft Skills \u2013 II",
+          "course_name": "Soft Skills II",
           "course_type": "L",
-          "teacher_id": "1743",
+          "teacher_id": "1743.0",
           "semester": 5,
           "course_dept": "Computer Science & Design",
           "student_dept": "Computer Science & Design",
@@ -23,11 +23,13 @@
           "practical_hours": 2,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 64
+          "student_count": 64,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "1743"
+        "1743.0"
       ],
       "courses": [
         "GE23521"
@@ -38,99 +40,12 @@
       "group_id": 2,
       "instances": [
         {
-          "id": 80,
-          "course_id": 264,
-          "course_code": "CS23431",
-          "course_name": "Operating Systems",
-          "course_type": "LoT",
-          "teacher_id": "178",
-          "semester": 5,
-          "course_dept": "Computer Science & Design",
-          "student_dept": "Computer Science & Design",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 64
-        }
-      ],
-      "teachers": [
-        "178"
-      ],
-      "courses": [
-        "CS23431"
-      ],
-      "total_workload": 7
-    },
-    {
-      "group_id": 3,
-      "instances": [
-        {
-          "id": 88,
-          "course_id": 592,
-          "course_code": "IT23E31",
-          "course_name": "Graphics and Multimedia",
-          "course_type": "LoT",
-          "teacher_id": "184",
-          "semester": 5,
-          "course_dept": "Computer Science & Design",
-          "student_dept": "Computer Science & Design",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 2,
-          "tutorial_hours": 0,
-          "student_count": 64
-        }
-      ],
-      "teachers": [
-        "184"
-      ],
-      "courses": [
-        "IT23E31"
-      ],
-      "total_workload": 4
-    },
-    {
-      "group_id": 4,
-      "instances": [
-        {
-          "id": 76,
-          "course_id": 540,
-          "course_code": "CD23531",
-          "course_name": "3D Modelling and Texturing",
-          "course_type": "LoT",
-          "teacher_id": "189",
-          "semester": 5,
-          "course_dept": "Computer Science & Design",
-          "student_dept": "Computer Science & Design",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 2,
-          "tutorial_hours": 0,
-          "student_count": 64
-        }
-      ],
-      "teachers": [
-        "189"
-      ],
-      "courses": [
-        "CD23531"
-      ],
-      "total_workload": 4
-    },
-    {
-      "group_id": 5,
-      "instances": [
-        {
           "id": 681,
           "course_id": 331,
           "course_code": "GE23627",
           "course_name": "Design Thinking and Innovation",
           "course_type": "L",
-          "teacher_id": "171",
+          "teacher_id": "171.0",
           "semester": 5,
           "course_dept": "Computer Science & Design",
           "student_dept": "Computer Science & Design",
@@ -139,14 +54,109 @@
           "practical_hours": 4,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 64
+          "student_count": 64,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "171"
+        "171.0"
       ],
       "courses": [
         "GE23627"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 3,
+      "instances": [
+        {
+          "id": 76,
+          "course_id": 540,
+          "course_code": "CD23531",
+          "course_name": "3D Modelling and Texturing",
+          "course_type": "LoT",
+          "teacher_id": "189.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Design",
+          "student_dept": "Computer Science & Design",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 64,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "189.0"
+      ],
+      "courses": [
+        "CD23531"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 4,
+      "instances": [
+        {
+          "id": 80,
+          "course_id": 264,
+          "course_code": "CS23431",
+          "course_name": "Operating Systems",
+          "course_type": "LoT",
+          "teacher_id": "178.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Design",
+          "student_dept": "Computer Science & Design",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 64,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "178.0"
+      ],
+      "courses": [
+        "CS23431"
+      ],
+      "total_workload": 7
+    },
+    {
+      "group_id": 5,
+      "instances": [
+        {
+          "id": 88,
+          "course_id": 592,
+          "course_code": "IT23E31",
+          "course_name": "Graphics and Multimedia",
+          "course_type": "LoT",
+          "teacher_id": "184.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Design",
+          "student_dept": "Computer Science & Design",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 64,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "184.0"
+      ],
+      "courses": [
+        "IT23E31"
       ],
       "total_workload": 4
     },
@@ -159,7 +169,7 @@
           "course_code": "CS23531",
           "course_name": "Web Programming",
           "course_type": "LoT",
-          "teacher_id": "185",
+          "teacher_id": "185.0",
           "semester": 5,
           "course_dept": "Computer Science & Design",
           "student_dept": "Computer Science & Design",
@@ -168,11 +178,13 @@
           "practical_hours": 4,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 64
+          "student_count": 64,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "185"
+        "185.0"
       ],
       "courses": [
         "CS23531"

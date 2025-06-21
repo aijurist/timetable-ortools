@@ -14,7 +14,7 @@
           "course_code": "CS23331",
           "course_name": "Design and Analysis of Algorithms",
           "course_type": "LoT",
-          "teacher_id": "179",
+          "teacher_id": "179.0",
           "semester": 3,
           "course_dept": "Computer Science & Design",
           "student_dept": "Computer Science & Design",
@@ -23,11 +23,13 @@
           "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 64
+          "student_count": 64,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "179"
+        "179.0"
       ],
       "courses": [
         "CS23331"
@@ -43,7 +45,7 @@
           "course_code": "CS23332",
           "course_name": "Database Management Systems",
           "course_type": "LoT",
-          "teacher_id": "171",
+          "teacher_id": "171.0",
           "semester": 3,
           "course_dept": "Computer Science & Design",
           "student_dept": "Computer Science & Design",
@@ -52,11 +54,13 @@
           "practical_hours": 4,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 64
+          "student_count": 64,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "171"
+        "171.0"
       ],
       "courses": [
         "CS23332"
@@ -67,41 +71,12 @@
       "group_id": 3,
       "instances": [
         {
-          "id": 92,
-          "course_id": 170,
-          "course_code": "CD23331",
-          "course_name": "Design Processes and Perspectives",
-          "course_type": "LoT",
-          "teacher_id": "182",
-          "semester": 3,
-          "course_dept": "Computer Science & Design",
-          "student_dept": "Computer Science & Design",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 64
-        }
-      ],
-      "teachers": [
-        "182"
-      ],
-      "courses": [
-        "CD23331"
-      ],
-      "total_workload": 5
-    },
-    {
-      "group_id": 4,
-      "instances": [
-        {
           "id": 73,
           "course_id": 171,
           "course_code": "CD23332",
           "course_name": "UI and UX design",
           "course_type": "LoT",
-          "teacher_id": "1743",
+          "teacher_id": "1743.0",
           "semester": 3,
           "course_dept": "Computer Science & Design",
           "student_dept": "Computer Science & Design",
@@ -110,16 +85,49 @@
           "practical_hours": 4,
           "lecture_hours": 2,
           "tutorial_hours": 0,
-          "student_count": 64
+          "student_count": 64,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "1743"
+        "1743.0"
       ],
       "courses": [
         "CD23332"
       ],
       "total_workload": 6
+    },
+    {
+      "group_id": 4,
+      "instances": [
+        {
+          "id": 1224,
+          "course_id": 424,
+          "course_code": "MA23313",
+          "course_name": "Discrete Mathematics for AI",
+          "course_type": "T",
+          "teacher_id": "419.0",
+          "semester": 3,
+          "course_dept": "Computer Science & Design",
+          "student_dept": "Computer Science & Design",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "419.0"
+      ],
+      "courses": [
+        "MA23313"
+      ],
+      "total_workload": 4
     },
     {
       "group_id": 5,
@@ -130,7 +138,7 @@
           "course_code": "CD23321",
           "course_name": "Python Programming for Design",
           "course_type": "L",
-          "teacher_id": "184",
+          "teacher_id": "184.0",
           "semester": 3,
           "course_dept": "Computer Science & Design",
           "student_dept": "Computer Science & Design",
@@ -139,11 +147,13 @@
           "practical_hours": 6,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 64
+          "student_count": 64,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "184"
+        "184.0"
       ],
       "courses": [
         "CD23321"
@@ -154,30 +164,32 @@
       "group_id": 6,
       "instances": [
         {
-          "id": 1224,
-          "course_id": 424,
-          "course_code": "MA23313",
-          "course_name": "Discrete Mathematics for AI",
-          "course_type": "T",
-          "teacher_id": "419",
+          "id": 92,
+          "course_id": 170,
+          "course_code": "CD23331",
+          "course_name": "Design Processes and Perspectives",
+          "course_type": "LoT",
+          "teacher_id": "182.0",
           "semester": 3,
           "course_dept": "Computer Science & Design",
           "student_dept": "Computer Science & Design",
-          "has_lab": false,
+          "has_lab": true,
           "has_theory": true,
-          "practical_hours": 0,
+          "practical_hours": 2,
           "lecture_hours": 3,
-          "tutorial_hours": 1,
-          "student_count": 70
+          "tutorial_hours": 0,
+          "student_count": 64,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "419"
+        "182.0"
       ],
       "courses": [
-        "MA23313"
+        "CD23331"
       ],
-      "total_workload": 4
+      "total_workload": 5
     }
   ],
   "summary": {

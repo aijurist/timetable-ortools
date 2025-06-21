@@ -54,13 +54,16 @@ class CourseGroupOptimizer:
         self.semester = semester
         self.logger = logger or logging.getLogger(__name__)
         
+        # Preprocess courses to handle large instances
+        self.courses = self._preprocess_large_courses(self.courses)
+        
         # Processing results
         self.groups = []
         self.solution_found = False
         self.objective_value = 0
         
         # Filter courses based on instance count before analysis
-        self.courses = self._filter_courses_by_instance_count(courses)
+        self.courses = self._filter_courses_by_instance_count(self.courses)
         
         # Course analysis
         self.lab_courses = [inst for inst in self.courses if inst.get('has_lab', False)]
@@ -72,12 +75,46 @@ class CourseGroupOptimizer:
         self.num_groups = len(self.unique_courses)
         
         self.logger.info(f"Initializing Course Group Optimizer for {dept} Semester {semester}")
-        self.logger.info(f"  Total instances: {len(courses)}")
+        self.logger.info(f"  Total instances: {len(self.courses)}")
         self.logger.info(f"  Lab instances: {len(self.lab_courses)}")
         self.logger.info(f"  Theory instances: {len(self.theory_courses)}")
         self.logger.info(f"  Unique courses: {len(self.unique_courses)}")
         self.logger.info(f"  Unique teachers: {len(self.unique_teachers)}")
         self.logger.info(f"  Target groups: {self.num_groups}")
+    
+    def _preprocess_large_courses(self, courses):
+        """
+        Preprocess courses to split instances with >= 140 students into two
+        virtual 70-student instances.
+        """
+        new_courses = []
+        co_schedule_counter = 1
+        for course in courses:
+            if course.get('student_count', 0) >= 140:
+                self.logger.info(f"Splitting large course instance {course['id']} ({course['course_code']}) with {course['student_count']} students.")
+                
+                # Create two virtual instances
+                instance1 = course.copy()
+                instance1['student_count'] = 70
+                instance1['virtual_id'] = f"{course['id']}-A"
+                instance1['id'] = f"{course['id']}-A"
+                instance1['co_scheduled_id'] = co_schedule_counter
+                
+                instance2 = course.copy()
+                instance2['student_count'] = 70
+                instance2['virtual_id'] = f"{course['id']}-B"
+                instance2['id'] = f"{course['id']}-B"
+                instance2['co_scheduled_id'] = co_schedule_counter
+                
+                new_courses.extend([instance1, instance2])
+                co_schedule_counter += 1
+            else:
+                new_courses.append(course)
+        
+        if co_schedule_counter > 1:
+            self.logger.info(f"Created {co_schedule_counter - 1} pairs of virtual co-scheduled instances.")
+            
+        return new_courses
     
     def _filter_courses_by_instance_count(self, courses):
         """
@@ -294,7 +331,8 @@ class CourseGroupOptimizer:
         for i, instance in enumerate(self.courses):
             instance_id = instance['id']
             for group_idx in range(self.num_groups):
-                var_name = f"assign_inst_{instance_id}_to_group_{group_idx}"
+                clean_instance_id = str(instance_id).replace('-', '_') # Make it a valid var name
+                var_name = f"assign_inst_{clean_instance_id}_to_group_{group_idx}"
                 assignment_vars[(i, group_idx)] = model.NewBoolVar(var_name)
         
         self.logger.info(f"Created {len(assignment_vars)} assignment variables")
@@ -310,10 +348,29 @@ class CourseGroupOptimizer:
         """
         # Each instance must be assigned to exactly one group
         for i, instance in enumerate(self.courses):
+            if 'co_scheduled_id' in instance and 'virtual_id' in instance and instance['virtual_id'].endswith('-B'):
+                # This is the second virtual instance, skip direct assignment
+                # It will be forced to follow the first instance
+                continue
+
             instance_assignments = [assignment_vars[(i, g)] for g in range(self.num_groups)]
             model.Add(sum(instance_assignments) == 1)
+
+            if 'co_scheduled_id' in instance and 'virtual_id' in instance and instance['virtual_id'].endswith('-A'):
+                # Find the corresponding second instance
+                co_id = instance['co_scheduled_id']
+                second_instance_idx = -1
+                for j, inst in enumerate(self.courses):
+                    if inst.get('co_scheduled_id') == co_id and inst.get('virtual_id', '').endswith('-B'):
+                        second_instance_idx = j
+                        break
+                
+                if second_instance_idx != -1:
+                    # Force the second instance to be in the same group as the first
+                    for g in range(self.num_groups):
+                        model.Add(assignment_vars[(i, g)] == assignment_vars[(second_instance_idx, g)])
         
-        self.logger.info("Applied basic assignment constraints (each instance to exactly one group)")
+        self.logger.info("Applied basic assignment constraints (each instance to one group, with co-scheduling links)")
     
     def _apply_teacher_uniqueness_constraints(self, model, assignment_vars):
         """
@@ -336,11 +393,34 @@ class CourseGroupOptimizer:
             # Add constraints: at most one instance per teacher per group
             for teacher_id, instance_indices in teacher_instances.items():
                 if len(instance_indices) > 1:
-                    teacher_assignments = [assignment_vars[(i, group_idx)] for i in instance_indices]
-                    model.Add(sum(teacher_assignments) <= 1)
-                    teacher_constraints_added += 1
-        
-        self.logger.info(f"Applied {teacher_constraints_added} teacher uniqueness constraints")
+                    # Check for valid co-scheduling cases
+                    co_scheduling_groups = defaultdict(list)
+                    for i in instance_indices:
+                        if 'co_scheduled_id' in self.courses[i]:
+                            co_scheduling_groups[self.courses[i]['co_scheduled_id']].append(i)
+                    
+                    # For each co-scheduling group, allow up to 2 instances from the same teacher
+                    for co_id, co_indices in co_scheduling_groups.items():
+                        if len(co_indices) == 2:
+                            co_vars = [assignment_vars[(i, group_idx)] for i in co_indices]
+                            model.Add(sum(co_vars) <= 2) # Allow both in the same group
+                    
+                    # For non-co-scheduled instances, enforce normal teacher uniqueness
+                    non_co_scheduled_indices = [
+                        i for i in instance_indices if 'co_scheduled_id' not in self.courses[i]
+                    ]
+                    
+                    # Include the first instance from any co-scheduling group of size 1
+                    for co_id, co_indices in co_scheduling_groups.items():
+                        if len(co_indices) == 1:
+                            non_co_scheduled_indices.extend(co_indices)
+
+                    if len(non_co_scheduled_indices) > 1:
+                        teacher_assignments = [assignment_vars[(i, group_idx)] for i in non_co_scheduled_indices]
+                        model.Add(sum(teacher_assignments) <= 1)
+                        teacher_constraints_added += 1
+
+        self.logger.info(f"Applied {teacher_constraints_added} teacher uniqueness constraints with co-scheduling exceptions")
     
     def _apply_course_limit_constraints(self, model, assignment_vars):
         """
@@ -692,16 +772,26 @@ class CourseGroupOptimizer:
         violations = 0
         
         for group_idx, group in enumerate(self.groups):
-            teacher_counts = defaultdict(int)
+            teacher_instance_map = defaultdict(list)
             
             for instance in group:
-                teacher_counts[instance['teacher_id']] += 1
+                teacher_instance_map[instance['teacher_id']].append(instance)
             
-            for teacher_id, count in teacher_counts.items():
-                if count > 1:
-                    violations += 1
-                    self.logger.error(f"Teacher {teacher_id} appears {count} times in Group {group_idx + 1}")
-        
+            for teacher_id, instances in teacher_instance_map.items():
+                if len(instances) > 1:
+                    # Check if this is a valid co-scheduling case
+                    co_scheduled_pairs = 0
+                    co_schedule_ids = [inst.get('co_scheduled_id') for inst in instances if 'co_scheduled_id' in inst]
+                    
+                    if len(co_schedule_ids) == 2 and co_schedule_ids[0] == co_schedule_ids[1]:
+                        # This is a valid pair
+                        co_scheduled_pairs = 1
+                    
+                    # A violation occurs if the number of instances exceeds the valid pairs
+                    if len(instances) - co_scheduled_pairs > 1:
+                        violations += 1
+                        self.logger.error(f"Teacher {teacher_id} appears {len(instances)} times in Group {group_idx + 1}, but only {co_scheduled_pairs} co-scheduled pairs found.")
+
         if violations == 0:
             self.logger.info("[OK] Teacher uniqueness constraint satisfied")
             return True
@@ -922,7 +1012,9 @@ class CourseGroupOptimizer:
                         'practical_hours': instance.get('practical_hours', 0),
                         'lecture_hours': instance.get('lecture_hours', 0),
                         'tutorial_hours': instance.get('tutorial_hours', 0),
-                        'student_count': instance.get('student_count', 0)
+                        'student_count': instance.get('student_count', 0),
+                        'virtual_id': instance.get('virtual_id', None),
+                        'co_scheduled_id': instance.get('co_scheduled_id', None)
                     })
                 
                 results['groups'].append(group_data)
