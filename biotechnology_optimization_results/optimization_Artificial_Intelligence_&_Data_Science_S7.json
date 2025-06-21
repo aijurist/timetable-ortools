@@ -1,0 +1,132 @@
+{
+  "department": "Artificial Intelligence & Data Science",
+  "semester": "7",
+  "solution_found": true,
+  "objective_value": 20.0,
+  "num_groups": 4,
+  "groups": [
+    {
+      "group_id": 1,
+      "instances": [
+        {
+          "id": 992,
+          "course_id": 582,
+          "course_code": "AD7P3",
+          "course_name": "ETHICS OF ARTIFICIAL INTELLIGENCE",
+          "course_type": "T",
+          "teacher_id": "14",
+          "semester": 7,
+          "course_dept": "Artificial Intelligence & Data Science",
+          "student_dept": "Artificial Intelligence & Data Science",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "14"
+      ],
+      "courses": [
+        "AD7P3"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 2,
+      "instances": [
+        {
+          "id": 1100,
+          "course_id": 710,
+          "course_code": "AI19741",
+          "course_name": "Big Data Technology",
+          "course_type": "LoT",
+          "teacher_id": "22",
+          "semester": 7,
+          "course_dept": "Artificial Intelligence & Data Science",
+          "student_dept": "Artificial Intelligence & Data Science",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "22"
+      ],
+      "courses": [
+        "AI19741"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 3,
+      "instances": [
+        {
+          "id": 965,
+          "course_id": 586,
+          "course_code": "AD7P4",
+          "course_name": "Predictive Analytics",
+          "course_type": "LoT",
+          "teacher_id": "30",
+          "semester": 7,
+          "course_dept": "Artificial Intelligence & Data Science",
+          "student_dept": "Artificial Intelligence & Data Science",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "30"
+      ],
+      "courses": [
+        "AD7P4"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 4,
+      "instances": [
+        {
+          "id": 368,
+          "course_id": 577,
+          "course_code": "AD19711",
+          "course_name": "Project Phase-I",
+          "course_type": "L",
+          "teacher_id": "26",
+          "semester": 7,
+          "course_dept": "Artificial Intelligence & Data Science",
+          "student_dept": "Artificial Intelligence & Data Science",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 6,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "26"
+      ],
+      "courses": [
+        "AD19711"
+      ],
+      "total_workload": 6
+    }
+  ],
+  "summary": {
+    "total_instances": 4,
+    "lab_instances": 3,
+    "theory_instances": 3,
+    "unique_courses": 4,
+    "unique_teachers": 4
+  }
+}

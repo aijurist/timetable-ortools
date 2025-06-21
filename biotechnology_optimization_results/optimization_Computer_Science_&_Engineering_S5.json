@@ -9,8 +9,8 @@
       "group_id": 1,
       "instances": [
         {
-          "id": 1928,
-          "course_id": 1556,
+          "id": 251,
+          "course_id": 270,
           "course_code": "CS23532",
           "course_name": "Computer Networks",
           "course_type": "LoT",
@@ -26,111 +26,8 @@
           "student_count": 70
         },
         {
-          "id": 95,
-          "course_id": 1868,
-          "course_code": "CS23533",
-          "course_name": "Foundations of Artificial Intelligence",
-          "course_type": "LoT",
-          "teacher_id": "187",
-          "semester": 5,
-          "course_dept": "Computer Science & Engineering",
-          "student_dept": "Computer Science & Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70
-        },
-        {
-          "id": 243,
-          "course_id": 1868,
-          "course_code": "CS23533",
-          "course_name": "Foundations of Artificial Intelligence",
-          "course_type": "LoT",
-          "teacher_id": "188",
-          "semester": 5,
-          "course_dept": "Computer Science & Engineering",
-          "student_dept": "Computer Science & Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70
-        },
-        {
-          "id": 275,
-          "course_id": 1868,
-          "course_code": "CS23533",
-          "course_name": "Foundations of Artificial Intelligence",
-          "course_type": "LoT",
-          "teacher_id": "195",
-          "semester": 5,
-          "course_dept": "Computer Science & Engineering",
-          "student_dept": "Computer Science & Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70
-        },
-        {
-          "id": 283,
-          "course_id": 1868,
-          "course_code": "CS23533",
-          "course_name": "Foundations of Artificial Intelligence",
-          "course_type": "LoT",
-          "teacher_id": "231",
-          "semester": 5,
-          "course_dept": "Computer Science & Engineering",
-          "student_dept": "Computer Science & Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70
-        },
-        {
-          "id": 1935,
-          "course_id": 1868,
-          "course_code": "CS23533",
-          "course_name": "Foundations of Artificial Intelligence",
-          "course_type": "LoT",
-          "teacher_id": "236",
-          "semester": 5,
-          "course_dept": "Computer Science & Engineering",
-          "student_dept": "Computer Science & Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70
-        }
-      ],
-      "teachers": [
-        "236",
-        "187",
-        "195",
-        "188",
-        "231",
-        "211"
-      ],
-      "courses": [
-        "CS23532",
-        "CS23533"
-      ],
-      "total_workload": 32
-    },
-    {
-      "group_id": 2,
-      "instances": [
-        {
           "id": 267,
-          "course_id": 1555,
+          "course_id": 269,
           "course_code": "CS23531",
           "course_name": "Web Programming",
           "course_type": "LoT",
@@ -147,7 +44,7 @@
         },
         {
           "id": 289,
-          "course_id": 1555,
+          "course_id": 269,
           "course_code": "CS23531",
           "course_name": "Web Programming",
           "course_type": "LoT",
@@ -163,8 +60,25 @@
           "student_count": 70
         },
         {
+          "id": 1930,
+          "course_id": 269,
+          "course_code": "CS23531",
+          "course_name": "Web Programming",
+          "course_type": "LoT",
+          "teacher_id": "234",
+          "semester": 5,
+          "course_dept": "Computer Science & Engineering",
+          "student_dept": "Computer Science & Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
           "id": 1931,
-          "course_id": 1555,
+          "course_id": 269,
           "course_code": "CS23531",
           "course_name": "Web Programming",
           "course_type": "LoT",
@@ -181,7 +95,7 @@
         },
         {
           "id": 1932,
-          "course_id": 1555,
+          "course_id": 269,
           "course_code": "CS23531",
           "course_name": "Web Programming",
           "course_type": "LoT",
@@ -195,27 +109,79 @@
           "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70
-        },
+        }
+      ],
+      "teachers": [
+        "1756",
+        "229",
+        "211",
+        "234",
+        "199",
+        "244"
+      ],
+      "courses": [
+        "CS23532",
+        "CS23531"
+      ],
+      "total_workload": 42
+    },
+    {
+      "group_id": 2,
+      "instances": [
         {
-          "id": 1933,
-          "course_id": 1555,
-          "course_code": "CS23531",
-          "course_name": "Web Programming",
+          "id": 95,
+          "course_id": 590,
+          "course_code": "CS23533",
+          "course_name": "Foundations of Artificial Intelligence",
           "course_type": "LoT",
-          "teacher_id": "1754",
+          "teacher_id": "187",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
           "has_lab": true,
           "has_theory": true,
-          "practical_hours": 4,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 243,
+          "course_id": 590,
+          "course_code": "CS23533",
+          "course_name": "Foundations of Artificial Intelligence",
+          "course_type": "LoT",
+          "teacher_id": "188",
+          "semester": 5,
+          "course_dept": "Computer Science & Engineering",
+          "student_dept": "Computer Science & Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 275,
+          "course_id": 590,
+          "course_code": "CS23533",
+          "course_name": "Foundations of Artificial Intelligence",
+          "course_type": "LoT",
+          "teacher_id": "195",
+          "semester": 5,
+          "course_dept": "Computer Science & Engineering",
+          "student_dept": "Computer Science & Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70
         },
         {
           "id": 1934,
-          "course_id": 1868,
+          "course_id": 590,
           "course_code": "CS23533",
           "course_name": "Foundations of Artificial Intelligence",
           "course_type": "LoT",
@@ -229,28 +195,62 @@
           "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70
+        },
+        {
+          "id": 1935,
+          "course_id": 590,
+          "course_code": "CS23533",
+          "course_name": "Foundations of Artificial Intelligence",
+          "course_type": "LoT",
+          "teacher_id": "236",
+          "semester": 5,
+          "course_dept": "Computer Science & Engineering",
+          "student_dept": "Computer Science & Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1933,
+          "course_id": 269,
+          "course_code": "CS23531",
+          "course_name": "Web Programming",
+          "course_type": "LoT",
+          "teacher_id": "1754",
+          "semester": 5,
+          "course_dept": "Computer Science & Engineering",
+          "student_dept": "Computer Science & Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
         }
       ],
       "teachers": [
-        "229",
-        "244",
-        "199",
+        "187",
         "1754",
+        "188",
         "218",
-        "1756"
+        "195",
+        "236"
       ],
       "courses": [
         "CS23533",
         "CS23531"
       ],
-      "total_workload": 40
+      "total_workload": 32
     },
     {
       "group_id": 3,
       "instances": [
         {
           "id": 244,
-          "course_id": 1556,
+          "course_id": 270,
           "course_code": "CS23532",
           "course_name": "Computer Networks",
           "course_type": "LoT",
@@ -266,25 +266,8 @@
           "student_count": 70
         },
         {
-          "id": 251,
-          "course_id": 1556,
-          "course_code": "CS23532",
-          "course_name": "Computer Networks",
-          "course_type": "LoT",
-          "teacher_id": "211",
-          "semester": 5,
-          "course_dept": "Computer Science & Engineering",
-          "student_dept": "Computer Science & Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70
-        },
-        {
           "id": 255,
-          "course_id": 1556,
+          "course_id": 270,
           "course_code": "CS23532",
           "course_name": "Computer Networks",
           "course_type": "LoT",
@@ -300,8 +283,25 @@
           "student_count": 70
         },
         {
+          "id": 1928,
+          "course_id": 270,
+          "course_code": "CS23532",
+          "course_name": "Computer Networks",
+          "course_type": "LoT",
+          "teacher_id": "211",
+          "semester": 5,
+          "course_dept": "Computer Science & Engineering",
+          "student_dept": "Computer Science & Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
           "id": 1929,
-          "course_id": 1556,
+          "course_id": 270,
           "course_code": "CS23532",
           "course_name": "Computer Networks",
           "course_type": "LoT",
@@ -318,7 +318,7 @@
         },
         {
           "id": 2021,
-          "course_id": 1556,
+          "course_id": 270,
           "course_code": "CS23532",
           "course_name": "Computer Networks",
           "course_type": "LoT",
@@ -334,43 +334,43 @@
           "student_count": 70
         },
         {
-          "id": 1930,
-          "course_id": 1555,
-          "course_code": "CS23531",
-          "course_name": "Web Programming",
+          "id": 283,
+          "course_id": 590,
+          "course_code": "CS23533",
+          "course_name": "Foundations of Artificial Intelligence",
           "course_type": "LoT",
-          "teacher_id": "234",
+          "teacher_id": "231",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
           "has_lab": true,
           "has_theory": true,
-          "practical_hours": 4,
+          "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70
         }
       ],
       "teachers": [
-        "245",
-        "217",
-        "234",
         "1853",
+        "1756",
+        "217",
+        "245",
         "211",
-        "1756"
+        "231"
       ],
       "courses": [
         "CS23532",
-        "CS23531"
+        "CS23533"
       ],
-      "total_workload": 42
+      "total_workload": 40
     },
     {
       "group_id": 4,
       "instances": [
         {
           "id": 256,
-          "course_id": 1554,
+          "course_id": 268,
           "course_code": "CS23512",
           "course_name": "Fundamentals of Mobile Computing",
           "course_type": "T",
@@ -387,7 +387,7 @@
         },
         {
           "id": 1925,
-          "course_id": 1554,
+          "course_id": 268,
           "course_code": "CS23512",
           "course_name": "Fundamentals of Mobile Computing",
           "course_type": "T",
@@ -404,7 +404,7 @@
         },
         {
           "id": 1920,
-          "course_id": 1553,
+          "course_id": 267,
           "course_code": "CS23511",
           "course_name": "Theory of Computation",
           "course_type": "T",
@@ -421,7 +421,7 @@
         },
         {
           "id": 1922,
-          "course_id": 1553,
+          "course_id": 267,
           "course_code": "CS23511",
           "course_name": "Theory of Computation",
           "course_type": "T",
@@ -438,7 +438,7 @@
         },
         {
           "id": 1923,
-          "course_id": 1553,
+          "course_id": 267,
           "course_code": "CS23511",
           "course_name": "Theory of Computation",
           "course_type": "T",
@@ -455,7 +455,7 @@
         },
         {
           "id": 1924,
-          "course_id": 1553,
+          "course_id": 267,
           "course_code": "CS23511",
           "course_name": "Theory of Computation",
           "course_type": "T",
@@ -472,16 +472,16 @@
         }
       ],
       "teachers": [
+        "1755",
+        "216",
         "223",
         "245",
-        "1755",
-        "222",
-        "216",
-        "234"
+        "234",
+        "222"
       ],
       "courses": [
-        "CS23512",
-        "CS23511"
+        "CS23511",
+        "CS23512"
       ],
       "total_workload": 22
     },
@@ -490,7 +490,7 @@
       "instances": [
         {
           "id": 259,
-          "course_id": 1554,
+          "course_id": 268,
           "course_code": "CS23512",
           "course_name": "Fundamentals of Mobile Computing",
           "course_type": "T",
@@ -507,7 +507,7 @@
         },
         {
           "id": 1926,
-          "course_id": 1554,
+          "course_id": 268,
           "course_code": "CS23512",
           "course_name": "Fundamentals of Mobile Computing",
           "course_type": "T",
@@ -524,7 +524,7 @@
         },
         {
           "id": 1927,
-          "course_id": 1554,
+          "course_id": 268,
           "course_code": "CS23512",
           "course_name": "Fundamentals of Mobile Computing",
           "course_type": "T",
@@ -541,7 +541,7 @@
         },
         {
           "id": 2020,
-          "course_id": 1554,
+          "course_id": 268,
           "course_code": "CS23512",
           "course_name": "Fundamentals of Mobile Computing",
           "course_type": "T",
@@ -558,7 +558,7 @@
         },
         {
           "id": 1919,
-          "course_id": 1553,
+          "course_id": 267,
           "course_code": "CS23511",
           "course_name": "Theory of Computation",
           "course_type": "T",
@@ -575,7 +575,7 @@
         },
         {
           "id": 1921,
-          "course_id": 1553,
+          "course_id": 267,
           "course_code": "CS23511",
           "course_name": "Theory of Computation",
           "course_type": "T",
@@ -592,16 +592,16 @@
         }
       ],
       "teachers": [
-        "192",
-        "222",
         "196",
         "203",
+        "1757",
+        "222",
         "2",
-        "1757"
+        "192"
       ],
       "courses": [
-        "CS23512",
-        "CS23511"
+        "CS23511",
+        "CS23512"
       ],
       "total_workload": 20
     }

@@ -1,0 +1,277 @@
+{
+  "department": "Civil Engineering",
+  "semester": "1",
+  "solution_found": true,
+  "objective_value": 45.0,
+  "num_groups": 9,
+  "groups": [
+    {
+      "group_id": 1,
+      "instances": [
+        {
+          "id": 1240,
+          "course_id": 425,
+          "course_code": "MA23331",
+          "course_name": "Transforms and Statistics",
+          "course_type": "LoT",
+          "teacher_id": "420",
+          "semester": 1,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "420"
+      ],
+      "courses": [
+        "MA23331"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 2,
+      "instances": [
+        {
+          "id": 1001,
+          "course_id": 183,
+          "course_code": "CE23112",
+          "course_name": "Engineering Drawing for Civil Engineers",
+          "course_type": "T",
+          "teacher_id": "152",
+          "semester": 1,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 30
+        }
+      ],
+      "teachers": [
+        "152"
+      ],
+      "courses": [
+        "CE23112"
+      ],
+      "total_workload": 6
+    },
+    {
+      "group_id": 3,
+      "instances": [
+        {
+          "id": 1398,
+          "course_id": 494,
+          "course_code": "PH23131",
+          "course_name": "Physics of Materials",
+          "course_type": "LoT",
+          "teacher_id": "571",
+          "semester": 1,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "571"
+      ],
+      "courses": [
+        "PH23131"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 4,
+      "instances": [
+        {
+          "id": 1003,
+          "course_id": 376,
+          "course_code": "GE23121",
+          "course_name": "Engineering Practices \u2013 Civil and Mechanical",
+          "course_type": "L",
+          "teacher_id": "152",
+          "semester": 1,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 60
+        }
+      ],
+      "teachers": [
+        "152"
+      ],
+      "courses": [
+        "GE23121"
+      ],
+      "total_workload": 2
+    },
+    {
+      "group_id": 5,
+      "instances": [
+        {
+          "id": 1597,
+          "course_id": 394,
+          "course_code": "HS23111",
+          "course_name": "Technical Communication -I",
+          "course_type": "T",
+          "teacher_id": "379",
+          "semester": 1,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "379"
+      ],
+      "courses": [
+        "HS23111"
+      ],
+      "total_workload": 2
+    },
+    {
+      "group_id": 6,
+      "instances": [
+        {
+          "id": 1340,
+          "course_id": 435,
+          "course_code": "MC23112",
+          "course_name": "Environmental Science and Engineering",
+          "course_type": "T",
+          "teacher_id": "154",
+          "semester": 1,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "154"
+      ],
+      "courses": [
+        "MC23112"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 7,
+      "instances": [
+        {
+          "id": 1000,
+          "course_id": 182,
+          "course_code": "CE23111",
+          "course_name": "Building Materials",
+          "course_type": "T",
+          "teacher_id": "163",
+          "semester": 1,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "163"
+      ],
+      "courses": [
+        "CE23111"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 8,
+      "instances": [
+        {
+          "id": 1723,
+          "course_id": 375,
+          "course_code": "GE23117",
+          "course_name": "\u0ba4\u0bae\u0bbf\u0bb4\u0bb0\u0bcd \u0bae\u0bb0\u0baa\u0bc1 /Heritage of Tamils",
+          "course_type": "T",
+          "teacher_id": "362",
+          "semester": 1,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 1,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "362"
+      ],
+      "courses": [
+        "GE23117"
+      ],
+      "total_workload": 1
+    },
+    {
+      "group_id": 9,
+      "instances": [
+        {
+          "id": 1509,
+          "course_id": 412,
+          "course_code": "MA23112",
+          "course_name": "Algebra and Calculus",
+          "course_type": "T",
+          "teacher_id": "439",
+          "semester": 1,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "439"
+      ],
+      "courses": [
+        "MA23112"
+      ],
+      "total_workload": 4
+    }
+  ],
+  "summary": {
+    "total_instances": 9,
+    "lab_instances": 4,
+    "theory_instances": 8,
+    "unique_courses": 9,
+    "unique_teachers": 8
+  }
+}

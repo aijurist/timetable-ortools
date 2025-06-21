@@ -1,0 +1,277 @@
+{
+  "department": "Robotics & Automation",
+  "semester": "1",
+  "solution_found": true,
+  "objective_value": 45.0,
+  "num_groups": 9,
+  "groups": [
+    {
+      "group_id": 1,
+      "instances": [
+        {
+          "id": 2003,
+          "course_id": 377,
+          "course_code": "GE23122",
+          "course_name": "Engineering Practices \u2013 Electrical and Electronics",
+          "course_type": "L",
+          "teacher_id": "341",
+          "semester": 1,
+          "course_dept": "Robotics & Automation",
+          "student_dept": "Robotics & Automation",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "341"
+      ],
+      "courses": [
+        "GE23122"
+      ],
+      "total_workload": 2
+    },
+    {
+      "group_id": 2,
+      "instances": [
+        {
+          "id": 1886,
+          "course_id": 312,
+          "course_code": "EE23132",
+          "course_name": "Basic Electrical Engineering",
+          "course_type": "LoT",
+          "teacher_id": "319",
+          "semester": 1,
+          "course_dept": "Robotics & Automation",
+          "student_dept": "Robotics & Automation",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "319"
+      ],
+      "courses": [
+        "EE23132"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 3,
+      "instances": [
+        {
+          "id": 1549,
+          "course_id": 376,
+          "course_code": "GE23121",
+          "course_name": "Engineering Practices \u2013 Civil and Mechanical",
+          "course_type": "L",
+          "teacher_id": "558",
+          "semester": 1,
+          "course_dept": "Robotics & Automation",
+          "student_dept": "Robotics & Automation",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 30
+        }
+      ],
+      "teachers": [
+        "558"
+      ],
+      "courses": [
+        "GE23121"
+      ],
+      "total_workload": 2
+    },
+    {
+      "group_id": 4,
+      "instances": [
+        {
+          "id": 1572,
+          "course_id": 435,
+          "course_code": "MC23112",
+          "course_name": "Environmental Science and Engineering",
+          "course_type": "T",
+          "teacher_id": "168",
+          "semester": 1,
+          "course_dept": "Robotics & Automation",
+          "student_dept": "Robotics & Automation",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "168"
+      ],
+      "courses": [
+        "MC23112"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 5,
+      "instances": [
+        {
+          "id": 1440,
+          "course_id": 412,
+          "course_code": "MA23112",
+          "course_name": "Algebra and Calculus",
+          "course_type": "T",
+          "teacher_id": "430",
+          "semester": 1,
+          "course_dept": "Robotics & Automation",
+          "student_dept": "Robotics & Automation",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "430"
+      ],
+      "courses": [
+        "MA23112"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 6,
+      "instances": [
+        {
+          "id": 1033,
+          "course_id": 374,
+          "course_code": "GE23111",
+          "course_name": "Engineering Graphics",
+          "course_type": "T",
+          "teacher_id": "567",
+          "semester": 1,
+          "course_dept": "Robotics & Automation",
+          "student_dept": "Robotics & Automation",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 4,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "567"
+      ],
+      "courses": [
+        "GE23111"
+      ],
+      "total_workload": 6
+    },
+    {
+      "group_id": 7,
+      "instances": [
+        {
+          "id": 1633,
+          "course_id": 394,
+          "course_code": "HS23111",
+          "course_name": "Technical Communication -I",
+          "course_type": "T",
+          "teacher_id": "364",
+          "semester": 1,
+          "course_dept": "Robotics & Automation",
+          "student_dept": "Robotics & Automation",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "364"
+      ],
+      "courses": [
+        "HS23111"
+      ],
+      "total_workload": 2
+    },
+    {
+      "group_id": 8,
+      "instances": [
+        {
+          "id": 414,
+          "course_id": 501,
+          "course_code": "RO23111",
+          "course_name": "Introduction To Mechanical Systems",
+          "course_type": "T",
+          "teacher_id": "578",
+          "semester": 1,
+          "course_dept": "Robotics & Automation",
+          "student_dept": "Robotics & Automation",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 1,
+          "student_count": 60
+        }
+      ],
+      "teachers": [
+        "578"
+      ],
+      "courses": [
+        "RO23111"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 9,
+      "instances": [
+        {
+          "id": 1548,
+          "course_id": 375,
+          "course_code": "GE23117",
+          "course_name": "\u0ba4\u0bae\u0bbf\u0bb4\u0bb0\u0bcd \u0bae\u0bb0\u0baa\u0bc1 /Heritage of Tamils",
+          "course_type": "T",
+          "teacher_id": "1745",
+          "semester": 1,
+          "course_dept": "Robotics & Automation",
+          "student_dept": "Robotics & Automation",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 1,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "1745"
+      ],
+      "courses": [
+        "GE23117"
+      ],
+      "total_workload": 1
+    }
+  ],
+  "summary": {
+    "total_instances": 9,
+    "lab_instances": 3,
+    "theory_instances": 7,
+    "unique_courses": 9,
+    "unique_teachers": 9
+  }
+}

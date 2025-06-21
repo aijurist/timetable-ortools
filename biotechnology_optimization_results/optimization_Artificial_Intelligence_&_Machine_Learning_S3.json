@@ -1,0 +1,520 @@
+{
+  "department": "Artificial Intelligence & Machine Learning",
+  "semester": "3",
+  "solution_found": true,
+  "objective_value": 240.0,
+  "num_groups": 6,
+  "groups": [
+    {
+      "group_id": 1,
+      "instances": [
+        {
+          "id": 498,
+          "course_id": 36,
+          "course_code": "AI23331",
+          "course_name": "Fundamentals of Machine Learning",
+          "course_type": "LoT",
+          "teacher_id": "57",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 512,
+          "course_id": 36,
+          "course_code": "AI23331",
+          "course_name": "Fundamentals of Machine Learning",
+          "course_type": "LoT",
+          "teacher_id": "54",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 513,
+          "course_id": 36,
+          "course_code": "AI23331",
+          "course_name": "Fundamentals of Machine Learning",
+          "course_type": "LoT",
+          "teacher_id": "50",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 522,
+          "course_id": 258,
+          "course_code": "CS23332",
+          "course_name": "Database Management Systems",
+          "course_type": "LoT",
+          "teacher_id": "37",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "54",
+        "57",
+        "37",
+        "50"
+      ],
+      "courses": [
+        "CS23332",
+        "AI23331"
+      ],
+      "total_workload": 22
+    },
+    {
+      "group_id": 2,
+      "instances": [
+        {
+          "id": 518,
+          "course_id": 257,
+          "course_code": "CS23331",
+          "course_name": "Design and Analysis of Algorithms",
+          "course_type": "LoT",
+          "teacher_id": "48",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 520,
+          "course_id": 257,
+          "course_code": "CS23331",
+          "course_name": "Design and Analysis of Algorithms",
+          "course_type": "LoT",
+          "teacher_id": "53",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1663,
+          "course_id": 257,
+          "course_code": "CS23331",
+          "course_name": "Design and Analysis of Algorithms",
+          "course_type": "LoT",
+          "teacher_id": "1782",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1197,
+          "course_id": 36,
+          "course_code": "AI23331",
+          "course_name": "Fundamentals of Machine Learning",
+          "course_type": "LoT",
+          "teacher_id": "1827",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "53",
+        "1827",
+        "48",
+        "1782"
+      ],
+      "courses": [
+        "CS23331",
+        "AI23331"
+      ],
+      "total_workload": 20
+    },
+    {
+      "group_id": 3,
+      "instances": [
+        {
+          "id": 940,
+          "course_id": 259,
+          "course_code": "CS23333",
+          "course_name": "Object Oriented Programming Using JAVA",
+          "course_type": "LoT",
+          "teacher_id": "36",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 941,
+          "course_id": 259,
+          "course_code": "CS23333",
+          "course_name": "Object Oriented Programming Using JAVA",
+          "course_type": "LoT",
+          "teacher_id": "40",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 2084,
+          "course_id": 259,
+          "course_code": "CS23333",
+          "course_name": "Object Oriented Programming Using JAVA",
+          "course_type": "LoT",
+          "teacher_id": "1829",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 575,
+          "course_id": 257,
+          "course_code": "CS23331",
+          "course_name": "Design and Analysis of Algorithms",
+          "course_type": "LoT",
+          "teacher_id": "48",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "40",
+        "36",
+        "1829",
+        "48"
+      ],
+      "courses": [
+        "CS23333",
+        "CS23331"
+      ],
+      "total_workload": 26
+    },
+    {
+      "group_id": 4,
+      "instances": [
+        {
+          "id": 1044,
+          "course_id": 259,
+          "course_code": "CS23333",
+          "course_name": "Object Oriented Programming Using JAVA",
+          "course_type": "LoT",
+          "teacher_id": "1794",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 523,
+          "course_id": 258,
+          "course_code": "CS23332",
+          "course_name": "Database Management Systems",
+          "course_type": "LoT",
+          "teacher_id": "35",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 524,
+          "course_id": 258,
+          "course_code": "CS23332",
+          "course_name": "Database Management Systems",
+          "course_type": "LoT",
+          "teacher_id": "46",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1034,
+          "course_id": 258,
+          "course_code": "CS23332",
+          "course_name": "Database Management Systems",
+          "course_type": "LoT",
+          "teacher_id": "1787",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "1794",
+        "1787",
+        "46",
+        "35"
+      ],
+      "courses": [
+        "CS23333",
+        "CS23332"
+      ],
+      "total_workload": 28
+    },
+    {
+      "group_id": 5,
+      "instances": [
+        {
+          "id": 1402,
+          "course_id": 435,
+          "course_code": "MC23112",
+          "course_name": "Environmental Science and Engineering",
+          "course_type": "T",
+          "teacher_id": "551",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1404,
+          "course_id": 435,
+          "course_code": "MC23112",
+          "course_name": "Environmental Science and Engineering",
+          "course_type": "T",
+          "teacher_id": "556",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1227,
+          "course_id": 424,
+          "course_code": "MA23313",
+          "course_name": "Discrete Mathematics for AI",
+          "course_type": "T",
+          "teacher_id": "434",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 65
+        },
+        {
+          "id": 1225,
+          "course_id": 424,
+          "course_code": "MA23313",
+          "course_name": "Discrete Mathematics for AI",
+          "course_type": "T",
+          "teacher_id": "433",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 65
+        }
+      ],
+      "teachers": [
+        "434",
+        "556",
+        "551",
+        "433"
+      ],
+      "courses": [
+        "MA23313",
+        "MC23112"
+      ],
+      "total_workload": 14
+    },
+    {
+      "group_id": 6,
+      "instances": [
+        {
+          "id": 1401,
+          "course_id": 435,
+          "course_code": "MC23112",
+          "course_name": "Environmental Science and Engineering",
+          "course_type": "T",
+          "teacher_id": "552",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1403,
+          "course_id": 435,
+          "course_code": "MC23112",
+          "course_name": "Environmental Science and Engineering",
+          "course_type": "T",
+          "teacher_id": "541",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1891,
+          "course_id": 424,
+          "course_code": "MA23313",
+          "course_name": "Discrete Mathematics for AI",
+          "course_type": "T",
+          "teacher_id": "381",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 70
+        },
+        {
+          "id": 1228,
+          "course_id": 424,
+          "course_code": "MA23313",
+          "course_name": "Discrete Mathematics for AI",
+          "course_type": "T",
+          "teacher_id": "455",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "455",
+        "552",
+        "541",
+        "381"
+      ],
+      "courses": [
+        "MA23313",
+        "MC23112"
+      ],
+      "total_workload": 14
+    }
+  ],
+  "summary": {
+    "total_instances": 24,
+    "lab_instances": 16,
+    "theory_instances": 24,
+    "unique_courses": 6,
+    "unique_teachers": 23
+  }
+}

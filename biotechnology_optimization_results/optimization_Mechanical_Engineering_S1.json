@@ -1,0 +1,400 @@
+{
+  "department": "Mechanical Engineering",
+  "semester": "1",
+  "solution_found": true,
+  "objective_value": 160.0,
+  "num_groups": 8,
+  "groups": [
+    {
+      "group_id": 1,
+      "instances": [
+        {
+          "id": 1472,
+          "course_id": 494,
+          "course_code": "PH23131",
+          "course_name": "Physics of Materials",
+          "course_type": "LoT",
+          "teacher_id": "552",
+          "semester": 1,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 2041,
+          "course_id": 376,
+          "course_code": "GE23121",
+          "course_name": "Engineering Practices \u2013 Civil and Mechanical",
+          "course_type": "L",
+          "teacher_id": "505",
+          "semester": 1,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "505",
+        "552"
+      ],
+      "courses": [
+        "PH23131",
+        "GE23121"
+      ],
+      "total_workload": 7
+    },
+    {
+      "group_id": 2,
+      "instances": [
+        {
+          "id": 1473,
+          "course_id": 494,
+          "course_code": "PH23131",
+          "course_name": "Physics of Materials",
+          "course_type": "LoT",
+          "teacher_id": "546",
+          "semester": 1,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 2042,
+          "course_id": 376,
+          "course_code": "GE23121",
+          "course_name": "Engineering Practices \u2013 Civil and Mechanical",
+          "course_type": "L",
+          "teacher_id": "525",
+          "semester": 1,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "525",
+        "546"
+      ],
+      "courses": [
+        "PH23131",
+        "GE23121"
+      ],
+      "total_workload": 7
+    },
+    {
+      "group_id": 3,
+      "instances": [
+        {
+          "id": 1629,
+          "course_id": 394,
+          "course_code": "HS23111",
+          "course_name": "Technical Communication -I",
+          "course_type": "T",
+          "teacher_id": "348",
+          "semester": 1,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 780,
+          "course_id": 374,
+          "course_code": "GE23111",
+          "course_name": "Engineering Graphics",
+          "course_type": "T",
+          "teacher_id": "525",
+          "semester": 1,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 4,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "525",
+        "348"
+      ],
+      "courses": [
+        "HS23111",
+        "GE23111"
+      ],
+      "total_workload": 8
+    },
+    {
+      "group_id": 4,
+      "instances": [
+        {
+          "id": 1630,
+          "course_id": 394,
+          "course_code": "HS23111",
+          "course_name": "Technical Communication -I",
+          "course_type": "T",
+          "teacher_id": "375",
+          "semester": 1,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 781,
+          "course_id": 374,
+          "course_code": "GE23111",
+          "course_name": "Engineering Graphics",
+          "course_type": "T",
+          "teacher_id": "560",
+          "semester": 1,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 4,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "375",
+        "560"
+      ],
+      "courses": [
+        "HS23111",
+        "GE23111"
+      ],
+      "total_workload": 8
+    },
+    {
+      "group_id": 5,
+      "instances": [
+        {
+          "id": 1475,
+          "course_id": 435,
+          "course_code": "MC23112",
+          "course_name": "Environmental Science and Engineering",
+          "course_type": "T",
+          "teacher_id": "137",
+          "semester": 1,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1092,
+          "course_id": 375,
+          "course_code": "GE23117",
+          "course_name": "\u0ba4\u0bae\u0bbf\u0bb4\u0bb0\u0bcd \u0bae\u0bb0\u0baa\u0bc1 /Heritage of Tamils",
+          "course_type": "T",
+          "teacher_id": "518",
+          "semester": 1,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 1,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "518",
+        "137"
+      ],
+      "courses": [
+        "MC23112",
+        "GE23117"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 6,
+      "instances": [
+        {
+          "id": 1468,
+          "course_id": 282,
+          "course_code": "EC23111",
+          "course_name": "Basic Electronics Engineering",
+          "course_type": "T",
+          "teacher_id": "273",
+          "semester": 1,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1474,
+          "course_id": 435,
+          "course_code": "MC23112",
+          "course_name": "Environmental Science and Engineering",
+          "course_type": "T",
+          "teacher_id": "153",
+          "semester": 1,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "153",
+        "273"
+      ],
+      "courses": [
+        "MC23112",
+        "EC23111"
+      ],
+      "total_workload": 6
+    },
+    {
+      "group_id": 7,
+      "instances": [
+        {
+          "id": 1359,
+          "course_id": 375,
+          "course_code": "GE23117",
+          "course_name": "\u0ba4\u0bae\u0bbf\u0bb4\u0bb0\u0bcd \u0bae\u0bb0\u0baa\u0bc1 /Heritage of Tamils",
+          "course_type": "T",
+          "teacher_id": "533",
+          "semester": 1,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 1,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1301,
+          "course_id": 412,
+          "course_code": "MA23112",
+          "course_name": "Algebra and Calculus",
+          "course_type": "T",
+          "teacher_id": "439",
+          "semester": 1,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "439",
+        "533"
+      ],
+      "courses": [
+        "GE23117",
+        "MA23112"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 8,
+      "instances": [
+        {
+          "id": 1467,
+          "course_id": 282,
+          "course_code": "EC23111",
+          "course_name": "Basic Electronics Engineering",
+          "course_type": "T",
+          "teacher_id": "304",
+          "semester": 1,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1554,
+          "course_id": 412,
+          "course_code": "MA23112",
+          "course_name": "Algebra and Calculus",
+          "course_type": "T",
+          "teacher_id": "470",
+          "semester": 1,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "470",
+        "304"
+      ],
+      "courses": [
+        "EC23111",
+        "MA23112"
+      ],
+      "total_workload": 7
+    }
+  ],
+  "summary": {
+    "total_instances": 16,
+    "lab_instances": 4,
+    "theory_instances": 14,
+    "unique_courses": 8,
+    "unique_teachers": 15
+  }
+}

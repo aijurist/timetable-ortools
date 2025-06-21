@@ -1,0 +1,190 @@
+{
+  "department": "Automobile Engineering",
+  "semester": "3",
+  "solution_found": true,
+  "objective_value": 30.0,
+  "num_groups": 6,
+  "groups": [
+    {
+      "group_id": 1,
+      "instances": [
+        {
+          "id": 469,
+          "course_id": 51,
+          "course_code": "AT23332",
+          "course_name": "Applied Thermodynamics",
+          "course_type": "LoT",
+          "teacher_id": "62",
+          "semester": 3,
+          "course_dept": "Automobile Engineering",
+          "student_dept": "Automobile Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 1,
+          "student_count": 36
+        }
+      ],
+      "teachers": [
+        "62"
+      ],
+      "courses": [
+        "AT23332"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 2,
+      "instances": [
+        {
+          "id": 482,
+          "course_id": 49,
+          "course_code": "AT23321",
+          "course_name": "Computer Aided Machine Drawing Laboratory",
+          "course_type": "L",
+          "teacher_id": "65",
+          "semester": 3,
+          "course_dept": "Automobile Engineering",
+          "student_dept": "Automobile Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 36
+        }
+      ],
+      "teachers": [
+        "65"
+      ],
+      "courses": [
+        "AT23321"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 3,
+      "instances": [
+        {
+          "id": 471,
+          "course_id": 52,
+          "course_code": "AT23333",
+          "course_name": "Strength of Materials for Automobile Engineers",
+          "course_type": "LoT",
+          "teacher_id": "71",
+          "semester": 3,
+          "course_dept": "Automobile Engineering",
+          "student_dept": "Automobile Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 1,
+          "student_count": 36
+        }
+      ],
+      "teachers": [
+        "71"
+      ],
+      "courses": [
+        "AT23333"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 4,
+      "instances": [
+        {
+          "id": 473,
+          "course_id": 53,
+          "course_code": "AT23334",
+          "course_name": "Production Technology - II",
+          "course_type": "LoT",
+          "teacher_id": "59",
+          "semester": 3,
+          "course_dept": "Automobile Engineering",
+          "student_dept": "Automobile Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 36
+        }
+      ],
+      "teachers": [
+        "59"
+      ],
+      "courses": [
+        "AT23334"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 5,
+      "instances": [
+        {
+          "id": 467,
+          "course_id": 50,
+          "course_code": "AT23331",
+          "course_name": "Automotive Engines",
+          "course_type": "LoT",
+          "teacher_id": "579",
+          "semester": 3,
+          "course_dept": "Automobile Engineering",
+          "student_dept": "Automobile Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 36
+        }
+      ],
+      "teachers": [
+        "579"
+      ],
+      "courses": [
+        "AT23331"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 6,
+      "instances": [
+        {
+          "id": 1206,
+          "course_id": 425,
+          "course_code": "MA23331",
+          "course_name": "Transforms and Statistics",
+          "course_type": "LoT",
+          "teacher_id": "431",
+          "semester": 3,
+          "course_dept": "Automobile Engineering",
+          "student_dept": "Automobile Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "431"
+      ],
+      "courses": [
+        "MA23331"
+      ],
+      "total_workload": 5
+    }
+  ],
+  "summary": {
+    "total_instances": 6,
+    "lab_instances": 6,
+    "theory_instances": 5,
+    "unique_courses": 6,
+    "unique_teachers": 6
+  }
+}

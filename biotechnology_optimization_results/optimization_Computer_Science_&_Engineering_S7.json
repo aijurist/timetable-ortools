@@ -9,59 +9,8 @@
       "group_id": 1,
       "instances": [
         {
-          "id": 1994,
-          "course_id": 2132,
-          "course_code": "CS19741",
-          "course_name": "Cloud Computing",
-          "course_type": "LoT",
-          "teacher_id": "1781",
-          "semester": 7,
-          "course_dept": "Computer Science & Engineering",
-          "student_dept": "Computer Science & Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 2,
-          "tutorial_hours": 0,
-          "student_count": 70
-        },
-        {
-          "id": 2018,
-          "course_id": 2132,
-          "course_code": "CS19741",
-          "course_name": "Cloud Computing",
-          "course_type": "LoT",
-          "teacher_id": "216",
-          "semester": 7,
-          "course_dept": "Computer Science & Engineering",
-          "student_dept": "Computer Science & Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 2,
-          "tutorial_hours": 0,
-          "student_count": 70
-        },
-        {
-          "id": 2019,
-          "course_id": 2132,
-          "course_code": "CS19741",
-          "course_name": "Cloud Computing",
-          "course_type": "LoT",
-          "teacher_id": "250",
-          "semester": 7,
-          "course_dept": "Computer Science & Engineering",
-          "student_dept": "Computer Science & Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 2,
-          "tutorial_hours": 0,
-          "student_count": 70
-        },
-        {
           "id": 1914,
-          "course_id": 2240,
+          "course_id": 841,
           "course_code": "CS19711",
           "course_name": "Project-1",
           "course_type": "L",
@@ -78,7 +27,7 @@
         },
         {
           "id": 1916,
-          "course_id": 2240,
+          "course_id": 841,
           "course_code": "CS19711",
           "course_name": "Project-1",
           "course_type": "L",
@@ -92,27 +41,10 @@
           "lecture_hours": 0,
           "tutorial_hours": 0,
           "student_count": 70
-        }
-      ],
-      "teachers": [
-        "211",
-        "1781",
-        "217",
-        "250",
-        "216"
-      ],
-      "courses": [
-        "CS19741",
-        "CS19711"
-      ],
-      "total_workload": 24
-    },
-    {
-      "group_id": 2,
-      "instances": [
+        },
         {
-          "id": 1936,
-          "course_id": 2132,
+          "id": 1994,
+          "course_id": 827,
           "course_code": "CS19741",
           "course_name": "Cloud Computing",
           "course_type": "LoT",
@@ -128,12 +60,12 @@
           "student_count": 70
         },
         {
-          "id": 1995,
-          "course_id": 2132,
+          "id": 2018,
+          "course_id": 827,
           "course_code": "CS19741",
           "course_name": "Cloud Computing",
           "course_type": "LoT",
-          "teacher_id": "205",
+          "teacher_id": "216",
           "semester": 7,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
@@ -145,8 +77,42 @@
           "student_count": 70
         },
         {
+          "id": 2019,
+          "course_id": 827,
+          "course_code": "CS19741",
+          "course_name": "Cloud Computing",
+          "course_type": "LoT",
+          "teacher_id": "250",
+          "semester": 7,
+          "course_dept": "Computer Science & Engineering",
+          "student_dept": "Computer Science & Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "1781",
+        "250",
+        "216",
+        "217",
+        "211"
+      ],
+      "courses": [
+        "CS19711",
+        "CS19741"
+      ],
+      "total_workload": 24
+    },
+    {
+      "group_id": 2,
+      "instances": [
+        {
           "id": 1915,
-          "course_id": 2240,
+          "course_id": 841,
           "course_code": "CS19711",
           "course_name": "Project-1",
           "course_type": "L",
@@ -163,7 +129,7 @@
         },
         {
           "id": 1917,
-          "course_id": 2240,
+          "course_id": 841,
           "course_code": "CS19711",
           "course_name": "Project-1",
           "course_type": "L",
@@ -180,7 +146,7 @@
         },
         {
           "id": 1918,
-          "course_id": 2240,
+          "course_id": 841,
           "course_code": "CS19711",
           "course_name": "Project-1",
           "course_type": "L",
@@ -194,18 +160,52 @@
           "lecture_hours": 0,
           "tutorial_hours": 0,
           "student_count": 70
+        },
+        {
+          "id": 1936,
+          "course_id": 827,
+          "course_code": "CS19741",
+          "course_name": "Cloud Computing",
+          "course_type": "LoT",
+          "teacher_id": "1781",
+          "semester": 7,
+          "course_dept": "Computer Science & Engineering",
+          "student_dept": "Computer Science & Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1995,
+          "course_id": 827,
+          "course_code": "CS19741",
+          "course_name": "Cloud Computing",
+          "course_type": "LoT",
+          "teacher_id": "205",
+          "semester": 7,
+          "course_dept": "Computer Science & Engineering",
+          "student_dept": "Computer Science & Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70
         }
       ],
       "teachers": [
-        "207",
         "1781",
-        "205",
+        "207",
         "240",
+        "205",
         "245"
       ],
       "courses": [
-        "CS19741",
-        "CS19711"
+        "CS19711",
+        "CS19741"
       ],
       "total_workload": 26
     }

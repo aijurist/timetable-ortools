@@ -1,0 +1,280 @@
+{
+  "department": "Artificial Intelligence & Machine Learning",
+  "semester": "7",
+  "solution_found": true,
+  "objective_value": 120.0,
+  "num_groups": 4,
+  "groups": [
+    {
+      "group_id": 1,
+      "instances": [
+        {
+          "id": 577,
+          "course_id": 710,
+          "course_code": "AI19741",
+          "course_name": "Big Data Technology",
+          "course_type": "LoT",
+          "teacher_id": "33",
+          "semester": 7,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 492,
+          "course_id": 751,
+          "course_code": "AI19711",
+          "course_name": "Project-I",
+          "course_type": "L",
+          "teacher_id": "577",
+          "semester": 7,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 6,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 503,
+          "course_id": 751,
+          "course_code": "AI19711",
+          "course_name": "Project-I",
+          "course_type": "L",
+          "teacher_id": "36",
+          "semester": 7,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 6,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "577",
+        "33",
+        "36"
+      ],
+      "courses": [
+        "AI19741",
+        "AI19711"
+      ],
+      "total_workload": 17
+    },
+    {
+      "group_id": 2,
+      "instances": [
+        {
+          "id": 491,
+          "course_id": 710,
+          "course_code": "AI19741",
+          "course_name": "Big Data Technology",
+          "course_type": "LoT",
+          "teacher_id": "577",
+          "semester": 7,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 576,
+          "course_id": 710,
+          "course_code": "AI19741",
+          "course_name": "Big Data Technology",
+          "course_type": "LoT",
+          "teacher_id": "39",
+          "semester": 7,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 502,
+          "course_id": 751,
+          "course_code": "AI19711",
+          "course_name": "Project-I",
+          "course_type": "L",
+          "teacher_id": "40",
+          "semester": 7,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 6,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "40",
+        "577",
+        "39"
+      ],
+      "courses": [
+        "AI19741",
+        "AI19711"
+      ],
+      "total_workload": 16
+    },
+    {
+      "group_id": 3,
+      "instances": [
+        {
+          "id": 983,
+          "course_id": 749,
+          "course_code": "AI19701",
+          "course_name": "Secure Systems Engineering",
+          "course_type": "T",
+          "teacher_id": "52",
+          "semester": 7,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1198,
+          "course_id": 750,
+          "course_code": "AI19702",
+          "course_name": "Social and Ethical Issues in AI",
+          "course_type": "T",
+          "teacher_id": "1828",
+          "semester": 7,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 1,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1200,
+          "course_id": 750,
+          "course_code": "AI19702",
+          "course_name": "Social and Ethical Issues in AI",
+          "course_type": "T",
+          "teacher_id": "1829",
+          "semester": 7,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 1,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "52",
+        "1829",
+        "1828"
+      ],
+      "courses": [
+        "AI19701",
+        "AI19702"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 4,
+      "instances": [
+        {
+          "id": 495,
+          "course_id": 749,
+          "course_code": "AI19701",
+          "course_name": "Secure Systems Engineering",
+          "course_type": "T",
+          "teacher_id": "47",
+          "semester": 7,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 511,
+          "course_id": 749,
+          "course_code": "AI19701",
+          "course_name": "Secure Systems Engineering",
+          "course_type": "T",
+          "teacher_id": "35",
+          "semester": 7,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1196,
+          "course_id": 750,
+          "course_code": "AI19702",
+          "course_name": "Social and Ethical Issues in AI",
+          "course_type": "T",
+          "teacher_id": "1827",
+          "semester": 7,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 1,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "1827",
+        "47",
+        "35"
+      ],
+      "courses": [
+        "AI19701",
+        "AI19702"
+      ],
+      "total_workload": 7
+    }
+  ],
+  "summary": {
+    "total_instances": 12,
+    "lab_instances": 6,
+    "theory_instances": 9,
+    "unique_courses": 4,
+    "unique_teachers": 11
+  }
+}

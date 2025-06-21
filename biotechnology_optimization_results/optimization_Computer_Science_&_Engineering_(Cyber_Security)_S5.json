@@ -1,0 +1,190 @@
+{
+  "department": "Computer Science & Engineering (Cyber Security)",
+  "semester": "5",
+  "solution_found": true,
+  "objective_value": 30.0,
+  "num_groups": 6,
+  "groups": [
+    {
+      "group_id": 1,
+      "instances": [
+        {
+          "id": 1072,
+          "course_id": 389,
+          "course_code": "GE23521",
+          "course_name": "Soft Skills \u2013 II",
+          "course_type": "L",
+          "teacher_id": "1789",
+          "semester": 5,
+          "course_dept": "Computer Science & Engineering (Cyber Security)",
+          "student_dept": "Computer Science & Engineering (Cyber Security)",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 66
+        }
+      ],
+      "teachers": [
+        "1789"
+      ],
+      "courses": [
+        "GE23521"
+      ],
+      "total_workload": 2
+    },
+    {
+      "group_id": 2,
+      "instances": [
+        {
+          "id": 1025,
+          "course_id": 269,
+          "course_code": "CS23531",
+          "course_name": "Web Programming",
+          "course_type": "LoT",
+          "teacher_id": "241",
+          "semester": 5,
+          "course_dept": "Computer Science & Engineering (Cyber Security)",
+          "student_dept": "Computer Science & Engineering (Cyber Security)",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 66
+        }
+      ],
+      "teachers": [
+        "241"
+      ],
+      "courses": [
+        "CS23531"
+      ],
+      "total_workload": 7
+    },
+    {
+      "group_id": 3,
+      "instances": [
+        {
+          "id": 1039,
+          "course_id": 244,
+          "course_code": "CR23532",
+          "course_name": "Cyber and Digital Forensics",
+          "course_type": "LoT",
+          "teacher_id": "1791",
+          "semester": 5,
+          "course_dept": "Computer Science & Engineering (Cyber Security)",
+          "student_dept": "Computer Science & Engineering (Cyber Security)",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 66
+        }
+      ],
+      "teachers": [
+        "1791"
+      ],
+      "courses": [
+        "CR23532"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 4,
+      "instances": [
+        {
+          "id": 1035,
+          "course_id": 590,
+          "course_code": "CS23533",
+          "course_name": "Foundations of Artificial Intelligence",
+          "course_type": "LoT",
+          "teacher_id": "1790",
+          "semester": 5,
+          "course_dept": "Computer Science & Engineering (Cyber Security)",
+          "student_dept": "Computer Science & Engineering (Cyber Security)",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 66
+        }
+      ],
+      "teachers": [
+        "1790"
+      ],
+      "courses": [
+        "CS23533"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 5,
+      "instances": [
+        {
+          "id": 1043,
+          "course_id": 265,
+          "course_code": "CS23432",
+          "course_name": "Software Construction",
+          "course_type": "L",
+          "teacher_id": "1855",
+          "semester": 5,
+          "course_dept": "Computer Science & Engineering (Cyber Security)",
+          "student_dept": "Computer Science & Engineering (Cyber Security)",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 66
+        }
+      ],
+      "teachers": [
+        "1855"
+      ],
+      "courses": [
+        "CS23432"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 6,
+      "instances": [
+        {
+          "id": 980,
+          "course_id": 243,
+          "course_code": "CR23531",
+          "course_name": "Ethical Hacking",
+          "course_type": "LoT",
+          "teacher_id": "238",
+          "semester": 5,
+          "course_dept": "Computer Science & Engineering (Cyber Security)",
+          "student_dept": "Computer Science & Engineering (Cyber Security)",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 66
+        }
+      ],
+      "teachers": [
+        "238"
+      ],
+      "courses": [
+        "CR23531"
+      ],
+      "total_workload": 5
+    }
+  ],
+  "summary": {
+    "total_instances": 6,
+    "lab_instances": 6,
+    "theory_instances": 5,
+    "unique_courses": 6,
+    "unique_teachers": 6
+  }
+}

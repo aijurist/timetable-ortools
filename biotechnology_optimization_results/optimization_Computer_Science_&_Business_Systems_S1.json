@@ -1,0 +1,448 @@
+{
+  "department": "Computer Science & Business Systems",
+  "semester": "1",
+  "solution_found": true,
+  "objective_value": 180.0,
+  "num_groups": 9,
+  "groups": [
+    {
+      "group_id": 1,
+      "instances": [
+        {
+          "id": 1065,
+          "course_id": 145,
+          "course_code": "CB23131",
+          "course_name": "Fundamentals of Computer Science",
+          "course_type": "LoT",
+          "teacher_id": "1804",
+          "semester": 1,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 762,
+          "course_id": 311,
+          "course_code": "EE23131",
+          "course_name": "Principles of Electrical Engineering",
+          "course_type": "LoT",
+          "teacher_id": "365",
+          "semester": 1,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "1804",
+        "365"
+      ],
+      "courses": [
+        "CB23131",
+        "EE23131"
+      ],
+      "total_workload": 10
+    },
+    {
+      "group_id": 2,
+      "instances": [
+        {
+          "id": 1543,
+          "course_id": 496,
+          "course_code": "PH23133",
+          "course_name": "Physics for Computing Science",
+          "course_type": "LoT",
+          "teacher_id": "537",
+          "semester": 1,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1845,
+          "course_id": 311,
+          "course_code": "EE23131",
+          "course_name": "Principles of Electrical Engineering",
+          "course_type": "LoT",
+          "teacher_id": "318",
+          "semester": 1,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "318",
+        "537"
+      ],
+      "courses": [
+        "PH23133",
+        "EE23131"
+      ],
+      "total_workload": 9
+    },
+    {
+      "group_id": 3,
+      "instances": [
+        {
+          "id": 1540,
+          "course_id": 496,
+          "course_code": "PH23133",
+          "course_name": "Physics for Computing Science",
+          "course_type": "LoT",
+          "teacher_id": "561",
+          "semester": 1,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1037,
+          "course_id": 145,
+          "course_code": "CB23131",
+          "course_name": "Fundamentals of Computer Science",
+          "course_type": "LoT",
+          "teacher_id": "175",
+          "semester": 1,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "175",
+        "561"
+      ],
+      "courses": [
+        "PH23133",
+        "CB23131"
+      ],
+      "total_workload": 11
+    },
+    {
+      "group_id": 4,
+      "instances": [
+        {
+          "id": 1698,
+          "course_id": 415,
+          "course_code": "MA23115",
+          "course_name": "Discrete Mathematics",
+          "course_type": "T",
+          "teacher_id": "435",
+          "semester": 1,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 70
+        },
+        {
+          "id": 1703,
+          "course_id": 434,
+          "course_code": "MC23111",
+          "course_name": "Indian Constitution and Freedom Movement",
+          "course_type": "T",
+          "teacher_id": "342",
+          "semester": 1,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "435",
+        "342"
+      ],
+      "courses": [
+        "MC23111",
+        "MA23115"
+      ],
+      "total_workload": 7
+    },
+    {
+      "group_id": 5,
+      "instances": [
+        {
+          "id": 1702,
+          "course_id": 434,
+          "course_code": "MC23111",
+          "course_name": "Indian Constitution and Freedom Movement",
+          "course_type": "T",
+          "teacher_id": "345",
+          "semester": 1,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1904,
+          "course_id": 395,
+          "course_code": "HS23112",
+          "course_name": "Business Communication and Value Science \u2013 I",
+          "course_type": "T",
+          "teacher_id": "352",
+          "semester": 1,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "352",
+        "345"
+      ],
+      "courses": [
+        "MC23111",
+        "HS23112"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 6,
+      "instances": [
+        {
+          "id": 1699,
+          "course_id": 415,
+          "course_code": "MA23115",
+          "course_name": "Discrete Mathematics",
+          "course_type": "T",
+          "teacher_id": "435",
+          "semester": 1,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 70
+        },
+        {
+          "id": 1739,
+          "course_id": 908,
+          "course_code": "GE23117",
+          "course_name": "\u0ba4\u0bae\u0bbf\u0bb4\u0bb0\u0bcd\u0bae\u0bb0\u0baa\u0bc1 /Heritage of Tamils",
+          "course_type": "T",
+          "teacher_id": "1841",
+          "semester": 1,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 1,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "435",
+        "1841"
+      ],
+      "courses": [
+        "MA23115",
+        "GE23117"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 7,
+      "instances": [
+        {
+          "id": 1696,
+          "course_id": 414,
+          "course_code": "MA23114",
+          "course_name": "Probability and Calculus",
+          "course_type": "T",
+          "teacher_id": "447",
+          "semester": 1,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 70
+        },
+        {
+          "id": 1738,
+          "course_id": 908,
+          "course_code": "GE23117",
+          "course_name": "\u0ba4\u0bae\u0bbf\u0bb4\u0bb0\u0bcd\u0bae\u0bb0\u0baa\u0bc1 /Heritage of Tamils",
+          "course_type": "T",
+          "teacher_id": "379",
+          "semester": 1,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 1,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "379",
+        "447"
+      ],
+      "courses": [
+        "MA23114",
+        "GE23117"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 8,
+      "instances": [
+        {
+          "id": 1701,
+          "course_id": 394,
+          "course_code": "HS23111",
+          "course_name": "Technical Communication -I",
+          "course_type": "T",
+          "teacher_id": "352",
+          "semester": 1,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1903,
+          "course_id": 395,
+          "course_code": "HS23112",
+          "course_name": "Business Communication and Value Science \u2013 I",
+          "course_type": "T",
+          "teacher_id": "363",
+          "semester": 1,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "352",
+        "363"
+      ],
+      "courses": [
+        "HS23111",
+        "HS23112"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 9,
+      "instances": [
+        {
+          "id": 1697,
+          "course_id": 414,
+          "course_code": "MA23114",
+          "course_name": "Probability and Calculus",
+          "course_type": "T",
+          "teacher_id": "447",
+          "semester": 1,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 70
+        },
+        {
+          "id": 1700,
+          "course_id": 394,
+          "course_code": "HS23111",
+          "course_name": "Technical Communication -I",
+          "course_type": "T",
+          "teacher_id": "363",
+          "semester": 1,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "363",
+        "447"
+      ],
+      "courses": [
+        "HS23111",
+        "MA23114"
+      ],
+      "total_workload": 6
+    }
+  ],
+  "summary": {
+    "total_instances": 18,
+    "lab_instances": 6,
+    "theory_instances": 18,
+    "unique_courses": 9,
+    "unique_teachers": 14
+  }
+}

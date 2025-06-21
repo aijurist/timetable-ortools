@@ -1,0 +1,352 @@
+{
+  "department": "Computer Science & Business Systems",
+  "semester": "3",
+  "solution_found": true,
+  "objective_value": 140.0,
+  "num_groups": 7,
+  "groups": [
+    {
+      "group_id": 1,
+      "instances": [
+        {
+          "id": 1293,
+          "course_id": 149,
+          "course_code": "CB23331",
+          "course_name": "Computational Statistics",
+          "course_type": "LoT",
+          "teacher_id": "1806",
+          "semester": 3,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 994,
+          "course_id": 150,
+          "course_code": "CB23332",
+          "course_name": "Software Engineering",
+          "course_type": "LoT",
+          "teacher_id": "165",
+          "semester": 3,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "1806",
+        "165"
+      ],
+      "courses": [
+        "CB23331",
+        "CB23332"
+      ],
+      "total_workload": 10
+    },
+    {
+      "group_id": 2,
+      "instances": [
+        {
+          "id": 1222,
+          "course_id": 149,
+          "course_code": "CB23331",
+          "course_name": "Computational Statistics",
+          "course_type": "LoT",
+          "teacher_id": "422",
+          "semester": 3,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 991,
+          "course_id": 150,
+          "course_code": "CB23332",
+          "course_name": "Software Engineering",
+          "course_type": "LoT",
+          "teacher_id": "193",
+          "semester": 3,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "193",
+        "422"
+      ],
+      "courses": [
+        "CB23331",
+        "CB23332"
+      ],
+      "total_workload": 10
+    },
+    {
+      "group_id": 3,
+      "instances": [
+        {
+          "id": 1074,
+          "course_id": 259,
+          "course_code": "CS23333",
+          "course_name": "Object Oriented Programming Using JAVA",
+          "course_type": "LoT",
+          "teacher_id": "1809",
+          "semester": 3,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1023,
+          "course_id": 151,
+          "course_code": "CB23333",
+          "course_name": "Database Technology",
+          "course_type": "LoT",
+          "teacher_id": "156",
+          "semester": 3,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "156",
+        "1809"
+      ],
+      "courses": [
+        "CS23333",
+        "CB23333"
+      ],
+      "total_workload": 12
+    },
+    {
+      "group_id": 4,
+      "instances": [
+        {
+          "id": 1073,
+          "course_id": 259,
+          "course_code": "CS23333",
+          "course_name": "Object Oriented Programming Using JAVA",
+          "course_type": "LoT",
+          "teacher_id": "1808",
+          "semester": 3,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1040,
+          "course_id": 151,
+          "course_code": "CB23333",
+          "course_name": "Database Technology",
+          "course_type": "LoT",
+          "teacher_id": "167",
+          "semester": 3,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "167",
+        "1808"
+      ],
+      "courses": [
+        "CS23333",
+        "CB23333"
+      ],
+      "total_workload": 12
+    },
+    {
+      "group_id": 5,
+      "instances": [
+        {
+          "id": 1334,
+          "course_id": 437,
+          "course_code": "MC23313",
+          "course_name": "Environmental Sciences",
+          "course_type": "T",
+          "teacher_id": "143",
+          "semester": 3,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1036,
+          "course_id": 148,
+          "course_code": "CB23312",
+          "course_name": "Computer Organization and Architecture",
+          "course_type": "T",
+          "teacher_id": "175",
+          "semester": 3,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "143",
+        "175"
+      ],
+      "courses": [
+        "MC23313",
+        "CB23312"
+      ],
+      "total_workload": 6
+    },
+    {
+      "group_id": 6,
+      "instances": [
+        {
+          "id": 1071,
+          "course_id": 147,
+          "course_code": "CB23311",
+          "course_name": "Formal Language and Automata Theory",
+          "course_type": "T",
+          "teacher_id": "1807",
+          "semester": 3,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1333,
+          "course_id": 437,
+          "course_code": "MC23313",
+          "course_name": "Environmental Sciences",
+          "course_type": "T",
+          "teacher_id": "168",
+          "semester": 3,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "1807",
+        "168"
+      ],
+      "courses": [
+        "CB23311",
+        "MC23313"
+      ],
+      "total_workload": 6
+    },
+    {
+      "group_id": 7,
+      "instances": [
+        {
+          "id": 1015,
+          "course_id": 147,
+          "course_code": "CB23311",
+          "course_name": "Formal Language and Automata Theory",
+          "course_type": "T",
+          "teacher_id": "173",
+          "semester": 3,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1068,
+          "course_id": 148,
+          "course_code": "CB23312",
+          "course_name": "Computer Organization and Architecture",
+          "course_type": "T",
+          "teacher_id": "1805",
+          "semester": 3,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "1805",
+        "173"
+      ],
+      "courses": [
+        "CB23311",
+        "CB23312"
+      ],
+      "total_workload": 6
+    }
+  ],
+  "summary": {
+    "total_instances": 14,
+    "lab_instances": 8,
+    "theory_instances": 14,
+    "unique_courses": 7,
+    "unique_teachers": 14
+  }
+}

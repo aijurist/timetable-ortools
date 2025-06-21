@@ -22,7 +22,7 @@ from course_group_optimizer import CourseGroupOptimizer
 class BiotechnologyDataTester:
     """Test the CourseGroupOptimizer with Biotechnology course data."""
     
-    def __init__(self, csv_file_path="data/department_data/Computer_Science___Engineering_courses.csv"):
+    def __init__(self, csv_file_path="data/department_data/C.csv"):
         self.csv_file_path = csv_file_path
         self.output_dir = "biotechnology_optimization_results"
         self.viz_dir = os.path.join(self.output_dir, "visualizations")

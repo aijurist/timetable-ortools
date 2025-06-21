@@ -1,0 +1,400 @@
+{
+  "department": "Biomedical Engineering",
+  "semester": "1",
+  "solution_found": true,
+  "objective_value": 160.0,
+  "num_groups": 8,
+  "groups": [
+    {
+      "group_id": 1,
+      "instances": [
+        {
+          "id": 1567,
+          "course_id": 277,
+          "course_code": "CY23131",
+          "course_name": "Chemistry For Electronics Engineering",
+          "course_type": "LoT",
+          "teacher_id": "142",
+          "semester": 1,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1863,
+          "course_id": 376,
+          "course_code": "GE23121",
+          "course_name": "Engineering Practices \u2013 Civil and Mechanical",
+          "course_type": "L",
+          "teacher_id": "512",
+          "semester": 1,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "512",
+        "142"
+      ],
+      "courses": [
+        "GE23121",
+        "CY23131"
+      ],
+      "total_workload": 7
+    },
+    {
+      "group_id": 2,
+      "instances": [
+        {
+          "id": 1568,
+          "course_id": 277,
+          "course_code": "CY23131",
+          "course_name": "Chemistry For Electronics Engineering",
+          "course_type": "LoT",
+          "teacher_id": "143",
+          "semester": 1,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1864,
+          "course_id": 376,
+          "course_code": "GE23121",
+          "course_name": "Engineering Practices \u2013 Civil and Mechanical",
+          "course_type": "L",
+          "teacher_id": "536",
+          "semester": 1,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "143",
+        "536"
+      ],
+      "courses": [
+        "GE23121",
+        "CY23131"
+      ],
+      "total_workload": 7
+    },
+    {
+      "group_id": 3,
+      "instances": [
+        {
+          "id": 1705,
+          "course_id": 394,
+          "course_code": "HS23111",
+          "course_name": "Technical Communication -I",
+          "course_type": "T",
+          "teacher_id": "381",
+          "semester": 1,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1410,
+          "course_id": 374,
+          "course_code": "GE23111",
+          "course_name": "Engineering Graphics",
+          "course_type": "T",
+          "teacher_id": "544",
+          "semester": 1,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 4,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "544",
+        "381"
+      ],
+      "courses": [
+        "HS23111",
+        "GE23111"
+      ],
+      "total_workload": 8
+    },
+    {
+      "group_id": 4,
+      "instances": [
+        {
+          "id": 1706,
+          "course_id": 394,
+          "course_code": "HS23111",
+          "course_name": "Technical Communication -I",
+          "course_type": "T",
+          "teacher_id": "355",
+          "semester": 1,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 1411,
+          "course_id": 374,
+          "course_code": "GE23111",
+          "course_name": "Engineering Graphics",
+          "course_type": "T",
+          "teacher_id": "507",
+          "semester": 1,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 4,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "355",
+        "507"
+      ],
+      "courses": [
+        "HS23111",
+        "GE23111"
+      ],
+      "total_workload": 8
+    },
+    {
+      "group_id": 5,
+      "instances": [
+        {
+          "id": 1574,
+          "course_id": 435,
+          "course_code": "MC23112",
+          "course_name": "Environmental Science and Engineering",
+          "course_type": "T",
+          "teacher_id": "149",
+          "semester": 1,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        },
+        {
+          "id": 898,
+          "course_id": 609,
+          "course_code": "BM23B14",
+          "course_name": "Biomaterials and Applications",
+          "course_type": "T",
+          "teacher_id": "83",
+          "semester": 1,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 57
+        }
+      ],
+      "teachers": [
+        "83",
+        "149"
+      ],
+      "courses": [
+        "BM23B14",
+        "MC23112"
+      ],
+      "total_workload": 6
+    },
+    {
+      "group_id": 6,
+      "instances": [
+        {
+          "id": 1561,
+          "course_id": 411,
+          "course_code": "MA23111",
+          "course_name": "Linear Algebra and Calculus",
+          "course_type": "T",
+          "teacher_id": "1831",
+          "semester": 1,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 70
+        },
+        {
+          "id": 1573,
+          "course_id": 435,
+          "course_code": "MC23112",
+          "course_name": "Environmental Science and Engineering",
+          "course_type": "T",
+          "teacher_id": "137",
+          "semester": 1,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "1831",
+        "137"
+      ],
+      "courses": [
+        "MA23111",
+        "MC23112"
+      ],
+      "total_workload": 7
+    },
+    {
+      "group_id": 7,
+      "instances": [
+        {
+          "id": 899,
+          "course_id": 609,
+          "course_code": "BM23B14",
+          "course_name": "Biomaterials and Applications",
+          "course_type": "T",
+          "teacher_id": "110",
+          "semester": 1,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 57
+        },
+        {
+          "id": 1729,
+          "course_id": 666,
+          "course_code": "GE23117",
+          "course_name": "Heritage of Tamil",
+          "course_type": "T",
+          "teacher_id": "360",
+          "semester": 1,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 1,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "110",
+        "360"
+      ],
+      "courses": [
+        "BM23B14",
+        "GE23117"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 8,
+      "instances": [
+        {
+          "id": 1558,
+          "course_id": 411,
+          "course_code": "MA23111",
+          "course_name": "Linear Algebra and Calculus",
+          "course_type": "T",
+          "teacher_id": "431",
+          "semester": 1,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 70
+        },
+        {
+          "id": 1730,
+          "course_id": 666,
+          "course_code": "GE23117",
+          "course_name": "Heritage of Tamil",
+          "course_type": "T",
+          "teacher_id": "363",
+          "semester": 1,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 1,
+          "tutorial_hours": 0,
+          "student_count": 70
+        }
+      ],
+      "teachers": [
+        "363",
+        "431"
+      ],
+      "courses": [
+        "MA23111",
+        "GE23117"
+      ],
+      "total_workload": 5
+    }
+  ],
+  "summary": {
+    "total_instances": 16,
+    "lab_instances": 4,
+    "theory_instances": 14,
+    "unique_courses": 8,
+    "unique_teachers": 16
+  }
+}

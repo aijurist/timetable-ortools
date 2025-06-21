@@ -76,6 +76,45 @@ def times_overlap(start1, end1, start2, end2):
         return False
     return start1 < end2 and end1 > start2
 
+def is_valid_co_scheduling(session1, session2):
+    """
+    Check if two overlapping sessions in the same room represent valid co-scheduling.
+    
+    Co-scheduling is valid when:
+    1. Same course code
+    2. Same time slot (exact match)
+    3. 140-capacity lab room (KSL03)
+    4. Different teachers
+    5. Both are lab sessions
+    6. Same department and semester
+    """
+    # Must be in 140-capacity lab (KSL03 has room_id 172)
+    if session1['room_id'] != 172 or session2['room_id'] != 172:
+        return False
+    
+    # Must be exact same time slot
+    if session1['time_slot'] != session2['time_slot']:
+        return False
+    
+    # Must be same course code
+    if session1['course_code'] != session2['course_code']:
+        return False
+    
+    # Must be different teachers
+    if session1['teacher_id'] == session2['teacher_id']:
+        return False
+    
+    # Must both be lab sessions
+    if session1['type'] != 'lab' or session2['type'] != 'lab':
+        return False
+    
+    # Must be same department and semester
+    if (session1['department'] != session2['department'] or 
+        session1['semester'] != session2['semester']):
+        return False
+    
+    return True
+
 def load_and_prepare_schedules(lab_file, theory_file):
     """Load and prepare both schedule files for analysis."""
     schedules = {}
@@ -177,6 +216,7 @@ def check_room_conflicts(schedules):
             sessions_by_day[session['day']].append(session)
     
     total_conflicts = 0
+    total_co_scheduling = 0
     
     for day, day_sessions in sessions_by_day.items():
         print(f"\n📅 Checking {day.upper()}...")
@@ -193,17 +233,33 @@ def check_room_conflicts(schedules):
                     # Check if times overlap
                     if times_overlap(session1['start_time'], session1['end_time'],
                                    session2['start_time'], session2['end_time']):
-                        conflict = {
-                            'day': day,
-                            'room_id': session1['room_id'],
-                            'room_number': session1['room_number'],
-                            'block': session1['block'],
-                            'session1': session1,
-                            'session2': session2
-                        }
-                        conflicts.append(conflict)
-                        day_conflicts += 1
-                        total_conflicts += 1
+                        
+                        # Check if this is valid co-scheduling (NOT a conflict)
+                        is_co_scheduling = is_valid_co_scheduling(session1, session2)
+                        
+                        if is_co_scheduling:
+                            # This is valid co-scheduling - not a conflict
+                            total_co_scheduling += 1
+                            print(f"  ✅ CO-SCHEDULING #{total_co_scheduling} (Valid):")
+                            print(f"     Room: {session1['room_number']} (140-capacity lab)")
+                            print(f"     Course: {session1['course_code']} - {session1['course_name']}")
+                            print(f"     Time: {session1['time_slot']}")
+                            print(f"     Teacher 1: {session1['teacher_name']} (ID: {session1['teacher_id']})")
+                            print(f"     Teacher 2: {session2['teacher_name']} (ID: {session2['teacher_id']})")
+                            print(f"     Department: {session1['department']} Semester: {session1['semester']}")
+                            print()
+                        else:
+                            conflict = {
+                                'day': day,
+                                'room_id': session1['room_id'],
+                                'room_number': session1['room_number'],
+                                'block': session1['block'],
+                                'session1': session1,
+                                'session2': session2
+                            }
+                            conflicts.append(conflict)
+                            day_conflicts += 1
+                            total_conflicts += 1
                         
                         print(f"  ❌ CONFLICT #{total_conflicts}:")
                         print(f"     Room: {session1['room_number']} (ID: {session1['room_id']}) in {session1['block']}")
@@ -221,6 +277,12 @@ def check_room_conflicts(schedules):
             print(f"  ✅ No conflicts found for {day}")
         else:
             print(f"  ❌ Found {day_conflicts} conflicts for {day}")
+    
+    print(f"\n📊 ROOM USAGE SUMMARY:")
+    print(f"   Total conflicts: {total_conflicts}")
+    print(f"   Co-scheduling instances: {total_co_scheduling}")
+    if total_co_scheduling > 0:
+        print(f"   ✅ {total_co_scheduling} valid co-scheduling pairs found (140-capacity lab optimization)")
     
     return conflicts
 

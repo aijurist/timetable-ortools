@@ -1,0 +1,161 @@
+{
+  "department": "Civil Engineering",
+  "semester": "7",
+  "solution_found": true,
+  "objective_value": 25.0,
+  "num_groups": 5,
+  "groups": [
+    {
+      "group_id": 1,
+      "instances": [
+        {
+          "id": 348,
+          "course_id": 583,
+          "course_code": "CE19711",
+          "course_name": "COMPUTER AIDED DESIGN AND DRAFTING LABORATORY",
+          "course_type": "L",
+          "teacher_id": "158",
+          "semester": 7,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 45
+        }
+      ],
+      "teachers": [
+        "158"
+      ],
+      "courses": [
+        "CE19711"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 2,
+      "instances": [
+        {
+          "id": 302,
+          "course_id": 588,
+          "course_code": "CE19714",
+          "course_name": "PROBLEM SOLVING USING MACHINE LEARNING IN CIVIL ENGINEERING",
+          "course_type": "L",
+          "teacher_id": "148",
+          "semester": 7,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 45
+        }
+      ],
+      "teachers": [
+        "148"
+      ],
+      "courses": [
+        "CE19714"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 3,
+      "instances": [
+        {
+          "id": 336,
+          "course_id": 581,
+          "course_code": "CE19P75",
+          "course_name": "GLOBAL CLIMATIC CHANGE",
+          "course_type": "T",
+          "teacher_id": "183",
+          "semester": 7,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 24
+        }
+      ],
+      "teachers": [
+        "183"
+      ],
+      "courses": [
+        "CE19P75"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 4,
+      "instances": [
+        {
+          "id": 288,
+          "course_id": 580,
+          "course_code": "CE19P71",
+          "course_name": "PRESTRESSED CONCRETE STRUCTURES",
+          "course_type": "T",
+          "teacher_id": "162",
+          "semester": 7,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 21
+        }
+      ],
+      "teachers": [
+        "162"
+      ],
+      "courses": [
+        "CE19P71"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 5,
+      "instances": [
+        {
+          "id": 300,
+          "course_id": 579,
+          "course_code": "CE19702",
+          "course_name": "WATER RESOURCES AND IRRIGATION ENGINEERING",
+          "course_type": "T",
+          "teacher_id": "148",
+          "semester": 7,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 45
+        }
+      ],
+      "teachers": [
+        "148"
+      ],
+      "courses": [
+        "CE19702"
+      ],
+      "total_workload": 3
+    }
+  ],
+  "summary": {
+    "total_instances": 5,
+    "lab_instances": 2,
+    "theory_instances": 3,
+    "unique_courses": 5,
+    "unique_teachers": 4
+  }
+}
