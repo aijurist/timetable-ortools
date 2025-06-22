@@ -51,6 +51,9 @@ class CombinedScheduler:
         # Set up lunch break configuration
         self._setup_lunch_break_configuration()
         
+        # Set up shift-based constraints for single-instance departments
+        self._setup_shift_based_constraints()
+        
         # Set up time configurations - WILL BE CUSTOMIZED PER DEPARTMENT
         # For now, use the most common pattern (Monday-Friday) as default
         self.days = ["monday", "tuesday", "wed", "thur", "fri"]  # Monday-Friday as default
@@ -407,6 +410,82 @@ class CombinedScheduler:
         if lunch_slot is None:
             return False  # No lunch break assigned to this department
         return slot_idx == lunch_slot
+    
+    def _setup_shift_based_constraints(self):
+        """Set up shift-based constraints for departments with single course instances."""
+        self.logger.info("Setting up shift-based constraints...")
+        
+        # Define the three shifts in terms of time slots
+        # Shift 1: 8AM - 3PM (theory slots 0-6, lab sessions L1-L4)
+        # Shift 2: 10AM - 5PM (theory slots 2-8, lab sessions L2-L5)  
+        # Shift 3: 12PM - 7PM (theory slots 4-10, lab sessions L3-L6)
+        
+        self.shift_definitions = {
+            'shift_1': {
+                'name': 'Shift 1 (8AM-3PM)',
+                'theory_slots': list(range(0, 7)),  # slots 0-6 (8:00-2:50)
+                'lab_sessions': ['L1', 'L2', 'L3', 'L4'],  # 8:00-3:30
+                'start_time': '8:00',
+                'end_time': '3:00'
+            },
+            'shift_2': {
+                'name': 'Shift 2 (10AM-5PM)',
+                'theory_slots': list(range(2, 9)),  # slots 2-8 (10:00-4:50)
+                'lab_sessions': ['L2', 'L3', 'L4', 'L5'],  # 9:50-5:30
+                'start_time': '10:00',
+                'end_time': '5:00'
+            },
+            'shift_3': {
+                'name': 'Shift 3 (12PM-7PM)',
+                'theory_slots': list(range(4, 11)),  # slots 4-10 (12:00-6:50)
+                'lab_sessions': ['L3', 'L4', 'L5', 'L6'],  # 11:50-7:10
+                'start_time': '12:00',
+                'end_time': '7:10'
+            }
+        }
+        
+        # Departments that should follow shift-based constraints
+        # These are departments with single course instances that need time-bounded scheduling
+        self.shift_departments = {
+            'Computer Science & Design': {
+                'enabled': True,  # Temporarily disabled to test
+                'description': 'Single instance department with shift-based scheduling'
+            }
+            # Add more departments here as needed
+            # 'Other Department Name': {
+            #     'enabled': True,
+            #     'description': 'Description here'
+            # }
+        }
+        
+        self.logger.info(f"Configured shift-based constraints for {len(self.shift_departments)} departments")
+        for dept_name, config in self.shift_departments.items():
+            if config['enabled']:
+                self.logger.info(f"  - {dept_name}: {config['description']}")
+        
+        # Initialize shift assignment tracking
+        self.daily_shift_assignments = {}  # Will store (dept, day) -> shift_id assignments
+    
+    def is_shift_department(self, dept_name):
+        """Check if a department should follow shift-based constraints."""
+        return (dept_name in self.shift_departments and 
+                self.shift_departments[dept_name]['enabled'])
+    
+    def get_available_shifts(self):
+        """Get list of available shift IDs."""
+        return list(self.shift_definitions.keys())
+    
+    def get_shift_theory_slots(self, shift_id):
+        """Get theory time slots for a specific shift."""
+        if shift_id in self.shift_definitions:
+            return self.shift_definitions[shift_id]['theory_slots']
+        return list(range(len(self.theory_time_slots)))  # fallback to all slots
+    
+    def get_shift_lab_sessions(self, shift_id):
+        """Get lab sessions for a specific shift."""
+        if shift_id in self.shift_definitions:
+            return self.shift_definitions[shift_id]['lab_sessions']
+        return list(self.lab_sessions.keys())  # fallback to all sessions
     
     def _load_core_lab_mapping(self):
         """Load core lab mapping file for specialized lab course assignments."""
@@ -1529,6 +1608,9 @@ class CombinedScheduler:
         # Apply consecutive batch scheduling constraint for specific departments
         constraints_applied += self.apply_consecutive_batch_scheduling_constraint(model, lab_variables)
         
+        # Apply shift-based constraints for departments with single course instances
+        constraints_applied += self.apply_shift_based_lab_constraint(model, lab_variables)
+        
         self.logger.info(f"Applied {constraints_applied} lab-specific constraints (optimized)")
         return constraints_applied
 
@@ -2519,6 +2601,9 @@ class CombinedScheduler:
         # CONSTRAINT 5: Lunch break constraint - prevent scheduling during department lunch breaks
         constraints_applied += self._apply_lunch_break_constraint(model, group_timeslot_vars)
         
+        # CONSTRAINT 6: Shift-based constraints for departments with single course instances
+        constraints_applied += self.apply_shift_based_theory_constraint(model, group_timeslot_vars)
+        
         self.logger.info(f"Applied {constraints_applied} theory-specific constraints with department-specific day patterns")
         return constraints_applied
 
@@ -3188,6 +3273,16 @@ class CombinedScheduler:
             self.logger.info(f"Added {len(self.consecutive_batch_preference_vars)} consecutive batch preference terms (weight: {preference_weight})")
             self.logger.info("  • Encourages consecutive scheduling of batched lab sessions for specific departments")
         
+        # Add penalty for shift violations (soft constraint - discourage shift violations)
+        if hasattr(self, 'shift_preference_vars') and self.shift_preference_vars:
+            # Subtract penalties (since we're maximizing, subtracting penalties minimizes them)
+            shift_penalty_weight = 75  # Moderate weight - discourage shift violations but allow flexibility
+            for penalty_var in self.shift_preference_vars:
+                objective_terms.append(-shift_penalty_weight * penalty_var)
+            self.logger.info(f"Added {len(self.shift_preference_vars)} shift violation penalty terms (weight: {shift_penalty_weight})")
+            self.logger.info("  • Discourages violation of shift-based time constraints for single-instance departments")
+            self.logger.info("  • Encourages consistent shift patterns within departments")
+        
         if objective_terms:
             model.Maximize(sum(objective_terms))
             self.logger.info(f"Combined objective set with {len(objective_terms)} terms")
@@ -3199,6 +3294,7 @@ class CombinedScheduler:
             self.logger.info("  5. Core lab group slot penalty (prefer ≤8 slots for groups with core labs)")
             self.logger.info("  6. Computing group slot penalty (prefer ≤6 slots for computing department groups)")
             self.logger.info("  7. Consecutive batch preference (encourage consecutive batched lab sessions)")
+            self.logger.info("  8. Shift-based scheduling penalty (encourage consistent shift patterns for single-instance departments)")
         else:
             self.logger.warning("No objective terms created for group allocation")
     
@@ -5811,4 +5907,262 @@ class CombinedScheduler:
         
         self.logger.info(f"Applied {constraints_applied} soft consecutive batch scheduling constraints")
         self.logger.info(f"Created {len(consecutive_preference_vars)} consecutive batch preference variables")
+        return constraints_applied
+
+    def apply_shift_based_lab_constraint(self, model, lab_variables):
+        """
+        CONSTRAINT: Apply shift-based scheduling constraints for departments with single course instances.
+        Each day for shift departments can be assigned to one of three shifts:
+        - Shift 1: 8AM-3PM (L1, L2, L3, L4)
+        - Shift 2: 10AM-5PM (L2, L3, L4, L5)  
+        - Shift 3: 12PM-7PM (L3, L4, L5, L6)
+        
+        All courses from the same department must respect the same shift on the same day.
+        This is implemented as a SOFT constraint to avoid infeasibility.
+        """
+        self.logger.info("Applying soft shift-based lab constraints for single-instance departments...")
+        constraints_applied = 0
+        
+        # Group courses by department
+        dept_courses = defaultdict(list)
+        
+        for teacher_id in lab_variables:
+            for course_instance_id in lab_variables[teacher_id]:
+                # Get department for this course
+                dept_name = "Computer Science & Engineering"  # Default
+                if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
+                    dept_name = self.instance_group_mapping[course_instance_id]['department']
+                else:
+                    # Fallback: look up in courses_df
+                    course_matches = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
+                    if not course_matches.empty:
+                        dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
+                
+                # Only apply to shift departments
+                if self.is_shift_department(dept_name):
+                    dept_courses[dept_name].append((teacher_id, course_instance_id))
+        
+        if not dept_courses:
+            self.logger.info("No shift-based departments found in lab variables")
+            return 0
+        
+        # Initialize shift preference variables for soft constraints
+        if not hasattr(self, 'shift_preference_vars'):
+            self.shift_preference_vars = []
+        
+        # Apply constraints for each shift department
+        for dept_name, courses in dept_courses.items():
+            self.logger.info(f"Applying soft shift constraints for {dept_name} with {len(courses)} lab courses")
+            
+            # Get department-specific days
+            dept_days = self._get_days_for_department(dept_name)
+            num_dept_days = len(dept_days)
+            
+            # For each day, create shift assignment variables (but allow flexibility)
+            shift_vars = {}  # day_idx -> {shift_id: bool_var}
+            
+            for day_idx in range(num_dept_days):
+                shift_vars[day_idx] = {}
+                for shift_id in self.get_available_shifts():
+                    shift_vars[day_idx][shift_id] = model.NewBoolVar(
+                        f'dept_{dept_name}_day_{day_idx}_shift_{shift_id}_soft'
+                    )
+                
+                # SOFT CONSTRAINT: Prefer to assign each day to exactly one shift, but allow violations
+                # Create penalty variable for not following exactly one shift
+                shift_violation = model.NewBoolVar(f'shift_violation_{dept_name}_day_{day_idx}')
+                
+                # Shift violation occurs if we don't have exactly one shift
+                total_shifts = sum(shift_vars[day_idx].values())
+                model.Add(total_shifts == 1).OnlyEnforceIf(shift_violation.Not())
+                model.Add(total_shifts != 1).OnlyEnforceIf(shift_violation)
+                
+                # Add penalty to objective (prefer not to violate)
+                self.shift_preference_vars.append(shift_violation)
+                constraints_applied += 2
+            
+            # For each course, create soft preferences for shift compliance
+            for teacher_id, course_instance_id in courses:
+                if teacher_id not in lab_variables or course_instance_id not in lab_variables[teacher_id]:
+                    continue
+                
+                # Get course details for logging
+                course_req = next((req for req in self.lab_requirements.get(teacher_id, []) 
+                                 if req['course_instance_id'] == course_instance_id), None)
+                course_code = course_req['course_code'] if course_req else f'Course_{course_instance_id}'
+                
+                for day_idx in range(num_dept_days):
+                    if day_idx not in lab_variables[teacher_id][course_instance_id]:
+                        continue
+                    
+                    # Create soft preferences for shift compliance instead of hard constraints
+                    for shift_id in self.get_available_shifts():
+                        allowed_sessions = self.get_shift_lab_sessions(shift_id)
+                        forbidden_sessions = [s for s in self.lab_sessions.keys() if s not in allowed_sessions]
+                        
+                        # Create penalty variable for using forbidden sessions when this shift is active
+                        if forbidden_sessions:
+                            shift_violation_penalty = model.NewBoolVar(
+                                f'shift_penalty_{course_instance_id}_{day_idx}_{shift_id}'
+                            )
+                            
+                            # Count forbidden session usage
+                            forbidden_usage = []
+                            for session_name in forbidden_sessions:
+                                if session_name in lab_variables[teacher_id][course_instance_id][day_idx]:
+                                    for room_id in self.lab_room_ids:
+                                        if room_id in lab_variables[teacher_id][course_instance_id][day_idx][session_name]:
+                                            forbidden_usage.append(
+                                                lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id]
+                                            )
+                            
+                            if forbidden_usage:
+                                # Penalty is active if shift is chosen AND forbidden sessions are used
+                                forbidden_used = model.NewBoolVar(f'forbidden_used_{course_instance_id}_{day_idx}_{shift_id}')
+                                model.Add(sum(forbidden_usage) >= 1).OnlyEnforceIf(forbidden_used)
+                                model.Add(sum(forbidden_usage) == 0).OnlyEnforceIf(forbidden_used.Not())
+                                
+                                # Penalty occurs when both shift is active and forbidden sessions are used
+                                model.AddBoolAnd([shift_vars[day_idx][shift_id], forbidden_used]).OnlyEnforceIf(shift_violation_penalty)
+                                model.AddBoolOr([shift_vars[day_idx][shift_id].Not(), forbidden_used.Not()]).OnlyEnforceIf(shift_violation_penalty.Not())
+                                
+                                # Add to preference variables (to be minimized)
+                                self.shift_preference_vars.append(shift_violation_penalty)
+                                constraints_applied += 3
+                
+                self.logger.debug(f"Applied soft shift constraints for lab course {course_code} in {dept_name}")
+        
+        # Store shift variables for cross-system coordination
+        if not hasattr(self, 'lab_shift_vars'):
+            self.lab_shift_vars = {}
+        if dept_courses:
+            self.lab_shift_vars.update({dept_name: shift_vars for dept_name, courses in dept_courses.items() 
+                                       if dept_name not in self.lab_shift_vars})
+        
+        self.logger.info(f"Applied {constraints_applied} soft shift-based lab constraints")
+        self.logger.info(f"Created {len(self.shift_preference_vars)} shift preference variables")
+        return constraints_applied
+    
+    def apply_shift_based_theory_constraint(self, model, group_timeslot_vars):
+        """
+        CONSTRAINT: Apply shift-based scheduling constraints for theory sessions in departments with single course instances.
+        Each day for shift departments can be assigned to one of three shifts:
+        - Shift 1: 8AM-3PM (theory slots 0-6)
+        - Shift 2: 10AM-5PM (theory slots 2-8)
+        - Shift 3: 12PM-7PM (theory slots 4-10)
+        
+        All groups from the same department must respect the same shift on the same day.
+        This constraint coordinates with lab shift assignments if available.
+        This is implemented as a SOFT constraint to avoid infeasibility.
+        """
+        self.logger.info("Applying soft shift-based theory constraints for single-instance departments...")
+        constraints_applied = 0
+        
+        # Group theory groups by department
+        dept_groups = defaultdict(list)
+        
+        for group_name in group_timeslot_vars.keys():
+            # Parse department from group name
+            dept_name = group_name.split('_S')[0] if '_S' in group_name else "Computer Science & Engineering"
+            
+            # Only apply to shift departments
+            if self.is_shift_department(dept_name):
+                dept_groups[dept_name].append(group_name)
+        
+        if not dept_groups:
+            self.logger.info("No shift-based departments found in theory groups")
+            return 0
+        
+        # Initialize shift preference variables if not already done
+        if not hasattr(self, 'shift_preference_vars'):
+            self.shift_preference_vars = []
+        
+        # Apply constraints for each shift department
+        for dept_name, groups in dept_groups.items():
+            self.logger.info(f"Applying soft shift constraints for {dept_name} with {len(groups)} theory groups")
+            
+            # Get department-specific days
+            dept_days = self._get_days_for_department(dept_name)
+            num_dept_days = len(dept_days)
+            
+            # Check if we have lab shift variables for coordination
+            has_lab_shifts = (hasattr(self, 'lab_shift_vars') and 
+                            dept_name in self.lab_shift_vars)
+            
+            # For each day, create or reuse shift assignment variables
+            if has_lab_shifts:
+                # Reuse lab shift variables for coordination
+                shift_vars = self.lab_shift_vars[dept_name]
+                self.logger.info(f"Coordinating theory shifts with existing lab shifts for {dept_name}")
+            else:
+                # Create new shift variables for theory only (with soft constraints)
+                shift_vars = {}
+                for day_idx in range(num_dept_days):
+                    shift_vars[day_idx] = {}
+                    for shift_id in self.get_available_shifts():
+                        shift_vars[day_idx][shift_id] = model.NewBoolVar(
+                            f'dept_{dept_name}_day_{day_idx}_shift_{shift_id}_theory_soft'
+                        )
+                    
+                    # SOFT CONSTRAINT: Prefer to assign each day to exactly one shift
+                    shift_violation = model.NewBoolVar(f'theory_shift_violation_{dept_name}_day_{day_idx}')
+                    
+                    total_shifts = sum(shift_vars[day_idx].values())
+                    model.Add(total_shifts == 1).OnlyEnforceIf(shift_violation.Not())
+                    model.Add(total_shifts != 1).OnlyEnforceIf(shift_violation)
+                    
+                    # Add penalty to objective
+                    self.shift_preference_vars.append(shift_violation)
+                    constraints_applied += 2
+            
+            # For each group, create soft preferences for shift compliance
+            for group_name in groups:
+                if group_name not in group_timeslot_vars:
+                    continue
+                
+                for day_idx in range(num_dept_days):
+                    if day_idx not in group_timeslot_vars[group_name]:
+                        continue
+                    
+                    # Create soft preferences for shift compliance instead of hard constraints
+                    for shift_id in self.get_available_shifts():
+                        allowed_slots = self.get_shift_theory_slots(shift_id)
+                        forbidden_slots = [s for s in range(self.num_theory_slots) if s not in allowed_slots]
+                        
+                        # Create penalty for using forbidden slots when this shift is active
+                        if forbidden_slots:
+                            theory_shift_penalty = model.NewBoolVar(
+                                f'theory_shift_penalty_{group_name}_{day_idx}_{shift_id}'
+                            )
+                            
+                            # Count forbidden slot usage
+                            forbidden_slot_usage = []
+                            for slot_idx in forbidden_slots:
+                                if slot_idx in group_timeslot_vars[group_name][day_idx]:
+                                    forbidden_slot_usage.append(group_timeslot_vars[group_name][day_idx][slot_idx])
+                            
+                            if forbidden_slot_usage:
+                                # Penalty is active if shift is chosen AND forbidden slots are used
+                                forbidden_used = model.NewBoolVar(f'theory_forbidden_used_{group_name}_{day_idx}_{shift_id}')
+                                model.Add(sum(forbidden_slot_usage) >= 1).OnlyEnforceIf(forbidden_used)
+                                model.Add(sum(forbidden_slot_usage) == 0).OnlyEnforceIf(forbidden_used.Not())
+                                
+                                # Penalty occurs when both shift is active and forbidden slots are used
+                                model.AddBoolAnd([shift_vars[day_idx][shift_id], forbidden_used]).OnlyEnforceIf(theory_shift_penalty)
+                                model.AddBoolOr([shift_vars[day_idx][shift_id].Not(), forbidden_used.Not()]).OnlyEnforceIf(theory_shift_penalty.Not())
+                                
+                                # Add to preference variables
+                                self.shift_preference_vars.append(theory_shift_penalty)
+                                constraints_applied += 3
+                
+                self.logger.debug(f"Applied soft shift constraints for theory group {group_name}")
+            
+            # Store shift variables if they were newly created
+            if not has_lab_shifts:
+                if not hasattr(self, 'theory_shift_vars'):
+                    self.theory_shift_vars = {}
+                self.theory_shift_vars[dept_name] = shift_vars
+        
+        self.logger.info(f"Applied {constraints_applied} soft shift-based theory constraints")
+        self.logger.info(f"Total shift preference variables: {len(self.shift_preference_vars)}")
         return constraints_applied
