@@ -335,17 +335,20 @@ class CombinedScheduler:
             'Information Technology': 4,
             'Computer Science & Business Systems': 4,
             'Computer Science & Design': 4,
-            'Computer Science & Cyber Security': 4,
-            
+            'Computer Science & Engineering (Cyber Security)': 5,
+
             # Engineering departments
             # 'Electronics & Communication Engineering': 4,  # Early lunch (11:00 - 11:50)
-            'Electrical & Electronics Engineering': 3,
+            # 'Electrical & Electronics Engineering': 3,
             'Mechanical Engineering': 3,
+            "Food Technology":5,
+            "Mechatronics Engineering":5,
             'Civil Engineering': 3,
-            'Aeronautical Engineering': 3,  # Added missing department
-            'Chemical Engineering': 3,  # Added missing department
-            'Biomedical Engineering': 3,  # Added missing department
-            'Biotechnology': 5,  # Late lunch (1:00 - 1:50)
+            "Aeronautical Engineering":5,
+            # 'Aeronautical Engineering': 3, 
+            'Chemical Engineering': 3, 
+            'Biomedical Engineering': 3, 
+            # 'Biotechnology': 5,  # Late lunch (1:00 - 1:50)
             
             # Default for any department not explicitly listed
             # 'default': 4  # Standard lunch
@@ -1520,7 +1523,7 @@ class CombinedScheduler:
         # REMOVED: apply_lab_efficiency_constraints - too restrictive and redundant with other constraints
         
         # Apply lunch break constraint for lab sessions
-        # constraints_applied += self._apply_lab_lunch_break_constraint(model, lab_variables)  # COMMENTED OUT
+        constraints_applied += self._apply_lab_lunch_break_constraint(model, lab_variables)
         
         self.logger.info(f"Applied {constraints_applied} lab-specific constraints (optimized)")
         return constraints_applied
@@ -2385,7 +2388,7 @@ class CombinedScheduler:
         constraints_applied += self._apply_consecutive_slots_soft_constraint(model, group_timeslot_vars)
         
         # CONSTRAINT 5: Lunch break constraint - prevent scheduling during department lunch breaks
-        # constraints_applied += self._apply_lunch_break_constraint(model, group_timeslot_vars)  # COMMENTED OUT
+        constraints_applied += self._apply_lunch_break_constraint(model, group_timeslot_vars)
         
         self.logger.info(f"Applied {constraints_applied} theory-specific constraints with department-specific day patterns")
         return constraints_applied
@@ -3369,15 +3372,14 @@ class CombinedScheduler:
                 day_idx, time_slot_idx = allocated_slots[slot_idx]
                 
                 # CRITICAL: Check if this time slot is during lunch break for this department
-                # COMMENTED OUT - Lunch break check disabled
-                # dept_name = group_info['dept']
-                # if self.is_lunch_break_slot(time_slot_idx, dept_name):
-                #     lunch_time = self.get_lunch_break_time(dept_name)
-                #     self.logger.error(f"LUNCH BREAK VIOLATION BLOCKED: {group_name} attempted to schedule during lunch break slot {time_slot_idx} ({self.theory_time_slots[time_slot_idx]}) for department {dept_name}")
-                #     self.logger.error(f"  Expected lunch time: {lunch_time}")
-                #     self.logger.error(f"  Skipping {len(assigned_sessions)} sessions that would violate lunch break")
-                #     sessions_skipped_no_room += len(assigned_sessions)
-                #     continue  # Skip this entire time slot
+                dept_name = group_info['dept']
+                if self.is_lunch_break_slot(time_slot_idx, dept_name):
+                    lunch_time = self.get_lunch_break_time(dept_name)
+                    self.logger.error(f"LUNCH BREAK VIOLATION BLOCKED: {group_name} attempted to schedule during lunch break slot {time_slot_idx} ({self.theory_time_slots[time_slot_idx]}) for department {dept_name}")
+                    self.logger.error(f"  Expected lunch time: {lunch_time}")
+                    self.logger.error(f"  Skipping {len(assigned_sessions)} sessions that would violate lunch break")
+                    sessions_skipped_no_room += len(assigned_sessions)
+                    continue  # Skip this entire time slot
                 
                 # Track room usage for this specific time slot to prevent double-booking
                 used_rooms_this_slot = set()
