@@ -1506,9 +1506,9 @@ class CombinedScheduler:
                             priority_level = 2  # Second priority
                         else:
                             # 2 practical hours: Lower priority for 70+ capacity labs
-                            max_batched_sessions = min(sessions_with_batching, 2)
+                            max_batched_sessions = min(sessions_with_batching, 3)
                             max_unbatched_sessions = min(base_sessions, 1)
-                            absolute_max_sessions = 2  # Hard limit for 2 hour courses
+                            absolute_max_sessions = 3  # Hard limit for 2 hour courses
                             priority_level = 3  # Lower priority
                         
                         # CRITICAL FIX: 2-hour courses CANNOT use 70+ capacity labs (EXCEPT core labs)
@@ -3067,13 +3067,56 @@ class CombinedScheduler:
             else:
                 self.logger.debug(f"THEORY OK: {group_name} - All {len(instances)} theory instances properly flagged")
             
+            # Log co-scheduled instance analysis
+            co_scheduled_instances = [inst for inst in instances if inst.get('co_scheduled_id') is not None]
+            regular_instances = [inst for inst in instances if inst.get('co_scheduled_id') is None]
+            self.logger.info(f"{group_name} instance breakdown: {len(regular_instances)} regular + {len(co_scheduled_instances)} co-scheduled instances")
+            
             # Collect all theory sessions needed for this group
             sessions_needed = []
+            processed_co_scheduled = set()  # Track processed co-scheduled pairs
+            
             for instance in instances:
                 course_instance_id = instance['id']
                 teacher_id = instance['teacher_id']
                 lecture_hours = instance.get('lecture_hours', 0)
                 tutorial_hours = instance.get('tutorial_hours', 0)
+                
+                # Handle co-scheduled instances (virtual pairs from 140+ student courses)
+                co_scheduled_id = instance.get('co_scheduled_id')
+                virtual_id = instance.get('virtual_id', '')
+                
+                # If this is a co-scheduled instance, only process it once per pair
+                if co_scheduled_id is not None:
+                    if co_scheduled_id in processed_co_scheduled:
+                        continue  # Skip - already processed this co-scheduled pair
+                    
+                    # Mark this co-scheduled pair as processed
+                    processed_co_scheduled.add(co_scheduled_id)
+                    
+                    # Find the partner instance to combine capacity
+                    partner_instance = None
+                    combined_student_count = instance.get('student_count', 70)
+                    
+                    for other_instance in instances:
+                        if (other_instance.get('co_scheduled_id') == co_scheduled_id and 
+                            other_instance.get('virtual_id') != virtual_id):
+                            partner_instance = other_instance
+                            combined_student_count += other_instance.get('student_count', 70)
+                            break
+                    
+                    # Create a combined instance for scheduling
+                    combined_instance = instance.copy()
+                    combined_instance['student_count'] = combined_student_count
+                    combined_instance['is_co_scheduled'] = True
+                    combined_instance['partner_instance_id'] = partner_instance['id'] if partner_instance else None
+                    
+                    self.logger.info(f"Co-scheduled pair: {instance['course_code']} "
+                                   f"({virtual_id} + partner) = {combined_student_count} students")
+                else:
+                    # Regular single instance
+                    combined_instance = instance
+                    combined_instance['is_co_scheduled'] = False
                 
                 # Create lecture sessions
                 for session_num in range(lecture_hours):
@@ -3082,7 +3125,7 @@ class CombinedScheduler:
                         'teacher_id': teacher_id,
                         'session_type': 'Lecture',
                         'session_number': session_num + 1,
-                        'instance': instance
+                        'instance': combined_instance
                     })
                 
                 # Create tutorial sessions
@@ -3092,9 +3135,60 @@ class CombinedScheduler:
                         'teacher_id': teacher_id,
                         'session_type': 'Tutorial',
                         'session_number': session_num + 1,
-                        'instance': instance
+                        'instance': combined_instance
                     })
             
+            # Log session creation summary
+            sessions_by_type = {}
+            for session in sessions_needed:
+                session_type = session['session_type']
+                course_code = session['instance']['course_code']
+                key = f"{course_code}_{session_type}"
+                sessions_by_type[key] = sessions_by_type.get(key, 0) + 1
+            
+            total_sessions = len(sessions_needed)
+            self.logger.info(f"{group_name} created {total_sessions} sessions: {dict(sessions_by_type)}")
+            
+            # Check for expected session counts
+            group_course_codes = set(inst['instance']['course_code'] for inst in sessions_needed)
+            for course_code in group_course_codes:
+                # Sum expected hours for all instances of this course in the group
+                expected_lectures = sum(
+                    inst.get('lecture_hours', 0) 
+                    for inst in instances if inst['course_code'] == course_code
+                )
+                expected_tutorials = sum(
+                    inst.get('tutorial_hours', 0)
+                    for inst in instances if inst['course_code'] == course_code
+                )
+                
+                # Get actual session counts from the group's total
+                actual_lectures = sessions_by_type.get(f"{course_code}_Lecture", 0)
+                actual_tutorials = sessions_by_type.get(f"{course_code}_Tutorial", 0)
+                
+                if actual_lectures != expected_lectures or actual_tutorials != expected_tutorials:
+                    self.logger.warning(f"SESSION COUNT MISMATCH: {course_code} - "
+                                      f"Expected L:{expected_lectures}/T:{expected_tutorials}, "
+                                      f"Got L:{actual_lectures}/T:{actual_tutorials}")
+            
+            # --> TRACK UNDERUTILIZATION
+            num_instances_in_group = len(instances)
+            num_allocated_slots = len(allocated_slots)
+            
+            # Total room-slots available for the group
+            total_potential_slots = num_instances_in_group * num_allocated_slots
+            
+            # Total room-slots actually needed by the group's sessions
+            total_sessions_needed = len(sessions_needed)
+            
+            # Calculate wasted slots
+            underutilized_slots = total_potential_slots - total_sessions_needed
+            
+            if underutilized_slots > 0:
+                self.logger.info(f"ROOM UTILIZATION: Group {group_name} has {underutilized_slots} underutilized room-slots.")
+                self.logger.info(f"  - Group has {num_instances_in_group} parallel instances over {num_allocated_slots} time slots ({total_potential_slots} total slots).")
+                self.logger.info(f"  - Only {total_sessions_needed} sessions are needed, leaving {underutilized_slots} slots empty.")
+
             # Distribute sessions across allocated time slots ensuring no teacher conflicts
             slot_assignments = {}  # slot_idx -> assigned_sessions
             slot_teachers = {}  # slot_idx -> set of teacher_ids
@@ -3171,23 +3265,34 @@ class CombinedScheduler:
                 # Track room usage for this specific time slot to prevent double-booking
                 used_rooms_this_slot = set()
                 
+                # Track sessions assigned in this slot for co-scheduling awareness
+                assigned_sessions_this_slot = []
+                
                 for session in assigned_sessions:
                     # Get teacher and course details
                     instance = session['instance']
                     # Get teacher details with proper error handling  
                     teacher_matches = self.courses_df[self.courses_df['teacher_id'] == session['teacher_id']]
                     if teacher_matches.empty:
-                        # Try with different data types
-                        teacher_matches = self.courses_df[self.courses_df['teacher_id'] == int(session['teacher_id'])]
+                        # Try with different data types - handle float strings like '178.0'
+                        try:
+                            # Convert to float first, then to int to handle '178.0' format
+                            teacher_id_int = int(float(session['teacher_id']))
+                            teacher_matches = self.courses_df[self.courses_df['teacher_id'] == teacher_id_int]
+                        except (ValueError, TypeError):
+                            # If conversion fails, try as string
+                            teacher_matches = self.courses_df[self.courses_df['teacher_id'].astype(str) == str(session['teacher_id'])]
+                        
                         if teacher_matches.empty:
                             self.logger.error(f"Teacher ID {session['teacher_id']} not found in courses dataframe for theory schedule")
                             sessions_skipped_no_room += 1
                             continue
                     teacher_row = teacher_matches.iloc[0]
                     
-                    # IMPROVED: Find available room with cross-schedule validation
-                    available_room_id = self._find_available_theory_room_with_cross_validation(
-                        day_idx, time_slot_idx, used_rooms_this_slot, theory_schedule, dept_days, lab_schedule
+                    # CAPACITY-AWARE: Find available room with capacity-aware assignment
+                    available_room_id = self._find_capacity_aware_theory_room(
+                        day_idx, time_slot_idx, used_rooms_this_slot, theory_schedule, dept_days, 
+                        session, assigned_sessions_this_slot, lab_schedule
                     )
                     
                     if available_room_id is None:
@@ -3202,13 +3307,30 @@ class CombinedScheduler:
                     room_row = self.rooms_df[self.rooms_df['id'] == available_room_id].iloc[0]
                     sessions_successfully_scheduled += 1
                     
+                    # Track this session for co-scheduling awareness
+                    session_with_room = session.copy()
+                    session_with_room['assigned_room_id'] = available_room_id
+                    assigned_sessions_this_slot.append(session_with_room)
+                    
+                    # Determine course display name and capacity info
+                    is_co_scheduled = instance.get('is_co_scheduled', False)
+                    student_count = int(instance.get('student_count', 70))
+                    course_display = instance['course_code']
+                    
+                    if is_co_scheduled:
+                        # For co-scheduled instances, show combined capacity
+                        course_display = f"{instance['course_code']} (Combined 140-student course)"
+                        capacity_info = f"Co-scheduled: {student_count} students total"
+                    else:
+                        capacity_info = f"Regular: {student_count} students"
+                    
                     # Create schedule entry
                     theory_session = {
                         'day': dept_days[day_idx] if day_idx < len(dept_days) else f"day_{day_idx}",
                         'time_slot': self.theory_time_slots[time_slot_idx],
                         'slot_index': time_slot_idx,
                         'course_instance_id': session['course_instance_id'],
-                        'course_code': instance['course_code'],
+                        'course_code': course_display,
                         'course_name': instance['course_name'],
                         'session_type': session['session_type'],
                         'session_number': session['session_number'],
@@ -3218,10 +3340,13 @@ class CombinedScheduler:
                         'room_id': int(available_room_id),
                         'room_number': room_row['room_number'],
                         'block': room_row.get('block', ''),
-                        'student_count': int(instance.get('student_count', 70)),
+                        'student_count': student_count,
                         'lecture_hours': int(instance.get('lecture_hours', 0)),
                         'tutorial_hours': int(instance.get('tutorial_hours', 0)),
                         'schedule_type': 'theory',
+                        'is_co_scheduled': is_co_scheduled,
+                        'capacity_info': capacity_info,
+                        'partner_instance_id': instance.get('partner_instance_id', ''),
                         # Group information
                         'group_name': group_name,
                         'group_index': int(group_name.split('_G')[1]) if '_G' in group_name else 1,
@@ -3670,8 +3795,15 @@ class CombinedScheduler:
                                 # Get teacher details with proper error handling
                                 teacher_matches = self.courses_df[self.courses_df['teacher_id'] == teacher_id]
                                 if teacher_matches.empty:
-                                    # Try with different data types
-                                    teacher_matches = self.courses_df[self.courses_df['teacher_id'] == int(teacher_id)]
+                                    # Try with different data types - handle float strings like '178.0'
+                                    try:
+                                        # Convert to float first, then to int to handle '178.0' format
+                                        teacher_id_int = int(float(teacher_id))
+                                        teacher_matches = self.courses_df[self.courses_df['teacher_id'] == teacher_id_int]
+                                    except (ValueError, TypeError):
+                                        # If conversion fails, try as string
+                                        teacher_matches = self.courses_df[self.courses_df['teacher_id'].astype(str) == str(teacher_id)]
+                                    
                                     if teacher_matches.empty:
                                         self.logger.error(f"Teacher ID {teacher_id} not found in courses dataframe")
                                         continue
@@ -5006,3 +5138,145 @@ class CombinedScheduler:
         self.logger.info(f"  • {len(self.co_schedulable_course_groups)} co-schedulable groups processed")
         self.logger.info(f"  • 140-capacity lab RESERVED for co-scheduling ONLY")
         return constraints_applied
+
+    def _find_capacity_aware_theory_room(self, day_idx, time_slot_idx, used_rooms_this_slot, existing_schedule, dept_days, session, assigned_sessions_this_slot, lab_schedule=None):
+        """
+        Find an available theory room with capacity-aware assignment prioritizing high-capacity rooms 
+        for co-scheduled instances and reserving 140+ capacity rooms from regular 70-student instances.
+        
+        Args:
+            day_idx: Day index (department-specific)
+            time_slot_idx: Time slot index
+            used_rooms_this_slot: Set of room IDs already used in this time slot
+            existing_schedule: List of already scheduled theory sessions
+            dept_days: Department-specific day names
+            session: Current session being assigned (contains course instance info)
+            assigned_sessions_this_slot: List of sessions already assigned to this time slot
+            lab_schedule: Lab schedule for cross-validation
+            
+        Returns:
+            room_id if available, None if no room available
+        """
+        # Get correct day name using department-specific days
+        day_name = dept_days[day_idx] if day_idx < len(dept_days) else f"day_{day_idx}"
+        time_slot = self.theory_time_slots[time_slot_idx]
+        
+        # Normalize day name for consistent checking
+        day_normalized = self._normalize_day_name(day_name)
+        
+        # Get session details for capacity-aware assignment
+        instance = session['instance']
+        student_count = instance.get('student_count', 70)
+        course_code = instance.get('course_code', '')
+        virtual_id = instance.get('virtual_id', '')
+        co_scheduled_id = instance.get('co_scheduled_id', None)
+        
+        self.logger.debug(f"Finding capacity-aware theory room for {course_code} "
+                         f"({student_count} students) on {day_name} {time_slot}")
+        
+        # Check if this is a co-scheduled instance (from split 140+ student course)
+        is_co_scheduled = co_scheduled_id is not None and virtual_id
+        
+        # Check if co-scheduled partner is already assigned in this slot
+        co_scheduled_partner_room = None
+        if is_co_scheduled:
+            for assigned_session in assigned_sessions_this_slot:
+                assigned_instance = assigned_session['instance']
+                if (assigned_instance.get('co_scheduled_id') == co_scheduled_id and 
+                    assigned_instance.get('virtual_id') != virtual_id):
+                    # Found partner session, get its room
+                    co_scheduled_partner_room = assigned_session.get('assigned_room_id')
+                    self.logger.debug(f"Co-scheduled partner found in room {co_scheduled_partner_room}")
+                    break
+        
+        # Get rooms already occupied from existing theory schedule
+        occupied_rooms = set()
+        for existing_session in existing_schedule:
+            session_day_normalized = self._normalize_day_name(existing_session['day'])
+            if session_day_normalized == day_normalized and existing_session['time_slot'] == time_slot:
+                occupied_rooms.add(existing_session['room_id'])
+        
+        # Check global room registry for any conflicts
+        global_occupied_rooms = set()
+        for room_id in self.theory_room_ids:
+            if not self._is_room_available_global(day_name, time_slot, room_id):
+                global_occupied_rooms.add(room_id)
+        
+        # Check lab schedule for overlapping times (if provided)
+        lab_conflict_rooms = set()
+        if lab_schedule:
+            for lab_session in lab_schedule:
+                lab_day_normalized = self._normalize_day_name(lab_session['day'])
+                if lab_day_normalized == day_normalized:
+                    # Check if lab time overlaps with theory time
+                    lab_time_range = lab_session.get('time_range', '')
+                    if self._times_overlap(lab_time_range, time_slot):
+                        lab_conflict_rooms.add(lab_session['room_id'])
+        
+        # Combine all occupied rooms
+        all_occupied_rooms = occupied_rooms | used_rooms_this_slot | global_occupied_rooms | lab_conflict_rooms
+        
+        # Get room capacities for smart assignment
+        room_capacities = {}
+        for room_id in self.theory_room_ids:
+            if room_id not in all_occupied_rooms:
+                room_row = self.rooms_df[self.rooms_df['id'] == room_id]
+                if not room_row.empty:
+                    room_capacities[room_id] = int(room_row.iloc[0]['room_max_cap'])
+        
+        # PRIORITY 1: If this is a co-scheduled instance and partner is assigned, use same room if available
+        if is_co_scheduled and co_scheduled_partner_room is not None:
+            if co_scheduled_partner_room in room_capacities:
+                self.logger.info(f"Assigning co-scheduled instance {virtual_id} to same room {co_scheduled_partner_room} as partner")
+                return co_scheduled_partner_room
+        
+        # PRIORITY 2: For co-scheduled instances, prefer 140+ capacity rooms
+        if is_co_scheduled:
+            high_capacity_rooms = [rid for rid, cap in room_capacities.items() if cap >= 140]
+            if high_capacity_rooms:
+                # Sort by capacity (prefer exactly 140, then higher)
+                high_capacity_rooms.sort(key=lambda rid: room_capacities[rid])
+                selected_room = high_capacity_rooms[0]
+                self.logger.info(f"Assigning co-scheduled instance {virtual_id} to high-capacity room {selected_room} "
+                               f"(capacity: {room_capacities[selected_room]})")
+                return selected_room
+        
+        # PRIORITY 3: For regular instances (70 students), prefer 70-110 capacity rooms
+        # Avoid 140+ capacity rooms unless no other option
+        if not is_co_scheduled:
+            # Try 70-110 capacity rooms first
+            suitable_rooms = [rid for rid, cap in room_capacities.items() if 70 <= cap <= 110]
+            if suitable_rooms:
+                # Sort by capacity (prefer closest to student count)
+                suitable_rooms.sort(key=lambda rid: abs(room_capacities[rid] - student_count))
+                selected_room = suitable_rooms[0]
+                self.logger.debug(f"Assigning regular instance {course_code} to suitable room {selected_room} "
+                                f"(capacity: {room_capacities[selected_room]}, students: {student_count})")
+                return selected_room
+            
+            # If no suitable rooms, check if any 140+ rooms are available but warn
+            high_capacity_rooms = [rid for rid, cap in room_capacities.items() if cap >= 140]
+            if high_capacity_rooms:
+                # Only use if absolutely necessary
+                selected_room = high_capacity_rooms[0]
+                self.logger.warning(f"Using high-capacity room {selected_room} for regular instance {course_code} "
+                                  f"(capacity: {room_capacities[selected_room]}, students: {student_count}) "
+                                  f"- should be reserved for co-scheduled instances")
+                return selected_room
+        
+        # FALLBACK: Any available room if no capacity-aware assignment possible
+        available_rooms = list(room_capacities.keys())
+        if available_rooms:
+            fallback_room = available_rooms[0]
+            self.logger.warning(f"Using fallback room assignment: {fallback_room} for {course_code}")
+            return fallback_room
+        
+        # If no room available, log detailed warning
+        self.logger.error(f"No available theory room for {course_code} on {day_name} {time_slot}")
+        self.logger.error(f"  Theory occupied: {len(occupied_rooms)} rooms")
+        self.logger.error(f"  Used this slot: {len(used_rooms_this_slot)} rooms") 
+        self.logger.error(f"  Global conflicts: {len(global_occupied_rooms)} rooms")
+        self.logger.error(f"  Lab conflicts: {len(lab_conflict_rooms)} rooms")
+        self.logger.error(f"  Total occupied: {len(all_occupied_rooms)}/{len(self.theory_room_ids)} rooms")
+        
+        return None

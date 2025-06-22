@@ -62,6 +62,11 @@ class CourseGroupOptimizer:
         self.solution_found = False
         self.objective_value = 0
         
+        # Track removed and modified courses for verification
+        self.removed_courses = []  # Courses removed due to insufficient instances
+        self.trimmed_courses = {}  # Courses trimmed down: {course_code: {'original_count': x, 'kept_count': y, 'removed_instances': []}}
+        self.filtering_summary = {}  # Summary of filtering process
+        
         # Filter courses based on instance count before analysis
         self.courses = self._filter_courses_by_instance_count(self.courses)
         
@@ -160,11 +165,16 @@ class CourseGroupOptimizer:
                 courses_to_keep.add(course_code)
                 courses_to_trim[course_code] = most_common_count
         
-        # Log filtering results
+        # Store removed courses for verification
         if courses_to_remove:
             self.logger.warning(f"Removing courses with insufficient instances:")
             for course_code in sorted(courses_to_remove):
                 count = course_instance_counts[course_code]
+                removed_instances = [c for c in courses if c['course_code'] == course_code]
+                
+                # Store removed course info
+                self.removed_courses.extend(removed_instances)
+                
                 self.logger.warning(f"  {course_code}: {count} instances (< {most_common_count}) - REMOVED")
         
         if courses_to_keep:
@@ -188,13 +198,39 @@ class CourseGroupOptimizer:
                 # Randomly select target_count instances from this course
                 target_count = courses_to_trim[course_code]
                 selected_instances = random.sample(course_instances, target_count)
+                removed_instances = [inst for inst in course_instances if inst not in selected_instances]
+                
+                # Store trimming info
+                self.trimmed_courses[course_code] = {
+                    'original_count': len(course_instances),
+                    'kept_count': target_count,
+                    'removed_instances': removed_instances,
+                    'kept_instances': selected_instances
+                }
+                
                 filtered_courses.extend(selected_instances)
                 self.logger.info(f"  {course_code}: selected {target_count} out of {len(course_instances)} instances")
             else:
                 # Keep all instances
                 filtered_courses.extend(course_instances)
         
+        # Create filtering summary
+        self.filtering_summary = {
+            'original_total_instances': len(courses),
+            'filtered_total_instances': len(filtered_courses),
+            'most_common_instance_count': most_common_count,
+            'instance_count_distribution': dict(instance_count_frequency),
+            'courses_removed_count': len(set(inst['course_code'] for inst in self.removed_courses)),
+            'courses_trimmed_count': len(self.trimmed_courses),
+            'total_instances_removed': len(self.removed_courses) + sum(len(info['removed_instances']) for info in self.trimmed_courses.values()),
+            'courses_kept_unchanged': len(courses_to_keep) - len(self.trimmed_courses)
+        }
+        
         self.logger.info(f"Filtered courses: {len(courses)} -> {len(filtered_courses)} instances")
+        self.logger.info(f"Filtering summary: {self.filtering_summary['courses_removed_count']} courses removed, "
+                        f"{self.filtering_summary['courses_trimmed_count']} courses trimmed, "
+                        f"{self.filtering_summary['total_instances_removed']} total instances removed")
+        
         return filtered_courses
     
     def _check_feasibility(self):
@@ -587,40 +623,106 @@ class CourseGroupOptimizer:
     
     def _set_optimization_objectives(self, model, assignment_vars):
         """
-        Set optimization objectives.
+        Set optimization objectives. This now includes a primary objective to
+        minimize the variance in total hours within each group to improve
+        room utilization.
         
         Args:
             model: CP-SAT model
             assignment_vars: Assignment variables
         """
-        # Primary objective: Maximize student choice (courses in multiple groups)
-        # Since we now enforce exactly 2 groups for multi-instance courses,
-        # we focus on maximizing overall assignment satisfaction
-        objective_terms = []
+        self.logger.info("Setting optimization objectives...")
         
-        for course_code in self.unique_courses:
-            course_instances = [i for i, inst in enumerate(self.courses) 
-                             if inst['course_code'] == course_code]
+        # Objective 1: Minimize workload variance within each group (primary objective)
+        # This encourages forming groups with courses that have similar total hours,
+        # which is the key to reducing underutilized room-slots.
+        
+        total_variance_terms = []
+        
+        for group_idx in range(self.num_groups):
+            # Simplified approach: minimize the range (max - min) of hours within each group
+            # This is easier to implement in OR-Tools and achieves similar results
             
-            if len(course_instances) > 1:
-                # Multi-instance course: will be in exactly 2 groups due to constraints
-                # Reward balanced distribution across groups
-                for group_idx in range(self.num_groups):
-                    for i in course_instances:
-                        objective_terms.append(assignment_vars[(i, group_idx)] * 10)
-            else:
-                # Single-instance course: will be in exactly 1 group
-                # Add smaller reward for assignment
-                for group_idx in range(self.num_groups):
-                    for i in course_instances:
-                        objective_terms.append(assignment_vars[(i, group_idx)] * 5)
-        
-        # Set objective: maximize overall assignment satisfaction
-        if objective_terms:
-            model.Maximize(sum(objective_terms))
-        
-        self.logger.info("Set optimization objectives (maximize balanced distribution)")
-    
+            # Get all possible hour values in the dataset
+            all_hour_values = []
+            for instance in self.courses:
+                total_hours = instance.get('lecture_hours', 0) + instance.get('tutorial_hours', 0)
+                if total_hours not in all_hour_values:
+                    all_hour_values.append(total_hours)
+            
+            all_hour_values.sort()
+            
+            # For each group, create variables to track min and max hours
+            group_min_hours = model.NewIntVar(0, max(all_hour_values), f'group_{group_idx}_min_hours')
+            group_max_hours = model.NewIntVar(0, max(all_hour_values), f'group_{group_idx}_max_hours')
+            
+            # Create indicator variables for each possible hour value being present in the group
+            hour_present = {}
+            for hour_val in all_hour_values:
+                hour_present[hour_val] = model.NewBoolVar(f'group_{group_idx}_has_{hour_val}_hours')
+                
+                # This hour is present if any instance with this hour count is assigned to this group
+                instances_with_this_hour = []
+                for i, instance in enumerate(self.courses):
+                    instance_hours = instance.get('lecture_hours', 0) + instance.get('tutorial_hours', 0)
+                    if instance_hours == hour_val:
+                        instances_with_this_hour.append(assignment_vars[(i, group_idx)])
+                
+                if instances_with_this_hour:
+                    # hour_present[hour_val] is 1 if any instance with hour_val is in this group
+                    model.Add(hour_present[hour_val] <= sum(instances_with_this_hour))
+                    for var in instances_with_this_hour:
+                        model.Add(hour_present[hour_val] >= var)
+                else:
+                    # No instances with this hour value, so it can't be present
+                    model.Add(hour_present[hour_val] == 0)
+            
+            # Set min_hours to the smallest hour value present in the group
+            for hour_val in all_hour_values:
+                # If this hour is present, min_hours must be <= hour_val
+                model.Add(group_min_hours <= hour_val).OnlyEnforceIf(hour_present[hour_val])
+                
+                # If all smaller hours are absent and this hour is present, min_hours = hour_val
+                smaller_hours_absent = []
+                for smaller_hour in all_hour_values:
+                    if smaller_hour < hour_val:
+                        smaller_hours_absent.append(hour_present[smaller_hour].Not())
+                
+                if smaller_hours_absent:
+                    model.Add(group_min_hours == hour_val).OnlyEnforceIf(
+                        [hour_present[hour_val]] + smaller_hours_absent
+                    )
+                elif hour_val == min(all_hour_values):
+                    model.Add(group_min_hours == hour_val).OnlyEnforceIf(hour_present[hour_val])
+            
+            # Set max_hours to the largest hour value present in the group
+            for hour_val in all_hour_values:
+                # If this hour is present, max_hours must be >= hour_val
+                model.Add(group_max_hours >= hour_val).OnlyEnforceIf(hour_present[hour_val])
+                
+                # If all larger hours are absent and this hour is present, max_hours = hour_val
+                larger_hours_absent = []
+                for larger_hour in all_hour_values:
+                    if larger_hour > hour_val:
+                        larger_hours_absent.append(hour_present[larger_hour].Not())
+                
+                if larger_hours_absent:
+                    model.Add(group_max_hours == hour_val).OnlyEnforceIf(
+                        [hour_present[hour_val]] + larger_hours_absent
+                    )
+                elif hour_val == max(all_hour_values):
+                    model.Add(group_max_hours == hour_val).OnlyEnforceIf(hour_present[hour_val])
+            
+            # The range for this group (what we want to minimize)
+            group_range = model.NewIntVar(0, max(all_hour_values), f'group_{group_idx}_range')
+            model.Add(group_range == group_max_hours - group_min_hours)
+            
+            total_variance_terms.append(group_range)
+
+        # The model will try to make the sum of all group variances as small as possible.
+        model.Minimize(sum(total_variance_terms))
+        self.logger.info("Primary Objective: Minimize workload variance within groups to improve room utilization.")
+
     def _solve_model(self, model, assignment_vars):
         """
         Solve the optimization model.
@@ -953,6 +1055,184 @@ class CourseGroupOptimizer:
         """
         return self.groups
     
+    def get_removed_courses(self):
+        """
+        Get courses that were removed during filtering.
+        
+        Returns:
+            list: List of removed course instances
+        """
+        return self.removed_courses
+    
+    def get_trimmed_courses(self):
+        """
+        Get courses that were trimmed during filtering.
+        
+        Returns:
+            dict: Dictionary with trimming information per course
+        """
+        return self.trimmed_courses
+    
+    def get_filtering_summary(self):
+        """
+        Get summary of the filtering process.
+        
+        Returns:
+            dict: Filtering summary statistics
+        """
+        return self.filtering_summary
+    
+    def save_filtering_report(self, output_file, output_dir=None):
+        """
+        Save detailed filtering report to file for verification.
+        
+        Args:
+            output_file: Path to output file (can be just filename if output_dir is provided)
+            output_dir: Optional directory to save the file in
+        """
+        if not hasattr(self, 'filtering_summary'):
+            self.logger.error("No filtering data to save")
+            return
+        
+        # Handle output directory
+        if output_dir:
+            os.makedirs(output_dir, exist_ok=True)
+            if not os.path.isabs(output_file):
+                output_file = os.path.join(output_dir, output_file)
+        
+        # Create comprehensive filtering report
+        report = {
+            'department': self.dept,
+            'semester': self.semester,
+            'timestamp': datetime.now().isoformat(),
+            'summary': self.filtering_summary,
+            'removed_courses': {
+                'total_instances': len(self.removed_courses),
+                'unique_courses': list(set(inst['course_code'] for inst in self.removed_courses)),
+                'instances': []
+            },
+            'trimmed_courses': {},
+            'detailed_analysis': {
+                'instance_count_breakdown': {},
+                'teacher_impact': {},
+                'course_type_impact': {}
+            }
+        }
+        
+        # Add removed course instances details
+        for instance in self.removed_courses:
+            report['removed_courses']['instances'].append({
+                'id': instance['id'],
+                'course_code': instance['course_code'],
+                'course_name': instance.get('course_name', ''),
+                'teacher_id': instance['teacher_id'],
+                'student_count': instance.get('student_count', 0),
+                'practical_hours': instance.get('practical_hours', 0),
+                'lecture_hours': instance.get('lecture_hours', 0),
+                'tutorial_hours': instance.get('tutorial_hours', 0),
+                'has_lab': instance.get('has_lab', False),
+                'has_theory': instance.get('has_theory', False),
+                'reason': 'Insufficient instances (below most common count)'
+            })
+        
+        # Add trimmed courses details
+        for course_code, trim_info in self.trimmed_courses.items():
+            report['trimmed_courses'][course_code] = {
+                'original_count': trim_info['original_count'],
+                'kept_count': trim_info['kept_count'],
+                'removed_count': len(trim_info['removed_instances']),
+                'removed_instances': [],
+                'kept_instances': [inst['id'] for inst in trim_info['kept_instances']]
+            }
+            
+            for instance in trim_info['removed_instances']:
+                report['trimmed_courses'][course_code]['removed_instances'].append({
+                    'id': instance['id'],
+                    'teacher_id': instance['teacher_id'],
+                    'student_count': instance.get('student_count', 0),
+                    'practical_hours': instance.get('practical_hours', 0),
+                    'lecture_hours': instance.get('lecture_hours', 0),
+                    'tutorial_hours': instance.get('tutorial_hours', 0),
+                    'reason': f'Randomly selected for removal during trimming to {trim_info["kept_count"]} instances'
+                })
+        
+        # Add detailed analysis
+        if hasattr(self, 'filtering_summary') and 'instance_count_distribution' in self.filtering_summary:
+            report['detailed_analysis']['instance_count_breakdown'] = self.filtering_summary['instance_count_distribution']
+        
+        # Analyze teacher impact
+        affected_teachers = set()
+        for instance in self.removed_courses:
+            affected_teachers.add(instance['teacher_id'])
+        for trim_info in self.trimmed_courses.values():
+            for instance in trim_info['removed_instances']:
+                affected_teachers.add(instance['teacher_id'])
+        
+        report['detailed_analysis']['teacher_impact'] = {
+            'total_teachers_affected': len(affected_teachers),
+            'affected_teacher_ids': list(affected_teachers)
+        }
+        
+        # Analyze course type impact
+        lab_courses_removed = len([inst for inst in self.removed_courses if inst.get('has_lab', False)])
+        theory_courses_removed = len([inst for inst in self.removed_courses if inst.get('has_theory', False)])
+        
+        report['detailed_analysis']['course_type_impact'] = {
+            'lab_instances_removed': lab_courses_removed,
+            'theory_instances_removed': theory_courses_removed,
+            'total_instances_removed': len(self.removed_courses) + sum(len(info['removed_instances']) for info in self.trimmed_courses.values())
+        }
+        
+        # Save to file
+        with open(output_file, 'w') as f:
+            json.dump(report, f, indent=2, default=str)
+        
+        self.logger.info(f"Filtering verification report saved to {output_file}")
+        self.logger.info(f"Report summary:")
+        self.logger.info(f"  - {report['removed_courses']['total_instances']} course instances completely removed")
+        self.logger.info(f"  - {len(report['removed_courses']['unique_courses'])} unique courses removed: {report['removed_courses']['unique_courses']}")
+        self.logger.info(f"  - {len(self.trimmed_courses)} courses trimmed")
+        self.logger.info(f"  - {len(affected_teachers)} teachers affected")
+        
+        return report
+    
+    def print_filtering_summary(self):
+        """
+        Print a concise summary of the filtering process for quick verification.
+        """
+        if not hasattr(self, 'filtering_summary'):
+            self.logger.warning("No filtering data available")
+            return
+        
+        print(f"\n{'='*60}")
+        print(f"COURSE FILTERING SUMMARY - {self.dept} Semester {self.semester}")
+        print(f"{'='*60}")
+        
+        print(f"Original instances: {self.filtering_summary['original_total_instances']}")
+        print(f"Filtered instances: {self.filtering_summary['filtered_total_instances']}")
+        print(f"Most common instance count: {self.filtering_summary['most_common_instance_count']}")
+        
+        print(f"\nInstance count distribution:")
+        for count, freq in sorted(self.filtering_summary['instance_count_distribution'].items()):
+            print(f"  {freq} courses had {count} instances each")
+        
+        print(f"\nFiltering actions:")
+        print(f"  • {self.filtering_summary['courses_removed_count']} courses COMPLETELY REMOVED (insufficient instances)")
+        print(f"  • {self.filtering_summary['courses_trimmed_count']} courses TRIMMED (excess instances)")
+        print(f"  • {self.filtering_summary['courses_kept_unchanged']} courses kept unchanged")
+        print(f"  • {self.filtering_summary['total_instances_removed']} total instances removed")
+        
+        if self.removed_courses:
+            removed_course_codes = list(set(inst['course_code'] for inst in self.removed_courses))
+            print(f"\nRemoved courses: {removed_course_codes}")
+        
+        if self.trimmed_courses:
+            print(f"\nTrimmed courses:")
+            for course_code, info in self.trimmed_courses.items():
+                print(f"  • {course_code}: {info['original_count']} → {info['kept_count']} instances")
+        
+        print(f"{'='*60}\n")
+    
     def save_results(self, output_file):
         """
         Save optimization results to file.
@@ -1183,6 +1463,14 @@ def optimize_course_groups(csv_file, dept_name, semester):
         
         # Create and run optimizer
         optimizer = CourseGroupOptimizer(courses, dept_name, semester, logger)
+        
+        # Save filtering report before optimization (for verification)
+        # Create reports directory if it doesn't exist
+        reports_dir = "course_filtering_reports"
+        os.makedirs(reports_dir, exist_ok=True)
+        
+        filtering_report_file = os.path.join(reports_dir, f"filtering_report_{dept_name.replace(' ', '_').replace('&', 'and')}_S{semester}.json")
+        optimizer.save_filtering_report(filtering_report_file)
         
         # Optimize distribution
         if optimizer.optimize_distribution():
