@@ -223,10 +223,10 @@ class CombinedScheduler:
                 'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
                 'pattern': 'Monday-Saturday'
             },
-            ('Electronics & Communication Engineering', 7): {
-                'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
-                'pattern': 'Monday-Saturday'
-            },
+            # ('Electronics & Communication Engineering', 7): {
+            #     'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
+            #     'pattern': 'Monday-Saturday'
+            # },
             # Add more semester-specific overrides here as needed
             # ('Department Name', semester_number): {'days': [...], 'pattern': 'Monday-Saturday'}
         }
@@ -1525,6 +1525,9 @@ class CombinedScheduler:
         
         # Apply lunch break constraint for lab sessions
         constraints_applied += self._apply_lab_lunch_break_constraint(model, lab_variables)
+        
+        # Apply consecutive batch scheduling constraint for specific departments
+        constraints_applied += self.apply_consecutive_batch_scheduling_constraint(model, lab_variables)
         
         self.logger.info(f"Applied {constraints_applied} lab-specific constraints (optimized)")
         return constraints_applied
@@ -3176,6 +3179,15 @@ class CombinedScheduler:
             self.logger.info(f"Added {len(self.computing_group_slot_penalties)} computing group slot penalty terms (weight: {penalty_weight})")
             self.logger.info("  • Discourages computing groups from using more than 6 lab slots")
         
+        # Add bonus for consecutive batch scheduling preference (soft constraint - encourage consecutive scheduling)
+        if hasattr(self, 'consecutive_batch_preference_vars') and self.consecutive_batch_preference_vars:
+            # Add bonuses (since we're maximizing, adding bonuses encourages preferred behavior)
+            preference_weight = 50  # Moderate weight - encourage but don't force consecutive batch scheduling
+            for preference_var in self.consecutive_batch_preference_vars:
+                objective_terms.append(preference_weight * preference_var)
+            self.logger.info(f"Added {len(self.consecutive_batch_preference_vars)} consecutive batch preference terms (weight: {preference_weight})")
+            self.logger.info("  • Encourages consecutive scheduling of batched lab sessions for specific departments")
+        
         if objective_terms:
             model.Maximize(sum(objective_terms))
             self.logger.info(f"Combined objective set with {len(objective_terms)} terms")
@@ -3186,6 +3198,7 @@ class CombinedScheduler:
             self.logger.info("  4. Consecutive slot penalty (avoid >2 consecutive slots per group per day)")
             self.logger.info("  5. Core lab group slot penalty (prefer ≤8 slots for groups with core labs)")
             self.logger.info("  6. Computing group slot penalty (prefer ≤6 slots for computing department groups)")
+            self.logger.info("  7. Consecutive batch preference (encourage consecutive batched lab sessions)")
         else:
             self.logger.warning("No objective terms created for group allocation")
     
@@ -5649,4 +5662,153 @@ class CombinedScheduler:
                                         self.logger.debug(f"Lab lunch break constraint: {course_code} ({dept_name}) in lunch break slot {lunch_slot_idx + 1}")
         
         self.logger.info(f"Applied {constraints_applied} lab lunch break constraints")
+        return constraints_applied
+
+    def apply_consecutive_batch_scheduling_constraint(self, model, lab_variables):
+        """
+        CONSTRAINT: For specific departments (like Biotechnology) with batched 4+ practical hour courses,
+        encourage (but don't force) batch sessions for the same course instance to be scheduled consecutively.
+        
+        This is implemented as a SOFT constraint that prefers consecutive scheduling but allows flexibility
+        to ensure the model remains feasible.
+        """
+        self.logger.info("Applying consecutive batch scheduling constraint for specific departments...")
+        constraints_applied = 0
+        
+        # Define departments that benefit from consecutive batch scheduling
+        consecutive_batch_departments = [
+            'Biotechnology',
+            'Chemical Engineering',
+            'Food Technology',
+            'Biomedical Engineering'
+            # Add more departments as needed
+        ]
+        
+        # Only apply to the most common consecutive pairs to avoid over-constraining
+        preferred_consecutive_pairs = [
+            ('L1', 'L2'),  # 8:00-9:40 and 9:50-11:30 (morning block)
+            ('L3', 'L4'),  # 11:50-1:30 and 1:50-3:30 (around lunch)
+            ('L5', 'L6')   # 3:50-5:30 and 5:30-7:10 (evening block)
+        ]
+        
+        # Store consecutive preference variables for objective
+        consecutive_preference_vars = []
+        
+        for teacher_id in lab_variables:
+            for course_instance_id in lab_variables[teacher_id]:
+                # Get course details
+                course_req = next((req for req in self.lab_requirements.get(teacher_id, []) 
+                                 if req['course_instance_id'] == course_instance_id), None)
+                
+                if not course_req:
+                    continue  # Skip if course not found
+                
+                practical_hours = course_req['practical_hours']
+                students_per_instance = course_req['students_per_instance']
+                
+                # Only apply to courses with 4+ practical hours that need batching
+                if practical_hours < 4 or students_per_instance <= 35:
+                    continue
+                
+                # Get department for this course
+                dept_name = "Computer Science & Engineering"  # Default
+                if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
+                    dept_name = self.instance_group_mapping[course_instance_id]['department']
+                else:
+                    # Fallback: look up in courses_df
+                    course_matches = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
+                    if not course_matches.empty:
+                        dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
+                
+                # Only apply to specific departments
+                if dept_name not in consecutive_batch_departments:
+                    continue
+                
+                # Get lab capacity categories
+                labs_35 = [lab['id'] for lab in self.lab_capacity_analysis['labs_35']]
+                
+                # Check if course has variables for 35-capacity labs
+                has_35_cap_assignments = False
+                for day_idx in lab_variables[teacher_id][course_instance_id]:
+                    for session_name in lab_variables[teacher_id][course_instance_id][day_idx]:
+                        for room_id in lab_variables[teacher_id][course_instance_id][day_idx][session_name]:
+                            if room_id in labs_35:
+                                has_35_cap_assignments = True
+                                break
+                        if has_35_cap_assignments:
+                            break
+                    if has_35_cap_assignments:
+                        break
+                
+                if not has_35_cap_assignments:
+                    continue  # No 35-capacity lab assignments possible
+                
+                # Get department-specific days
+                dept_days = self._get_days_for_department(dept_name)
+                num_dept_days = len(dept_days)
+                
+                self.logger.info(f"Applying soft consecutive batch constraint for {course_req['course_code']} "
+                               f"({dept_name}, {practical_hours}h, {students_per_instance} students)")
+                
+                # For each day, create soft preference for consecutive scheduling
+                for day_idx in range(num_dept_days):
+                    if day_idx not in lab_variables[teacher_id][course_instance_id]:
+                        continue
+                    
+                    # Apply soft constraint only to preferred consecutive pairs
+                    for session1, session2 in preferred_consecutive_pairs:
+                        if (session1 in lab_variables[teacher_id][course_instance_id][day_idx] and 
+                            session2 in lab_variables[teacher_id][course_instance_id][day_idx]):
+                            
+                            # Collect assignments for each session in 35-capacity labs
+                            session1_vars = []
+                            session2_vars = []
+                            
+                            for room_id in labs_35:
+                                if room_id in lab_variables[teacher_id][course_instance_id][day_idx][session1]:
+                                    session1_vars.append(lab_variables[teacher_id][course_instance_id][day_idx][session1][room_id])
+                                if room_id in lab_variables[teacher_id][course_instance_id][day_idx][session2]:
+                                    session2_vars.append(lab_variables[teacher_id][course_instance_id][day_idx][session2][room_id])
+                            
+                            if session1_vars and session2_vars:
+                                # Create preference variable for consecutive scheduling
+                                consecutive_pref = model.NewBoolVar(f'consecutive_pref_{course_instance_id}_{day_idx}_{session1}_{session2}')
+                                
+                                # Create variables to track if sessions are used
+                                session1_used = model.NewBoolVar(f'session1_used_{course_instance_id}_{day_idx}_{session1}')
+                                session2_used = model.NewBoolVar(f'session2_used_{course_instance_id}_{day_idx}_{session2}')
+                                
+                                # Session is used if any room assignment is made
+                                model.Add(sum(session1_vars) >= 1).OnlyEnforceIf(session1_used)
+                                model.Add(sum(session1_vars) == 0).OnlyEnforceIf(session1_used.Not())
+                                model.Add(sum(session2_vars) >= 1).OnlyEnforceIf(session2_used)
+                                model.Add(sum(session2_vars) == 0).OnlyEnforceIf(session2_used.Not())
+                                
+                                # Preference is satisfied if both sessions are used together OR neither is used
+                                both_used = model.NewBoolVar(f'both_used_{course_instance_id}_{day_idx}_{session1}_{session2}')
+                                model.AddBoolAnd([session1_used, session2_used]).OnlyEnforceIf(both_used)
+                                model.AddBoolOr([session1_used.Not(), session2_used.Not()]).OnlyEnforceIf(both_used.Not())
+                                
+                                neither_used = model.NewBoolVar(f'neither_used_{course_instance_id}_{day_idx}_{session1}_{session2}')
+                                model.AddBoolAnd([session1_used.Not(), session2_used.Not()]).OnlyEnforceIf(neither_used)
+                                model.AddBoolOr([session1_used, session2_used]).OnlyEnforceIf(neither_used.Not())
+                                
+                                # Consecutive preference is satisfied if both are used OR neither is used
+                                model.AddBoolOr([both_used, neither_used]).OnlyEnforceIf(consecutive_pref)
+                                model.AddBoolAnd([both_used.Not(), neither_used.Not()]).OnlyEnforceIf(consecutive_pref.Not())
+                                
+                                # Add to preference variables for objective
+                                consecutive_preference_vars.append(consecutive_pref)
+                                constraints_applied += 1
+                                
+                                self.logger.debug(f"Soft consecutive constraint: {course_req['course_code']} day {day_idx} "
+                                                f"{session1}-{session2} preferred to be scheduled together")
+        
+        # Store preference variables for use in objective function
+        if not hasattr(self, 'consecutive_batch_preference_vars'):
+            self.consecutive_batch_preference_vars = []
+        self.consecutive_batch_preference_vars.extend(consecutive_preference_vars)
+        
+        self.logger.info(f"Applied {constraints_applied} soft consecutive batch scheduling constraints")
+        self.logger.info(f"Created {len(consecutive_preference_vars)} consecutive batch preference variables")
         return constraints_applied

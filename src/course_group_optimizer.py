@@ -346,6 +346,9 @@ class CourseGroupOptimizer:
         self._apply_group_size_constraints(model, assignment_vars)
         self._apply_lab_priority_constraints(model, assignment_vars)
         
+        # Apply special constraints for specific departments/semesters
+        self._apply_special_department_constraints(model, assignment_vars)
+        
         # Set objectives
         self._set_optimization_objectives(model, assignment_vars)
         
@@ -620,6 +623,309 @@ class CourseGroupOptimizer:
                     lab_priority_constraints_added += 1
         
         self.logger.info(f"Applied {lab_priority_constraints_added} lab priority constraints")
+    
+    def _apply_special_department_constraints(self, model, assignment_vars):
+        """
+        Apply special constraints for specific departments/semesters.
+        
+        Args:
+            model: CP-SAT model
+            assignment_vars: Assignment variables
+        """
+        constraints_added = 0
+        
+        # Special constraint for Electronics & Communication Engineering 7th semester
+        if (self.dept == "Electronics & Communication Engineering" and self.semester == 7):
+            constraints_added += self._apply_ece_s7_even_lab_distribution(model, assignment_vars)
+        
+        # Special constraint for Electronics & Communication Engineering 5th semester
+        if (self.dept == "Electronics & Communication Engineering" and self.semester == 5):
+            constraints_added += self._apply_ece_s5_even_lab_distribution(model, assignment_vars)
+        
+        if constraints_added > 0:
+            self.logger.info(f"Applied {constraints_added} special department-specific constraints")
+        else:
+            self.logger.info("No special department-specific constraints applied")
+    
+    def _apply_ece_s7_even_lab_distribution(self, model, assignment_vars):
+        """
+        Special constraint for ECE 7th semester: ensure even distribution of lab course instances.
+        
+        For courses with practical hours > 0 and multiple instances, ensure that instances
+        are distributed evenly across the groups they appear in.
+        
+        Args:
+            model: CP-SAT model
+            assignment_vars: Assignment variables
+            
+        Returns:
+            int: Number of constraints added
+        """
+        self.logger.info("Applying ECE S7 special constraint: even lab distribution")
+        constraints_added = 0
+        
+        # Identify lab courses with multiple instances
+        lab_courses_multi_instance = {}
+        for course in self.courses:
+            if course.get('practical_hours', 0) > 0:
+                course_code = course['course_code']
+                if course_code not in lab_courses_multi_instance:
+                    lab_courses_multi_instance[course_code] = []
+                lab_courses_multi_instance[course_code].append(course)
+        
+        # Filter to only courses with multiple instances
+        lab_courses_multi_instance = {
+            course_code: instances 
+            for course_code, instances in lab_courses_multi_instance.items() 
+            if len(instances) > 1
+        }
+        
+        if not lab_courses_multi_instance:
+            self.logger.info("No multi-instance lab courses found for ECE S7 even distribution constraint")
+            return 0
+        
+        self.logger.info(f"Applying even distribution to {len(lab_courses_multi_instance)} lab courses:")
+        for course_code, instances in lab_courses_multi_instance.items():
+            self.logger.info(f"  {course_code}: {len(instances)} instances")
+        
+        # For each multi-instance lab course, ensure even distribution
+        for course_code, course_instances in lab_courses_multi_instance.items():
+            num_instances = len(course_instances)
+            instance_indices = [
+                i for i, inst in enumerate(self.courses) 
+                if inst['course_code'] == course_code and inst.get('practical_hours', 0) > 0
+            ]
+            
+            # Since course limit constraint forces multi-instance courses into exactly 2 groups,
+            # we need to ensure even distribution across those 2 groups
+            
+            # Create auxiliary variables to track which groups have this course
+            group_has_course = []
+            group_instance_counts = []
+            
+            for group_idx in range(self.num_groups):
+                # Track if this group has any instance of this course
+                group_var = model.NewBoolVar(f"ece_s7_{course_code}_in_group_{group_idx}")
+                group_has_course.append(group_var)
+                
+                # Count instances of this course in this group
+                group_count = model.NewIntVar(0, num_instances, f"ece_s7_{course_code}_count_group_{group_idx}")
+                group_instance_counts.append(group_count)
+                
+                # Link count to actual assignments
+                course_assignments_in_group = [assignment_vars[(i, group_idx)] for i in instance_indices]
+                model.Add(group_count == sum(course_assignments_in_group))
+                
+                # Link group_has_course to assignments
+                for instance_idx in instance_indices:
+                    model.Add(group_var >= assignment_vars[(instance_idx, group_idx)])
+                model.Add(group_var <= sum(course_assignments_in_group))
+                
+                constraints_added += 3
+            
+            # Constraint: Course must be in exactly 2 groups (enforced by course limit constraint)
+            # Additional constraint: Even distribution across those 2 groups
+            
+            # If course has even number of instances, each group should have exactly half
+            if num_instances % 2 == 0:
+                target_per_group = num_instances // 2
+                
+                # For each pair of groups that could contain this course, if both contain it,
+                # they must have equal instances
+                for g1 in range(self.num_groups):
+                    for g2 in range(g1 + 1, self.num_groups):
+                        # If both groups have this course, they must have equal counts
+                        both_have_course = model.NewBoolVar(f"ece_s7_{course_code}_in_both_g{g1}_g{g2}")
+                        
+                        # both_have_course is true iff both groups have the course
+                        model.Add(both_have_course <= group_has_course[g1])
+                        model.Add(both_have_course <= group_has_course[g2])
+                        model.Add(both_have_course >= group_has_course[g1] + group_has_course[g2] - 1)
+                        
+                        # If both have the course, they must have equal instances (target_per_group each)
+                        model.Add(group_instance_counts[g1] == target_per_group).OnlyEnforceIf(both_have_course)
+                        model.Add(group_instance_counts[g2] == target_per_group).OnlyEnforceIf(both_have_course)
+                        
+                        constraints_added += 5
+                
+                self.logger.info(f"  {course_code}: enforcing {target_per_group} instances per group (even split)")
+                
+            else:
+                # Odd number of instances: as even as possible (difference of at most 1)
+                target_low = num_instances // 2
+                target_high = target_low + 1
+                
+                for g1 in range(self.num_groups):
+                    for g2 in range(g1 + 1, self.num_groups):
+                        # If both groups have this course, difference should be at most 1
+                        both_have_course = model.NewBoolVar(f"ece_s7_{course_code}_in_both_g{g1}_g{g2}")
+                        
+                        model.Add(both_have_course <= group_has_course[g1])
+                        model.Add(both_have_course <= group_has_course[g2])
+                        model.Add(both_have_course >= group_has_course[g1] + group_has_course[g2] - 1)
+                        
+                        # If both have the course, each must have target_low or target_high instances
+                        g1_valid = model.NewBoolVar(f"ece_s7_{course_code}_g{g1}_valid")
+                        g2_valid = model.NewBoolVar(f"ece_s7_{course_code}_g{g2}_valid")
+                        
+                        # g1 is valid if it has target_low or target_high instances
+                        model.Add(group_instance_counts[g1] >= target_low).OnlyEnforceIf([both_have_course, g1_valid])
+                        model.Add(group_instance_counts[g1] <= target_high).OnlyEnforceIf([both_have_course, g1_valid])
+                        
+                        # g2 is valid if it has target_low or target_high instances  
+                        model.Add(group_instance_counts[g2] >= target_low).OnlyEnforceIf([both_have_course, g2_valid])
+                        model.Add(group_instance_counts[g2] <= target_high).OnlyEnforceIf([both_have_course, g2_valid])
+                        
+                        # If both groups have the course, both must be valid
+                        model.Add(g1_valid == 1).OnlyEnforceIf(both_have_course)
+                        model.Add(g2_valid == 1).OnlyEnforceIf(both_have_course)
+                        
+                        constraints_added += 9
+                
+                self.logger.info(f"  {course_code}: enforcing {target_low}-{target_high} instances per group (balanced split)")
+        
+        self.logger.info(f"Applied {constraints_added} ECE S7 even lab distribution constraints")
+        return constraints_added
+    
+    def _apply_ece_s5_even_lab_distribution(self, model, assignment_vars):
+        """
+        Special constraint for ECE 5th semester: ensure even distribution of lab course instances.
+        
+        For courses with practical hours > 0 and multiple instances, ensure that instances
+        are distributed evenly across the groups they appear in.
+        
+        Args:
+            model: CP-SAT model
+            assignment_vars: Assignment variables
+            
+        Returns:
+            int: Number of constraints added
+        """
+        self.logger.info("Applying ECE S5 special constraint: even lab distribution")
+        constraints_added = 0
+        
+        # Identify lab courses with multiple instances
+        lab_courses_multi_instance = {}
+        for course in self.courses:
+            if course.get('practical_hours', 0) > 0:
+                course_code = course['course_code']
+                if course_code not in lab_courses_multi_instance:
+                    lab_courses_multi_instance[course_code] = []
+                lab_courses_multi_instance[course_code].append(course)
+        
+        # Filter to only courses with multiple instances
+        lab_courses_multi_instance = {
+            course_code: instances 
+            for course_code, instances in lab_courses_multi_instance.items() 
+            if len(instances) > 1
+        }
+        
+        if not lab_courses_multi_instance:
+            self.logger.info("No multi-instance lab courses found for ECE S5 even distribution constraint")
+            return 0
+        
+        self.logger.info(f"Applying even distribution to {len(lab_courses_multi_instance)} lab courses:")
+        for course_code, instances in lab_courses_multi_instance.items():
+            self.logger.info(f"  {course_code}: {len(instances)} instances")
+        
+        # For each multi-instance lab course, ensure even distribution
+        for course_code, course_instances in lab_courses_multi_instance.items():
+            num_instances = len(course_instances)
+            instance_indices = [
+                i for i, inst in enumerate(self.courses) 
+                if inst['course_code'] == course_code and inst.get('practical_hours', 0) > 0
+            ]
+            
+            # Since course limit constraint forces multi-instance courses into exactly 2 groups,
+            # we need to ensure even distribution across those 2 groups
+            
+            # Create auxiliary variables to track which groups have this course
+            group_has_course = []
+            group_instance_counts = []
+            
+            for group_idx in range(self.num_groups):
+                # Track if this group has any instance of this course
+                group_var = model.NewBoolVar(f"ece_s5_{course_code}_in_group_{group_idx}")
+                group_has_course.append(group_var)
+                
+                # Count instances of this course in this group
+                group_count = model.NewIntVar(0, num_instances, f"ece_s5_{course_code}_count_group_{group_idx}")
+                group_instance_counts.append(group_count)
+                
+                # Link count to actual assignments
+                course_assignments_in_group = [assignment_vars[(i, group_idx)] for i in instance_indices]
+                model.Add(group_count == sum(course_assignments_in_group))
+                
+                # Link group_has_course to assignments
+                for instance_idx in instance_indices:
+                    model.Add(group_var >= assignment_vars[(instance_idx, group_idx)])
+                model.Add(group_var <= sum(course_assignments_in_group))
+                
+                constraints_added += 3
+            
+            # Constraint: Course must be in exactly 2 groups (enforced by course limit constraint)
+            # Additional constraint: Even distribution across those 2 groups
+            
+            # If course has even number of instances, each group should have exactly half
+            if num_instances % 2 == 0:
+                target_per_group = num_instances // 2
+                
+                # For each pair of groups that could contain this course, if both contain it,
+                # they must have equal instances
+                for g1 in range(self.num_groups):
+                    for g2 in range(g1 + 1, self.num_groups):
+                        # If both groups have this course, they must have equal counts
+                        both_have_course = model.NewBoolVar(f"ece_s5_{course_code}_in_both_g{g1}_g{g2}")
+                        
+                        # both_have_course is true iff both groups have the course
+                        model.Add(both_have_course <= group_has_course[g1])
+                        model.Add(both_have_course <= group_has_course[g2])
+                        model.Add(both_have_course >= group_has_course[g1] + group_has_course[g2] - 1)
+                        
+                        # If both have the course, they must have equal instances (target_per_group each)
+                        model.Add(group_instance_counts[g1] == target_per_group).OnlyEnforceIf(both_have_course)
+                        model.Add(group_instance_counts[g2] == target_per_group).OnlyEnforceIf(both_have_course)
+                        
+                        constraints_added += 5
+                
+                self.logger.info(f"  {course_code}: enforcing {target_per_group} instances per group (even split)")
+                
+            else:
+                # Odd number of instances: as even as possible (difference of at most 1)
+                target_low = num_instances // 2
+                target_high = target_low + 1
+                
+                for g1 in range(self.num_groups):
+                    for g2 in range(g1 + 1, self.num_groups):
+                        # If both groups have this course, difference should be at most 1
+                        both_have_course = model.NewBoolVar(f"ece_s5_{course_code}_in_both_g{g1}_g{g2}")
+                        
+                        model.Add(both_have_course <= group_has_course[g1])
+                        model.Add(both_have_course <= group_has_course[g2])
+                        model.Add(both_have_course >= group_has_course[g1] + group_has_course[g2] - 1)
+                        
+                        # If both have the course, each must have target_low or target_high instances
+                        g1_valid = model.NewBoolVar(f"ece_s5_{course_code}_g{g1}_valid")
+                        g2_valid = model.NewBoolVar(f"ece_s5_{course_code}_g{g2}_valid")
+                        
+                        # g1 is valid if it has target_low or target_high instances
+                        model.Add(group_instance_counts[g1] >= target_low).OnlyEnforceIf([both_have_course, g1_valid])
+                        model.Add(group_instance_counts[g1] <= target_high).OnlyEnforceIf([both_have_course, g1_valid])
+                        
+                        # g2 is valid if it has target_low or target_high instances  
+                        model.Add(group_instance_counts[g2] >= target_low).OnlyEnforceIf([both_have_course, g2_valid])
+                        model.Add(group_instance_counts[g2] <= target_high).OnlyEnforceIf([both_have_course, g2_valid])
+                        
+                        # If both groups have the course, both must be valid
+                        model.Add(g1_valid == 1).OnlyEnforceIf(both_have_course)
+                        model.Add(g2_valid == 1).OnlyEnforceIf(both_have_course)
+                        
+                        constraints_added += 9
+                
+                self.logger.info(f"  {course_code}: enforcing {target_low}-{target_high} instances per group (balanced split)")
+        
+        self.logger.info(f"Applied {constraints_added} ECE S5 even lab distribution constraints")
+        return constraints_added
     
     def _set_optimization_objectives(self, model, assignment_vars):
         """
