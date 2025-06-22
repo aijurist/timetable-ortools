@@ -48,6 +48,9 @@ class CombinedScheduler:
         # Set up time configurations based on day order
         self._setup_department_day_patterns()
         
+        # Set up lunch break configuration
+        self._setup_lunch_break_configuration()
+        
         # Set up time configurations - WILL BE CUSTOMIZED PER DEPARTMENT
         # For now, use the most common pattern (Monday-Friday) as default
         self.days = ["monday", "tuesday", "wed", "thur", "fri"]  # Monday-Friday as default
@@ -220,10 +223,10 @@ class CombinedScheduler:
                 'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
                 'pattern': 'Monday-Saturday'
             },
-            # ('Electronics & Communication Engineering', 7): {
-            #     'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
-            #     'pattern': 'Monday-Saturday'
-            # },
+            ('Electronics & Communication Engineering', 7): {
+                'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
+                'pattern': 'Monday-Saturday'
+            },
             # Add more semester-specific overrides here as needed
             # ('Department Name', semester_number): {'days': [...], 'pattern': 'Monday-Saturday'}
         }
@@ -303,6 +306,105 @@ class CombinedScheduler:
         
         self.logger.info(f"Added semester override: {dept_name} Semester {semester} -> {day_pattern} ({len(days)} days)")
         self.logger.info(f"  Days: {', '.join(days).title()}")
+    
+    def _setup_lunch_break_configuration(self):
+        """Set up lunch break configuration for departments.
+        
+        Lunch break is between 11:00 AM to 1:30 PM, affecting theory slots:
+        - Slot 3: 11:00 - 11:50
+        - Slot 4: 12:00 - 12:50  
+        - Slot 5: 1:00 - 1:50
+        
+        Each department gets assigned one of these slots as their lunch break.
+        """
+        self.logger.info("Setting up lunch break configuration...")
+        
+        # Define lunch break time slots (11:00 AM to 1:30 PM)
+        self.lunch_break_slots = {
+            3: "11:00 - 11:50",  # Slot 3
+            4: "12:00 - 12:50",  # Slot 4
+            5: "1:00 - 1:50"     # Slot 5
+        }
+        
+        # Department-wise lunch break assignment
+        # Each department gets one lunch break slot to ensure consistency
+        self.department_lunch_breaks = {
+            'Computer Science & Engineering': 4,  # Standard lunch (12:00 - 12:50)
+            'Artificial Intelligence & Data Science': 4,
+            'Artificial Intelligence & Machine Learning': 4,  # Added missing department
+            'Information Technology': 4,
+            'Computer Science & Business Systems': 4,
+            'Computer Science & Design': 4,
+            'Computer Science & Cyber Security': 4,
+            
+            # Engineering departments
+            # 'Electronics & Communication Engineering': 4,  # Early lunch (11:00 - 11:50)
+            'Electrical & Electronics Engineering': 3,
+            'Mechanical Engineering': 3,
+            'Civil Engineering': 3,
+            'Aeronautical Engineering': 3,  # Added missing department
+            'Chemical Engineering': 3,  # Added missing department
+            'Biomedical Engineering': 3,  # Added missing department
+            'Biotechnology': 5,  # Late lunch (1:00 - 1:50)
+            
+            # Default for any department not explicitly listed
+            # 'default': 4  # Standard lunch
+        }
+        
+        # Create reverse mapping: lunch slot -> departments
+        self.lunch_break_to_departments = {}
+        for dept, slot_idx in self.department_lunch_breaks.items():
+            if slot_idx not in self.lunch_break_to_departments:
+                self.lunch_break_to_departments[slot_idx] = []
+            self.lunch_break_to_departments[slot_idx].append(dept)
+        
+        # Log lunch break configuration
+        self.logger.info("Lunch break configuration:")
+        for slot_idx, time_slot in self.lunch_break_slots.items():
+            depts = self.lunch_break_to_departments.get(slot_idx, [])
+            self.logger.info(f"  Slot {slot_idx} ({time_slot}): {len(depts)} departments")
+        
+        self.logger.info(f"Lunch break configuration completed for {len(self.department_lunch_breaks)} departments")
+
+    def get_lunch_break_slot(self, department_name):
+        """Get the lunch break slot for a specific department.
+        
+        Args:
+            department_name (str): Name of the department
+            
+        Returns:
+            int or None: Slot index (3, 4, or 5) for the lunch break, or None if no lunch break assigned
+        """
+        return self.department_lunch_breaks.get(department_name, None)
+
+    def get_lunch_break_time(self, department_name):
+        """Get the lunch break time slot string for a specific department.
+        
+        Args:
+            department_name (str): Name of the department
+            
+        Returns:
+            str or None: Time slot string (e.g., "12:00 - 12:50"), or None if no lunch break assigned
+        """
+        slot_idx = self.get_lunch_break_slot(department_name)
+        if slot_idx is None:
+            return None
+        return self.lunch_break_slots[slot_idx]
+
+    def is_lunch_break_slot(self, slot_idx, department_name):
+        """Check if a given slot is a lunch break slot for the department.
+        
+        Args:
+            slot_idx (int): Time slot index to check
+            department_name (str): Name of the department
+            
+        Returns:
+            bool: True if this is a lunch break slot for the department
+        """
+        lunch_slot = self.get_lunch_break_slot(department_name)
+        if lunch_slot is None:
+            return False  # No lunch break assigned to this department
+        return slot_idx == lunch_slot
     
     def _load_core_lab_mapping(self):
         """Load core lab mapping file for specialized lab course assignments."""
@@ -1417,6 +1519,9 @@ class CombinedScheduler:
         constraints_applied += self.apply_140_lab_co_scheduling_constraint(model, lab_variables)
         # REMOVED: apply_lab_efficiency_constraints - too restrictive and redundant with other constraints
         
+        # Apply lunch break constraint for lab sessions
+        # constraints_applied += self._apply_lab_lunch_break_constraint(model, lab_variables)  # COMMENTED OUT
+        
         self.logger.info(f"Applied {constraints_applied} lab-specific constraints (optimized)")
         return constraints_applied
 
@@ -2279,6 +2384,9 @@ class CombinedScheduler:
         # CONSTRAINT 4: Soft constraint - avoid more than 2 consecutive time slots per group per day
         constraints_applied += self._apply_consecutive_slots_soft_constraint(model, group_timeslot_vars)
         
+        # CONSTRAINT 5: Lunch break constraint - prevent scheduling during department lunch breaks
+        # constraints_applied += self._apply_lunch_break_constraint(model, group_timeslot_vars)  # COMMENTED OUT
+        
         self.logger.info(f"Applied {constraints_applied} theory-specific constraints with department-specific day patterns")
         return constraints_applied
 
@@ -2837,7 +2945,7 @@ class CombinedScheduler:
                                     if room_id in lab_variables[teacher_id][course_instance_id][day_idx][session_name]:
                                         objective_terms.append(lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id])
         
-        # Theory objective: maximize group timeslot allocations with time slot preference
+        # Theory objective: maximize group timeslot allocations (all time slots equal)
         for group_name, day_slots in group_timeslot_vars.items():
             # Get department and semester for this group
             dept_name = group_name.split('_S')[0] if '_S' in group_name else "Computer Science & Engineering"
@@ -2855,9 +2963,8 @@ class CombinedScheduler:
                 if day_idx in day_slots:
                     for slot_idx in range(self.num_theory_slots):
                         if slot_idx in day_slots[day_idx]:
-                    # Give higher weight to earlier slots (morning preferred over evening)
-                            weight = self.num_theory_slots - slot_idx
-                            objective_terms.append(day_slots[day_idx][slot_idx] * weight)
+                            # Equal weight for all time slots (no time preference)
+                            objective_terms.append(day_slots[day_idx][slot_idx])
         
         # Add capacity preferences for lab room assignments
         if hasattr(self, 'capacity_preferences') and self.capacity_preferences:
@@ -2936,8 +3043,7 @@ class CombinedScheduler:
             self.logger.info(f"Combined objective set with {len(objective_terms)} terms")
             self.logger.info("Objective strategy:")
             self.logger.info("  1. Lab assignments (base priority)")
-            self.logger.info("  2. Group timeslots with time slot preference")
-            self.logger.info("     - Earlier time slots preferred within each day")
+            self.logger.info("  2. Group timeslots (no time slot preference)")
             self.logger.info("  3. Room capacity optimization (prefer appropriate room sizes)")
             self.logger.info("  4. Consecutive slot penalty (avoid >2 consecutive slots per group per day)")
             self.logger.info("  5. Core lab group slot penalty (prefer ≤8 slots for groups with core labs)")
@@ -3261,6 +3367,17 @@ class CombinedScheduler:
                     continue
             
                 day_idx, time_slot_idx = allocated_slots[slot_idx]
+                
+                # CRITICAL: Check if this time slot is during lunch break for this department
+                # COMMENTED OUT - Lunch break check disabled
+                # dept_name = group_info['dept']
+                # if self.is_lunch_break_slot(time_slot_idx, dept_name):
+                #     lunch_time = self.get_lunch_break_time(dept_name)
+                #     self.logger.error(f"LUNCH BREAK VIOLATION BLOCKED: {group_name} attempted to schedule during lunch break slot {time_slot_idx} ({self.theory_time_slots[time_slot_idx]}) for department {dept_name}")
+                #     self.logger.error(f"  Expected lunch time: {lunch_time}")
+                #     self.logger.error(f"  Skipping {len(assigned_sessions)} sessions that would violate lunch break")
+                #     sessions_skipped_no_room += len(assigned_sessions)
+                #     continue  # Skip this entire time slot
                 
                 # Track room usage for this specific time slot to prevent double-booking
                 used_rooms_this_slot = set()
@@ -4467,14 +4584,13 @@ class CombinedScheduler:
                 if day_idx in day_slots:
                     for slot_idx in range(self.num_theory_slots):
                         if slot_idx in day_slots[day_idx]:
-                    # Give higher weight to earlier slots (morning preferred over evening)
-                            weight = self.num_theory_slots - slot_idx
-                            objective_terms.append(day_slots[day_idx][slot_idx] * weight)
+                            # Equal weight for all time slots (no time preference)
+                            objective_terms.append(day_slots[day_idx][slot_idx])
         
         if objective_terms:
             model.Maximize(sum(objective_terms))
             self.logger.info(f"Group allocation objective set with {len(objective_terms)} terms")
-            self.logger.info("Objective strategy: Prefer earlier time slots for compact scheduling")
+            self.logger.info("Objective strategy: Equal weight for all time slots (no time preference)")
         else:
             self.logger.warning("No objective terms created for group allocation")
 
@@ -5280,3 +5396,119 @@ class CombinedScheduler:
         self.logger.error(f"  Total occupied: {len(all_occupied_rooms)}/{len(self.theory_room_ids)} rooms")
         
         return None
+
+    def _apply_lunch_break_constraint(self, model, group_timeslot_vars):
+        """
+        Prevent any group from being scheduled in its department's lunch break slot.
+        """
+        self.logger.info("Applying lunch break constraint for all departments...")
+        constraints_applied = 0
+        
+        for group_name in group_timeslot_vars.keys():
+            # Parse department name from group name: "Department_S3_G1" -> "Department"
+            dept_name = group_name.split('_S')[0] if '_S' in group_name else "Computer Science & Engineering"
+            
+            # Extract semester from group name for semester-specific overrides
+            semester = None
+            if '_S' in group_name:
+                try:
+                    semester_part = group_name.split('_S')[1].split('_G')[0]
+                    semester = int(semester_part)
+                except (ValueError, IndexError):
+                    pass
+            
+            # Get department-specific days (with semester override if available)
+            dept_days = self._get_days_for_department(dept_name, semester)
+            num_dept_days = len(dept_days)
+            
+            # Get the lunch break slot for this department
+            lunch_slot = self.get_lunch_break_slot(dept_name)
+            
+            # Skip departments without lunch break assignments
+            if lunch_slot is None:
+                self.logger.debug(f"No lunch break assigned for department: {dept_name} - skipping lunch constraints")
+                continue
+            
+            # For each working day of this department, prevent scheduling in lunch break slot
+            for day_idx in range(num_dept_days):
+                # No group can be scheduled in its lunch break slot
+                if (day_idx in group_timeslot_vars[group_name] and 
+                    lunch_slot in group_timeslot_vars[group_name][day_idx]):
+                    model.Add(group_timeslot_vars[group_name][day_idx][lunch_slot] == 0)
+                    constraints_applied += 1
+                    self.logger.debug(f"Lunch constraint: {group_name} blocked from day {day_idx} slot {lunch_slot} ({self.theory_time_slots[lunch_slot]}) - {dept_name}")
+                else:
+                    self.logger.debug(f"Lunch constraint skipped: {group_name} day {day_idx} slot {lunch_slot} not in variables - {dept_name}")
+        
+        self.logger.info(f"Applied {constraints_applied} lunch break constraints.")
+        return constraints_applied
+
+    def _apply_lab_lunch_break_constraint(self, model, lab_variables):
+        """
+        Prevent any lab session from being scheduled during its department's lunch break slot.
+        """
+        self.logger.info("Applying lunch break constraint for lab sessions...")
+        constraints_applied = 0
+        
+        # Map lunch break theory slots to lab sessions that overlap
+        lunch_slot_to_lab_sessions = {}
+        for lunch_slot_idx, lunch_time in self.lunch_break_slots.items():
+            lunch_slot_to_lab_sessions[lunch_slot_idx] = []
+            
+            # Check which lab sessions overlap with this lunch time slot
+            for session_name, session_times in self.lab_sessions.items():
+                for session_time in session_times:
+                    if self._times_overlap(session_time, lunch_time):
+                        lunch_slot_to_lab_sessions[lunch_slot_idx].append(session_name)
+                        break  # Session overlaps, no need to check more times
+        
+        # Apply constraints for each teacher and course
+        for teacher_id in lab_variables:
+            for course_instance_id in lab_variables[teacher_id]:
+                # Get department for this course instance
+                dept_name = "Computer Science & Engineering"  # Default
+                if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
+                    dept_name = self.instance_group_mapping[course_instance_id]['department']
+                else:
+                    # Fallback: look up in courses_df
+                    course_matches = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
+                    if not course_matches.empty:
+                        dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
+                
+                # Get the lunch break slot for this department
+                lunch_slot_idx = self.get_lunch_break_slot(dept_name)
+                
+                # Skip departments without lunch break assignments
+                if lunch_slot_idx is None:
+                    continue  # No lunch break assigned for this department
+                
+                # Get the lab sessions that overlap with this department's lunch break
+                overlapping_sessions = lunch_slot_to_lab_sessions.get(lunch_slot_idx, [])
+                
+                if not overlapping_sessions:
+                    continue  # No overlapping sessions for this lunch slot
+                
+                # Get department-specific days
+                dept_days = self._get_days_for_department(dept_name)
+                num_dept_days = len(dept_days)
+                
+                # For each day, prevent scheduling in the lunch break slot
+                for day_idx in range(num_dept_days):
+                    if day_idx in lab_variables[teacher_id][course_instance_id]:
+                        for session_name in overlapping_sessions:
+                            if session_name in lab_variables[teacher_id][course_instance_id][day_idx]:
+                                for room_id in self.lab_room_ids:
+                                    if room_id in lab_variables[teacher_id][course_instance_id][day_idx][session_name]:
+                                        # Check if this session is in the lunch break slot
+                                        model.Add(lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id] == 0)
+                                        constraints_applied += 1
+                                        
+                                        # Get course code for logging
+                                        course_req = next((req for req in self.lab_requirements.get(teacher_id, []) 
+                                                         if req['course_instance_id'] == course_instance_id), None)
+                                        course_code = course_req['course_code'] if course_req else 'Unknown'
+                                        
+                                        self.logger.debug(f"Lab lunch break constraint: {course_code} ({dept_name}) in lunch break slot {lunch_slot_idx + 1}")
+        
+        self.logger.info(f"Applied {constraints_applied} lab lunch break constraints")
+        return constraints_applied

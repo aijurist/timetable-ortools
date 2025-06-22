@@ -32,7 +32,7 @@ def verify_lecture_tutorial_hours(theory_schedule_file=None, course_file=None):
     """
     # Setup default file paths
     if course_file is None:
-        course_file = "data/department_data/Computing_main.csv"
+        course_file = "data/department_data/final_computing.csv"
     
     if not os.path.exists(course_file):
         print(f"Course file not found: {course_file}")
@@ -141,11 +141,34 @@ def verify_lecture_tutorial_hours(theory_schedule_file=None, course_file=None):
     
     # Count scheduled hours per course instance
     scheduled_hours = defaultdict(lambda: {'lecture': 0, 'tutorial': 0})
+    processed_co_scheduled = set()  # Track processed co-scheduled pairs
     
     # Count theory assignments
     for _, row in theory_schedule_df.iterrows():
         try:
-            instance_id = str(int(float(row['course_instance_id'])))
+            raw_instance_id = str(row['course_instance_id'])
+            # Handle co-scheduled course IDs like "493-A" or "493-B"
+            if '-' in raw_instance_id:
+                base_instance_id = raw_instance_id.split('-')[0]
+                # Check if it's a co-scheduled course
+                is_co_scheduled = row.get('is_co_scheduled', False)
+                
+                if is_co_scheduled:
+                    # For co-scheduled courses, only count each session once per course
+                    # Create a unique key for this session
+                    session_key = f"{base_instance_id}_{row.get('day', '')}_{row.get('time_slot', '')}_{row.get('session_type', '')}_{row.get('session_number', '')}"
+                    
+                    if session_key in processed_co_scheduled:
+                        # Already processed this session
+                        continue
+                    else:
+                        processed_co_scheduled.add(session_key)
+                        print(f"Debug: Counting co-scheduled session: {raw_instance_id} -> {base_instance_id} (session: {row.get('session_type', 'lecture')} {row.get('session_number', '')})")
+            else:
+                base_instance_id = raw_instance_id
+            
+            # Convert to integer and back to string for consistency
+            instance_id = str(int(float(base_instance_id)))
         except:
             instance_id = str(row['course_instance_id'])
         

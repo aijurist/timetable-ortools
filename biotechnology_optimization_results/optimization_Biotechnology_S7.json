@@ -1,0 +1,592 @@
+{
+  "department": "Biotechnology",
+  "semester": "7",
+  "solution_found": true,
+  "objective_value": 0.0,
+  "num_groups": 8,
+  "groups": [
+    {
+      "group_id": 1,
+      "instances": [
+        {
+          "id": 1315,
+          "course_id": 560,
+          "course_code": "BT19713",
+          "course_name": "Artificial Intelligence and Machine Learning for Biotechnologist",
+          "course_type": "L",
+          "teacher_id": "124",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 62,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1316,
+          "course_id": 560,
+          "course_code": "BT19713",
+          "course_name": "Artificial Intelligence and Machine Learning for Biotechnologist",
+          "course_type": "L",
+          "teacher_id": "128",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 62,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 2071,
+          "course_id": 757,
+          "course_code": "BT19711",
+          "course_name": "Downstream processing lab",
+          "course_type": "L",
+          "teacher_id": "98",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 61,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "124",
+        "98",
+        "128"
+      ],
+      "courses": [
+        "BT19713",
+        "BT19711"
+      ],
+      "total_workload": 12
+    },
+    {
+      "group_id": 2,
+      "instances": [
+        {
+          "id": 1247,
+          "course_id": 757,
+          "course_code": "BT19711",
+          "course_name": "Downstream processing lab",
+          "course_type": "L",
+          "teacher_id": "111",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 61,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1252,
+          "course_id": 757,
+          "course_code": "BT19711",
+          "course_name": "Downstream processing lab",
+          "course_type": "L",
+          "teacher_id": "113",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 62,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1289,
+          "course_id": 892,
+          "course_code": "BT19712",
+          "course_name": "Bioinformatics Laboratory",
+          "course_type": "T",
+          "teacher_id": "121",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 61,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "111",
+        "113",
+        "121"
+      ],
+      "courses": [
+        "BT19712",
+        "BT19711"
+      ],
+      "total_workload": 12
+    },
+    {
+      "group_id": 3,
+      "instances": [
+        {
+          "id": 1314,
+          "course_id": 560,
+          "course_code": "BT19713",
+          "course_name": "Artificial Intelligence and Machine Learning for Biotechnologist",
+          "course_type": "L",
+          "teacher_id": "105",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 61,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1288,
+          "course_id": 892,
+          "course_code": "BT19712",
+          "course_name": "Bioinformatics Laboratory",
+          "course_type": "T",
+          "teacher_id": "133",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 62,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1291,
+          "course_id": 892,
+          "course_code": "BT19712",
+          "course_name": "Bioinformatics Laboratory",
+          "course_type": "T",
+          "teacher_id": "119",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 61,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "119",
+        "133",
+        "105"
+      ],
+      "courses": [
+        "BT19713",
+        "BT19712"
+      ],
+      "total_workload": 12
+    },
+    {
+      "group_id": 4,
+      "instances": [
+        {
+          "id": 552,
+          "course_id": 542,
+          "course_code": "BT19702",
+          "course_name": "Bioinformatics",
+          "course_type": "T",
+          "teacher_id": "124",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 61,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 191,
+          "course_id": 544,
+          "course_code": "BT19705",
+          "course_name": "PROTEIN ENGINEERING TECHNIQUES",
+          "course_type": "T",
+          "teacher_id": "102",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 61,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1256,
+          "course_id": 544,
+          "course_code": "BT19705",
+          "course_name": "PROTEIN ENGINEERING TECHNIQUES",
+          "course_type": "T",
+          "teacher_id": "128",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 62,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "124",
+        "128",
+        "102"
+      ],
+      "courses": [
+        "BT19702",
+        "BT19705"
+      ],
+      "total_workload": 9
+    },
+    {
+      "group_id": 5,
+      "instances": [
+        {
+          "id": 1179,
+          "course_id": 547,
+          "course_code": "BT19P71",
+          "course_name": "Comprehensive Course for Biotechnologists",
+          "course_type": "T",
+          "teacher_id": "119",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 62,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 2062,
+          "course_id": 547,
+          "course_code": "BT19P71",
+          "course_name": "Comprehensive Course for Biotechnologists",
+          "course_type": "T",
+          "teacher_id": "109",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 61,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 192,
+          "course_id": 544,
+          "course_code": "BT19705",
+          "course_name": "PROTEIN ENGINEERING TECHNIQUES",
+          "course_type": "T",
+          "teacher_id": "102",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 62,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "109",
+        "119",
+        "102"
+      ],
+      "courses": [
+        "BT19P71",
+        "BT19705"
+      ],
+      "total_workload": 9
+    },
+    {
+      "group_id": 6,
+      "instances": [
+        {
+          "id": 1156,
+          "course_id": 542,
+          "course_code": "BT19702",
+          "course_name": "Bioinformatics",
+          "course_type": "T",
+          "teacher_id": "133",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 61,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 2064,
+          "course_id": 542,
+          "course_code": "BT19702",
+          "course_name": "Bioinformatics",
+          "course_type": "T",
+          "teacher_id": "124",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 62,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1246,
+          "course_id": 547,
+          "course_code": "BT19P71",
+          "course_name": "Comprehensive Course for Biotechnologists",
+          "course_type": "T",
+          "teacher_id": "112",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 61,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "124",
+        "133",
+        "112"
+      ],
+      "courses": [
+        "BT19P71",
+        "BT19702"
+      ],
+      "total_workload": 9
+    },
+    {
+      "group_id": 7,
+      "instances": [
+        {
+          "id": 544,
+          "course_id": 553,
+          "course_code": "BT19P01",
+          "course_name": "Animal Biotechnology",
+          "course_type": "T",
+          "teacher_id": "106",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 62,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 529,
+          "course_id": 549,
+          "course_code": "BT19P01",
+          "course_name": "Cancer Biology",
+          "course_type": "T",
+          "teacher_id": "99",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 61,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 530,
+          "course_id": 541,
+          "course_code": "BT19701",
+          "course_name": "DOWNSTREAM PROCESSING",
+          "course_type": "T",
+          "teacher_id": "113",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 62,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "99",
+        "113",
+        "106"
+      ],
+      "courses": [
+        "BT19P01",
+        "BT19701"
+      ],
+      "total_workload": 9
+    },
+    {
+      "group_id": 8,
+      "instances": [
+        {
+          "id": 185,
+          "course_id": 553,
+          "course_code": "BT19P01",
+          "course_name": "Animal Biotechnology",
+          "course_type": "T",
+          "teacher_id": "92",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 61,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 203,
+          "course_id": 541,
+          "course_code": "BT19701",
+          "course_name": "DOWNSTREAM PROCESSING",
+          "course_type": "T",
+          "teacher_id": "98",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 61,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 2065,
+          "course_id": 541,
+          "course_code": "BT19701",
+          "course_name": "DOWNSTREAM PROCESSING",
+          "course_type": "T",
+          "teacher_id": "121",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 61,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "92",
+        "98",
+        "121"
+      ],
+      "courses": [
+        "BT19P01",
+        "BT19701"
+      ],
+      "total_workload": 9
+    }
+  ],
+  "summary": {
+    "total_instances": 24,
+    "lab_instances": 9,
+    "theory_instances": 18,
+    "unique_courses": 8,
+    "unique_teachers": 15
+  }
+}

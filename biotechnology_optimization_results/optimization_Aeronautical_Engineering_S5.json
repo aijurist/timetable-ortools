@@ -1,0 +1,233 @@
+{
+  "department": "Aeronautical Engineering",
+  "semester": "5",
+  "solution_found": true,
+  "objective_value": 0.0,
+  "num_groups": 7,
+  "groups": [
+    {
+      "group_id": 1,
+      "instances": [
+        {
+          "id": 371,
+          "course_id": 29,
+          "course_code": "AE23521",
+          "course_name": "Computational Simulation Laboratory",
+          "course_type": "L",
+          "teacher_id": "24",
+          "semester": 5,
+          "course_dept": "Aeronautical Engineering",
+          "student_dept": "Aeronautical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 60,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "24"
+      ],
+      "courses": [
+        "AE23521"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 2,
+      "instances": [
+        {
+          "id": 365,
+          "course_id": 389,
+          "course_code": "GE23521",
+          "course_name": "Soft Skills - II",
+          "course_type": "L",
+          "teacher_id": "3",
+          "semester": 5,
+          "course_dept": "Aeronautical Engineering",
+          "student_dept": "Aeronautical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 60,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "3"
+      ],
+      "courses": [
+        "GE23521"
+      ],
+      "total_workload": 2
+    },
+    {
+      "group_id": 3,
+      "instances": [
+        {
+          "id": 361,
+          "course_id": 24,
+          "course_code": "AE23531",
+          "course_name": "Aircraft Structures - II",
+          "course_type": "LoT",
+          "teacher_id": "6",
+          "semester": 5,
+          "course_dept": "Aeronautical Engineering",
+          "student_dept": "Aeronautical Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 1,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "6"
+      ],
+      "courses": [
+        "AE23531"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 4,
+      "instances": [
+        {
+          "id": 326,
+          "course_id": 21,
+          "course_code": "AE23512",
+          "course_name": "Compressible Aerodynamics",
+          "course_type": "T",
+          "teacher_id": "9",
+          "semester": 5,
+          "course_dept": "Aeronautical Engineering",
+          "student_dept": "Aeronautical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 1,
+          "student_count": 65,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "9"
+      ],
+      "courses": [
+        "AE23512"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 5,
+      "instances": [
+        {
+          "id": 324,
+          "course_id": 22,
+          "course_code": "AE23513",
+          "course_name": "Flight Dynamics",
+          "course_type": "T",
+          "teacher_id": "10",
+          "semester": 5,
+          "course_dept": "Aeronautical Engineering",
+          "student_dept": "Aeronautical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 1,
+          "student_count": 65,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "10"
+      ],
+      "courses": [
+        "AE23513"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 6,
+      "instances": [
+        {
+          "id": 319,
+          "course_id": 20,
+          "course_code": "AE23511",
+          "course_name": "Aircraft Propulsion",
+          "course_type": "T",
+          "teacher_id": "575",
+          "semester": 5,
+          "course_dept": "Aeronautical Engineering",
+          "student_dept": "Aeronautical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 1,
+          "student_count": 65,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "575"
+      ],
+      "courses": [
+        "AE23511"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 7,
+      "instances": [
+        {
+          "id": 377,
+          "course_id": 595,
+          "course_code": "AE23D11",
+          "course_name": "Fundamentals of UAV Systems and Design",
+          "course_type": "T",
+          "teacher_id": "8",
+          "semester": 5,
+          "course_dept": "Aeronautical Engineering",
+          "student_dept": "Aeronautical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 65,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "8"
+      ],
+      "courses": [
+        "AE23D11"
+      ],
+      "total_workload": 3
+    }
+  ],
+  "summary": {
+    "total_instances": 7,
+    "lab_instances": 3,
+    "theory_instances": 5,
+    "unique_courses": 7,
+    "unique_teachers": 7
+  }
+}
