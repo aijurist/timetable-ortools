@@ -340,15 +340,14 @@ class CombinedScheduler:
             # Engineering departments
             # 'Electronics & Communication Engineering': 4,  # Early lunch (11:00 - 11:50)
             # 'Electrical & Electronics Engineering': 3,
-            'Mechanical Engineering': 3,
+            # 'Mechanical Engineering': 3,
             "Food Technology":5,
             "Mechatronics Engineering":5,
             'Civil Engineering': 3,
             "Aeronautical Engineering":5,
-            # 'Aeronautical Engineering': 3, 
             'Chemical Engineering': 3, 
-            'Biomedical Engineering': 3, 
-            # 'Biotechnology': 5,  # Late lunch (1:00 - 1:50)
+            'Biomedical Engineering': 4, 
+            # 'Biotechnology': 4,  # Late lunch (1:00 - 1:50)
             
             # Default for any department not explicitly listed
             # 'default': 4  # Standard lunch
@@ -1514,6 +1513,8 @@ class CombinedScheduler:
         constraints_applied += self.apply_core_lab_mapping_constraint(model, lab_variables)
         # NEW: Apply core lab group slot limit constraint (8 slots max for groups containing core labs)
         constraints_applied += self.apply_core_lab_group_slot_limit_constraint(model, lab_variables)
+        # NEW: Apply computing group slot limit constraint (6 slots max for computing department groups)
+        constraints_applied += self.apply_computing_group_slot_limit_constraint(model, lab_variables)
         # REMOVED: apply_theory_lab_group_conflict_constraint - redundant with cross-system constraints
         # REMOVED: This constraint was too restrictive and prevented the full scheduling of required practical hours.
         constraints_applied += self.apply_semester_lab_slot_limit_constraint(model, lab_variables)
@@ -2018,7 +2019,7 @@ class CombinedScheduler:
         
         self.logger.info(f"Applied {constraints_applied} group-based scheduling constraints")
         return constraints_applied
-    
+
     def apply_core_lab_mapping_constraint(self, model, lab_variables):
         """Apply constraint that courses in core_mapping must be assigned to their specified lab(s)."""
         if not self.course_to_room_mapping:
@@ -2210,6 +2211,131 @@ class CombinedScheduler:
             self.logger.info(f"  - SOFT CONSTRAINT: Core lab group {group_name} prefers <= 8 lab slots ({num_dept_days} days pattern)")
         
         self.logger.info(f"Applied {constraints_applied} core lab group soft slot limit constraints")
+        return constraints_applied
+    
+    def apply_computing_group_slot_limit_constraint(self, model, lab_variables):
+        """SOFT CONSTRAINT: Prefer to limit computing department groups to 6 lab slots with penalty for exceeding."""
+        self.logger.info("Applying computing group soft slot limit constraint (prefer 6 slots for computing groups)...")
+        constraints_applied = 0
+        
+        # Define computing departments
+        computing_departments = {
+            'Computer Science & Engineering',
+            'Computer Science & Business Systems',
+            'Computer Science & Design', 
+            'Computer Science & Engineering (Cyber Security)',
+            'Artificial Intelligence & Data Science',
+            'Artificial Intelligence & Machine Learning',
+            'Information Technology'
+        }
+        
+        # Initialize penalty variables list if not exists
+        if not hasattr(self, 'computing_group_slot_penalties'):
+            self.computing_group_slot_penalties = []
+        
+        # Identify computing groups
+        computing_groups = set()
+        if hasattr(self, 'course_groups'):
+            for (dept, semester), groups in self.course_groups.items():
+                if dept in computing_departments:
+                    for group_idx, group in enumerate(groups):
+                        group_name = f"{dept}_S{semester}_G{group_idx + 1}"
+                        computing_groups.add(group_name)
+        
+        if not computing_groups:
+            self.logger.info("No computing groups identified - skipping computing group slot limit constraint")
+            return 0
+        
+        self.logger.info(f"Identified {len(computing_groups)} computing groups for 6-slot limit constraint")
+        
+        # Apply constraint to each computing group
+        for group_name in computing_groups:
+            # Extract department and semester from group name
+            parts = group_name.split('_S')
+            if len(parts) < 2:
+                self.logger.warning(f"Cannot parse department from group name: {group_name}")
+                continue
+                
+            dept = parts[0]
+            semester_and_group = parts[1]
+            semester_part = semester_and_group.split('_G')[0]
+            
+            try:
+                semester = int(semester_part)
+            except ValueError:
+                self.logger.warning(f"Cannot parse semester from group name: {group_name}")
+                continue
+            
+            # Get department-specific day pattern for accurate slot counting
+            dept_days = self._get_days_for_department(dept, semester)
+            num_dept_days = len(dept_days)
+            
+            # Find all lab instances belonging to this computing group
+            group_lab_instances = []
+            if hasattr(self, 'course_groups') and (dept, semester) in self.course_groups:
+                group_idx_str = group_name.split('_G')[1] if '_G' in group_name else "1"
+                try:
+                    group_idx = int(group_idx_str) - 1  # Convert to 0-based index
+                    if 0 <= group_idx < len(self.course_groups[(dept, semester)]):
+                        group = self.course_groups[(dept, semester)][group_idx]
+                        for instance in group:
+                            instance_id = instance['id']
+                            teacher_id = str(instance['teacher_id'])
+                            
+                            # Check if this instance has lab requirements and is in lab_variables
+                            if (teacher_id in lab_variables and 
+                                instance_id in lab_variables[teacher_id]):
+                                group_lab_instances.append((teacher_id, instance_id))
+                except (ValueError, IndexError):
+                    self.logger.warning(f"Cannot parse group index from group name: {group_name}")
+                    continue
+            
+            if not group_lab_instances:
+                self.logger.debug(f"Computing group {group_name} has no lab instances to constrain")
+                continue
+            
+            self.logger.info(f"Applying soft 6-slot limit to computing group: {group_name} ({len(group_lab_instances)} lab instances)")
+            
+            # Create boolean variables for each time slot used by this computing group
+            slot_used_vars = {}
+            for day_idx in range(num_dept_days):
+                for session_name in self.lab_sessions.keys():
+                    slot_used_vars[(day_idx, session_name)] = model.NewBoolVar(
+                        f'computing_group_slot_used_{group_name}_d{day_idx}_s{session_name}'
+                    )
+            
+            # Link these variables to lab assignments from this computing group
+            for day_idx in range(num_dept_days):
+                for session_name in self.lab_sessions.keys():
+                    # Slot is used if ANY lab from this computing group is scheduled in it
+                    slot_assignments = []
+                    for teacher_id, course_instance_id in group_lab_instances:
+                        if (day_idx < len(lab_variables[teacher_id][course_instance_id]) and 
+                            session_name in lab_variables[teacher_id][course_instance_id][day_idx]):
+                            for room_id in self.lab_room_ids:
+                                if room_id in lab_variables[teacher_id][course_instance_id][day_idx][session_name]:
+                                    slot_assignments.append(lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id])
+                    
+                    if slot_assignments:
+                        # Reification: slot_used_vars is true iff sum(slot_assignments) > 0
+                        model.Add(sum(slot_assignments) >= 1).OnlyEnforceIf(slot_used_vars[(day_idx, session_name)])
+                        model.Add(sum(slot_assignments) == 0).OnlyEnforceIf(slot_used_vars[(day_idx, session_name)].Not())
+                        constraints_applied += 2
+            
+            # SOFT CONSTRAINT: Create penalty variable for exceeding 6 slots
+            total_group_slots_used = sum(slot_used_vars.values())
+            excess_slots = model.NewIntVar(0, len(slot_used_vars), f'computing_group_excess_slots_{group_name}')
+            
+            # excess_slots = max(0, total_group_slots_used - 6)
+            model.AddMaxEquality(excess_slots, [total_group_slots_used - 6, 0])
+            constraints_applied += 1
+            
+            # Add penalty to the list (will be minimized in objective)
+            self.computing_group_slot_penalties.append(excess_slots)
+            
+            self.logger.info(f"  - SOFT CONSTRAINT: Computing group {group_name} prefers <= 6 lab slots ({num_dept_days} days pattern)")
+        
+        self.logger.info(f"Applied {constraints_applied} computing group soft slot limit constraints")
         return constraints_applied
     
     def apply_semester_lab_slot_limit_constraint(self, model, lab_variables):
@@ -2733,7 +2859,7 @@ class CombinedScheduler:
         
         # 1. Pre-build optimized teacher activities mapping
         teacher_activities = {}
-
+        
         # Map lab courses to teachers (optimized)
         for teacher_id, courses in self.lab_requirements.items():
             teacher_key = str(teacher_id)
@@ -3041,6 +3167,15 @@ class CombinedScheduler:
             self.logger.info(f"Added {len(self.core_lab_group_slot_penalties)} core lab group slot penalty terms (weight: {penalty_weight})")
             self.logger.info("  • Discourages core lab groups from using more than 8 lab slots")
         
+        # Add penalty for computing groups exceeding 6 slots (soft constraint - minimize penalties)
+        if hasattr(self, 'computing_group_slot_penalties') and self.computing_group_slot_penalties:
+            # Subtract penalties (since we're maximizing, subtracting penalties minimizes them)
+            penalty_weight = 150  # Moderate weight - computing group limit is important but less than core labs
+            for penalty_var in self.computing_group_slot_penalties:
+                objective_terms.append(-penalty_weight * penalty_var)
+            self.logger.info(f"Added {len(self.computing_group_slot_penalties)} computing group slot penalty terms (weight: {penalty_weight})")
+            self.logger.info("  • Discourages computing groups from using more than 6 lab slots")
+        
         if objective_terms:
             model.Maximize(sum(objective_terms))
             self.logger.info(f"Combined objective set with {len(objective_terms)} terms")
@@ -3050,6 +3185,7 @@ class CombinedScheduler:
             self.logger.info("  3. Room capacity optimization (prefer appropriate room sizes)")
             self.logger.info("  4. Consecutive slot penalty (avoid >2 consecutive slots per group per day)")
             self.logger.info("  5. Core lab group slot penalty (prefer ≤8 slots for groups with core labs)")
+            self.logger.info("  6. Computing group slot penalty (prefer ≤6 slots for computing department groups)")
         else:
             self.logger.warning("No objective terms created for group allocation")
     
