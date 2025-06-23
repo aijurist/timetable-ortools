@@ -7,37 +7,8 @@
   "groups": [
     {
       "group_id": 1,
-      "instances": [
-        {
-          "id": 337,
-          "course_id": 263,
-          "course_code": "CS23422",
-          "course_name": "Python Programming for Machine Learning",
-          "course_type": "L",
-          "teacher_id": "183",
-          "semester": 3,
-          "course_dept": "Civil Engineering",
-          "student_dept": "Civil Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 59,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "183"
-      ],
-      "courses": [
-        "CS23422"
-      ],
-      "total_workload": 4
-    },
-    {
-      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 264,
@@ -45,7 +16,7 @@
           "course_code": "CE23321",
           "course_name": "Construction Materials Laboratory",
           "course_type": "L",
-          "teacher_id": "159",
+          "teacher_id": "159.0",
           "semester": 3,
           "course_dept": "Civil Engineering",
           "student_dept": "Civil Engineering",
@@ -60,7 +31,7 @@
         }
       ],
       "teachers": [
-        "159"
+        "159.0"
       ],
       "courses": [
         "CE23321"
@@ -68,7 +39,42 @@
       "total_workload": 4
     },
     {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 337,
+          "course_id": 263,
+          "course_code": "CS23422",
+          "course_name": "Python Programming for Machine Learning",
+          "course_type": "L",
+          "teacher_id": "183.0",
+          "semester": 3,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 59,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "183.0"
+      ],
+      "courses": [
+        "CS23422"
+      ],
+      "total_workload": 4
+    },
+    {
       "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 335,
@@ -76,7 +82,7 @@
           "course_code": "CE23331",
           "course_name": "Surveying",
           "course_type": "LoT",
-          "teacher_id": "163",
+          "teacher_id": "163.0",
           "semester": 3,
           "course_dept": "Civil Engineering",
           "student_dept": "Civil Engineering",
@@ -91,7 +97,7 @@
         }
       ],
       "teachers": [
-        "163"
+        "163.0"
       ],
       "courses": [
         "CE23331"
@@ -100,14 +106,16 @@
     },
     {
       "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
-          "id": 291,
-          "course_id": 185,
-          "course_code": "CE23311",
-          "course_name": "Strength of Materials I",
+          "id": 262,
+          "course_id": 186,
+          "course_code": "CE23312",
+          "course_name": "Fluid Mechanics",
           "course_type": "T",
-          "teacher_id": "155",
+          "teacher_id": "159.0",
           "semester": 3,
           "course_dept": "Civil Engineering",
           "student_dept": "Civil Engineering",
@@ -122,15 +130,17 @@
         }
       ],
       "teachers": [
-        "155"
+        "159.0"
       ],
       "courses": [
-        "CE23311"
+        "CE23312"
       ],
       "total_workload": 3
     },
     {
       "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 353,
@@ -138,7 +148,7 @@
           "course_code": "GE23311",
           "course_name": "Fundamentals of Management for Engineers",
           "course_type": "T",
-          "teacher_id": "152",
+          "teacher_id": "152.0",
           "semester": 3,
           "course_dept": "Civil Engineering",
           "student_dept": "Civil Engineering",
@@ -153,7 +163,7 @@
         }
       ],
       "teachers": [
-        "152"
+        "152.0"
       ],
       "courses": [
         "GE23311"
@@ -162,6 +172,8 @@
     },
     {
       "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 303,
@@ -169,7 +181,7 @@
           "course_code": "CE23313",
           "course_name": "Construction Techniques, Equipment and Practice",
           "course_type": "T",
-          "teacher_id": "166",
+          "teacher_id": "166.0",
           "semester": 3,
           "course_dept": "Civil Engineering",
           "student_dept": "Civil Engineering",
@@ -184,7 +196,7 @@
         }
       ],
       "teachers": [
-        "166"
+        "166.0"
       ],
       "courses": [
         "CE23313"
@@ -193,14 +205,16 @@
     },
     {
       "group_id": 7,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
-          "id": 262,
-          "course_id": 186,
-          "course_code": "CE23312",
-          "course_name": "Fluid Mechanics",
+          "id": 291,
+          "course_id": 185,
+          "course_code": "CE23311",
+          "course_name": "Strength of Materials I",
           "course_type": "T",
-          "teacher_id": "159",
+          "teacher_id": "155.0",
           "semester": 3,
           "course_dept": "Civil Engineering",
           "student_dept": "Civil Engineering",
@@ -215,19 +229,22 @@
         }
       ],
       "teachers": [
-        "159"
+        "155.0"
       ],
       "courses": [
-        "CE23312"
+        "CE23311"
       ],
       "total_workload": 3
     }
   ],
+  "pe_group_included": false,
   "summary": {
     "total_instances": 7,
+    "pe_instances": 0,
     "lab_instances": 3,
     "theory_instances": 5,
     "unique_courses": 7,
-    "unique_teachers": 6
+    "unique_teachers": 6,
+    "pe_course_codes": []
   }
 }

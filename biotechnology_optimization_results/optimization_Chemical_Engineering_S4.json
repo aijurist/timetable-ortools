@@ -7,6 +7,8 @@
   "groups": [
     {
       "group_id": 1,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 767,
@@ -14,7 +16,7 @@
           "course_code": "CH23411",
           "course_name": "Thermodynamics",
           "course_type": "T",
-          "teacher_id": "120",
+          "teacher_id": "120.0",
           "semester": 4,
           "course_dept": "Chemical Engineering",
           "student_dept": "Chemical Engineering",
@@ -29,7 +31,7 @@
         }
       ],
       "teachers": [
-        "120"
+        "120.0"
       ],
       "courses": [
         "CH23411"
@@ -37,11 +39,14 @@
       "total_workload": 3
     }
   ],
+  "pe_group_included": false,
   "summary": {
     "total_instances": 1,
+    "pe_instances": 0,
     "lab_instances": 0,
     "theory_instances": 1,
     "unique_courses": 1,
-    "unique_teachers": 1
+    "unique_teachers": 1,
+    "pe_course_codes": []
   }
 }

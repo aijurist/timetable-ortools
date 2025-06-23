@@ -7,14 +7,16 @@
   "groups": [
     {
       "group_id": 1,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
-          "id": 774,
-          "course_id": 236,
-          "course_code": "CH23722",
-          "course_name": "Process Control Lab",
+          "id": 857,
+          "course_id": 839,
+          "course_code": "CH19713",
+          "course_name": "Computer Applications In  Chemical Engineering Lab",
           "course_type": "L",
-          "teacher_id": "123",
+          "teacher_id": "125.0",
           "semester": 7,
           "course_dept": "Chemical Engineering",
           "student_dept": "Chemical Engineering",
@@ -29,7 +31,40 @@
         }
       ],
       "teachers": [
-        "123"
+        "125.0"
+      ],
+      "courses": [
+        "CH19713"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 774,
+          "course_id": 236,
+          "course_code": "CH23722",
+          "course_name": "Process Control Lab",
+          "course_type": "L",
+          "teacher_id": "123.0",
+          "semester": 7,
+          "course_dept": "Chemical Engineering",
+          "student_dept": "Chemical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 58,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "123.0"
       ],
       "courses": [
         "CH23722"
@@ -37,38 +72,9 @@
       "total_workload": 4
     },
     {
-      "group_id": 2,
-      "instances": [
-        {
-          "id": 857,
-          "course_id": 839,
-          "course_code": "CH19713",
-          "course_name": "Computer Applications In  Chemical Engineering Lab",
-          "course_type": "L",
-          "teacher_id": "125",
-          "semester": 7,
-          "course_dept": "Chemical Engineering",
-          "student_dept": "Chemical Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 3,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 58,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "125"
-      ],
-      "courses": [
-        "CH19713"
-      ],
-      "total_workload": 3
-    },
-    {
       "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 856,
@@ -76,13 +82,13 @@
           "course_code": "CH19711",
           "course_name": "Chemical Reaction Engineering  lab",
           "course_type": "L",
-          "teacher_id": "140",
+          "teacher_id": "140.0",
           "semester": 7,
           "course_dept": "Chemical Engineering",
           "student_dept": "Chemical Engineering",
           "has_lab": true,
           "has_theory": false,
-          "practical_hours": 3,
+          "practical_hours": 4,
           "lecture_hours": 0,
           "tutorial_hours": 0,
           "student_count": 58,
@@ -91,15 +97,50 @@
         }
       ],
       "teachers": [
-        "140"
+        "140.0"
       ],
       "courses": [
         "CH19711"
       ],
-      "total_workload": 3
+      "total_workload": 4
     },
     {
       "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1339,
+          "course_id": 836,
+          "course_code": "CH19703",
+          "course_name": "Computer Applications in Chemical Engineering",
+          "course_type": "T",
+          "teacher_id": "125.0",
+          "semester": 7,
+          "course_dept": "Chemical Engineering",
+          "student_dept": "Chemical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 58,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "125.0"
+      ],
+      "courses": [
+        "CH19703"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 854,
@@ -107,7 +148,7 @@
           "course_code": "CH19701",
           "course_name": "Transport Phenomena",
           "course_type": "T",
-          "teacher_id": "123",
+          "teacher_id": "123.0",
           "semester": 7,
           "course_dept": "Chemical Engineering",
           "student_dept": "Chemical Engineering",
@@ -122,7 +163,7 @@
         }
       ],
       "teachers": [
-        "123"
+        "123.0"
       ],
       "courses": [
         "CH19701"
@@ -130,7 +171,9 @@
       "total_workload": 4
     },
     {
-      "group_id": 5,
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 855,
@@ -138,7 +181,7 @@
           "course_code": "CH19702",
           "course_name": "Comprehensive Chemical  Engineering",
           "course_type": "T",
-          "teacher_id": "120",
+          "teacher_id": "120.0",
           "semester": 7,
           "course_dept": "Chemical Engineering",
           "student_dept": "Chemical Engineering",
@@ -153,7 +196,7 @@
         }
       ],
       "teachers": [
-        "120"
+        "120.0"
       ],
       "courses": [
         "CH19702"
@@ -161,7 +204,9 @@
       "total_workload": 3
     },
     {
-      "group_id": 6,
+      "group_id": 7,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 858,
@@ -169,7 +214,7 @@
           "course_code": "CH19P71",
           "course_name": "Environmental Technology",
           "course_type": "T",
-          "teacher_id": "132",
+          "teacher_id": "132.0",
           "semester": 7,
           "course_dept": "Chemical Engineering",
           "student_dept": "Chemical Engineering",
@@ -184,50 +229,22 @@
         }
       ],
       "teachers": [
-        "132"
+        "132.0"
       ],
       "courses": [
         "CH19P71"
       ],
       "total_workload": 3
-    },
-    {
-      "group_id": 7,
-      "instances": [
-        {
-          "id": 1339,
-          "course_id": 836,
-          "course_code": "CH19703",
-          "course_name": "Computer Applications in Chemical Engineering",
-          "course_type": "T",
-          "teacher_id": "125",
-          "semester": 7,
-          "course_dept": "Chemical Engineering",
-          "student_dept": "Chemical Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 58,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "125"
-      ],
-      "courses": [
-        "CH19703"
-      ],
-      "total_workload": 3
     }
   ],
+  "pe_group_included": false,
   "summary": {
     "total_instances": 7,
+    "pe_instances": 0,
     "lab_instances": 3,
     "theory_instances": 4,
     "unique_courses": 7,
-    "unique_teachers": 5
+    "unique_teachers": 5,
+    "pe_course_codes": []
   }
 }

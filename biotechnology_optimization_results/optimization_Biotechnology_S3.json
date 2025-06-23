@@ -7,52 +7,16 @@
   "groups": [
     {
       "group_id": 1,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
-        {
-          "id": 2070,
-          "course_id": 118,
-          "course_code": "BT23321",
-          "course_name": "Basic Food and Enzyme Technology Laboratory",
-          "course_type": "L",
-          "teacher_id": "86",
-          "semester": 3,
-          "course_dept": "Biotechnology",
-          "student_dept": "Biotechnology",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 2,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 63,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 540,
-          "course_id": 119,
-          "course_code": "BT23331",
-          "course_name": "Analytical Techniques in Biotechnology",
-          "course_type": "LoT",
-          "teacher_id": "133",
-          "semester": 3,
-          "course_dept": "Biotechnology",
-          "student_dept": "Biotechnology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 2,
-          "tutorial_hours": 0,
-          "student_count": 64,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
         {
           "id": 2006,
-          "course_id": 119,
+          "course_id": 1409,
           "course_code": "BT23331",
           "course_name": "Analytical Techniques in Biotechnology",
           "course_type": "LoT",
-          "teacher_id": "116",
+          "teacher_id": "116.0",
           "semester": 3,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -62,50 +26,16 @@
           "lecture_hours": 2,
           "tutorial_hours": 0,
           "student_count": 63,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "86",
-        "133",
-        "116"
-      ],
-      "courses": [
-        "BT23321",
-        "BT23331"
-      ],
-      "total_workload": 10
-    },
-    {
-      "group_id": 2,
-      "instances": [
-        {
-          "id": 186,
-          "course_id": 118,
-          "course_code": "BT23321",
-          "course_name": "Basic Food and Enzyme Technology Laboratory",
-          "course_type": "L",
-          "teacher_id": "92",
-          "semester": 3,
-          "course_dept": "Biotechnology",
-          "student_dept": "Biotechnology",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 2,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 64,
           "virtual_id": null,
           "co_scheduled_id": null
         },
         {
           "id": 1154,
-          "course_id": 118,
+          "course_id": 1408,
           "course_code": "BT23321",
           "course_name": "Basic Food and Enzyme Technology Laboratory",
           "course_type": "L",
-          "teacher_id": "107",
+          "teacher_id": "107.0",
           "semester": 3,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -119,29 +49,29 @@
           "co_scheduled_id": null
         },
         {
-          "id": 200,
-          "course_id": 119,
-          "course_code": "BT23331",
-          "course_name": "Analytical Techniques in Biotechnology",
-          "course_type": "LoT",
-          "teacher_id": "127",
+          "id": 1155,
+          "course_id": 1408,
+          "course_code": "BT23321",
+          "course_name": "Basic Food and Enzyme Technology Laboratory",
+          "course_type": "L",
+          "teacher_id": "1749.0",
           "semester": 3,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
           "has_lab": true,
-          "has_theory": true,
+          "has_theory": false,
           "practical_hours": 2,
-          "lecture_hours": 2,
+          "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 64,
+          "student_count": 63,
           "virtual_id": null,
           "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "107",
-        "92",
-        "127"
+        "116.0",
+        "107.0",
+        "1749.0"
       ],
       "courses": [
         "BT23321",
@@ -150,60 +80,62 @@
       "total_workload": 8
     },
     {
-      "group_id": 3,
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
-          "id": 1178,
-          "course_id": 116,
-          "course_code": "BT23313",
-          "course_name": "Molecular Genetics",
-          "course_type": "T",
-          "teacher_id": "122",
+          "id": 200,
+          "course_id": 1409,
+          "course_code": "BT23331",
+          "course_name": "Analytical Techniques in Biotechnology",
+          "course_type": "LoT",
+          "teacher_id": "127.0",
           "semester": 3,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
-          "has_lab": false,
+          "has_lab": true,
           "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 63,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 2067,
-          "course_id": 116,
-          "course_code": "BT23313",
-          "course_name": "Molecular Genetics",
-          "course_type": "T",
-          "teacher_id": "109",
-          "semester": 3,
-          "course_dept": "Biotechnology",
-          "student_dept": "Biotechnology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
+          "practical_hours": 2,
+          "lecture_hours": 2,
           "tutorial_hours": 0,
           "student_count": 64,
           "virtual_id": null,
           "co_scheduled_id": null
         },
         {
-          "id": 1287,
-          "course_id": 117,
-          "course_code": "BT23314",
-          "course_name": "Cell Biology",
-          "course_type": "T",
-          "teacher_id": "1752",
+          "id": 540,
+          "course_id": 1409,
+          "course_code": "BT23331",
+          "course_name": "Analytical Techniques in Biotechnology",
+          "course_type": "LoT",
+          "teacher_id": "133.0",
           "semester": 3,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
-          "has_lab": false,
+          "has_lab": true,
           "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 64,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 186,
+          "course_id": 1408,
+          "course_code": "BT23321",
+          "course_name": "Basic Food and Enzyme Technology Laboratory",
+          "course_type": "L",
+          "teacher_id": "92.0",
+          "semester": 3,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
           "tutorial_hours": 0,
           "student_count": 64,
           "virtual_id": null,
@@ -211,28 +143,30 @@
         }
       ],
       "teachers": [
-        "109",
-        "1752",
-        "122"
+        "133.0",
+        "92.0",
+        "127.0"
       ],
       "courses": [
-        "BT23313",
-        "BT23314"
+        "BT23321",
+        "BT23331"
       ],
-      "total_workload": 9
+      "total_workload": 10
     },
     {
-      "group_id": 4,
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 1270,
-          "course_id": 422,
+          "course_id": 2246,
           "course_code": "MA23311",
           "course_name": "Transforms and Applied Partial Differential Equations",
           "course_type": "T",
-          "teacher_id": "470",
+          "teacher_id": "470.0",
           "semester": 3,
-          "course_dept": "Biotechnology",
+          "course_dept": "Mathematics",
           "student_dept": "Biotechnology",
           "has_lab": false,
           "has_theory": true,
@@ -245,11 +179,11 @@
         },
         {
           "id": 199,
-          "course_id": 115,
+          "course_id": 1405,
           "course_code": "BT23312",
           "course_name": "Stoichiometry and Fluid Mechanics",
           "course_type": "T",
-          "teacher_id": "127",
+          "teacher_id": "127.0",
           "semester": 3,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -264,11 +198,11 @@
         },
         {
           "id": 1274,
-          "course_id": 115,
+          "course_id": 1405,
           "course_code": "BT23312",
           "course_name": "Stoichiometry and Fluid Mechanics",
           "course_type": "T",
-          "teacher_id": "107",
+          "teacher_id": "107.0",
           "semester": 3,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -283,9 +217,9 @@
         }
       ],
       "teachers": [
-        "107",
-        "470",
-        "127"
+        "107.0",
+        "470.0",
+        "127.0"
       ],
       "courses": [
         "MA23311",
@@ -294,17 +228,93 @@
       "total_workload": 12
     },
     {
+      "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1177,
+          "course_id": 2250,
+          "course_code": "BT23313",
+          "course_name": "Molecular Genetics",
+          "course_type": "T",
+          "teacher_id": "122.0",
+          "semester": 3,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 64,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1245,
+          "course_id": 2250,
+          "course_code": "BT23313",
+          "course_name": "Molecular Genetics",
+          "course_type": "T",
+          "teacher_id": "116.0",
+          "semester": 3,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 64,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1299,
+          "course_id": 1404,
+          "course_code": "BT23311",
+          "course_name": "Enzyme Technology and Biotransformations",
+          "course_type": "T",
+          "teacher_id": "104.0",
+          "semester": 3,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 64,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "116.0",
+        "104.0",
+        "122.0"
+      ],
+      "courses": [
+        "BT23311",
+        "BT23313"
+      ],
+      "total_workload": 9
+    },
+    {
       "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 1268,
-          "course_id": 422,
+          "course_id": 2246,
           "course_code": "MA23311",
           "course_name": "Transforms and Applied Partial Differential Equations",
           "course_type": "T",
-          "teacher_id": "409",
+          "teacher_id": "409.0",
           "semester": 3,
-          "course_dept": "Biotechnology",
+          "course_dept": "Mathematics",
           "student_dept": "Biotechnology",
           "has_lab": false,
           "has_theory": true,
@@ -317,13 +327,13 @@
         },
         {
           "id": 1271,
-          "course_id": 422,
+          "course_id": 2246,
           "course_code": "MA23311",
           "course_name": "Transforms and Applied Partial Differential Equations",
           "course_type": "T",
-          "teacher_id": "446",
+          "teacher_id": "446.0",
           "semester": 3,
-          "course_dept": "Biotechnology",
+          "course_dept": "Mathematics",
           "student_dept": "Biotechnology",
           "has_lab": false,
           "has_theory": true,
@@ -336,11 +346,11 @@
         },
         {
           "id": 564,
-          "course_id": 115,
+          "course_id": 1405,
           "course_code": "BT23312",
           "course_name": "Stoichiometry and Fluid Mechanics",
           "course_type": "T",
-          "teacher_id": "107",
+          "teacher_id": "107.0",
           "semester": 3,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -355,9 +365,9 @@
         }
       ],
       "teachers": [
-        "107",
-        "409",
-        "446"
+        "409.0",
+        "446.0",
+        "107.0"
       ],
       "courses": [
         "MA23311",
@@ -367,33 +377,16 @@
     },
     {
       "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
-          "id": 1299,
-          "course_id": 114,
-          "course_code": "BT23311",
-          "course_name": "Enzyme Technology and Biotransformations",
-          "course_type": "T",
-          "teacher_id": "104",
-          "semester": 3,
-          "course_dept": "Biotechnology",
-          "student_dept": "Biotechnology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 64,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 2060,
-          "course_id": 117,
+          "id": 1285,
+          "course_id": 1407,
           "course_code": "BT23314",
           "course_name": "Cell Biology",
           "course_type": "T",
-          "teacher_id": "103",
+          "teacher_id": "1750.0",
           "semester": 3,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -407,12 +400,12 @@
           "co_scheduled_id": null
         },
         {
-          "id": 2061,
-          "course_id": 117,
+          "id": 2005,
+          "course_id": 1407,
           "course_code": "BT23314",
           "course_name": "Cell Biology",
           "course_type": "T",
-          "teacher_id": "119",
+          "teacher_id": "109.0",
           "semester": 3,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -424,29 +417,50 @@
           "student_count": 64,
           "virtual_id": null,
           "co_scheduled_id": null
+        },
+        {
+          "id": 1178,
+          "course_id": 2250,
+          "course_code": "BT23313",
+          "course_name": "Molecular Genetics",
+          "course_type": "T",
+          "teacher_id": "122.0",
+          "semester": 3,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 63,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "103",
-        "119",
-        "104"
+        "109.0",
+        "122.0",
+        "1750.0"
       ],
       "courses": [
         "BT23314",
-        "BT23311"
+        "BT23313"
       ],
       "total_workload": 9
     },
     {
       "group_id": 7,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
-          "id": 1177,
-          "course_id": 116,
-          "course_code": "BT23313",
-          "course_name": "Molecular Genetics",
+          "id": 1287,
+          "course_id": 1407,
+          "course_code": "BT23314",
+          "course_name": "Cell Biology",
           "course_type": "T",
-          "teacher_id": "122",
+          "teacher_id": "1752.0",
           "semester": 3,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -461,11 +475,11 @@
         },
         {
           "id": 1300,
-          "course_id": 114,
+          "course_id": 1404,
           "course_code": "BT23311",
           "course_name": "Enzyme Technology and Biotransformations",
           "course_type": "T",
-          "teacher_id": "104",
+          "teacher_id": "104.0",
           "semester": 3,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -479,12 +493,12 @@
           "co_scheduled_id": null
         },
         {
-          "id": 2072,
-          "course_id": 114,
+          "id": 1302,
+          "course_id": 1404,
           "course_code": "BT23311",
           "course_name": "Enzyme Technology and Biotransformations",
           "course_type": "T",
-          "teacher_id": "114",
+          "teacher_id": "1749.0",
           "semester": 3,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -499,22 +513,25 @@
         }
       ],
       "teachers": [
-        "114",
-        "104",
-        "122"
+        "1749.0",
+        "104.0",
+        "1752.0"
       ],
       "courses": [
-        "BT23313",
+        "BT23314",
         "BT23311"
       ],
       "total_workload": 9
     }
   ],
+  "pe_group_included": false,
   "summary": {
     "total_instances": 21,
+    "pe_instances": 0,
     "lab_instances": 6,
     "theory_instances": 18,
     "unique_courses": 7,
-    "unique_teachers": 16
+    "unique_teachers": 14,
+    "pe_course_codes": []
   }
 }

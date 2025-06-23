@@ -7,37 +7,8 @@
   "groups": [
     {
       "group_id": 1,
-      "instances": [
-        {
-          "id": 771,
-          "course_id": 224,
-          "course_code": "CH23521",
-          "course_name": "Heat Transfer Lab",
-          "course_type": "L",
-          "teacher_id": "135",
-          "semester": 5,
-          "course_dept": "Chemical Engineering",
-          "student_dept": "Chemical Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "135"
-      ],
-      "courses": [
-        "CH23521"
-      ],
-      "total_workload": 4
-    },
-    {
-      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 1365,
@@ -45,7 +16,7 @@
           "course_code": "EC23527",
           "course_name": "Microfluidics Laboratory",
           "course_type": "T",
-          "teacher_id": "125",
+          "teacher_id": "125.0",
           "semester": 5,
           "course_dept": "Chemical Engineering",
           "student_dept": "Chemical Engineering",
@@ -60,7 +31,7 @@
         }
       ],
       "teachers": [
-        "125"
+        "125.0"
       ],
       "courses": [
         "EC23527"
@@ -68,7 +39,42 @@
       "total_workload": 2
     },
     {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 771,
+          "course_id": 224,
+          "course_code": "CH23521",
+          "course_name": "Heat Transfer Lab",
+          "course_type": "L",
+          "teacher_id": "135.0",
+          "semester": 5,
+          "course_dept": "Chemical Engineering",
+          "student_dept": "Chemical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "135.0"
+      ],
+      "courses": [
+        "CH23521"
+      ],
+      "total_workload": 4
+    },
+    {
       "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 770,
@@ -76,7 +82,7 @@
           "course_code": "CH23A11",
           "course_name": "Petroleum chemistry and Refining Fundamemtals",
           "course_type": "T",
-          "teacher_id": "123",
+          "teacher_id": "123.0",
           "semester": 5,
           "course_dept": "Chemical Engineering",
           "student_dept": "Chemical Engineering",
@@ -91,7 +97,7 @@
         }
       ],
       "teachers": [
-        "123"
+        "123.0"
       ],
       "courses": [
         "CH23A11"
@@ -100,6 +106,8 @@
     },
     {
       "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 768,
@@ -107,7 +115,7 @@
           "course_code": "CH23513",
           "course_name": "Mass Transfer I",
           "course_type": "T",
-          "teacher_id": "135",
+          "teacher_id": "135.0",
           "semester": 5,
           "course_dept": "Chemical Engineering",
           "student_dept": "Chemical Engineering",
@@ -122,7 +130,7 @@
         }
       ],
       "teachers": [
-        "135"
+        "135.0"
       ],
       "courses": [
         "CH23513"
@@ -131,6 +139,8 @@
     },
     {
       "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 766,
@@ -138,7 +148,7 @@
           "course_code": "CH23511",
           "course_name": "Process Plant Utilities",
           "course_type": "T",
-          "teacher_id": "130",
+          "teacher_id": "130.0",
           "semester": 5,
           "course_dept": "Chemical Engineering",
           "student_dept": "Chemical Engineering",
@@ -153,7 +163,7 @@
         }
       ],
       "teachers": [
-        "130"
+        "130.0"
       ],
       "courses": [
         "CH23511"
@@ -162,6 +172,8 @@
     },
     {
       "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 769,
@@ -169,7 +181,7 @@
           "course_code": "CH23514",
           "course_name": "Chemical Reaction Engineering I",
           "course_type": "T",
-          "teacher_id": "140",
+          "teacher_id": "140.0",
           "semester": 5,
           "course_dept": "Chemical Engineering",
           "student_dept": "Chemical Engineering",
@@ -184,7 +196,7 @@
         }
       ],
       "teachers": [
-        "140"
+        "140.0"
       ],
       "courses": [
         "CH23514"
@@ -193,6 +205,8 @@
     },
     {
       "group_id": 7,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 1353,
@@ -200,7 +214,7 @@
           "course_code": "CH23512",
           "course_name": "Chemical Engineering Thermodynamics",
           "course_type": "T",
-          "teacher_id": "120",
+          "teacher_id": "120.0",
           "semester": 5,
           "course_dept": "Chemical Engineering",
           "student_dept": "Chemical Engineering",
@@ -215,7 +229,7 @@
         }
       ],
       "teachers": [
-        "120"
+        "120.0"
       ],
       "courses": [
         "CH23512"
@@ -223,11 +237,14 @@
       "total_workload": 3
     }
   ],
+  "pe_group_included": false,
   "summary": {
     "total_instances": 7,
+    "pe_instances": 0,
     "lab_instances": 2,
     "theory_instances": 6,
     "unique_courses": 7,
-    "unique_teachers": 6
+    "unique_teachers": 6,
+    "pe_course_codes": []
   }
 }

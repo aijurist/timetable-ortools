@@ -7,6 +7,8 @@
   "groups": [
     {
       "group_id": 1,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 457,
@@ -14,7 +16,7 @@
           "course_code": "FT19712",
           "course_name": "Livestock and Marine Technology Laboratory",
           "course_type": "L",
-          "teacher_id": "367",
+          "teacher_id": "367.0",
           "semester": 6,
           "course_dept": "Food Technology",
           "student_dept": "Food Technology",
@@ -29,7 +31,7 @@
         }
       ],
       "teachers": [
-        "367"
+        "367.0"
       ],
       "courses": [
         "FT19712"
@@ -38,6 +40,8 @@
     },
     {
       "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 2054,
@@ -45,7 +49,7 @@
           "course_code": "FT19701",
           "course_name": "Food Packaging Technology",
           "course_type": "T",
-          "teacher_id": "369",
+          "teacher_id": "369.0",
           "semester": 6,
           "course_dept": "Food Technology",
           "student_dept": "Food Technology",
@@ -60,7 +64,7 @@
         }
       ],
       "teachers": [
-        "369"
+        "369.0"
       ],
       "courses": [
         "FT19701"
@@ -69,6 +73,8 @@
     },
     {
       "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 2057,
@@ -76,7 +82,7 @@
           "course_code": "FT19703",
           "course_name": "Food Safety, Quality and Regulation",
           "course_type": "T",
-          "teacher_id": "380",
+          "teacher_id": "380.0",
           "semester": 6,
           "course_dept": "Food Technology",
           "student_dept": "Food Technology",
@@ -91,7 +97,7 @@
         }
       ],
       "teachers": [
-        "380"
+        "380.0"
       ],
       "courses": [
         "FT19703"
@@ -99,11 +105,14 @@
       "total_workload": 3
     }
   ],
+  "pe_group_included": false,
   "summary": {
     "total_instances": 3,
+    "pe_instances": 0,
     "lab_instances": 1,
     "theory_instances": 2,
     "unique_courses": 3,
-    "unique_teachers": 3
+    "unique_teachers": 3,
+    "pe_course_codes": []
   }
 }

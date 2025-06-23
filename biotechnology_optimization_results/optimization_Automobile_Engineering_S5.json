@@ -7,6 +7,8 @@
   "groups": [
     {
       "group_id": 1,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 824,
@@ -14,7 +16,7 @@
           "course_code": "AT23531",
           "course_name": "Automotive Electrical and Electronics",
           "course_type": "LoT",
-          "teacher_id": "65",
+          "teacher_id": "65.0",
           "semester": 5,
           "course_dept": "Automobile Engineering",
           "student_dept": "Automobile Engineering",
@@ -29,7 +31,7 @@
         }
       ],
       "teachers": [
-        "65"
+        "65.0"
       ],
       "courses": [
         "AT23531"
@@ -38,14 +40,16 @@
     },
     {
       "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
-          "id": 239,
-          "course_id": 60,
-          "course_code": "AT23521",
-          "course_name": "Two and Three wheelers Laboratory",
+          "id": 240,
+          "course_id": 61,
+          "course_code": "AT23522",
+          "course_name": "Computer Aided Vehicle Design Data Characteristics Laboratory",
           "course_type": "L",
-          "teacher_id": "49",
+          "teacher_id": "65.0",
           "semester": 5,
           "course_dept": "Automobile Engineering",
           "student_dept": "Automobile Engineering",
@@ -60,15 +64,17 @@
         }
       ],
       "teachers": [
-        "49"
+        "65.0"
       ],
       "courses": [
-        "AT23521"
+        "AT23522"
       ],
       "total_workload": 2
     },
     {
       "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 238,
@@ -76,7 +82,7 @@
           "course_code": "AT23532",
           "course_name": "Electric and Hybrid Vehicles - II",
           "course_type": "LoT",
-          "teacher_id": "64",
+          "teacher_id": "64.0",
           "semester": 5,
           "course_dept": "Automobile Engineering",
           "student_dept": "Automobile Engineering",
@@ -91,7 +97,7 @@
         }
       ],
       "teachers": [
-        "64"
+        "64.0"
       ],
       "courses": [
         "AT23532"
@@ -100,14 +106,16 @@
     },
     {
       "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
-          "id": 240,
-          "course_id": 61,
-          "course_code": "AT23522",
-          "course_name": "Computer Aided Vehicle Design Data Characteristics Laboratory",
+          "id": 239,
+          "course_id": 60,
+          "course_code": "AT23521",
+          "course_name": "Two and Three wheelers Laboratory",
           "course_type": "L",
-          "teacher_id": "65",
+          "teacher_id": "49.0",
           "semester": 5,
           "course_dept": "Automobile Engineering",
           "student_dept": "Automobile Engineering",
@@ -122,15 +130,50 @@
         }
       ],
       "teachers": [
-        "65"
+        "49.0"
       ],
       "courses": [
-        "AT23522"
+        "AT23521"
       ],
       "total_workload": 2
     },
     {
       "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 233,
+          "course_id": 384,
+          "course_code": "GE23311",
+          "course_name": "Fundamentals of Management for Engineers",
+          "course_type": "T",
+          "teacher_id": "59.0",
+          "semester": 5,
+          "course_dept": "Automobile Engineering",
+          "student_dept": "Automobile Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 32,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "59.0"
+      ],
+      "courses": [
+        "GE23311"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 567,
@@ -138,7 +181,7 @@
           "course_code": "AT23511",
           "course_name": "Design of Machine Elements",
           "course_type": "T",
-          "teacher_id": "66",
+          "teacher_id": "66.0",
           "semester": 5,
           "course_dept": "Automobile Engineering",
           "student_dept": "Automobile Engineering",
@@ -153,7 +196,7 @@
         }
       ],
       "teachers": [
-        "66"
+        "66.0"
       ],
       "courses": [
         "AT23511"
@@ -161,7 +204,9 @@
       "total_workload": 3
     },
     {
-      "group_id": 6,
+      "group_id": 7,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 234,
@@ -169,7 +214,7 @@
           "course_code": "AT23G12",
           "course_name": "Two and Three Wheelers",
           "course_type": "T",
-          "teacher_id": "49",
+          "teacher_id": "49.0",
           "semester": 5,
           "course_dept": "Automobile Engineering",
           "student_dept": "Automobile Engineering",
@@ -184,50 +229,22 @@
         }
       ],
       "teachers": [
-        "49"
+        "49.0"
       ],
       "courses": [
         "AT23G12"
       ],
       "total_workload": 3
-    },
-    {
-      "group_id": 7,
-      "instances": [
-        {
-          "id": 233,
-          "course_id": 384,
-          "course_code": "GE23311",
-          "course_name": "Fundamentals of Management for Engineers",
-          "course_type": "T",
-          "teacher_id": "59",
-          "semester": 5,
-          "course_dept": "Automobile Engineering",
-          "student_dept": "Automobile Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 32,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "59"
-      ],
-      "courses": [
-        "GE23311"
-      ],
-      "total_workload": 3
     }
   ],
+  "pe_group_included": false,
   "summary": {
     "total_instances": 7,
+    "pe_instances": 0,
     "lab_instances": 4,
     "theory_instances": 5,
     "unique_courses": 7,
-    "unique_teachers": 5
+    "unique_teachers": 5,
+    "pe_course_codes": []
   }
 }

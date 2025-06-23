@@ -22,7 +22,7 @@ from course_group_optimizer import CourseGroupOptimizer
 class BiotechnologyDataTester:
     """Test the CourseGroupOptimizer with Biotechnology course data."""
     
-    def __init__(self, csv_file_path="data/department_data/Core_depts.csv"):
+    def __init__(self, csv_file_path="data/department_data/final_computing.csv"):
         self.csv_file_path = csv_file_path
         self.output_dir = "biotechnology_optimization_results"
         self.viz_dir = os.path.join(self.output_dir, "visualizations")
@@ -121,12 +121,13 @@ class BiotechnologyDataTester:
             self.logger.info(f"\n[{i}/{total}] Optimizing {dept} Semester {semester}")
             self.logger.info(f"Course instances: {len(instances)}")
             
-            # Create optimizer
+            # Create optimizer with PE course mapping
             optimizer = CourseGroupOptimizer(
                 courses=instances,
                 dept=dept,
                 semester=semester,
-                logger=self.logger
+                logger=self.logger,
+                pe_course_map_file="data/pe_course_map.csv"  # Add PE course mapping
             )
             
             # Run optimization

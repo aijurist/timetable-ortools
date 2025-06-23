@@ -7,6 +7,8 @@
   "groups": [
     {
       "group_id": 1,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 230,
@@ -14,7 +16,7 @@
           "course_code": "AT19723",
           "course_name": "Comprehension",
           "course_type": "L",
-          "teacher_id": "56",
+          "teacher_id": "56.0",
           "semester": 7,
           "course_dept": "Automobile Engineering",
           "student_dept": "Automobile Engineering",
@@ -29,7 +31,7 @@
         }
       ],
       "teachers": [
-        "56"
+        "56.0"
       ],
       "courses": [
         "AT19723"
@@ -38,6 +40,74 @@
     },
     {
       "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 229,
+          "course_id": 653,
+          "course_code": "AT19722",
+          "course_name": "Computer Aided Analysis Laboratory",
+          "course_type": "L",
+          "teacher_id": "66.0",
+          "semester": 7,
+          "course_dept": "Automobile Engineering",
+          "student_dept": "Automobile Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 21,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "66.0"
+      ],
+      "courses": [
+        "AT19722"
+      ],
+      "total_workload": 2
+    },
+    {
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 228,
+          "course_id": 651,
+          "course_code": "AT19721",
+          "course_name": "Vehicle Maintenance Laboratory",
+          "course_type": "L",
+          "teacher_id": "56.0",
+          "semester": 7,
+          "course_dept": "Automobile Engineering",
+          "student_dept": "Automobile Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 21,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "56.0"
+      ],
+      "courses": [
+        "AT19721"
+      ],
+      "total_workload": 2
+    },
+    {
+      "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 231,
@@ -45,7 +115,7 @@
           "course_code": "AT19711",
           "course_name": "AI and ML for Automobile  Engineers",
           "course_type": "L",
-          "teacher_id": "64",
+          "teacher_id": "64.0",
           "semester": 7,
           "course_dept": "Automobile Engineering",
           "student_dept": "Automobile Engineering",
@@ -60,7 +130,7 @@
         }
       ],
       "teachers": [
-        "64"
+        "64.0"
       ],
       "courses": [
         "AT19711"
@@ -68,100 +138,9 @@
       "total_workload": 6
     },
     {
-      "group_id": 3,
-      "instances": [
-        {
-          "id": 229,
-          "course_id": 653,
-          "course_code": "AT19722",
-          "course_name": "Computer Aided Analysis Laboratory",
-          "course_type": "L",
-          "teacher_id": "66",
-          "semester": 7,
-          "course_dept": "Automobile Engineering",
-          "student_dept": "Automobile Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 2,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 21,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "66"
-      ],
-      "courses": [
-        "AT19722"
-      ],
-      "total_workload": 2
-    },
-    {
-      "group_id": 4,
-      "instances": [
-        {
-          "id": 228,
-          "course_id": 651,
-          "course_code": "AT19721",
-          "course_name": "Vehicle Maintenance Laboratory",
-          "course_type": "L",
-          "teacher_id": "56",
-          "semester": 7,
-          "course_dept": "Automobile Engineering",
-          "student_dept": "Automobile Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 2,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 21,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "56"
-      ],
-      "courses": [
-        "AT19721"
-      ],
-      "total_workload": 2
-    },
-    {
       "group_id": 5,
-      "instances": [
-        {
-          "id": 825,
-          "course_id": 650,
-          "course_code": "AT19P73",
-          "course_name": "Automotive Safety",
-          "course_type": "T",
-          "teacher_id": "56",
-          "semester": 7,
-          "course_dept": "Automobile Engineering",
-          "student_dept": "Automobile Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 21,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "56"
-      ],
-      "courses": [
-        "AT19P73"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 224,
@@ -169,7 +148,7 @@
           "course_code": "AT19702",
           "course_name": "Intelligent Vehicle System",
           "course_type": "T",
-          "teacher_id": "65",
+          "teacher_id": "65.0",
           "semester": 7,
           "course_dept": "Automobile Engineering",
           "student_dept": "Automobile Engineering",
@@ -184,7 +163,7 @@
         }
       ],
       "teachers": [
-        "65"
+        "65.0"
       ],
       "courses": [
         "AT19702"
@@ -192,7 +171,9 @@
       "total_workload": 3
     },
     {
-      "group_id": 7,
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 222,
@@ -200,7 +181,7 @@
           "course_code": "AT19701",
           "course_name": "Vehicle Mangement System",
           "course_type": "T",
-          "teacher_id": "49",
+          "teacher_id": "49.0",
           "semester": 7,
           "course_dept": "Automobile Engineering",
           "student_dept": "Automobile Engineering",
@@ -215,19 +196,55 @@
         }
       ],
       "teachers": [
-        "49"
+        "49.0"
       ],
       "courses": [
         "AT19701"
       ],
       "total_workload": 3
+    },
+    {
+      "group_id": 7,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 825,
+          "course_id": 650,
+          "course_code": "AT19P73",
+          "course_name": "Automotive Safety",
+          "course_type": "T",
+          "teacher_id": "56.0",
+          "semester": 7,
+          "course_dept": "Automobile Engineering",
+          "student_dept": "Automobile Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 21,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "56.0"
+      ],
+      "courses": [
+        "AT19P73"
+      ],
+      "total_workload": 3
     }
   ],
+  "pe_group_included": false,
   "summary": {
     "total_instances": 7,
+    "pe_instances": 0,
     "lab_instances": 4,
     "theory_instances": 3,
     "unique_courses": 7,
-    "unique_teachers": 5
+    "unique_teachers": 5,
+    "pe_course_codes": []
   }
 }

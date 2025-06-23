@@ -7,6 +7,8 @@
   "groups": [
     {
       "group_id": 1,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 2074,
@@ -14,7 +16,7 @@
           "course_code": "FT23511",
           "course_name": "Food Analysis Laboratory",
           "course_type": "L",
-          "teacher_id": "376",
+          "teacher_id": "376.0",
           "semester": 5,
           "course_dept": "Food Technology",
           "student_dept": "Food Technology",
@@ -29,7 +31,7 @@
         }
       ],
       "teachers": [
-        "376"
+        "376.0"
       ],
       "courses": [
         "FT23511"
@@ -38,6 +40,8 @@
     },
     {
       "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 2055,
@@ -45,7 +49,7 @@
           "course_code": "FT19711",
           "course_name": "Food Packaging Technology Laboratory",
           "course_type": "L",
-          "teacher_id": "369",
+          "teacher_id": "369.0",
           "semester": 5,
           "course_dept": "Food Technology",
           "student_dept": "Food Technology",
@@ -60,7 +64,7 @@
         }
       ],
       "teachers": [
-        "369"
+        "369.0"
       ],
       "courses": [
         "FT19711"
@@ -69,6 +73,8 @@
     },
     {
       "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 2075,
@@ -76,7 +82,7 @@
           "course_code": "FT23512",
           "course_name": "Food Processing and Preservation Laboratory - II",
           "course_type": "L",
-          "teacher_id": "380",
+          "teacher_id": "380.0",
           "semester": 5,
           "course_dept": "Food Technology",
           "student_dept": "Food Technology",
@@ -91,7 +97,7 @@
         }
       ],
       "teachers": [
-        "380"
+        "380.0"
       ],
       "courses": [
         "FT23512"
@@ -100,161 +106,8 @@
     },
     {
       "group_id": 4,
-      "instances": [
-        {
-          "id": 479,
-          "course_id": 746,
-          "course_code": "FT23F01",
-          "course_name": "Bakery Ingredients and Flour Rheology",
-          "course_type": "T",
-          "teacher_id": "366",
-          "semester": 5,
-          "course_dept": "Food Technology",
-          "student_dept": "Food Technology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 61,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "366"
-      ],
-      "courses": [
-        "FT23F01"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 5,
-      "instances": [
-        {
-          "id": 434,
-          "course_id": 361,
-          "course_code": "FT23503",
-          "course_name": "Heat and Mass Transfer in Food Processing",
-          "course_type": "T",
-          "teacher_id": "376",
-          "semester": 5,
-          "course_dept": "Food Technology",
-          "student_dept": "Food Technology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 61,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "376"
-      ],
-      "courses": [
-        "FT23503"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 6,
-      "instances": [
-        {
-          "id": 2073,
-          "course_id": 359,
-          "course_code": "FT23501",
-          "course_name": "Food Analysis",
-          "course_type": "T",
-          "teacher_id": "374",
-          "semester": 5,
-          "course_dept": "Food Technology",
-          "student_dept": "Food Technology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 61,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "374"
-      ],
-      "courses": [
-        "FT23501"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 7,
-      "instances": [
-        {
-          "id": 459,
-          "course_id": 360,
-          "course_code": "FT23502",
-          "course_name": "Food Process Engineering",
-          "course_type": "T",
-          "teacher_id": "389",
-          "semester": 5,
-          "course_dept": "Food Technology",
-          "student_dept": "Food Technology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 61,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "389"
-      ],
-      "courses": [
-        "FT23502"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 8,
-      "instances": [
-        {
-          "id": 442,
-          "course_id": 722,
-          "course_code": "FT19704",
-          "course_name": "Professional Ethics",
-          "course_type": "T",
-          "teacher_id": "372",
-          "semester": 5,
-          "course_dept": "Food Technology",
-          "student_dept": "Food Technology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 61,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "372"
-      ],
-      "courses": [
-        "FT19704"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 9,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 481,
@@ -262,7 +115,7 @@
           "course_code": "NPTEL",
           "course_name": "Dairy and Food Process and Products Technology",
           "course_type": "T",
-          "teacher_id": "367",
+          "teacher_id": "367.0",
           "semester": 5,
           "course_dept": "Food Technology",
           "student_dept": "Food Technology",
@@ -277,19 +130,187 @@
         }
       ],
       "teachers": [
-        "367"
+        "367.0"
       ],
       "courses": [
         "NPTEL"
       ],
       "total_workload": 3
+    },
+    {
+      "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 479,
+          "course_id": 746,
+          "course_code": "FT23F01",
+          "course_name": "Bakery Ingredients and Flour Rheology",
+          "course_type": "T",
+          "teacher_id": "366.0",
+          "semester": 5,
+          "course_dept": "Food Technology",
+          "student_dept": "Food Technology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 61,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "366.0"
+      ],
+      "courses": [
+        "FT23F01"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 459,
+          "course_id": 360,
+          "course_code": "FT23502",
+          "course_name": "Food Process Engineering",
+          "course_type": "T",
+          "teacher_id": "389.0",
+          "semester": 5,
+          "course_dept": "Food Technology",
+          "student_dept": "Food Technology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 61,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "389.0"
+      ],
+      "courses": [
+        "FT23502"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 7,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 434,
+          "course_id": 361,
+          "course_code": "FT23503",
+          "course_name": "Heat and Mass Transfer in Food Processing",
+          "course_type": "T",
+          "teacher_id": "376.0",
+          "semester": 5,
+          "course_dept": "Food Technology",
+          "student_dept": "Food Technology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 61,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "376.0"
+      ],
+      "courses": [
+        "FT23503"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 8,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 2073,
+          "course_id": 359,
+          "course_code": "FT23501",
+          "course_name": "Food Analysis",
+          "course_type": "T",
+          "teacher_id": "374.0",
+          "semester": 5,
+          "course_dept": "Food Technology",
+          "student_dept": "Food Technology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 61,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "374.0"
+      ],
+      "courses": [
+        "FT23501"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 9,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 442,
+          "course_id": 722,
+          "course_code": "FT19704",
+          "course_name": "Professional Ethics",
+          "course_type": "T",
+          "teacher_id": "372.0",
+          "semester": 5,
+          "course_dept": "Food Technology",
+          "student_dept": "Food Technology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 61,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "372.0"
+      ],
+      "courses": [
+        "FT19704"
+      ],
+      "total_workload": 3
     }
   ],
+  "pe_group_included": false,
   "summary": {
     "total_instances": 9,
+    "pe_instances": 0,
     "lab_instances": 3,
     "theory_instances": 6,
     "unique_courses": 9,
-    "unique_teachers": 8
+    "unique_teachers": 8,
+    "pe_course_codes": []
   }
 }

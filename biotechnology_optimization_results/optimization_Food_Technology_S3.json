@@ -7,6 +7,8 @@
   "groups": [
     {
       "group_id": 1,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 102,
@@ -14,7 +16,7 @@
           "course_code": "FT23312",
           "course_name": "Biochemistry and Nutrition Laboratory",
           "course_type": "L",
-          "teacher_id": "390",
+          "teacher_id": "390.0",
           "semester": 3,
           "course_dept": "Food Technology",
           "student_dept": "Food Technology",
@@ -29,7 +31,7 @@
         }
       ],
       "teachers": [
-        "390"
+        "390.0"
       ],
       "courses": [
         "FT23312"
@@ -38,6 +40,8 @@
     },
     {
       "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 961,
@@ -45,7 +49,7 @@
           "course_code": "FT23311",
           "course_name": "Food Microbiology Laboratory",
           "course_type": "L",
-          "teacher_id": "386",
+          "teacher_id": "386.0",
           "semester": 3,
           "course_dept": "Food Technology",
           "student_dept": "Food Technology",
@@ -60,7 +64,7 @@
         }
       ],
       "teachers": [
-        "386"
+        "386.0"
       ],
       "courses": [
         "FT23311"
@@ -69,68 +73,8 @@
     },
     {
       "group_id": 3,
-      "instances": [
-        {
-          "id": 68,
-          "course_id": 568,
-          "course_code": "FT23302",
-          "course_name": "Biochemistry and Nutrition",
-          "course_type": "T",
-          "teacher_id": "390",
-          "semester": 3,
-          "course_dept": "Food Technology",
-          "student_dept": "Food Technology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 62,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "390"
-      ],
-      "courses": [
-        "FT23302"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 4,
-      "instances": [
-        {
-          "id": 435,
-          "course_id": 350,
-          "course_code": "FT23304",
-          "course_name": "Food Process Calculations",
-          "course_type": "T",
-          "teacher_id": "376",
-          "semester": 3,
-          "course_dept": "Food Technology",
-          "student_dept": "Food Technology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 62,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "376"
-      ],
-      "courses": [
-        "FT23304"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 441,
@@ -138,7 +82,7 @@
           "course_code": "FT23305",
           "course_name": "Food Additives",
           "course_type": "T",
-          "teacher_id": "372",
+          "teacher_id": "372.0",
           "semester": 3,
           "course_dept": "Food Technology",
           "student_dept": "Food Technology",
@@ -153,7 +97,7 @@
         }
       ],
       "teachers": [
-        "372"
+        "372.0"
       ],
       "courses": [
         "FT23305"
@@ -161,7 +105,108 @@
       "total_workload": 3
     },
     {
+      "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1362,
+          "course_id": 349,
+          "course_code": "FT23303",
+          "course_name": "Thermodynamics for Food Technologists",
+          "course_type": "T",
+          "teacher_id": "544.0",
+          "semester": 3,
+          "course_dept": "Food Technology",
+          "student_dept": "Food Technology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "544.0"
+      ],
+      "courses": [
+        "FT23303"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 68,
+          "course_id": 568,
+          "course_code": "FT23302",
+          "course_name": "Biochemistry and Nutrition",
+          "course_type": "T",
+          "teacher_id": "390.0",
+          "semester": 3,
+          "course_dept": "Food Technology",
+          "student_dept": "Food Technology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 62,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "390.0"
+      ],
+      "courses": [
+        "FT23302"
+      ],
+      "total_workload": 3
+    },
+    {
       "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 435,
+          "course_id": 350,
+          "course_code": "FT23304",
+          "course_name": "Food Process Calculations",
+          "course_type": "T",
+          "teacher_id": "376.0",
+          "semester": 3,
+          "course_dept": "Food Technology",
+          "student_dept": "Food Technology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 62,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "376.0"
+      ],
+      "courses": [
+        "FT23304"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 7,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 1215,
@@ -169,7 +214,7 @@
           "course_code": "MA23311",
           "course_name": "Transforms and Applied Partial Differential Equations",
           "course_type": "T",
-          "teacher_id": "443",
+          "teacher_id": "443.0",
           "semester": 3,
           "course_dept": "Food Technology",
           "student_dept": "Food Technology",
@@ -184,7 +229,7 @@
         }
       ],
       "teachers": [
-        "443"
+        "443.0"
       ],
       "courses": [
         "MA23311"
@@ -192,38 +237,9 @@
       "total_workload": 4
     },
     {
-      "group_id": 7,
-      "instances": [
-        {
-          "id": 1362,
-          "course_id": 349,
-          "course_code": "FT23303",
-          "course_name": "Thermodynamics for Food Technologists",
-          "course_type": "T",
-          "teacher_id": "544",
-          "semester": 3,
-          "course_dept": "Food Technology",
-          "student_dept": "Food Technology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "544"
-      ],
-      "courses": [
-        "FT23303"
-      ],
-      "total_workload": 3
-    },
-    {
       "group_id": 8,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 452,
@@ -231,7 +247,7 @@
           "course_code": "FT23301",
           "course_name": "Food Microbiology",
           "course_type": "T",
-          "teacher_id": "386",
+          "teacher_id": "386.0",
           "semester": 3,
           "course_dept": "Food Technology",
           "student_dept": "Food Technology",
@@ -246,7 +262,7 @@
         }
       ],
       "teachers": [
-        "386"
+        "386.0"
       ],
       "courses": [
         "FT23301"
@@ -254,11 +270,14 @@
       "total_workload": 3
     }
   ],
+  "pe_group_included": false,
   "summary": {
     "total_instances": 8,
+    "pe_instances": 0,
     "lab_instances": 2,
     "theory_instances": 6,
     "unique_courses": 8,
-    "unique_teachers": 6
+    "unique_teachers": 6,
+    "pe_course_codes": []
   }
 }

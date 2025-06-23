@@ -7,6 +7,8 @@
   "groups": [
     {
       "group_id": 1,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 425,
@@ -14,7 +16,7 @@
           "course_code": "CS23336",
           "course_name": "Introduction to Python Programming",
           "course_type": "LoT",
-          "teacher_id": "495",
+          "teacher_id": "495.0",
           "semester": 3,
           "course_dept": "Mechatronics Engineering",
           "student_dept": "Mechatronics Engineering",
@@ -29,7 +31,7 @@
         }
       ],
       "teachers": [
-        "495"
+        "495.0"
       ],
       "courses": [
         "CS23336"
@@ -38,37 +40,8 @@
     },
     {
       "group_id": 2,
-      "instances": [
-        {
-          "id": 397,
-          "course_id": 677,
-          "course_code": "MT23331",
-          "course_name": "Analog Devices and Drives",
-          "course_type": "LoT",
-          "teacher_id": "493",
-          "semester": 3,
-          "course_dept": "Mechatronics Engineering",
-          "student_dept": "Mechatronics Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 2,
-          "tutorial_hours": 0,
-          "student_count": 63,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "493"
-      ],
-      "courses": [
-        "MT23331"
-      ],
-      "total_workload": 4
-    },
-    {
-      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 1272,
@@ -76,7 +49,7 @@
           "course_code": "MA23311",
           "course_name": "Transforms and Applied Partial Differential Equations",
           "course_type": "T",
-          "teacher_id": "451",
+          "teacher_id": "451.0",
           "semester": 3,
           "course_dept": "Mechatronics Engineering",
           "student_dept": "Mechatronics Engineering",
@@ -91,7 +64,7 @@
         }
       ],
       "teachers": [
-        "451"
+        "451.0"
       ],
       "courses": [
         "MA23311"
@@ -99,15 +72,17 @@
       "total_workload": 4
     },
     {
-      "group_id": 4,
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
-          "id": 406,
-          "course_id": 682,
-          "course_code": "MT23334",
-          "course_name": "Mechanics of Solids",
+          "id": 396,
+          "course_id": 680,
+          "course_code": "MT23333",
+          "course_name": "Manufacturing Technology",
           "course_type": "LoT",
-          "teacher_id": "483",
+          "teacher_id": "516.0",
           "semester": 3,
           "course_dept": "Mechatronics Engineering",
           "student_dept": "Mechatronics Engineering",
@@ -122,23 +97,25 @@
         }
       ],
       "teachers": [
-        "483"
+        "516.0"
       ],
       "courses": [
-        "MT23334"
+        "MT23333"
       ],
       "total_workload": 5
     },
     {
-      "group_id": 5,
+      "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
-          "id": 424,
-          "course_id": 473,
-          "course_code": "MT23332",
-          "course_name": "Digital System Design",
+          "id": 397,
+          "course_id": 677,
+          "course_code": "MT23331",
+          "course_name": "Analog Devices and Drives",
           "course_type": "LoT",
-          "teacher_id": "496",
+          "teacher_id": "493.0",
           "semester": 3,
           "course_dept": "Mechatronics Engineering",
           "student_dept": "Mechatronics Engineering",
@@ -153,23 +130,25 @@
         }
       ],
       "teachers": [
-        "496"
+        "493.0"
       ],
       "courses": [
-        "MT23332"
+        "MT23331"
       ],
       "total_workload": 4
     },
     {
-      "group_id": 6,
+      "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
-          "id": 396,
-          "course_id": 680,
-          "course_code": "MT23333",
-          "course_name": "Manufacturing Technology",
+          "id": 406,
+          "course_id": 682,
+          "course_code": "MT23334",
+          "course_name": "Mechanics of Solids",
           "course_type": "LoT",
-          "teacher_id": "516",
+          "teacher_id": "483.0",
           "semester": 3,
           "course_dept": "Mechatronics Engineering",
           "student_dept": "Mechatronics Engineering",
@@ -184,19 +163,55 @@
         }
       ],
       "teachers": [
-        "516"
+        "483.0"
       ],
       "courses": [
-        "MT23333"
+        "MT23334"
       ],
       "total_workload": 5
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 424,
+          "course_id": 473,
+          "course_code": "MT23332",
+          "course_name": "Digital System Design",
+          "course_type": "LoT",
+          "teacher_id": "496.0",
+          "semester": 3,
+          "course_dept": "Mechatronics Engineering",
+          "student_dept": "Mechatronics Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 63,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "496.0"
+      ],
+      "courses": [
+        "MT23332"
+      ],
+      "total_workload": 4
     }
   ],
+  "pe_group_included": false,
   "summary": {
     "total_instances": 6,
+    "pe_instances": 0,
     "lab_instances": 5,
     "theory_instances": 6,
     "unique_courses": 6,
-    "unique_teachers": 6
+    "unique_teachers": 6,
+    "pe_course_codes": []
   }
 }

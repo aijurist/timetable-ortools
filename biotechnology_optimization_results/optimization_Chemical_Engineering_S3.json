@@ -7,37 +7,8 @@
   "groups": [
     {
       "group_id": 1,
-      "instances": [
-        {
-          "id": 764,
-          "course_id": 215,
-          "course_code": "CH23331",
-          "course_name": "Fluid Mechanics for Chemical Engineers",
-          "course_type": "LoT",
-          "teacher_id": "141",
-          "semester": 3,
-          "course_dept": "Chemical Engineering",
-          "student_dept": "Chemical Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 1,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "141"
-      ],
-      "courses": [
-        "CH23331"
-      ],
-      "total_workload": 6
-    },
-    {
-      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 1405,
@@ -45,7 +16,7 @@
           "course_code": "CY23334",
           "course_name": "Physical and Organic Chemistry",
           "course_type": "LoT",
-          "teacher_id": "160",
+          "teacher_id": "160.0",
           "semester": 3,
           "course_dept": "Chemical Engineering",
           "student_dept": "Chemical Engineering",
@@ -60,7 +31,7 @@
         }
       ],
       "teachers": [
-        "160"
+        "160.0"
       ],
       "courses": [
         "CY23334"
@@ -68,21 +39,23 @@
       "total_workload": 5
     },
     {
-      "group_id": 3,
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
-          "id": 1408,
-          "course_id": 422,
-          "course_code": "MA23311",
-          "course_name": "Transforms and Applied Partial Differential Equations",
-          "course_type": "T",
-          "teacher_id": "461",
+          "id": 764,
+          "course_id": 215,
+          "course_code": "CH23331",
+          "course_name": "Fluid Mechanics for Chemical Engineers",
+          "course_type": "LoT",
+          "teacher_id": "141.0",
           "semester": 3,
           "course_dept": "Chemical Engineering",
           "student_dept": "Chemical Engineering",
-          "has_lab": false,
+          "has_lab": true,
           "has_theory": true,
-          "practical_hours": 0,
+          "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 1,
           "student_count": 70,
@@ -91,77 +64,17 @@
         }
       ],
       "teachers": [
-        "461"
+        "141.0"
       ],
       "courses": [
-        "MA23311"
+        "CH23331"
       ],
-      "total_workload": 4
+      "total_workload": 6
     },
     {
-      "group_id": 4,
-      "instances": [
-        {
-          "id": 74,
-          "course_id": 212,
-          "course_code": "CH23311",
-          "course_name": "Solid Mechanics",
-          "course_type": "T",
-          "teacher_id": "130",
-          "semester": 3,
-          "course_dept": "Chemical Engineering",
-          "student_dept": "Chemical Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 2,
-          "tutorial_hours": 1,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "130"
-      ],
-      "courses": [
-        "CH23311"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 5,
-      "instances": [
-        {
-          "id": 75,
-          "course_id": 213,
-          "course_code": "CH23312",
-          "course_name": "Chemical Process Calculations",
-          "course_type": "T",
-          "teacher_id": "131",
-          "semester": 3,
-          "course_dept": "Chemical Engineering",
-          "student_dept": "Chemical Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 2,
-          "tutorial_hours": 1,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "131"
-      ],
-      "courses": [
-        "CH23312"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 6,
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
       "instances": [
         {
           "id": 763,
@@ -169,7 +82,7 @@
           "course_code": "CH23313",
           "course_name": "Chemical Process Industries",
           "course_type": "T",
-          "teacher_id": "118",
+          "teacher_id": "118.0",
           "semester": 3,
           "course_dept": "Chemical Engineering",
           "student_dept": "Chemical Engineering",
@@ -184,19 +97,121 @@
         }
       ],
       "teachers": [
-        "118"
+        "118.0"
       ],
       "courses": [
         "CH23313"
       ],
       "total_workload": 3
+    },
+    {
+      "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 75,
+          "course_id": 213,
+          "course_code": "CH23312",
+          "course_name": "Chemical Process Calculations",
+          "course_type": "T",
+          "teacher_id": "131.0",
+          "semester": 3,
+          "course_dept": "Chemical Engineering",
+          "student_dept": "Chemical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 1,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "131.0"
+      ],
+      "courses": [
+        "CH23312"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1408,
+          "course_id": 422,
+          "course_code": "MA23311",
+          "course_name": "Transforms and Applied Partial Differential Equations",
+          "course_type": "T",
+          "teacher_id": "461.0",
+          "semester": 3,
+          "course_dept": "Chemical Engineering",
+          "student_dept": "Chemical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "461.0"
+      ],
+      "courses": [
+        "MA23311"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 74,
+          "course_id": 212,
+          "course_code": "CH23311",
+          "course_name": "Solid Mechanics",
+          "course_type": "T",
+          "teacher_id": "130.0",
+          "semester": 3,
+          "course_dept": "Chemical Engineering",
+          "student_dept": "Chemical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 1,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "130.0"
+      ],
+      "courses": [
+        "CH23311"
+      ],
+      "total_workload": 3
     }
   ],
+  "pe_group_included": false,
   "summary": {
     "total_instances": 6,
+    "pe_instances": 0,
     "lab_instances": 2,
     "theory_instances": 6,
     "unique_courses": 6,
-    "unique_teachers": 6
+    "unique_teachers": 6,
+    "pe_course_codes": []
   }
 }

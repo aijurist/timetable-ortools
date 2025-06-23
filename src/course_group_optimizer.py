@@ -39,7 +39,7 @@ class CourseGroupOptimizer:
     Number of groups is always equal to the number of unique courses (after filtering).
     """
     
-    def __init__(self, courses, dept, semester, logger=None):
+    def __init__(self, courses, dept, semester, logger=None, pe_course_map_file=None):
         """
         Initialize the optimizer with course instances.
         
@@ -48,14 +48,25 @@ class CourseGroupOptimizer:
             dept: Department name
             semester: Semester number
             logger: Logger instance (optional)
+            pe_course_map_file: Path to PE course mapping CSV file (optional)
         """
         self.courses = courses
         self.dept = dept
         self.semester = semester
         self.logger = logger or logging.getLogger(__name__)
+        self.pe_course_map_file = pe_course_map_file
         
-        # Preprocess courses to handle large instances
+        # Load PE course mapping if provided
+        self.pe_course_codes = set()
+        self.pe_courses = []
+        if pe_course_map_file:
+            self._load_pe_course_mapping()
+        
+        # Preprocess ALL courses to handle large instances FIRST (before separation)
         self.courses = self._preprocess_large_courses(self.courses)
+        
+        # Then separate PE courses from regular courses after preprocessing
+        self.courses, self.pe_courses = self._separate_pe_courses(self.courses)
         
         # Processing results
         self.groups = []
@@ -70,7 +81,7 @@ class CourseGroupOptimizer:
         # Filter courses based on instance count before analysis
         self.courses = self._filter_courses_by_instance_count(self.courses)
         
-        # Course analysis
+        # Course analysis (only on non-PE courses)
         self.lab_courses = [inst for inst in self.courses if inst.get('has_lab', False)]
         self.theory_courses = [inst for inst in self.courses if inst.get('has_theory', False)]
         self.unique_courses = list(set(inst['course_code'] for inst in self.courses))
@@ -80,12 +91,103 @@ class CourseGroupOptimizer:
         self.num_groups = len(self.unique_courses)
         
         self.logger.info(f"Initializing Course Group Optimizer for {dept} Semester {semester}")
-        self.logger.info(f"  Total instances: {len(self.courses)}")
+        self.logger.info(f"  Total instances (excluding PE): {len(self.courses)}")
+        self.logger.info(f"  PE course instances: {len(self.pe_courses)}")
         self.logger.info(f"  Lab instances: {len(self.lab_courses)}")
         self.logger.info(f"  Theory instances: {len(self.theory_courses)}")
         self.logger.info(f"  Unique courses: {len(self.unique_courses)}")
         self.logger.info(f"  Unique teachers: {len(self.unique_teachers)}")
         self.logger.info(f"  Target groups: {self.num_groups}")
+        if self.pe_courses:
+            pe_course_codes = list(set(inst['course_code'] for inst in self.pe_courses))
+            self.logger.info(f"  PE courses to be added as final group: {pe_course_codes}")
+    
+    def _load_pe_course_mapping(self):
+        """
+        Load PE course mapping from CSV file to identify Professional Elective courses.
+        """
+        if not self.pe_course_map_file or not os.path.exists(self.pe_course_map_file):
+            self.logger.warning(f"PE course map file not found: {self.pe_course_map_file}")
+            return
+        
+        try:
+            import pandas as pd
+            df = pd.read_csv(self.pe_course_map_file)
+            
+            # Extract GENERAL CODE values and filter by department and semester
+            if 'GENERAL CODE' in df.columns and 'DEPT' in df.columns and 'SEM' in df.columns:
+                # Filter by department and semester
+                dept_mapping = {
+                    'AI&DS': 'Artificial Intelligence & Data Science',
+                    'AIML': 'Artificial Intelligence & Machine Learning', 
+                    'CSE': 'Computer Science & Engineering',
+                    'BME': 'Biomedical Engineering',
+                    'BT': 'Biotechnology',
+                    'EEE': 'Electrical & Electronics Engineering',
+                    'ECE': 'Electronics & Communication Engineering',
+                    'MECH': 'Mechanical Engineering'
+                }
+                
+                # Find matching department abbreviation
+                dept_abbrev = None
+                for abbrev, full_name in dept_mapping.items():
+                    if full_name == self.dept:
+                        dept_abbrev = abbrev
+                        break
+                
+                if dept_abbrev:
+                    # Filter for matching department and semester
+                    filtered_df = df[(df['DEPT'] == dept_abbrev) & (df['SEM'] == self.semester)]
+                    
+                    # Extract PE course codes
+                    for _, row in filtered_df.iterrows():
+                        general_code = row['GENERAL CODE']
+                        if pd.notna(general_code) and general_code.strip():
+                            self.pe_course_codes.add(general_code.strip())
+                    
+                    self.logger.info(f"Loaded {len(self.pe_course_codes)} PE course codes for {self.dept} Semester {self.semester}: {sorted(self.pe_course_codes)}")
+                else:
+                    self.logger.warning(f"No PE course mapping found for department: {self.dept}")
+            else:
+                self.logger.error(f"PE course map file missing required columns: GENERAL CODE, DEPT, SEM")
+                
+        except Exception as e:
+            self.logger.error(f"Error loading PE course mapping: {e}")
+            import traceback
+            traceback.print_exc()
+
+    def _separate_pe_courses(self, courses):
+        """
+        Separate PE (Professional Elective) courses from regular courses.
+        
+        Args:
+            courses: List of all course instances
+            
+        Returns:
+            tuple: (regular_courses, pe_courses)
+        """
+        regular_courses = []
+        pe_courses = []
+        
+        for course in courses:
+            course_code = course.get('course_code', '')
+            if course_code in self.pe_course_codes:
+                pe_courses.append(course)
+                self.logger.debug(f"Identified PE course: {course_code}")
+            else:
+                regular_courses.append(course)
+        
+        if pe_courses:
+            pe_course_codes = list(set(inst['course_code'] for inst in pe_courses))
+            pe_virtual_instances = [inst for inst in pe_courses if 'virtual_id' in inst]
+            pe_regular_instances = [inst for inst in pe_courses if 'virtual_id' not in inst]
+            
+            self.logger.info(f"Separated {len(pe_courses)} PE course instances ({len(pe_course_codes)} unique courses) from optimization")
+            self.logger.info(f"PE courses: {pe_course_codes}")
+            if pe_virtual_instances:
+                self.logger.info(f"PE courses include {len(pe_virtual_instances)} virtual instances from large courses (140+ students)")
+        
+        return regular_courses, pe_courses
     
     def _preprocess_large_courses(self, courses):
         """
@@ -94,8 +196,16 @@ class CourseGroupOptimizer:
         """
         new_courses = []
         co_schedule_counter = 1
+        large_courses_found = []
+        
         for course in courses:
             if course.get('student_count', 0) >= 140:
+                large_courses_found.append({
+                    'id': course['id'],
+                    'course_code': course['course_code'],
+                    'student_count': course['student_count']
+                })
+                
                 self.logger.info(f"Splitting large course instance {course['id']} ({course['course_code']}) with {course['student_count']} students.")
                 
                 # Create two virtual instances
@@ -116,8 +226,14 @@ class CourseGroupOptimizer:
             else:
                 new_courses.append(course)
         
-        if co_schedule_counter > 1:
-            self.logger.info(f"Created {co_schedule_counter - 1} pairs of virtual co-scheduled instances.")
+        if large_courses_found:
+            self.logger.info(f"Large course preprocessing summary:")
+            self.logger.info(f"  Found {len(large_courses_found)} courses with 140+ students")
+            self.logger.info(f"  Created {co_schedule_counter - 1} pairs of virtual co-scheduled instances")
+            for course_info in large_courses_found:
+                self.logger.info(f"    {course_info['course_code']} (ID: {course_info['id']}) → split from {course_info['student_count']} to 2x70 students")
+        else:
+            self.logger.info("No large courses (140+ students) found to split")
             
         return new_courses
     
@@ -1072,7 +1188,7 @@ class CourseGroupOptimizer:
     
     def _extract_solution(self, solver, assignment_vars):
         """
-        Extract the solution from the solver.
+        Extract the solution from the solver and add PE courses as final group.
         
         Args:
             solver: CP-SAT solver
@@ -1088,6 +1204,11 @@ class CourseGroupOptimizer:
                     self.groups[group_idx].append(instance)
                     break
         
+        # Add PE courses as a final group if any exist
+        if self.pe_courses:
+            self.groups.append(self.pe_courses)
+            self.logger.info(f"Added PE courses as Group {len(self.groups)} (final group)")
+        
         # Log group distribution
         self.logger.info(f"Optimal group distribution for {self.dept} Semester {self.semester}:")
         
@@ -1100,9 +1221,13 @@ class CourseGroupOptimizer:
                 lab_instances = [inst for inst in group if inst.get('has_lab', False)]
                 theory_instances = [inst for inst in group if inst.get('has_theory', False)]
                 
-                # Track course distribution
-                for course_code in courses:
-                    course_distribution[course_code].append(group_idx + 1)
+                # Check if this is the PE group
+                is_pe_group = group_idx >= self.num_groups
+                
+                # Track course distribution (excluding PE courses from regular analysis)
+                if not is_pe_group:
+                    for course_code in courses:
+                        course_distribution[course_code].append(group_idx + 1)
                 
                 total_workload = sum(
                     inst.get('practical_hours', 0) + 
@@ -1111,14 +1236,15 @@ class CourseGroupOptimizer:
                     for inst in group
                 )
                 
-                self.logger.info(f"  Group {group_idx + 1}: {len(group)} instances")
+                group_type = " (PE Group)" if is_pe_group else ""
+                self.logger.info(f"  Group {group_idx + 1}{group_type}: {len(group)} instances")
                 self.logger.info(f"    Lab: {len(lab_instances)}, Theory: {len(theory_instances)}")
                 self.logger.info(f"    Teachers: [{', '.join(teachers)}]")
                 self.logger.info(f"    Courses: [{', '.join(courses)}]")
                 self.logger.info(f"    Total workload: {total_workload} hours")
         
-        # Log course distribution summary
-        self.logger.info(f"\nCourse distribution summary:")
+        # Log course distribution summary (excluding PE courses)
+        self.logger.info(f"\nCourse distribution summary (excluding PE courses):")
         total_courses = len(course_distribution)
         courses_with_choice = 0
         
@@ -1130,10 +1256,19 @@ class CourseGroupOptimizer:
             self.logger.info(f"  {course_code}: {', '.join(group_names)} ({len(group_list)} groups) {status}")
         
         choice_percentage = (courses_with_choice / total_courses * 100) if total_courses > 0 else 0
-        self.logger.info(f"\nStudent choice analysis:")
-        self.logger.info(f"  Total courses: {total_courses}")
+        self.logger.info(f"\nStudent choice analysis (excluding PE courses):")
+        self.logger.info(f"  Total regular courses: {total_courses}")
         self.logger.info(f"  Courses with multiple group options: {courses_with_choice}")
         self.logger.info(f"  Student choice percentage: {choice_percentage:.1f}%")
+        
+        # Log PE course information
+        if self.pe_courses:
+            pe_course_codes = list(set(inst['course_code'] for inst in self.pe_courses))
+            self.logger.info(f"\nPE Course information:")
+            self.logger.info(f"  Total PE courses: {len(pe_course_codes)}")
+            self.logger.info(f"  PE course codes: {pe_course_codes}")
+            self.logger.info(f"  Total PE instances: {len(self.pe_courses)}")
+            self.logger.info(f"  PE courses are in Group {len(self.groups)} for separate scheduling")
     
     def validate_solution(self):
         """
@@ -1180,6 +1315,9 @@ class CourseGroupOptimizer:
         violations = 0
         
         for group_idx, group in enumerate(self.groups):
+            # Check if this is the PE group
+            is_pe_group = group_idx >= self.num_groups
+            
             teacher_instance_map = defaultdict(list)
             
             for instance in group:
@@ -1187,6 +1325,16 @@ class CourseGroupOptimizer:
             
             for teacher_id, instances in teacher_instance_map.items():
                 if len(instances) > 1:
+                    # For PE groups, teacher uniqueness might be more relaxed
+                    if is_pe_group:
+                        # PE courses often have the same teacher for multiple instances/choices
+                        # Only flag as violation if it's clearly a problem
+                        pe_course_codes = set(inst['course_code'] for inst in instances)
+                        if len(pe_course_codes) == 1:
+                            # Same teacher for same PE course is acceptable (different sections)
+                            self.logger.debug(f"PE Group {group_idx + 1}: Teacher {teacher_id} has {len(instances)} instances of same PE course {list(pe_course_codes)[0]} - acceptable")
+                            continue
+                    
                     # Check if this is a valid co-scheduling case
                     co_scheduled_pairs = 0
                     co_schedule_ids = [inst.get('co_scheduled_id') for inst in instances if 'co_scheduled_id' in inst]
@@ -1198,7 +1346,8 @@ class CourseGroupOptimizer:
                     # A violation occurs if the number of instances exceeds the valid pairs
                     if len(instances) - co_scheduled_pairs > 1:
                         violations += 1
-                        self.logger.error(f"Teacher {teacher_id} appears {len(instances)} times in Group {group_idx + 1}, but only {co_scheduled_pairs} co-scheduled pairs found.")
+                        group_type = " (PE Group)" if is_pe_group else ""
+                        self.logger.error(f"Teacher {teacher_id} appears {len(instances)} times in Group {group_idx + 1}{group_type}, but only {co_scheduled_pairs} co-scheduled pairs found.")
 
         if violations == 0:
             self.logger.info("[OK] Teacher uniqueness constraint satisfied")
@@ -1269,8 +1418,14 @@ class CourseGroupOptimizer:
                     return False
                 assigned_instances.add(instance_id)
         
+        # Check all regular course instances
         missing_instances = []
         for instance in self.courses:
+            if instance['id'] not in assigned_instances:
+                missing_instances.append(instance['id'])
+        
+        # Check all PE course instances
+        for instance in self.pe_courses:
             if instance['id'] not in assigned_instances:
                 missing_instances.append(instance['id'])
         
@@ -1278,11 +1433,13 @@ class CourseGroupOptimizer:
             self.logger.error(f"Instances not assigned: {missing_instances}")
             return False
         
-        self.logger.info("[OK] All instances assigned exactly once")
+        total_expected = len(self.courses) + len(self.pe_courses)
+        total_assigned = len(assigned_instances)
+        self.logger.info(f"[OK] All instances assigned exactly once ({total_assigned}/{total_expected})")
         return True
     
     def _validate_group_sizes(self):
-        """Validate that all groups have the same size equal to target group size."""
+        """Validate that all regular groups have the same size equal to target group size."""
         if not hasattr(self, 'target_group_size'):
             self.logger.warning("Target group size not set, skipping group size validation")
             return True
@@ -1290,18 +1447,28 @@ class CourseGroupOptimizer:
         violations = 0
         expected_size = self.target_group_size
         
-        for group_idx, group in enumerate(self.groups):
+        # Only validate the first num_groups (regular optimization groups), exclude PE group
+        groups_to_validate = min(len(self.groups), self.num_groups)
+        
+        for group_idx in range(groups_to_validate):
+            group = self.groups[group_idx]
             actual_size = len(group)
             if actual_size != expected_size:
                 violations += 1
                 self.logger.error(f"Group {group_idx + 1} has {actual_size} instances, "
                                 f"expected {expected_size}")
         
+        # Log PE group separately if it exists
+        if len(self.groups) > self.num_groups:
+            pe_group = self.groups[-1]  # PE group is always the last group
+            pe_size = len(pe_group)
+            self.logger.info(f"PE Group {len(self.groups)} has {pe_size} instances (validation skipped - special group)")
+        
         if violations == 0:
-            self.logger.info(f"[OK] All groups have {expected_size} instances each")
+            self.logger.info(f"[OK] All {groups_to_validate} regular groups have {expected_size} instances each")
             return True
         else:
-            self.logger.error(f"[ERROR] {violations} group size violations")
+            self.logger.error(f"[ERROR] {violations} group size violations in regular groups")
             return False
     
     def _validate_lab_priority(self):
@@ -1557,20 +1724,28 @@ class CourseGroupOptimizer:
             'objective_value': self.objective_value,
             'num_groups': self.num_groups,
             'groups': [],
+            'pe_group_included': len(self.pe_courses) > 0,
             'summary': {
                 'total_instances': len(self.courses),
+                'pe_instances': len(self.pe_courses),
                 'lab_instances': len(self.lab_courses),
                 'theory_instances': len(self.theory_courses),
                 'unique_courses': len(self.unique_courses),
-                'unique_teachers': len(self.unique_teachers)
+                'unique_teachers': len(self.unique_teachers),
+                'pe_course_codes': list(set(inst['course_code'] for inst in self.pe_courses)) if self.pe_courses else []
             }
         }
         
         # Add group details
         for group_idx, group in enumerate(self.groups):
             if group:
+                # Check if this is the PE group
+                is_pe_group = group_idx >= self.num_groups
+                
                 group_data = {
                     'group_id': group_idx + 1,
+                    'is_pe_group': is_pe_group,
+                    'group_type': 'PE' if is_pe_group else 'Regular',
                     'instances': [],
                     'teachers': list(set(inst['teacher_id'] for inst in group)),
                     'courses': list(set(inst['course_code'] for inst in group)),
@@ -1680,12 +1855,13 @@ def main():
         }
     ]
     
-    # Create and run optimizer
+    # Create and run optimizer with PE course mapping
     optimizer = CourseGroupOptimizer(
         courses=sample_courses,
         dept="Computer Science",
         semester=5,
-        logger=logger
+        logger=logger,
+        pe_course_map_file="data/pe_course_map.csv"  # Optional PE course mapping
     )
     
     # Optimize distribution
@@ -1706,7 +1882,7 @@ def main():
         logger.error("Optimization failed")
 
 
-def optimize_course_groups(csv_file, dept_name, semester):
+def optimize_course_groups(csv_file, dept_name, semester, pe_course_map_file=None):
     """
     Load courses from CSV and optimize groups for a specific department and semester.
     
@@ -1714,6 +1890,7 @@ def optimize_course_groups(csv_file, dept_name, semester):
         csv_file: Path to CSV file containing course data
         dept_name: Department name to filter by (uses student_dept field)
         semester: Semester to filter by
+        pe_course_map_file: Path to PE course mapping CSV file (optional)
         
     Returns:
         list: Optimized groups or None if failed
@@ -1767,8 +1944,8 @@ def optimize_course_groups(csv_file, dept_name, semester):
             
             courses.append(course)
         
-        # Create and run optimizer
-        optimizer = CourseGroupOptimizer(courses, dept_name, semester, logger)
+        # Create and run optimizer with PE course mapping
+        optimizer = CourseGroupOptimizer(courses, dept_name, semester, logger, pe_course_map_file)
         
         # Save filtering report before optimization (for verification)
         # Create reports directory if it doesn't exist
