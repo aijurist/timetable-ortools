@@ -1641,6 +1641,9 @@ class CombinedScheduler:
         # Apply shift-based constraints for departments with single course instances
         constraints_applied += self.apply_shift_based_lab_constraint(model, lab_variables)
         
+        # Apply teacher max consecutive lab constraint
+        constraints_applied += self.apply_teacher_max_consecutive_lab_constraint(model, lab_variables)
+        
         self.logger.info(f"Applied {constraints_applied} lab-specific constraints (optimized)")
         return constraints_applied
 
@@ -3383,6 +3386,16 @@ class CombinedScheduler:
             self.logger.info("  • Discourages violation of shift-based time constraints for single-instance departments")
             self.logger.info("  • Encourages consistent shift patterns within departments")
         
+        # Add penalty for teacher consecutive lab violations (soft constraint for Biotechnology)
+        if hasattr(self, 'teacher_consecutive_penalty_vars') and self.teacher_consecutive_penalty_vars:
+            # Subtract penalties (since we're maximizing, subtracting penalties minimizes them)
+            teacher_consecutive_penalty_weight = 100  # Moderate weight - discourage but allow 3+ consecutive for experiments
+            for penalty_var in self.teacher_consecutive_penalty_vars:
+                objective_terms.append(-teacher_consecutive_penalty_weight * penalty_var)
+            self.logger.info(f"Added {len(self.teacher_consecutive_penalty_vars)} teacher consecutive lab penalty terms (weight: {teacher_consecutive_penalty_weight})")
+            self.logger.info("  • Discourages teachers from having 3+ consecutive lab slots (soft constraint for Biotechnology)")
+            self.logger.info("  • Allows experimental continuity when needed but prefers shorter consecutive sessions")
+        
         if objective_terms:
             model.Maximize(sum(objective_terms))
             self.logger.info(f"Combined objective set with {len(objective_terms)} terms")
@@ -3396,6 +3409,7 @@ class CombinedScheduler:
             self.logger.info("  7. Computing group slot penalty (prefer ≤6 slots for computing department groups)")
             self.logger.info("  8. Consecutive batch preference (encourage consecutive batched lab sessions)")
             self.logger.info("  9. Shift-based scheduling penalty (encourage consistent shift patterns for single-instance departments)")
+            self.logger.info("  10. Teacher consecutive lab penalty (discourage 3+ consecutive labs for Biotechnology, allow experimental continuity)")
         else:
             self.logger.warning("No objective terms created for group allocation")
     
@@ -6299,3 +6313,276 @@ class CombinedScheduler:
         self.logger.info(f"Applied {constraints_applied} soft shift-based theory constraints")
         self.logger.info(f"Total shift preference variables: {len(self.shift_preference_vars)}")
         return constraints_applied
+
+    def apply_teacher_max_consecutive_lab_constraint(self, model, lab_variables):
+        """
+        CONSTRAINT: Teachers cannot have more than 2 consecutive lab slots (DEPARTMENT-AWARE).
+        
+        This constraint is applied as:
+        - SOFT constraint for Biotechnology (allows 3+ consecutive for experimental continuity)
+        - HARD constraint for other departments
+        
+        This allows:
+        - L1+L2 (2 consecutive = 4 hours) ✅
+        - L2+L3 (2 consecutive = 4 hours) ✅
+        - L3+L4 (2 consecutive = 4 hours) ✅
+        - L4+L5 (2 consecutive = 4 hours) ✅
+        - L5+L6 (2 consecutive = 4 hours) ✅
+        
+        For Biotechnology: Discourages but allows (soft constraint):
+        - L1+L2+L3 (3 consecutive = 6 hours) 💔
+        
+        For Other Departments: Prohibits (hard constraint):
+        - L1+L2+L3 (3 consecutive = 6 hours) ❌
+        """
+        self.logger.info("Applying DEPARTMENT-AWARE constraint: Teachers cannot have more than 2 consecutive lab slots...")
+        constraints_applied = 0
+        soft_constraints_applied = 0
+        
+        # Define departments with soft consecutive constraints (allow longer sessions for experiments)
+        soft_consecutive_departments = [
+            'Biotechnology'
+        ]
+        
+        # Track which departments get hard vs soft constraints
+        hard_constraint_depts = set()
+        soft_constraint_depts = set()
+        
+        # Initialize soft constraint penalty variables
+        if not hasattr(self, 'teacher_consecutive_penalty_vars'):
+            self.teacher_consecutive_penalty_vars = []
+        
+        # Define the consecutive lab session sequences
+        lab_session_order = ['L1', 'L2', 'L3', 'L4', 'L5', 'L6']
+        
+        # OPTIMIZED: Only check minimal 3-consecutive patterns
+        # If we prevent all 3-consecutive, longer sequences are automatically prevented
+        forbidden_sequences = []
+        
+        # Generate only 3-consecutive sequences (minimal forbidden patterns)
+        for start_idx in range(len(lab_session_order) - 2):  # Generate L1+L2+L3, L2+L3+L4, etc.
+            sequence = lab_session_order[start_idx:start_idx + 3]
+            forbidden_sequences.append(sequence)
+        
+        self.logger.info(f"Optimized forbidden consecutive sequences (3 sessions only): {forbidden_sequences}")
+        self.logger.info("Note: Preventing 3-consecutive automatically prevents 4+, 5+, 6+ consecutive patterns")
+        
+        # Apply constraint for each teacher
+        for teacher_id in lab_variables:
+            self.logger.debug(f"Applying consecutive lab constraint for teacher {teacher_id}...")
+            
+            # Get all course instances for this teacher
+            teacher_courses = list(lab_variables[teacher_id].keys())
+            
+            if not teacher_courses:
+                continue
+            
+            # For each day, check all consecutive sequences across all teacher's courses
+            for course_instance_id in teacher_courses:
+                if course_instance_id not in lab_variables[teacher_id]:
+                    continue
+                
+                # Get department for this course to determine number of days and constraint type
+                dept_name = "Computer Science & Engineering"  # Default
+                if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
+                    dept_name = self.instance_group_mapping[course_instance_id]['department']
+                else:
+                    # Fallback: look up in courses_df
+                    course_matches = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
+                    if not course_matches.empty:
+                        dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
+                
+                # Determine constraint type for this department
+                is_soft_constraint = dept_name in soft_consecutive_departments
+                
+                dept_days = self._get_days_for_department(dept_name)
+                num_dept_days = len(dept_days)
+                
+                # Track department constraint types
+                if is_soft_constraint:
+                    soft_constraint_depts.add(dept_name)
+                else:
+                    hard_constraint_depts.add(dept_name)
+                
+                # For each day, apply the consecutive constraint
+                for day_idx in range(num_dept_days):
+                    if day_idx not in lab_variables[teacher_id][course_instance_id]:
+                        continue
+                    
+                    # Check if this day has enough sessions to form any forbidden sequence
+                    available_sessions = list(lab_variables[teacher_id][course_instance_id][day_idx].keys())
+                    if len(available_sessions) < 3:
+                        continue  # Skip if less than 3 sessions available
+                    
+                    # For each forbidden sequence, ensure teacher cannot be assigned to all sessions in the sequence
+                    for forbidden_sequence in forbidden_sequences:
+                        # Quick check: Do all sessions in the sequence exist for this day?
+                        if not all(session in lab_variables[teacher_id][course_instance_id][day_idx] 
+                                  for session in forbidden_sequence):
+                            continue  # Skip if not all sessions are available
+                        
+                        # Collect session usage variables efficiently
+                        sequence_variables = []
+                        
+                        for session_name in forbidden_sequence:
+                            # Collect all room assignments for this session
+                            session_assignments = []
+                            session_data = lab_variables[teacher_id][course_instance_id][day_idx][session_name]
+                            
+                            for room_id in self.lab_room_ids:
+                                if room_id in session_data:
+                                    session_assignments.append(session_data[room_id])
+                            
+                            if session_assignments:
+                                # Create a boolean variable that is true if ANY assignment is made in this session
+                                session_used = model.NewBoolVar(
+                                    f'teacher_{teacher_id}_course_{course_instance_id}_day_{day_idx}_session_{session_name}_used'
+                                )
+                                
+                                # session_used is true if at least one room assignment is made
+                                model.Add(sum(session_assignments) >= 1).OnlyEnforceIf(session_used)
+                                model.Add(sum(session_assignments) == 0).OnlyEnforceIf(session_used.Not())
+                                
+                                sequence_variables.append(session_used)
+                        
+                        # Apply constraint only if we have all 3 sessions
+                        if len(sequence_variables) == 3:
+                            if is_soft_constraint:
+                                # SOFT CONSTRAINT for Biotechnology: Create penalty variable for 3+ consecutive sessions
+                                consecutive_violation = model.NewBoolVar(
+                                    f'teacher_{teacher_id}_course_{course_instance_id}_day_{day_idx}_consecutive_violation_{"_".join(forbidden_sequence)}'
+                                )
+                                
+                                # Violation occurs if all 3 consecutive sessions are used
+                                model.Add(sum(sequence_variables) >= 3).OnlyEnforceIf(consecutive_violation)
+                                model.Add(sum(sequence_variables) <= 2).OnlyEnforceIf(consecutive_violation.Not())
+                                
+                                # Add to penalty variables for objective minimization
+                                self.teacher_consecutive_penalty_vars.append(consecutive_violation)
+                                soft_constraints_applied += 1
+                                
+                                self.logger.debug(f"Applied SOFT constraint: Teacher {teacher_id} discouraged from using all 3 sessions "
+                                                f"{' -> '.join(forbidden_sequence)} on day {day_idx} (Biotechnology)")
+                            else:
+                                # HARD CONSTRAINT for other departments: At most 2 out of 3 consecutive sessions can be used
+                                model.Add(sum(sequence_variables) <= 2)
+                                constraints_applied += 1
+                                
+                                self.logger.debug(f"Applied HARD constraint: Teacher {teacher_id} can use at most 2/3 sessions "
+                                                f"{' -> '.join(forbidden_sequence)} on day {day_idx} ({dept_name})")
+        
+        # Also apply constraint across all courses of a teacher on the same day
+        # (to prevent teacher from having consecutive sessions across different courses)
+        for teacher_id in lab_variables:
+            teacher_courses = list(lab_variables[teacher_id].keys())
+            
+            if len(teacher_courses) <= 1:
+                continue  # Skip if teacher has only one course
+            
+            # Get a representative course to determine department days and constraint type
+            sample_course = teacher_courses[0]
+            dept_name = "Computer Science & Engineering"  # Default
+            if hasattr(self, 'instance_group_mapping') and sample_course in self.instance_group_mapping:
+                dept_name = self.instance_group_mapping[sample_course]['department']
+            else:
+                # Fallback: look up in courses_df
+                course_matches = self.courses_df[self.courses_df['id'] == int(sample_course)]
+                if not course_matches.empty:
+                    dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
+            
+            # Determine constraint type for cross-course constraints
+            is_soft_constraint = dept_name in soft_consecutive_departments
+            
+            dept_days = self._get_days_for_department(dept_name)
+            num_dept_days = len(dept_days)
+            
+            # Track department constraint types
+            if is_soft_constraint:
+                soft_constraint_depts.add(dept_name)
+            else:
+                hard_constraint_depts.add(dept_name)
+            
+            # For each day, apply cross-course consecutive constraint
+            for day_idx in range(num_dept_days):
+                # Check if teacher has any sessions on this day across all courses
+                teacher_has_sessions_today = any(
+                    day_idx in lab_variables[teacher_id][course_instance_id]
+                    for course_instance_id in teacher_courses
+                    if course_instance_id in lab_variables[teacher_id]
+                )
+                
+                if not teacher_has_sessions_today:
+                    continue  # Skip if teacher has no sessions on this day
+                
+                # For each forbidden sequence, ensure teacher cannot be assigned across courses
+                for forbidden_sequence in forbidden_sequences:
+                    # Collect all session usage variables across all courses for this teacher on this day
+                    cross_course_sequence_vars = []
+                    
+                    for session_name in forbidden_sequence:
+                        # Collect all assignments for this session across ALL courses for this teacher
+                        session_assignments_all_courses = []
+                        
+                        for course_instance_id in teacher_courses:
+                            if (course_instance_id in lab_variables[teacher_id] and
+                                day_idx in lab_variables[teacher_id][course_instance_id] and
+                                session_name in lab_variables[teacher_id][course_instance_id][day_idx]):
+                                
+                                session_data = lab_variables[teacher_id][course_instance_id][day_idx][session_name]
+                                for room_id in self.lab_room_ids:
+                                    if room_id in session_data:
+                                        session_assignments_all_courses.append(session_data[room_id])
+                        
+                        if session_assignments_all_courses:
+                            # Create variable to track if teacher is used in this session (any course)
+                            teacher_used_in_session = model.NewBoolVar(
+                                f'teacher_{teacher_id}_day_{day_idx}_session_{session_name}_used_any_course'
+                            )
+                            
+                            # Teacher is used if any assignment across all courses is made
+                            model.Add(sum(session_assignments_all_courses) >= 1).OnlyEnforceIf(teacher_used_in_session)
+                            model.Add(sum(session_assignments_all_courses) == 0).OnlyEnforceIf(teacher_used_in_session.Not())
+                            
+                            cross_course_sequence_vars.append(teacher_used_in_session)
+                    
+                    # Apply constraint only if we have all 3 sessions
+                    if len(cross_course_sequence_vars) == 3:
+                        if is_soft_constraint:
+                            # SOFT CONSTRAINT for Biotechnology: Create penalty variable for 3+ consecutive sessions
+                            cross_course_violation = model.NewBoolVar(
+                                f'teacher_{teacher_id}_day_{day_idx}_cross_course_consecutive_violation_{"_".join(forbidden_sequence)}'
+                            )
+                            
+                            # Violation occurs if all 3 consecutive sessions are used across courses
+                            model.Add(sum(cross_course_sequence_vars) >= 3).OnlyEnforceIf(cross_course_violation)
+                            model.Add(sum(cross_course_sequence_vars) <= 2).OnlyEnforceIf(cross_course_violation.Not())
+                            
+                            # Add to penalty variables for objective minimization
+                            self.teacher_consecutive_penalty_vars.append(cross_course_violation)
+                            soft_constraints_applied += 1
+                            
+                            self.logger.debug(f"Applied SOFT cross-course constraint: Teacher {teacher_id} discouraged from using all 3 sessions "
+                                            f"{' -> '.join(forbidden_sequence)} on day {day_idx} (Biotechnology)")
+                        else:
+                            # HARD CONSTRAINT for other departments: At most 2 out of 3 consecutive sessions can be used
+                            model.Add(sum(cross_course_sequence_vars) <= 2)
+                            constraints_applied += 1
+                            
+                            self.logger.debug(f"Applied HARD cross-course constraint: Teacher {teacher_id} can use at most 2/3 sessions "
+                                            f"{' -> '.join(forbidden_sequence)} on day {day_idx} ({dept_name})")
+        
+        self.logger.info(f"Applied teacher consecutive lab constraints:")
+        self.logger.info(f"  - {constraints_applied} HARD constraints (other departments)")
+        self.logger.info(f"  - {soft_constraints_applied} SOFT constraints (Biotechnology)")
+        self.logger.info(f"  - Total penalty variables: {len(self.teacher_consecutive_penalty_vars)}")
+        
+        if hard_constraint_depts:
+            self.logger.info(f"🔒 HARD constraint departments: {sorted(hard_constraint_depts)}")
+            self.logger.info("   ❌ Teachers CANNOT have 3+ consecutive lab slots")
+        
+        if soft_constraint_depts:
+            self.logger.info(f"💔 SOFT constraint departments: {sorted(soft_constraint_depts)}")
+            self.logger.info("   💔 Teachers DISCOURAGED from 3+ consecutive lab slots (allows experimental continuity)")
+        
+        self.logger.info("✅ All teachers limited to maximum 2 consecutive lab slots is preferred")
+        return constraints_applied + soft_constraints_applied
