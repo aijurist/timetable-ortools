@@ -1629,7 +1629,7 @@ class CombinedScheduler:
         constraints_applied += self.apply_semester_lab_slot_limit_constraint(model, lab_variables)
         
         # Apply 140-capacity lab co-scheduling constraints for same course instances
-        constraints_applied += self.apply_140_lab_co_scheduling_constraint(model, lab_variables)
+        # constraints_applied += self.apply_140_lab_co_scheduling_constraint(model, lab_variables)
         # REMOVED: apply_lab_efficiency_constraints - too restrictive and redundant with other constraints
         
         # Apply lunch break constraint for lab sessions
