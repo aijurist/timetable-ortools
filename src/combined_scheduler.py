@@ -448,8 +448,28 @@ class CombinedScheduler:
         # These are departments with single course instances that need time-bounded scheduling
         self.shift_departments = {
             'Computer Science & Design': {
-                'enabled': True,  # Temporarily disabled to test
+                'enabled': True,
                 'description': 'Single instance department with shift-based scheduling'
+            },
+            'Aeronautical Engineering': {
+                'enabled': True,
+                'description': 'Single instance engineering department with shift-based time constraints'
+            },
+            'Automobile Engineering': {
+                'enabled': True,
+                'description': 'Single instance engineering department with shift-based time constraints'
+            },
+            'Food Technology': {
+                'enabled': True,
+                'description': 'Single instance technology department with shift-based time constraints'
+            },
+            'Robotics & Automation': {
+                'enabled': True,
+                'description': 'Single instance engineering department with shift-based time constraints'
+            },
+            'Mechatronics Engineering': {
+                'enabled': True,
+                'description': 'Single instance engineering department with shift-based time constraints'
             }
             # Add more departments here as needed
             # 'Other Department Name': {
