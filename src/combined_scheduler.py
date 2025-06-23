@@ -3401,7 +3401,7 @@ class CombinedScheduler:
         solver.parameters.num_search_workers = 16
         solver.parameters.max_memory_in_mb = 30000
         solver.parameters.log_search_progress = True
-        # solver.parameters.stop_after_first_solution= True
+        solver.parameters.stop_after_first_solution= True
         
         self.logger.info("Solving combined scheduling model...")
         status = solver.Solve(model)
