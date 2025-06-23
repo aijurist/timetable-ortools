@@ -174,7 +174,7 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 212,WS MECH GF2,C Block,Manufacturing Technology II,1,Core-Lab,20,35,0,0,High-tech,23,0,0,0
 213,WS MECH SM,C Block,Strength of Materials Lab,1,Core-Lab,20,35,0,0,High-tech,23,0,0,0
 214,WS MECH TL,C Block,Thermal Lab 2,1,Core-Lab,20,35,0,0,Basic,23,0,0,0
-215,TANCAM,Arch Block,,1,Core-Lab,0,25,0,1,High-tech,33,0,0,0
+215,TANCAM,Arch Block,,1,Core-Lab,0,35,0,1,High-tech,33,0,0,0
 216,D503,D Block,Chemistry Lab,1,Core-Lab,35,70,0,0,None,32,0,0,0
 217,D603,D block,Physics LAB - 1,1,Core-Lab,30,70,0,0,Advanced,31,0,0,0
 218,D403,D block,Physics LAB - 2,1,Core-Lab,30,70,0,0,Advanced,31,0,0,0

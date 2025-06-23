@@ -226,6 +226,10 @@ class CombinedScheduler:
                 'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
                 'pattern': 'Monday-Saturday'
             },
+              ('Electrical & Electronics Engineering', 5): {
+                'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
+                'pattern': 'Monday-Saturday'
+            },
             # ('Electronics & Communication Engineering', 7): {
             #     'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
             #     'pattern': 'Monday-Saturday'
@@ -3399,7 +3403,7 @@ class CombinedScheduler:
         """Solve the combined scheduling model using two-phase approach."""
         # Create the solver
         solver = cp_model.CpSolver()
-        solver.parameters.max_time_in_seconds = 300
+        solver.parameters.max_time_in_seconds = 1000
         solver.parameters.num_search_workers = 16
         solver.parameters.max_memory_in_mb = 30000
         solver.parameters.log_search_progress = True
@@ -5870,14 +5874,14 @@ class CombinedScheduler:
         
         # Define departments with hard consecutive requirements
         hard_consecutive_departments = [
-            'Biotechnology'
+            'Biotechnology',
+            'Food Technology',
+            'Chemical Engineering',
         ]
         
         # Define departments with soft consecutive preferences
         soft_consecutive_departments = [
-            'Chemical Engineering',
-            'Food Technology',
-            'Biomedical Engineering'
+                 'Biomedical Engineering'
             # Add more departments as needed
         ]
         

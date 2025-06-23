@@ -12,11 +12,11 @@
       "instances": [
         {
           "id": 1265,
-          "course_id": 2245,
+          "course_id": 141,
           "course_code": "BT23523",
           "course_name": "Immunology lab",
           "course_type": "L",
-          "teacher_id": "122.0",
+          "teacher_id": "122",
           "semester": 5,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -31,11 +31,11 @@
         },
         {
           "id": 1267,
-          "course_id": 2245,
+          "course_id": 141,
           "course_code": "BT23523",
           "course_name": "Immunology lab",
           "course_type": "L",
-          "teacher_id": "114.0",
+          "teacher_id": "114",
           "semester": 5,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -49,12 +49,12 @@
           "co_scheduled_id": null
         },
         {
-          "id": 1311,
-          "course_id": 1420,
+          "id": 1309,
+          "course_id": 130,
           "course_code": "BT23522",
           "course_name": "Bioinformatics Laboratory",
           "course_type": "L",
-          "teacher_id": "116.0",
+          "teacher_id": "104",
           "semester": 5,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -69,13 +69,13 @@
         }
       ],
       "teachers": [
-        "116.0",
-        "114.0",
-        "122.0"
+        "104",
+        "114",
+        "122"
       ],
       "courses": [
-        "BT23523",
-        "BT23522"
+        "BT23522",
+        "BT23523"
       ],
       "total_workload": 12
     },
@@ -85,86 +85,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 198,
-          "course_id": 1419,
-          "course_code": "BT23521",
-          "course_name": "Bioprocess Laboratory- I",
-          "course_type": "L",
-          "teacher_id": "106.0",
-          "semester": 5,
-          "course_dept": "Biotechnology",
-          "student_dept": "Biotechnology",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 63,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1304,
-          "course_id": 1420,
-          "course_code": "BT23522",
-          "course_name": "Bioinformatics Laboratory",
-          "course_type": "L",
-          "teacher_id": "112.0",
-          "semester": 5,
-          "course_dept": "Biotechnology",
-          "student_dept": "Biotechnology",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 63,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1309,
-          "course_id": 1420,
-          "course_code": "BT23522",
-          "course_name": "Bioinformatics Laboratory",
-          "course_type": "L",
-          "teacher_id": "104.0",
-          "semester": 5,
-          "course_dept": "Biotechnology",
-          "student_dept": "Biotechnology",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 62,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "104.0",
-        "112.0",
-        "106.0"
-      ],
-      "courses": [
-        "BT23522",
-        "BT23521"
-      ],
-      "total_workload": 12
-    },
-    {
-      "group_id": 3,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 1262,
-          "course_id": 2245,
+          "course_id": 141,
           "course_code": "BT23523",
           "course_name": "Immunology lab",
           "course_type": "L",
-          "teacher_id": "96.0",
+          "teacher_id": "96",
           "semester": 5,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -179,11 +105,11 @@
         },
         {
           "id": 183,
-          "course_id": 1419,
+          "course_id": 129,
           "course_code": "BT23521",
           "course_name": "Bioprocess Laboratory- I",
           "course_type": "L",
-          "teacher_id": "100.0",
+          "teacher_id": "100",
           "semester": 5,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -197,12 +123,48 @@
           "co_scheduled_id": null
         },
         {
-          "id": 603,
-          "course_id": 1419,
+          "id": 198,
+          "course_id": 129,
           "course_code": "BT23521",
           "course_name": "Bioprocess Laboratory- I",
           "course_type": "L",
-          "teacher_id": "93.0",
+          "teacher_id": "106",
+          "semester": 5,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 63,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "96",
+        "100",
+        "106"
+      ],
+      "courses": [
+        "BT23521",
+        "BT23523"
+      ],
+      "total_workload": 12
+    },
+    {
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 603,
+          "course_id": 129,
+          "course_code": "BT23521",
+          "course_name": "Bioprocess Laboratory- I",
+          "course_type": "L",
+          "teacher_id": "93",
           "semester": 5,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -214,15 +176,53 @@
           "student_count": 64,
           "virtual_id": null,
           "co_scheduled_id": null
+        },
+        {
+          "id": 1304,
+          "course_id": 130,
+          "course_code": "BT23522",
+          "course_name": "Bioinformatics Laboratory",
+          "course_type": "L",
+          "teacher_id": "112",
+          "semester": 5,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 63,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1311,
+          "course_id": 130,
+          "course_code": "BT23522",
+          "course_name": "Bioinformatics Laboratory",
+          "course_type": "L",
+          "teacher_id": "116",
+          "semester": 5,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 62,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "96.0",
-        "100.0",
-        "93.0"
+        "112",
+        "93",
+        "116"
       ],
       "courses": [
-        "BT23523",
+        "BT23522",
         "BT23521"
       ],
       "total_workload": 12
@@ -234,11 +234,11 @@
       "instances": [
         {
           "id": 1257,
-          "course_id": 2244,
+          "course_id": 754,
           "course_code": "BT23514",
           "course_name": "Immunology",
           "course_type": "T",
-          "teacher_id": "96.0",
+          "teacher_id": "96",
           "semester": 5,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -252,67 +252,12 @@
           "co_scheduled_id": null
         },
         {
-          "id": 197,
-          "course_id": 1416,
-          "course_code": "BT23511",
-          "course_name": "Bioprocess Principles",
-          "course_type": "T",
-          "teacher_id": "93.0",
-          "semester": 5,
-          "course_dept": "Biotechnology",
-          "student_dept": "Biotechnology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 62,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 528,
-          "course_id": 1416,
-          "course_code": "BT23511",
-          "course_name": "Bioprocess Principles",
-          "course_type": "T",
-          "teacher_id": "1749.0",
-          "semester": 5,
-          "course_dept": "Biotechnology",
-          "student_dept": "Biotechnology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 62,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "96.0",
-        "93.0",
-        "1749.0"
-      ],
-      "courses": [
-        "BT23514",
-        "BT23511"
-      ],
-      "total_workload": 9
-    },
-    {
-      "group_id": 5,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 483,
-          "course_id": 1417,
+          "course_id": 127,
           "course_code": "BT23512",
           "course_name": "Bioinformatics",
           "course_type": "T",
-          "teacher_id": "112.0",
+          "teacher_id": "112",
           "semester": 5,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -327,30 +272,11 @@
         },
         {
           "id": 526,
-          "course_id": 1417,
+          "course_id": 127,
           "course_code": "BT23512",
           "course_name": "Bioinformatics",
           "course_type": "T",
-          "teacher_id": "105.0",
-          "semester": 5,
-          "course_dept": "Biotechnology",
-          "student_dept": "Biotechnology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 63,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 182,
-          "course_id": 1416,
-          "course_code": "BT23511",
-          "course_name": "Bioprocess Principles",
-          "course_type": "T",
-          "teacher_id": "100.0",
+          "teacher_id": "105",
           "semester": 5,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -365,28 +291,47 @@
         }
       ],
       "teachers": [
-        "100.0",
-        "112.0",
-        "105.0"
+        "112",
+        "96",
+        "105"
       ],
       "courses": [
-        "BT23511",
+        "BT23514",
         "BT23512"
       ],
       "total_workload": 9
     },
     {
-      "group_id": 6,
+      "group_id": 5,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
         {
-          "id": 556,
-          "course_id": 1418,
+          "id": 190,
+          "course_id": 128,
           "course_code": "BT23513",
           "course_name": "Separation Process Principles",
           "course_type": "T",
-          "teacher_id": "113.0",
+          "teacher_id": "111",
+          "semester": 5,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 63,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 556,
+          "course_id": 128,
+          "course_code": "BT23513",
+          "course_name": "Separation Process Principles",
+          "course_type": "T",
+          "teacher_id": "113",
           "semester": 5,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -400,12 +345,86 @@
           "co_scheduled_id": null
         },
         {
+          "id": 525,
+          "course_id": 127,
+          "course_code": "BT23512",
+          "course_name": "Bioinformatics",
+          "course_type": "T",
+          "teacher_id": "105",
+          "semester": 5,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 62,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "111",
+        "105",
+        "113"
+      ],
+      "courses": [
+        "BT23513",
+        "BT23512"
+      ],
+      "total_workload": 11
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 182,
+          "course_id": 126,
+          "course_code": "BT23511",
+          "course_name": "Bioprocess Principles",
+          "course_type": "T",
+          "teacher_id": "100",
+          "semester": 5,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 63,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 197,
+          "course_id": 126,
+          "course_code": "BT23511",
+          "course_name": "Bioprocess Principles",
+          "course_type": "T",
+          "teacher_id": "93",
+          "semester": 5,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 62,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
           "id": 1273,
-          "course_id": 1418,
+          "course_id": 128,
           "course_code": "BT23513",
           "course_name": "Separation Process Principles",
           "course_type": "T",
-          "teacher_id": "111.0",
+          "teacher_id": "111",
           "semester": 5,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -417,37 +436,18 @@
           "student_count": 61,
           "virtual_id": null,
           "co_scheduled_id": null
-        },
-        {
-          "id": 525,
-          "course_id": 1417,
-          "course_code": "BT23512",
-          "course_name": "Bioinformatics",
-          "course_type": "T",
-          "teacher_id": "105.0",
-          "semester": 5,
-          "course_dept": "Biotechnology",
-          "student_dept": "Biotechnology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 62,
-          "virtual_id": null,
-          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "113.0",
-        "111.0",
-        "105.0"
+        "111",
+        "93",
+        "100"
       ],
       "courses": [
-        "BT23513",
-        "BT23512"
+        "BT23511",
+        "BT23513"
       ],
-      "total_workload": 11
+      "total_workload": 10
     },
     {
       "group_id": 7,
@@ -456,11 +456,11 @@
       "instances": [
         {
           "id": 1258,
-          "course_id": 2244,
+          "course_id": 754,
           "course_code": "BT23514",
           "course_name": "Immunology",
           "course_type": "T",
-          "teacher_id": "97.0",
+          "teacher_id": "97",
           "semester": 5,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -475,11 +475,11 @@
         },
         {
           "id": 1260,
-          "course_id": 2244,
+          "course_id": 754,
           "course_code": "BT23514",
           "course_name": "Immunology",
           "course_type": "T",
-          "teacher_id": "114.0",
+          "teacher_id": "114",
           "semester": 5,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -493,12 +493,12 @@
           "co_scheduled_id": null
         },
         {
-          "id": 190,
-          "course_id": 1418,
-          "course_code": "BT23513",
-          "course_name": "Separation Process Principles",
+          "id": 528,
+          "course_id": 126,
+          "course_code": "BT23511",
+          "course_name": "Bioprocess Principles",
           "course_type": "T",
-          "teacher_id": "111.0",
+          "teacher_id": "1749",
           "semester": 5,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -506,22 +506,22 @@
           "has_theory": true,
           "practical_hours": 0,
           "lecture_hours": 3,
-          "tutorial_hours": 1,
-          "student_count": 63,
+          "tutorial_hours": 0,
+          "student_count": 62,
           "virtual_id": null,
           "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "114.0",
-        "111.0",
-        "97.0"
+        "97",
+        "1749",
+        "114"
       ],
       "courses": [
         "BT23514",
-        "BT23513"
+        "BT23511"
       ],
-      "total_workload": 10
+      "total_workload": 9
     }
   ],
   "pe_group_included": false,
