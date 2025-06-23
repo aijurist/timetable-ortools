@@ -335,7 +335,6 @@ id,student_count,academic_year,semester,requires_special_scheduling,is_assistant
 2084,70,2,3,0,0,1829,AIML-NS8,New Faculty,Artificial Intelligence & Machine Learning (NS-AIML-NS8),placeholder.ns-aiml-ns8@artificial intelligence & machine learning.university.edu,,,,,,259,CS23333,Object Oriented Programming Using JAVA,LoT,3,4,0,4,Artificial Intelligence & Machine Learning,Artificial Intelligence & Machine Learning,4,Artificial Intelligence & Machine Learning,TL,low-end,"For programming subjects, basic coding, and web development",,,,,,Basic,NE
 
 
-
 319,65,3,5,0,0,575,,HOD,AERO,hod.aero@rajalakshmi.edu.in,,,,,,20,AE23511,Aircraft Propulsion,T,2,0,1,3.0,Aeronautical Engineering,Aeronautical Engineering,2,Aeronautical Engineering,,,,,,,,,,NE
 324,65,3,5,0,0,10,AE78,Mr.,B Kathiravan,kathiravan.b@rajalakshmi.edu.in,,,,,,22,AE23513,Flight Dynamics,T,2,0,1,3.0,Aeronautical Engineering,Aeronautical Engineering,2,Aeronautical Engineering,,,,,,,,,,NE
 325,51,4,7,0,0,10,AE78,Mr.,B Kathiravan,kathiravan.b@rajalakshmi.edu.in,,,,,,674,AE19P74,Combustion and Flames,T,3,0,0,3.0,Aeronautical Engineering,Aeronautical Engineering,2,Aeronautical Engineering,,,,,,,,,,PE 3

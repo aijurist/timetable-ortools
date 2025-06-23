@@ -451,6 +451,10 @@ class CombinedScheduler:
                 'enabled': True,
                 'description': 'Single instance department with shift-based scheduling'
             },
+            'Computer Science & Engineering (Cyber Security)': {
+                'enabled': True,
+                'description': 'Single instance department with shift-based scheduling'
+            },
             'Aeronautical Engineering': {
                 'enabled': True,
                 'description': 'Single instance engineering department with shift-based time constraints'
@@ -2624,6 +2628,9 @@ class CombinedScheduler:
         # CONSTRAINT 6: Shift-based constraints for departments with single course instances
         constraints_applied += self.apply_shift_based_theory_constraint(model, group_timeslot_vars)
         
+        # CONSTRAINT 7: Early scheduling constraint - schedule all theory before 3:00 PM
+        constraints_applied += self._apply_early_scheduling_constraint(model, group_timeslot_vars)
+        
         self.logger.info(f"Applied {constraints_applied} theory-specific constraints with department-specific day patterns")
         return constraints_applied
 
@@ -2687,6 +2694,64 @@ class CombinedScheduler:
         
         self.logger.info(f"Created {len(self.consecutive_slot_penalties)} consecutive slot penalty variables")
         self.logger.info(f"Applied {constraints_applied} consecutive slot soft constraints")
+        return constraints_applied
+    
+    def _apply_early_scheduling_constraint(self, model, group_timeslot_vars):
+        """
+        Apply soft constraint to prefer scheduling theory sessions before 3:00 PM (time slot index 7).
+        Creates penalty variables for sessions scheduled at 3:00 PM or later that will be minimized 
+        in the objective function.
+        """
+        self.logger.info("Applying soft early scheduling constraint: prefer theory before 3:00 PM...")
+        constraints_applied = 0
+        
+        # Initialize penalty variables list if not exists
+        if not hasattr(self, 'late_scheduling_penalties'):
+            self.late_scheduling_penalties = []
+        
+        # Time slot index 7 corresponds to "3:00 - 3:50"
+        # We want to penalize scheduling in slots 7 and later (3:00 PM and after)
+        penalty_start_slot = 7  # "3:00 - 3:50" and later get penalties
+        
+        for group_name in group_timeslot_vars.keys():
+            # Get department-specific days for this group
+            dept_name = group_name.split('_S')[0] if '_S' in group_name else "Computer Science & Engineering"
+            
+            # Extract semester for semester-specific overrides
+            semester = None
+            if '_S' in group_name:
+                try:
+                    semester_part = group_name.split('_S')[1].split('_G')[0]
+                    semester = int(semester_part)
+                except (ValueError, IndexError):
+                    pass
+            
+            dept_days = self._get_days_for_department(dept_name, semester)
+            num_dept_days = len(dept_days)
+            
+            # Apply constraint for each day
+            for day_idx in range(num_dept_days):
+                if day_idx not in group_timeslot_vars[group_name]:
+                    continue
+                
+                # Create penalty for each late time slot (3:00 PM and after)
+                for slot_idx in range(penalty_start_slot, self.num_theory_slots):
+                    if slot_idx in group_timeslot_vars[group_name][day_idx]:
+                        # Create a penalty variable that equals 1 if this late slot is assigned
+                        penalty_var = model.NewBoolVar(f'late_penalty_{group_name}_day_{day_idx}_slot_{slot_idx}')
+                        
+                        # Penalty variable equals the assignment variable for this late slot
+                        # If the slot is assigned (=1), penalty = 1; if not assigned (=0), penalty = 0
+                        model.Add(penalty_var == group_timeslot_vars[group_name][day_idx][slot_idx])
+                        
+                        # Add to penalties list to be minimized in objective
+                        self.late_scheduling_penalties.append(penalty_var)
+                        constraints_applied += 1
+                        
+                        self.logger.debug(f"Added late scheduling penalty for {group_name} day {day_idx} slot {slot_idx} ({self.theory_time_slots[slot_idx]})")
+        
+        self.logger.info(f"Created {len(self.late_scheduling_penalties)} late scheduling penalty variables")
+        self.logger.info(f"Applied {constraints_applied} soft early scheduling constraints")
         return constraints_applied
     
     def _apply_proper_theory_room_capacity_constraint(self, model, group_timeslot_vars):
@@ -3266,6 +3331,15 @@ class CombinedScheduler:
             self.logger.info(f"Added {len(self.consecutive_slot_penalties)} consecutive slot penalty terms (weight: {penalty_weight})")
             self.logger.info("  • Discourages groups from having more than 2 consecutive time slots")
         
+        # Add penalty for late scheduling (soft constraint - prefer early scheduling)
+        if hasattr(self, 'late_scheduling_penalties') and self.late_scheduling_penalties:
+            # Subtract penalties (since we're maximizing, subtracting penalties minimizes them)
+            late_penalty_weight = 150  # Higher weight than consecutive slots - early scheduling is important
+            for penalty_var in self.late_scheduling_penalties:
+                objective_terms.append(-late_penalty_weight * penalty_var)
+            self.logger.info(f"Added {len(self.late_scheduling_penalties)} late scheduling penalty terms (weight: {late_penalty_weight})")
+            self.logger.info("  • Strongly discourages theory sessions scheduled at 3:00 PM or later")
+        
         # Add penalty for core lab groups exceeding 8 slots (soft constraint - minimize penalties)
         if hasattr(self, 'core_lab_group_slot_penalties') and self.core_lab_group_slot_penalties:
             # Subtract penalties (since we're maximizing, subtracting penalties minimizes them)
@@ -3311,10 +3385,11 @@ class CombinedScheduler:
             self.logger.info("  2. Group timeslots (no time slot preference)")
             self.logger.info("  3. Room capacity optimization (prefer appropriate room sizes)")
             self.logger.info("  4. Consecutive slot penalty (avoid >2 consecutive slots per group per day)")
-            self.logger.info("  5. Core lab group slot penalty (prefer ≤8 slots for groups with core labs)")
-            self.logger.info("  6. Computing group slot penalty (prefer ≤6 slots for computing department groups)")
-            self.logger.info("  7. Consecutive batch preference (encourage consecutive batched lab sessions)")
-            self.logger.info("  8. Shift-based scheduling penalty (encourage consistent shift patterns for single-instance departments)")
+            self.logger.info("  5. Late scheduling penalty (strongly prefer theory before 3:00 PM)")
+            self.logger.info("  6. Core lab group slot penalty (prefer ≤8 slots for groups with core labs)")
+            self.logger.info("  7. Computing group slot penalty (prefer ≤6 slots for computing department groups)")
+            self.logger.info("  8. Consecutive batch preference (encourage consecutive batched lab sessions)")
+            self.logger.info("  9. Shift-based scheduling penalty (encourage consistent shift patterns for single-instance departments)")
         else:
             self.logger.warning("No objective terms created for group allocation")
     
@@ -3322,11 +3397,11 @@ class CombinedScheduler:
         """Solve the combined scheduling model using two-phase approach."""
         # Create the solver
         solver = cp_model.CpSolver()
-        solver.parameters.max_time_in_seconds = 1000
+        solver.parameters.max_time_in_seconds = 300
         solver.parameters.num_search_workers = 16
         solver.parameters.max_memory_in_mb = 30000
         solver.parameters.log_search_progress = True
-        solver.parameters.stop_after_first_solution= True
+        # solver.parameters.stop_after_first_solution= True
         
         self.logger.info("Solving combined scheduling model...")
         status = solver.Solve(model)
