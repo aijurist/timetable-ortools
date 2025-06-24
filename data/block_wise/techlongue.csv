@@ -94,6 +94,15 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 66,C302,C Block,Classroom,0,Classroom,50,70,1,0,None,29,0,0,0
 67,C307,C Block,Classroom,0,Classroom,50,70,1,0,None,29,0,0,0
 68,C308,C Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
+102,TIFAC I01,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
+103,TIFAC I02,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
+104,TIFAC I03,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
+105,TIFAC I04,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
+106,TIFAC I11,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
+107,TIFAC I12,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
+108,TIFAC I13,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
+111,TIFAC V03,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
+112,TIFAC V04,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
 158,DG02,D Block,Computer Lab (DG02),1,Laboratory,50,70,1,0,High-tech,13,0,0,0
 159,DG03,D Block,Computer Lab (DG03),1,Laboratory,50,70,1,0,Basic,13,0,0,0
 113,B First Floor,B Block,Immunology Lab,1,Core-Lab,20,35,1,0,Advanced,7,0,0,0

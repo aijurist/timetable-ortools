@@ -1629,7 +1629,7 @@ class CombinedScheduler:
         constraints_applied += self.apply_semester_lab_slot_limit_constraint(model, lab_variables)
         
         # Apply 140-capacity lab co-scheduling constraints for same course instances
-        # constraints_applied += self.apply_140_lab_co_scheduling_constraint(model, lab_variables)
+        constraints_applied += self.apply_140_lab_co_scheduling_constraint(model, lab_variables)
         # REMOVED: apply_lab_efficiency_constraints - too restrictive and redundant with other constraints
         
         # Apply lunch break constraint for lab sessions
@@ -3417,7 +3417,7 @@ class CombinedScheduler:
         """Solve the combined scheduling model using two-phase approach."""
         # Create the solver
         solver = cp_model.CpSolver()
-        solver.parameters.max_time_in_seconds = 1000
+        solver.parameters.max_time_in_seconds = 3000
         solver.parameters.num_search_workers = 16
         solver.parameters.max_memory_in_mb = 30000
         solver.parameters.log_search_progress = True
