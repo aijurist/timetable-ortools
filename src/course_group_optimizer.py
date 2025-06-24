@@ -100,7 +100,7 @@ class CourseGroupOptimizer:
         self.logger.info(f"  Target groups: {self.num_groups}")
         if self.pe_courses:
             pe_course_codes = list(set(inst['course_code'] for inst in self.pe_courses))
-            self.logger.info(f"  PE courses to be added as final group: {pe_course_codes}")
+            self.logger.debug(f"  PE courses to be added as final group: {pe_course_codes}")
     
     def _load_pe_course_mapping(self):
         """
@@ -179,20 +179,15 @@ class CourseGroupOptimizer:
         
         if pe_courses:
             pe_course_codes = list(set(inst['course_code'] for inst in pe_courses))
-            pe_virtual_instances = [inst for inst in pe_courses if 'virtual_id' in inst]
-            pe_regular_instances = [inst for inst in pe_courses if 'virtual_id' not in inst]
-            
-            self.logger.info(f"Separated {len(pe_courses)} PE course instances ({len(pe_course_codes)} unique courses) from optimization")
-            self.logger.info(f"PE courses: {pe_course_codes}")
-            if pe_virtual_instances:
-                self.logger.info(f"PE courses include {len(pe_virtual_instances)} virtual instances from large courses (140+ students)")
+            self.logger.debug(f"Separated {len(pe_courses)} PE course instances from optimization: {pe_course_codes}")
         
         return regular_courses, pe_courses
     
     def _preprocess_large_courses(self, courses):
         """
-        Preprocess courses to split instances with >= 140 students into two
-        virtual 70-student instances.
+        Split large courses (140+ students) into virtual instances for distribution,
+        but mark them for post-processing merge back to unified instances.
+        This allows normal distribution while maintaining the ability to use 140-capacity labs.
         """
         new_courses = []
         co_schedule_counter = 1
@@ -206,34 +201,31 @@ class CourseGroupOptimizer:
                     'student_count': course['student_count']
                 })
                 
-                self.logger.info(f"Splitting large course instance {course['id']} ({course['course_code']}) with {course['student_count']} students.")
-                
-                # Create two virtual instances
+                # Create two virtual instances for distribution
                 instance1 = course.copy()
                 instance1['student_count'] = 70
                 instance1['virtual_id'] = f"{course['id']}-A"
                 instance1['id'] = f"{course['id']}-A"
                 instance1['co_scheduled_id'] = co_schedule_counter
+                instance1['original_student_count'] = course['student_count']  # Store original count
+                instance1['is_large_course_split'] = True  # Mark for post-processing
                 
                 instance2 = course.copy()
                 instance2['student_count'] = 70
                 instance2['virtual_id'] = f"{course['id']}-B"
                 instance2['id'] = f"{course['id']}-B"
                 instance2['co_scheduled_id'] = co_schedule_counter
+                instance2['original_student_count'] = course['student_count']  # Store original count
+                instance2['is_large_course_split'] = True  # Mark for post-processing
                 
                 new_courses.extend([instance1, instance2])
                 co_schedule_counter += 1
             else:
                 new_courses.append(course)
         
+        # Only log if large courses found, keep it minimal
         if large_courses_found:
-            self.logger.info(f"Large course preprocessing summary:")
-            self.logger.info(f"  Found {len(large_courses_found)} courses with 140+ students")
-            self.logger.info(f"  Created {co_schedule_counter - 1} pairs of virtual co-scheduled instances")
-            for course_info in large_courses_found:
-                self.logger.info(f"    {course_info['course_code']} (ID: {course_info['id']}) → split from {course_info['student_count']} to 2x70 students")
-        else:
-            self.logger.info("No large courses (140+ students) found to split")
+            self.logger.debug(f"Split {len(large_courses_found)} large courses (140+ students) into virtual instances for group distribution")
             
         return new_courses
     
@@ -1207,7 +1199,7 @@ class CourseGroupOptimizer:
         # Add PE courses as a final group if any exist
         if self.pe_courses:
             self.groups.append(self.pe_courses)
-            self.logger.info(f"Added PE courses as Group {len(self.groups)} (final group)")
+            self.logger.debug(f"Added PE courses as Group {len(self.groups)} (final group)")
         
         # Log group distribution
         self.logger.info(f"Optimal group distribution for {self.dept} Semester {self.semester}:")
@@ -1264,11 +1256,7 @@ class CourseGroupOptimizer:
         # Log PE course information
         if self.pe_courses:
             pe_course_codes = list(set(inst['course_code'] for inst in self.pe_courses))
-            self.logger.info(f"\nPE Course information:")
-            self.logger.info(f"  Total PE courses: {len(pe_course_codes)}")
-            self.logger.info(f"  PE course codes: {pe_course_codes}")
-            self.logger.info(f"  Total PE instances: {len(self.pe_courses)}")
-            self.logger.info(f"  PE courses are in Group {len(self.groups)} for separate scheduling")
+            self.logger.debug(f"PE Course information: {len(pe_course_codes)} courses ({len(self.pe_courses)} instances) in Group {len(self.groups)}")
     
     def validate_solution(self):
         """

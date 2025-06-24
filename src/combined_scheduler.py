@@ -854,25 +854,7 @@ class CombinedScheduler:
                 self.logger.debug(f"Duplicate registration for same course: {key}")
                 return True
             
-            # Check if this is valid co-scheduling for 140-capacity labs
-            labs_140_ids = set()
-            if hasattr(self, 'lab_capacity_analysis') and 'labs_140' in self.lab_capacity_analysis:
-                labs_140_ids = {lab['id'] for lab in self.lab_capacity_analysis['labs_140']}
-            
-            if room_id in labs_140_ids and len(existing) < 2:
-                # Check if this is same course code and same group (co-scheduling eligible)
-                existing_session = existing[0]
-                same_course = (session_info.get('course_code') == existing_session.get('course_code'))
-                same_group = (session_info.get('group_name') == existing_session.get('group_name'))
-                
-                if same_course and same_group:
-                    # Valid co-scheduling for 140-capacity lab
-                    existing.append(session_info)
-                    self.global_room_registry[key] = existing
-                    self.logger.info(f"✅ CO-SCHEDULING SUCCESS: {session_info.get('course_code')} in {session_info.get('group_name')} - "
-                                   f"Teachers {existing_session.get('teacher_name')} and {session_info.get('teacher_name')} "
-                                   f"share 140-lab {room_id} on {day} {time_slot}")
-                    return True
+    
             
             # This is a real conflict
             self.logger.error(f"CRITICAL ROOM CONFLICT: Room {room_id} double-booked on {day} {time_slot}")
@@ -888,29 +870,11 @@ class CombinedScheduler:
         return True
 
     def _is_room_available_global(self, day, time_slot, room_id):
-        """Check if room is available in global registry, allowing co-scheduling for 140-capacity labs."""
+        """Check if room is available in global registry."""
         day_normalized = self._normalize_day_name(day)
         key = (day_normalized, time_slot, room_id)
         
-        if key not in self.global_room_registry:
-            return True
-        
-        # Check if this is a 140-capacity lab and allows co-scheduling
-        labs_140_ids = set()
-        if hasattr(self, 'lab_capacity_analysis') and 'labs_140' in self.lab_capacity_analysis:
-            labs_140_ids = {lab['id'] for lab in self.lab_capacity_analysis['labs_140']}
-        
-        if room_id in labs_140_ids:
-            # For 140-capacity labs, check if existing usage allows co-scheduling
-            existing_sessions = self.global_room_registry[key]
-            if not isinstance(existing_sessions, list):
-                existing_sessions = [existing_sessions]
-            
-            # Allow up to 2 sessions (co-scheduling)
-            if len(existing_sessions) < 2:
-                return True
-        
-        return False
+        return key not in self.global_room_registry
 
     def _normalize_day_name(self, day_name):
         """Normalize day names to ensure consistency across different day patterns."""
@@ -923,6 +887,10 @@ class CombinedScheduler:
             'sat': 'saturday', 'saturday': 'saturday'
         }
         return day_mapping.get(day_name.lower(), day_name.lower())
+
+    def _get_base_course_id(self, course_instance_id):
+        """Extract base course ID from virtual instance ID (e.g., '877-A' -> '877')."""
+        return course_instance_id.split('-')[0] if '-' in course_instance_id else course_instance_id
 
     def _parse_time_to_minutes(self, time_str):
         """Parse time string to minutes since midnight for overlap detection."""
@@ -1059,15 +1027,24 @@ class CombinedScheduler:
     
     def create_course_groups(self):
         """Create unified course groups for both lab and theory using OR-Tools optimized distribution."""
+        self.logger.info("🔥 DEBUG: create_course_groups() STARTED")
         self.logger.info("Creating unified course groups using OR-Tools optimization...")
         
         # Use the new OR-Tools based group creation logic
         # This ensures optimal constraint satisfaction and student choice
+        self.logger.info("🔥 DEBUG: About to call _create_course_groups_by_dept_semester()")
         self.course_groups = self._create_course_groups_by_dept_semester()
+        self.logger.info("🔥 DEBUG: Finished _create_course_groups_by_dept_semester()")
         
         # Create instance-group mapping for both lab and theory
         self.instance_group_mapping = {}
         self._create_instance_group_mapping()
+        
+        # Update lab requirements to include virtual instances from CourseGroupOptimizer
+        self._update_lab_requirements_with_virtual_instances()
+        
+        # Update lab requirements to handle virtual co-scheduled instances
+        self._update_lab_requirements_for_virtual_instances()
         
         # Filter lab requirements to only include instances present in groups
         self._filter_lab_requirements_by_groups()
@@ -1078,6 +1055,81 @@ class CombinedScheduler:
         self.logger.info("OR-Tools unified course grouping completed successfully")
         self.logger.info("[OK] UNIFIED CONSTRAINTS: Both lab and theory respect same group structure")
         self.logger.info("[OK] OR-TOOLS OPTIMIZATION: Maximized student choice with constraint satisfaction")
+
+    def _update_lab_requirements_with_virtual_instances(self):
+        """Update lab requirements to include virtual instances created by CourseGroupOptimizer."""
+        self.logger.info("Updating lab requirements to include virtual instances from CourseGroupOptimizer...")
+        
+        # Find all virtual instances in groups
+        virtual_instances = {}
+        original_to_virtual = {}
+        
+        for (dept, semester), groups in self.course_groups.items():
+            for group_idx, group in enumerate(groups):
+                for instance in group:
+                    instance_id = instance['id']
+                    if 'virtual_id' in instance and instance.get('is_large_course_split', False):
+                        # This is a virtual instance created by CourseGroupOptimizer
+                        virtual_id = instance['virtual_id']
+                        original_student_count = instance.get('original_student_count', 140)
+                        
+                        virtual_instances[virtual_id] = instance
+                        
+                        # Map from original ID to virtual instances
+                        original_id = virtual_id.split('-')[0]  # Remove -A or -B suffix
+                        if original_id not in original_to_virtual:
+                            original_to_virtual[original_id] = []
+                        original_to_virtual[original_id].append(virtual_id)
+                        
+                        self.logger.info(f"  Found virtual instance: {virtual_id} (from original {original_id}, {original_student_count} students)")
+        
+        if not virtual_instances:
+            self.logger.info("  No virtual instances found to process")
+            return
+        
+        # Update lab requirements to replace original large course instances with virtual instances
+        updated_lab_requirements = defaultdict(list)
+        virtual_instances_added = 0
+        original_instances_replaced = 0
+        
+        for teacher_id, lab_courses in self.lab_requirements.items():
+            updated_lab_requirements[teacher_id] = []
+            
+            for course_req in lab_courses:
+                course_instance_id = course_req['course_instance_id']
+                
+                # Check if this is an original instance that was split into virtual instances
+                if course_instance_id in original_to_virtual:
+                    # Replace with virtual instances
+                    virtual_ids = original_to_virtual[course_instance_id]
+                    original_instances_replaced += 1
+                    
+                    self.logger.info(f"  Replacing original instance {course_instance_id} with virtual instances: {virtual_ids}")
+                    
+                    for virtual_id in virtual_ids:
+                        if virtual_id in virtual_instances:
+                            virtual_instance = virtual_instances[virtual_id]
+                            
+                            # Create lab requirement for virtual instance
+                            virtual_req = course_req.copy()
+                            virtual_req['course_instance_id'] = virtual_id
+                            virtual_req['students_per_instance'] = virtual_instance['student_count']  # Should be 70
+                            
+                            updated_lab_requirements[teacher_id].append(virtual_req)
+                            virtual_instances_added += 1
+                            
+                            self.logger.info(f"    Added virtual instance {virtual_id}: {virtual_req['students_per_instance']} students, {virtual_req['practical_hours']}h")
+                else:
+                    # Keep original instance as-is
+                    updated_lab_requirements[teacher_id].append(course_req)
+        
+        # Update lab requirements
+        self.lab_requirements = updated_lab_requirements
+        
+        self.logger.info(f"Lab requirements updated successfully:")
+        self.logger.info(f"  Original large instances replaced: {original_instances_replaced}")
+        self.logger.info(f"  Virtual instances added: {virtual_instances_added}")
+        self.logger.info(f"  Virtual instances will be merged back to unified instances in post-processing")
     
     def _create_course_groups_by_dept_semester(self):
         """Group course instances by department and semester using OR-Tools optimization (unified for lab and theory)."""
@@ -1375,6 +1427,102 @@ class CombinedScheduler:
         
         self.logger.info(f"Instance-group mapping created: {total_mapped_instances} instances mapped")
     
+    def _update_lab_requirements_for_virtual_instances(self):
+        """Merge virtual instances of large courses back into unified instances for scheduling."""
+        self.logger.info("Post-processing: Merging virtual instances back to unified 140+ student courses...")
+        
+        updated_lab_requirements = defaultdict(list)
+        merged_instances = 0
+        virtual_pairs_found = 0
+        
+        # Track which virtual instances have been processed
+        processed_virtual_ids = set()
+        
+        # Copy existing lab requirements and merge virtual instances
+        for teacher_id, lab_courses in self.lab_requirements.items():
+            updated_lab_requirements[teacher_id] = []
+            
+            for course_req in lab_courses:
+                course_instance_id = course_req['course_instance_id']
+                
+                # Skip if already processed as part of a virtual pair
+                if course_instance_id in processed_virtual_ids:
+                    continue
+                
+                # Check if this is a virtual instance that needs merging
+                if '-A' in course_instance_id:
+                    # Look for the corresponding -B instance
+                    base_id = course_instance_id.replace('-A', '')
+                    virtual_b_id = f"{base_id}-B"
+                    
+                    # Find the -B instance in the same teacher's lab courses
+                    virtual_b_req = None
+                    for other_req in lab_courses:
+                        if other_req['course_instance_id'] == virtual_b_id:
+                            virtual_b_req = other_req
+                            break
+                    
+                    if virtual_b_req:
+                        # Merge the virtual instances back into unified instance
+                        merged_req = course_req.copy()
+                        merged_req['course_instance_id'] = base_id
+                        merged_req['students_per_instance'] = course_req.get('students_per_instance', 70) + virtual_b_req.get('students_per_instance', 70)
+                        # Keep all practical hours from one instance (they should be the same)
+                        
+                        updated_lab_requirements[teacher_id].append(merged_req)
+                        
+                        # Update instance-group mapping for the merged instance
+                        # Find which group the virtual instances are in and map the merged instance to it
+                        virtual_a_group = self.instance_group_mapping.get(course_instance_id)
+                        virtual_b_group = self.instance_group_mapping.get(virtual_b_id)
+                        
+                        if virtual_a_group:
+                            # Map the merged instance to the same group as virtual instance A
+                            self.instance_group_mapping[base_id] = virtual_a_group
+                            self.logger.info(f"  🔗 Mapped merged instance {base_id} to group: {virtual_a_group['group_name']}")
+                        elif virtual_b_group:
+                            # Fallback to virtual instance B's group
+                            self.instance_group_mapping[base_id] = virtual_b_group
+                            self.logger.info(f"  🔗 Mapped merged instance {base_id} to group: {virtual_b_group['group_name']}")
+                        else:
+                            self.logger.warning(f"  ⚠️ Could not find group mapping for virtual instances {course_instance_id} or {virtual_b_id}")
+                        
+                        # Mark both virtual instances as processed
+                        processed_virtual_ids.add(course_instance_id)
+                        processed_virtual_ids.add(virtual_b_id)
+                        
+                        merged_instances += 1
+                        virtual_pairs_found += 1
+                        
+                        course_code = merged_req.get('course_code', 'Unknown')
+                        practical_hours = merged_req.get('practical_hours', 0)
+                        self.logger.info(f"  ✅ Merged virtual pair: {course_code} ({virtual_b_id.replace('-B', '')}-A + {virtual_b_id}) → {base_id}")
+                        self.logger.info(f"      Unified: {merged_req['students_per_instance']} students, {practical_hours}h → 140-capacity labs")
+                    else:
+                        # No corresponding -B found, keep as-is
+                        updated_lab_requirements[teacher_id].append(course_req)
+                        
+                elif '-B' in course_instance_id:
+                    # -B instance should have been processed with its -A counterpart
+                    # If we reach here, it means there was no -A counterpart, so keep as-is
+                    if course_instance_id not in processed_virtual_ids:
+                        updated_lab_requirements[teacher_id].append(course_req)
+                        
+                else:
+                    # Regular instance, keep as-is
+                    updated_lab_requirements[teacher_id].append(course_req)
+        
+        # Update lab requirements
+        self.lab_requirements = updated_lab_requirements
+        
+        if virtual_pairs_found == 0:
+            self.logger.info("  No virtual instance pairs found to merge")
+        else:
+            self.logger.info(f"  Successfully merged {virtual_pairs_found} virtual instance pairs into unified 140+ student courses")
+            self.logger.info(f"  These unified courses will be forced to use 140-capacity labs")
+        
+        return virtual_pairs_found
+
     def _filter_lab_requirements_by_groups(self):
         """Filter lab requirements to only include course instances that are present in groups."""
         self.logger.info("Filtering lab requirements to only include instances present in groups...")
@@ -1628,9 +1776,8 @@ class CombinedScheduler:
         # REMOVED: This constraint was too restrictive and prevented the full scheduling of required practical hours.
         constraints_applied += self.apply_semester_lab_slot_limit_constraint(model, lab_variables)
         
-        # Apply 140-capacity lab co-scheduling constraints for same course instances
-        constraints_applied += self.apply_140_lab_co_scheduling_constraint(model, lab_variables)
-        # REMOVED: apply_lab_efficiency_constraints - too restrictive and redundant with other constraints
+        # Apply constraint to prevent small course instances from using 140-capacity labs
+        constraints_applied += self.apply_140_lab_restriction_constraint(model, lab_variables)
         
         # Apply lunch break constraint for lab sessions
         constraints_applied += self._apply_lab_lunch_break_constraint(model, lab_variables)
@@ -1666,7 +1813,8 @@ class CombinedScheduler:
                         dept_name = self.instance_group_mapping[course_instance_id]['department']
                     else:
                         # Fallback: look up in courses_df
-                        course_matches = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
+                        base_id = self._get_base_course_id(course_instance_id)
+                        course_matches = self.courses_df[self.courses_df['id'] == int(base_id)]
                         if not course_matches.empty:
                             dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
                     
@@ -1738,15 +1886,29 @@ class CombinedScheduler:
                             absolute_max_sessions = 3  # Hard limit for 2 hour courses
                             priority_level = 3  # Lower priority
                         
-                        # CRITICAL FIX: 2-hour courses CANNOT use 70+ capacity labs (EXCEPT core labs)
+                        # CRITICAL FIX: Handle 2-hour courses with special consideration for large student counts
                         if practical_hours <= 2:
                             # Check if this is a core lab that should be exempted from the 35-capacity restriction
                             is_core_lab = course_instance_id in self.core_lab_instance_ids
                             
-                            if is_core_lab:
-                                # Core labs with 2 practical hours can use both 35 and 70 capacity labs
+                            # EXCEPTION FIX: Large student counts (100+) need special handling even for 2-hour courses
+                            needs_large_capacity = student_count >= 100
+                            
+                            if is_core_lab or needs_large_capacity:
+                                # Core labs OR large student courses can use both 35 and 70+ capacity labs
                                 # Allow the same flexible strategy as other courses
                                 use_35_cap_strategy = model.NewBoolVar(f'course_{course_instance_id}_use_35_cap_strategy')
+                                
+                                # For large student counts, adjust session limits to prevent infeasibility
+                                if needs_large_capacity and not is_core_lab:
+                                    # Recalculate limits for large 2-hour courses
+                                    max_batched_sessions_adjusted = min(sessions_with_batching, 8)  # Allow up to 8 sessions for batching
+                                    max_unbatched_sessions_adjusted = max_unbatched_sessions  # Keep original unbatched limit
+                                    
+                                    self.logger.info(f"LARGE 2H Course {course_req['course_code']} ({student_count} students): Adjusted limits - batched: {max_batched_sessions_adjusted}, unbatched: {max_unbatched_sessions_adjusted}")
+                                else:
+                                    max_batched_sessions_adjusted = max_batched_sessions
+                                    max_unbatched_sessions_adjusted = max_unbatched_sessions
                                 
                                 # Constraint 1: If using 35-cap strategy, ALL sessions must be in 35-cap labs
                                 if assignments_in_35_cap and assignments_in_70_plus_cap:
@@ -1757,27 +1919,32 @@ class CombinedScheduler:
                                     model.Add(total_70_plus_assignments == sum(total_assignments)).OnlyEnforceIf(use_35_cap_strategy.Not())
                                     model.Add(total_35_assignments == 0).OnlyEnforceIf(use_35_cap_strategy.Not())
                             
-                                    # Constraint 3: Session count depends on chosen strategy
-                                    model.Add(sum(total_assignments) == max_batched_sessions).OnlyEnforceIf(use_35_cap_strategy)
-                                    model.Add(sum(total_assignments) == max_unbatched_sessions).OnlyEnforceIf(use_35_cap_strategy.Not())
+                                    # Constraint 3: Session count depends on chosen strategy (use adjusted limits)
+                                    model.Add(sum(total_assignments) == max_batched_sessions_adjusted).OnlyEnforceIf(use_35_cap_strategy)
+                                    model.Add(sum(total_assignments) == max_unbatched_sessions_adjusted).OnlyEnforceIf(use_35_cap_strategy.Not())
                                     
-                                    # Neutral preference for core labs with 2 hours (let solver decide)
+                                    # Add preference based on student count and core lab status
+                                    if needs_large_capacity and not is_core_lab:
+                                        # Strong preference for 70+ capacity labs for large student counts
+                                        self._add_capacity_preference(model, use_35_cap_strategy, 800, course_req['course_code'], "2h course with 100+ students - prefer large labs")
+                                    
                                     constraints_applied += 6
-                                    self.logger.info(f"CORE LAB {course_req['course_code']} ({practical_hours}h): ALLOWED to use BOTH 35-cap ({max_batched_sessions} sessions) OR 70+ cap ({max_unbatched_sessions} sessions)")
+                                    lab_type = "CORE LAB" if is_core_lab else "LARGE STUDENT"
+                                    self.logger.info(f"{lab_type} {course_req['course_code']} ({practical_hours}h, {student_count} students): ALLOWED to use BOTH 35-cap ({max_batched_sessions_adjusted} sessions) OR 70+ cap ({max_unbatched_sessions_adjusted} sessions)")
                                 else:
-                                    # Fallback assignment for core labs
-                                    required_sessions = min(max_batched_sessions, len(total_assignments), absolute_max_sessions)
+                                    # Fallback assignment
+                                    required_sessions = min(max_batched_sessions_adjusted if 'max_batched_sessions_adjusted' in locals() else max_batched_sessions, len(total_assignments), absolute_max_sessions)
                                     model.Add(sum(total_assignments) == required_sessions)
                                     constraints_applied += 1
-                                    self.logger.info(f"CORE LAB {course_req['course_code']} ({practical_hours}h): fallback assignment with {required_sessions} sessions")
+                                    self.logger.info(f"Course {course_req['course_code']} ({practical_hours}h, {student_count} students): fallback assignment with {required_sessions} sessions")
                             else:
-                                # FORCE 35-capacity labs ONLY for non-core 2-hour courses
+                                # FORCE 35-capacity labs ONLY for small non-core 2-hour courses
                                 if assignments_in_35_cap:
                                     model.Add(total_35_assignments == sum(total_assignments))
                                     model.Add(total_70_plus_assignments == 0)
                                     model.Add(sum(total_assignments) == max_batched_sessions)
                                     constraints_applied += 3
-                                    self.logger.info(f"NON-CORE Course {course_req['course_code']} ({practical_hours}h): FORCED to use 35-capacity labs only with {max_batched_sessions} sessions")
+                                    self.logger.info(f"SMALL NON-CORE Course {course_req['course_code']} ({practical_hours}h, {student_count} students): FORCED to use 35-capacity labs only with {max_batched_sessions} sessions")
                                 else:
                                     self.logger.error(f"NON-CORE Course {course_req['course_code']} ({practical_hours}h): No 35-capacity labs available - scheduling impossible")
                         else:
@@ -1854,11 +2021,11 @@ class CombinedScheduler:
             self.logger.info(f"  → {course_code}: {description} - 35 capacity preference (weight: +{abs(weight)})")
 
     def apply_lab_room_single_assignment_constraint(self, model, lab_variables):
-        """Prevent lab room double-booking with comprehensive cross-pattern validation, allowing co-scheduling for 140-capacity labs."""
-        self.logger.info("Applying optimized lab room single assignment constraint with 140-lab co-scheduling support...")
+        """Prevent lab room double-booking with comprehensive cross-pattern validation."""
+        self.logger.info("Applying optimized lab room single assignment constraint...")
         constraints_applied = 0
         
-        # Get 140-capacity lab IDs for special handling (cached)
+        # Get 140-capacity lab IDs for co-location exceptions
         labs_140 = set(lab['id'] for lab in self.lab_capacity_analysis['labs_140'])
         
         # Pre-cache department mappings to avoid repeated lookups
@@ -1895,9 +2062,11 @@ class CombinedScheduler:
                 if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
                     group_name = self.instance_group_mapping[course_instance_id]['group_name']
                 
-                course_matches = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
-                if not course_matches.empty:
-                    course_code = course_matches.iloc[0]['course_code']
+                    # Handle virtual instance IDs (e.g., '877-A', '877-B')
+                    base_id = course_instance_id.split('-')[0] if '-' in course_instance_id else course_instance_id
+                    course_matches = self.courses_df[self.courses_df['id'] == int(base_id)]
+                    if not course_matches.empty:
+                        course_code = course_matches.iloc[0]['course_code']
                 
                 course_info_cache[course_instance_id] = {
                     'course_code': course_code,
@@ -1930,15 +2099,15 @@ class CombinedScheduler:
                                             time_slot_assignments[key] = []
                                         
                                         time_slot_assignments[key].append({
-                                'variable': day_sessions[session_name][room_id],
-                                            'teacher_id': teacher_id,
-                                            'course_instance_id': course_instance_id,
-                                'dept_name': dept_info['dept_name'],
-                                'day_pattern': dept_info['day_pattern'],
-                                'session_name': session_name,
-                                'group_name': course_info['group_name'],
-                                'course_code': course_info['course_code']
-                            })
+                                            'variable': day_sessions[session_name][room_id],
+                                                        'teacher_id': teacher_id,
+                                                        'course_instance_id': course_instance_id,
+                                            'dept_name': dept_info['dept_name'],
+                                            'day_pattern': dept_info['day_pattern'],
+                                            'session_name': session_name,
+                                            'group_name': course_info['group_name'],
+                                            'course_code': course_info['course_code']
+                                                })
         
         # Apply room conflict constraints for each absolute session slot (optimized)
         for (absolute_day, session_name, room_id), assignments in time_slot_assignments.items():
@@ -1946,55 +2115,10 @@ class CombinedScheduler:
                 continue  # Skip if no conflicts
             
             assignment_vars = [assignment['variable'] for assignment in assignments]
-                
-            # Special handling for 140-capacity labs - ONLY allow co-scheduling
-            if room_id in labs_140:
-                # Group assignments by (group_name, course_code) - optimized
-                same_course_groups = {}
-                for assignment in assignments:
-                    key = (assignment['group_name'], assignment['course_code'])
-                    if key not in same_course_groups:
-                        same_course_groups[key] = []
-                    same_course_groups[key].append(assignment)
-                
-                # Check for valid co-scheduling opportunities
-                co_schedulable_groups = []
-                invalid_vars = []
-                
-                for (group_name, course_code), group_assignments in same_course_groups.items():
-                    if len(group_assignments) >= 2 and group_name and course_code:
-                        # Valid co-scheduling group
-                        co_schedulable_groups.append((group_name, course_code, group_assignments))
-                    else:
-                        # Invalid single instances
-                        invalid_vars.extend([ga['variable'] for ga in group_assignments])
-                
-                # Apply co-scheduling constraints
-                for group_name, course_code, group_assignments in co_schedulable_groups:
-                    group_vars = [ga['variable'] for ga in group_assignments]
-                    
-                    # STRICT CONSTRAINT: Either 0 instances OR exactly 2 instances
-                    total_assignments = sum(group_vars)
-                    course_using_140_lab = model.NewBoolVar(f'course_using_140lab_{group_name}_{course_code}_{absolute_day}_{session_name}_{room_id}')
-                    
-                    model.Add(total_assignments <= 2 * course_using_140_lab)
-                    model.Add(total_assignments >= 2 * course_using_140_lab)
-                    constraints_applied += 2
-                    
-                    if constraints_applied % 100 == 0:  # Reduce logging frequency
-                        self.logger.debug(f"🎯 140-lab co-scheduling: {course_code} in {group_name}")
-                
-                # Block invalid single instances
-                if invalid_vars:
-                    model.Add(sum(invalid_vars) == 0)
-                    constraints_applied += 1
-                    
-                    if constraints_applied % 100 == 0:  # Reduce logging frequency
-                        self.logger.debug(f"🚫 Blocked {len(invalid_vars)} single instances from 140-lab")
-            else:
-                # Standard labs: at most one course can use this room at this session
-                model.Add(sum(assignment_vars) <= 1)
-                constraints_applied += 1
+            
+            # Standard room assignment: at most one course can use this room at this session
+            model.Add(sum(assignment_vars) <= 1)
+            constraints_applied += 1
         
         # Optimized course instance room assignment constraint
         for teacher_id in lab_variables:
@@ -2009,23 +2133,110 @@ class CombinedScheduler:
                         room_vars = list(day_sessions[session_name].values())
                         
                         if len(room_vars) > 1:
-                            # Separate 140-capacity labs from others for flexibility
-                            labs_140_vars = [var for room_id, var in day_sessions[session_name].items() if room_id in labs_140]
-                            other_vars = [var for room_id, var in day_sessions[session_name].items() if room_id not in labs_140]
-                            
-                            if labs_140_vars:
-                                # Allow flexibility for 140-lab co-scheduling
-                                model.Add(sum(labs_140_vars) + sum(other_vars) <= 1)
-                            else:
-                                # Standard constraint
-                                model.Add(sum(room_vars) <= 1)
-                            
+                            # Standard constraint: each course instance can use at most one room per session
+                            model.Add(sum(room_vars) <= 1)
                             constraints_applied += 1
         
         self.logger.info(f"Applied {constraints_applied} optimized lab room single assignment constraints")
         self.logger.info(f"Processed {len(time_slot_assignments)} unique session-room combinations")
         return constraints_applied
-    
+
+    def apply_140_lab_restriction_constraint(self, model, lab_variables):
+        """
+        Force 140+ student course instances to use 140-capacity labs,
+        while preventing ≤70 student instances from using 140-capacity labs.
+        """
+        self.logger.info("Applying 140-capacity lab assignment constraint for unified 140+ student courses...")
+        constraints_applied = 0
+        
+        # Get 140-capacity lab IDs
+        labs_140 = set(lab['id'] for lab in self.lab_capacity_analysis['labs_140'])
+        
+        if not labs_140:
+            self.logger.info("No 140-capacity labs found - skipping 140-capacity lab constraints")
+            return 0
+        
+        # Identify 140+ student instances and regular instances
+        large_instances = []  # 140+ students
+        regular_instances = []  # ≤70 students
+        
+        for teacher_id, lab_courses in self.lab_requirements.items():
+            for course_req in lab_courses:
+                course_instance_id = course_req['course_instance_id']
+                students_per_instance = course_req.get('students_per_instance', 0)
+                
+                if students_per_instance >= 140:
+                    large_instances.append((teacher_id, course_instance_id, course_req))
+                else:
+                    regular_instances.append((teacher_id, course_instance_id, course_req))
+        
+        self.logger.info(f"Found {len(large_instances)} courses with 140+ students and {len(regular_instances)} regular instances")
+        
+        # CONSTRAINT 1: Force 140+ student instances to use 140-capacity labs ONLY
+        forced_140_instances = 0
+        for teacher_id, instance_id, course_req in large_instances:
+            if teacher_id in lab_variables and instance_id in lab_variables[teacher_id]:
+                # Collect all lab assignment variables for this large instance
+                lab_140_assignments = []
+                non_140_assignments = []
+                
+                for day_idx in lab_variables[teacher_id][instance_id]:
+                    for session_name in lab_variables[teacher_id][instance_id][day_idx]:
+                        for room_id in lab_variables[teacher_id][instance_id][day_idx][session_name]:
+                            var = lab_variables[teacher_id][instance_id][day_idx][session_name][room_id]
+                            
+                            if room_id in labs_140:
+                                lab_140_assignments.append(var)
+                            else:
+                                non_140_assignments.append(var)
+                
+                # Force 140+ student instances to ONLY use 140-capacity labs
+                if non_140_assignments:
+                    for var in non_140_assignments:
+                        model.Add(var == 0)
+                        constraints_applied += 1
+                    
+                    forced_140_instances += 1
+                    course_code = course_req.get('course_code', 'Unknown')
+                    students = course_req.get('students_per_instance', 0)
+                    self.logger.info(f"  🔒 Large course {course_code} (ID: {instance_id}, {students} students) FORCED to use 140-capacity labs only")
+        
+        # CONSTRAINT 2: Prevent regular instances (≤70 students) from using 140-capacity labs
+        restricted_regular_instances = 0
+        for teacher_id, instance_id, course_req in regular_instances:
+            if teacher_id in lab_variables and instance_id in lab_variables[teacher_id]:
+                lab_140_assignments = []
+                
+                for day_idx in lab_variables[teacher_id][instance_id]:
+                    for session_name in lab_variables[teacher_id][instance_id][day_idx]:
+                        for room_id in lab_variables[teacher_id][instance_id][day_idx][session_name]:
+                            if room_id in labs_140:
+                                var = lab_variables[teacher_id][instance_id][day_idx][session_name][room_id]
+                                lab_140_assignments.append(var)
+                
+                # Prevent regular instances from using 140-capacity labs
+                if lab_140_assignments:
+                    for var in lab_140_assignments:
+                        model.Add(var == 0)
+                        constraints_applied += 1
+                    
+                    restricted_regular_instances += 1
+                    course_code = course_req.get('course_code', 'Unknown')
+                    students = course_req.get('students_per_instance', 0)
+                    if restricted_regular_instances <= 5:  # Log first few restrictions
+                        self.logger.info(f"  🚫 Regular course {course_code} (ID: {instance_id}, {students} students) RESTRICTED from 140-capacity labs")
+                    elif restricted_regular_instances == 6:
+                        self.logger.info("  🚫 ... (additional regular course instances restricted)")
+        
+        self.logger.info(f"140-capacity lab constraints applied successfully:")
+        self.logger.info(f"  Forced {forced_140_instances} large courses (140+ students) to use 140-capacity labs only")
+        self.logger.info(f"  Restricted {restricted_regular_instances} regular courses (≤70 students) from 140-capacity labs")
+        self.logger.info(f"  Total constraints applied: {constraints_applied}")
+        
+        return constraints_applied
+
+
+
     def apply_group_based_scheduling_constraint(self, model, lab_variables):
         """Apply group-based scheduling constraints to enforce scheduling by groups."""
         self.logger.info("Applying group-based scheduling constraints...")
@@ -2115,7 +2326,8 @@ class CombinedScheduler:
                     semester = self.instance_group_mapping[course_instance_id].get('semester')
                 else:
                     # Fallback: look up in courses_df
-                    course_matches = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
+                    base_id = self._get_base_course_id(course_instance_id)
+                    course_matches = self.courses_df[self.courses_df['id'] == int(base_id)]
                     if not course_matches.empty:
                         dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
                 
@@ -2153,9 +2365,10 @@ class CombinedScheduler:
                 course_instance_id = course_req['course_instance_id']
                 
                 # Get course name from the original courses data
-                course_row = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
+                base_id = self._get_base_course_id(course_instance_id)
+                course_row = self.courses_df[self.courses_df['id'] == int(base_id)]
                 if course_row.empty:
-                    self.logger.warning(f"Course instance {course_instance_id} not found in courses data")
+                    self.logger.warning(f"Course instance {course_instance_id} (base: {base_id}) not found in courses data")
                     continue
                     
                 course_name = course_row.iloc[0]['course_name']
@@ -3127,7 +3340,8 @@ class CombinedScheduler:
         for teacher_id, activities in teacher_activities.items():
             for course_instance_id in activities['lab_courses']:
                 if course_instance_id not in course_info_cache:
-                    course_matches = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
+                    base_id = self._get_base_course_id(course_instance_id)
+                    course_matches = self.courses_df[self.courses_df['id'] == int(base_id)]
                     if not course_matches.empty:
                         course_row = course_matches.iloc[0]
                         course_info_cache[course_instance_id] = {
@@ -3202,14 +3416,22 @@ class CombinedScheduler:
                                 if course_instance_id in course_info_cache:
                                     course_info = course_info_cache[course_instance_id]
                                     if course_info['practical_hours'] >= 4:
-                                        lab_course_instances.append(course_info)
+                                        lab_course_instances.append({
+                                            'instance_id': course_instance_id,
+                                            'course_code': course_info['course_code'],
+                                            'group_name': course_info['group_name']
+                                        })
                             
                             # Check if we have 2 instances of the same course in the same group
                             if len(lab_course_instances) >= 2:
                                 for i in range(len(lab_course_instances)):
                                     for j in range(i + 1, len(lab_course_instances)):
-                                        if (lab_course_instances[i]['course_code'] == lab_course_instances[j]['course_code'] and
-                                            lab_course_instances[i]['group_name'] == lab_course_instances[j]['group_name']):
+                                        inst1 = lab_course_instances[i]
+                                        inst2 = lab_course_instances[j]
+                                        
+                                        # Same course in same group can be co-scheduled
+                                        if (inst1['course_code'] == inst2['course_code'] and
+                                            inst1['group_name'] == inst2['group_name']):
                                             can_co_schedule = True
                                             break
                                     if can_co_schedule:
@@ -3241,7 +3463,8 @@ class CombinedScheduler:
                     semester = mapping.get('semester')
                 else:
                     # Fallback: look up in courses_df
-                    course_matches = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
+                    base_id = self._get_base_course_id(course_instance_id)
+                    course_matches = self.courses_df[self.courses_df['id'] == int(base_id)]
                     if not course_matches.empty:
                         dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
                 
@@ -3283,11 +3506,9 @@ class CombinedScheduler:
             self.logger.info(f"Added {len(self.capacity_preferences)} capacity preference terms to objective")
             self.logger.info("  • Encourages 70+ capacity labs for courses with 4-6 practical hours")
             self.logger.info("  • Allows 35-capacity labs with batching as fallback")
-            self.logger.info("  • 140-capacity lab RESERVED for co-scheduling ONLY")
         
-        # Add STRONG preference for 70-capacity labs over 140-capacity for single instances
+        # Add preference for 70-capacity labs
         labs_70_bonus = 1000  # Strong preference for using 70-capacity labs
-        labs_140_penalty = -3000  # STRONG penalty for single instances trying to use 140-capacity lab
         
         # PERFORMANCE OPTIMIZATION: Pre-cache room capacities to avoid repeated DataFrame lookups
         room_capacities = {}
@@ -3310,26 +3531,9 @@ class CombinedScheduler:
                                 # BONUS for using 70-capacity labs (perfect size for single instances)
                                 objective_terms.append(var * labs_70_bonus)
                                 capacity_terms_added += 1
-                            elif room_capacity > 70:  # 140-capacity labs
-                                # PENALTY for single instances trying to use 140-capacity lab
-                                # (co-scheduling will override this with the +5000 bonus)
-                                objective_terms.append(var * labs_140_penalty)
-                                capacity_terms_added += 1
         
         self.logger.info(f"Added {capacity_terms_added} room capacity preference terms to objective (OPTIMIZED)")
         self.logger.info(f"  • 70-capacity lab preference bonus: +{labs_70_bonus}")
-        self.logger.info(f"  • 140-capacity lab penalty for single instances: {labs_140_penalty}")
-        self.logger.info("  • This ensures 140-capacity lab is ONLY used for co-scheduling")
-        
-        # Add co-scheduling preferences for 140-capacity lab efficiency
-        if hasattr(self, 'co_scheduling_vars') and self.co_scheduling_vars:
-            co_scheduling_bonus = 5000  # MUCH HIGHER bonus for co-scheduling same course instances
-            for key, var_info in self.co_scheduling_vars.items():
-                objective_terms.append(var_info['co_sched_var'] * co_scheduling_bonus)
-            
-            self.logger.info(f"Added {len(self.co_scheduling_vars)} co-scheduling preference terms to objective")
-            self.logger.info("  • STRONGLY encourages co-scheduling of same course instances in 140-capacity lab")
-            self.logger.info(f"  • Bonus weight: {co_scheduling_bonus} per co-scheduled pair (INCREASED!)")
         
         # Add penalty for consecutive slots (soft constraint - minimize penalties)
         if hasattr(self, 'consecutive_slot_penalties') and self.consecutive_slot_penalties:
@@ -3945,12 +4149,11 @@ class CombinedScheduler:
         return total_conflicts == 0
     
     def _check_schedule_room_conflicts(self, schedule, schedule_type):
-        """Check for room conflicts within a single schedule, allowing co-scheduling for 140-capacity labs."""
+        """Check for room conflicts within a single schedule."""
         conflicts = 0
         room_usage = {}
         
-        # Get 140-capacity lab IDs for special handling
-        labs_140 = [lab['id'] for lab in self.lab_capacity_analysis.get('labs_140', [])]
+
         
         for session in schedule:
             day = self._normalize_day_name(session['day'])
@@ -3970,25 +4173,11 @@ class CombinedScheduler:
                         existing_course = existing.get('course_code', '')
                         existing_group = existing.get('group_name', '')
                         
-                        # Check if this is allowed co-scheduling in 140-capacity lab
-                        if (room_id in labs_140 and 
-                            course_code == existing_course and 
-                            group_name == existing_group and
-                            group_name and course_code):  # Same course, same group
-                            
-                            # This is allowed co-scheduling for same course instances
-                            self.logger.info(f"✅ Co-scheduling: {course_code} instances in {group_name} sharing 140-capacity lab {room_id}")
-                            
-                            # Track multiple sessions for this slot
-                            if not isinstance(room_usage[key], list):
-                                room_usage[key] = [room_usage[key]]
-                            room_usage[key].append(session)
-                        else:
-                            # This is a real conflict
-                            conflicts += 1
-                            self.logger.error(f"{schedule_type} room conflict: Room {room_id} on {day} {lab_time_slot}")
-                            self.logger.error(f"  Existing: {existing_course} (Group: {existing_group})")
-                            self.logger.error(f"  Conflicting: {course_code} (Group: {group_name})")
+                        # This is a room conflict
+                        conflicts += 1
+                        self.logger.error(f"{schedule_type} room conflict: Room {room_id} on {day} {lab_time_slot}")
+                        self.logger.error(f"  Existing: {existing_course} (Group: {existing_group})")
+                        self.logger.error(f"  Conflicting: {course_code} (Group: {group_name})")
                     else:
                         room_usage[key] = session
             else:
@@ -4288,14 +4477,20 @@ class CombinedScheduler:
                                         continue
                                 teacher_row = teacher_matches.iloc[0]
                                 
-                                course_matches = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
+                                # Handle virtual instance IDs by getting base course ID
+                                base_course_id = self._get_base_course_id(course_instance_id)
+                                course_matches = self.courses_df[self.courses_df['id'] == int(base_course_id)]
                                 if course_matches.empty:
-                                    self.logger.error(f"Course instance ID {course_instance_id} not found in courses dataframe")
+                                    self.logger.error(f"Course instance ID {course_instance_id} (base: {base_course_id}) not found in courses dataframe")
                                     continue
                                 course_row = course_matches.iloc[0]
                                 
                                 # Rule 1: Simple batching rule - batch if using 35-capacity lab and have more students
-                                student_count = int(course_row['student_count'])
+                                # For virtual instances, use 70 students (half of the original), otherwise use the original count
+                                if '-A' in str(course_instance_id) or '-B' in str(course_instance_id):
+                                    student_count = 70  # Virtual instances have 70 students each
+                                else:
+                                    student_count = int(course_row['student_count'])
                                 
                                 if student_count > room_capacity:
                                     # Need batching: split students into batches that fit the lab capacity
@@ -5406,216 +5601,11 @@ class CombinedScheduler:
             import traceback
             self.logger.error(f"Traceback: {traceback.format_exc()}")
 
-    def _identify_co_schedulable_course_instances(self):
-        """Identify course instances that can be co-scheduled in 140-capacity labs."""
-        self.logger.info("Identifying co-schedulable course instances for 140-capacity lab optimization...")
-        
-        # Pre-cache course information to avoid repeated DataFrame lookups
-        course_cache = {}
-        for teacher_id, courses in self.lab_requirements.items():
-            for course_req in courses:
-                course_instance_id = course_req['course_instance_id']
-                if course_instance_id not in course_cache:
-                    course_matches = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
-                    if not course_matches.empty:
-                        course_row = course_matches.iloc[0]
-                        course_cache[course_instance_id] = {
-                            'course_code': course_row['course_code'],
-                            'practical_hours': int(course_row.get('practical_hours', 0)),
-                            'student_count': int(course_row['student_count'])
-                        }
-        
-        # Group course instances by (group, course_code) - optimized
-        co_schedulable_groups = {}
-        core_labs_skipped = 0
-        
-        for teacher_id, courses in self.lab_requirements.items():
-            for course_req in courses:
-                course_instance_id = course_req['course_instance_id']
-                
-                # Skip if course info not cached or doesn't meet criteria
-                if (course_instance_id not in course_cache or 
-                    course_cache[course_instance_id]['practical_hours'] < 4):
-                    continue
-                
-                # OPTIMIZATION: Skip core labs - they don't have 140-capacity rooms
-                if hasattr(self, 'core_lab_instance_ids') and course_instance_id in self.core_lab_instance_ids:
-                    core_labs_skipped += 1
-                    continue  # Core labs cannot use 140-capacity rooms for co-scheduling
-                
-                # Get group information (optimized)
-                if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
-                    group_mapping = self.instance_group_mapping[course_instance_id]
-                    group_name = group_mapping['group_name']
-                    course_info = course_cache[course_instance_id]
-                    
-                    key = (group_name, course_info['course_code'])
-                    
-                    if key not in co_schedulable_groups:
-                        co_schedulable_groups[key] = []
-                    
-                    co_schedulable_groups[key].append({
-                        'course_instance_id': course_instance_id,
-                        'teacher_id': teacher_id,
-                        'practical_hours': course_info['practical_hours'],
-                        'course_code': course_info['course_code'],
-                        'group_name': group_name,
-                        'student_count': course_info['student_count']
-                    })
-        
-        # Filter to valid co-schedulable groups (optimized)
-        self.co_schedulable_course_groups = {}
-        valid_groups_count = 0
-        
-        for key, instances in co_schedulable_groups.items():
-            if len(instances) >= 2:  # Multiple instances of same course in same group
-                group_name, course_code = key
-                total_students = sum(inst['student_count'] for inst in instances)
-                
-                # Check if total students can fit in 140-capacity lab
-                if total_students <= 140:
-                    self.co_schedulable_course_groups[key] = {
-                        'instances': instances,
-                        'total_students': total_students,
-                        'can_co_schedule': True
-                    }
-                    valid_groups_count += 1
-                    
-                    # Reduced logging frequency for performance
-                    if valid_groups_count <= 5:  # Log only first 5 groups
-                        self.logger.info(f"✅ Co-schedulable group found: {course_code} in {group_name}")
-                        self.logger.info(f"   → {len(instances)} instances, {total_students} total students")
-                    elif valid_groups_count == 6:
-                        self.logger.info("   ... (additional co-schedulable groups found, reducing log output)")
-        
-        self.logger.info(f"Found {len(self.co_schedulable_course_groups)} co-schedulable course groups for 140-capacity lab")
-        if core_labs_skipped > 0:
-            self.logger.info(f"  • Skipped {core_labs_skipped} core lab instances (no 140-capacity rooms available)")
-        return self.co_schedulable_course_groups
+    # REMOVED: _identify_co_schedulable_course_instances function
+    # This function identified course instances for 140-capacity lab co-scheduling which has been removed
 
-    def apply_140_lab_co_scheduling_constraint(self, model, lab_variables):
-        """Apply co-scheduling constraints for 140-capacity lab with same course instances."""
-        self.logger.info("Applying optimized 140-capacity lab co-scheduling constraints...")
-        constraints_applied = 0
-        
-        # Get 140-capacity lab IDs (cached as set for O(1) lookup)
-        labs_140 = set(lab['id'] for lab in self.lab_capacity_analysis['labs_140'])
-        
-        if not labs_140:
-            self.logger.warning("No 140-capacity labs found for co-scheduling")
-            return 0
-        
-        # Identify co-schedulable course instances (cached)
-        if not hasattr(self, 'co_schedulable_course_groups'):
-            self._identify_co_schedulable_course_instances()
-        
-        if not self.co_schedulable_course_groups:
-            self.logger.info("No co-schedulable course groups found")
-            return 0
-        
-        # Pre-cache department information for all groups
-        group_dept_cache = {}
-        for (group_name, course_code) in self.co_schedulable_course_groups.keys():
-            if group_name not in group_dept_cache:
-                dept_name = group_name.split('_S')[0] if '_S' in group_name else "Computer Science & Engineering"
-                semester = None
-                if '_S' in group_name:
-                    sem_part = group_name.split('_S')[1].split('_G')[0]
-                    try:
-                        semester = int(sem_part)
-                    except ValueError:
-                        pass
-                group_dept_cache[group_name] = {
-                    'dept_name': dept_name,
-                    'semester': semester,
-                    'dept_days': self._get_days_for_department(dept_name, semester)
-                }
-        
-        # Create co-scheduling variables for objective function (optimized)
-        self.co_scheduling_vars = {}
-        groups_processed = 0
-        
-        for (group_name, course_code), group_info in self.co_schedulable_course_groups.items():
-            instances = group_info['instances']
-            
-            if len(instances) < 2:
-                continue
-            
-            groups_processed += 1
-            
-            # Reduced logging frequency for performance
-            if groups_processed <= 3:
-                self.logger.info(f"🔄 Setting up co-scheduling for {course_code} in {group_name} ({len(instances)} instances)")
-            elif groups_processed == 4:
-                self.logger.info("   ... (processing additional co-schedulable groups)")
-            
-            # Use cached department information
-            dept_info = group_dept_cache[group_name]
-            dept_days = dept_info['dept_days']
-            
-            # Pre-collect valid instance variables to avoid repeated lookups
-            valid_instances = []
-            for instance in instances:
-                teacher_id = instance['teacher_id']
-                course_instance_id = instance['course_instance_id']
-                
-                # Double-check: ensure no core labs slip through (should already be filtered)
-                if (hasattr(self, 'core_lab_instance_ids') and 
-                    course_instance_id in self.core_lab_instance_ids):
-                    continue  # Extra safety check - core labs should already be filtered
-                
-                if (teacher_id in lab_variables and 
-                    course_instance_id in lab_variables[teacher_id]):
-                    valid_instances.append(instance)
-            
-            if len(valid_instances) < 2:
-                continue
-            
-            # Optimized constraint creation - only for valid combinations
-            for day_idx in range(len(dept_days)):
-                for session_name in self.lab_sessions.keys():
-                    for lab_140_id in labs_140:
-                        # Collect assignment variables for these instances in this slot (optimized)
-                        instance_vars = []
-                        
-                        for instance in valid_instances:
-                            teacher_id = instance['teacher_id']
-                            course_instance_id = instance['course_instance_id']
-                            
-                            # Direct access with error checking
-                            try:
-                                if (day_idx in lab_variables[teacher_id][course_instance_id] and
-                                    session_name in lab_variables[teacher_id][course_instance_id][day_idx] and
-                                    lab_140_id in lab_variables[teacher_id][course_instance_id][day_idx][session_name]):
-                                    
-                                    instance_var = lab_variables[teacher_id][course_instance_id][day_idx][session_name][lab_140_id]
-                                    instance_vars.append((instance_var, instance))
-                            except (KeyError, IndexError):
-                                continue  # Skip invalid combinations
-                        
-                        if len(instance_vars) >= 2:
-                            # Create simplified co-scheduling detection variable
-                            var_name = f'co_schedule_{course_code}_{group_name}_d{day_idx}_s{session_name}_l{lab_140_id}'
-                            co_sched_var = model.NewBoolVar(var_name)
-                            
-                            # Simplified constraint: co-scheduling is active when exactly 2 instances are scheduled
-                            vars_sum = sum(var for var, _ in instance_vars)
-                            model.Add(vars_sum == 2 * co_sched_var)
-                            
-                            # Store for objective function (optimized structure)
-                            key = (course_code, group_name, day_idx, session_name, lab_140_id)
-                            self.co_scheduling_vars[key] = {
-                                'co_sched_var': co_sched_var,
-                                'instance_vars': [var for var, _ in instance_vars],
-                                'total_students': sum(inst['student_count'] for _, inst in instance_vars)
-                            }
-                            
-                            constraints_applied += 1
-        
-        self.logger.info(f"✅ Applied {constraints_applied} optimized co-scheduling detection constraints for 140-capacity lab")
-        self.logger.info(f"  • {len(self.co_schedulable_course_groups)} co-schedulable groups processed")
-        self.logger.info(f"  • 140-capacity lab RESERVED for co-scheduling ONLY")
-        return constraints_applied
+    
+    # This function implemented 140-capacity lab co-scheduling which has been removed
 
     def _find_capacity_aware_theory_room(self, day_idx, time_slot_idx, used_rooms_this_slot, existing_schedule, dept_days, session, assigned_sessions_this_slot, lab_schedule=None):
         """

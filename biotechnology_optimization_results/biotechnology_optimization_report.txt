@@ -1,0 +1,160 @@
+BIOTECHNOLOGY COURSE GROUP OPTIMIZATION REPORT
+============================================================
+Generated: 2025-06-24 10:02:01
+Method: OR-Tools CP-SAT Optimization
+Data Source: data/department_data/final_computing.csv
+
+OVERALL RESULTS:
+- Total Department-Semester Combinations: 20
+- Successful Optimizations: 20
+- Failed Optimizations: 0
+- Success Rate: 100.0%
+
+DETAILED RESULTS:
+
+Artificial Intelligence & Data Science - Semester 3:
+  ✅ Status: SUCCESS
+  📊 Objective Value: 2.0
+  👥 Groups: 5
+  📝 Instances: 25
+  📚 Courses: 5
+
+Artificial Intelligence & Data Science - Semester 5:
+  ✅ Status: SUCCESS
+  📊 Objective Value: 2.0
+  👥 Groups: 5
+  📝 Instances: 15
+  📚 Courses: 5
+
+Artificial Intelligence & Data Science - Semester 7:
+  ✅ Status: SUCCESS
+  📊 Objective Value: 0.0
+  👥 Groups: 4
+  📝 Instances: 4
+  📚 Courses: 4
+
+Artificial Intelligence & Machine Learning - Semester 3:
+  ✅ Status: SUCCESS
+  📊 Objective Value: 2.0
+  👥 Groups: 6
+  📝 Instances: 24
+  📚 Courses: 6
+
+Artificial Intelligence & Machine Learning - Semester 5:
+  ✅ Status: SUCCESS
+  📊 Objective Value: 6.0
+  👥 Groups: 6
+  📝 Instances: 18
+  📚 Courses: 6
+
+Artificial Intelligence & Machine Learning - Semester 7:
+  ✅ Status: SUCCESS
+  📊 Objective Value: 6.0
+  👥 Groups: 5
+  📝 Instances: 15
+  📚 Courses: 5
+
+Computer Science & Business Systems - Semester 3:
+  ✅ Status: SUCCESS
+  📊 Objective Value: 0.0
+  👥 Groups: 7
+  📝 Instances: 14
+  📚 Courses: 7
+
+Computer Science & Business Systems - Semester 5:
+  ✅ Status: SUCCESS
+  📊 Objective Value: 2.0
+  👥 Groups: 5
+  📝 Instances: 10
+  📚 Courses: 5
+
+Computer Science & Business Systems - Semester 7:
+  ✅ Status: SUCCESS
+  📊 Objective Value: 4.0
+  👥 Groups: 6
+  📝 Instances: 12
+  📚 Courses: 6
+
+Computer Science & Design - Semester 3:
+  ✅ Status: SUCCESS
+  📊 Objective Value: 0.0
+  👥 Groups: 6
+  📝 Instances: 6
+  📚 Courses: 6
+
+Computer Science & Design - Semester 5:
+  ✅ Status: SUCCESS
+  📊 Objective Value: 0.0
+  👥 Groups: 5
+  📝 Instances: 5
+  📚 Courses: 5
+
+Computer Science & Design - Semester 7:
+  ✅ Status: SUCCESS
+  📊 Objective Value: 0.0
+  👥 Groups: 5
+  📝 Instances: 5
+  📚 Courses: 5
+
+Computer Science & Engineering - Semester 3:
+  ✅ Status: SUCCESS
+  📊 Objective Value: 2.0
+  👥 Groups: 6
+  📝 Instances: 60
+  📚 Courses: 6
+
+Computer Science & Engineering - Semester 5:
+  ✅ Status: SUCCESS
+  📊 Objective Value: 2.0
+  👥 Groups: 5
+  📝 Instances: 30
+  📚 Courses: 5
+
+Computer Science & Engineering - Semester 7:
+  ✅ Status: SUCCESS
+  📊 Objective Value: 0.0
+  👥 Groups: 3
+  📝 Instances: 15
+  📚 Courses: 3
+
+Computer Science & Engineering (Cyber Security) - Semester 3:
+  ✅ Status: SUCCESS
+  📊 Objective Value: 2.0
+  👥 Groups: 5
+  📝 Instances: 10
+  📚 Courses: 5
+
+Computer Science & Engineering (Cyber Security) - Semester 5:
+  ✅ Status: SUCCESS
+  📊 Objective Value: 0.0
+  👥 Groups: 5
+  📝 Instances: 5
+  📚 Courses: 5
+
+Information Technology - Semester 3:
+  ✅ Status: SUCCESS
+  📊 Objective Value: 2.0
+  👥 Groups: 6
+  📝 Instances: 30
+  📚 Courses: 6
+
+Information Technology - Semester 5:
+  ✅ Status: SUCCESS
+  📊 Objective Value: 0.0
+  👥 Groups: 5
+  📝 Instances: 20
+  📚 Courses: 5
+
+Information Technology - Semester 7:
+  ✅ Status: SUCCESS
+  📊 Objective Value: 6.0
+  👥 Groups: 3
+  📝 Instances: 9
+  📚 Courses: 3
+
+OR-TOOLS ADVANTAGES:
++ Optimal Solutions: Mathematical optimization guarantees best result
++ Constraint Satisfaction: All constraints mathematically enforced
++ Student Choice: Maximizes course availability across groups
++ Scalability: Handles complex problems efficiently
++ Reproducibility: Consistent results for same input
