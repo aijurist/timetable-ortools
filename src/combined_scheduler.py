@@ -2143,18 +2143,28 @@ class CombinedScheduler:
 
     def apply_140_lab_restriction_constraint(self, model, lab_variables):
         """
-        Force 140+ student course instances to use 140-capacity labs,
-        while preventing ≤70 student instances from using 140-capacity labs.
+        Force 140+ student course instances to use 140-capacity Laboratory rooms ONLY,
+        while preventing ≤70 student instances from using 140-capacity Labs.
+        IMPORTANT: Only 'Laboratory' type rooms are allowed, NOT core labs.
         """
-        self.logger.info("Applying 140-capacity lab assignment constraint for unified 140+ student courses...")
+        self.logger.info("Applying 140-capacity LABORATORY assignment constraint for unified 140+ student courses...")
         constraints_applied = 0
         
-        # Get 140-capacity lab IDs
-        labs_140 = set(lab['id'] for lab in self.lab_capacity_analysis['labs_140'])
+        # Get 140-capacity lab IDs that are specifically 'Laboratory' type (not core labs)
+        labs_140_laboratory_only = set()
+        for lab in self.lab_capacity_analysis['labs_140']:
+            lab_id = lab['id']
+            # Check if this room is of type 'Laboratory'
+            if lab_id in self.laboratory_room_ids:
+                labs_140_laboratory_only.add(lab_id)
         
-        if not labs_140:
-            self.logger.info("No 140-capacity labs found - skipping 140-capacity lab constraints")
+        if not labs_140_laboratory_only:
+            self.logger.warning("No 140-capacity LABORATORY rooms found - skipping 140-capacity lab constraints")
+            self.logger.warning("(140+ capacity rooms exist but they are not 'Laboratory' type - they might be core labs)")
             return 0
+        
+        self.logger.info(f"Found {len(labs_140_laboratory_only)} rooms that are both 140+ capacity AND 'Laboratory' type")
+        self.logger.info(f"Laboratory room IDs for 140+ students: {sorted(labs_140_laboratory_only)}")
         
         # Identify 140+ student instances and regular instances
         large_instances = []  # 140+ students
@@ -2172,51 +2182,51 @@ class CombinedScheduler:
         
         self.logger.info(f"Found {len(large_instances)} courses with 140+ students and {len(regular_instances)} regular instances")
         
-        # CONSTRAINT 1: Force 140+ student instances to use 140-capacity labs ONLY
+        # CONSTRAINT 1: Force 140+ student instances to use 140-capacity LABORATORY rooms ONLY
         forced_140_instances = 0
         for teacher_id, instance_id, course_req in large_instances:
             if teacher_id in lab_variables and instance_id in lab_variables[teacher_id]:
                 # Collect all lab assignment variables for this large instance
-                lab_140_assignments = []
-                non_140_assignments = []
+                lab_140_laboratory_assignments = []
+                non_140_laboratory_assignments = []
                 
                 for day_idx in lab_variables[teacher_id][instance_id]:
                     for session_name in lab_variables[teacher_id][instance_id][day_idx]:
                         for room_id in lab_variables[teacher_id][instance_id][day_idx][session_name]:
                             var = lab_variables[teacher_id][instance_id][day_idx][session_name][room_id]
                             
-                            if room_id in labs_140:
-                                lab_140_assignments.append(var)
+                            if room_id in labs_140_laboratory_only:
+                                lab_140_laboratory_assignments.append(var)
                             else:
-                                non_140_assignments.append(var)
+                                non_140_laboratory_assignments.append(var)
                 
-                # Force 140+ student instances to ONLY use 140-capacity labs
-                if non_140_assignments:
-                    for var in non_140_assignments:
+                # Force 140+ student instances to ONLY use 140-capacity LABORATORY rooms
+                if non_140_laboratory_assignments:
+                    for var in non_140_laboratory_assignments:
                         model.Add(var == 0)
                         constraints_applied += 1
                     
                     forced_140_instances += 1
                     course_code = course_req.get('course_code', 'Unknown')
                     students = course_req.get('students_per_instance', 0)
-                    self.logger.info(f"  🔒 Large course {course_code} (ID: {instance_id}, {students} students) FORCED to use 140-capacity labs only")
+                    self.logger.info(f"  🔒 Large course {course_code} (ID: {instance_id}, {students} students) FORCED to use 140-capacity LABORATORY rooms only")
         
-        # CONSTRAINT 2: Prevent regular instances (≤70 students) from using 140-capacity labs
+        # CONSTRAINT 2: Prevent regular instances (≤70 students) from using 140-capacity LABORATORY rooms
         restricted_regular_instances = 0
         for teacher_id, instance_id, course_req in regular_instances:
             if teacher_id in lab_variables and instance_id in lab_variables[teacher_id]:
-                lab_140_assignments = []
+                lab_140_laboratory_assignments = []
                 
                 for day_idx in lab_variables[teacher_id][instance_id]:
                     for session_name in lab_variables[teacher_id][instance_id][day_idx]:
                         for room_id in lab_variables[teacher_id][instance_id][day_idx][session_name]:
-                            if room_id in labs_140:
+                            if room_id in labs_140_laboratory_only:
                                 var = lab_variables[teacher_id][instance_id][day_idx][session_name][room_id]
-                                lab_140_assignments.append(var)
+                                lab_140_laboratory_assignments.append(var)
                 
-                # Prevent regular instances from using 140-capacity labs
-                if lab_140_assignments:
-                    for var in lab_140_assignments:
+                # Prevent regular instances from using 140-capacity LABORATORY rooms
+                if lab_140_laboratory_assignments:
+                    for var in lab_140_laboratory_assignments:
                         model.Add(var == 0)
                         constraints_applied += 1
                     
@@ -2224,14 +2234,15 @@ class CombinedScheduler:
                     course_code = course_req.get('course_code', 'Unknown')
                     students = course_req.get('students_per_instance', 0)
                     if restricted_regular_instances <= 5:  # Log first few restrictions
-                        self.logger.info(f"  🚫 Regular course {course_code} (ID: {instance_id}, {students} students) RESTRICTED from 140-capacity labs")
+                        self.logger.info(f"  🚫 Regular course {course_code} (ID: {instance_id}, {students} students) RESTRICTED from 140-capacity LABORATORY rooms")
                     elif restricted_regular_instances == 6:
                         self.logger.info("  🚫 ... (additional regular course instances restricted)")
         
-        self.logger.info(f"140-capacity lab constraints applied successfully:")
-        self.logger.info(f"  Forced {forced_140_instances} large courses (140+ students) to use 140-capacity labs only")
-        self.logger.info(f"  Restricted {restricted_regular_instances} regular courses (≤70 students) from 140-capacity labs")
+        self.logger.info(f"140-capacity LABORATORY room constraints applied successfully:")
+        self.logger.info(f"  Forced {forced_140_instances} large courses (140+ students) to use 140-capacity LABORATORY rooms only")
+        self.logger.info(f"  Restricted {restricted_regular_instances} regular courses (≤70 students) from 140-capacity LABORATORY rooms")
         self.logger.info(f"  Total constraints applied: {constraints_applied}")
+        self.logger.info(f"  🏫 IMPORTANT: Only 'Laboratory' type rooms used, core labs are excluded for 140+ capacity courses")
         
         return constraints_applied
 
@@ -3625,7 +3636,7 @@ class CombinedScheduler:
         """Solve the combined scheduling model using two-phase approach."""
         # Create the solver
         solver = cp_model.CpSolver()
-        solver.parameters.max_time_in_seconds = 3000
+        solver.parameters.max_time_in_seconds = 1000
         solver.parameters.num_search_workers = 16
         solver.parameters.max_memory_in_mb = 30000
         solver.parameters.log_search_progress = True
@@ -6329,7 +6340,7 @@ class CombinedScheduler:
                 shift_vars[day_idx] = {}
                 for shift_id in self.get_available_shifts():
                     shift_vars[day_idx][shift_id] = model.NewBoolVar(
-                    f'fallback_theory_{dept_name}_day_{day_idx}_shift_{shift_id}'
+                f'fallback_theory_{dept_name}_day_{day_idx}_shift_{shift_id}'
                     )
                     # SOFT CONSTRAINT: Prefer to assign each day to exactly one shift
                     shift_violation = model.NewBoolVar(f'fallback_theory_shift_violation_{dept_name}_day_{day_idx}')
