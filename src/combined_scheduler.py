@@ -440,8 +440,8 @@ class CombinedScheduler:
         return slot_idx == lunch_slot
     
     def _setup_shift_based_constraints(self):
-        """Set up shift-based constraints for ALL departments."""
-        self.logger.info("Setting up shift-based constraints for ALL departments...")
+        """Set up department-centric shift-based constraints for ALL departments."""
+        self.logger.info("Setting up department-centric shift-based constraints for ALL departments...")
         
         # Define the three shifts in terms of time slots
         # Shift 1: 8AM - 3PM (theory slots 0-6, lab sessions L1-L4)
@@ -452,71 +452,117 @@ class CombinedScheduler:
             'shift_1': {
                 'name': 'Shift 1 (8AM-3PM)',
                 'theory_slots': list(range(0, 7)),  # slots 0-6 (8:00-2:50)
-                'lab_sessions': ['L1', 'L2', 'L3', 'L4'],  # 8:00-3:30
+                'lab_sessions': ['L1', 'L2', 'L3', 'L4'],  # 8:00-9:40, 10:00-11:40, 11:50-1:20, 1:20-3:00
                 'start_time': '8:00',
                 'end_time': '3:00'
             },
             'shift_2': {
                 'name': 'Shift 2 (10AM-5PM)',
                 'theory_slots': list(range(2, 9)),  # slots 2-8 (10:00-4:50)
-                'lab_sessions': ['L2', 'L3', 'L4', 'L5'],  # 9:50-5:30
+                'lab_sessions': ['L2', 'L3', 'L4', 'L5'],  # 10:00-11:40, 11:50-1:20, 1:20-3:00, 3:00-4:40
                 'start_time': '10:00',
                 'end_time': '5:00'
             },
             'shift_3': {
                 'name': 'Shift 3 (12PM-7PM)',
                 'theory_slots': list(range(4, 11)),  # slots 4-10 (12:00-6:50)
-                'lab_sessions': ['L3', 'L4', 'L5', 'L6'],  # 11:50-7:10
+                'lab_sessions': ['L3', 'L4', 'L5', 'L6'],  # 11:50-1:20, 1:20-3:00, 3:00-4:40, 5:10-6:50
                 'start_time': '12:00',
-                'end_time': '7:10'
+                'end_time': '7:00'
             }
         }
         
+        # Define valid weekly shift patterns (days_shift1, days_shift2, days_shift3)
+        # Each department will follow one of these patterns
+        self.valid_shift_patterns = [
+            (2, 2, 1),  # Pattern A: 2 days Shift1, 2 days Shift2, 1 day Shift3
+            (1, 2, 2),  # Pattern B: 1 day Shift1, 2 days Shift2, 2 days Shift3
+            (2, 1, 2)   # Pattern C: 2 days Shift1, 1 day Shift2, 2 days Shift3
+        ]
+        
         # Departments that should follow shift-based constraints
-        # These are departments with single course instances that need time-bounded scheduling
+        # All departments will now follow department-centric shift patterns
         self.shift_departments = {
             'Computer Science & Design': {
                 'enabled': True,
-                'description': 'Single instance department with shift-based scheduling'
+                'description': 'Department with unified shift-based scheduling'
             },
             'Computer Science & Engineering (Cyber Security)': {
                 'enabled': True,
-                'description': 'Single instance department with shift-based scheduling'
+                'description': 'Department with unified shift-based scheduling'
             },
             'Aeronautical Engineering': {
                 'enabled': True,
-                'description': 'Single instance engineering department with shift-based time constraints'
+                'description': 'Engineering department with unified shift-based time constraints'
             },
             'Automobile Engineering': {
                 'enabled': True,
-                'description': 'Single instance engineering department with shift-based time constraints'
+                'description': 'Engineering department with unified shift-based time constraints'
             },
             'Food Technology': {
                 'enabled': True,
-                'description': 'Single instance technology department with shift-based time constraints'
+                'description': 'Technology department with unified shift-based time constraints'
             },
             'Robotics & Automation': {
                 'enabled': True,
-                'description': 'Single instance engineering department with shift-based time constraints'
+                'description': 'Engineering department with unified shift-based time constraints'
             },
             'Mechatronics Engineering': {
                 'enabled': True,
-                'description': 'Single instance engineering department with shift-based time constraints'
+                'description': 'Engineering department with unified shift-based time constraints'
+            },
+            'Computer Science & Engineering': {
+                'enabled': True,
+                'description': 'Core CS department with unified shift-based scheduling'
+            },
+            'Information Technology': {
+                'enabled': True,
+                'description': 'IT department with unified shift-based scheduling'
+            },
+            'Electronics & Communication Engineering': {
+                'enabled': True,
+                'description': 'ECE department with unified shift-based scheduling'
+            },
+            'Electrical & Electronics Engineering': {
+                'enabled': True,
+                'description': 'EEE department with unified shift-based scheduling'
+            },
+            'Mechanical Engineering': {
+                'enabled': True,
+                'description': 'Mechanical department with unified shift-based scheduling'
+            },
+            'Civil Engineering': {
+                'enabled': True,
+                'description': 'Civil department with unified shift-based scheduling'
+            },
+            'Chemical Engineering': {
+                'enabled': True,
+                'description': 'Chemical department with unified shift-based scheduling'
+            },
+            'Biomedical Engineering': {
+                'enabled': True,
+                'description': 'Biomedical department with unified shift-based scheduling'
+            },
+            'Biotechnology': {
+                'enabled': True,
+                'description': 'Biotechnology department with unified shift-based scheduling'
             }
             # Add more departments here as needed
-            # 'Other Department Name': {
-            #     'enabled': True,
-            #     'description': 'Description here'
-            # }
         }
         
-        self.logger.info(f"Configured shift-based constraints for {len(self.shift_departments)} departments")
+        self.logger.info(f"Configured department-centric shift-based constraints for {len(self.shift_departments)} departments")
         for dept_name, config in self.shift_departments.items():
             if config['enabled']:
                 self.logger.info(f"  - {dept_name}: {config['description']}")
         
-        # Initialize teacher shift assignment tracking
-        self.teacher_shift_assignments = {}  # Will store (teacher_id, day) -> shift_id assignments
+        # Initialize department shift pattern tracking
+        self.department_shift_patterns = {}  # Will store dept_name -> (pattern, daily_assignments)
+        self.department_shift_assignments = {}  # Will store (dept_name, day) -> shift_id assignments
+        
+        self.logger.info("Department-centric shift system initialized:")
+        self.logger.info("  - Each department will follow ONE unified weekly shift pattern")
+        self.logger.info("  - All teachers in a department follow the same shift pattern")
+        self.logger.info("  - Available patterns: 2-2-1, 1-2-2, 2-1-2 (days per shift)")
     
     def is_shift_department(self, dept_name):
         """Check if a department should follow shift-based constraints."""
@@ -542,6 +588,19 @@ class CombinedScheduler:
         if shift_id in self.shift_definitions:
             return self.shift_definitions[shift_id]['lab_sessions']
         return list(self.lab_sessions.keys())  # fallback to all sessions
+    
+    def get_department_shift_pattern(self, dept_name):
+        """Get the shift pattern assigned to a department."""
+        return self.department_shift_patterns.get(dept_name, None)
+    
+    def get_department_shift_for_day(self, dept_name, day_idx):
+        """Get the shift assigned to a department for a specific day."""
+        return self.department_shift_assignments.get((dept_name, day_idx), None)
+    
+    def is_department_shift_compatible(self, dept_name, day_idx, shift_id):
+        """Check if a shift is compatible with department's pattern for a given day."""
+        assigned_shift = self.get_department_shift_for_day(dept_name, day_idx)
+        return assigned_shift is None or assigned_shift == shift_id
     
     def _load_core_lab_mapping(self):
         """Load core lab mapping file for specialized lab course assignments."""
@@ -3745,7 +3804,7 @@ class CombinedScheduler:
         # Add penalty for shift violations (soft constraint - discourage shift violations)
         if hasattr(self, 'shift_preference_vars') and self.shift_preference_vars:
             # Subtract penalties (since we're maximizing, subtracting penalties minimizes them)
-            shift_penalty_weight = 2500  # Moderate weight - discourage shift violations but allow flexibility
+            shift_penalty_weight = 3000  # Moderate weight - discourage shift violations but allow flexibility
             for penalty_var in self.shift_preference_vars:
                 objective_terms.append(-shift_penalty_weight * penalty_var)
             self.logger.info(f"Added {len(self.shift_preference_vars)} shift violation penalty terms (weight: {shift_penalty_weight})")
@@ -3783,7 +3842,7 @@ class CombinedScheduler:
         """Solve the combined scheduling model using two-phase approach."""
         # Create the solver
         solver = cp_model.CpSolver()
-        solver.parameters.max_time_in_seconds = 1200
+        solver.parameters.max_time_in_seconds = 300
         solver.parameters.num_search_workers = 16
         solver.parameters.max_memory_in_mb = 30000
         solver.parameters.log_search_progress = True
@@ -6216,20 +6275,21 @@ class CombinedScheduler:
 
     def apply_shift_based_lab_constraint(self, model, lab_variables):
         """
-        CONSTRAINT: Apply teacher-level shift-based scheduling constraints.
-        Each teacher can be assigned to one of three shifts per day:
-        - Shift 1: 8AM-3PM (L1, L2, L3, L4)
-        - Shift 2: 10AM-5PM (L2, L3, L4, L5)  
-        - Shift 3: 12PM-7PM (L3, L4, L5, L6)
+        CONSTRAINT: Apply department-centric shift-based scheduling constraints.
+        Each department follows one unified weekly shift pattern:
+        - Pattern 2-2-1: 2 days Shift1 (8AM-3PM), 2 days Shift2 (10AM-5PM), 1 day Shift3 (12PM-7PM)
+        - Pattern 1-2-2: 1 day Shift1, 2 days Shift2, 2 days Shift3
+        - Pattern 2-1-2: 2 days Shift1, 1 day Shift2, 2 days Shift3
         
-        Each teacher's lab sessions must respect their individual shift pattern.
+        All teachers in a department follow the same department shift pattern.
         This is implemented as a SOFT constraint to avoid infeasibility.
         """
-        self.logger.info("Applying teacher-level shift-based lab constraints for ALL departments...")
+        self.logger.info("Applying department-centric shift-based lab constraints for ALL departments...")
         constraints_applied = 0
         
-        # Group courses by teacher
-        teacher_courses = defaultdict(list)
+        # Group courses by department
+        dept_courses = defaultdict(list)
+        dept_teachers = defaultdict(set)
         
         for teacher_id in lab_variables:
             for course_instance_id in lab_variables[teacher_id]:
@@ -6245,49 +6305,82 @@ class CombinedScheduler:
                 
                 # Apply to all departments now
                 if self.is_shift_department(dept_name):
-                    teacher_courses[teacher_id].append((course_instance_id, dept_name))
+                    dept_courses[dept_name].append((teacher_id, course_instance_id))
+                    dept_teachers[dept_name].add(teacher_id)
         
-        if not teacher_courses:
-            self.logger.info("No teachers found with lab courses")
+        if not dept_courses:
+            self.logger.info("No departments found with lab courses")
             return 0
         
         # Initialize shift preference variables for soft constraints
         if not hasattr(self, 'shift_preference_vars'):
             self.shift_preference_vars = []
         
-        # Apply constraints for each teacher individually
-        for teacher_id, courses in teacher_courses.items():
-            self.logger.info(f"Applying teacher-level shift constraints for Teacher {teacher_id} with {len(courses)} lab courses")
+        # Initialize department shift variables storage
+        if not hasattr(self, 'department_shift_vars'):
+            self.department_shift_vars = {}
+        
+        # Apply constraints for each department
+        for dept_name, courses in dept_courses.items():
+            self.logger.info(f"Applying department-centric shift constraints for {dept_name} with {len(courses)} lab courses and {len(dept_teachers[dept_name])} teachers")
             
-            # Get department-specific days from first course (assuming teacher works in one department)
-            dept_name = courses[0][1] if courses else "Computer Science & Engineering"
             dept_days = self._get_days_for_department(dept_name)
             num_dept_days = len(dept_days)
             
-            # For each day, create individual teacher shift assignment variables
-            teacher_shift_vars = {}  # day_idx -> {shift_id: bool_var}
+            # Create department shift assignment variables for each day
+            dept_shift_vars = {}  # day_idx -> {shift_id: bool_var}
             
             for day_idx in range(num_dept_days):
-                teacher_shift_vars[day_idx] = {}
+                dept_shift_vars[day_idx] = {}
                 for shift_id in self.get_available_shifts():
-                    teacher_shift_vars[day_idx][shift_id] = model.NewBoolVar(
-                        f'teacher_{teacher_id}_day_{day_idx}_shift_{shift_id}_lab'
+                    dept_shift_vars[day_idx][shift_id] = model.NewBoolVar(
+                        f'dept_{dept_name.replace(" ", "_").replace("&", "and")}_day_{day_idx}_shift_{shift_id}_lab'
                     )
                 
-                # SOFT CONSTRAINT: Prefer teacher to follow exactly one shift per day
-                shift_violation = model.NewBoolVar(f'teacher_shift_violation_{teacher_id}_day_{day_idx}')
-                
-                # Shift violation occurs if teacher doesn't have exactly one shift
-                total_shifts = sum(teacher_shift_vars[day_idx].values())
-                model.Add(total_shifts == 1).OnlyEnforceIf(shift_violation.Not())
-                model.Add(total_shifts != 1).OnlyEnforceIf(shift_violation)
-                
-                # Add penalty to objective (prefer not to violate)
-                self.shift_preference_vars.append(shift_violation)
-                constraints_applied += 2
+                # CONSTRAINT: Each day must be assigned to exactly one shift
+                model.Add(sum(dept_shift_vars[day_idx].values()) == 1)
+                constraints_applied += 1
             
-            # For each course taught by this teacher, link to teacher's shift pattern
-            for course_instance_id, dept_name in courses:
+            # Store department shift variables
+            self.department_shift_vars[dept_name] = dept_shift_vars
+            
+            # Apply weekly shift pattern constraints for this department
+            for pattern_days_shift1, pattern_days_shift2, pattern_days_shift3 in self.valid_shift_patterns:
+                # Create pattern selection variable
+                pattern_var = model.NewBoolVar(
+                    f'dept_{dept_name.replace(" ", "_").replace("&", "and")}_pattern_{pattern_days_shift1}_{pattern_days_shift2}_{pattern_days_shift3}'
+                )
+                
+                # If this pattern is selected, enforce the shift distribution
+                shift1_days = []
+                shift2_days = []
+                shift3_days = []
+                
+                for day_idx in range(num_dept_days):
+                    shift1_days.append(dept_shift_vars[day_idx]['shift_1'])
+                    shift2_days.append(dept_shift_vars[day_idx]['shift_2'])
+                    shift3_days.append(dept_shift_vars[day_idx]['shift_3'])
+                
+                # Enforce pattern constraints
+                model.Add(sum(shift1_days) == pattern_days_shift1).OnlyEnforceIf(pattern_var)
+                model.Add(sum(shift2_days) == pattern_days_shift2).OnlyEnforceIf(pattern_var)
+                model.Add(sum(shift3_days) == pattern_days_shift3).OnlyEnforceIf(pattern_var)
+                
+                constraints_applied += 3
+            
+            # Exactly one pattern must be selected for this department
+            pattern_vars = []
+            for pattern in self.valid_shift_patterns:
+                pattern_var = model.NewBoolVar(
+                    f'dept_{dept_name.replace(" ", "_").replace("&", "and")}_pattern_{pattern[0]}_{pattern[1]}_{pattern[2]}'
+                )
+                pattern_vars.append(pattern_var)
+            
+            model.Add(sum(pattern_vars) == 1)
+            constraints_applied += 1
+            
+            # Apply lab session constraints based on department shift pattern
+            for teacher_id, course_instance_id in courses:
                 if teacher_id not in lab_variables or course_instance_id not in lab_variables[teacher_id]:
                     continue
                 
@@ -6300,15 +6393,15 @@ class CombinedScheduler:
                     if day_idx not in lab_variables[teacher_id][course_instance_id]:
                         continue
                     
-                    # Create soft preferences for teacher shift compliance
+                    # Create soft preferences for department shift compliance
                     for shift_id in self.get_available_shifts():
                         allowed_sessions = self.get_shift_lab_sessions(shift_id)
                         forbidden_sessions = [s for s in self.lab_sessions.keys() if s not in allowed_sessions]
                         
-                        # Create penalty variable for using forbidden sessions when teacher is on this shift
+                        # Create penalty variable for using forbidden sessions when department is on this shift
                         if forbidden_sessions:
                             shift_violation_penalty = model.NewBoolVar(
-                                f'teacher_shift_penalty_{teacher_id}_{course_instance_id}_{day_idx}_{shift_id}'
+                                f'dept_shift_penalty_{dept_name.replace(" ", "_").replace("&", "and")}_{teacher_id}_{course_instance_id}_{day_idx}_{shift_id}'
                             )
                             
                             # Count forbidden session usage
@@ -6322,48 +6415,42 @@ class CombinedScheduler:
                                             )
                             
                             if forbidden_usage:
-                                # Penalty is active if teacher's shift is chosen AND forbidden sessions are used
-                                forbidden_used = model.NewBoolVar(f'teacher_forbidden_used_{teacher_id}_{course_instance_id}_{day_idx}_{shift_id}')
+                                # Penalty is active if department's shift is chosen AND forbidden sessions are used
+                                forbidden_used = model.NewBoolVar(f'dept_forbidden_used_{dept_name.replace(" ", "_").replace("&", "and")}_{teacher_id}_{course_instance_id}_{day_idx}_{shift_id}')
                                 model.Add(sum(forbidden_usage) >= 1).OnlyEnforceIf(forbidden_used)
                                 model.Add(sum(forbidden_usage) == 0).OnlyEnforceIf(forbidden_used.Not())
                                 
-                                # Penalty occurs when teacher's shift is active AND forbidden sessions are used
-                                model.AddBoolAnd([teacher_shift_vars[day_idx][shift_id], forbidden_used]).OnlyEnforceIf(shift_violation_penalty)
-                                model.AddBoolOr([teacher_shift_vars[day_idx][shift_id].Not(), forbidden_used.Not()]).OnlyEnforceIf(shift_violation_penalty.Not())
+                                # Penalty occurs when department's shift is active AND forbidden sessions are used
+                                model.AddBoolAnd([dept_shift_vars[day_idx][shift_id], forbidden_used]).OnlyEnforceIf(shift_violation_penalty)
+                                model.AddBoolOr([dept_shift_vars[day_idx][shift_id].Not(), forbidden_used.Not()]).OnlyEnforceIf(shift_violation_penalty.Not())
                                 
                                 # Add to preference variables (to be minimized)
                                 self.shift_preference_vars.append(shift_violation_penalty)
                                 constraints_applied += 3
                 
-                self.logger.debug(f"Applied teacher-level shift constraints for course {course_code} taught by Teacher {teacher_id}")
-            
-            # Store teacher shift variables for cross-system coordination
-            if not hasattr(self, 'teacher_lab_shift_vars'):
-                self.teacher_lab_shift_vars = {}
-            self.teacher_lab_shift_vars[teacher_id] = teacher_shift_vars
+                self.logger.debug(f"Applied department shift constraints for course {course_code} in {dept_name}")
         
-        self.logger.info(f"Applied {constraints_applied} teacher-level shift-based lab constraints")
-        self.logger.info(f"Teachers with individual shift patterns: {len(teacher_courses)}")
+        self.logger.info(f"Applied {constraints_applied} department-centric shift-based lab constraints")
+        self.logger.info(f"Departments with unified shift patterns: {len(dept_courses)}")
         self.logger.info(f"Created {len(self.shift_preference_vars)} shift preference variables")
         return constraints_applied
     
     def apply_shift_based_theory_constraint(self, model, group_timeslot_vars):
         """
-        CONSTRAINT: Apply teacher-level theory shift constraints that coordinate with individual teacher shift patterns.
-        This ensures that when a teacher is on Shift 1 (8-3) on Monday, BOTH their lab sessions AND 
+        CONSTRAINT: Apply department-centric theory shift constraints that coordinate with department shift patterns.
+        This ensures that when a department is on Shift 1 (8-3) on Monday, BOTH their lab sessions AND 
         theory sessions comply with the same shift time window.
         
-        Each teacher will follow their individual weekly shift patterns:
+        Each department will follow one unified weekly shift pattern:
         - Pattern 2-2-1: 2 days Shift1 (8-3), 2 days Shift2 (10-5), 1 day Shift3 (12-7)
         - Pattern 1-2-2: 1 day Shift1 (8-3), 2 days Shift2 (10-5), 2 days Shift3 (12-7)  
         - Pattern 2-1-2: 2 days Shift1 (8-3), 1 day Shift2 (10-5), 2 days Shift3 (12-7)
         """
-        self.logger.info("Applying teacher-level theory shift constraints to coordinate with individual teacher shift patterns...")
+        self.logger.info("Applying department-centric theory shift constraints to coordinate with department shift patterns...")
         constraints_applied = 0
         
-        # Group theory groups by department and find corresponding teachers
+        # Group theory groups by department
         dept_groups = defaultdict(list)
-        group_teachers = {}  # Map group_name -> list of teachers in that group
         
         for group_name in group_timeslot_vars.keys():
             # Parse department from group name
@@ -6372,106 +6459,80 @@ class CombinedScheduler:
             # Only apply to shift departments
             if self.is_shift_department(dept_name):
                 dept_groups[dept_name].append(group_name)
-                
-                # Find teachers for this group
-                teachers = []
-                if hasattr(self, 'course_groups') and self.course_groups:
-                    try:
-                        if isinstance(self.course_groups, dict):
-                            for dept_key, dept_data in self.course_groups.items():
-                                if isinstance(dept_data, dict):
-                                    for sem_key, sem_data in dept_data.items():
-                                        if isinstance(sem_data, list):
-                                            for group in sem_data:
-                                                if isinstance(group, dict) and group.get('group_name') == group_name and 'teachers' in group:
-                                                    teachers.extend(group['teachers'])
-                                                    break
-                    except (TypeError, AttributeError) as e:
-                        self.logger.warning(f"Error accessing course_groups structure for {group_name}: {e}")
-                        teachers = []
-                
-                group_teachers[group_name] = teachers
         
         if not dept_groups:
             self.logger.info("No departments found in theory groups")
             return 0
         
-        # Check if we have unified teacher shift variables
-        if not hasattr(self, 'unified_teacher_shift_vars') or not self.unified_teacher_shift_vars:
-            self.logger.warning("No teacher shift variables found - theory shifts cannot be coordinated")
+        # Check if we have department shift variables
+        if not hasattr(self, 'department_shift_vars') or not self.department_shift_vars:
+            self.logger.warning("No department shift variables found - theory shifts cannot be coordinated")
             return self._apply_fallback_theory_shifts(model, group_timeslot_vars, dept_groups)
         
         # Initialize shift preference variables if not already done
         if not hasattr(self, 'shift_preference_vars'):
             self.shift_preference_vars = []
         
-        self.logger.info("Coordinating theory slots with individual teacher shift patterns...")
+        self.logger.info("Coordinating theory slots with department shift patterns...")
             
-        # For each theory group, coordinate with individual teacher shift patterns
+        # For each theory group, coordinate with department shift patterns
         for dept_name, groups in dept_groups.items():
+            if dept_name not in self.department_shift_vars:
+                self.logger.warning(f"No shift variables found for department {dept_name} - skipping coordination")
+                continue
+                
             dept_days = self._get_days_for_department(dept_name)
             num_dept_days = len(dept_days)
+            dept_shift_vars = self.department_shift_vars[dept_name]
+            
+            self.logger.info(f"Coordinating {len(groups)} theory groups in {dept_name} with department shift pattern")
             
             for group_name in groups:
                 if group_name not in group_timeslot_vars:
                     continue
                 
-                teachers = group_teachers.get(group_name, [])
-                if not teachers:
-                    self.logger.warning(f"No teachers found for theory group {group_name} - skipping coordination")
-                    continue
-                
-                self.logger.info(f"Coordinating theory group {group_name} with {len(teachers)} individual teacher shift patterns")
-                
-                # For each teacher associated with this group
-                for teacher_id in teachers:
-                    if teacher_id not in self.unified_teacher_shift_vars:
-                        continue  # Skip if teacher doesn't have unified shift variables
+                # Create coordination constraints between department shifts and theory slot usage
+                for day_idx in range(num_dept_days):
+                    if day_idx not in group_timeslot_vars[group_name]:
+                        continue
                     
-                    teacher_shift_vars = self.unified_teacher_shift_vars[teacher_id]
-                    
-                    # Create coordination constraints between unified teacher shifts and theory slot usage
-                    for day_idx in range(num_dept_days):
-                        if day_idx not in group_timeslot_vars[group_name]:
-                            continue
+                    for shift_id in self.get_available_shifts():
+                        allowed_slots = self.get_shift_theory_slots(shift_id)
+                        forbidden_slots = [s for s in range(self.num_theory_slots) if s not in allowed_slots]
                         
-                        for shift_id in self.get_available_shifts():
-                            allowed_slots = self.get_shift_theory_slots(shift_id)
-                            forbidden_slots = [s for s in range(self.num_theory_slots) if s not in allowed_slots]
+                        if forbidden_slots:
+                            # Create coordination penalty for violating department's shift pattern
+                            coord_violation = model.NewBoolVar(
+                                f'dept_theory_coord_{dept_name.replace(" ", "_").replace("&", "and")}_{group_name}_day_{day_idx}_shift_{shift_id}'
+                            )
                             
-                            if forbidden_slots:
-                                # Create coordination penalty for violating teacher's individual shift pattern
-                                coord_violation = model.NewBoolVar(
-                                    f'teacher_theory_coord_{group_name}_teacher_{teacher_id}_day_{day_idx}_shift_{shift_id}'
+                            # Collect forbidden slot usage for this group
+                            forbidden_slot_usage = []
+                            for slot_idx in forbidden_slots:
+                                if slot_idx in group_timeslot_vars[group_name][day_idx]:
+                                    forbidden_slot_usage.append(group_timeslot_vars[group_name][day_idx][slot_idx])
+                            
+                            if forbidden_slot_usage:
+                                # Create helper variable for forbidden slots being used
+                                forbidden_used = model.NewBoolVar(
+                                    f'dept_theory_forbidden_{dept_name.replace(" ", "_").replace("&", "and")}_{group_name}_day_{day_idx}_shift_{shift_id}'
                                 )
+                                model.Add(sum(forbidden_slot_usage) >= 1).OnlyEnforceIf(forbidden_used)
+                                model.Add(sum(forbidden_slot_usage) == 0).OnlyEnforceIf(forbidden_used.Not())
                                 
-                                # Collect forbidden slot usage for this group
-                                forbidden_slot_usage = []
-                                for slot_idx in forbidden_slots:
-                                    if slot_idx in group_timeslot_vars[group_name][day_idx]:
-                                        forbidden_slot_usage.append(group_timeslot_vars[group_name][day_idx][slot_idx])
+                                # Coordination violation occurs when department's shift is active AND group uses forbidden slots
+                                model.AddBoolAnd([dept_shift_vars[day_idx][shift_id], forbidden_used]).OnlyEnforceIf(coord_violation)
+                                model.AddBoolOr([dept_shift_vars[day_idx][shift_id].Not(), forbidden_used.Not()]).OnlyEnforceIf(coord_violation.Not())
                                 
-                                if forbidden_slot_usage:
-                                    # Create helper variable for forbidden slots being used
-                                    forbidden_used = model.NewBoolVar(
-                                        f'teacher_theory_forbidden_{group_name}_teacher_{teacher_id}_day_{day_idx}_shift_{shift_id}'
-                                    )
-                                    model.Add(sum(forbidden_slot_usage) >= 1).OnlyEnforceIf(forbidden_used)
-                                    model.Add(sum(forbidden_slot_usage) == 0).OnlyEnforceIf(forbidden_used.Not())
-                                    
-                                    # Coordination violation occurs when teacher's shift is active AND group uses forbidden slots
-                                    model.AddBoolAnd([teacher_shift_vars[day_idx][shift_id], forbidden_used]).OnlyEnforceIf(coord_violation)
-                                    model.AddBoolOr([teacher_shift_vars[day_idx][shift_id].Not(), forbidden_used.Not()]).OnlyEnforceIf(coord_violation.Not())
-                                    
-                                    # Add this as a soft penalty (theory should respect individual teacher shift patterns)
-                                    self.shift_preference_vars.append(coord_violation)
-                                    constraints_applied += 3
+                                # Add this as a soft penalty (theory should respect department shift patterns)
+                                self.shift_preference_vars.append(coord_violation)
+                                constraints_applied += 3
         
-        self.logger.info(f"Applied {constraints_applied} teacher-level theory-teacher shift coordination constraints")
-        self.logger.info(f"Theory groups now coordinate with individual teacher shift patterns:")
-        self.logger.info(f"  🎯 INDIVIDUAL: When teacher is on Shift1 Monday, ALL their activities (lab+theory) fit 8-3 window")
-        self.logger.info(f"  🎯 INDIVIDUAL: When teacher is on Shift2 Tuesday, ALL their activities (lab+theory) fit 10-5 window")
-        self.logger.info(f"  🎯 INDIVIDUAL: When teacher is on Shift3 Wednesday, ALL their activities (lab+theory) fit 12-7 window")
+        self.logger.info(f"Applied {constraints_applied} department-centric theory-department shift coordination constraints")
+        self.logger.info(f"Theory groups now coordinate with department shift patterns:")
+        self.logger.info(f"  🎯 DEPARTMENT: When department is on Shift1 Monday, ALL department activities (lab+theory) fit 8-3 window")
+        self.logger.info(f"  🎯 DEPARTMENT: When department is on Shift2 Tuesday, ALL department activities (lab+theory) fit 10-5 window")
+        self.logger.info(f"  🎯 DEPARTMENT: When department is on Shift3 Wednesday, ALL department activities (lab+theory) fit 12-7 window")
         return constraints_applied
     
     def _apply_fallback_theory_shifts(self, model, group_timeslot_vars, dept_groups):
@@ -6576,213 +6637,46 @@ class CombinedScheduler:
 
     def apply_unified_weekly_shift_constraint(self, model, lab_variables, group_timeslot_vars):
         """
-        CONSTRAINT: Apply unified weekly shift pattern constraints for teachers in ALL departments.
-        This creates a single set of shift variables per teacher that coordinates BOTH lab and theory scheduling.
+        CONSTRAINT: Apply unified weekly shift pattern constraints for departments.
+        This method is now a wrapper that ensures department shift variables are properly coordinated
+        between lab and theory scheduling. The actual constraints are applied in the individual
+        apply_shift_based_lab_constraint and apply_shift_based_theory_constraint methods.
         
-        Key innovation: Instead of separate lab and theory shift patterns, teachers get ONE unified pattern:
+        Department-centric approach: Each department follows ONE unified pattern:
         - Pattern 2-2-1: 2 days Shift1 (8-3), 2 days Shift2 (10-5), 1 day Shift3 (12-7)
         - Pattern 1-2-2: 1 day Shift1 (8-3), 2 days Shift2 (10-5), 2 days Shift3 (12-7)  
         - Pattern 2-1-2: 2 days Shift1 (8-3), 1 day Shift2 (10-5), 2 days Shift3 (12-7)
         
-        Then both lab_constraints and theory_constraints respect the SAME teacher shift variables.
+        All teachers in a department follow the same department shift pattern.
         """
-        self.logger.info("Applying unified weekly shift pattern constraints for teachers in ALL departments...")
+        self.logger.info("Ensuring unified department-centric weekly shift pattern coordination...")
         constraints_applied = 0
         
-        # Define valid weekly shift patterns (days_shift1, days_shift2, days_shift3)
-        valid_patterns = [
-            (2, 2, 1),  # 2 days Shift1, 2 days Shift2, 1 day Shift3
-            (1, 2, 2),  # 1 day Shift1, 2 days Shift2, 2 days Shift3
-            (2, 1, 2)   # 2 days Shift1, 1 day Shift2, 2 days Shift3
-        ]
-        
-        # Collect all teachers in shift departments from both lab and theory variables
-        all_teachers = set()
-        teacher_lab_courses = defaultdict(list)
-        teacher_theory_groups = defaultdict(list)
-        
-        # Collect from lab variables
-        for teacher_id in lab_variables:
-            for course_instance_id in lab_variables[teacher_id]:
-                # Get department for this course
-                dept_name = "Computer Science & Engineering"  # Default
-                if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
-                    dept_name = self.instance_group_mapping[course_instance_id]['department']
-                else:
-                    # Fallback: look up in courses_df
-                    course_matches = self.courses_df[self.courses_df['id'] == int(course_instance_id)]
-                    if not course_matches.empty:
-                        dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
-                
-                # Only apply to shift departments
-                if self.is_shift_department(dept_name):
-                    all_teachers.add((teacher_id, dept_name))
-                    teacher_lab_courses[teacher_id].append(course_instance_id)
-        
-        # Collect from theory variables (assuming group names contain teacher info)
-        if hasattr(self, 'course_groups') and self.course_groups:
-            for group_name in group_timeslot_vars.keys():
-                # Parse department from group name
-                dept_name = group_name.split('_S')[0] if '_S' in group_name else "Computer Science & Engineering"
-                
-                # Only apply to shift departments
-                if self.is_shift_department(dept_name):
-                    # Try to find teachers for this group
-                    group_data = None
-                    try:
-                        if isinstance(self.course_groups, dict):
-                            for dept_key, dept_data in self.course_groups.items():
-                                if isinstance(dept_data, dict):
-                                    for sem_key, sem_data in dept_data.items():
-                                        if isinstance(sem_data, list):
-                                            for group in sem_data:
-                                                if isinstance(group, dict) and group.get('group_name') == group_name:
-                                                    group_data = group
-                                                    break
-                    except (TypeError, AttributeError) as e:
-                        self.logger.warning(f"Error accessing course_groups structure for {group_name}: {e}")
-                        group_data = None
-                    
-                    if group_data and 'teachers' in group_data:
-                        for teacher_id in group_data['teachers']:
-                            all_teachers.add((teacher_id, dept_name))
-                            teacher_theory_groups[teacher_id].append(group_name)
-        
-        if not all_teachers:
-            self.logger.info("No teachers found in any departments for unified constraints")
+        # Check if department shift variables have been created
+        if not hasattr(self, 'department_shift_vars') or not self.department_shift_vars:
+            self.logger.warning("No department shift variables found - department shifts may not be properly coordinated")
             return 0
         
-        # Create unified teacher shift variables (will be used by both lab and theory)
-        if not hasattr(self, 'unified_teacher_shift_vars'):
-            self.unified_teacher_shift_vars = {}
+        # Verify that department shift variables exist for all shift departments
+        dept_count = 0
+        for dept_name in self.department_shift_vars:
+            if self.is_shift_department(dept_name):
+                dept_count += 1
+                self.logger.info(f"✅ Department {dept_name} has unified shift pattern variables")
         
-        if not hasattr(self, 'shift_preference_vars'):
-            self.shift_preference_vars = []
+        if dept_count == 0:
+            self.logger.warning("No shift departments found with shift variables")
+            return 0
         
-        # For each teacher, create unified shift pattern variables
-        for teacher_id, dept_name in all_teachers:
-            if teacher_id in self.unified_teacher_shift_vars:
-                continue  # Already processed
-                
-            dept_days = self._get_days_for_department(dept_name)
-            num_dept_days = len(dept_days)
-            
-            # Create shift assignment variables for each day
-            teacher_shift_vars = {}
-            for day_idx in range(num_dept_days):
-                teacher_shift_vars[day_idx] = {}
-                for shift_id in self.get_available_shifts():
-                    teacher_shift_vars[day_idx][shift_id] = model.NewBoolVar(
-                        f'unified_teacher_{teacher_id}_day_{day_idx}_shift_{shift_id}'
-                    )
-                
-                # Each day must be assigned to exactly one shift
-                model.Add(sum(teacher_shift_vars[day_idx].values()) == 1)
-                constraints_applied += 1
-            
-            # Store teacher shift variables for cross-system coordination
-            self.unified_teacher_shift_vars[teacher_id] = teacher_shift_vars
-            
-            # Apply weekly pattern constraints
-            for pattern_days_shift1, pattern_days_shift2, pattern_days_shift3 in valid_patterns:
-                # Create pattern selection variable
-                pattern_var = model.NewBoolVar(
-                    f'unified_teacher_{teacher_id}_pattern_{pattern_days_shift1}_{pattern_days_shift2}_{pattern_days_shift3}'
-                )
-                
-                # If this pattern is selected, enforce the shift distribution
-                shift1_days = []
-                shift2_days = []
-                shift3_days = []
-                
-                for day_idx in range(num_dept_days):
-                    shift1_days.append(teacher_shift_vars[day_idx]['shift_1'])
-                    shift2_days.append(teacher_shift_vars[day_idx]['shift_2'])
-                    shift3_days.append(teacher_shift_vars[day_idx]['shift_3'])
-                
-                # Enforce pattern constraints
-                model.Add(sum(shift1_days) == pattern_days_shift1).OnlyEnforceIf(pattern_var)
-                model.Add(sum(shift2_days) == pattern_days_shift2).OnlyEnforceIf(pattern_var)
-                model.Add(sum(shift3_days) == pattern_days_shift3).OnlyEnforceIf(pattern_var)
-                
-                # Store pattern variable
-                self.shift_preference_vars.append(pattern_var)
-                constraints_applied += 3
-                
-            # Exactly one pattern must be selected
-            pattern_vars = [
-                model.NewBoolVar(f'unified_teacher_{teacher_id}_pattern_{p[0]}_{p[1]}_{p[2]}')
-                for p in valid_patterns
-            ]
-            model.Add(sum(pattern_vars) == 1)
-            constraints_applied += 1
-            
-            # Link lab sessions to unified teacher shift variables
-            self.logger.info("Linking lab sessions to unified teacher shift variables...")
-            if teacher_id in teacher_lab_courses:
-                if teacher_id not in self.unified_teacher_shift_vars:
-                    continue  # Skip if no unified shift variables for this teacher
-                
-                for course_instance_id in teacher_lab_courses[teacher_id]:
-                    if teacher_id not in lab_variables or course_instance_id not in lab_variables[teacher_id]:
-                        continue
-                    
-                    teacher_shift_vars = self.unified_teacher_shift_vars[teacher_id]
-                    
-                    for day_idx in range(num_dept_days):
-                        if day_idx not in lab_variables[teacher_id][course_instance_id]:
-                            continue
-                        
-                        # For each shift, create constraints linking teacher shifts to lab session usage
-                        for shift_id in self.get_available_shifts():
-                            allowed_sessions = self.get_shift_lab_sessions(shift_id)
-                            forbidden_sessions = [s for s in self.lab_sessions.keys() if s not in allowed_sessions]
-                            
-                            # Create violation penalty for using forbidden sessions when this shift is active
-                            if forbidden_sessions:
-                                shift_violation = model.NewBoolVar(
-                                    f'unified_teacher_{teacher_id}_course_{course_instance_id}_day_{day_idx}_shift_{shift_id}_lab_violation'
-                                )
-                                
-                                # Collect forbidden session usage
-                                forbidden_usage = []
-                                for session_name in forbidden_sessions:
-                                    if session_name in lab_variables[teacher_id][course_instance_id][day_idx]:
-                                        for room_id in self.lab_room_ids:
-                                            if room_id in lab_variables[teacher_id][course_instance_id][day_idx][session_name]:
-                                                forbidden_usage.append(
-                                                    lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id]
-                                                )
-                                
-                                if forbidden_usage:
-                                    # Create helper variable for forbidden sessions being used
-                                    forbidden_used = model.NewBoolVar(f'unified_teacher_{teacher_id}_course_{course_instance_id}_day_{day_idx}_shift_{shift_id}_lab_forbidden_used')
-                                    model.Add(sum(forbidden_usage) >= 1).OnlyEnforceIf(forbidden_used)
-                                    model.Add(sum(forbidden_usage) == 0).OnlyEnforceIf(forbidden_used.Not())
-                                    
-                                    # Violation occurs when shift is active AND forbidden sessions are used
-                                    model.AddBoolAnd([teacher_shift_vars[day_idx][shift_id], forbidden_used]).OnlyEnforceIf(shift_violation)
-                                    model.AddBoolOr([teacher_shift_vars[day_idx][shift_id].Not(), forbidden_used.Not()]).OnlyEnforceIf(shift_violation.Not())
-                                    
-                                    # Add to preference variables (minimize violations)
-                                    self.shift_preference_vars.append(shift_violation)
-                                    constraints_applied += 3
-                
-            # Log the pattern setup for this teacher
-            lab_courses_count = len(teacher_lab_courses.get(teacher_id, []))
-            theory_groups_count = len(teacher_theory_groups.get(teacher_id, []))
-            pattern_names = [f"{p[0]}-{p[1]}-{p[2]}" for p in valid_patterns]
-            self.logger.info(f"Teacher {teacher_id} ({dept_name}): {lab_courses_count} lab courses, {theory_groups_count} theory groups")
-            self.logger.info(f"  → Unified shift patterns: {pattern_names}")
+        # Log coordination status
+        self.logger.info(f"✅ Department-centric shift coordination verified for {dept_count} departments")
+        self.logger.info("✅ Lab and theory constraints will use the same department shift variables")
+        self.logger.info("✅ All teachers in each department follow the same department shift pattern")
         
-        # Generate dynamic pattern names for logging
-        pattern_names = [f"{p[0]}-{p[1]}-{p[2]}" for p in valid_patterns]
+        # Generate pattern names for logging
+        pattern_names = [f"{p[0]}-{p[1]}-{p[2]}" for p in self.valid_shift_patterns]
+        self.logger.info(f"✅ Valid department patterns: {', '.join(pattern_names)} (Shift1-Shift2-Shift3 days)")
         
-        self.logger.info(f"Applied {constraints_applied} unified weekly shift pattern constraints")
-        self.logger.info(f"Teachers with unified shift patterns: {len(all_teachers)}")
-        self.logger.info(f"Valid weekly patterns: {', '.join(pattern_names)} (Shift1-Shift2-Shift3 days)")
-        self.logger.info(f"Unified shifts will be used by both lab and theory constraints")
-        self.logger.info(f"Created {len(self.shift_preference_vars)} shift preference variables")
         return constraints_applied
 
     def apply_teacher_max_consecutive_lab_constraint(self, model, lab_variables):
