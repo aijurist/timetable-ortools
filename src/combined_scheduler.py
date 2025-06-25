@@ -2411,9 +2411,20 @@ class CombinedScheduler:
                 if teacher_id not in lab_variables or course_instance_id not in lab_variables[teacher_id]:
                     continue
                 
-                if (course_code, course_name) in self.course_to_room_mapping:
+                # Check if course code is in core mapping (using course code only for simplicity)
+                is_core_mapped = False
+                mapped_room_ids = None
+                
+                # Look for this course code in the core mapping
+                for (mapped_code, mapped_name), room_ids in self.course_to_room_mapping.items():
+                    if mapped_code == course_code:
+                        is_core_mapped = True
+                        mapped_room_ids = room_ids
+                        break
+                
+                if is_core_mapped:
                     mapped_courses_count += 1
-                    required_room_ids = self.course_to_room_mapping[(course_code, course_name)]
+                    required_room_ids = mapped_room_ids
                     
                     # Ensure all required rooms are valid lab rooms
                     valid_required_rooms = [room_id for room_id in required_room_ids if room_id in self.lab_room_ids]

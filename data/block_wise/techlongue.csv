@@ -140,9 +140,9 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 150,CG005,C Block,Avionics Lab,1,Core-Lab,20,35,1,0,Advanced,2,0,0,0
 151,CG006,C Block,Aero CAD Lab,1,Core-Lab,20,35,1,0,None,2,0,0,0
 152,D102,D Block,Auto CAD Lab,1,Core-Lab,20,35,1,0,None,5,0,0,0
-153,DG009,D Block,Food Chemistry Lab,1,Core-Lab,20,35,1,0,High-tech,18,0,0,0
-154,DG060,D Block,Isaac Asimov Laboratory,1,Core-Lab,20,35,1,0,Basic,27,0,0,0
-155,DG004,D Block,Medical Image Processing Lab,1,Core-Lab,20,35,1,0,Advanced,6,0,0,0
+153,DG009,D Block,Food Chemistry Lab,1,Core-Lab,20,35,1,0,None,18,0,0,0
+154,DG0IAL,D Block,Isaac Asimov Laboratory,1,Core-Lab,20,35,1,0,Basic,27,0,0,0
+155,DG,D Block,Medical Image Processing Lab,1,Core-Lab,20,35,1,0,Advanced,6,0,0,0
 156,DG012,D Block,Electronics and Instrumentation,1,Core-Lab,20,35,1,0,None,6,0,0,0
 157,DG013,D Block,Diagnostic and Therapeutic Equipment Lab,1,Core-Lab,20,35,1,0,Basic,6,0,0,0
 191,WBL11,B Block,Electrical Machines II Lab,1,Core-Lab,20,35,0,0,High-tech,15,0,0,0
