@@ -11,39 +11,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 91,
-          "course_id": 269,
-          "course_code": "CS23531",
-          "course_name": "Web Programming",
-          "course_type": "LoT",
-          "teacher_id": "185.0",
-          "semester": 5,
-          "course_dept": "Computer Science & Design",
-          "student_dept": "Computer Science & Design",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "185.0"
-      ],
-      "courses": [
-        "CS23531"
-      ],
-      "total_workload": 7
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 681,
           "course_id": 331,
           "course_code": "GE23627",
@@ -70,6 +37,39 @@
         "GE23627"
       ],
       "total_workload": 4
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 91,
+          "course_id": 269,
+          "course_code": "CS23531",
+          "course_name": "Web Programming",
+          "course_type": "LoT",
+          "teacher_id": "185.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Design",
+          "student_dept": "Computer Science & Design",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "185.0"
+      ],
+      "courses": [
+        "CS23531"
+      ],
+      "total_workload": 7
     },
     {
       "group_id": 3,
@@ -110,39 +110,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 88,
-          "course_id": 592,
-          "course_code": "IT23E31",
-          "course_name": "Graphics and Multimedia",
-          "course_type": "LoT",
-          "teacher_id": "184.0",
-          "semester": 5,
-          "course_dept": "Computer Science & Design",
-          "student_dept": "Computer Science & Design",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 2,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "184.0"
-      ],
-      "courses": [
-        "IT23E31"
-      ],
-      "total_workload": 4
-    },
-    {
-      "group_id": 5,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 80,
           "course_id": 264,
           "course_code": "CS23431",
@@ -169,6 +136,39 @@
         "CS23431"
       ],
       "total_workload": 7
+    },
+    {
+      "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 88,
+          "course_id": 592,
+          "course_code": "IT23E31",
+          "course_name": "Graphics and Multimedia",
+          "course_type": "LoT",
+          "teacher_id": "184.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Design",
+          "student_dept": "Computer Science & Design",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "184.0"
+      ],
+      "courses": [
+        "IT23E31"
+      ],
+      "total_workload": 4
     }
   ],
   "pe_group_included": false,

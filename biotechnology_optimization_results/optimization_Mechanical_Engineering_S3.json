@@ -1,0 +1,451 @@
+{
+  "department": "Mechanical Engineering",
+  "semester": "3",
+  "solution_found": true,
+  "objective_value": 2.0,
+  "num_groups": 8,
+  "groups": [
+    {
+      "group_id": 1,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 829,
+          "course_id": 263,
+          "course_code": "CS23422",
+          "course_name": "Python Programming for Machine Learning",
+          "course_type": "L",
+          "teacher_id": "525.0",
+          "semester": 3,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 68,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 748,
+          "course_id": 442,
+          "course_code": "ME23321",
+          "course_name": "Manufacturing Technology Laboratory I",
+          "course_type": "L",
+          "teacher_id": "505.0",
+          "semester": 3,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "525.0",
+        "505.0"
+      ],
+      "courses": [
+        "CS23422",
+        "ME23321"
+      ],
+      "total_workload": 6
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1221,
+          "course_id": 425,
+          "course_code": "MA23331",
+          "course_name": "Transforms and Statistics",
+          "course_type": "LoT",
+          "teacher_id": "428.0",
+          "semester": 3,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 745,
+          "course_id": 443,
+          "course_code": "ME23331",
+          "course_name": "Strength of Materials",
+          "course_type": "LoT",
+          "teacher_id": "536.0",
+          "semester": 3,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "428.0",
+        "536.0"
+      ],
+      "courses": [
+        "MA23331",
+        "ME23331"
+      ],
+      "total_workload": 10
+    },
+    {
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 2052,
+          "course_id": 833,
+          "course_code": "ME23VAP2",
+          "course_name": "Thors E-Learning",
+          "course_type": "L",
+          "teacher_id": "543.0",
+          "semester": 3,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 747,
+          "course_id": 442,
+          "course_code": "ME23321",
+          "course_name": "Manufacturing Technology Laboratory I",
+          "course_type": "L",
+          "teacher_id": "518.0",
+          "semester": 3,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "543.0",
+        "518.0"
+      ],
+      "courses": [
+        "ME23VAP2",
+        "ME23321"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 2051,
+          "course_id": 833,
+          "course_code": "ME23VAP2",
+          "course_name": "Thors E-Learning",
+          "course_type": "L",
+          "teacher_id": "518.0",
+          "semester": 3,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 832,
+          "course_id": 263,
+          "course_code": "CS23422",
+          "course_name": "Python Programming for Machine Learning",
+          "course_type": "L",
+          "teacher_id": "502.0",
+          "semester": 3,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 61,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "502.0",
+        "518.0"
+      ],
+      "courses": [
+        "ME23VAP2",
+        "CS23422"
+      ],
+      "total_workload": 6
+    },
+    {
+      "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1220,
+          "course_id": 425,
+          "course_code": "MA23331",
+          "course_name": "Transforms and Statistics",
+          "course_type": "LoT",
+          "teacher_id": "465.0",
+          "semester": 3,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 746,
+          "course_id": 443,
+          "course_code": "ME23331",
+          "course_name": "Strength of Materials",
+          "course_type": "LoT",
+          "teacher_id": "498.0",
+          "semester": 3,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "498.0",
+        "465.0"
+      ],
+      "courses": [
+        "MA23331",
+        "ME23331"
+      ],
+      "total_workload": 10
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 744,
+          "course_id": 441,
+          "course_code": "ME23313",
+          "course_name": "Kinematics of Machinery",
+          "course_type": "T",
+          "teacher_id": "503.0",
+          "semester": 3,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 742,
+          "course_id": 440,
+          "course_code": "ME23312",
+          "course_name": "Manufacturing Technology I",
+          "course_type": "T",
+          "teacher_id": "530.0",
+          "semester": 3,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "530.0",
+        "503.0"
+      ],
+      "courses": [
+        "ME23313",
+        "ME23312"
+      ],
+      "total_workload": 6
+    },
+    {
+      "group_id": 7,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 709,
+          "course_id": 439,
+          "course_code": "ME23311",
+          "course_name": "Engineering Thermodynamics",
+          "course_type": "T",
+          "teacher_id": "502.0",
+          "semester": 3,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 741,
+          "course_id": 440,
+          "course_code": "ME23312",
+          "course_name": "Manufacturing Technology I",
+          "course_type": "T",
+          "teacher_id": "499.0",
+          "semester": 3,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "502.0",
+        "499.0"
+      ],
+      "courses": [
+        "ME23311",
+        "ME23312"
+      ],
+      "total_workload": 7
+    },
+    {
+      "group_id": 8,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 665,
+          "course_id": 439,
+          "course_code": "ME23311",
+          "course_name": "Engineering Thermodynamics",
+          "course_type": "T",
+          "teacher_id": "526.0",
+          "semester": 3,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 743,
+          "course_id": 441,
+          "course_code": "ME23313",
+          "course_name": "Kinematics of Machinery",
+          "course_type": "T",
+          "teacher_id": "524.0",
+          "semester": 3,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "526.0",
+        "524.0"
+      ],
+      "courses": [
+        "ME23311",
+        "ME23313"
+      ],
+      "total_workload": 7
+    }
+  ],
+  "pe_group_included": false,
+  "summary": {
+    "total_instances": 16,
+    "pe_instances": 0,
+    "lab_instances": 10,
+    "theory_instances": 10,
+    "unique_courses": 8,
+    "unique_teachers": 14,
+    "pe_course_codes": []
+  }
+}

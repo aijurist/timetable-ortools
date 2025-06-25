@@ -2,7 +2,7 @@
   "department": "Artificial Intelligence & Machine Learning",
   "semester": "7",
   "solution_found": true,
-  "objective_value": 6.0,
+  "objective_value": 0.0,
   "num_groups": 4,
   "groups": [
     {
@@ -10,25 +10,6 @@
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
-        {
-          "id": 577,
-          "course_id": 710,
-          "course_code": "AI19741",
-          "course_name": "Big Data Technology",
-          "course_type": "LoT",
-          "teacher_id": "33.0",
-          "semester": 7,
-          "course_dept": "Artificial Intelligence & Machine Learning",
-          "student_dept": "Artificial Intelligence & Machine Learning",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
         {
           "id": "493-A",
           "course_id": 748,
@@ -66,17 +47,35 @@
           "student_count": 70,
           "virtual_id": "493-B",
           "co_scheduled_id": 1
+        },
+        {
+          "id": 504,
+          "course_id": 748,
+          "course_code": "AI19P71",
+          "course_name": "Data Visualization using Python (Professional Elective III)",
+          "course_type": "LoT",
+          "teacher_id": "38.0",
+          "semester": 7,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "33.0",
-        "31.0"
+        "31.0",
+        "38.0"
       ],
       "courses": [
-        "AI19P71",
-        "AI19741"
+        "AI19P71"
       ],
-      "total_workload": 13
+      "total_workload": 12
     },
     {
       "group_id": 2,
@@ -122,19 +121,19 @@
           "co_scheduled_id": null
         },
         {
-          "id": 504,
-          "course_id": 748,
-          "course_code": "AI19P71",
-          "course_name": "Data Visualization using Python (Professional Elective III)",
+          "id": 577,
+          "course_id": 710,
+          "course_code": "AI19741",
+          "course_name": "Big Data Technology",
           "course_type": "LoT",
-          "teacher_id": "38.0",
+          "teacher_id": "33.0",
           "semester": 7,
           "course_dept": "Artificial Intelligence & Machine Learning",
           "student_dept": "Artificial Intelligence & Machine Learning",
           "has_lab": true,
           "has_theory": true,
           "practical_hours": 2,
-          "lecture_hours": 2,
+          "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
           "virtual_id": null,
@@ -142,15 +141,14 @@
         }
       ],
       "teachers": [
-        "38.0",
-        "39.0",
-        "577.0"
+        "577.0",
+        "33.0",
+        "39.0"
       ],
       "courses": [
-        "AI19P71",
         "AI19741"
       ],
-      "total_workload": 14
+      "total_workload": 15
     },
     {
       "group_id": 3,
@@ -158,19 +156,19 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 983,
-          "course_id": 749,
-          "course_code": "AI19701",
-          "course_name": "Secure Systems Engineering",
+          "id": 1196,
+          "course_id": 750,
+          "course_code": "AI19702",
+          "course_name": "Social and Ethical Issues in AI",
           "course_type": "T",
-          "teacher_id": "52.0",
+          "teacher_id": "1827.0",
           "semester": 7,
           "course_dept": "Artificial Intelligence & Machine Learning",
           "student_dept": "Artificial Intelligence & Machine Learning",
           "has_lab": false,
           "has_theory": true,
           "practical_hours": 0,
-          "lecture_hours": 3,
+          "lecture_hours": 1,
           "tutorial_hours": 0,
           "student_count": 70,
           "virtual_id": null,
@@ -216,15 +214,14 @@
         }
       ],
       "teachers": [
-        "52.0",
         "1829.0",
+        "1827.0",
         "1828.0"
       ],
       "courses": [
-        "AI19701",
         "AI19702"
       ],
-      "total_workload": 5
+      "total_workload": 3
     },
     {
       "group_id": 4,
@@ -270,19 +267,19 @@
           "co_scheduled_id": null
         },
         {
-          "id": 1196,
-          "course_id": 750,
-          "course_code": "AI19702",
-          "course_name": "Social and Ethical Issues in AI",
+          "id": 983,
+          "course_id": 749,
+          "course_code": "AI19701",
+          "course_name": "Secure Systems Engineering",
           "course_type": "T",
-          "teacher_id": "1827.0",
+          "teacher_id": "52.0",
           "semester": 7,
           "course_dept": "Artificial Intelligence & Machine Learning",
           "student_dept": "Artificial Intelligence & Machine Learning",
           "has_lab": false,
           "has_theory": true,
           "practical_hours": 0,
-          "lecture_hours": 1,
+          "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
           "virtual_id": null,
@@ -291,14 +288,13 @@
       ],
       "teachers": [
         "47.0",
-        "1827.0",
-        "35.0"
+        "35.0",
+        "52.0"
       ],
       "courses": [
-        "AI19701",
-        "AI19702"
+        "AI19701"
       ],
-      "total_workload": 7
+      "total_workload": 9
     },
     {
       "group_id": 5,
@@ -364,9 +360,9 @@
         }
       ],
       "teachers": [
-        "37.0",
         "67.0",
-        "57.0"
+        "57.0",
+        "37.0"
       ],
       "courses": [
         "AI19PE2"

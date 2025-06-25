@@ -2,7 +2,7 @@
   "department": "Information Technology",
   "semester": "3",
   "solution_found": true,
-  "objective_value": 2.0,
+  "objective_value": 0.0,
   "num_groups": 6,
   "groups": [
     {
@@ -11,18 +11,18 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 2090,
-          "course_id": 826,
-          "course_code": "IT23331",
-          "course_name": "Digital Logic and Computer Architecture",
-          "course_type": "T",
-          "teacher_id": "269.0",
+          "id": 1009,
+          "course_id": 259,
+          "course_code": "CS23333",
+          "course_name": "Object Oriented Programming Using JAVA",
+          "course_type": "LoT",
+          "teacher_id": "383.0",
           "semester": 3,
           "course_dept": "Information Technology",
           "student_dept": "Information Technology",
           "has_lab": true,
           "has_theory": true,
-          "practical_hours": 2,
+          "practical_hours": 4,
           "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
@@ -107,17 +107,16 @@
         }
       ],
       "teachers": [
-        "1856.0",
-        "384.0",
-        "402.0",
         "378.0",
-        "269.0"
+        "1856.0",
+        "402.0",
+        "383.0",
+        "384.0"
       ],
       "courses": [
-        "IT23331",
         "CS23333"
       ],
-      "total_workload": 33
+      "total_workload": 35
     },
     {
       "group_id": 2,
@@ -163,6 +162,25 @@
           "co_scheduled_id": 1
         },
         {
+          "id": 814,
+          "course_id": 258,
+          "course_code": "CS23332",
+          "course_name": "Database Management Systems",
+          "course_type": "LoT",
+          "teacher_id": "405.0",
+          "semester": 3,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
           "id": 815,
           "course_id": 258,
           "course_code": "CS23332",
@@ -199,36 +217,16 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
-        },
-        {
-          "id": 1009,
-          "course_id": 259,
-          "course_code": "CS23333",
-          "course_name": "Object Oriented Programming Using JAVA",
-          "course_type": "LoT",
-          "teacher_id": "383.0",
-          "semester": 3,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "408.0",
-        "383.0",
+        "405.0",
         "421.0",
-        "404.0"
+        "404.0",
+        "408.0"
       ],
       "courses": [
-        "CS23332",
-        "CS23333"
+        "CS23332"
       ],
       "total_workload": 35
     },
@@ -244,6 +242,25 @@
           "course_name": "Design and Analysis of Algorithms",
           "course_type": "LoT",
           "teacher_id": "393.0",
+          "semester": 3,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 820,
+          "course_id": 257,
+          "course_code": "CS23331",
+          "course_name": "Design and Analysis of Algorithms",
+          "course_type": "LoT",
+          "teacher_id": "415.0",
           "semester": 3,
           "course_dept": "Information Technology",
           "student_dept": "Information Technology",
@@ -312,39 +329,19 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
-        },
-        {
-          "id": 814,
-          "course_id": 258,
-          "course_code": "CS23332",
-          "course_name": "Database Management Systems",
-          "course_type": "LoT",
-          "teacher_id": "405.0",
-          "semester": 3,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "405.0",
-        "429.0",
-        "391.0",
         "393.0",
-        "400.0"
+        "391.0",
+        "415.0",
+        "400.0",
+        "429.0"
       ],
       "courses": [
-        "CS23331",
-        "CS23332"
+        "CS23331"
       ],
-      "total_workload": 27
+      "total_workload": 25
     },
     {
       "group_id": 4,
@@ -377,6 +374,25 @@
           "course_name": "Digital Logic and Computer Architecture",
           "course_type": "T",
           "teacher_id": "401.0",
+          "semester": 3,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 2090,
+          "course_id": 826,
+          "course_code": "IT23331",
+          "course_name": "Digital Logic and Computer Architecture",
+          "course_type": "T",
+          "teacher_id": "269.0",
           "semester": 3,
           "course_dept": "Information Technology",
           "student_dept": "Information Technology",
@@ -426,36 +442,16 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
-        },
-        {
-          "id": 820,
-          "course_id": 257,
-          "course_code": "CS23331",
-          "course_name": "Design and Analysis of Algorithms",
-          "course_type": "LoT",
-          "teacher_id": "415.0",
-          "semester": 3,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "305.0",
         "401.0",
-        "415.0",
+        "269.0",
+        "305.0",
         "315.0",
         "395.0"
       ],
       "courses": [
-        "CS23331",
         "IT23331"
       ],
       "total_workload": 25
@@ -466,12 +462,50 @@
       "group_type": "Regular",
       "instances": [
         {
+          "id": 618,
+          "course_id": 289,
+          "course_code": "EC23314",
+          "course_name": "Analog and Digital Communication",
+          "course_type": "T",
+          "teacher_id": "287.0",
+          "semester": 3,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
           "id": 619,
           "course_id": 289,
           "course_code": "EC23314",
           "course_name": "Analog and Digital Communication",
           "course_type": "T",
           "teacher_id": "263.0",
+          "semester": 3,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 620,
+          "course_id": 289,
+          "course_code": "EC23314",
+          "course_name": "Analog and Digital Communication",
+          "course_type": "T",
+          "teacher_id": "282.0",
           "semester": 3,
           "course_dept": "Information Technology",
           "student_dept": "Information Technology",
@@ -521,6 +555,43 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "287.0",
+        "263.0",
+        "282.0",
+        "296.0",
+        "293.0"
+      ],
+      "courses": [
+        "EC23314"
+      ],
+      "total_workload": 15
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1216,
+          "course_id": 423,
+          "course_code": "MA23312",
+          "course_name": "Fourier series and Number theory",
+          "course_type": "T",
+          "teacher_id": "485.0",
+          "semester": 3,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         },
         {
           "id": 1218,
@@ -542,107 +613,31 @@
           "co_scheduled_id": null
         },
         {
-          "id": 1276,
-          "course_id": 423,
-          "course_code": "MA23312",
-          "course_name": "Fourier series and Number theory",
-          "course_type": "T",
-          "teacher_id": "463.0",
-          "semester": 3,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 1,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "418.0",
-        "296.0",
-        "463.0",
-        "263.0",
-        "293.0"
-      ],
-      "courses": [
-        "MA23312",
-        "EC23314"
-      ],
-      "total_workload": 17
-    },
-    {
-      "group_id": 6,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 618,
-          "course_id": 289,
-          "course_code": "EC23314",
-          "course_name": "Analog and Digital Communication",
-          "course_type": "T",
-          "teacher_id": "287.0",
-          "semester": 3,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 620,
-          "course_id": 289,
-          "course_code": "EC23314",
-          "course_name": "Analog and Digital Communication",
-          "course_type": "T",
-          "teacher_id": "282.0",
-          "semester": 3,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1216,
-          "course_id": 423,
-          "course_code": "MA23312",
-          "course_name": "Fourier series and Number theory",
-          "course_type": "T",
-          "teacher_id": "485.0",
-          "semester": 3,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 1,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
           "id": 1219,
           "course_id": 423,
           "course_code": "MA23312",
           "course_name": "Fourier series and Number theory",
           "course_type": "T",
           "teacher_id": "426.0",
+          "semester": 3,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1276,
+          "course_id": 423,
+          "course_code": "MA23312",
+          "course_name": "Fourier series and Number theory",
+          "course_type": "T",
+          "teacher_id": "463.0",
           "semester": 3,
           "course_dept": "Information Technology",
           "student_dept": "Information Technology",
@@ -676,17 +671,16 @@
         }
       ],
       "teachers": [
-        "406.0",
+        "418.0",
         "426.0",
+        "463.0",
         "485.0",
-        "282.0",
-        "287.0"
+        "406.0"
       ],
       "courses": [
-        "MA23312",
-        "EC23314"
+        "MA23312"
       ],
-      "total_workload": 18
+      "total_workload": 20
     }
   ],
   "pe_group_included": false,

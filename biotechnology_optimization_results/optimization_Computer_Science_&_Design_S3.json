@@ -44,39 +44,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 1224,
-          "course_id": 424,
-          "course_code": "MA23313",
-          "course_name": "Discrete Mathematics for AI",
-          "course_type": "T",
-          "teacher_id": "419.0",
-          "semester": 3,
-          "course_dept": "Computer Science & Design",
-          "student_dept": "Computer Science & Design",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 1,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "419.0"
-      ],
-      "courses": [
-        "MA23313"
-      ],
-      "total_workload": 4
-    },
-    {
-      "group_id": 3,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 92,
           "course_id": 170,
           "course_code": "CD23331",
@@ -103,6 +70,39 @@
         "CD23331"
       ],
       "total_workload": 5
+    },
+    {
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1224,
+          "course_id": 424,
+          "course_code": "MA23313",
+          "course_name": "Discrete Mathematics for AI",
+          "course_type": "T",
+          "teacher_id": "419.0",
+          "semester": 3,
+          "course_dept": "Computer Science & Design",
+          "student_dept": "Computer Science & Design",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "419.0"
+      ],
+      "courses": [
+        "MA23313"
+      ],
+      "total_workload": 4
     },
     {
       "group_id": 4,

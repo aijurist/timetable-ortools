@@ -39,7 +39,7 @@ class CourseGroupOptimizer:
     Number of groups is always equal to the number of unique courses (after filtering).
     """
     
-    def __init__(self, courses, dept, semester, logger=None, pe_course_map_file=None):
+    def __init__(self, courses, dept, semester, logger=None, pe_course_map_file=None, flexible_grouping_depts=None):
         """
         Initialize the optimizer with course instances.
         
@@ -49,12 +49,30 @@ class CourseGroupOptimizer:
             semester: Semester number
             logger: Logger instance (optional)
             pe_course_map_file: Path to PE course mapping CSV file (optional)
+            flexible_grouping_depts: List of departments that can have minimum 1 group for multi-instance courses (optional)
         """
         self.courses = courses
         self.dept = dept
         self.semester = semester
         self.logger = logger or logging.getLogger(__name__)
         self.pe_course_map_file = pe_course_map_file
+        
+        # Departments that can have minimum 1 group for multi-instance courses
+        # If not specified, use default list of flexible departments
+        if flexible_grouping_depts is None:
+            self.flexible_grouping_depts = {
+                'Computer Science & Engineering',
+                'Computer Science & Business Systems',
+                'Computer Science & Design',
+                'Artificial Intelligence & Data Science',
+                'Artificial Intelligence & Machine Learning',
+                'Information Technology'
+            }
+        else:
+            self.flexible_grouping_depts = set(flexible_grouping_depts)
+        
+        # Check if current department allows flexible grouping
+        self.allows_flexible_grouping = self.dept in self.flexible_grouping_depts
         
         # Load PE course mapping if provided
         self.pe_course_codes = set()
@@ -98,6 +116,11 @@ class CourseGroupOptimizer:
         self.logger.info(f"  Unique courses: {len(self.unique_courses)}")
         self.logger.info(f"  Unique teachers: {len(self.unique_teachers)}")
         self.logger.info(f"  Target groups: {self.num_groups}")
+        self.logger.info(f"  Flexible grouping enabled: {self.allows_flexible_grouping}")
+        if self.allows_flexible_grouping:
+            self.logger.info(f"  → Multi-instance courses can have minimum 1 group (if feasible)")
+        else:
+            self.logger.info(f"  → Multi-instance courses must have minimum 2 groups")
         if self.pe_courses:
             pe_course_codes = list(set(inst['course_code'] for inst in self.pe_courses))
             self.logger.debug(f"  PE courses to be added as final group: {pe_course_codes}")
@@ -572,7 +595,9 @@ class CourseGroupOptimizer:
     def _apply_course_limit_constraints(self, model, assignment_vars):
         """
         Apply course limit constraints:
-        - Courses with multiple instances: minimum 2 groups, maximum 2 groups
+        - Courses with multiple instances: 
+          * Flexible departments: minimum 1 group, maximum 2 groups (allows consolidation if feasible)
+          * Standard departments: minimum 2 groups, maximum 2 groups
         - Courses with single instance: allow in only 1 group
         
         Args:
@@ -582,6 +607,7 @@ class CourseGroupOptimizer:
         course_constraints_added = 0
         single_instance_courses = 0
         multi_instance_courses = 0
+        flexible_courses = 0
         
         for course_code in self.unique_courses:
             # Find all instances of this course
@@ -594,7 +620,7 @@ class CourseGroupOptimizer:
                 self.logger.debug(f"Course {course_code}: 1 instance -> can be in 1 group")
                 
             elif len(course_instances) > 1:
-                # Multiple instance course: enforce min 2 groups, max 2 groups
+                # Multiple instance course: apply constraints based on department flexibility
                 multi_instance_courses += 1
                 
                 # Create auxiliary variables to track which groups have this course
@@ -615,20 +641,31 @@ class CourseGroupOptimizer:
                     # This constraint ensures group_var = 1 iff at least one instance is assigned to this group
                     model.Add(group_var <= sum(course_assignments_in_group))
                 
-                # Constraint 1: Course must be in at least 2 groups (minimum distribution)
-                if self.num_groups >= 2:
-                    model.Add(sum(group_has_course) >= 2)
+                # Apply minimum group constraint based on department flexibility
+                if self.allows_flexible_grouping:
+                    # Flexible departments: Allow courses to be in minimum 1 group (consolidation allowed)
+                    model.Add(sum(group_has_course) >= 1)
                     course_constraints_added += 1
+                    flexible_courses += 1
+                    self.logger.debug(f"Course {course_code}: {len(course_instances)} instances -> flexible (min 1, max 2 groups)")
+                else:
+                    # Standard departments: Enforce minimum 2 groups for distribution
+                    if self.num_groups >= 2:
+                        model.Add(sum(group_has_course) >= 2)
+                        course_constraints_added += 1
+                    self.logger.debug(f"Course {course_code}: {len(course_instances)} instances -> standard (min 2, max 2 groups)")
                     
-                # Constraint 2: Course can be in at most 2 groups (maximum distribution)
+                # Maximum constraint: Course can be in at most 2 groups (always enforced)
                 model.Add(sum(group_has_course) <= 2)
                 course_constraints_added += 1
-                
-                self.logger.debug(f"Course {course_code}: {len(course_instances)} instances -> must be in exactly 2 groups")
         
         self.logger.info(f"Applied {course_constraints_added} course limit constraints")
         self.logger.info(f"  Single-instance courses: {single_instance_courses} (can be in 1 group)")
-        self.logger.info(f"  Multi-instance courses: {multi_instance_courses} (must be in exactly 2 groups)")
+        if self.allows_flexible_grouping:
+            self.logger.info(f"  Multi-instance courses: {multi_instance_courses} (min 1, max 2 groups - FLEXIBLE)")
+            self.logger.info(f"  Flexible courses allowing consolidation: {flexible_courses}")
+        else:
+            self.logger.info(f"  Multi-instance courses: {multi_instance_courses} (min 2, max 2 groups - STANDARD)")
     
     def _apply_group_size_constraints(self, model, assignment_vars):
         """
@@ -1348,7 +1385,9 @@ class CourseGroupOptimizer:
         """
         Validate course limit constraints:
         - Single-instance courses: can be in 1 group
-        - Multi-instance courses: must be in exactly 2 groups
+        - Multi-instance courses: 
+          * Flexible departments: can be in 1-2 groups
+          * Standard departments: must be in exactly 2 groups
         """
         violations = 0
         course_group_counts = defaultdict(set)
@@ -1377,18 +1416,34 @@ class CourseGroupOptimizer:
                     self.logger.debug(f"Single-instance course {course_code} correctly in 1 group: {group_names[0]}")
                     
             elif instance_count > 1:
-                # Multi-instance course: should be in exactly 2 groups
-                if group_count < 2:
-                    violations += 1
-                    self.logger.error(f"Multi-instance course {course_code} ({instance_count} instances) appears in only {group_count} groups: {', '.join(group_names)} (should be in 2 groups)")
-                elif group_count > 2:
-                    violations += 1
-                    self.logger.error(f"Multi-instance course {course_code} ({instance_count} instances) appears in {group_count} groups: {', '.join(group_names)} (should be in 2 groups)")
+                # Multi-instance course: validation depends on department flexibility
+                if self.allows_flexible_grouping:
+                    # Flexible departments: 1-2 groups allowed
+                    if group_count < 1:
+                        violations += 1
+                        self.logger.error(f"Multi-instance course {course_code} ({instance_count} instances) appears in {group_count} groups: {', '.join(group_names)} (should be in 1-2 groups)")
+                    elif group_count > 2:
+                        violations += 1
+                        self.logger.error(f"Multi-instance course {course_code} ({instance_count} instances) appears in {group_count} groups: {', '.join(group_names)} (should be in 1-2 groups)")
+                    else:
+                        if group_count == 1:
+                            self.logger.debug(f"Multi-instance course {course_code} ({instance_count} instances) consolidated in 1 group: {group_names[0]} [FLEXIBLE]")
+                        else:
+                            self.logger.debug(f"Multi-instance course {course_code} ({instance_count} instances) distributed across 2 groups: {', '.join(group_names)} [FLEXIBLE]")
                 else:
-                    self.logger.debug(f"Multi-instance course {course_code} ({instance_count} instances) correctly in 2 groups: {', '.join(group_names)}")
+                    # Standard departments: exactly 2 groups required
+                    if group_count < 2:
+                        violations += 1
+                        self.logger.error(f"Multi-instance course {course_code} ({instance_count} instances) appears in only {group_count} groups: {', '.join(group_names)} (should be in 2 groups)")
+                    elif group_count > 2:
+                        violations += 1
+                        self.logger.error(f"Multi-instance course {course_code} ({instance_count} instances) appears in {group_count} groups: {', '.join(group_names)} (should be in 2 groups)")
+                    else:
+                        self.logger.debug(f"Multi-instance course {course_code} ({instance_count} instances) correctly in 2 groups: {', '.join(group_names)} [STANDARD]")
         
         if violations == 0:
-            self.logger.info("[OK] Course limit constraints satisfied")
+            constraint_type = "flexible (1-2 groups)" if self.allows_flexible_grouping else "standard (2 groups)"
+            self.logger.info(f"[OK] Course limit constraints satisfied [{constraint_type}]")
             return True
         else:
             self.logger.error(f"[ERROR] {violations} course limit violations")
@@ -1870,7 +1925,7 @@ def main():
         logger.error("Optimization failed")
 
 
-def optimize_course_groups(csv_file, dept_name, semester, pe_course_map_file=None):
+def optimize_course_groups(csv_file, dept_name, semester, pe_course_map_file=None, flexible_grouping_depts=None):
     """
     Load courses from CSV and optimize groups for a specific department and semester.
     
@@ -1879,6 +1934,7 @@ def optimize_course_groups(csv_file, dept_name, semester, pe_course_map_file=Non
         dept_name: Department name to filter by (uses student_dept field)
         semester: Semester to filter by
         pe_course_map_file: Path to PE course mapping CSV file (optional)
+        flexible_grouping_depts: List of departments that can have minimum 1 group for multi-instance courses (optional)
         
     Returns:
         list: Optimized groups or None if failed
@@ -1932,8 +1988,8 @@ def optimize_course_groups(csv_file, dept_name, semester, pe_course_map_file=Non
             
             courses.append(course)
         
-        # Create and run optimizer with PE course mapping
-        optimizer = CourseGroupOptimizer(courses, dept_name, semester, logger, pe_course_map_file)
+        # Create and run optimizer with PE course mapping and flexible grouping option
+        optimizer = CourseGroupOptimizer(courses, dept_name, semester, logger, pe_course_map_file, flexible_grouping_depts)
         
         # Save filtering report before optimization (for verification)
         # Create reports directory if it doesn't exist

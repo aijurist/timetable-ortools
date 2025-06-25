@@ -1,0 +1,250 @@
+{
+  "department": "Civil Engineering",
+  "semester": "5",
+  "solution_found": true,
+  "objective_value": 0.0,
+  "num_groups": 7,
+  "groups": [
+    {
+      "group_id": 1,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 293,
+          "course_id": 200,
+          "course_code": "CE23531",
+          "course_name": "Structural Analysis",
+          "course_type": "LoT",
+          "teacher_id": "152.0",
+          "semester": 5,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 65,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "152.0"
+      ],
+      "courses": [
+        "CE23531"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 330,
+          "course_id": 199,
+          "course_code": "CE23521",
+          "course_name": "Water and Waste Water Analysis Laboratory",
+          "course_type": "L",
+          "teacher_id": "166.0",
+          "semester": 5,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 65,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "166.0"
+      ],
+      "courses": [
+        "CE23521"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 285,
+          "course_id": 196,
+          "course_code": "CE23511",
+          "course_name": "Design of Reinforced Concrete Elements",
+          "course_type": "T",
+          "teacher_id": "147.0",
+          "semester": 5,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 65,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "147.0"
+      ],
+      "courses": [
+        "CE23511"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 258,
+          "course_id": 198,
+          "course_code": "CE23513",
+          "course_name": "Waste Water Engineering",
+          "course_type": "T",
+          "teacher_id": "169.0",
+          "semester": 5,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 65,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "169.0"
+      ],
+      "courses": [
+        "CE23513"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 297,
+          "course_id": 571,
+          "course_code": "CE23C11",
+          "course_name": "ADVANCED CONSTRUCTION TECHNIQUES",
+          "course_type": "T",
+          "teacher_id": "158.0",
+          "semester": 5,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 32,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "158.0"
+      ],
+      "courses": [
+        "CE23C11"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 290,
+          "course_id": 197,
+          "course_code": "CE23512",
+          "course_name": "Foundation Engineering",
+          "course_type": "T",
+          "teacher_id": "155.0",
+          "semester": 5,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 65,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "155.0"
+      ],
+      "courses": [
+        "CE23512"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 7,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 301,
+          "course_id": 574,
+          "course_code": "CE23F14",
+          "course_name": "URBAN PLANNING AND DEVELOPMENT",
+          "course_type": "T",
+          "teacher_id": "148.0",
+          "semester": 5,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 33,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "148.0"
+      ],
+      "courses": [
+        "CE23F14"
+      ],
+      "total_workload": 3
+    }
+  ],
+  "pe_group_included": false,
+  "summary": {
+    "total_instances": 7,
+    "pe_instances": 0,
+    "lab_instances": 2,
+    "theory_instances": 6,
+    "unique_courses": 7,
+    "unique_teachers": 7,
+    "pe_course_codes": []
+  }
+}

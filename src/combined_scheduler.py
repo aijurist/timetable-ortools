@@ -61,20 +61,20 @@ class CombinedScheduler:
         
         # LAB TIME CONFIGURATION - EXACTLY as in lab_scheduler.py
         self.lab_time_slots = [
-            "8:00 - 8:50", "8:50 - 9:40", "9:50 - 10:40", "10:40 - 11:30",
-            "11:50 - 12:40", "12:40 - 1:30", "1:50 - 2:40", "2:40 - 3:30", 
-            "3:50 - 4:40", "4:40 - 5:30", "5:30 - 6:20", "6:20 - 7:10"
+            "8:00 - 8:50", "8:50 - 9:40", "10:00 - 10:50", "10:50 - 11:40",
+            "11:50 - 12:30", "12:30 - 1:20", "1:20 - 2:10", "2:10 - 3:00", 
+            "3:00 - 3:50", "3:50 - 4:40", "5:10 - 6:00", "6:00 - 6:50"
         ]
         self.num_lab_slots = len(self.lab_time_slots)
         
         # Group lab slots into 2-hour sessions (L1, L2, L3, etc.) - EXACTLY as in lab_scheduler.py
         self.lab_sessions = {
             'L1': ['8:00 - 8:50', '8:50 - 9:40'],      # 8:00 - 9:40
-            'L2': ['9:50 - 10:40', '10:40 - 11:30'],   # 9:50 - 11:30  
-            'L3': ['11:50 - 12:40', '12:40 - 1:30'],   # 11:50 - 1:30
-            'L4': ['1:50 - 2:40', '2:40 - 3:30'],      # 1:50 - 3:30
-            'L5': ['3:50 - 4:40', '4:40 - 5:30'],      # 3:50 - 5:30
-            'L6': ['5:30 - 6:20', '6:20 - 7:10']       # 5:30 - 7:10
+            'L2': ['10:00 - 10:50', '10:50 - 11:40'],   # 9:50 - 11:30  
+            'L3': ['11:50 - 12:30', '12:30 - 1:20'],   # 11:50 - 1:30
+            'L4': ['1:20 - 2:10', '2:10 - 3:00'],      # 1:50 - 3:30
+            'L5': ['3:00 - 3:50', '3:50 - 4:40'],      # 3:50 - 5:30
+            'L6': ['5:10 - 6:00', '6:00 - 6:50']       # 5:30 - 7:10
         }
         self.num_lab_sessions = len(self.lab_sessions)
 
@@ -1770,7 +1770,7 @@ class CombinedScheduler:
         constraints_applied += self.apply_core_lab_mapping_constraint(model, lab_variables)
         # NEW: Apply core lab group slot limit constraint (8 slots max for groups containing core labs)
         constraints_applied += self.apply_core_lab_group_slot_limit_constraint(model, lab_variables)
-        # NEW: Apply computing group slot limit constraint (6 slots max for computing department groups)
+        # HARD CONSTRAINT: Apply computing group slot limit constraint (6 slots max for computing department groups)
         constraints_applied += self.apply_computing_group_slot_limit_constraint(model, lab_variables)
         # REMOVED: apply_theory_lab_group_conflict_constraint - redundant with cross-system constraints
         # REMOVED: This constraint was too restrictive and prevented the full scheduling of required practical hours.
@@ -1881,9 +1881,9 @@ class CombinedScheduler:
                             priority_level = 2  # Second priority
                         else:
                             # 2 practical hours: Lower priority for 70+ capacity labs
-                            max_batched_sessions = min(sessions_with_batching, 3)
+                            max_batched_sessions = min(sessions_with_batching, 2)
                             max_unbatched_sessions = min(base_sessions, 1)
-                            absolute_max_sessions = 3  # Hard limit for 2 hour courses
+                            absolute_max_sessions = 2  # Hard limit for 2 hour courses
                             priority_level = 3  # Lower priority
                         
                         # CRITICAL FIX: Handle 2-hour courses with special consideration for large student counts
@@ -2368,7 +2368,11 @@ class CombinedScheduler:
             return 0
 
         self.logger.info("Applying core lab mapping constraint...")
+        self.logger.info("🔒 STRICT ENFORCEMENT: Only courses mapped in og-final.csv can use specialized labs")
         constraints_applied = 0
+        mapped_courses_count = 0
+        unmapped_courses_count = 0
+        blocked_courses = []
         
         for teacher_id, lab_courses in self.lab_requirements.items():
             for course_req in lab_courses:
@@ -2388,13 +2392,15 @@ class CombinedScheduler:
                     continue
                 
                 if (course_code, course_name) in self.course_to_room_mapping:
+                    mapped_courses_count += 1
                     required_room_ids = self.course_to_room_mapping[(course_code, course_name)]
                     
                     # Ensure all required rooms are valid lab rooms
                     valid_required_rooms = [room_id for room_id in required_room_ids if room_id in self.lab_room_ids]
                     
                     if not valid_required_rooms:
-                        self.logger.warning(f"No valid lab rooms found for course {course_code}. Skipping constraint for this course.")
+                        self.logger.warning(f"❌ BLOCKED: No valid lab rooms found for core course {course_code}. Required: {required_room_ids}")
+                        blocked_courses.append(course_code)
                         continue
                         
                     # This course must be assigned ONLY to one of its specified rooms
@@ -2422,11 +2428,12 @@ class CombinedScheduler:
                                     model.Add(lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id] == 0)
                                     constraints_applied += 1
                     
-                    self.logger.info(f"Core constraint: Course '{course_code}' - '{course_name}' restricted to {len(valid_required_rooms)} specific room(s): {valid_required_rooms}")
+                    self.logger.info(f"✅ CORE COURSE: '{course_code}' - '{course_name}' → RESTRICTED to {len(valid_required_rooms)} specific room(s): {valid_required_rooms}")
                 else:
+                    unmapped_courses_count += 1
                     # This course is NOT in the core mapping.
-                    # Constrain it to rooms of type 'Laboratory'.
-                    self.logger.debug(f"Course '{course_code}' not in core mapping. Constraining to 'Laboratory' type rooms.")
+                    # Constrain it to rooms of type 'Laboratory' ONLY.
+                    self.logger.debug(f"⚠️  NON-CORE: Course '{course_code}' not in og-final.csv. RESTRICTED to general 'Laboratory' type rooms only.")
                     non_laboratory_rooms = set(self.lab_room_ids) - set(self.laboratory_room_ids)
                     
                     # Get department and semester for this course to determine number of days
@@ -2449,7 +2456,18 @@ class CombinedScheduler:
                                     model.Add(lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id] == 0)
                                     constraints_applied += 1
 
-        self.logger.info(f"Applied {constraints_applied} core lab mapping constraints.")
+        # Enhanced summary logging
+        self.logger.info("="*60)
+        self.logger.info("CORE LAB MAPPING CONSTRAINT SUMMARY:")
+        self.logger.info(f"📋 Total courses processed: {mapped_courses_count + unmapped_courses_count}")
+        self.logger.info(f"✅ Courses mapped in og-final.csv: {mapped_courses_count}")
+        self.logger.info(f"⚠️  Courses NOT in og-final.csv: {unmapped_courses_count}")
+        if blocked_courses:
+            self.logger.warning(f"❌ BLOCKED courses (invalid labs): {blocked_courses}")
+        self.logger.info(f"🔒 Total constraints applied: {constraints_applied}")
+        self.logger.info("🎯 ENFORCEMENT: Only mapped courses can access specialized labs!")
+        self.logger.info("="*60)
+
         return constraints_applied
     
     def apply_core_lab_group_slot_limit_constraint(self, model, lab_variables):
@@ -2556,8 +2574,8 @@ class CombinedScheduler:
         return constraints_applied
     
     def apply_computing_group_slot_limit_constraint(self, model, lab_variables):
-        """SOFT CONSTRAINT: Prefer to limit computing department groups to 6 lab slots with penalty for exceeding."""
-        self.logger.info("Applying computing group soft slot limit constraint (prefer 6 slots for computing groups)...")
+        """HARD CONSTRAINT: Limit computing department groups to EXACTLY 6 lab slots maximum - NO EXCEPTIONS."""
+        self.logger.info("Applying computing group HARD slot limit constraint (MAX 6 slots for computing groups)...")
         constraints_applied = 0
         
         # Define computing departments
@@ -2571,9 +2589,7 @@ class CombinedScheduler:
             'Information Technology'
         }
         
-        # Initialize penalty variables list if not exists
-        if not hasattr(self, 'computing_group_slot_penalties'):
-            self.computing_group_slot_penalties = []
+        # No penalty variables needed - this is a HARD constraint
         
         # Identify computing groups
         computing_groups = set()
@@ -2588,7 +2604,7 @@ class CombinedScheduler:
             self.logger.info("No computing groups identified - skipping computing group slot limit constraint")
             return 0
         
-        self.logger.info(f"Identified {len(computing_groups)} computing groups for 6-slot limit constraint")
+        self.logger.info(f"Identified {len(computing_groups)} computing groups for HARD 6-slot limit constraint")
         
         # Apply constraint to each computing group
         for group_name in computing_groups:
@@ -2636,7 +2652,7 @@ class CombinedScheduler:
                 self.logger.debug(f"Computing group {group_name} has no lab instances to constrain")
                 continue
             
-            self.logger.info(f"Applying soft 6-slot limit to computing group: {group_name} ({len(group_lab_instances)} lab instances)")
+            self.logger.info(f"Applying HARD 6-slot limit to computing group: {group_name} ({len(group_lab_instances)} lab instances)")
             
             # Create boolean variables for each time slot used by this computing group
             slot_used_vars = {}
@@ -2664,20 +2680,16 @@ class CombinedScheduler:
                         model.Add(sum(slot_assignments) == 0).OnlyEnforceIf(slot_used_vars[(day_idx, session_name)].Not())
                         constraints_applied += 2
             
-            # SOFT CONSTRAINT: Create penalty variable for exceeding 6 slots
+            # HARD CONSTRAINT: Limit total slots to exactly 6 maximum
             total_group_slots_used = sum(slot_used_vars.values())
-            excess_slots = model.NewIntVar(0, len(slot_used_vars), f'computing_group_excess_slots_{group_name}')
             
-            # excess_slots = max(0, total_group_slots_used - 6)
-            model.AddMaxEquality(excess_slots, [total_group_slots_used - 6, 0])
+            # HARD LIMIT: total_group_slots_used <= 6 (NO EXCEPTIONS)
+            model.Add(total_group_slots_used <= 6)
             constraints_applied += 1
             
-            # Add penalty to the list (will be minimized in objective)
-            self.computing_group_slot_penalties.append(excess_slots)
-            
-            self.logger.info(f"  - SOFT CONSTRAINT: Computing group {group_name} prefers <= 6 lab slots ({num_dept_days} days pattern)")
+            self.logger.info(f"  - 🔒 HARD CONSTRAINT: Computing group {group_name} LIMITED to ≤ 6 lab slots ({num_dept_days} days pattern)")
         
-        self.logger.info(f"Applied {constraints_applied} computing group soft slot limit constraints")
+        self.logger.info(f"Applied {constraints_applied} computing group HARD slot limit constraints (MAX 6 slots each)")
         return constraints_applied
     
     def apply_semester_lab_slot_limit_constraint(self, model, lab_variables):
@@ -2852,8 +2864,8 @@ class CombinedScheduler:
         # CONSTRAINT 3: FIXED Room capacity constraint - based on actual course instances, not groups
         constraints_applied += self._apply_proper_theory_room_capacity_constraint(model, group_timeslot_vars)
         
-        # CONSTRAINT 4: Soft constraint - avoid more than 2 consecutive time slots per group per day
-        constraints_applied += self._apply_consecutive_slots_soft_constraint(model, group_timeslot_vars)
+        # CONSTRAINT 4: HARD constraint - prevent 3 consecutive time slots per group per day
+        constraints_applied += self._apply_no_three_consecutive_slots_constraint(model, group_timeslot_vars)
         
         # CONSTRAINT 5: Lunch break constraint - prevent scheduling during department lunch breaks
         constraints_applied += self._apply_lunch_break_constraint(model, group_timeslot_vars)
@@ -2867,17 +2879,13 @@ class CombinedScheduler:
         self.logger.info(f"Applied {constraints_applied} theory-specific constraints with department-specific day patterns")
         return constraints_applied
 
-    def _apply_consecutive_slots_soft_constraint(self, model, group_timeslot_vars):
+    def _apply_no_three_consecutive_slots_constraint(self, model, group_timeslot_vars):
         """
-        Apply soft constraint to discourage groups from having more than 2 consecutive time slots per day.
-        This creates penalty variables that will be minimized in the objective function.
+        Apply HARD constraint to prevent groups from having 3 consecutive time slots per day.
+        This ensures better distribution of theory sessions throughout the day.
         """
-        self.logger.info("Applying soft constraint to avoid more than 2 consecutive group time slots...")
+        self.logger.info("Applying HARD constraint: no group can have 3 consecutive theory slots...")
         constraints_applied = 0
-        
-        # Initialize penalty variables list if not exists
-        if not hasattr(self, 'consecutive_slot_penalties'):
-            self.consecutive_slot_penalties = []
         
         for group_name in group_timeslot_vars.keys():
             # Get department-specific days for this group
@@ -2900,7 +2908,7 @@ class CombinedScheduler:
                 if day_idx not in group_timeslot_vars[group_name]:
                     continue
                 
-                # Check all possible sequences of 3 consecutive slots
+                # Check all possible sequences of 3 consecutive slots and FORBID them
                 for start_slot in range(self.num_theory_slots - 2):
                     consecutive_slots = []
                     for offset in range(3):  # Check 3 consecutive slots
@@ -2908,25 +2916,16 @@ class CombinedScheduler:
                         if slot_idx in group_timeslot_vars[group_name][day_idx]:
                             consecutive_slots.append(group_timeslot_vars[group_name][day_idx][slot_idx])
                     
-                    # If we have 3 consecutive slot variables, create a penalty
+                    # If we have 3 consecutive slot variables, PREVENT all 3 from being assigned
                     if len(consecutive_slots) == 3:
-                        # Create a penalty variable that equals 1 if all 3 consecutive slots are assigned
-                        penalty_var = model.NewBoolVar(f'penalty_{group_name}_day_{day_idx}_slots_{start_slot}_{start_slot+2}')
+                        # HARD CONSTRAINT: sum of 3 consecutive slots must be <= 2
+                        # This allows at most 2 out of 3 consecutive slots to be assigned
+                        model.Add(sum(consecutive_slots) <= 2)
+                        constraints_applied += 1
                         
-                        # If all 3 slots are assigned, penalty = 1; otherwise penalty = 0
-                        # penalty_var >= sum(consecutive_slots) - 2 (so if sum=3, penalty>=1, forcing penalty=1)
-                        # penalty_var <= sum(consecutive_slots) / 3 (so if sum<3, penalty<=0, forcing penalty=0)
-                        model.Add(penalty_var >= sum(consecutive_slots) - 2)
-                        model.Add(penalty_var * 3 <= sum(consecutive_slots))
-                        
-                        # Add to penalties list to be minimized in objective
-                        self.consecutive_slot_penalties.append(penalty_var)
-                        constraints_applied += 2
-                        
-                        self.logger.debug(f"Added consecutive slot penalty for {group_name} day {day_idx} slots {start_slot}-{start_slot+2}")
+                        self.logger.debug(f"BLOCKED 3 consecutive slots for {group_name} day {day_idx} slots {start_slot}-{start_slot+2}")
         
-        self.logger.info(f"Created {len(self.consecutive_slot_penalties)} consecutive slot penalty variables")
-        self.logger.info(f"Applied {constraints_applied} consecutive slot soft constraints")
+        self.logger.info(f"Applied {constraints_applied} HARD constraints preventing 3 consecutive theory slots")
         return constraints_applied
     
     def _apply_early_scheduling_constraint(self, model, group_timeslot_vars):
@@ -2989,14 +2988,14 @@ class CombinedScheduler:
     
     def _apply_proper_theory_room_capacity_constraint(self, model, group_timeslot_vars):
         """
-        Apply proper room capacity constraint that considers the actual number of course instances
-        within each group, not just the number of groups. Now handles department-specific day patterns.
+        Apply advanced room capacity constraint that tracks individual course sessions per time slot
+        for optimal room utilization. Handles department-specific day patterns and precise session mapping.
         """
-        self.logger.info("Applying proper theory room capacity constraint based on course instances with department-specific day patterns...")
+        self.logger.info("Applying advanced session-specific theory room capacity constraint...")
         constraints_applied = 0
         
-        # Pre-calculate the number of theory sessions each group will need per time slot
-        group_session_counts = {}
+        # NEW: Calculate detailed session-to-slot mapping for each group
+        group_detailed_sessions = {}
         
         for group_name in group_timeslot_vars.keys():
             # Find the group data
@@ -3010,36 +3009,93 @@ class CombinedScheduler:
             
             if not group_info:
                 self.logger.warning(f"Group info not found for {group_name}")
-                group_session_counts[group_name] = 0
+                group_detailed_sessions[group_name] = {'sessions_per_slot': {}, 'total_sessions': 0}
                 continue
             
             # Count theory course instances in this group
             theory_instances = [inst for inst in group_info['instances'] if inst.get('has_theory', False)]
             
-            # Calculate total sessions needed per time slot for this group
-            # Each theory course instance needs 1 room when the group is active
-            total_sessions_per_slot = 0
+            # NEW: Create detailed session mapping
+            all_sessions = []
+            processed_co_scheduled = set()
             
             for instance in theory_instances:
                 lecture_hours = instance.get('lecture_hours', 0)
                 tutorial_hours = instance.get('tutorial_hours', 0)
-                total_theory_sessions = lecture_hours + tutorial_hours
                 
-                if total_theory_sessions > 0:
-                    # FIXED: Each course instance that has theory sessions will need a room
-                    # when this group is scheduled - but we need to account for ALL sessions
-                    # that will be created (lecture + tutorial), not just the instance count
-                    
-                    # Each lecture/tutorial session needs its own room slot
-                    # But they can be distributed across the group's allocated time slots
-                    # So we need to calculate the MAXIMUM concurrent sessions possible
-                    
-                    # For now, assume each course instance needs 1 room per time slot
-                    # (sessions will be distributed across multiple time slots)
-                    total_sessions_per_slot += 1
+                # Handle co-scheduled instances (virtual pairs from 140+ student courses)
+                co_scheduled_id = instance.get('co_scheduled_id')
+                virtual_id = instance.get('virtual_id', '')
+                
+                # Skip already processed co-scheduled pairs
+                if co_scheduled_id is not None:
+                    if co_scheduled_id in processed_co_scheduled:
+                        continue
+                    processed_co_scheduled.add(co_scheduled_id)
+                
+                # Create individual sessions
+                for session_num in range(lecture_hours):
+                    all_sessions.append({
+                        'course_instance_id': instance['id'],
+                        'course_code': instance['course_code'],
+                        'session_type': 'Lecture',
+                        'session_number': session_num + 1
+                    })
+                
+                for session_num in range(tutorial_hours):
+                    all_sessions.append({
+                        'course_instance_id': instance['id'],
+                        'course_code': instance['course_code'],
+                        'session_type': 'Tutorial',
+                        'session_number': session_num + 1
+                    })
             
-            group_session_counts[group_name] = total_sessions_per_slot
-            self.logger.debug(f"Group {group_name}: {len(theory_instances)} theory instances = {total_sessions_per_slot} rooms needed per time slot")
+            # Calculate how many rooms will be needed per time slot
+            total_sessions = len(all_sessions)
+            
+            # NEW: Determine time slots this group will need based on max hours
+            max_hours_in_group = 0
+            for instance in theory_instances:
+                instance_hours = instance.get('lecture_hours', 0) + instance.get('tutorial_hours', 0)
+                max_hours_in_group = max(max_hours_in_group, instance_hours)
+            
+            # Distribute sessions across time slots optimally
+            sessions_per_slot = {}
+            if max_hours_in_group > 0 and total_sessions > 0:
+                # Calculate optimal distribution of sessions across allocated slots
+                # This gives us the ACTUAL rooms needed per slot, not assuming all courses need all slots
+                
+                sessions_per_allocated_slot = max(1, total_sessions // max_hours_in_group)
+                remaining_sessions = total_sessions % max_hours_in_group
+                
+                for slot_idx in range(max_hours_in_group):
+                    sessions_in_this_slot = sessions_per_allocated_slot
+                    if slot_idx < remaining_sessions:
+                        sessions_in_this_slot += 1
+                    sessions_per_slot[slot_idx] = sessions_in_this_slot
+            
+            group_detailed_sessions[group_name] = {
+                'sessions_per_slot': sessions_per_slot,
+                'total_sessions': total_sessions,
+                'max_slots_needed': max_hours_in_group,
+                'all_sessions': all_sessions
+            }
+            
+            # Enhanced logging
+            session_distribution = ', '.join([f"Slot{i}:{count}" for i, count in sessions_per_slot.items()])
+            self.logger.info(f"Group {group_name}: {total_sessions} total sessions → {session_distribution} (max {max_hours_in_group} slots)")
+            
+            # Log course breakdown
+            course_breakdown = {}
+            for instance in theory_instances:
+                course_code = instance['course_code']
+                hours = instance.get('lecture_hours', 0) + instance.get('tutorial_hours', 0)
+                if course_code not in course_breakdown:
+                    course_breakdown[course_code] = []
+                course_breakdown[course_code].append(f"{hours}h")
+            
+            course_summary = ', '.join([f"{code}({'+'.join(hours)})" for code, hours in course_breakdown.items()])
+            self.logger.debug(f"  Course breakdown: {course_summary}")
         
         # Group constraints by day pattern to handle different department schedules
         groups_by_day_pattern = {}
@@ -3078,48 +3134,100 @@ class CombinedScheduler:
             dept_days = self._get_days_for_department(representative_dept, semester)
             num_dept_days = len(dept_days)
             
-            self.logger.info(f"Applying room capacity constraints for {day_pattern} pattern ({num_dept_days} days, {len(pattern_groups)} groups)")
+            self.logger.info(f"Applying advanced room capacity constraints for {day_pattern} pattern ({num_dept_days} days, {len(pattern_groups)} groups)")
             
-            # Now apply the constraint: for each time slot in this pattern, total rooms needed <= available rooms
+            # NEW: Apply session-specific constraints for each time slot
             for day_idx in range(num_dept_days):
                 for slot_idx in range(self.num_theory_slots):
-                    # Calculate total rooms needed at this time slot for this day pattern
-                    total_rooms_needed = []
+                    # Calculate total rooms needed at this specific time slot
+                    slot_room_requirements = []
+                    slot_debug_info = []
                     
                     for group_name in pattern_groups:
-                        sessions_count = group_session_counts.get(group_name, 0)
-                        if sessions_count > 0:
-                            # If group is scheduled at this time slot, it needs 'sessions_count' rooms
+                        group_sessions = group_detailed_sessions.get(group_name, {})
+                        max_slots_needed = group_sessions.get('max_slots_needed', 0)
+                        sessions_per_slot = group_sessions.get('sessions_per_slot', {})
+                        
+                        # Check if this group needs this slot index
+                        if slot_idx < max_slots_needed and slot_idx in sessions_per_slot:
+                            rooms_needed_this_slot = sessions_per_slot[slot_idx]
+                            
+                            # If group is scheduled at this time slot, it needs specific rooms
                             if (day_idx in group_timeslot_vars[group_name] and
                                 slot_idx in group_timeslot_vars[group_name][day_idx]):
                                 group_active = group_timeslot_vars[group_name][day_idx][slot_idx]
-                                total_rooms_needed.append(group_active * sessions_count)
+                                slot_room_requirements.append(group_active * rooms_needed_this_slot)
+                                slot_debug_info.append(f"{group_name}:{rooms_needed_this_slot}")
                     
-                    if total_rooms_needed:
-                        # Total rooms needed cannot exceed available theory rooms
-                        model.Add(sum(total_rooms_needed) <= len(self.theory_room_ids))
+                    if slot_room_requirements:
+                        # NEW: Precise constraint - only count rooms actually needed for this slot
+                        model.Add(sum(slot_room_requirements) <= len(self.theory_room_ids))
                         constraints_applied += 1
                         
-                        # Log constraint details for debugging
-                        if len(total_rooms_needed) > 0:
-                            max_possible_rooms = sum(group_session_counts.get(gn, 0) for gn in pattern_groups)
-                            if max_possible_rooms > len(self.theory_room_ids):
-                                day_name = dept_days[day_idx] if day_idx < len(dept_days) else f"day_{day_idx}"
-                                self.logger.debug(f"Time slot {day_name} {self.theory_time_slots[slot_idx]} ({day_pattern}): "
-                                               f"constraint applied - max {max_possible_rooms} rooms possible, "
-                                               f"{len(self.theory_room_ids)} available")
+                        # Enhanced debug logging (calculate potential rooms from our tracking data)
+                        total_potential_rooms = 0
+                        for info in slot_debug_info:
+                            if ':' in info:
+                                try:
+                                    rooms_count = int(info.split(':')[1])
+                                    total_potential_rooms += rooms_count
+                                except (ValueError, IndexError):
+                                    self.logger.warning(f"Could not parse room count from debug info: {info}")
+                        
+                        if total_potential_rooms > len(self.theory_room_ids):
+                            day_name = dept_days[day_idx] if day_idx < len(dept_days) else f"day_{day_idx}"
+                            self.logger.debug(f"PRECISE CONSTRAINT: {day_name} {self.theory_time_slots[slot_idx]} slot#{slot_idx} ({day_pattern})")
+                            self.logger.debug(f"  Groups needing this slot: {', '.join(slot_debug_info)}")
+                            self.logger.debug(f"  Total rooms if all active: {total_potential_rooms}, Available: {len(self.theory_room_ids)}")
         
-        # Log summary of group session requirements
-        total_max_sessions = sum(group_session_counts.values())
-        self.logger.info(f"Theory room capacity constraint applied successfully:")
-        self.logger.info(f"  - Total theory rooms available: {len(self.theory_room_ids)}")
-        self.logger.info(f"  - Maximum sessions possible if all groups active: {total_max_sessions}")
+        # NEW: Advanced summary logging with detailed session tracking
+        total_sessions_all_groups = sum(data.get('total_sessions', 0) for data in group_detailed_sessions.values())
+        max_concurrent_rooms_needed = 0
         
-        for group_name, sessions_count in group_session_counts.items():
-            if sessions_count > 0:
-                dept_name = group_name.split('_S')[0] if '_S' in group_name else "Computer Science & Engineering"
+        # Calculate maximum concurrent rooms needed across all time slots
+        all_day_patterns = set()
+        for group_name in group_detailed_sessions.keys():
+            dept_name = group_name.split('_S')[0] if '_S' in group_name else "Computer Science & Engineering"
+            semester = None
+            if '_S' in group_name:
+                try:
+                    semester_part = group_name.split('_S')[1].split('_G')[0]
+                    semester = int(semester_part)
+                except (ValueError, IndexError):
+                    pass
+            day_pattern = self._get_day_pattern_for_department(dept_name, semester)
+            all_day_patterns.add(day_pattern)
+        
+        for day_pattern in all_day_patterns:
+            pattern_groups = [gn for gn in group_detailed_sessions.keys() 
+                            if self._get_day_pattern_for_department(gn.split('_S')[0] if '_S' in gn else "Computer Science & Engineering", 
+                                                                  int(gn.split('_S')[1].split('_G')[0]) if '_S' in gn else None) == day_pattern]
+            
+            # Check maximum rooms needed in any single time slot
+            max_slot_index = max([group_detailed_sessions[gn].get('max_slots_needed', 0) for gn in pattern_groups])
+            
+            for slot_idx in range(max_slot_index):
+                slot_total_rooms = 0
+                for group_name in pattern_groups:
+                    group_data = group_detailed_sessions.get(group_name, {})
+                    sessions_per_slot = group_data.get('sessions_per_slot', {})
+                    if slot_idx in sessions_per_slot:
+                        slot_total_rooms += sessions_per_slot[slot_idx]
                 
-                # Extract semester for semester-specific overrides
+                max_concurrent_rooms_needed = max(max_concurrent_rooms_needed, slot_total_rooms)
+        
+        self.logger.info("="*80)
+        self.logger.info("ADVANCED THEORY ROOM CAPACITY ANALYSIS:")
+        self.logger.info(f"  📊 Total theory rooms available: {len(self.theory_room_ids)}")
+        self.logger.info(f"  📈 Total sessions across all groups: {total_sessions_all_groups}")
+        self.logger.info(f"  🎯 Maximum concurrent rooms needed: {max_concurrent_rooms_needed}")
+        self.logger.info(f"  💡 Room utilization efficiency: {(max_concurrent_rooms_needed/len(self.theory_room_ids)*100):.1f}%")
+        
+        # Detailed group breakdown
+        self.logger.info("  📋 Group-by-group session distribution:")
+        for group_name, group_data in group_detailed_sessions.items():
+            if group_data.get('total_sessions', 0) > 0:
+                dept_name = group_name.split('_S')[0] if '_S' in group_name else "Computer Science & Engineering"
                 semester = None
                 if '_S' in group_name:
                     try:
@@ -3129,14 +3237,22 @@ class CombinedScheduler:
                         pass
                 
                 day_pattern = self._get_day_pattern_for_department(dept_name, semester)
-                self.logger.info(f"  - {group_name} ({day_pattern}): {sessions_count} rooms needed when active")
+                sessions_per_slot = group_data.get('sessions_per_slot', {})
+                slot_details = ', '.join([f"S{i}→{count}R" for i, count in sessions_per_slot.items()])
+                
+                self.logger.info(f"    - {group_name} ({day_pattern}): {group_data['total_sessions']} sessions → [{slot_details}]")
         
-        if total_max_sessions > len(self.theory_room_ids):
-            self.logger.warning(f"POTENTIAL ISSUE: Maximum possible sessions ({total_max_sessions}) "
-                              f"exceeds available rooms ({len(self.theory_room_ids)}) - "
-                              f"but constraint system will prevent over-allocation")
+        # Efficiency warnings
+        if max_concurrent_rooms_needed > len(self.theory_room_ids):
+            self.logger.error(f"🚨 CRITICAL: Peak demand ({max_concurrent_rooms_needed} rooms) exceeds capacity ({len(self.theory_room_ids)} rooms)")
+            self.logger.error(f"   → System will prevent over-allocation through constraints")
+        elif max_concurrent_rooms_needed > len(self.theory_room_ids) * 0.9:
+            self.logger.warning(f"⚠️  HIGH UTILIZATION: Peak demand ({max_concurrent_rooms_needed}) uses {(max_concurrent_rooms_needed/len(self.theory_room_ids)*100):.0f}% of capacity")
+        else:
+            self.logger.info(f"✅ OPTIMAL: Room capacity well within limits")
         
-        self.logger.info(f"Applied {constraints_applied} proper theory room capacity constraints with department-specific day patterns")
+        self.logger.info("="*80)
+        self.logger.info(f"Applied {constraints_applied} advanced session-specific room capacity constraints")
         return constraints_applied
     
     def _apply_cross_system_constraints(self, model, lab_variables, group_timeslot_vars):

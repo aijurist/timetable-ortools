@@ -1,0 +1,472 @@
+{
+  "department": "Biomedical Engineering",
+  "semester": "5",
+  "solution_found": true,
+  "objective_value": 6.0,
+  "num_groups": 7,
+  "groups": [
+    {
+      "group_id": 1,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 902,
+          "course_id": 97,
+          "course_code": "BM23531",
+          "course_name": "Signals and Systems Analysis",
+          "course_type": "LoT",
+          "teacher_id": "91.0",
+          "semester": 5,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 1,
+          "tutorial_hours": 1,
+          "student_count": 57,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 911,
+          "course_id": 98,
+          "course_code": "BM23532",
+          "course_name": "Microcontroller and Embedded System Design",
+          "course_type": "LoT",
+          "teacher_id": "87.0",
+          "semester": 5,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 57,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "91.0",
+        "87.0"
+      ],
+      "courses": [
+        "BM23531",
+        "BM23532"
+      ],
+      "total_workload": 9
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 903,
+          "course_id": 97,
+          "course_code": "BM23531",
+          "course_name": "Signals and Systems Analysis",
+          "course_type": "LoT",
+          "teacher_id": "82.0",
+          "semester": 5,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 1,
+          "tutorial_hours": 1,
+          "student_count": 57,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 904,
+          "course_id": 98,
+          "course_code": "BM23532",
+          "course_name": "Microcontroller and Embedded System Design",
+          "course_type": "LoT",
+          "teacher_id": "61.0",
+          "semester": 5,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 57,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "61.0",
+        "82.0"
+      ],
+      "courses": [
+        "BM23531",
+        "BM23532"
+      ],
+      "total_workload": 9
+    },
+    {
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 907,
+          "course_id": 96,
+          "course_code": "BM23521",
+          "course_name": "Diagnostic and Therapeutic Equipment Laboratory",
+          "course_type": "L",
+          "teacher_id": "68.0",
+          "semester": 5,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 57,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 906,
+          "course_id": 263,
+          "course_code": "CS23422",
+          "course_name": "Python Programming for Machine Learning",
+          "course_type": "L",
+          "teacher_id": "89.0",
+          "semester": 5,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 57,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "68.0",
+        "89.0"
+      ],
+      "courses": [
+        "BM23521",
+        "CS23422"
+      ],
+      "total_workload": 8
+    },
+    {
+      "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 908,
+          "course_id": 96,
+          "course_code": "BM23521",
+          "course_name": "Diagnostic and Therapeutic Equipment Laboratory",
+          "course_type": "L",
+          "teacher_id": "89.0",
+          "semester": 5,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 57,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 905,
+          "course_id": 263,
+          "course_code": "CS23422",
+          "course_name": "Python Programming for Machine Learning",
+          "course_type": "L",
+          "teacher_id": "87.0",
+          "semester": 5,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 57,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "87.0",
+        "89.0"
+      ],
+      "courses": [
+        "BM23521",
+        "CS23422"
+      ],
+      "total_workload": 8
+    },
+    {
+      "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1186,
+          "course_id": 95,
+          "course_code": "BM23512",
+          "course_name": "Diagnostic and Therapeutic Equipment",
+          "course_type": "T",
+          "teacher_id": "79.0",
+          "semester": 5,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 57,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 897,
+          "course_id": 611,
+          "course_code": "24NCS08",
+          "course_name": "Introduction to Internet of Things",
+          "course_type": "T",
+          "teacher_id": "101.0",
+          "semester": 5,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 1,
+          "tutorial_hours": 0,
+          "student_count": 55,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "79.0",
+        "101.0"
+      ],
+      "courses": [
+        "BM23512",
+        "24NCS08"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 892,
+          "course_id": 94,
+          "course_code": "BM23511",
+          "course_name": "Biocontrol systems",
+          "course_type": "T",
+          "teacher_id": "79.0",
+          "semester": 5,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 57,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 896,
+          "course_id": 611,
+          "course_code": "24NCS08",
+          "course_name": "Introduction to Internet of Things",
+          "course_type": "T",
+          "teacher_id": "110.0",
+          "semester": 5,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 1,
+          "tutorial_hours": 0,
+          "student_count": 57,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "79.0",
+        "110.0"
+      ],
+      "courses": [
+        "BM23511",
+        "24NCS08"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 7,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 893,
+          "course_id": 94,
+          "course_code": "BM23511",
+          "course_name": "Biocontrol systems",
+          "course_type": "T",
+          "teacher_id": "75.0",
+          "semester": 5,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 57,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 895,
+          "course_id": 95,
+          "course_code": "BM23512",
+          "course_name": "Diagnostic and Therapeutic Equipment",
+          "course_type": "T",
+          "teacher_id": "89.0",
+          "semester": 5,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 57,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "75.0",
+        "89.0"
+      ],
+      "courses": [
+        "BM23512",
+        "BM23511"
+      ],
+      "total_workload": 6
+    },
+    {
+      "group_id": 8,
+      "is_pe_group": true,
+      "group_type": "PE",
+      "instances": [
+        {
+          "id": 1184,
+          "course_id": 610,
+          "course_code": "BM23P01",
+          "course_name": "Pattern Recognition and Neural Networks",
+          "course_type": "T",
+          "teacher_id": "84.0",
+          "semester": 5,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 898,
+          "course_id": 609,
+          "course_code": "BM23P01",
+          "course_name": "Biomaterials and Applications",
+          "course_type": "T",
+          "teacher_id": "83.0",
+          "semester": 5,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 57,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 899,
+          "course_id": 609,
+          "course_code": "BM23P01",
+          "course_name": "Biomaterials and Applications",
+          "course_type": "T",
+          "teacher_id": "110.0",
+          "semester": 5,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 57,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "83.0",
+        "84.0",
+        "110.0"
+      ],
+      "courses": [
+        "BM23P01"
+      ],
+      "total_workload": 9
+    }
+  ],
+  "pe_group_included": true,
+  "summary": {
+    "total_instances": 14,
+    "pe_instances": 3,
+    "lab_instances": 8,
+    "theory_instances": 10,
+    "unique_courses": 7,
+    "unique_teachers": 10,
+    "pe_course_codes": [
+      "BM23P01"
+    ]
+  }
+}

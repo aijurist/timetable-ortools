@@ -173,3 +173,4 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 216,D503,D Block,Chemistry Lab,1,Core-Lab,35,70,0,0,None,32,0,0,0
 217,D603,D block,Physics LAB - 1,1,Core-Lab,30,70,0,0,Advanced,31,0,0,0
 218,D403,D block,Physics LAB - 2,1,Core-Lab,30,70,0,0,Advanced,31,0,0,0
+219,TIFAC V01/02,A Block,Soft Skills – II,1,Core-Lab,70,140,0,0,None,29,0,0,0
