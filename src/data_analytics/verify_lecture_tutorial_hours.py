@@ -32,7 +32,7 @@ def verify_lecture_tutorial_hours(theory_schedule_file=None, course_file=None):
     """
     # Setup default file paths
     if course_file is None:
-        course_file = "data/department_data/final_computing.csv"
+        course_file = "data/final.csv"
     
     if not os.path.exists(course_file):
         print(f"Course file not found: {course_file}")
