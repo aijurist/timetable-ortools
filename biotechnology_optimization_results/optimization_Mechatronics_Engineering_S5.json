@@ -25,7 +25,7 @@
           "practical_hours": 2,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 67,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -58,7 +58,7 @@
           "practical_hours": 4,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 67,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -77,39 +77,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 430,
-          "course_id": 384,
-          "course_code": "GE23311",
-          "course_name": "Fundamentals of Management for Engineers",
-          "course_type": "T",
-          "teacher_id": "489.0",
-          "semester": 5,
-          "course_dept": "Mechatronics Engineering",
-          "student_dept": "Mechatronics Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 67,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "489.0"
-      ],
-      "courses": [
-        "GE23311"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 4,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 417,
           "course_id": 716,
           "course_code": "MT23511",
@@ -124,7 +91,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 67,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -138,40 +105,40 @@
       "total_workload": 3
     },
     {
-      "group_id": 5,
+      "group_id": 4,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
         {
-          "id": 403,
-          "course_id": 481,
-          "course_code": "MT23512",
-          "course_name": "Industrial Electronics",
+          "id": 430,
+          "course_id": 384,
+          "course_code": "GE23311",
+          "course_name": "Fundamentals of Management for Engineers",
           "course_type": "T",
-          "teacher_id": "488.0",
+          "teacher_id": "489.0",
           "semester": 5,
           "course_dept": "Mechatronics Engineering",
           "student_dept": "Mechatronics Engineering",
           "has_lab": false,
           "has_theory": true,
           "practical_hours": 0,
-          "lecture_hours": 2,
-          "tutorial_hours": 1,
-          "student_count": 67,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "488.0"
+        "489.0"
       ],
       "courses": [
-        "MT23512"
+        "GE23311"
       ],
       "total_workload": 3
     },
     {
-      "group_id": 6,
+      "group_id": 5,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -190,7 +157,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 67,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -200,6 +167,39 @@
       ],
       "courses": [
         "MT23513"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 403,
+          "course_id": 481,
+          "course_code": "MT23512",
+          "course_name": "Industrial Electronics",
+          "course_type": "T",
+          "teacher_id": "488.0",
+          "semester": 5,
+          "course_dept": "Mechatronics Engineering",
+          "student_dept": "Mechatronics Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 1,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "488.0"
+      ],
+      "courses": [
+        "MT23512"
       ],
       "total_workload": 3
     }

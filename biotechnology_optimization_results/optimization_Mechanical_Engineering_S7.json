@@ -11,12 +11,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 2049,
+          "id": 2087,
           "course_id": 833,
           "course_code": "ME23VAP2",
           "course_name": "Thors E-Learning",
           "course_type": "L",
-          "teacher_id": "525.0",
+          "teacher_id": "505.0",
           "semester": 7,
           "course_dept": "Mechanical Engineering",
           "student_dept": "Mechanical Engineering",
@@ -30,18 +30,92 @@
           "co_scheduled_id": null
         },
         {
-          "id": 2087,
-          "course_id": 833,
-          "course_code": "ME23VAP2",
-          "course_name": "Thors E-Learning",
+          "id": 705,
+          "course_id": 534,
+          "course_code": "ME19741",
+          "course_name": "Mechatronics",
+          "course_type": "LoT",
+          "teacher_id": "511.0",
+          "semester": 7,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 707,
+          "course_id": 534,
+          "course_code": "ME19741",
+          "course_name": "Mechatronics",
+          "course_type": "LoT",
+          "teacher_id": "532.0",
+          "semester": 7,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "505.0",
+        "532.0",
+        "511.0"
+      ],
+      "courses": [
+        "ME19741",
+        "ME23VAP2"
+      ],
+      "total_workload": 12
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 2038,
+          "course_id": 817,
+          "course_code": "ME19713",
+          "course_name": "Artificial Intelligence for Mechanical Engineers",
           "course_type": "L",
-          "teacher_id": "505.0",
+          "teacher_id": "514.0",
           "semester": 7,
           "course_dept": "Mechanical Engineering",
           "student_dept": "Mechanical Engineering",
           "has_lab": true,
           "has_theory": false,
-          "practical_hours": 2,
+          "practical_hours": 6,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 2039,
+          "course_id": 817,
+          "course_code": "ME19713",
+          "course_name": "Artificial Intelligence for Mechanical Engineers",
+          "course_type": "L",
+          "teacher_id": "521.0",
+          "semester": 7,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 6,
           "lecture_hours": 0,
           "tutorial_hours": 0,
           "student_count": 70,
@@ -63,95 +137,21 @@
           "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 45,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "531.0",
-        "525.0",
-        "505.0"
+        "514.0",
+        "521.0",
+        "531.0"
       ],
       "courses": [
-        "ME23VAP2",
+        "ME19713",
         "ME19741"
       ],
-      "total_workload": 9
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 750,
-          "course_id": 762,
-          "course_code": "ME19712",
-          "course_name": "COMPREHENSION",
-          "course_type": "T",
-          "teacher_id": "527.0",
-          "semester": 7,
-          "course_dept": "Mechanical Engineering",
-          "student_dept": "Mechanical Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 45,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 705,
-          "course_id": 534,
-          "course_code": "ME19741",
-          "course_name": "Mechatronics",
-          "course_type": "LoT",
-          "teacher_id": "511.0",
-          "semester": 7,
-          "course_dept": "Mechanical Engineering",
-          "student_dept": "Mechanical Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 45,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 707,
-          "course_id": 534,
-          "course_code": "ME19741",
-          "course_name": "Mechatronics",
-          "course_type": "LoT",
-          "teacher_id": "532.0",
-          "semester": 7,
-          "course_dept": "Mechanical Engineering",
-          "student_dept": "Mechanical Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 45,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "532.0",
-        "511.0",
-        "527.0"
-      ],
-      "courses": [
-        "ME19741",
-        "ME19712"
-      ],
-      "total_workload": 12
+      "total_workload": 17
     },
     {
       "group_id": 3,
@@ -159,37 +159,18 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 2039,
-          "course_id": 817,
-          "course_code": "ME19713",
-          "course_name": "Artificial Intelligence for Mechanical Engineers",
-          "course_type": "L",
-          "teacher_id": "521.0",
+          "id": 751,
+          "course_id": 762,
+          "course_code": "ME19712",
+          "course_name": "COMPREHENSION",
+          "course_type": "T",
+          "teacher_id": "542.0",
           "semester": 7,
           "course_dept": "Mechanical Engineering",
           "student_dept": "Mechanical Engineering",
           "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 6,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 2040,
-          "course_id": 817,
-          "course_code": "ME19713",
-          "course_name": "Artificial Intelligence for Mechanical Engineers",
-          "course_type": "L",
-          "teacher_id": "522.0",
-          "semester": 7,
-          "course_dept": "Mechanical Engineering",
-          "student_dept": "Mechanical Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 6,
+          "has_theory": true,
+          "practical_hours": 2,
           "lecture_hours": 0,
           "tutorial_hours": 0,
           "student_count": 70,
@@ -214,43 +195,43 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
+        },
+        {
+          "id": 2049,
+          "course_id": 833,
+          "course_code": "ME23VAP2",
+          "course_name": "Thors E-Learning",
+          "course_type": "L",
+          "teacher_id": "525.0",
+          "semester": 7,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "522.0",
-        "521.0",
-        "511.0"
+        "511.0",
+        "525.0",
+        "542.0"
       ],
       "courses": [
-        "ME19713",
+        "ME19712",
         "ME23VAP2"
       ],
-      "total_workload": 14
+      "total_workload": 6
     },
     {
       "group_id": 4,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
-        {
-          "id": 2038,
-          "course_id": 817,
-          "course_code": "ME19713",
-          "course_name": "Artificial Intelligence for Mechanical Engineers",
-          "course_type": "L",
-          "teacher_id": "514.0",
-          "semester": 7,
-          "course_dept": "Mechanical Engineering",
-          "student_dept": "Mechanical Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 6,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
         {
           "id": 749,
           "course_id": 762,
@@ -266,17 +247,17 @@
           "practical_hours": 2,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 45,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
         {
-          "id": 751,
+          "id": 750,
           "course_id": 762,
           "course_code": "ME19712",
           "course_name": "COMPREHENSION",
           "course_type": "T",
-          "teacher_id": "542.0",
+          "teacher_id": "527.0",
           "semester": 7,
           "course_dept": "Mechanical Engineering",
           "student_dept": "Mechanical Engineering",
@@ -285,19 +266,38 @@
           "practical_hours": 2,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 45,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 2040,
+          "course_id": 817,
+          "course_code": "ME19713",
+          "course_name": "Artificial Intelligence for Mechanical Engineers",
+          "course_type": "L",
+          "teacher_id": "522.0",
+          "semester": 7,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 6,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "526.0",
-        "542.0",
-        "514.0"
+        "527.0",
+        "522.0",
+        "526.0"
       ],
       "courses": [
-        "ME19713",
-        "ME19712"
+        "ME19712",
+        "ME19713"
       ],
       "total_workload": 10
     },
@@ -321,7 +321,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 45,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
@@ -340,7 +340,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 45,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
@@ -359,19 +359,19 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 45,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
       ],
       "teachers": [
         "505.0",
-        "510.0",
-        "538.0"
+        "538.0",
+        "510.0"
       ],
       "courses": [
-        "ME19702",
-        "ME19701"
+        "ME19701",
+        "ME19702"
       ],
       "total_workload": 9
     },
@@ -395,7 +395,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 45,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
@@ -414,7 +414,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 45,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
@@ -433,19 +433,19 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 45,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "540.0",
         "512.0",
-        "521.0"
+        "521.0",
+        "540.0"
       ],
       "courses": [
-        "ME19702",
-        "ME19701"
+        "ME19701",
+        "ME19702"
       ],
       "total_workload": 9
     },

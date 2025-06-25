@@ -77,6 +77,39 @@
       "group_type": "Regular",
       "instances": [
         {
+          "id": 88,
+          "course_id": 592,
+          "course_code": "IT23E31",
+          "course_name": "Graphics and Multimedia",
+          "course_type": "LoT",
+          "teacher_id": "184.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Design",
+          "student_dept": "Computer Science & Design",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "184.0"
+      ],
+      "courses": [
+        "IT23E31"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
           "id": 76,
           "course_id": 540,
           "course_code": "CD23531",
@@ -105,7 +138,7 @@
       "total_workload": 4
     },
     {
-      "group_id": 4,
+      "group_id": 5,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -136,39 +169,6 @@
         "CS23431"
       ],
       "total_workload": 7
-    },
-    {
-      "group_id": 5,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 88,
-          "course_id": 592,
-          "course_code": "IT23E31",
-          "course_name": "Graphics and Multimedia",
-          "course_type": "LoT",
-          "teacher_id": "184.0",
-          "semester": 5,
-          "course_dept": "Computer Science & Design",
-          "student_dept": "Computer Science & Design",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 2,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "184.0"
-      ],
-      "courses": [
-        "IT23E31"
-      ],
-      "total_workload": 4
     }
   ],
   "pe_group_included": false,

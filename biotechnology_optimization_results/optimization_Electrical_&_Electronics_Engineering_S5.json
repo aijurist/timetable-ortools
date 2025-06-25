@@ -11,21 +11,21 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 639,
-          "course_id": 331,
-          "course_code": "GE23627",
-          "course_name": "Design Thinking and Innovation",
+          "id": 1144,
+          "course_id": 759,
+          "course_code": "EE23B21",
+          "course_name": "Wiring Harness Design Engineering",
           "course_type": "L",
-          "teacher_id": "300.0",
+          "teacher_id": "320.0",
           "semester": 5,
           "course_dept": "Electrical & Electronics Engineering",
           "student_dept": "Electrical & Electronics Engineering",
           "has_lab": true,
           "has_theory": false,
-          "practical_hours": 4,
+          "practical_hours": 6,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 69,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
@@ -44,20 +44,20 @@
           "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 68,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
       ],
       "teachers": [
         "329.0",
-        "300.0"
+        "320.0"
       ],
       "courses": [
-        "EE23531",
-        "GE23627"
+        "EE23B21",
+        "EE23531"
       ],
-      "total_workload": 9
+      "total_workload": 11
     },
     {
       "group_id": 2,
@@ -65,21 +65,21 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 1144,
-          "course_id": 759,
-          "course_code": "EE23B21",
-          "course_name": "Wiring Harness Design Engineering",
+          "id": 642,
+          "course_id": 331,
+          "course_code": "GE23627",
+          "course_name": "Design Thinking and Innovation",
           "course_type": "L",
-          "teacher_id": "320.0",
+          "teacher_id": "306.0",
           "semester": 5,
           "course_dept": "Electrical & Electronics Engineering",
           "student_dept": "Electrical & Electronics Engineering",
           "has_lab": true,
           "has_theory": false,
-          "practical_hours": 6,
+          "practical_hours": 4,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 45,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
@@ -98,20 +98,20 @@
           "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 69,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "320.0",
+        "306.0",
         "331.0"
       ],
       "courses": [
         "EE23531",
-        "EE23B21"
+        "GE23627"
       ],
-      "total_workload": 11
+      "total_workload": 9
     },
     {
       "group_id": 3,
@@ -133,10 +133,45 @@
           "practical_hours": 2,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 68,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
+        {
+          "id": 639,
+          "course_id": 331,
+          "course_code": "GE23627",
+          "course_name": "Design Thinking and Innovation",
+          "course_type": "L",
+          "teacher_id": "300.0",
+          "semester": 5,
+          "course_dept": "Electrical & Electronics Engineering",
+          "student_dept": "Electrical & Electronics Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "300.0",
+        "303.0"
+      ],
+      "courses": [
+        "GE23627",
+        "EE23521"
+      ],
+      "total_workload": 6
+    },
+    {
+      "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
         {
           "id": 1143,
           "course_id": 759,
@@ -152,42 +187,7 @@
           "practical_hours": 6,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 46,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "306.0",
-        "303.0"
-      ],
-      "courses": [
-        "EE23B21",
-        "EE23521"
-      ],
-      "total_workload": 8
-    },
-    {
-      "group_id": 4,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 642,
-          "course_id": 331,
-          "course_code": "GE23627",
-          "course_name": "Design Thinking and Innovation",
-          "course_type": "L",
-          "teacher_id": "306.0",
-          "semester": 5,
-          "course_dept": "Electrical & Electronics Engineering",
-          "student_dept": "Electrical & Electronics Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 68,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
@@ -206,23 +206,77 @@
           "practical_hours": 2,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 69,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "306.0",
-        "328.0"
+        "328.0",
+        "306.0"
       ],
       "courses": [
-        "EE23521",
-        "GE23627"
+        "EE23B21",
+        "EE23521"
+      ],
+      "total_workload": 8
+    },
+    {
+      "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 675,
+          "course_id": 327,
+          "course_code": "EE23511",
+          "course_name": "Power System Analysis",
+          "course_type": "T",
+          "teacher_id": "339.0",
+          "semester": 5,
+          "course_dept": "Electrical & Electronics Engineering",
+          "student_dept": "Electrical & Electronics Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 631,
+          "course_id": 329,
+          "course_code": "EE23513",
+          "course_name": "Control Systems",
+          "course_type": "T",
+          "teacher_id": "308.0",
+          "semester": 5,
+          "course_dept": "Electrical & Electronics Engineering",
+          "student_dept": "Electrical & Electronics Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "308.0",
+        "339.0"
+      ],
+      "courses": [
+        "EE23511",
+        "EE23513"
       ],
       "total_workload": 6
     },
     {
-      "group_id": 5,
+      "group_id": 6,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -241,7 +295,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 68,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
@@ -260,7 +314,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 69,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -270,35 +324,16 @@
         "307.0"
       ],
       "courses": [
-        "EE23512",
-        "EE23511"
+        "EE23511",
+        "EE23512"
       ],
       "total_workload": 6
     },
     {
-      "group_id": 6,
+      "group_id": 7,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
-        {
-          "id": 632,
-          "course_id": 329,
-          "course_code": "EE23513",
-          "course_name": "Control Systems",
-          "course_type": "T",
-          "teacher_id": "298.0",
-          "semester": 5,
-          "course_dept": "Electrical & Electronics Engineering",
-          "student_dept": "Electrical & Electronics Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 68,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
         {
           "id": 668,
           "course_id": 328,
@@ -314,7 +349,26 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 69,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 632,
+          "course_id": 329,
+          "course_code": "EE23513",
+          "course_name": "Control Systems",
+          "course_type": "T",
+          "teacher_id": "298.0",
+          "semester": 5,
+          "course_dept": "Electrical & Electronics Engineering",
+          "student_dept": "Electrical & Electronics Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -326,60 +380,6 @@
       "courses": [
         "EE23513",
         "EE23512"
-      ],
-      "total_workload": 6
-    },
-    {
-      "group_id": 7,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 631,
-          "course_id": 329,
-          "course_code": "EE23513",
-          "course_name": "Control Systems",
-          "course_type": "T",
-          "teacher_id": "308.0",
-          "semester": 5,
-          "course_dept": "Electrical & Electronics Engineering",
-          "student_dept": "Electrical & Electronics Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 69,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 675,
-          "course_id": 327,
-          "course_code": "EE23511",
-          "course_name": "Power System Analysis",
-          "course_type": "T",
-          "teacher_id": "339.0",
-          "semester": 5,
-          "course_dept": "Electrical & Electronics Engineering",
-          "student_dept": "Electrical & Electronics Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 68,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "308.0",
-        "339.0"
-      ],
-      "courses": [
-        "EE23513",
-        "EE23511"
       ],
       "total_workload": 6
     }

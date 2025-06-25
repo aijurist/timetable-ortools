@@ -2,7 +2,7 @@
   "department": "Computer Science & Business Systems",
   "semester": "5",
   "solution_found": true,
-  "objective_value": 2.0,
+  "objective_value": 3.0,
   "num_groups": 5,
   "groups": [
     {
@@ -11,26 +11,26 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 1836,
-          "course_id": 77,
-          "course_code": "BA23511",
-          "course_name": "Principles of Financial Management",
-          "course_type": "T",
-          "teacher_id": "471.0",
+          "id": 1066,
+          "course_id": 158,
+          "course_code": "CB23532",
+          "course_name": "Artificial Intelligence",
+          "course_type": "LoT",
+          "teacher_id": "1804.0",
           "semester": 5,
           "course_dept": "Computer Science & Business Systems",
           "student_dept": "Computer Science & Business Systems",
-          "has_lab": false,
+          "has_lab": true,
           "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 2,
+          "practical_hours": 2,
+          "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
         {
-          "id": 1011,
+          "id": 1010,
           "course_id": 156,
           "course_code": "CB23521",
           "course_name": "Design Thinking and Innovation",
@@ -51,13 +51,13 @@
       ],
       "teachers": [
         "172.0",
-        "471.0"
+        "1804.0"
       ],
       "courses": [
-        "BA23511",
+        "CB23532",
         "CB23521"
       ],
-      "total_workload": 5
+      "total_workload": 8
     },
     {
       "group_id": 2,
@@ -84,12 +84,12 @@
           "co_scheduled_id": null
         },
         {
-          "id": 1007,
-          "course_id": 890,
-          "course_code": "CB23D31",
-          "course_name": "Data Mining and Analytics",
+          "id": 1028,
+          "course_id": 157,
+          "course_code": "CB23531",
+          "course_name": "Computer Network Technology",
           "course_type": "LoT",
-          "teacher_id": "170.0",
+          "teacher_id": "180.0",
           "semester": 5,
           "course_dept": "Computer Science & Business Systems",
           "student_dept": "Computer Science & Business Systems",
@@ -104,11 +104,10 @@
         }
       ],
       "teachers": [
-        "170.0",
+        "180.0",
         "173.0"
       ],
       "courses": [
-        "CB23D31",
         "CB23531"
       ],
       "total_workload": 10
@@ -118,25 +117,6 @@
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
-        {
-          "id": 1066,
-          "course_id": 158,
-          "course_code": "CB23532",
-          "course_name": "Artificial Intelligence",
-          "course_type": "LoT",
-          "teacher_id": "1804.0",
-          "semester": 5,
-          "course_dept": "Computer Science & Business Systems",
-          "student_dept": "Computer Science & Business Systems",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
         {
           "id": 1030,
           "course_id": 890,
@@ -150,7 +130,26 @@
           "has_lab": true,
           "has_theory": true,
           "practical_hours": 2,
-          "lecture_hours": 3,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1837,
+          "course_id": 77,
+          "course_code": "BA23511",
+          "course_name": "Principles of Financial Management",
+          "course_type": "T",
+          "teacher_id": "471.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
           "tutorial_hours": 0,
           "student_count": 70,
           "virtual_id": null,
@@ -158,14 +157,14 @@
         }
       ],
       "teachers": [
-        "1804.0",
-        "180.0"
+        "180.0",
+        "471.0"
       ],
       "courses": [
-        "CB23532",
+        "BA23511",
         "CB23D31"
       ],
-      "total_workload": 10
+      "total_workload": 6
     },
     {
       "group_id": 4,
@@ -173,12 +172,66 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 1028,
-          "course_id": 157,
-          "course_code": "CB23531",
-          "course_name": "Computer Network Technology",
+          "id": 1011,
+          "course_id": 156,
+          "course_code": "CB23521",
+          "course_name": "Design Thinking and Innovation",
           "course_type": "LoT",
-          "teacher_id": "180.0",
+          "teacher_id": "172.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 1,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1836,
+          "course_id": 77,
+          "course_code": "BA23511",
+          "course_name": "Principles of Financial Management",
+          "course_type": "T",
+          "teacher_id": "471.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "172.0",
+        "471.0"
+      ],
+      "courses": [
+        "BA23511",
+        "CB23521"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1007,
+          "course_id": 890,
+          "course_code": "CB23D31",
+          "course_name": "Data Mining and Analytics",
+          "course_type": "LoT",
+          "teacher_id": "170.0",
           "semester": 5,
           "course_dept": "Computer Science & Business Systems",
           "student_dept": "Computer Science & Business Systems",
@@ -212,68 +265,14 @@
         }
       ],
       "teachers": [
-        "180.0",
+        "170.0",
         "1805.0"
       ],
       "courses": [
         "CB23532",
-        "CB23531"
+        "CB23D31"
       ],
       "total_workload": 10
-    },
-    {
-      "group_id": 5,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 1837,
-          "course_id": 77,
-          "course_code": "BA23511",
-          "course_name": "Principles of Financial Management",
-          "course_type": "T",
-          "teacher_id": "471.0",
-          "semester": 5,
-          "course_dept": "Computer Science & Business Systems",
-          "student_dept": "Computer Science & Business Systems",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 2,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1010,
-          "course_id": 156,
-          "course_code": "CB23521",
-          "course_name": "Design Thinking and Innovation",
-          "course_type": "LoT",
-          "teacher_id": "172.0",
-          "semester": 5,
-          "course_dept": "Computer Science & Business Systems",
-          "student_dept": "Computer Science & Business Systems",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 1,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "172.0",
-        "471.0"
-      ],
-      "courses": [
-        "BA23511",
-        "CB23521"
-      ],
-      "total_workload": 5
     }
   ],
   "pe_group_included": false,

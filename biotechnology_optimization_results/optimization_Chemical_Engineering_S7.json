@@ -11,39 +11,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 856,
-          "course_id": 837,
-          "course_code": "CH19711",
-          "course_name": "Chemical Reaction Engineering  lab",
-          "course_type": "L",
-          "teacher_id": "140.0",
-          "semester": 7,
-          "course_dept": "Chemical Engineering",
-          "student_dept": "Chemical Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 58,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "140.0"
-      ],
-      "courses": [
-        "CH19711"
-      ],
-      "total_workload": 4
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 857,
           "course_id": 839,
           "course_code": "CH19713",
@@ -58,7 +25,7 @@
           "practical_hours": 4,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 58,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -68,6 +35,39 @@
       ],
       "courses": [
         "CH19713"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 856,
+          "course_id": 837,
+          "course_code": "CH19711",
+          "course_name": "Chemical Reaction Engineering  lab",
+          "course_type": "L",
+          "teacher_id": "140.0",
+          "semester": 7,
+          "course_dept": "Chemical Engineering",
+          "student_dept": "Chemical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "140.0"
+      ],
+      "courses": [
+        "CH19711"
       ],
       "total_workload": 4
     },
@@ -91,7 +91,7 @@
           "practical_hours": 4,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 58,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -124,7 +124,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 58,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -157,7 +157,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 58,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -190,7 +190,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 1,
-          "student_count": 58,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -223,7 +223,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 58,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }

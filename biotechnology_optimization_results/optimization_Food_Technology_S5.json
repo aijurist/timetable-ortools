@@ -11,39 +11,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 2075,
-          "course_id": 363,
-          "course_code": "FT23512",
-          "course_name": "Food Processing and Preservation Laboratory - II",
-          "course_type": "L",
-          "teacher_id": "380.0",
-          "semester": 5,
-          "course_dept": "Food Technology",
-          "student_dept": "Food Technology",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 61,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "380.0"
-      ],
-      "courses": [
-        "FT23512"
-      ],
-      "total_workload": 4
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 2074,
           "course_id": 362,
           "course_code": "FT23511",
@@ -58,7 +25,7 @@
           "practical_hours": 4,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 61,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -68,6 +35,39 @@
       ],
       "courses": [
         "FT23511"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 2075,
+          "course_id": 363,
+          "course_code": "FT23512",
+          "course_name": "Food Processing and Preservation Laboratory - II",
+          "course_type": "L",
+          "teacher_id": "380.0",
+          "semester": 5,
+          "course_dept": "Food Technology",
+          "student_dept": "Food Technology",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "380.0"
+      ],
+      "courses": [
+        "FT23512"
       ],
       "total_workload": 4
     },
@@ -91,7 +91,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 61,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -124,7 +124,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 61,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -157,7 +157,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 61,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -176,39 +176,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 2073,
-          "course_id": 359,
-          "course_code": "FT23501",
-          "course_name": "Food Analysis",
-          "course_type": "T",
-          "teacher_id": "374.0",
-          "semester": 5,
-          "course_dept": "Food Technology",
-          "student_dept": "Food Technology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 61,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "374.0"
-      ],
-      "courses": [
-        "FT23501"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 7,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 479,
           "course_id": 746,
           "course_code": "FT23F01",
@@ -223,7 +190,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 61,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -233,6 +200,39 @@
       ],
       "courses": [
         "FT23F01"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 7,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 2073,
+          "course_id": 359,
+          "course_code": "FT23501",
+          "course_name": "Food Analysis",
+          "course_type": "T",
+          "teacher_id": "374.0",
+          "semester": 5,
+          "course_dept": "Food Technology",
+          "student_dept": "Food Technology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "374.0"
+      ],
+      "courses": [
+        "FT23501"
       ],
       "total_workload": 3
     }

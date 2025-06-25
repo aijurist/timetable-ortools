@@ -25,7 +25,7 @@
           "practical_hours": 4,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 66,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -58,7 +58,7 @@
           "practical_hours": 6,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 66,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -77,39 +77,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 450,
-          "course_id": 734,
-          "course_code": "RO19D12",
-          "course_name": "Advanced Manufacturing Systems",
-          "course_type": "T",
-          "teacher_id": "570.0",
-          "semester": 7,
-          "course_dept": "Robotics & Automation",
-          "student_dept": "Robotics & Automation",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 66,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "570.0"
-      ],
-      "courses": [
-        "RO19D12"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 4,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 445,
           "course_id": 732,
           "course_code": "RO19702",
@@ -124,7 +91,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 66,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -138,7 +105,7 @@
       "total_workload": 3
     },
     {
-      "group_id": 5,
+      "group_id": 4,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -157,7 +124,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 66,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -171,7 +138,7 @@
       "total_workload": 3
     },
     {
-      "group_id": 6,
+      "group_id": 5,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -190,7 +157,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 66,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -200,6 +167,39 @@
       ],
       "courses": [
         "GE19304"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 450,
+          "course_id": 734,
+          "course_code": "RO19D12",
+          "course_name": "Advanced Manufacturing Systems",
+          "course_type": "T",
+          "teacher_id": "570.0",
+          "semester": 7,
+          "course_dept": "Robotics & Automation",
+          "student_dept": "Robotics & Automation",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "570.0"
+      ],
+      "courses": [
+        "RO19D12"
       ],
       "total_workload": 3
     }

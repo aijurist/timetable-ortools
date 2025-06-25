@@ -11,39 +11,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 476,
-          "course_id": 743,
-          "course_code": "MT19713",
-          "course_name": "Mechatronics Problem Solving using AI, ML & DL",
-          "course_type": "L",
-          "teacher_id": "495.0",
-          "semester": 7,
-          "course_dept": "Mechatronics Engineering",
-          "student_dept": "Mechatronics Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 68,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "495.0"
-      ],
-      "courses": [
-        "MT19713"
-      ],
-      "total_workload": 4
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 474,
           "course_id": 740,
           "course_code": "MT19711",
@@ -58,7 +25,7 @@
           "practical_hours": 4,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 68,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -72,7 +39,7 @@
       "total_workload": 4
     },
     {
-      "group_id": 3,
+      "group_id": 2,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -91,7 +58,7 @@
           "practical_hours": 4,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 68,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -105,73 +72,40 @@
       "total_workload": 4
     },
     {
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 476,
+          "course_id": 743,
+          "course_code": "MT19713",
+          "course_name": "Mechatronics Problem Solving using AI, ML & DL",
+          "course_type": "L",
+          "teacher_id": "495.0",
+          "semester": 7,
+          "course_dept": "Mechatronics Engineering",
+          "student_dept": "Mechatronics Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "495.0"
+      ],
+      "courses": [
+        "MT19713"
+      ],
+      "total_workload": 4
+    },
+    {
       "group_id": 4,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 472,
-          "course_id": 739,
-          "course_code": "MT19704",
-          "course_name": "Machine Vision",
-          "course_type": "T",
-          "teacher_id": "482.0",
-          "semester": 7,
-          "course_dept": "Mechatronics Engineering",
-          "student_dept": "Mechatronics Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 68,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "482.0"
-      ],
-      "courses": [
-        "MT19704"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 5,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 470,
-          "course_id": 738,
-          "course_code": "MT19703",
-          "course_name": "Industrial Automation",
-          "course_type": "T",
-          "teacher_id": "493.0",
-          "semester": 7,
-          "course_dept": "Mechatronics Engineering",
-          "student_dept": "Mechatronics Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 68,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "493.0"
-      ],
-      "courses": [
-        "MT19703"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 6,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -190,7 +124,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 68,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -204,7 +138,40 @@
       "total_workload": 3
     },
     {
-      "group_id": 7,
+      "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 472,
+          "course_id": 739,
+          "course_code": "MT19704",
+          "course_name": "Machine Vision",
+          "course_type": "T",
+          "teacher_id": "482.0",
+          "semester": 7,
+          "course_dept": "Mechatronics Engineering",
+          "student_dept": "Mechatronics Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "482.0"
+      ],
+      "courses": [
+        "MT19704"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 6,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -223,7 +190,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 68,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -233,6 +200,39 @@
       ],
       "courses": [
         "MT19702"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 7,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 470,
+          "course_id": 738,
+          "course_code": "MT19703",
+          "course_name": "Industrial Automation",
+          "course_type": "T",
+          "teacher_id": "493.0",
+          "semester": 7,
+          "course_dept": "Mechatronics Engineering",
+          "student_dept": "Mechatronics Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "493.0"
+      ],
+      "courses": [
+        "MT19703"
       ],
       "total_workload": 3
     }

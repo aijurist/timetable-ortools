@@ -25,7 +25,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 64,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
@@ -44,7 +44,7 @@
           "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 64,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -79,7 +79,7 @@
           "practical_hours": 2,
           "lecture_hours": 2,
           "tutorial_hours": 1,
-          "student_count": 64,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
@@ -98,7 +98,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 64,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -133,7 +133,7 @@
           "practical_hours": 2,
           "lecture_hours": 2,
           "tutorial_hours": 1,
-          "student_count": 64,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
@@ -152,7 +152,7 @@
           "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 64,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -187,7 +187,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 39,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
@@ -206,7 +206,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 39,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
@@ -225,15 +225,15 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 50,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
       ],
       "teachers": [
+        "300.0",
         "324.0",
-        "331.0",
-        "300.0"
+        "331.0"
       ],
       "courses": [
         "EE19P72"

@@ -11,6 +11,152 @@
       "group_type": "Regular",
       "instances": [
         {
+          "id": 367,
+          "course_id": 570,
+          "course_code": "AD23531",
+          "course_name": "Big Data Architecture",
+          "course_type": "LoT",
+          "teacher_id": "26.0",
+          "semester": 5,
+          "course_dept": "Artificial Intelligence & Data Science",
+          "student_dept": "Artificial Intelligence & Data Science",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 375,
+          "course_id": 570,
+          "course_code": "AD23531",
+          "course_name": "Big Data Architecture",
+          "course_type": "LoT",
+          "teacher_id": "18.0",
+          "semester": 5,
+          "course_dept": "Artificial Intelligence & Data Science",
+          "student_dept": "Artificial Intelligence & Data Science",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1091,
+          "course_id": 570,
+          "course_code": "AD23531",
+          "course_name": "Big Data Architecture",
+          "course_type": "LoT",
+          "teacher_id": "1815.0",
+          "semester": 5,
+          "course_dept": "Artificial Intelligence & Data Science",
+          "student_dept": "Artificial Intelligence & Data Science",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "26.0",
+        "1815.0",
+        "18.0"
+      ],
+      "courses": [
+        "AD23531"
+      ],
+      "total_workload": 15
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1076,
+          "course_id": 39,
+          "course_code": "AI23531",
+          "course_name": "Deep Learning",
+          "course_type": "LoT",
+          "teacher_id": "21.0",
+          "semester": 5,
+          "course_dept": "Artificial Intelligence & Data Science",
+          "student_dept": "Artificial Intelligence & Data Science",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1086,
+          "course_id": 39,
+          "course_code": "AI23531",
+          "course_name": "Deep Learning",
+          "course_type": "LoT",
+          "teacher_id": "1801.0",
+          "semester": 5,
+          "course_dept": "Artificial Intelligence & Data Science",
+          "student_dept": "Artificial Intelligence & Data Science",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1871,
+          "course_id": 39,
+          "course_code": "AI23531",
+          "course_name": "Deep Learning",
+          "course_type": "LoT",
+          "teacher_id": "1844.0",
+          "semester": 5,
+          "course_dept": "Artificial Intelligence & Data Science",
+          "student_dept": "Artificial Intelligence & Data Science",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "1801.0",
+        "1844.0",
+        "21.0"
+      ],
+      "courses": [
+        "AI23531"
+      ],
+      "total_workload": 15
+    },
+    {
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
           "id": 692,
           "course_id": 270,
           "course_code": "CS23532",
@@ -77,152 +223,6 @@
         "CS23532"
       ],
       "total_workload": 21
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 367,
-          "course_id": 570,
-          "course_code": "AD23531",
-          "course_name": "Big Data Architecture",
-          "course_type": "LoT",
-          "teacher_id": "26.0",
-          "semester": 5,
-          "course_dept": "Artificial Intelligence & Data Science",
-          "student_dept": "Artificial Intelligence & Data Science",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 375,
-          "course_id": 570,
-          "course_code": "AD23531",
-          "course_name": "Big Data Architecture",
-          "course_type": "LoT",
-          "teacher_id": "18.0",
-          "semester": 5,
-          "course_dept": "Artificial Intelligence & Data Science",
-          "student_dept": "Artificial Intelligence & Data Science",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1091,
-          "course_id": 570,
-          "course_code": "AD23531",
-          "course_name": "Big Data Architecture",
-          "course_type": "LoT",
-          "teacher_id": "1815.0",
-          "semester": 5,
-          "course_dept": "Artificial Intelligence & Data Science",
-          "student_dept": "Artificial Intelligence & Data Science",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "1815.0",
-        "18.0",
-        "26.0"
-      ],
-      "courses": [
-        "AD23531"
-      ],
-      "total_workload": 15
-    },
-    {
-      "group_id": 3,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 1076,
-          "course_id": 39,
-          "course_code": "AI23531",
-          "course_name": "Deep Learning",
-          "course_type": "LoT",
-          "teacher_id": "21.0",
-          "semester": 5,
-          "course_dept": "Artificial Intelligence & Data Science",
-          "student_dept": "Artificial Intelligence & Data Science",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1086,
-          "course_id": 39,
-          "course_code": "AI23531",
-          "course_name": "Deep Learning",
-          "course_type": "LoT",
-          "teacher_id": "1801.0",
-          "semester": 5,
-          "course_dept": "Artificial Intelligence & Data Science",
-          "student_dept": "Artificial Intelligence & Data Science",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1871,
-          "course_id": 39,
-          "course_code": "AI23531",
-          "course_name": "Deep Learning",
-          "course_type": "LoT",
-          "teacher_id": "1844.0",
-          "semester": 5,
-          "course_dept": "Artificial Intelligence & Data Science",
-          "student_dept": "Artificial Intelligence & Data Science",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "1844.0",
-        "1801.0",
-        "21.0"
-      ],
-      "courses": [
-        "AI23531"
-      ],
-      "total_workload": 15
     },
     {
       "group_id": 4,
@@ -303,7 +303,7 @@
       "group_type": "PE",
       "instances": [
         {
-          "id": "1117-A",
+          "id": "1183-A",
           "course_id": 881,
           "course_code": "IT23PE11",
           "course_name": "INTERNET OF THINGS",
@@ -318,11 +318,11 @@
           "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
-          "virtual_id": "1117-A",
+          "virtual_id": "1183-A",
           "co_scheduled_id": 1
         },
         {
-          "id": "1117-B",
+          "id": "1183-B",
           "course_id": 881,
           "course_code": "IT23PE11",
           "course_name": "INTERNET OF THINGS",
@@ -337,7 +337,7 @@
           "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
-          "virtual_id": "1117-B",
+          "virtual_id": "1183-B",
           "co_scheduled_id": 1
         },
         {

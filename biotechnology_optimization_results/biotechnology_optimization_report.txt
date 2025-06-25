@@ -1,14 +1,14 @@
 BIOTECHNOLOGY COURSE GROUP OPTIMIZATION REPORT
 ============================================================
-Generated: 2025-06-24 16:22:34
+Generated: 2025-06-26 02:48:36
 Method: OR-Tools CP-SAT Optimization
-Data Source: data/department_data/final_computing.csv
+Data Source: data/final_v2.csv
 
 OVERALL RESULTS:
-- Total Department-Semester Combinations: 57
+- Total Department-Semester Combinations: 58
 - Successful Optimizations: 57
-- Failed Optimizations: 0
-- Success Rate: 100.0%
+- Failed Optimizations: 1
+- Success Rate: 98.3%
 
 DETAILED RESULTS:
 
@@ -32,6 +32,9 @@ Aeronautical Engineering - Semester 7:
   👥 Groups: 7
   📝 Instances: 7
   📚 Courses: 7
+
+Artificial Intelligence & Data Science - Semester 1:
+  ❌ Status: FAILED
 
 Artificial Intelligence & Data Science - Semester 3:
   ✅ Status: SUCCESS
@@ -169,23 +172,23 @@ Chemical Engineering - Semester 7:
 Civil Engineering - Semester 3:
   ✅ Status: SUCCESS
   📊 Objective Value: 0.0
-  👥 Groups: 7
-  📝 Instances: 7
-  📚 Courses: 7
+  👥 Groups: 8
+  📝 Instances: 8
+  📚 Courses: 8
 
 Civil Engineering - Semester 5:
   ✅ Status: SUCCESS
   📊 Objective Value: 0.0
-  👥 Groups: 7
-  📝 Instances: 7
-  📚 Courses: 7
+  👥 Groups: 6
+  📝 Instances: 6
+  📚 Courses: 6
 
 Civil Engineering - Semester 7:
   ✅ Status: SUCCESS
   📊 Objective Value: 0.0
-  👥 Groups: 8
-  📝 Instances: 8
-  📚 Courses: 8
+  👥 Groups: 7
+  📝 Instances: 7
+  📚 Courses: 7
 
 Computer Science & Business Systems - Semester 3:
   ✅ Status: SUCCESS
@@ -196,7 +199,7 @@ Computer Science & Business Systems - Semester 3:
 
 Computer Science & Business Systems - Semester 5:
   ✅ Status: SUCCESS
-  📊 Objective Value: 2.0
+  📊 Objective Value: 3.0
   👥 Groups: 5
   📝 Instances: 10
   📚 Courses: 5
@@ -295,9 +298,9 @@ Electronics & Communication Engineering - Semester 3:
 Electronics & Communication Engineering - Semester 5:
   ✅ Status: SUCCESS
   📊 Objective Value: 6.0
-  👥 Groups: 7
-  📝 Instances: 28
-  📚 Courses: 7
+  👥 Groups: 6
+  📝 Instances: 24
+  📚 Courses: 6
 
 Electronics & Communication Engineering - Semester 7:
   ✅ Status: SUCCESS
@@ -400,9 +403,9 @@ Robotics & Automation - Semester 3:
 Robotics & Automation - Semester 5:
   ✅ Status: SUCCESS
   📊 Objective Value: 0.0
-  👥 Groups: 7
-  📝 Instances: 7
-  📚 Courses: 7
+  👥 Groups: 6
+  📝 Instances: 6
+  📚 Courses: 6
 
 Robotics & Automation - Semester 7:
   ✅ Status: SUCCESS

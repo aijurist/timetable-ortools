@@ -107,11 +107,11 @@
         }
       ],
       "teachers": [
-        "248.0",
         "212.0",
+        "216.0",
         "1781.0",
-        "205.0",
-        "216.0"
+        "248.0",
+        "205.0"
       ],
       "courses": [
         "CS19741",
@@ -221,11 +221,11 @@
         }
       ],
       "teachers": [
-        "227.0",
-        "248.0",
         "212.0",
         "1781.0",
-        "250.0"
+        "248.0",
+        "250.0",
+        "227.0"
       ],
       "courses": [
         "CS19741",
@@ -249,9 +249,9 @@
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
           "has_lab": true,
-          "has_theory": true,
+          "has_theory": false,
           "practical_hours": 6,
-          "lecture_hours": 2,
+          "lecture_hours": 0,
           "tutorial_hours": 0,
           "student_count": 70,
           "virtual_id": null,
@@ -268,9 +268,9 @@
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
           "has_lab": true,
-          "has_theory": true,
+          "has_theory": false,
           "practical_hours": 6,
-          "lecture_hours": 2,
+          "lecture_hours": 0,
           "tutorial_hours": 0,
           "student_count": 70,
           "virtual_id": "877-A",
@@ -287,9 +287,9 @@
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering",
           "has_lab": true,
-          "has_theory": true,
+          "has_theory": false,
           "practical_hours": 6,
-          "lecture_hours": 2,
+          "lecture_hours": 0,
           "tutorial_hours": 0,
           "student_count": 70,
           "virtual_id": "877-B",
@@ -307,7 +307,7 @@
           "student_dept": "Computer Science & Engineering",
           "has_lab": true,
           "has_theory": true,
-          "practical_hours": 6,
+          "practical_hours": 2,
           "lecture_hours": 2,
           "tutorial_hours": 0,
           "student_count": 70,
@@ -326,7 +326,7 @@
           "student_dept": "Computer Science & Engineering",
           "has_lab": true,
           "has_theory": true,
-          "practical_hours": 6,
+          "practical_hours": 2,
           "lecture_hours": 2,
           "tutorial_hours": 0,
           "student_count": 70,
@@ -336,14 +336,14 @@
       ],
       "teachers": [
         "204.0",
-        "217.0",
         "202.0",
-        "197.0"
+        "197.0",
+        "217.0"
       ],
       "courses": [
         "CS19PE04"
       ],
-      "total_workload": 40
+      "total_workload": 26
     }
   ],
   "pe_group_included": true,

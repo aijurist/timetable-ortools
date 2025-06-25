@@ -11,12 +11,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 994,
-          "course_id": 150,
-          "course_code": "CB23332",
-          "course_name": "Software Engineering",
+          "id": 1223,
+          "course_id": 149,
+          "course_code": "CB23331",
+          "course_name": "Computational Statistics",
           "course_type": "LoT",
-          "teacher_id": "165.0",
+          "teacher_id": "450.0",
           "semester": 3,
           "course_dept": "Computer Science & Business Systems",
           "student_dept": "Computer Science & Business Systems",
@@ -50,12 +50,12 @@
         }
       ],
       "teachers": [
-        "165.0",
+        "450.0",
         "1808.0"
       ],
       "courses": [
-        "CB23332",
-        "CS23333"
+        "CS23333",
+        "CB23331"
       ],
       "total_workload": 12
     },
@@ -65,12 +65,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 1222,
-          "course_id": 149,
-          "course_code": "CB23331",
-          "course_name": "Computational Statistics",
+          "id": 1040,
+          "course_id": 151,
+          "course_code": "CB23333",
+          "course_name": "Database Technology",
           "course_type": "LoT",
-          "teacher_id": "422.0",
+          "teacher_id": "167.0",
           "semester": 3,
           "course_dept": "Computer Science & Business Systems",
           "student_dept": "Computer Science & Business Systems",
@@ -84,12 +84,12 @@
           "co_scheduled_id": null
         },
         {
-          "id": 1223,
-          "course_id": 149,
-          "course_code": "CB23331",
-          "course_name": "Computational Statistics",
+          "id": 991,
+          "course_id": 150,
+          "course_code": "CB23332",
+          "course_name": "Software Engineering",
           "course_type": "LoT",
-          "teacher_id": "450.0",
+          "teacher_id": "193.0",
           "semester": 3,
           "course_dept": "Computer Science & Business Systems",
           "student_dept": "Computer Science & Business Systems",
@@ -104,11 +104,12 @@
         }
       ],
       "teachers": [
-        "422.0",
-        "450.0"
+        "193.0",
+        "167.0"
       ],
       "courses": [
-        "CB23331"
+        "CB23333",
+        "CB23332"
       ],
       "total_workload": 10
     },
@@ -137,12 +138,12 @@
           "co_scheduled_id": null
         },
         {
-          "id": 1040,
-          "course_id": 151,
-          "course_code": "CB23333",
-          "course_name": "Database Technology",
+          "id": 994,
+          "course_id": 150,
+          "course_code": "CB23332",
+          "course_name": "Software Engineering",
           "course_type": "LoT",
-          "teacher_id": "167.0",
+          "teacher_id": "165.0",
           "semester": 3,
           "course_dept": "Computer Science & Business Systems",
           "student_dept": "Computer Science & Business Systems",
@@ -157,11 +158,12 @@
         }
       ],
       "teachers": [
-        "167.0",
-        "156.0"
+        "156.0",
+        "165.0"
       ],
       "courses": [
-        "CB23333"
+        "CB23333",
+        "CB23332"
       ],
       "total_workload": 10
     },
@@ -171,12 +173,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 991,
-          "course_id": 150,
-          "course_code": "CB23332",
-          "course_name": "Software Engineering",
+          "id": 1222,
+          "course_id": 149,
+          "course_code": "CB23331",
+          "course_name": "Computational Statistics",
           "course_type": "LoT",
-          "teacher_id": "193.0",
+          "teacher_id": "422.0",
           "semester": 3,
           "course_dept": "Computer Science & Business Systems",
           "student_dept": "Computer Science & Business Systems",
@@ -211,11 +213,11 @@
       ],
       "teachers": [
         "1809.0",
-        "193.0"
+        "422.0"
       ],
       "courses": [
-        "CB23332",
-        "CS23333"
+        "CS23333",
+        "CB23331"
       ],
       "total_workload": 12
     },
@@ -264,8 +266,8 @@
         }
       ],
       "teachers": [
-        "173.0",
-        "1807.0"
+        "1807.0",
+        "173.0"
       ],
       "courses": [
         "CB23311"
@@ -274,59 +276,6 @@
     },
     {
       "group_id": 6,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 1036,
-          "course_id": 148,
-          "course_code": "CB23312",
-          "course_name": "Computer Organization and Architecture",
-          "course_type": "T",
-          "teacher_id": "175.0",
-          "semester": 3,
-          "course_dept": "Computer Science & Business Systems",
-          "student_dept": "Computer Science & Business Systems",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1068,
-          "course_id": 148,
-          "course_code": "CB23312",
-          "course_name": "Computer Organization and Architecture",
-          "course_type": "T",
-          "teacher_id": "1805.0",
-          "semester": 3,
-          "course_dept": "Computer Science & Business Systems",
-          "student_dept": "Computer Science & Business Systems",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "175.0",
-        "1805.0"
-      ],
-      "courses": [
-        "CB23312"
-      ],
-      "total_workload": 6
-    },
-    {
-      "group_id": 7,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -370,11 +319,64 @@
         }
       ],
       "teachers": [
-        "143.0",
-        "168.0"
+        "168.0",
+        "143.0"
       ],
       "courses": [
         "MC23313"
+      ],
+      "total_workload": 6
+    },
+    {
+      "group_id": 7,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1036,
+          "course_id": 148,
+          "course_code": "CB23312",
+          "course_name": "Computer Organization and Architecture",
+          "course_type": "T",
+          "teacher_id": "175.0",
+          "semester": 3,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1068,
+          "course_id": 148,
+          "course_code": "CB23312",
+          "course_name": "Computer Organization and Architecture",
+          "course_type": "T",
+          "teacher_id": "1805.0",
+          "semester": 3,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "1805.0",
+        "175.0"
+      ],
+      "courses": [
+        "CB23312"
       ],
       "total_workload": 6
     }

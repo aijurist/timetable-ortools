@@ -58,7 +58,7 @@
           "practical_hours": 4,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 60,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -77,39 +77,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 324,
-          "course_id": 22,
-          "course_code": "AE23513",
-          "course_name": "Flight Dynamics",
-          "course_type": "T",
-          "teacher_id": "10.0",
-          "semester": 5,
-          "course_dept": "Aeronautical Engineering",
-          "student_dept": "Aeronautical Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 2,
-          "tutorial_hours": 1,
-          "student_count": 65,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "10.0"
-      ],
-      "courses": [
-        "AE23513"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 4,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 319,
           "course_id": 20,
           "course_code": "AE23511",
@@ -124,7 +91,7 @@
           "practical_hours": 0,
           "lecture_hours": 2,
           "tutorial_hours": 1,
-          "student_count": 65,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -138,7 +105,7 @@
       "total_workload": 3
     },
     {
-      "group_id": 5,
+      "group_id": 4,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -157,7 +124,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 65,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -171,7 +138,7 @@
       "total_workload": 3
     },
     {
-      "group_id": 6,
+      "group_id": 5,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -190,7 +157,7 @@
           "practical_hours": 0,
           "lecture_hours": 2,
           "tutorial_hours": 1,
-          "student_count": 65,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -200,6 +167,39 @@
       ],
       "courses": [
         "AE23512"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 324,
+          "course_id": 22,
+          "course_code": "AE23513",
+          "course_name": "Flight Dynamics",
+          "course_type": "T",
+          "teacher_id": "10.0",
+          "semester": 5,
+          "course_dept": "Aeronautical Engineering",
+          "student_dept": "Aeronautical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 1,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "10.0"
+      ],
+      "courses": [
+        "AE23513"
       ],
       "total_workload": 3
     }

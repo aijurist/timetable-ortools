@@ -25,7 +25,7 @@
           "practical_hours": 4,
           "lecture_hours": 1,
           "tutorial_hours": 0,
-          "student_count": 69,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
@@ -79,7 +79,7 @@
           "practical_hours": 4,
           "lecture_hours": 1,
           "tutorial_hours": 0,
-          "student_count": 68,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
@@ -119,25 +119,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 671,
-          "course_id": 320,
-          "course_code": "EE23315",
-          "course_name": "Power Plant Engineering",
-          "course_type": "T",
-          "teacher_id": "300.0",
-          "semester": 3,
-          "course_dept": "Electrical & Electronics Engineering",
-          "student_dept": "Electrical & Electronics Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 69,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
           "id": 1214,
           "course_id": 423,
           "course_code": "MA23312",
@@ -155,15 +136,34 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
+        },
+        {
+          "id": 634,
+          "course_id": 317,
+          "course_code": "EE23312",
+          "course_name": "Electrical Machines - I",
+          "course_type": "T",
+          "teacher_id": "316.0",
+          "semester": 3,
+          "course_dept": "Electrical & Electronics Engineering",
+          "student_dept": "Electrical & Electronics Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
         "414.0",
-        "300.0"
+        "316.0"
       ],
       "courses": [
         "MA23312",
-        "EE23315"
+        "EE23312"
       ],
       "total_workload": 7
     },
@@ -187,17 +187,17 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 69,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
         {
-          "id": 672,
-          "course_id": 320,
-          "course_code": "EE23315",
-          "course_name": "Power Plant Engineering",
+          "id": 635,
+          "course_id": 317,
+          "course_code": "EE23312",
+          "course_name": "Electrical Machines - I",
           "course_type": "T",
-          "teacher_id": "312.0",
+          "teacher_id": "347.0",
           "semester": 3,
           "course_dept": "Electrical & Electronics Engineering",
           "student_dept": "Electrical & Electronics Engineering",
@@ -206,17 +206,17 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 68,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
       ],
       "teachers": [
         "328.0",
-        "312.0"
+        "347.0"
       ],
       "courses": [
-        "EE23315",
+        "EE23312",
         "EE23313"
       ],
       "total_workload": 6
@@ -241,61 +241,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 68,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 638,
-          "course_id": 316,
-          "course_code": "EE23311",
-          "course_name": "Electromagnetic Theory",
-          "course_type": "T",
-          "teacher_id": "309.0",
-          "semester": 3,
-          "course_dept": "Electrical & Electronics Engineering",
-          "student_dept": "Electrical & Electronics Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 68,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "309.0",
-        "338.0"
-      ],
-      "courses": [
-        "EE23313",
-        "EE23311"
-      ],
-      "total_workload": 6
-    },
-    {
-      "group_id": 6,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 635,
-          "course_id": 317,
-          "course_code": "EE23312",
-          "course_name": "Electrical Machines - I",
-          "course_type": "T",
-          "teacher_id": "347.0",
-          "semester": 3,
-          "course_dept": "Electrical & Electronics Engineering",
-          "student_dept": "Electrical & Electronics Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 68,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
@@ -314,18 +260,72 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 68,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "347.0",
-        "358.0"
+        "358.0",
+        "338.0"
       ],
       "courses": [
-        "EE23312",
-        "EE23314"
+        "EE23314",
+        "EE23313"
+      ],
+      "total_workload": 6
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 672,
+          "course_id": 320,
+          "course_code": "EE23315",
+          "course_name": "Power Plant Engineering",
+          "course_type": "T",
+          "teacher_id": "312.0",
+          "semester": 3,
+          "course_dept": "Electrical & Electronics Engineering",
+          "student_dept": "Electrical & Electronics Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 638,
+          "course_id": 316,
+          "course_code": "EE23311",
+          "course_name": "Electromagnetic Theory",
+          "course_type": "T",
+          "teacher_id": "309.0",
+          "semester": 3,
+          "course_dept": "Electrical & Electronics Engineering",
+          "student_dept": "Electrical & Electronics Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "309.0",
+        "312.0"
+      ],
+      "courses": [
+        "EE23311",
+        "EE23315"
       ],
       "total_workload": 6
     },
@@ -335,12 +335,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 634,
-          "course_id": 317,
-          "course_code": "EE23312",
-          "course_name": "Electrical Machines - I",
+          "id": 671,
+          "course_id": 320,
+          "course_code": "EE23315",
+          "course_name": "Power Plant Engineering",
           "course_type": "T",
-          "teacher_id": "316.0",
+          "teacher_id": "300.0",
           "semester": 3,
           "course_dept": "Electrical & Electronics Engineering",
           "student_dept": "Electrical & Electronics Engineering",
@@ -349,17 +349,17 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 69,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
         {
-          "id": 643,
-          "course_id": 319,
-          "course_code": "EE23314",
-          "course_name": "Electronic Devices and Circuits",
+          "id": 637,
+          "course_id": 316,
+          "course_code": "EE23311",
+          "course_name": "Electromagnetic Theory",
           "course_type": "T",
-          "teacher_id": "310.0",
+          "teacher_id": "294.0",
           "semester": 3,
           "course_dept": "Electrical & Electronics Engineering",
           "student_dept": "Electrical & Electronics Engineering",
@@ -368,18 +368,18 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 69,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "316.0",
-        "310.0"
+        "300.0",
+        "294.0"
       ],
       "courses": [
-        "EE23312",
-        "EE23314"
+        "EE23311",
+        "EE23315"
       ],
       "total_workload": 6
     },
@@ -408,12 +408,12 @@
           "co_scheduled_id": null
         },
         {
-          "id": 637,
-          "course_id": 316,
-          "course_code": "EE23311",
-          "course_name": "Electromagnetic Theory",
+          "id": 643,
+          "course_id": 319,
+          "course_code": "EE23314",
+          "course_name": "Electronic Devices and Circuits",
           "course_type": "T",
-          "teacher_id": "294.0",
+          "teacher_id": "310.0",
           "semester": 3,
           "course_dept": "Electrical & Electronics Engineering",
           "student_dept": "Electrical & Electronics Engineering",
@@ -422,18 +422,18 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 69,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "430.0",
-        "294.0"
+        "310.0",
+        "430.0"
       ],
       "courses": [
         "MA23312",
-        "EE23311"
+        "EE23314"
       ],
       "total_workload": 7
     }

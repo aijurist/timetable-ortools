@@ -25,7 +25,7 @@
           "practical_hours": 4,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 51,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -44,39 +44,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 338,
-          "course_id": 692,
-          "course_code": "AE19741",
-          "course_name": "Avionics",
-          "course_type": "LoT",
-          "teacher_id": "7.0",
-          "semester": 7,
-          "course_dept": "Aeronautical Engineering",
-          "student_dept": "Aeronautical Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 51,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "7.0"
-      ],
-      "courses": [
-        "AE19741"
-      ],
-      "total_workload": 5
-    },
-    {
-      "group_id": 3,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 384,
           "course_id": 705,
           "course_code": "AE19712",
@@ -91,7 +58,7 @@
           "practical_hours": 4,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 51,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -105,73 +72,40 @@
       "total_workload": 4
     },
     {
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 338,
+          "course_id": 692,
+          "course_code": "AE19741",
+          "course_name": "Avionics",
+          "course_type": "LoT",
+          "teacher_id": "7.0",
+          "semester": 7,
+          "course_dept": "Aeronautical Engineering",
+          "student_dept": "Aeronautical Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "7.0"
+      ],
+      "courses": [
+        "AE19741"
+      ],
+      "total_workload": 5
+    },
+    {
       "group_id": 4,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 382,
-          "course_id": 601,
-          "course_code": "AE19701",
-          "course_name": "Computational Fluid Dynamics",
-          "course_type": "T",
-          "teacher_id": "11.0",
-          "semester": 7,
-          "course_dept": "Aeronautical Engineering",
-          "student_dept": "Aeronautical Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 50,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "11.0"
-      ],
-      "courses": [
-        "AE19701"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 5,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 362,
-          "course_id": 673,
-          "course_code": "AE19P72",
-          "course_name": "Fatigue and Fracture",
-          "course_type": "T",
-          "teacher_id": "6.0",
-          "semester": 7,
-          "course_dept": "Aeronautical Engineering",
-          "student_dept": "Aeronautical Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 51,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "6.0"
-      ],
-      "courses": [
-        "AE19P72"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 6,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -190,7 +124,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 51,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -204,7 +138,7 @@
       "total_workload": 3
     },
     {
-      "group_id": 7,
+      "group_id": 5,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -223,7 +157,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 51,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -233,6 +167,72 @@
       ],
       "courses": [
         "AE19A11"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 362,
+          "course_id": 673,
+          "course_code": "AE19P72",
+          "course_name": "Fatigue and Fracture",
+          "course_type": "T",
+          "teacher_id": "6.0",
+          "semester": 7,
+          "course_dept": "Aeronautical Engineering",
+          "student_dept": "Aeronautical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "6.0"
+      ],
+      "courses": [
+        "AE19P72"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 7,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 382,
+          "course_id": 601,
+          "course_code": "AE19701",
+          "course_name": "Computational Fluid Dynamics",
+          "course_type": "T",
+          "teacher_id": "11.0",
+          "semester": 7,
+          "course_dept": "Aeronautical Engineering",
+          "student_dept": "Aeronautical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "11.0"
+      ],
+      "courses": [
+        "AE19701"
       ],
       "total_workload": 3
     }

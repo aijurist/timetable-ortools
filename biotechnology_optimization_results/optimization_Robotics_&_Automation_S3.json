@@ -11,39 +11,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 408,
-          "course_id": 507,
-          "course_code": "RO23332",
-          "course_name": "Mechanics of Materials",
-          "course_type": "LoT",
-          "teacher_id": "572.0",
-          "semester": 3,
-          "course_dept": "Robotics & Automation",
-          "student_dept": "Robotics & Automation",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 63,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "572.0"
-      ],
-      "courses": [
-        "RO23332"
-      ],
-      "total_workload": 5
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 416,
           "course_id": 263,
           "course_code": "CS23422",
@@ -58,7 +25,7 @@
           "practical_hours": 4,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 63,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -70,6 +37,39 @@
         "CS23422"
       ],
       "total_workload": 4
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 408,
+          "course_id": 507,
+          "course_code": "RO23332",
+          "course_name": "Mechanics of Materials",
+          "course_type": "LoT",
+          "teacher_id": "572.0",
+          "semester": 3,
+          "course_dept": "Robotics & Automation",
+          "student_dept": "Robotics & Automation",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "572.0"
+      ],
+      "courses": [
+        "RO23332"
+      ],
+      "total_workload": 5
     },
     {
       "group_id": 3,
@@ -91,7 +91,7 @@
           "practical_hours": 2,
           "lecture_hours": 2,
           "tutorial_hours": 0,
-          "student_count": 63,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -157,7 +157,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 63,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }

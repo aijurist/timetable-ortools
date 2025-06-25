@@ -11,6 +11,153 @@
       "group_type": "Regular",
       "instances": [
         {
+          "id": 785,
+          "course_id": 658,
+          "course_code": "IT19P78",
+          "course_name": "Software Testing",
+          "course_type": "T",
+          "teacher_id": "423.0",
+          "semester": 7,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 786,
+          "course_id": 563,
+          "course_code": "IT19741",
+          "course_name": "Cloud and Big Data Analytics",
+          "course_type": "LoT",
+          "teacher_id": "410.0",
+          "semester": 7,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 789,
+          "course_id": 563,
+          "course_code": "IT19741",
+          "course_name": "Cloud and Big Data Analytics",
+          "course_type": "LoT",
+          "teacher_id": "387.0",
+          "semester": 7,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "423.0",
+        "387.0",
+        "410.0"
+      ],
+      "courses": [
+        "IT19P78",
+        "IT19741"
+      ],
+      "total_workload": 17
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": "783-A",
+          "course_id": 658,
+          "course_code": "IT19P78",
+          "course_name": "Software Testing",
+          "course_type": "T",
+          "teacher_id": "416.0",
+          "semester": 7,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": "783-A",
+          "co_scheduled_id": 1
+        },
+        {
+          "id": "783-B",
+          "course_id": 658,
+          "course_code": "IT19P78",
+          "course_name": "Software Testing",
+          "course_type": "T",
+          "teacher_id": "416.0",
+          "semester": 7,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": "783-B",
+          "co_scheduled_id": 1
+        },
+        {
+          "id": 787,
+          "course_id": 563,
+          "course_code": "IT19741",
+          "course_name": "Cloud and Big Data Analytics",
+          "course_type": "LoT",
+          "teacher_id": "382.0",
+          "semester": 7,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "416.0",
+        "382.0"
+      ],
+      "courses": [
+        "IT19P78",
+        "IT19741"
+      ],
+      "total_workload": 13
+    },
+    {
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
           "id": 793,
           "course_id": 660,
           "course_code": "IT19711",
@@ -69,161 +216,14 @@
         }
       ],
       "teachers": [
-        "415.0",
+        "402.0",
         "421.0",
-        "402.0"
+        "415.0"
       ],
       "courses": [
         "IT19711"
       ],
       "total_workload": 12
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": "783-A",
-          "course_id": 658,
-          "course_code": "IT19P78",
-          "course_name": "Software Testing",
-          "course_type": "T",
-          "teacher_id": "416.0",
-          "semester": 7,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": "783-A",
-          "co_scheduled_id": 1
-        },
-        {
-          "id": "783-B",
-          "course_id": 658,
-          "course_code": "IT19P78",
-          "course_name": "Software Testing",
-          "course_type": "T",
-          "teacher_id": "416.0",
-          "semester": 7,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": "783-B",
-          "co_scheduled_id": 1
-        },
-        {
-          "id": 789,
-          "course_id": 563,
-          "course_code": "IT19741",
-          "course_name": "Cloud and Big Data Analytics",
-          "course_type": "LoT",
-          "teacher_id": "387.0",
-          "semester": 7,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "416.0",
-        "387.0"
-      ],
-      "courses": [
-        "IT19P78",
-        "IT19741"
-      ],
-      "total_workload": 13
-    },
-    {
-      "group_id": 3,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 785,
-          "course_id": 658,
-          "course_code": "IT19P78",
-          "course_name": "Software Testing",
-          "course_type": "T",
-          "teacher_id": "423.0",
-          "semester": 7,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 786,
-          "course_id": 563,
-          "course_code": "IT19741",
-          "course_name": "Cloud and Big Data Analytics",
-          "course_type": "LoT",
-          "teacher_id": "410.0",
-          "semester": 7,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 787,
-          "course_id": 563,
-          "course_code": "IT19741",
-          "course_name": "Cloud and Big Data Analytics",
-          "course_type": "LoT",
-          "teacher_id": "382.0",
-          "semester": 7,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "410.0",
-        "423.0",
-        "382.0"
-      ],
-      "courses": [
-        "IT19P78",
-        "IT19741"
-      ],
-      "total_workload": 17
     }
   ],
   "pe_group_included": false,

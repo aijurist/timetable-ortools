@@ -11,231 +11,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 1009,
-          "course_id": 259,
-          "course_code": "CS23333",
-          "course_name": "Object Oriented Programming Using JAVA",
-          "course_type": "LoT",
-          "teacher_id": "383.0",
-          "semester": 3,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1013,
-          "course_id": 259,
-          "course_code": "CS23333",
-          "course_name": "Object Oriented Programming Using JAVA",
-          "course_type": "LoT",
-          "teacher_id": "384.0",
-          "semester": 3,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1016,
-          "course_id": 259,
-          "course_code": "CS23333",
-          "course_name": "Object Oriented Programming Using JAVA",
-          "course_type": "LoT",
-          "teacher_id": "378.0",
-          "semester": 3,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1017,
-          "course_id": 259,
-          "course_code": "CS23333",
-          "course_name": "Object Oriented Programming Using JAVA",
-          "course_type": "LoT",
-          "teacher_id": "402.0",
-          "semester": 3,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 2059,
-          "course_id": 259,
-          "course_code": "CS23333",
-          "course_name": "Object Oriented Programming Using JAVA",
-          "course_type": "LoT",
-          "teacher_id": "1856.0",
-          "semester": 3,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "378.0",
-        "1856.0",
-        "402.0",
-        "383.0",
-        "384.0"
-      ],
-      "courses": [
-        "CS23333"
-      ],
-      "total_workload": 35
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": "813-A",
-          "course_id": 258,
-          "course_code": "CS23332",
-          "course_name": "Database Management Systems",
-          "course_type": "LoT",
-          "teacher_id": "408.0",
-          "semester": 3,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": "813-A",
-          "co_scheduled_id": 1
-        },
-        {
-          "id": "813-B",
-          "course_id": 258,
-          "course_code": "CS23332",
-          "course_name": "Database Management Systems",
-          "course_type": "LoT",
-          "teacher_id": "408.0",
-          "semester": 3,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": "813-B",
-          "co_scheduled_id": 1
-        },
-        {
-          "id": 814,
-          "course_id": 258,
-          "course_code": "CS23332",
-          "course_name": "Database Management Systems",
-          "course_type": "LoT",
-          "teacher_id": "405.0",
-          "semester": 3,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 815,
-          "course_id": 258,
-          "course_code": "CS23332",
-          "course_name": "Database Management Systems",
-          "course_type": "LoT",
-          "teacher_id": "404.0",
-          "semester": 3,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 816,
-          "course_id": 258,
-          "course_code": "CS23332",
-          "course_name": "Database Management Systems",
-          "course_type": "LoT",
-          "teacher_id": "421.0",
-          "semester": 3,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "405.0",
-        "421.0",
-        "404.0",
-        "408.0"
-      ],
-      "courses": [
-        "CS23332"
-      ],
-      "total_workload": 35
-    },
-    {
-      "group_id": 3,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 819,
           "course_id": 257,
           "course_code": "CS23331",
@@ -333,10 +108,10 @@
       ],
       "teachers": [
         "393.0",
-        "391.0",
         "415.0",
+        "429.0",
         "400.0",
-        "429.0"
+        "391.0"
       ],
       "courses": [
         "CS23331"
@@ -344,7 +119,120 @@
       "total_workload": 25
     },
     {
-      "group_id": 4,
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1009,
+          "course_id": 259,
+          "course_code": "CS23333",
+          "course_name": "Object Oriented Programming Using JAVA",
+          "course_type": "LoT",
+          "teacher_id": "383.0",
+          "semester": 3,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1013,
+          "course_id": 259,
+          "course_code": "CS23333",
+          "course_name": "Object Oriented Programming Using JAVA",
+          "course_type": "LoT",
+          "teacher_id": "384.0",
+          "semester": 3,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1016,
+          "course_id": 259,
+          "course_code": "CS23333",
+          "course_name": "Object Oriented Programming Using JAVA",
+          "course_type": "LoT",
+          "teacher_id": "378.0",
+          "semester": 3,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1017,
+          "course_id": 259,
+          "course_code": "CS23333",
+          "course_name": "Object Oriented Programming Using JAVA",
+          "course_type": "LoT",
+          "teacher_id": "402.0",
+          "semester": 3,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 2059,
+          "course_id": 259,
+          "course_code": "CS23333",
+          "course_name": "Object Oriented Programming Using JAVA",
+          "course_type": "LoT",
+          "teacher_id": "1856.0",
+          "semester": 3,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "402.0",
+        "383.0",
+        "378.0",
+        "384.0",
+        "1856.0"
+      ],
+      "courses": [
+        "CS23333"
+      ],
+      "total_workload": 35
+    },
+    {
+      "group_id": 3,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -445,16 +333,128 @@
         }
       ],
       "teachers": [
-        "401.0",
-        "269.0",
-        "305.0",
         "315.0",
-        "395.0"
+        "305.0",
+        "269.0",
+        "395.0",
+        "401.0"
       ],
       "courses": [
         "IT23331"
       ],
       "total_workload": 25
+    },
+    {
+      "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": "813-A",
+          "course_id": 258,
+          "course_code": "CS23332",
+          "course_name": "Database Management Systems",
+          "course_type": "LoT",
+          "teacher_id": "408.0",
+          "semester": 3,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": "813-A",
+          "co_scheduled_id": 1
+        },
+        {
+          "id": "813-B",
+          "course_id": 258,
+          "course_code": "CS23332",
+          "course_name": "Database Management Systems",
+          "course_type": "LoT",
+          "teacher_id": "408.0",
+          "semester": 3,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": "813-B",
+          "co_scheduled_id": 1
+        },
+        {
+          "id": 814,
+          "course_id": 258,
+          "course_code": "CS23332",
+          "course_name": "Database Management Systems",
+          "course_type": "LoT",
+          "teacher_id": "405.0",
+          "semester": 3,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 815,
+          "course_id": 258,
+          "course_code": "CS23332",
+          "course_name": "Database Management Systems",
+          "course_type": "LoT",
+          "teacher_id": "404.0",
+          "semester": 3,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 816,
+          "course_id": 258,
+          "course_code": "CS23332",
+          "course_name": "Database Management Systems",
+          "course_type": "LoT",
+          "teacher_id": "421.0",
+          "semester": 3,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "404.0",
+        "421.0",
+        "405.0",
+        "408.0"
+      ],
+      "courses": [
+        "CS23332"
+      ],
+      "total_workload": 35
     },
     {
       "group_id": 5,
@@ -558,11 +558,11 @@
         }
       ],
       "teachers": [
-        "287.0",
-        "263.0",
-        "282.0",
         "296.0",
-        "293.0"
+        "287.0",
+        "293.0",
+        "263.0",
+        "282.0"
       ],
       "courses": [
         "EC23314"
@@ -671,11 +671,11 @@
         }
       ],
       "teachers": [
-        "418.0",
         "426.0",
-        "463.0",
         "485.0",
-        "406.0"
+        "406.0",
+        "418.0",
+        "463.0"
       ],
       "courses": [
         "MA23312"

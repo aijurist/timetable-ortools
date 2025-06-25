@@ -214,9 +214,9 @@
         }
       ],
       "teachers": [
-        "1829.0",
         "1827.0",
-        "1828.0"
+        "1828.0",
+        "1829.0"
       ],
       "courses": [
         "AI19702"
@@ -288,8 +288,8 @@
       ],
       "teachers": [
         "47.0",
-        "35.0",
-        "52.0"
+        "52.0",
+        "35.0"
       ],
       "courses": [
         "AI19701"
@@ -314,7 +314,7 @@
           "has_lab": true,
           "has_theory": true,
           "practical_hours": 2,
-          "lecture_hours": 3,
+          "lecture_hours": 2,
           "tutorial_hours": 0,
           "student_count": 70,
           "virtual_id": null,
@@ -333,7 +333,7 @@
           "has_lab": true,
           "has_theory": true,
           "practical_hours": 2,
-          "lecture_hours": 3,
+          "lecture_hours": 2,
           "tutorial_hours": 0,
           "student_count": 70,
           "virtual_id": null,
@@ -349,9 +349,9 @@
           "semester": 7,
           "course_dept": "Artificial Intelligence & Machine Learning",
           "student_dept": "Artificial Intelligence & Machine Learning",
-          "has_lab": true,
+          "has_lab": false,
           "has_theory": true,
-          "practical_hours": 2,
+          "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
@@ -360,14 +360,14 @@
         }
       ],
       "teachers": [
-        "67.0",
         "57.0",
+        "67.0",
         "37.0"
       ],
       "courses": [
         "AI19PE2"
       ],
-      "total_workload": 15
+      "total_workload": 11
     }
   ],
   "pe_group_included": true,

@@ -11,56 +11,56 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 1202,
-          "course_id": 707,
-          "course_code": "AI23512",
-          "course_name": "DataEngineering",
-          "course_type": "T",
-          "teacher_id": "40.0",
-          "semester": 5,
-          "course_dept": "Artificial Intelligence & Machine Learning",
-          "student_dept": "Artificial Intelligence & Machine Learning",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1313,
-          "course_id": 707,
-          "course_code": "AI23512",
-          "course_name": "DataEngineering",
-          "course_type": "T",
-          "teacher_id": "63.0",
-          "semester": 5,
-          "course_dept": "Artificial Intelligence & Machine Learning",
-          "student_dept": "Artificial Intelligence & Machine Learning",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 508,
-          "course_id": 39,
-          "course_code": "AI23531",
-          "course_name": "Deep Learning",
+          "id": 515,
+          "course_id": 270,
+          "course_code": "CS23532",
+          "course_name": "Computer Networks",
           "course_type": "LoT",
-          "teacher_id": "33.0",
+          "teacher_id": "47.0",
           "semester": 5,
           "course_dept": "Artificial Intelligence & Machine Learning",
           "student_dept": "Artificial Intelligence & Machine Learning",
           "has_lab": true,
           "has_theory": true,
-          "practical_hours": 2,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 517,
+          "course_id": 270,
+          "course_code": "CS23532",
+          "course_name": "Computer Networks",
+          "course_type": "LoT",
+          "teacher_id": "38.0",
+          "semester": 5,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 979,
+          "course_id": 270,
+          "course_code": "CS23532",
+          "course_name": "Computer Networks",
+          "course_type": "LoT",
+          "teacher_id": "52.0",
+          "semester": 5,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
           "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
@@ -69,15 +69,14 @@
         }
       ],
       "teachers": [
-        "40.0",
-        "33.0",
-        "63.0"
+        "47.0",
+        "52.0",
+        "38.0"
       ],
       "courses": [
-        "AI23512",
-        "AI23531"
+        "CS23532"
       ],
-      "total_workload": 11
+      "total_workload": 21
     },
     {
       "group_id": 2,
@@ -217,8 +216,8 @@
       ],
       "teachers": [
         "1794.0",
-        "46.0",
-        "1793.0"
+        "1793.0",
+        "46.0"
       ],
       "courses": [
         "AI23521"
@@ -231,37 +230,18 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 517,
-          "course_id": 270,
-          "course_code": "CS23532",
-          "course_name": "Computer Networks",
-          "course_type": "LoT",
-          "teacher_id": "38.0",
+          "id": 1202,
+          "course_id": 707,
+          "course_code": "AI23512",
+          "course_name": "DataEngineering",
+          "course_type": "T",
+          "teacher_id": "40.0",
           "semester": 5,
           "course_dept": "Artificial Intelligence & Machine Learning",
           "student_dept": "Artificial Intelligence & Machine Learning",
-          "has_lab": true,
+          "has_lab": false,
           "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 979,
-          "course_id": 270,
-          "course_code": "CS23532",
-          "course_name": "Computer Networks",
-          "course_type": "LoT",
-          "teacher_id": "52.0",
-          "semester": 5,
-          "course_dept": "Artificial Intelligence & Machine Learning",
-          "student_dept": "Artificial Intelligence & Machine Learning",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
+          "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
@@ -286,18 +266,36 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
+        },
+        {
+          "id": 1313,
+          "course_id": 707,
+          "course_code": "AI23512",
+          "course_name": "DataEngineering",
+          "course_type": "T",
+          "teacher_id": "63.0",
+          "semester": 5,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "36.0",
-        "52.0",
-        "38.0"
+        "63.0",
+        "40.0",
+        "36.0"
       ],
       "courses": [
-        "CS23532",
         "AI23512"
       ],
-      "total_workload": 17
+      "total_workload": 9
     },
     {
       "group_id": 5,
@@ -305,18 +303,18 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 515,
-          "course_id": 270,
-          "course_code": "CS23532",
-          "course_name": "Computer Networks",
+          "id": 500,
+          "course_id": 39,
+          "course_code": "AI23531",
+          "course_name": "Deep Learning",
           "course_type": "LoT",
-          "teacher_id": "47.0",
+          "teacher_id": "67.0",
           "semester": 5,
           "course_dept": "Artificial Intelligence & Machine Learning",
           "student_dept": "Artificial Intelligence & Machine Learning",
           "has_lab": true,
           "has_theory": true,
-          "practical_hours": 4,
+          "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
@@ -324,12 +322,12 @@
           "co_scheduled_id": null
         },
         {
-          "id": 500,
+          "id": 508,
           "course_id": 39,
           "course_code": "AI23531",
           "course_name": "Deep Learning",
           "course_type": "LoT",
-          "teacher_id": "67.0",
+          "teacher_id": "33.0",
           "semester": 5,
           "course_dept": "Artificial Intelligence & Machine Learning",
           "student_dept": "Artificial Intelligence & Machine Learning",
@@ -363,15 +361,14 @@
         }
       ],
       "teachers": [
-        "67.0",
-        "47.0",
-        "53.0"
+        "33.0",
+        "53.0",
+        "67.0"
       ],
       "courses": [
-        "CS23532",
         "AI23531"
       ],
-      "total_workload": 17
+      "total_workload": 15
     },
     {
       "group_id": 6,
@@ -437,9 +434,9 @@
         }
       ],
       "teachers": [
-        "39.0",
+        "1782.0",
         "90.0",
-        "1782.0"
+        "39.0"
       ],
       "courses": [
         "AI23PE1"

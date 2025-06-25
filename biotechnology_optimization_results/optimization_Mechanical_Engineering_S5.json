@@ -11,6 +11,25 @@
       "group_type": "Regular",
       "instances": [
         {
+          "id": 2047,
+          "course_id": 832,
+          "course_code": "ME23VAP1",
+          "course_name": "Windchill Training",
+          "course_type": "L",
+          "teacher_id": "560.0",
+          "semester": 5,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
           "id": 740,
           "course_id": 452,
           "course_code": "ME23521",
@@ -28,34 +47,15 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
-        },
-        {
-          "id": 2046,
-          "course_id": 832,
-          "course_code": "ME23VAP1",
-          "course_name": "Windchill Training",
-          "course_type": "L",
-          "teacher_id": "507.0",
-          "semester": 5,
-          "course_dept": "Mechanical Engineering",
-          "student_dept": "Mechanical Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "507.0",
-        "524.0"
+        "524.0",
+        "560.0"
       ],
       "courses": [
-        "ME23521",
-        "ME23VAP1"
+        "ME23VAP1",
+        "ME23521"
       ],
       "total_workload": 8
     },
@@ -104,8 +104,8 @@
         }
       ],
       "teachers": [
-        "522.0",
-        "533.0"
+        "533.0",
+        "522.0"
       ],
       "courses": [
         "ME23531",
@@ -115,60 +115,6 @@
     },
     {
       "group_id": 3,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 2050,
-          "course_id": 452,
-          "course_code": "ME23521",
-          "course_name": "Component Modeling Laboratory",
-          "course_type": "L",
-          "teacher_id": "498.0",
-          "semester": 5,
-          "course_dept": "Mechanical Engineering",
-          "student_dept": "Mechanical Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 2047,
-          "course_id": 832,
-          "course_code": "ME23VAP1",
-          "course_name": "Windchill Training",
-          "course_type": "L",
-          "teacher_id": "560.0",
-          "semester": 5,
-          "course_dept": "Mechanical Engineering",
-          "student_dept": "Mechanical Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "498.0",
-        "560.0"
-      ],
-      "courses": [
-        "ME23521",
-        "ME23VAP1"
-      ],
-      "total_workload": 8
-    },
-    {
-      "group_id": 4,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -212,14 +158,68 @@
         }
       ],
       "teachers": [
-        "521.0",
-        "514.0"
+        "514.0",
+        "521.0"
       ],
       "courses": [
         "ME23531",
         "ME23532"
       ],
       "total_workload": 10
+    },
+    {
+      "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 2046,
+          "course_id": 832,
+          "course_code": "ME23VAP1",
+          "course_name": "Windchill Training",
+          "course_type": "L",
+          "teacher_id": "507.0",
+          "semester": 5,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 2050,
+          "course_id": 452,
+          "course_code": "ME23521",
+          "course_name": "Component Modeling Laboratory",
+          "course_type": "L",
+          "teacher_id": "498.0",
+          "semester": 5,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "498.0",
+        "507.0"
+      ],
+      "courses": [
+        "ME23VAP1",
+        "ME23521"
+      ],
+      "total_workload": 8
     },
     {
       "group_id": 5,
@@ -349,7 +349,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 50,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
@@ -368,7 +368,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 50,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
@@ -387,15 +387,15 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 50,
+          "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
       ],
       "teachers": [
         "529.0",
-        "517.0",
-        "528.0"
+        "528.0",
+        "517.0"
       ],
       "courses": [
         "ME23P01"

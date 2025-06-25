@@ -11,12 +11,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 238,
-          "course_id": 63,
-          "course_code": "AT23532",
-          "course_name": "Electric and Hybrid Vehicles - II",
+          "id": 824,
+          "course_id": 62,
+          "course_code": "AT23531",
+          "course_name": "Automotive Electrical and Electronics",
           "course_type": "LoT",
-          "teacher_id": "64.0",
+          "teacher_id": "65.0",
           "semester": 5,
           "course_dept": "Automobile Engineering",
           "student_dept": "Automobile Engineering",
@@ -25,16 +25,16 @@
           "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 32,
+          "student_count": 35,
           "virtual_id": null,
           "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "64.0"
+        "65.0"
       ],
       "courses": [
-        "AT23532"
+        "AT23531"
       ],
       "total_workload": 5
     },
@@ -58,7 +58,7 @@
           "practical_hours": 2,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 32,
+          "student_count": 35,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -77,12 +77,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 824,
-          "course_id": 62,
-          "course_code": "AT23531",
-          "course_name": "Automotive Electrical and Electronics",
+          "id": 238,
+          "course_id": 63,
+          "course_code": "AT23532",
+          "course_name": "Electric and Hybrid Vehicles - II",
           "course_type": "LoT",
-          "teacher_id": "65.0",
+          "teacher_id": "64.0",
           "semester": 5,
           "course_dept": "Automobile Engineering",
           "student_dept": "Automobile Engineering",
@@ -91,16 +91,16 @@
           "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 32,
+          "student_count": 35,
           "virtual_id": null,
           "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "65.0"
+        "64.0"
       ],
       "courses": [
-        "AT23531"
+        "AT23532"
       ],
       "total_workload": 5
     },
@@ -124,7 +124,7 @@
           "practical_hours": 2,
           "lecture_hours": 0,
           "tutorial_hours": 0,
-          "student_count": 32,
+          "student_count": 35,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -143,39 +143,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 233,
-          "course_id": 384,
-          "course_code": "GE23311",
-          "course_name": "Fundamentals of Management for Engineers",
-          "course_type": "T",
-          "teacher_id": "59.0",
-          "semester": 5,
-          "course_dept": "Automobile Engineering",
-          "student_dept": "Automobile Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 32,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "59.0"
-      ],
-      "courses": [
-        "GE23311"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 6,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 234,
           "course_id": 661,
           "course_code": "AT23G12",
@@ -190,7 +157,7 @@
           "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
-          "student_count": 32,
+          "student_count": 35,
           "virtual_id": null,
           "co_scheduled_id": null
         }
@@ -200,6 +167,39 @@
       ],
       "courses": [
         "AT23G12"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 233,
+          "course_id": 384,
+          "course_code": "GE23311",
+          "course_name": "Fundamentals of Management for Engineers",
+          "course_type": "T",
+          "teacher_id": "59.0",
+          "semester": 5,
+          "course_dept": "Automobile Engineering",
+          "student_dept": "Automobile Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 35,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "59.0"
+      ],
+      "courses": [
+        "GE23311"
       ],
       "total_workload": 3
     },
@@ -223,7 +223,7 @@
           "practical_hours": 0,
           "lecture_hours": 2,
           "tutorial_hours": 1,
-          "student_count": 36,
+          "student_count": 35,
           "virtual_id": null,
           "co_scheduled_id": null
         }
