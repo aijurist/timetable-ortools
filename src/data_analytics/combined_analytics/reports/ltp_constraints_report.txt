@@ -2,8 +2,8 @@ LTP CONSTRAINT VERIFICATION REPORT
 ==================================================
 
 Total Courses: 771
-Compliant Courses: 704
-Compliance Rate: 91.3%
+Compliant Courses: 705
+Compliance Rate: 91.4%
 
 VIOLATIONS:
 - Course CS23332 (ID: 1081): Lecture shortage - need 3, got 0
@@ -14,15 +14,14 @@ VIOLATIONS:
 - Course CS23332 (ID: 1147): Practical shortage - need 4, got 0
 - Course CS23532 (ID: 1149): Lecture shortage - need 3, got 0
 - Course CS23532 (ID: 1149): Practical shortage - need 4, got 0
-- Course IT23A11 (ID: 1117): Lecture shortage - need 3, got 0
 - Course IT23A11 (ID: 1183): Lecture shortage - need 3, got 0
 - Course AI19P71 (ID: 493): Lecture shortage - need 2, got 0
 - Course AI19P71 (ID: 578): Lecture shortage - need 2, got 0
 - Course AI19P71 (ID: 578): Practical shortage - need 2, got 0
 - Course CS23333 (ID: 1194): Lecture shortage - need 3, got 0
 - Course CS23333 (ID: 1194): Practical shortage - need 4, got 0
-- Course MA23313 (ID: 1228): Lecture shortage - need 3, got 0
-- Course MA23313 (ID: 1228): Tutorial shortage - need 1, got 0
+- Course MA23313 (ID: 1225): Lecture shortage - need 3, got 0
+- Course MA23313 (ID: 1225): Tutorial shortage - need 1, got 0
 - Course CB23331 (ID: 1293): Lecture shortage - need 3, got 0
 - Course CB23331 (ID: 1293): Practical shortage - need 2, got 0
 - Course IT19P78 (ID: 783): Lecture shortage - need 3, got 0
@@ -38,8 +37,8 @@ VIOLATIONS:
 - Course AI23231 (ID: 996): Lecture shortage - need 3, got 0
 - Course CS19P21 (ID: 1913): Practical shortage - need 6, got 0
 - Course CS19P23 (ID: 875): Practical shortage - need 6, got 0
-- Course MA23312 (ID: 1237): Lecture shortage - need 3, got 0
-- Course MA23312 (ID: 1237): Tutorial shortage - need 1, got 0
+- Course MA23312 (ID: 1236): Lecture shortage - need 3, got 0
+- Course MA23312 (ID: 1236): Tutorial shortage - need 1, got 0
 - Course CP23A11 (ID: 2030): Lecture shortage - need 3, got 0
 - Course P23A12 (ID: 2031): Lecture shortage - need 3, got 0
 - Course CP23A13 (ID: 2032): Lecture shortage - need 3, got 0
@@ -79,7 +78,7 @@ VIOLATIONS:
 - Course BT19P74 (ID: 201): Lecture shortage - need 3, got 0
 - Course BT19711 (ID: 1253): Practical shortage - need 4, got 0
 - Course BT23313 (ID: 1245): Lecture shortage - need 3, got 0
-- Course EC23321 (ID: 593): Practical shortage - need 4, got 0
+- Course EC23321 (ID: 591): Practical shortage - need 4, got 0
 - Course MA23312 (ID: 1616): Lecture shortage - need 3, got 0
 - Course MA23312 (ID: 1616): Tutorial shortage - need 1, got 0
 - Course CE23321 (ID: 265): Practical shortage - need 4, got 0

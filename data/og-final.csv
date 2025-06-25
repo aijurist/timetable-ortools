@@ -11,7 +11,6 @@ AE19712,Structural And Flow Simulation Laboratory,Aeronautical Engineering,1,CG0
 AE23731,Avionics,Aeronautical Engineering,1,Avionics Lab,,,,
 EE23133,Basic Electrical and Electronics Engineering,Aeronautical Engineering,1,Basic electronics lab-1,,,,
 AE23623,Airframe and Aero Engine Laboratory,Aeronautical Engineering,1,Aero CAD Lab,,,,
-AE23321,Computer Aided Modelling Laboratory,Aeronautical Engineering,1,Aero CAD Lab,,,,
 CY23223,Engineering Chemistry ,Aeronautical Engineering,1,Chemistry Lab,,,,
 GE23121,Engineering Practices – Civil and Mechanical,Aeronautical Engineering,3,Machine Shop FF1 - EPL - 1,Machine Shop FF2 - EPL - 2,Machine Shop FF3 - EPL - 3,,
 GE23122,Engineering Practices – Electrical and Electronics,Aeronautical Engineering,1,Engineering Practices Lab (Electrical),Engineering Practices Lab (Electronics),,,
@@ -223,3 +222,4 @@ GE23521,Soft Skills – II,Robotics and Automation,3,TIFAC IV01/02,TIFAC IV03/04
 EE23B21,Wiring Harness Design Engineering,Electrical & Electronics Engineering,1,TANCAM,,,,
 AT19722,Computer Aided Analysis Laboratory,Automobile Engineering,1,TANCAM,,,,
 ME23521,Component Modeling Laboratory,Mechanical Engineering,1,TANCAM,,,,
+AE23321,Computer Aided Modelling Laboratory,Aeronautical Engineering,1,TANCAM,,,,

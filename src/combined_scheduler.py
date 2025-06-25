@@ -17,6 +17,7 @@ from ortools.sat.python import cp_model
 import matplotlib.pyplot as plt
 import seaborn as sns
 from .course_group_optimizer import CourseGroupOptimizer
+from .shift_report_generator import ShiftReportGenerator
 
 class CombinedScheduler:
     """
@@ -40,7 +41,30 @@ class CombinedScheduler:
         
         # Load and process data
         self.courses_df = pd.read_csv(course_file)
-        self.rooms_df = pd.read_csv(room_file)
+        
+        # Use techlongue.csv as the primary room source
+        techlongue_paths = [
+            'data/block_wise/techlongue.csv',
+            './data/block_wise/techlongue.csv',
+            '../data/block_wise/techlongue.csv',
+            'timetable_scheduler/data/block_wise/techlongue.csv'
+        ]
+        
+        techlongue_file = None
+        for path in techlongue_paths:
+            if os.path.exists(path):
+                techlongue_file = path
+                break
+        
+        if techlongue_file:
+            self.rooms_df = pd.read_csv(techlongue_file)
+            self.logger.info(f"Successfully loaded room data from techlongue.csv: {techlongue_file}")
+        else:
+            # Fallback to the provided room_file
+            self.rooms_df = pd.read_csv(room_file)
+            self.logger.warning(f"techlongue.csv not found, using fallback room file: {room_file}")
+        
+        self.logger.info(f"Loaded {len(self.rooms_df)} rooms from room data source")
         
         # Load day order information
         self.day_order_df = self._load_day_order()
@@ -966,11 +990,7 @@ class CombinedScheduler:
                 'student_count': int(row['student_count']),
                 'semester': row.get('semester', 1),
                 'course_dept': row.get('course_dept', 'Computer Science & Engineering'),
-                'student_dept': row.get('student_dept', 'Computer Science & Engineering'),
-                'has_assistant': row['is_assistant'] == 1,
-                'assistant_teacher_id': row.get('assist_teacher_id'),
-                'assistant_staff_code': row.get('assist_staff_code'),
-                'assistant_teacher_name': f"{row.get('assist_first_name', '')} {row.get('assist_last_name', '')}".strip()
+                'student_dept': row.get('student_dept', 'Computer Science & Engineering')
             }
             
             self.teacher_course_assignments[teacher_id].append(course_instance)
@@ -1158,11 +1178,7 @@ class CombinedScheduler:
                 'course_dept': row.get('course_dept', 'Computer Science & Engineering'),
                 'student_dept': row.get('student_dept', 'Computer Science & Engineering'),
                 'has_lab': int(row.get('practical_hours', 0)) > 0,
-                'has_theory': int(row.get('lecture_hours', 0)) > 0 or int(row.get('tutorial_hours', 0)) > 0,
-                'has_assistant': row['is_assistant'] == 1,
-                'assistant_teacher_id': str(row.get('assist_teacher_id')),
-                'assistant_staff_code': row.get('assist_staff_code'),
-                'assistant_teacher_name': f"{row.get('assist_first_name', '')} {row.get('assist_last_name', '')}".strip()
+                'has_theory': int(row.get('lecture_hours', 0)) > 0 or int(row.get('tutorial_hours', 0)) > 0
             }
             all_instances.append(instance_with_teacher)
             total_instances += 1
@@ -1259,17 +1275,6 @@ class CombinedScheduler:
                     'instance_id': instance['id'],
                     'role': 'Main'
                 })
-
-                # Assistant teacher
-                if instance.get('has_assistant') and pd.notna(instance.get('assistant_teacher_id')):
-                    assistant_id = instance.get('assistant_teacher_id')
-                    if assistant_id not in teacher_occurrences:
-                        teacher_occurrences[assistant_id] = []
-                    teacher_occurrences[assistant_id].append({
-                        'course_code': instance['course_code'],
-                        'instance_id': instance['id'],
-                        'role': 'Assistant'
-                    })
             
             # Check for violations
             for teacher_id, course_details in teacher_occurrences.items():
@@ -1856,8 +1861,19 @@ class CombinedScheduler:
                                     else:
                                         assignments_in_70_plus_cap.append(assignment_var)
                     
+                    # SPECIAL CASE: 35 students exactly -> FORCE 35-capacity labs ONLY
+                    if student_count == 35:
+                        # Force ALL sessions to be in 35-capacity labs, NO batching
+                        if assignments_in_35_cap:
+                            model.Add(sum(assignments_in_35_cap) == sum(total_assignments))
+                            model.Add(sum(assignments_in_70_plus_cap) == 0)
+                            model.Add(sum(total_assignments) == base_sessions)  # Exactly base sessions, no batching
+                            constraints_applied += 3
+                            self.logger.info(f"35-STUDENT Course {course_req['course_code']} ({practical_hours}h): FORCED to use 35-capacity labs ONLY with {base_sessions} sessions (no batching)")
+                        else:
+                            self.logger.error(f"35-STUDENT Course {course_req['course_code']} ({practical_hours}h): No 35-capacity labs available - scheduling impossible")
                     # Create conditional constraint based on lab capacity assignment
-                    if student_count > 35:
+                    elif student_count > 35:
                         # CRITICAL: Either ALL sessions in 35-cap (with batching) OR ALL sessions in 70+ cap (no batching)
                         total_35_assignments = sum(assignments_in_35_cap)
                         total_70_plus_assignments = sum(assignments_in_70_plus_cap)
@@ -1984,7 +2000,7 @@ class CombinedScheduler:
                                 constraints_applied += 1
                                 self.logger.info(f"Course {course_req['course_code']} ({practical_hours}h): fallback assignment with {required_sessions} sessions (max {absolute_max_sessions} enforced)")
                     else:
-                        # Small courses: always base sessions, but apply same absolute limits based on practical hours
+                        # Small courses (< 35 students): always base sessions, but apply same absolute limits based on practical hours
                         if practical_hours >= 6:
                             absolute_max_sessions = 6
                         elif practical_hours >= 4:
@@ -1995,7 +2011,7 @@ class CombinedScheduler:
                         max_sessions = min(base_sessions, absolute_max_sessions)
                         model.Add(sum(total_assignments) == max_sessions)
                         constraints_applied += 1
-                        self.logger.info(f"Course {course_req['course_code']} ({practical_hours}h): exactly {max_sessions} sessions (max {absolute_max_sessions} slots enforced)")
+                        self.logger.info(f"Course {course_req['course_code']} ({practical_hours}h, {student_count} students): exactly {max_sessions} sessions (max {absolute_max_sessions} slots enforced)")
         
         self.logger.info(f"Applied {constraints_applied} course lab requirements constraints")
         return constraints_applied
@@ -3714,7 +3730,7 @@ class CombinedScheduler:
         # Add penalty for shift violations (soft constraint - discourage shift violations)
         if hasattr(self, 'shift_preference_vars') and self.shift_preference_vars:
             # Subtract penalties (since we're maximizing, subtracting penalties minimizes them)
-            shift_penalty_weight = 75  # Moderate weight - discourage shift violations but allow flexibility
+            shift_penalty_weight = 2500  # Moderate weight - discourage shift violations but allow flexibility
             for penalty_var in self.shift_preference_vars:
                 objective_terms.append(-shift_penalty_weight * penalty_var)
             self.logger.info(f"Added {len(self.shift_preference_vars)} shift violation penalty terms (weight: {shift_penalty_weight})")
@@ -3752,7 +3768,7 @@ class CombinedScheduler:
         """Solve the combined scheduling model using two-phase approach."""
         # Create the solver
         solver = cp_model.CpSolver()
-        solver.parameters.max_time_in_seconds = 1000
+        solver.parameters.max_time_in_seconds = 1200
         solver.parameters.num_search_workers = 16
         solver.parameters.max_memory_in_mb = 30000
         solver.parameters.log_search_progress = True
@@ -3776,6 +3792,9 @@ class CombinedScheduler:
             validation_success = self._validate_combined_schedules(lab_schedule, theory_schedule)
             
             self._save_combined_schedules(lab_schedule, theory_schedule)
+            
+            # --- Generate Shift Reports ---
+            self._generate_shift_reports(lab_schedule, theory_schedule)
             
             if lab_schedule or theory_schedule:
                 combined_schedule = lab_schedule + theory_schedule
@@ -5116,6 +5135,31 @@ class CombinedScheduler:
                         f.write(f"    {course_code}: {len(course_groups)} co-scheduled groups\n")
         
         self.logger.info(f"Combined summary saved to {summary_path}") 
+
+    def _generate_shift_reports(self, lab_schedule, theory_schedule):
+        """Generate comprehensive shift reports using the ShiftReportGenerator."""
+        try:
+            self.logger.info("🔍 Starting shift report generation...")
+            
+            # Initialize shift report generator
+            shift_report_generator = ShiftReportGenerator(self.output_dir)
+            
+            # Generate comprehensive shift reports
+            shift_reports = shift_report_generator.generate_shift_reports(lab_schedule, theory_schedule)
+            
+            # Log summary of violations if any
+            violations = shift_reports.get('staff_violations', {})
+            if violations:
+                violation_count = sum(len(v) for v in violations.values())
+                self.logger.warning(f"⚠️ Found {violation_count} shift violations across all staff")
+            
+            self.logger.info(f"✅ Shift reports generated successfully!")
+            
+            return shift_reports
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error generating shift reports: {str(e)}")
+            return {}
     
     def analyze_lab_capacity(self):
         """Analyze lab capacity distribution."""
@@ -5177,6 +5221,14 @@ class CombinedScheduler:
         
         # Check if this is a core lab
         is_core_lab = course_instance_id and course_instance_id in self.core_lab_instance_ids
+        
+        # SPECIAL RULE: 35 students exactly -> FORCE 35-capacity labs ONLY, NO batching
+        if students_per_instance == 35:
+            strategy['force_35_capacity'] = True
+            strategy['preferred_lab_capacities'] = [35]  # Only 35-capacity labs
+            strategy['total_lab_slots_needed'] = base_sessions  # No batching needed
+            self.logger.info(f"35-STUDENT Course with {practical_hours}h practical: FORCED to use 35-capacity labs ONLY (no batching)")
+            return strategy
         
         # Simple capacity rules based on practical hours
         if practical_hours <= 2:
