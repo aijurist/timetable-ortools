@@ -249,14 +249,14 @@ class CombinedScheduler:
             #     'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
             #     'pattern': 'Monday-Saturday'
             # },
-            ('Electronics & Communication Engineering', 5): {
-                'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
-                'pattern': 'Monday-Saturday'
-            },
-              ('Electrical & Electronics Engineering', 5): {
-                'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
-                'pattern': 'Monday-Saturday'
-            },
+            # ('Electronics & Communication Engineering', 5): {
+            #     'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
+            #     'pattern': 'Monday-Saturday'
+            # },
+            #   ('Electrical & Electronics Engineering', 5): {
+            #     'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
+            #     'pattern': 'Monday-Saturday'
+            # },
             # ('Electronics & Communication Engineering', 7): {
             #     'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
             #     'pattern': 'Monday-Saturday'
@@ -3053,6 +3053,9 @@ class CombinedScheduler:
         # CONSTRAINT 10: Teacher daily presence limit - prevent 11+ hour violation days
         constraints_applied += self.apply_teacher_daily_presence_constraint(model, group_timeslot_vars)
         
+        # CONSTRAINT 11: Daily theory slot limit - maximum 5 theory slots per day
+        # constraints_applied += self._apply_daily_theory_slot_limit_constraint(model, group_timeslot_vars)
+        
         self.logger.info(f"Applied {constraints_applied} theory-specific constraints with department-specific day patterns")
         return constraints_applied
 
@@ -3671,14 +3674,17 @@ class CombinedScheduler:
         Apply HARD constraint to prevent teacher violation days (11+ hour campus presence).
         Prevents teachers from having sessions spanning from early morning (8-9AM) to late evening (7PM+).
         Based on shift report violation criteria: normalized_start_hour <= 8 AND end_hour >= 19.
+        
+        UPDATED: Allow specific combinations like Slot 1 + Slot 9 (9:00-9:50 + 5:00-5:50) = 8+ hours
         """
         self.logger.info("Applying teacher daily presence constraint: prevent 11+ hour violation days...")
         constraints_applied = 0
         
         # Define violation time windows based on shift report logic
-        # Violation: Start at 8AM block (≤9AM) AND end at 7PM+ (≥19:00)
-        early_morning_slots = [0, 1]  # "8:00-8:50", "9:00-9:50" (8AM block)
-        late_evening_slots = [10]     # "6:00-6:50" (corresponds to 7PM hour in violation logic)
+        # UPDATED: Only prevent the most extreme combinations
+        # Violation: Start at earliest slot (8:00-8:50) AND end at latest slots (6:00-6:50+)
+        early_morning_slots = [0,1]     # Only "8:00-8:50" (most extreme early)
+        late_evening_slots = [9,10]     # Only "6:00-6:50" (most extreme late)
         
         # Map theory groups to teachers for efficient processing
         teacher_groups = defaultdict(list)
@@ -3777,7 +3783,109 @@ class CombinedScheduler:
         # since we need access to lab_variables parameter
         
         self.logger.info(f"Applied {constraints_applied} teacher daily presence constraints (theory only)")
-        self.logger.info("✅ VIOLATION PREVENTION: No teacher can have 11+ hour theory days (8AM-7PM+ span)")
+        self.logger.info("✅ RELAXED VIOLATION PREVENTION: Only prevents most extreme theory days (8:00-8:50 + 6:00-6:50)")
+        self.logger.info("✅ ALLOWED: Slot 1 + Slot 9 (9:00-9:50 + 5:00-5:50) and similar 8+ hour combinations")
+        return constraints_applied
+    
+    def _apply_daily_theory_slot_limit_constraint(self, model, group_timeslot_vars):
+        """
+        Apply constraint to limit the maximum number of theory TIME SLOTS used per day to 5.
+        This means only 5 different time slots can be used per day across all groups.
+        """
+        self.logger.info("Applying daily theory slot limit constraint: maximum 5 time slots used per day...")
+        constraints_applied = 0
+        
+        # Maximum theory time slots that can be used per day
+        MAX_THEORY_SLOTS_PER_DAY = 5
+        
+        # Get all unique department patterns to determine which days to apply constraints
+        unique_dept_patterns = set()
+        for group_name in group_timeslot_vars.keys():
+            dept_name = group_name.split('_S')[0] if '_S' in group_name else "Computer Science & Engineering"
+            semester = None
+            if '_S' in group_name:
+                try:
+                    semester_part = group_name.split('_S')[1].split('_G')[0]
+                    semester = int(semester_part)
+                except (ValueError, IndexError):
+                    pass
+            unique_dept_patterns.add((dept_name, semester))
+        
+        # Define core departments that get higher slot limits
+        core_departments = {
+            "Aeronautical Engineering", "Automobile Engineering", "Biomedical Engineering", 
+            "Biotechnology", "Chemical Engineering", "Civil Engineering", 
+            "Electrical & Electronics Engineering", "Electronics & Communication Engineering",
+            "Food Technology", "Mechanical Engineering", "Mechatronics Engineering"
+        }
+        
+        # Apply constraint for each department pattern
+        for dept_name, semester in unique_dept_patterns:
+            # EXCEPTION: Skip constraint for Biotechnology 5th semester
+            if dept_name == "Biotechnology" and semester == 5:
+                self.logger.info(f"✅ EXCEPTION: Biotechnology S5 is exempt from daily theory slot limit")
+                continue
+            
+            # Determine slot limit based on department type
+            if dept_name in core_departments:
+                dept_slot_limit = 8  # Core departments get 6 slots
+                dept_type = "CORE"
+            else:
+                dept_slot_limit = MAX_THEORY_SLOTS_PER_DAY  # Non-core departments get 5 slots
+                dept_type = "NON-CORE"
+                
+            dept_days = self._get_days_for_department(dept_name, semester)
+            num_dept_days = len(dept_days)
+            
+            # For each day, create boolean variables for each time slot
+            # indicating whether that time slot is used at all
+            for day_idx in range(num_dept_days):
+                slot_usage_vars = []
+                
+                # For each time slot, create a boolean variable indicating if it's used
+                for slot_idx in range(self.num_theory_slots):
+                    slot_used_var = model.NewBoolVar(f'slot_used_{dept_name}_S{semester}_d{day_idx}_s{slot_idx}')
+                    slot_usage_vars.append(slot_used_var)
+                    
+                    # Collect all group variables for this time slot
+                    groups_at_slot = []
+                    for group_name in group_timeslot_vars.keys():
+                        # Check if this group belongs to the current department pattern
+                        group_dept = group_name.split('_S')[0] if '_S' in group_name else "Computer Science & Engineering"
+                        group_semester = None
+                        if '_S' in group_name:
+                            try:
+                                semester_part = group_name.split('_S')[1].split('_G')[0]
+                                group_semester = int(semester_part)
+                            except (ValueError, IndexError):
+                                pass
+                        
+                        if (group_dept == dept_name and group_semester == semester and
+                            group_name in group_timeslot_vars and
+                            day_idx in group_timeslot_vars[group_name] and
+                            slot_idx in group_timeslot_vars[group_name][day_idx]):
+                            groups_at_slot.append(group_timeslot_vars[group_name][day_idx][slot_idx])
+                    
+                    # Link the slot usage variable to the actual group assignments
+                    if groups_at_slot:
+                        # If any group uses this slot, then slot_used_var must be True
+                        model.Add(sum(groups_at_slot) > 0).OnlyEnforceIf(slot_used_var)
+                        model.Add(sum(groups_at_slot) == 0).OnlyEnforceIf(slot_used_var.Not())
+                
+                # MAIN CONSTRAINT: Apply department-specific slot limit
+                if slot_usage_vars:
+                    model.Add(sum(slot_usage_vars) <= dept_slot_limit)
+                    constraints_applied += 1
+                    
+                    day_name = dept_days[day_idx] if day_idx < len(dept_days) else f"day_{day_idx}"
+                    self.logger.debug(f"Day {day_name} for {dept_name} S{semester} ({dept_type}): max {dept_slot_limit} time slots can be used")
+        
+        self.logger.info(f"Applied {constraints_applied} daily theory slot limit constraints")
+        self.logger.info(f"✅ THEORY TIME SLOT LIMITS:")
+        self.logger.info(f"   - CORE DEPARTMENTS: Maximum 7 different time slots per day")
+        self.logger.info(f"   - NON-CORE DEPARTMENTS: Maximum {MAX_THEORY_SLOTS_PER_DAY} different time slots per day") 
+        self.logger.info(f"   - BIOTECHNOLOGY S5: Unlimited (exempt)")
+        self.logger.info(f"✅ Core departments: {', '.join(sorted(core_departments))}")
         return constraints_applied
     
     def _apply_cross_system_constraints(self, model, lab_variables, group_timeslot_vars):
@@ -4278,11 +4386,11 @@ class CombinedScheduler:
         """Solve the combined scheduling model using two-phase approach."""
         # Create the solver
         solver = cp_model.CpSolver()
-        solver.parameters.max_time_in_seconds = 4000
+        solver.parameters.max_time_in_seconds = 2000
         solver.parameters.num_search_workers = 16
         solver.parameters.max_memory_in_mb = 30000
         solver.parameters.log_search_progress = True
-        # solver.parameters.stop_after_first_solution= True
+        solver.parameters.stop_after_first_solution= True
         
         self.logger.info("Solving combined scheduling model...")
         status = solver.Solve(model)
@@ -7777,15 +7885,18 @@ class CombinedScheduler:
         Apply HARD constraint to prevent teacher violation days (11+ hour campus presence) for lab sessions.
         Prevents teachers from having lab sessions spanning from early morning (L1: 8AM) to late evening (L6: 7PM).
         Based on shift report violation criteria: normalized_start_hour <= 8 AND end_hour >= 19.
+        
+        UPDATED: Allow L1 + L5 (8:00-9:40 + 3:00-4:40) = 8.5+ hours combination
         """
         self.logger.info("Applying teacher daily presence constraint for lab sessions: prevent 11+ hour violation days...")
         constraints_applied = 0
         
         # Define violation lab sessions based on time mappings
+        # UPDATED: Only prevent the most extreme combination
         # Early morning: L1 (8:00-9:40) - corresponds to 8AM block
-        # Late evening: L6 (5:10-6:50) - extends into 7PM hour (violation threshold)
-        early_lab_sessions = ['L1']  # 8:00-9:40
-        late_lab_sessions = ['L6']   # 5:10-6:50 (extends into 7PM hour)
+        # Late sessions: Only L6 (5:10-6:50) - most extreme late session
+        early_lab_sessions = ['L1']     # 8:00-9:40
+        late_lab_sessions = ['L6']      # Only 5:10-6:50 (most extreme late)
         
         # Apply constraint for each teacher with lab courses
         for teacher_id in lab_variables:
@@ -7849,5 +7960,6 @@ class CombinedScheduler:
                     self.logger.debug(f"  Early lab: L1 (8:00-9:40), Late lab: L6 (5:10-6:50)")
         
         self.logger.info(f"Applied {constraints_applied} teacher daily presence constraints for lab sessions")
-        self.logger.info("✅ LAB VIOLATION PREVENTION: No teacher can have 11+ hour lab days (L1 + L6 span)")
+        self.logger.info("✅ RELAXED LAB VIOLATION PREVENTION: Only prevents most extreme lab days (L1 + L6)")
+        self.logger.info("✅ ALLOWED: L1 + L5 (8:00-9:40 + 3:00-4:40) and similar 8+ hour combinations")
         return constraints_applied

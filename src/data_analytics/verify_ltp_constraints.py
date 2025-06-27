@@ -6,7 +6,7 @@ def verify_ltp_constraints():
     """Verify that LTP constraints are satisfied for all courses with updated batching logic and theory verification."""
     
     # Load course requirements
-    course_file = "data/final_v2.csv"
+    course_file = "data/final_v3.csv"
     
     if not os.path.exists(course_file):
         print(f"Course file not found: {course_file}")
@@ -601,6 +601,10 @@ def verify_lab_constraints(schedule_df, course_requirements):
     workload_violations = verify_lab_workload_constraints(schedule_df)
     violations.extend(workload_violations)
     
+    # 8. Verify extra lab slot assignments
+    extra_slot_violations = verify_extra_lab_slots(schedule_df, course_requirements)
+    violations.extend(extra_slot_violations)
+    
     # Print summary
     print(f"\n📊 LAB CONSTRAINT VERIFICATION SUMMARY:")
     print(f"Total lab assignments: {len(lab_data)}")
@@ -611,6 +615,7 @@ def verify_lab_constraints(schedule_df, course_requirements):
     print(f"Theory-lab overlap violations: {len(overlap_violations)}")
     print(f"Continuity violations: {len(continuity_violations)}")
     print(f"Workload violations: {len(workload_violations)}")
+    print(f"Extra lab slot violations: {len(extra_slot_violations)}")
     print(f"TOTAL VIOLATIONS: {len(violations)}")
     
     if len(violations) == 0:
@@ -1428,6 +1433,125 @@ def analyze_theory_efficiency(theory_schedule_df, course_requirements):
         print(f"\n📚 SESSION TYPE DISTRIBUTION:")
         for session_type, count in type_distribution.items():
             print(f"  {session_type.capitalize()}: {count} sessions")
+
+def verify_extra_lab_slots(schedule_df, course_requirements):
+    """Verify that no extra lab slots are assigned beyond required practical hours."""
+    print("\n🔍 CHECKING FOR EXTRA LAB SLOT ASSIGNMENTS")
+    print("-" * 60)
+    
+    violations = []
+    
+    if 'slot_type' in schedule_df.columns:
+        lab_data = schedule_df[schedule_df['slot_type'] == 'Practical']
+    else:
+        lab_data = schedule_df
+    
+    if len(lab_data) == 0:
+        print("❌ No lab assignments found!")
+        return violations
+    
+    # Count scheduled lab hours per course instance
+    scheduled_lab_hours = defaultdict(int)
+    course_details = {}
+    
+    for _, row in lab_data.iterrows():
+        try:
+            instance_id = str(int(float(row['course_instance_id'])))
+        except:
+            instance_id = str(row['course_instance_id'])
+        
+        course_code = row.get('display_course_code', row.get('course_code', 'Unknown'))
+        teacher_id = row['teacher_id']
+        day = row['day']
+        time_interval = row['time_interval']
+        room_id = row.get('room_id', 'Unknown')
+        
+        # Each lab session = 2 practical hours
+        scheduled_lab_hours[instance_id] += 2
+        
+        # Store course details for reporting
+        if instance_id not in course_details:
+            course_details[instance_id] = {
+                'course_code': course_code,
+                'teacher_id': teacher_id,
+                'assignments': []
+            }
+        
+        course_details[instance_id]['assignments'].append({
+            'day': day,
+            'time': time_interval,
+            'room': room_id
+        })
+    
+    # Check for extra assignments
+    extra_assignments_found = 0
+    perfect_assignments = 0
+    under_assignments = 0
+    
+    print(f"{'ID':<6} {'Course':<12} {'Required':<8} {'Scheduled':<9} {'Status':<12} {'Details'}")
+    print("-" * 80)
+    
+    for instance_id, requirements in sorted(course_requirements.items(), key=lambda x: int(x[0])):
+        if instance_id in scheduled_lab_hours:
+            required_hours = requirements['practical_hours']
+            scheduled_hours = scheduled_lab_hours[instance_id]
+            course_code = requirements['course_code']
+            
+            if required_hours > 0:  # Only check courses that need practicals
+                details = course_details[instance_id]
+                
+                if scheduled_hours > required_hours:
+                    # EXTRA SLOTS DETECTED
+                    extra_hours = scheduled_hours - required_hours
+                    extra_sessions = extra_hours // 2
+                    status = f"⚠️ EXTRA +{extra_hours}h"
+                    extra_assignments_found += 1
+                    
+                    # Create detailed violation report
+                    assignment_list = []
+                    for assignment in details['assignments']:
+                        assignment_list.append(f"{assignment['day']} {assignment['time']} ({assignment['room']})")
+                    
+                    violation_msg = (f"EXTRA LAB SLOTS: Course {course_code} (ID: {instance_id}) "
+                                   f"assigned {scheduled_hours} hours but only needs {required_hours} hours. "
+                                   f"Extra {extra_sessions} lab session(s) = {extra_hours} hours. "
+                                   f"Teacher: {details['teacher_id']}. "
+                                   f"Assignments: {'; '.join(assignment_list)}")
+                    violations.append(violation_msg)
+                    
+                    detail_text = f"{len(details['assignments'])} sessions"
+                    
+                elif scheduled_hours == required_hours:
+                    # PERFECT MATCH
+                    status = "✅ PERFECT"
+                    perfect_assignments += 1
+                    detail_text = f"{len(details['assignments'])} sessions"
+                    
+                else:
+                    # UNDER-ASSIGNED
+                    missing_hours = required_hours - scheduled_hours
+                    status = f"❌ SHORT -{missing_hours}h"
+                    under_assignments += 1
+                    detail_text = f"{len(details['assignments'])} sessions"
+                
+                print(f"{instance_id:<6} {course_code:<12} {required_hours:<8} {scheduled_hours:<9} {status:<12} {detail_text}")
+    
+    print("-" * 80)
+    print(f"📊 EXTRA LAB SLOT ANALYSIS:")
+    print(f"  ✅ Perfect assignments: {perfect_assignments}")
+    print(f"  ⚠️  Extra assignments: {extra_assignments_found}")
+    print(f"  ❌ Under assignments: {under_assignments}")
+    
+    if extra_assignments_found > 0:
+        print(f"\n🔍 DETAILED EXTRA SLOT VIOLATIONS:")
+        for i, violation in enumerate(violations, 1):
+            if "EXTRA LAB SLOTS" in violation:
+                print(f"  {i}. {violation}")
+    else:
+        print(f"✅ No extra lab slots detected - all assignments match requirements!")
+    
+    print(f"🧪 Extra lab slot violations: {len([v for v in violations if 'EXTRA LAB SLOTS' in v])}")
+    return violations
 
 if __name__ == "__main__":
     verify_ltp_constraints() 
