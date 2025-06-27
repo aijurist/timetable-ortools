@@ -11,7 +11,7 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 185,TLGL2,Techlounge,Computer Lab (TLGL2),1,Laboratory,50,70,1,0,Advanced,13,0,0,0
 186,TLGL3,Techlounge,Computer Lab (TLGL3),1,Laboratory,20,35,1,0,None,13,0,0,0
 187,TLGL4,Techlounge,Computer Lab (TLGL4),1,Laboratory,20,35,1,0,Basic,4,0,0,0
-170,KFR02,K Block,Computer Lab (KFR02),1,Laboratory,20,35,1,0,High-tech,3,0,0,0
+168,KFL03,K Block,Computer Lab (KFL03),1,Laboratory,20,35,1,0,High-tech,12,0,0,0
 171,KFR03,K Block,Computer Lab (KFR03),1,Laboratory,20,35,1,0,Advanced,13,0,0,0
 160,JL1,J Block,Computer Lab (JL1),1,Laboratory,20,35,1,0,None,13,0,0,0
 161,JL2,J Block,Computer Lab (JL2),1,Laboratory,20,35,1,0,High-tech,12,0,0,0
@@ -160,13 +160,11 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 203,WS CIVIL 2,C Block,Soil Mechanics & Highway Lab,1,Core-Lab,20,35,0,0,Advanced,10,0,0,0
 204,WS MECH FF1,C Block,Machine Shop FF1 - EPL - 1,1,Core-Lab,50,70,0,0,Advanced,23,0,0,0
 205,WS MECH FF2,C Block,Machine Shop FF2 - EPL - 2,1,Core-Lab,50,70,0,0,None,23,0,0,0
-206,WS MECH FF3,C Block,Machine Shop FF3 - EPL - 3,1,Core-Lab,50,70,0,0,High-tech,23,0,0,0
 207,WS MECH FF4,C Block,Thermal Lab 1,1,Core-Lab,20,35,0,0,Advanced,23,0,0,0
 208,WS MECH FF5,C Block,Engineering Practices Lab (Electrical),1,Core-Lab,50,70,0,0,Basic,15,0,0,0
 209,WS MECH FF6,C Block,Engineering Practices Lab (Electronics),1,Core-Lab,50,70,0,0,None,16,0,0,0
 210,WS MECH FM,C Block,Fluid Mechanics Lab,1,Core-Lab,20,35,0,0,None,23,0,0,0
 211,WS MECH GF1,C Block,Manufacturing Technology I,1,Core-Lab,20,35,0,0,Basic,23,0,0,0
-212,WS MECH GF2,C Block,Manufacturing Technology II,1,Core-Lab,20,35,0,0,High-tech,23,0,0,0
 213,WS MECH SM,C Block,Strength of Materials Lab,1,Core-Lab,20,35,0,0,High-tech,23,0,0,0
 214,WS MECH TL,C Block,Thermal Lab 2,1,Core-Lab,20,35,0,0,Basic,23,0,0,0
 215,TANCAM,Arch Block,,1,Core-Lab,0,35,0,1,High-tech,33,0,0,0
@@ -174,3 +172,4 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 217,D603,D block,Physics LAB - 1,1,Core-Lab,30,70,0,0,Advanced,31,0,0,0
 218,D403,D block,Physics LAB - 2,1,Core-Lab,30,70,0,0,Advanced,31,0,0,0
 219,TIFAC V01/02,A Block,Soft Skills – II,1,Core-Lab,70,140,0,0,None,29,0,0,0
+222,B304,B Block,Computer Aided Application-Chem Engineering,1,Core-Lab,30,35,0,0,None,29,0,0,0

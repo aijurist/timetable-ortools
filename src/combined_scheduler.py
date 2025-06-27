@@ -249,10 +249,10 @@ class CombinedScheduler:
             #     'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
             #     'pattern': 'Monday-Saturday'
             # },
-            # ('Electronics & Communication Engineering', 5): {
-            #     'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
-            #     'pattern': 'Monday-Saturday'
-            # },
+            ('Electronics & Communication Engineering', 5): {
+                'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
+                'pattern': 'Monday-Saturday'
+            },
             #   ('Electrical & Electronics Engineering', 5): {
             #     'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
             #     'pattern': 'Monday-Saturday'
@@ -3054,7 +3054,7 @@ class CombinedScheduler:
         constraints_applied += self.apply_teacher_daily_presence_constraint(model, group_timeslot_vars)
         
         # CONSTRAINT 11: Daily theory slot limit - maximum 5 theory slots per day
-        # constraints_applied += self._apply_daily_theory_slot_limit_constraint(model, group_timeslot_vars)
+        constraints_applied += self._apply_daily_theory_slot_limit_constraint(model, group_timeslot_vars)
         
         self.logger.info(f"Applied {constraints_applied} theory-specific constraints with department-specific day patterns")
         return constraints_applied
@@ -3821,14 +3821,17 @@ class CombinedScheduler:
         
         # Apply constraint for each department pattern
         for dept_name, semester in unique_dept_patterns:
-            # EXCEPTION: Skip constraint for Biotechnology 5th semester
+            # EXCEPTIONS: Skip constraint for specific department-semester combinations
             if dept_name == "Biotechnology" and semester == 5:
                 self.logger.info(f"✅ EXCEPTION: Biotechnology S5 is exempt from daily theory slot limit")
+                continue
+            if dept_name == "Electronics & Communication Engineering" and semester == 5:
+                self.logger.info(f"✅ EXCEPTION: Electronics & Communication Engineering S5 is exempt from daily theory slot limit")
                 continue
             
             # Determine slot limit based on department type
             if dept_name in core_departments:
-                dept_slot_limit = 8  # Core departments get 6 slots
+                dept_slot_limit = 6  # Core departments get 6 slots
                 dept_type = "CORE"
             else:
                 dept_slot_limit = MAX_THEORY_SLOTS_PER_DAY  # Non-core departments get 5 slots
@@ -3882,9 +3885,10 @@ class CombinedScheduler:
         
         self.logger.info(f"Applied {constraints_applied} daily theory slot limit constraints")
         self.logger.info(f"✅ THEORY TIME SLOT LIMITS:")
-        self.logger.info(f"   - CORE DEPARTMENTS: Maximum 7 different time slots per day")
+        self.logger.info(f"   - CORE DEPARTMENTS: Maximum 6 different time slots per day")
         self.logger.info(f"   - NON-CORE DEPARTMENTS: Maximum {MAX_THEORY_SLOTS_PER_DAY} different time slots per day") 
         self.logger.info(f"   - BIOTECHNOLOGY S5: Unlimited (exempt)")
+        self.logger.info(f"   - ELECTRONICS & COMMUNICATION ENGINEERING S5: Unlimited (exempt)")
         self.logger.info(f"✅ Core departments: {', '.join(sorted(core_departments))}")
         return constraints_applied
     
