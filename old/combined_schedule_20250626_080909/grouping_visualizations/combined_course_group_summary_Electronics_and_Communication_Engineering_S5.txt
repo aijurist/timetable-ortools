@@ -1,0 +1,66 @@
+Combined Course-Group Distribution Summary
+Department: Electronics & Communication Engineering
+Semester: 5
+Generated: 2025-06-26 08:53:32
+============================================================
+
+OVERVIEW:
+- Total Courses: 6
+  └─ Lab Courses: 2
+  └─ Theory Courses: 5
+  └─ Overlap (Both): 1
+- Total Groups: 6
+- Total Teacher Assignments: 24
+- Courses with Multiple Group Options: 6 (100.0%)
+
+COURSE DISTRIBUTION BY TYPE:
+- EC23511 [Theory]: 2 groups, 4 teacher assignments
+  └─ G3: 1 teachers
+  └─ G6: 3 teachers
+- EC23512 [Theory]: 2 groups, 4 teacher assignments
+  └─ G3: 3 teachers
+  └─ G4: 1 teachers
+- EC23521 [Lab]: 2 groups, 4 teacher assignments
+  └─ G1: 2 teachers
+  └─ G2: 2 teachers
+- EC23531 [Lab + Theory]: 2 groups, 4 teacher assignments
+  └─ G1: 2 teachers
+  └─ G2: 2 teachers
+- EC23B11 [Theory]: 2 groups, 4 teacher assignments
+  └─ G4: 3 teachers
+  └─ G5: 1 teachers
+- EC23E01 [Theory]: 2 groups, 4 teacher assignments
+  └─ G5: 3 teachers
+  └─ G6: 1 teachers
+
+GROUP COMPOSITION:
+- G1: 2 courses, 4 teachers
+  └─ Lab courses: 2
+  └─ Theory courses: 1
+    └─ EC23521 [L]: 2 teachers, 2 instances
+    └─ EC23531 [L+T]: 2 teachers, 2 instances
+- G2: 2 courses, 4 teachers
+  └─ Lab courses: 2
+  └─ Theory courses: 1
+    └─ EC23521 [L]: 2 teachers, 2 instances
+    └─ EC23531 [L+T]: 2 teachers, 2 instances
+- G3: 2 courses, 4 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 2
+    └─ EC23511 [T]: 1 teachers, 1 instances
+    └─ EC23512 [T]: 3 teachers, 3 instances
+- G4: 2 courses, 4 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 2
+    └─ EC23512 [T]: 1 teachers, 1 instances
+    └─ EC23B11 [T]: 3 teachers, 3 instances
+- G5: 2 courses, 4 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 2
+    └─ EC23B11 [T]: 1 teachers, 1 instances
+    └─ EC23E01 [T]: 3 teachers, 3 instances
+- G6: 2 courses, 4 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 2
+    └─ EC23511 [T]: 3 teachers, 3 instances
+    └─ EC23E01 [T]: 1 teachers, 1 instances

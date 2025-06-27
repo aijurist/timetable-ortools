@@ -1,0 +1,60 @@
+Combined Course-Group Distribution Summary
+Department: Food Technology
+Semester: 5
+Generated: 2025-06-26 08:53:30
+============================================================
+
+OVERVIEW:
+- Total Courses: 7
+  └─ Lab Courses: 2
+  └─ Theory Courses: 5
+  └─ Overlap (Both): 0
+- Total Groups: 7
+- Total Teacher Assignments: 7
+- Courses with Multiple Group Options: 0 (0.0%)
+
+COURSE DISTRIBUTION BY TYPE:
+- FT23501 [Theory]: 1 groups, 1 teacher assignments
+  └─ G6: 1 teachers
+- FT23502 [Theory]: 1 groups, 1 teacher assignments
+  └─ G7: 1 teachers
+- FT23503 [Theory]: 1 groups, 1 teacher assignments
+  └─ G5: 1 teachers
+- FT23511 [Lab]: 1 groups, 1 teacher assignments
+  └─ G1: 1 teachers
+- FT23512 [Lab]: 1 groups, 1 teacher assignments
+  └─ G2: 1 teachers
+- FT23F01 [Theory]: 1 groups, 1 teacher assignments
+  └─ G3: 1 teachers
+- NPTEL [Theory]: 1 groups, 1 teacher assignments
+  └─ G4: 1 teachers
+
+GROUP COMPOSITION:
+- G1: 1 courses, 1 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 0
+    └─ FT23511 [L]: 1 teachers, 1 instances
+- G2: 1 courses, 1 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 0
+    └─ FT23512 [L]: 1 teachers, 1 instances
+- G3: 1 courses, 1 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ FT23F01 [T]: 1 teachers, 1 instances
+- G4: 1 courses, 1 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ NPTEL [T]: 1 teachers, 1 instances
+- G5: 1 courses, 1 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ FT23503 [T]: 1 teachers, 1 instances
+- G6: 1 courses, 1 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ FT23501 [T]: 1 teachers, 1 instances
+- G7: 1 courses, 1 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ FT23502 [T]: 1 teachers, 1 instances

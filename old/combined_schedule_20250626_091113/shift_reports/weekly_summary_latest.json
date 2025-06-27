@@ -1,0 +1,9 @@
+{
+  "total_staff": 431,
+  "total_presence_instances": 1523,
+  "category_distribution": {
+    "optimal": 1201,
+    "medium": 243,
+    "violation": 79
+  }
+}

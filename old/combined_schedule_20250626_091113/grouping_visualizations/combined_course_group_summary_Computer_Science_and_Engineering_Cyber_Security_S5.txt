@@ -1,0 +1,48 @@
+Combined Course-Group Distribution Summary
+Department: Computer Science & Engineering (Cyber Security)
+Semester: 5
+Generated: 2025-06-26 10:20:35
+============================================================
+
+OVERVIEW:
+- Total Courses: 5
+  └─ Lab Courses: 5
+  └─ Theory Courses: 5
+  └─ Overlap (Both): 5
+- Total Groups: 5
+- Total Teacher Assignments: 5
+- Courses with Multiple Group Options: 0 (0.0%)
+
+COURSE DISTRIBUTION BY TYPE:
+- CR23531 [Lab + Theory]: 1 groups, 1 teacher assignments
+  └─ G3: 1 teachers
+- CR23532 [Lab + Theory]: 1 groups, 1 teacher assignments
+  └─ G2: 1 teachers
+- CS23432 [Lab + Theory]: 1 groups, 1 teacher assignments
+  └─ G1: 1 teachers
+- CS23531 [Lab + Theory]: 1 groups, 1 teacher assignments
+  └─ G4: 1 teachers
+- CS23533 [Lab + Theory]: 1 groups, 1 teacher assignments
+  └─ G5: 1 teachers
+
+GROUP COMPOSITION:
+- G1: 1 courses, 1 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 1
+    └─ CS23432 [L+T]: 1 teachers, 1 instances
+- G2: 1 courses, 1 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 1
+    └─ CR23532 [L+T]: 1 teachers, 1 instances
+- G3: 1 courses, 1 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 1
+    └─ CR23531 [L+T]: 1 teachers, 1 instances
+- G4: 1 courses, 1 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 1
+    └─ CS23531 [L+T]: 1 teachers, 1 instances
+- G5: 1 courses, 1 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 1
+    └─ CS23533 [L+T]: 1 teachers, 1 instances

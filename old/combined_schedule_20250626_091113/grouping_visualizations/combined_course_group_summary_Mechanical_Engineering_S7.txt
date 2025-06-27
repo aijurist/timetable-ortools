@@ -1,0 +1,72 @@
+Combined Course-Group Distribution Summary
+Department: Mechanical Engineering
+Semester: 7
+Generated: 2025-06-26 10:20:49
+============================================================
+
+OVERVIEW:
+- Total Courses: 7
+  └─ Lab Courses: 4
+  └─ Theory Courses: 4
+  └─ Overlap (Both): 1
+- Total Groups: 7
+- Total Teacher Assignments: 21
+- Courses with Multiple Group Options: 7 (100.0%)
+
+COURSE DISTRIBUTION BY TYPE:
+- ME19701 [Theory]: 2 groups, 3 teacher assignments
+  └─ G5: 1 teachers
+  └─ G6: 2 teachers
+- ME19702 [Theory]: 2 groups, 3 teacher assignments
+  └─ G5: 2 teachers
+  └─ G6: 1 teachers
+- ME19712 [Lab]: 2 groups, 3 teacher assignments
+  └─ G2: 1 teachers
+  └─ G4: 2 teachers
+- ME19713 [Lab]: 2 groups, 3 teacher assignments
+  └─ G1: 2 teachers
+  └─ G3: 1 teachers
+- ME19741 [Lab + Theory]: 2 groups, 3 teacher assignments
+  └─ G1: 1 teachers
+  └─ G2: 2 teachers
+- ME19E01 [Theory]: 1 groups, 3 teacher assignments
+  └─ G7: 3 teachers
+- ME23VAP2 [Lab]: 2 groups, 3 teacher assignments
+  └─ G3: 2 teachers
+  └─ G4: 1 teachers
+
+GROUP COMPOSITION:
+- G1: 2 courses, 3 teachers
+  └─ Lab courses: 2
+  └─ Theory courses: 1
+    └─ ME19713 [L]: 2 teachers, 2 instances
+    └─ ME19741 [L+T]: 1 teachers, 1 instances
+- G2: 2 courses, 3 teachers
+  └─ Lab courses: 2
+  └─ Theory courses: 1
+    └─ ME19712 [L]: 1 teachers, 1 instances
+    └─ ME19741 [L+T]: 2 teachers, 2 instances
+- G3: 2 courses, 3 teachers
+  └─ Lab courses: 2
+  └─ Theory courses: 0
+    └─ ME19713 [L]: 1 teachers, 1 instances
+    └─ ME23VAP2 [L]: 2 teachers, 2 instances
+- G4: 2 courses, 3 teachers
+  └─ Lab courses: 2
+  └─ Theory courses: 0
+    └─ ME19712 [L]: 2 teachers, 2 instances
+    └─ ME23VAP2 [L]: 1 teachers, 1 instances
+- G5: 2 courses, 3 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 2
+    └─ ME19701 [T]: 1 teachers, 1 instances
+    └─ ME19702 [T]: 2 teachers, 2 instances
+- G6: 2 courses, 3 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 2
+    └─ ME19701 [T]: 2 teachers, 2 instances
+    └─ ME19702 [T]: 1 teachers, 1 instances
+- G7: 1 courses, 3 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ ME19E01 [T]: 3 teachers, 3 instances

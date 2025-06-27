@@ -1,0 +1,36 @@
+Combined Course-Group Distribution Summary
+Department: Information Technology
+Semester: 7
+Generated: 2025-06-26 08:53:22
+============================================================
+
+OVERVIEW:
+- Total Courses: 3
+  └─ Lab Courses: 2
+  └─ Theory Courses: 2
+  └─ Overlap (Both): 1
+- Total Groups: 3
+- Total Teacher Assignments: 8
+- Courses with Multiple Group Options: 3 (100.0%)
+
+COURSE DISTRIBUTION BY TYPE:
+- IT19711 [Lab]: 1 groups, 3 teacher assignments
+  └─ G3: 3 teachers
+- IT19741 [Lab + Theory]: 1 groups, 3 teacher assignments
+  └─ G2: 3 teachers
+- IT19P78 [Theory]: 1 groups, 2 teacher assignments
+  └─ G1: 2 teachers
+
+GROUP COMPOSITION:
+- G1: 1 courses, 2 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ IT19P78 [T]: 2 teachers, 3 instances
+- G2: 1 courses, 3 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 1
+    └─ IT19741 [L+T]: 3 teachers, 3 instances
+- G3: 1 courses, 3 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 0
+    └─ IT19711 [L]: 3 teachers, 3 instances

@@ -134,6 +134,9 @@ class CombinedScheduler:
         # COURSE PROCESSING
         self.process_courses()
         
+        # IDENTIFY CROSS-DEPARTMENT TEACHERS
+        self._identify_cross_department_teachers()
+        
         # CREATE COURSE GROUPS (unified for lab and theory)
         self.create_course_groups()
         
@@ -559,10 +562,16 @@ class CombinedScheduler:
         self.department_shift_patterns = {}  # Will store dept_name -> (pattern, daily_assignments)
         self.department_shift_assignments = {}  # Will store (dept_name, day) -> shift_id assignments
         
-        self.logger.info("Department-centric shift system initialized:")
+        # Initialize cross-department teacher tracking
+        self.cross_dept_teachers = {}  # Will store teacher_id -> set of student_departments
+        self.teacher_shift_patterns = {}  # Will store teacher_id -> individual shift pattern
+        self.teacher_shift_assignments = {}  # Will store (teacher_id, day) -> shift_id assignments
+        
+        self.logger.info("Enhanced shift system initialized:")
         self.logger.info("  - Each department will follow ONE unified weekly shift pattern")
-        self.logger.info("  - All teachers in a department follow the same shift pattern")
+        self.logger.info("  - Cross-department teachers get individual shift patterns")
         self.logger.info("  - Available patterns: 2-2-1, 1-2-2, 2-1-2 (days per shift)")
+        self.logger.info("  - Cross-department staff identified by student department diversity")
     
     def is_shift_department(self, dept_name):
         """Check if a department should follow shift-based constraints."""
@@ -601,6 +610,72 @@ class CombinedScheduler:
         """Check if a shift is compatible with department's pattern for a given day."""
         assigned_shift = self.get_department_shift_for_day(dept_name, day_idx)
         return assigned_shift is None or assigned_shift == shift_id
+    
+    def _identify_cross_department_teachers(self):
+        """Identify teachers who teach across multiple student departments."""
+        self.logger.info("Identifying cross-department teachers using student department analysis...")
+        
+        # Analyze teacher-student department relationships
+        teacher_student_depts = defaultdict(set)
+        
+        # Process courses to identify which student departments each teacher serves
+        for _, row in self.courses_df.iterrows():
+            teacher_id = str(row['teacher_id'])
+            student_dept = row.get('student_dept', 'Unknown')
+            
+            if student_dept and student_dept != 'Unknown':
+                teacher_student_depts[teacher_id].add(student_dept)
+        
+        # Identify cross-department teachers (teaching 2+ student departments)
+        single_dept_teachers = {}
+        cross_dept_teachers = {}
+        
+        for teacher_id, student_depts in teacher_student_depts.items():
+            if len(student_depts) > 1:
+                cross_dept_teachers[teacher_id] = student_depts
+            elif len(student_depts) == 1:
+                single_dept_teachers[teacher_id] = list(student_depts)[0]
+        
+        # Store cross-department teacher information
+        self.cross_dept_teachers = cross_dept_teachers
+        self.single_dept_teachers = single_dept_teachers
+        
+        # Log analysis results
+        self.logger.info(f"Teacher department analysis results:")
+        self.logger.info(f"  - Single-department teachers: {len(single_dept_teachers)}")
+        self.logger.info(f"  - Cross-department teachers: {len(cross_dept_teachers)}")
+        
+        if cross_dept_teachers:
+            self.logger.info("Cross-department teachers identified:")
+            for teacher_id, depts in cross_dept_teachers.items():
+                dept_list = ', '.join(sorted(depts))
+                self.logger.info(f"  Teacher {teacher_id}: {dept_list} ({len(depts)} departments)")
+        
+        # Log department distribution
+        dept_coverage = defaultdict(int)
+        for teacher_id, student_depts in teacher_student_depts.items():
+            for dept in student_depts:
+                dept_coverage[dept] += 1
+        
+        self.logger.info("Student department coverage by teachers:")
+        for dept, teacher_count in sorted(dept_coverage.items()):
+            cross_count = sum(1 for t_id, depts in cross_dept_teachers.items() if dept in depts)
+            single_count = teacher_count - cross_count
+            self.logger.info(f"  {dept}: {teacher_count} teachers ({single_count} single-dept, {cross_count} cross-dept)")
+        
+        return len(cross_dept_teachers)
+    
+    def is_cross_department_teacher(self, teacher_id):
+        """Check if a teacher teaches across multiple departments."""
+        return teacher_id in self.cross_dept_teachers
+    
+    def get_teacher_student_departments(self, teacher_id):
+        """Get the set of student departments a teacher serves."""
+        if teacher_id in self.cross_dept_teachers:
+            return self.cross_dept_teachers[teacher_id]
+        elif teacher_id in self.single_dept_teachers:
+            return {self.single_dept_teachers[teacher_id]}
+        return set()
     
     def _load_core_lab_mapping(self):
         """Load core lab mapping file for specialized lab course assignments."""
@@ -1859,6 +1934,9 @@ class CombinedScheduler:
         # Apply teacher max consecutive lab constraint
         constraints_applied += self.apply_teacher_max_consecutive_lab_constraint(model, lab_variables)
         
+        # Apply teacher daily presence constraint for lab sessions
+        constraints_applied += self.apply_teacher_daily_presence_lab_constraint(model, lab_variables)
+        
         self.logger.info(f"Applied {constraints_applied} lab-specific constraints (optimized)")
         return constraints_applied
 
@@ -2966,6 +3044,15 @@ class CombinedScheduler:
         # CONSTRAINT 7: Early scheduling constraint - schedule all theory before 3:00 PM
         constraints_applied += self._apply_early_scheduling_constraint(model, group_timeslot_vars)
         
+        # CONSTRAINT 8: 140-capacity theory room reservation constraint
+        constraints_applied += self.apply_140_capacity_theory_room_constraint(model, group_timeslot_vars)
+        
+        # CONSTRAINT 9: Course instance daily session limit - max 2 sessions per course per day
+        constraints_applied += self.apply_course_instance_daily_limit_constraint(model, group_timeslot_vars)
+        
+        # CONSTRAINT 10: Teacher daily presence limit - prevent 11+ hour violation days
+        constraints_applied += self.apply_teacher_daily_presence_constraint(model, group_timeslot_vars)
+        
         self.logger.info(f"Applied {constraints_applied} theory-specific constraints with department-specific day patterns")
         return constraints_applied
 
@@ -3074,6 +3161,240 @@ class CombinedScheduler:
         
         self.logger.info(f"Created {len(self.late_scheduling_penalties)} late scheduling penalty variables")
         self.logger.info(f"Applied {constraints_applied} soft early scheduling constraints")
+        return constraints_applied
+
+    def apply_140_capacity_theory_room_constraint(self, model, group_timeslot_vars):
+        """
+        Ensure 140-capacity theory rooms are properly reserved and not double-booked.
+        This constraint works during optimization phase to prevent conflicts before postprocessing.
+        """
+        self.logger.info("Applying 140-capacity theory room reservation constraint...")
+        constraints_applied = 0
+        
+        # Get 140-capacity theory rooms (rooms that can be used for both lab and theory)
+        theory_rooms_140 = set()
+        for room_id in self.theory_room_ids:
+            room_row = self.rooms_df[self.rooms_df['id'] == room_id]
+            if not room_row.empty:
+                room_capacity = int(room_row.iloc[0]['room_max_cap'])
+                if room_capacity >= 140:
+                    theory_rooms_140.add(room_id)
+        
+        if not theory_rooms_140:
+            self.logger.info("No 140-capacity theory rooms found - skipping constraint")
+            return 0
+        
+        self.logger.info(f"Found {len(theory_rooms_140)} theory rooms with 140+ capacity: {sorted(theory_rooms_140)}")
+        
+        # Track which groups have 140+ student courses (co-scheduled instances)
+        groups_needing_140 = set()
+        regular_groups = set()
+        
+        if hasattr(self, 'course_groups'):
+            for (dept, semester), groups in self.course_groups.items():
+                for group_idx, group in enumerate(groups):
+                    group_name = f"{dept}_S{semester}_G{group_idx + 1}"
+                    
+                    # Check if any instance in this group has 140+ students or is co-scheduled
+                    needs_140 = False
+                    for instance in group:
+                        student_count = instance.get('student_count', 70)
+                        is_co_scheduled = instance.get('co_scheduled_id') is not None
+                        if student_count >= 140 or is_co_scheduled:
+                            needs_140 = True
+                            break
+                    
+                    if needs_140:
+                        groups_needing_140.add(group_name)
+                        self.logger.debug(f"Group {group_name} needs 140-capacity rooms")
+                    else:
+                        regular_groups.add(group_name)
+        
+        self.logger.info(f"Groups needing 140-capacity rooms: {len(groups_needing_140)}")
+        self.logger.info(f"Regular groups: {len(regular_groups)}")
+        
+        # MAIN CONSTRAINT: Prevent multiple groups from conflicting over limited 140-capacity rooms
+        # For each time slot, count how many groups might need 140-capacity rooms
+        max_days = 0
+        if groups_needing_140:
+            # Calculate the maximum number of days any department uses
+            for group_name in groups_needing_140:
+                if '_S' in group_name:
+                    dept = group_name.split('_S')[0]
+                    try:
+                        semester = int(group_name.split('_S')[1].split('_G')[0])
+                        dept_days = self._get_days_for_department(dept, semester)
+                        max_days = max(max_days, len(dept_days))
+                    except (ValueError, IndexError):
+                        continue
+        
+        for day_idx in range(max_days):
+            for slot_idx in range(self.num_theory_slots):
+                # Collect all groups that need 140-capacity rooms for this time slot
+                groups_at_slot = []
+                for group_name in groups_needing_140:
+                    if (group_name in group_timeslot_vars and
+                        day_idx in group_timeslot_vars[group_name] and
+                        slot_idx in group_timeslot_vars[group_name]):
+                        groups_at_slot.append(group_timeslot_vars[group_name][day_idx][slot_idx])
+                
+                # If more groups need 140-capacity rooms than we have available,
+                # limit the number that can be scheduled simultaneously
+                if len(groups_at_slot) > len(theory_rooms_140):
+                    # At most as many groups as we have 140-capacity rooms
+                    model.Add(sum(groups_at_slot) <= len(theory_rooms_140))
+                    constraints_applied += 1
+                    self.logger.debug(f"140-capacity room limit: max {len(theory_rooms_140)} groups at day {day_idx} slot {slot_idx}")
+        
+        self.logger.info(f"Applied {constraints_applied} 140-capacity theory room reservation constraints")
+        return constraints_applied
+
+    def apply_course_instance_daily_limit_constraint(self, model, group_timeslot_vars):
+        """
+        Apply constraint to prevent over-concentration of course sessions on the same day.
+        Limits each course instance to maximum 2 sessions (lecture/tutorial) per day.
+        """
+        self.logger.info("Applying course instance daily session limit constraint (max 2 sessions per course per day)...")
+        constraints_applied = 0
+        
+        # Build mapping of course instances to their sessions across all groups
+        course_instance_sessions = {}  # course_instance_id -> {group_name: [session_info]}
+        
+        # First, collect all course instances and their sessions from all groups
+        if hasattr(self, 'course_groups'):
+            for (dept, semester), groups in self.course_groups.items():
+                for group_idx, group in enumerate(groups):
+                    group_name = f"{dept}_S{semester}_G{group_idx + 1}"
+                    
+                    for instance in group:
+                        if not instance.get('has_theory', False):
+                            continue
+                            
+                        course_instance_id = instance['id']
+                        course_code = instance.get('course_code', 'Unknown')
+                        lecture_hours = instance.get('lecture_hours', 0)
+                        tutorial_hours = instance.get('tutorial_hours', 0)
+                        
+                        # Handle co-scheduled instances to avoid double-counting
+                        co_scheduled_id = instance.get('co_scheduled_id')
+                        virtual_id = instance.get('virtual_id', '')
+                        
+                        if course_instance_id not in course_instance_sessions:
+                            course_instance_sessions[course_instance_id] = {
+                                'course_code': course_code,
+                                'lecture_hours': lecture_hours,
+                                'tutorial_hours': tutorial_hours,
+                                'total_sessions': lecture_hours + tutorial_hours,
+                                'co_scheduled_id': co_scheduled_id,
+                                'virtual_id': virtual_id,
+                                'groups': {}
+                            }
+                        
+                        # Track which group this instance belongs to
+                        course_instance_sessions[course_instance_id]['groups'][group_name] = {
+                            'dept': dept,
+                            'semester': semester,
+                            'group_idx': group_idx + 1
+                        }
+        
+        # Log course instance analysis
+        total_instances = len(course_instance_sessions)
+        instances_with_multiple_sessions = sum(1 for info in course_instance_sessions.values() if info['total_sessions'] > 2)
+        
+        self.logger.info(f"Analyzing {total_instances} course instances for daily session limits")
+        self.logger.info(f"Instances with >2 total sessions: {instances_with_multiple_sessions}")
+        
+        # Apply constraints for each course instance across all days
+        for course_instance_id, instance_info in course_instance_sessions.items():
+            course_code = instance_info['course_code']
+            total_sessions = instance_info['total_sessions']
+            
+            # Skip instances with ≤2 total sessions (constraint automatically satisfied)
+            if total_sessions <= 2:
+                continue
+                
+            # Get all groups this instance appears in
+            instance_groups = instance_info['groups']
+            
+            if not instance_groups:
+                continue
+                
+            # For each group this instance belongs to, apply daily limits
+            for group_name, group_info in instance_groups.items():
+                if group_name not in group_timeslot_vars:
+                    continue
+                    
+                dept = group_info['dept']
+                semester = group_info['semester']
+                
+                # Get department-specific days
+                dept_days = self._get_days_for_department(dept, semester)
+                num_dept_days = len(dept_days)
+                
+                self.logger.debug(f"Applying daily limits for {course_code} (ID: {course_instance_id}) in {group_name}")
+                self.logger.debug(f"  Total sessions: {total_sessions}, Department days: {num_dept_days}")
+                
+                # Apply constraint for each day
+                for day_idx in range(num_dept_days):
+                    if day_idx not in group_timeslot_vars[group_name]:
+                        continue
+                        
+                    # Collect all time slot variables for this group on this day
+                    day_slots = []
+                    for slot_idx in group_timeslot_vars[group_name][day_idx]:
+                        day_slots.append(group_timeslot_vars[group_name][day_idx][slot_idx])
+                    
+                    if len(day_slots) > 2:
+                        # CONSTRAINT: At most 2 time slots can be assigned to this group per day
+                        # This indirectly limits course sessions since group scheduling distributes sessions across allocated slots
+                        model.Add(sum(day_slots) <= 2)
+                        constraints_applied += 1
+                        
+                        day_name = dept_days[day_idx] if day_idx < len(dept_days) else f"day_{day_idx}"
+                        self.logger.debug(f"Applied daily limit: {group_name} on {day_name} - max 2 slots (affects {course_code})")
+                
+                # Additional constraint: For courses with many sessions, ensure distribution across multiple days
+                if total_sessions >= 4:
+                    # For courses with 4+ sessions, must use at least 2 different days
+                    all_group_slots = []
+                    day_usage_vars = []
+                    
+                    for day_idx in range(num_dept_days):
+                        if day_idx in group_timeslot_vars[group_name]:
+                            day_slots = []
+                            for slot_idx in group_timeslot_vars[group_name][day_idx]:
+                                day_slots.append(group_timeslot_vars[group_name][day_idx][slot_idx])
+                                all_group_slots.append(group_timeslot_vars[group_name][day_idx][slot_idx])
+                            
+                            if day_slots:
+                                # Create variable indicating if this day is used
+                                day_used = model.NewBoolVar(f'day_used_{group_name}_{course_instance_id}_{day_idx}')
+                                # Day is used if any slot on this day is assigned
+                                model.Add(day_used <= sum(day_slots))
+                                model.Add(sum(day_slots) <= len(day_slots) * day_used)
+                                day_usage_vars.append(day_used)
+                    
+                    # Must use at least 2 days for courses with 4+ sessions
+                    if len(day_usage_vars) >= 2:
+                        model.Add(sum(day_usage_vars) >= 2)
+                        constraints_applied += 1
+                        self.logger.debug(f"Multi-day distribution: {course_code} ({total_sessions} sessions) must use ≥2 days")
+        
+        # Log constraint summary
+        self.logger.info(f"Applied {constraints_applied} course instance daily session limit constraints")
+        
+        # Log instances that will be affected
+        affected_instances = [
+            f"{info['course_code']}({info['total_sessions']}s)" 
+            for info in course_instance_sessions.values() 
+            if info['total_sessions'] > 2
+        ]
+        
+        if affected_instances:
+            self.logger.info(f"Courses with session distribution constraints: {', '.join(affected_instances[:10])}")
+            if len(affected_instances) > 10:
+                self.logger.info(f"... and {len(affected_instances) - 10} more courses")
+        
         return constraints_applied
     
     def _apply_proper_theory_room_capacity_constraint(self, model, group_timeslot_vars):
@@ -3343,6 +3664,120 @@ class CombinedScheduler:
         
         self.logger.info("="*80)
         self.logger.info(f"Applied {constraints_applied} advanced session-specific room capacity constraints")
+        return constraints_applied
+    
+    def apply_teacher_daily_presence_constraint(self, model, group_timeslot_vars):
+        """
+        Apply HARD constraint to prevent teacher violation days (11+ hour campus presence).
+        Prevents teachers from having sessions spanning from early morning (8-9AM) to late evening (7PM+).
+        Based on shift report violation criteria: normalized_start_hour <= 8 AND end_hour >= 19.
+        """
+        self.logger.info("Applying teacher daily presence constraint: prevent 11+ hour violation days...")
+        constraints_applied = 0
+        
+        # Define violation time windows based on shift report logic
+        # Violation: Start at 8AM block (≤9AM) AND end at 7PM+ (≥19:00)
+        early_morning_slots = [0, 1]  # "8:00-8:50", "9:00-9:50" (8AM block)
+        late_evening_slots = [10]     # "6:00-6:50" (corresponds to 7PM hour in violation logic)
+        
+        # Map theory groups to teachers for efficient processing
+        teacher_groups = defaultdict(list)
+        for group_name in group_timeslot_vars.keys():
+            # Find teacher(s) for this group
+            dept_name = group_name.split('_S')[0] if '_S' in group_name else "Computer Science & Engineering"
+            
+            # Extract semester for semester-specific overrides
+            semester = None
+            if '_S' in group_name:
+                try:
+                    semester_part = group_name.split('_S')[1].split('_G')[0]
+                    semester = int(semester_part)
+                except (ValueError, IndexError):
+                    pass
+            
+            # Find teachers for this group from course_groups
+            for (dept, sem), groups in self.course_groups.items():
+                if dept == dept_name and sem == semester:
+                    for group_idx, group_instances in enumerate(groups):
+                        expected_group_name = f"{dept}_S{sem}_G{group_idx + 1}"
+                        if expected_group_name == group_name:
+                            for instance in group_instances:
+                                if instance.get('has_theory', False):
+                                    teacher_id = str(instance['teacher_id'])
+                                    if group_name not in teacher_groups[teacher_id]:
+                                        teacher_groups[teacher_id].append(group_name)
+                            break
+        
+        # Apply constraint for each teacher
+        for teacher_id, groups in teacher_groups.items():
+            if not groups:
+                continue
+                
+            # Get department days for the first group (assuming all groups for a teacher follow same pattern)
+            first_group = groups[0]
+            dept_name = first_group.split('_S')[0] if '_S' in first_group else "Computer Science & Engineering"
+            
+            # Extract semester for semester-specific overrides
+            semester = None
+            if '_S' in first_group:
+                try:
+                    semester_part = first_group.split('_S')[1].split('_G')[0]
+                    semester = int(semester_part)
+                except (ValueError, IndexError):
+                    pass
+            
+            dept_days = self._get_days_for_department(dept_name, semester)
+            num_dept_days = len(dept_days)
+            
+            self.logger.debug(f"Applying presence constraint for Teacher {teacher_id} with {len(groups)} groups")
+            
+            # Apply constraint for each day
+            for day_idx in range(num_dept_days):
+                # Check if teacher has any early morning sessions (8-9AM)
+                early_session_vars = []
+                for group_name in groups:
+                    if (group_name in group_timeslot_vars and
+                        day_idx in group_timeslot_vars[group_name]):
+                        for slot_idx in early_morning_slots:
+                            if slot_idx in group_timeslot_vars[group_name][day_idx]:
+                                early_session_vars.append(group_timeslot_vars[group_name][day_idx][slot_idx])
+                
+                # Check if teacher has any late evening sessions (6-7PM)
+                late_session_vars = []
+                for group_name in groups:
+                    if (group_name in group_timeslot_vars and
+                        day_idx in group_timeslot_vars[group_name]):
+                        for slot_idx in late_evening_slots:
+                            if slot_idx in group_timeslot_vars[group_name][day_idx]:
+                                late_session_vars.append(group_timeslot_vars[group_name][day_idx][slot_idx])
+                
+                # HARD CONSTRAINT: Prevent both early AND late sessions on the same day
+                if early_session_vars and late_session_vars:
+                    # Create boolean variables for early and late presence
+                    has_early_session = model.NewBoolVar(f'teacher_{teacher_id}_day_{day_idx}_early')
+                    has_late_session = model.NewBoolVar(f'teacher_{teacher_id}_day_{day_idx}_late')
+                    
+                    # Link boolean variables to actual sessions
+                    model.Add(sum(early_session_vars) > 0).OnlyEnforceIf(has_early_session)
+                    model.Add(sum(early_session_vars) == 0).OnlyEnforceIf(has_early_session.Not())
+                    
+                    model.Add(sum(late_session_vars) > 0).OnlyEnforceIf(has_late_session)
+                    model.Add(sum(late_session_vars) == 0).OnlyEnforceIf(has_late_session.Not())
+                    
+                    # PREVENT VIOLATION: Cannot have both early AND late sessions on same day
+                    model.Add(has_early_session + has_late_session <= 1)
+                    constraints_applied += 1
+                    
+                    day_name = dept_days[day_idx] if day_idx < len(dept_days) else f"day_{day_idx}"
+                    self.logger.debug(f"Teacher {teacher_id}: blocked violation pattern on {day_name}")
+                    self.logger.debug(f"  Early slots: {early_morning_slots} ({[self.theory_time_slots[i] for i in early_morning_slots if i < len(self.theory_time_slots)]})")
+                    self.logger.debug(f"  Late slots: {late_evening_slots} ({[self.theory_time_slots[i] for i in late_evening_slots if i < len(self.theory_time_slots)]})")
+        
+        # Note: Lab constraint will be applied separately in lab constraints section
+        # since we need access to lab_variables parameter
+        
+        self.logger.info(f"Applied {constraints_applied} teacher daily presence constraints (theory only)")
+        self.logger.info("✅ VIOLATION PREVENTION: No teacher can have 11+ hour theory days (8AM-7PM+ span)")
         return constraints_applied
     
     def _apply_cross_system_constraints(self, model, lab_variables, group_timeslot_vars):
@@ -3804,7 +4239,7 @@ class CombinedScheduler:
         # Add penalty for shift violations (soft constraint - discourage shift violations)
         if hasattr(self, 'shift_preference_vars') and self.shift_preference_vars:
             # Subtract penalties (since we're maximizing, subtracting penalties minimizes them)
-            shift_penalty_weight = 3000  # Moderate weight - discourage shift violations but allow flexibility
+            shift_penalty_weight = 3500  # Moderate weight - discourage shift violations but allow flexibility
             for penalty_var in self.shift_preference_vars:
                 objective_terms.append(-shift_penalty_weight * penalty_var)
             self.logger.info(f"Added {len(self.shift_preference_vars)} shift violation penalty terms (weight: {shift_penalty_weight})")
@@ -3835,6 +4270,7 @@ class CombinedScheduler:
             self.logger.info("  8. Consecutive batch preference (encourage consecutive batched lab sessions)")
             self.logger.info("  9. Shift-based scheduling penalty (encourage consistent shift patterns for single-instance departments)")
             self.logger.info("  10. Teacher consecutive lab penalty (discourage 3+ consecutive labs for Biotechnology, allow experimental continuity)")
+            self.logger.info("  11. Teacher daily presence constraint (HARD: prevent 11+ hour violation days)")
         else:
             self.logger.warning("No objective terms created for group allocation")
     
@@ -3842,7 +4278,7 @@ class CombinedScheduler:
         """Solve the combined scheduling model using two-phase approach."""
         # Create the solver
         solver = cp_model.CpSolver()
-        solver.parameters.max_time_in_seconds = 300
+        solver.parameters.max_time_in_seconds = 4000
         solver.parameters.num_search_workers = 16
         solver.parameters.max_memory_in_mb = 30000
         solver.parameters.log_search_progress = True
@@ -5864,10 +6300,75 @@ class CombinedScheduler:
     
     # This function implemented 140-capacity lab co-scheduling which has been removed
 
+    def _check_140_capacity_room_availability(self, day_name, time_slot, room_id, lab_schedule=None, existing_theory_schedule=None):
+        """
+        Comprehensive check for 140-capacity room availability across all schedules.
+        
+        Args:
+            day_name: Day name (department-specific)
+            time_slot: Time slot string (e.g., "09:00-10:00")
+            room_id: Room ID to check
+            lab_schedule: Lab schedule to check against
+            existing_theory_schedule: Existing theory schedule to check against
+            
+        Returns:
+            tuple: (is_available: bool, conflict_reason: str)
+        """
+        # Normalize day name for consistent checking
+        day_normalized = self._normalize_day_name(day_name)
+        
+        # Check if this is actually a 140-capacity room
+        room_row = self.rooms_df[self.rooms_df['id'] == room_id]
+        if room_row.empty:
+            return False, f"Room {room_id} not found in rooms database"
+        
+        room_capacity = int(room_row.iloc[0]['room_max_cap'])
+        if room_capacity < 140:
+            return True, ""  # Not a 140-capacity room, standard availability checks apply
+        
+        room_number = room_row.iloc[0]['room_number']
+        self.logger.debug(f"Checking 140-capacity room {room_number} (ID: {room_id}) availability for {day_name} {time_slot}")
+        
+        # Check 1: Global room registry
+        if not self._is_room_available_global(day_name, time_slot, room_id):
+            return False, f"140-capacity room {room_number} blocked by global registry"
+        
+        # Check 2: Existing theory schedule conflicts
+        if existing_theory_schedule:
+            for session in existing_theory_schedule:
+                session_day_normalized = self._normalize_day_name(session['day'])
+                if (session_day_normalized == day_normalized and 
+                    session['time_slot'] == time_slot and 
+                    session['room_id'] == room_id):
+                    course_code = session.get('course_code', 'Unknown')
+                    return False, f"140-capacity room {room_number} already assigned to {course_code}"
+        
+        # Check 3: Lab schedule conflicts (time overlap)
+        if lab_schedule:
+            for lab_session in lab_schedule:
+                lab_day_normalized = self._normalize_day_name(lab_session['day'])
+                if (lab_day_normalized == day_normalized and 
+                    lab_session['room_id'] == room_id):
+                    
+                    # Check if lab time overlaps with theory time
+                    lab_time_range = lab_session.get('time_range', '')
+                    if self._times_overlap(lab_time_range, time_slot):
+                        course_code = lab_session.get('course_code', 'Unknown')
+                        return False, f"140-capacity room {room_number} conflicts with lab session {course_code} ({lab_time_range})"
+        
+        # Check 4: Verify room is actually available for theory (not a pure lab room)
+        room_type = room_row.iloc[0].get('room_type', '')
+        if room_type.lower() == 'laboratory' and room_id not in self.theory_room_ids:
+            return False, f"140-capacity room {room_number} is laboratory-only, not available for theory sessions"
+        
+        return True, ""
+
     def _find_capacity_aware_theory_room(self, day_idx, time_slot_idx, used_rooms_this_slot, existing_schedule, dept_days, session, assigned_sessions_this_slot, lab_schedule=None):
         """
         Find an available theory room with capacity-aware assignment prioritizing high-capacity rooms 
         for co-scheduled instances and reserving 140+ capacity rooms from regular 70-student instances.
+        
+        ENHANCED: Now includes comprehensive 140-capacity room availability checking.
         
         Args:
             day_idx: Day index (department-specific)
@@ -5941,30 +6442,76 @@ class CombinedScheduler:
         # Combine all occupied rooms
         all_occupied_rooms = occupied_rooms | used_rooms_this_slot | global_occupied_rooms | lab_conflict_rooms
         
-        # Get room capacities for smart assignment
+        # Get room capacities for smart assignment WITH 140-capacity availability check
         room_capacities = {}
+        rooms_140_available = set()  # Track which 140-capacity rooms are actually available
+        rooms_140_blocked = {}       # Track why 140-capacity rooms are blocked
+        
         for room_id in self.theory_room_ids:
             if room_id not in all_occupied_rooms:
                 room_row = self.rooms_df[self.rooms_df['id'] == room_id]
                 if not room_row.empty:
-                    room_capacities[room_id] = int(room_row.iloc[0]['room_max_cap'])
+                    room_capacity = int(room_row.iloc[0]['room_max_cap'])
+                    room_capacities[room_id] = room_capacity
+                    
+                    # ENHANCED: For 140-capacity rooms, perform comprehensive availability check
+                    if room_capacity >= 140:
+                        is_available, conflict_reason = self._check_140_capacity_room_availability(
+                            day_name, time_slot, room_id, lab_schedule, existing_schedule
+                        )
+                        if is_available:
+                            rooms_140_available.add(room_id)
+                            self.logger.debug(f"140-capacity room {room_id} verified available")
+                        else:
+                            rooms_140_blocked[room_id] = conflict_reason
+                            # Remove from available rooms if blocked by 140-specific check
+                            if room_id in room_capacities:
+                                del room_capacities[room_id]
+                            self.logger.warning(f"140-capacity room {room_id} blocked: {conflict_reason}")
+        
+        # Log 140-capacity room availability analysis
+        if rooms_140_blocked:
+            self.logger.info(f"140-capacity room constraints for {course_code}: {len(rooms_140_available)} available, {len(rooms_140_blocked)} blocked")
+            for room_id, reason in rooms_140_blocked.items():
+                self.logger.debug(f"  Room {room_id}: {reason}")
         
         # PRIORITY 1: If this is a co-scheduled instance and partner is assigned, use same room if available
         if is_co_scheduled and co_scheduled_partner_room is not None:
             if co_scheduled_partner_room in room_capacities:
-                self.logger.info(f"Assigning co-scheduled instance {virtual_id} to same room {co_scheduled_partner_room} as partner")
-                return co_scheduled_partner_room
+                # Additional check for 140-capacity rooms
+                partner_room_row = self.rooms_df[self.rooms_df['id'] == co_scheduled_partner_room]
+                if not partner_room_row.empty:
+                    partner_capacity = int(partner_room_row.iloc[0]['room_max_cap'])
+                    if partner_capacity >= 140:
+                        # Verify the partner room is actually available for 140-capacity use
+                        if co_scheduled_partner_room in rooms_140_available:
+                            self.logger.info(f"Assigning co-scheduled instance {virtual_id} to verified 140-capacity room {co_scheduled_partner_room} with partner")
+                            return co_scheduled_partner_room
+                        else:
+                            blocked_reason = rooms_140_blocked.get(co_scheduled_partner_room, "Unknown constraint violation")
+                            self.logger.error(f"Cannot assign co-scheduled instance {virtual_id} to partner room {co_scheduled_partner_room}: {blocked_reason}")
+                    else:
+                        # Regular capacity room, proceed normally
+                        self.logger.info(f"Assigning co-scheduled instance {virtual_id} to same room {co_scheduled_partner_room} as partner")
+                        return co_scheduled_partner_room
         
-        # PRIORITY 2: For co-scheduled instances, prefer 140+ capacity rooms
+        # PRIORITY 2: For co-scheduled instances, prefer verified 140+ capacity rooms
         if is_co_scheduled:
-            high_capacity_rooms = [rid for rid, cap in room_capacities.items() if cap >= 140]
-            if high_capacity_rooms:
+            if rooms_140_available:
                 # Sort by capacity (prefer exactly 140, then higher)
-                high_capacity_rooms.sort(key=lambda rid: room_capacities[rid])
-                selected_room = high_capacity_rooms[0]
-                self.logger.info(f"Assigning co-scheduled instance {virtual_id} to high-capacity room {selected_room} "
-                               f"(capacity: {room_capacities[selected_room]})")
+                available_140_rooms = list(rooms_140_available)
+                available_140_rooms.sort(key=lambda rid: room_capacities[rid])
+                selected_room = available_140_rooms[0]
+                room_capacity = room_capacities[selected_room]
+                self.logger.info(f"✅ Assigning co-scheduled instance {virtual_id} to verified 140-capacity room {selected_room} "
+                               f"(capacity: {room_capacity}) - availability confirmed")
                 return selected_room
+            else:
+                # No 140-capacity rooms available - this is a serious constraint violation
+                self.logger.error(f"❌ CONSTRAINT VIOLATION: Co-scheduled instance {virtual_id} needs 140-capacity room but none available!")
+                self.logger.error(f"   All 140-capacity rooms blocked: {list(rooms_140_blocked.keys())}")
+                for room_id, reason in rooms_140_blocked.items():
+                    self.logger.error(f"   Room {room_id}: {reason}")
         
         # PRIORITY 3: For regular instances (70 students), prefer 70-110 capacity rooms
         # Avoid 140+ capacity rooms unless no other option
@@ -5980,12 +6527,13 @@ class CombinedScheduler:
                 return selected_room
             
             # If no suitable rooms, check if any 140+ rooms are available but warn
-            high_capacity_rooms = [rid for rid, cap in room_capacities.items() if cap >= 140]
-            if high_capacity_rooms:
-                # Only use if absolutely necessary
-                selected_room = high_capacity_rooms[0]
-                self.logger.warning(f"Using high-capacity room {selected_room} for regular instance {course_code} "
-                                  f"(capacity: {room_capacities[selected_room]}, students: {student_count}) "
+            if rooms_140_available:
+                # Only use if absolutely necessary - and only verified available ones
+                available_140_rooms = list(rooms_140_available)
+                selected_room = available_140_rooms[0]
+                room_capacity = room_capacities[selected_room]
+                self.logger.warning(f"⚠️  Using verified 140-capacity room {selected_room} for regular instance {course_code} "
+                                  f"(capacity: {room_capacity}, students: {student_count}) "
                                   f"- should be reserved for co-scheduled instances")
                 return selected_room
         
@@ -5996,13 +6544,22 @@ class CombinedScheduler:
             self.logger.warning(f"Using fallback room assignment: {fallback_room} for {course_code}")
             return fallback_room
         
-        # If no room available, log detailed warning
-        self.logger.error(f"No available theory room for {course_code} on {day_name} {time_slot}")
+        # If no room available, log detailed warning with 140-capacity constraint details
+        self.logger.error(f"❌ No available theory room for {course_code} on {day_name} {time_slot}")
         self.logger.error(f"  Theory occupied: {len(occupied_rooms)} rooms")
         self.logger.error(f"  Used this slot: {len(used_rooms_this_slot)} rooms") 
         self.logger.error(f"  Global conflicts: {len(global_occupied_rooms)} rooms")
         self.logger.error(f"  Lab conflicts: {len(lab_conflict_rooms)} rooms")
+        self.logger.error(f"  140-capacity blocked: {len(rooms_140_blocked)} rooms")
         self.logger.error(f"  Total occupied: {len(all_occupied_rooms)}/{len(self.theory_room_ids)} rooms")
+        
+        # Log specific 140-capacity constraint violations
+        if rooms_140_blocked:
+            self.logger.error(f"  140-capacity room constraint details:")
+            for room_id, reason in rooms_140_blocked.items():
+                room_row = self.rooms_df[self.rooms_df['id'] == room_id]
+                room_number = room_row.iloc[0]['room_number'] if not room_row.empty else f"ID:{room_id}"
+                self.logger.error(f"    {room_number}: {reason}")
         
         return None
 
@@ -6320,6 +6877,10 @@ class CombinedScheduler:
         if not hasattr(self, 'department_shift_vars'):
             self.department_shift_vars = {}
         
+        # Initialize teacher shift variables storage for cross-department teachers
+        if not hasattr(self, 'teacher_shift_vars'):
+            self.teacher_shift_vars = {}
+        
         # Apply constraints for each department
         for dept_name, courses in dept_courses.items():
             self.logger.info(f"Applying department-centric shift constraints for {dept_name} with {len(courses)} lab courses and {len(dept_teachers[dept_name])} teachers")
@@ -6430,9 +6991,144 @@ class CombinedScheduler:
                 
                 self.logger.debug(f"Applied department shift constraints for course {course_code} in {dept_name}")
         
-        self.logger.info(f"Applied {constraints_applied} department-centric shift-based lab constraints")
+        # Apply individual teacher shift constraints for cross-department teachers
+        cross_dept_constraints = self._apply_cross_department_teacher_shift_constraints(model, lab_variables)
+        constraints_applied += cross_dept_constraints
+        
+        self.logger.info(f"Applied {constraints_applied} total shift-based lab constraints")
+        self.logger.info(f"  - Department-centric constraints: {constraints_applied - cross_dept_constraints}")
+        self.logger.info(f"  - Cross-department teacher constraints: {cross_dept_constraints}")
         self.logger.info(f"Departments with unified shift patterns: {len(dept_courses)}")
         self.logger.info(f"Created {len(self.shift_preference_vars)} shift preference variables")
+        return constraints_applied
+    
+    def _apply_cross_department_teacher_shift_constraints(self, model, lab_variables):
+        """Apply individual shift constraints for cross-department teachers."""
+        self.logger.info("Applying individual shift constraints for cross-department teachers...")
+        constraints_applied = 0
+        
+        if not hasattr(self, 'cross_dept_teachers') or not self.cross_dept_teachers:
+            self.logger.info("No cross-department teachers identified")
+            return 0
+        
+        # Process each cross-department teacher
+        for teacher_id in self.cross_dept_teachers:
+            if teacher_id not in lab_variables:
+                continue
+            
+            student_depts = self.get_teacher_student_departments(teacher_id)
+            dept_list = ', '.join(sorted(student_depts))
+            
+            self.logger.info(f"Applying individual shift constraints for Teacher {teacher_id} (serves: {dept_list})")
+            
+            # Determine working days (use union of all departments they serve)
+            teacher_days = set()
+            for dept in student_depts:
+                dept_days = self._get_days_for_department(dept)
+                teacher_days.update(dept_days)
+            teacher_days = sorted(list(teacher_days))
+            num_teacher_days = len(teacher_days)
+            
+            # Create individual teacher shift assignment variables
+            teacher_shift_vars = {}
+            for day_idx in range(num_teacher_days):
+                teacher_shift_vars[day_idx] = {}
+                for shift_id in self.get_available_shifts():
+                    teacher_shift_vars[day_idx][shift_id] = model.NewBoolVar(
+                        f'cross_teacher_{teacher_id}_day_{day_idx}_shift_{shift_id}_lab'
+                    )
+                
+                # CONSTRAINT: Each day must be assigned to exactly one shift for this teacher
+                model.Add(sum(teacher_shift_vars[day_idx].values()) == 1)
+                constraints_applied += 1
+            
+            # Store teacher shift variables
+            self.teacher_shift_vars[teacher_id] = teacher_shift_vars
+            
+            # Apply weekly shift pattern constraints for this teacher
+            for pattern_days_shift1, pattern_days_shift2, pattern_days_shift3 in self.valid_shift_patterns:
+                # Create pattern selection variable
+                pattern_var = model.NewBoolVar(
+                    f'cross_teacher_{teacher_id}_pattern_{pattern_days_shift1}_{pattern_days_shift2}_{pattern_days_shift3}'
+                )
+                
+                # If this pattern is selected, enforce the shift distribution
+                shift1_days = []
+                shift2_days = []
+                shift3_days = []
+                
+                for day_idx in range(num_teacher_days):
+                    shift1_days.append(teacher_shift_vars[day_idx]['shift_1'])
+                    shift2_days.append(teacher_shift_vars[day_idx]['shift_2'])
+                    shift3_days.append(teacher_shift_vars[day_idx]['shift_3'])
+                
+                # Enforce pattern constraints
+                model.Add(sum(shift1_days) == pattern_days_shift1).OnlyEnforceIf(pattern_var)
+                model.Add(sum(shift2_days) == pattern_days_shift2).OnlyEnforceIf(pattern_var)
+                model.Add(sum(shift3_days) == pattern_days_shift3).OnlyEnforceIf(pattern_var)
+                
+                constraints_applied += 3
+            
+            # Exactly one pattern must be selected for this teacher
+            pattern_vars = []
+            for pattern in self.valid_shift_patterns:
+                pattern_var = model.NewBoolVar(
+                    f'cross_teacher_{teacher_id}_pattern_{pattern[0]}_{pattern[1]}_{pattern[2]}'
+                )
+                pattern_vars.append(pattern_var)
+            
+            model.Add(sum(pattern_vars) == 1)
+            constraints_applied += 1
+            
+            # Apply lab session constraints based on teacher's individual shift pattern
+            for course_instance_id in lab_variables[teacher_id]:
+                # Get course details
+                course_req = next((req for req in self.lab_requirements.get(teacher_id, []) 
+                                 if req['course_instance_id'] == course_instance_id), None)
+                course_code = course_req['course_code'] if course_req else f'Course_{course_instance_id}'
+                
+                for day_idx in range(num_teacher_days):
+                    if day_idx not in lab_variables[teacher_id][course_instance_id]:
+                        continue
+                    
+                    # Create soft preferences for teacher shift compliance
+                    for shift_id in self.get_available_shifts():
+                        allowed_sessions = self.get_shift_lab_sessions(shift_id)
+                        forbidden_sessions = [s for s in self.lab_sessions.keys() if s not in allowed_sessions]
+                        
+                        # Create penalty variable for using forbidden sessions when teacher is on this shift
+                        if forbidden_sessions:
+                            teacher_shift_violation_penalty = model.NewBoolVar(
+                                f'cross_teacher_shift_penalty_{teacher_id}_{course_instance_id}_{day_idx}_{shift_id}'
+                            )
+                            
+                            # Count forbidden session usage
+                            forbidden_usage = []
+                            for session_name in forbidden_sessions:
+                                if session_name in lab_variables[teacher_id][course_instance_id][day_idx]:
+                                    for room_id in self.lab_room_ids:
+                                        if room_id in lab_variables[teacher_id][course_instance_id][day_idx][session_name]:
+                                            forbidden_usage.append(
+                                                lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id]
+                                            )
+                            
+                            if forbidden_usage:
+                                # Penalty is active if teacher's shift is chosen AND forbidden sessions are used
+                                forbidden_used = model.NewBoolVar(f'cross_teacher_forbidden_used_{teacher_id}_{course_instance_id}_{day_idx}_{shift_id}')
+                                model.Add(sum(forbidden_usage) >= 1).OnlyEnforceIf(forbidden_used)
+                                model.Add(sum(forbidden_usage) == 0).OnlyEnforceIf(forbidden_used.Not())
+                                
+                                # Penalty occurs when teacher's shift is active AND forbidden sessions are used
+                                model.AddBoolAnd([teacher_shift_vars[day_idx][shift_id], forbidden_used]).OnlyEnforceIf(teacher_shift_violation_penalty)
+                                model.AddBoolOr([teacher_shift_vars[day_idx][shift_id].Not(), forbidden_used.Not()]).OnlyEnforceIf(teacher_shift_violation_penalty.Not())
+                                
+                                # Add to preference variables (to be minimized)
+                                self.shift_preference_vars.append(teacher_shift_violation_penalty)
+                                constraints_applied += 3
+                
+                self.logger.debug(f"Applied individual teacher shift constraints for course {course_code} by Teacher {teacher_id}")
+        
+        self.logger.info(f"Applied {constraints_applied} individual teacher shift constraints for {len(self.cross_dept_teachers)} cross-department teachers")
         return constraints_applied
     
     def apply_shift_based_theory_constraint(self, model, group_timeslot_vars):
@@ -6528,11 +7224,127 @@ class CombinedScheduler:
                                 self.shift_preference_vars.append(coord_violation)
                                 constraints_applied += 3
         
-        self.logger.info(f"Applied {constraints_applied} department-centric theory-department shift coordination constraints")
-        self.logger.info(f"Theory groups now coordinate with department shift patterns:")
+        # Apply individual teacher theory shift constraints for cross-department teachers
+        cross_dept_theory_constraints = self._apply_cross_department_teacher_theory_constraints(model, group_timeslot_vars)
+        constraints_applied += cross_dept_theory_constraints
+        
+        self.logger.info(f"Applied {constraints_applied} total theory shift constraints")
+        self.logger.info(f"  - Department-centric constraints: {constraints_applied - cross_dept_theory_constraints}")
+        self.logger.info(f"  - Cross-department teacher constraints: {cross_dept_theory_constraints}")
+        self.logger.info(f"Theory groups now coordinate with shift patterns:")
         self.logger.info(f"  🎯 DEPARTMENT: When department is on Shift1 Monday, ALL department activities (lab+theory) fit 8-3 window")
         self.logger.info(f"  🎯 DEPARTMENT: When department is on Shift2 Tuesday, ALL department activities (lab+theory) fit 10-5 window")
         self.logger.info(f"  🎯 DEPARTMENT: When department is on Shift3 Wednesday, ALL department activities (lab+theory) fit 12-7 window")
+        self.logger.info(f"  🎯 TEACHER: Cross-department teachers have individual shift patterns coordinated with their student departments")
+        return constraints_applied
+    
+    def _apply_cross_department_teacher_theory_constraints(self, model, group_timeslot_vars):
+        """Apply individual theory shift constraints for cross-department teachers."""
+        self.logger.info("Applying individual theory shift constraints for cross-department teachers...")
+        constraints_applied = 0
+        
+        if not hasattr(self, 'cross_dept_teachers') or not self.cross_dept_teachers:
+            self.logger.info("No cross-department teachers identified for theory constraints")
+            return 0
+        
+        if not hasattr(self, 'teacher_shift_vars') or not self.teacher_shift_vars:
+            self.logger.warning("No teacher shift variables found - cross-department theory shifts cannot be coordinated")
+            return 0
+        
+        # Find theory groups taught by cross-department teachers
+        cross_teacher_groups = defaultdict(list)
+        
+        for group_name in group_timeslot_vars.keys():
+            # Try to find teachers for this group
+            teachers = []
+            if hasattr(self, 'course_groups') and self.course_groups:
+                try:
+                    if isinstance(self.course_groups, dict):
+                        for dept_key, dept_data in self.course_groups.items():
+                            if isinstance(dept_data, dict):
+                                for sem_key, sem_data in dept_data.items():
+                                    if isinstance(sem_data, list):
+                                        for group in sem_data:
+                                            if isinstance(group, dict) and group.get('group_name') == group_name:
+                                                teachers = group.get('teachers', [])
+                                                break
+                except (TypeError, AttributeError) as e:
+                    self.logger.warning(f"Error accessing course_groups structure for {group_name}: {e}")
+                    teachers = []
+            
+            # Check if any teachers in this group are cross-department
+            for teacher_id in teachers:
+                if self.is_cross_department_teacher(teacher_id):
+                    cross_teacher_groups[teacher_id].append(group_name)
+        
+        if not cross_teacher_groups:
+            self.logger.info("No theory groups found with cross-department teachers")
+            return 0
+        
+        # Apply constraints for each cross-department teacher's theory groups
+        for teacher_id, group_names in cross_teacher_groups.items():
+            if teacher_id not in self.teacher_shift_vars:
+                continue
+            
+            student_depts = self.get_teacher_student_departments(teacher_id)
+            dept_list = ', '.join(sorted(student_depts))
+            
+            self.logger.info(f"Applying theory shift constraints for cross-dept Teacher {teacher_id} (serves: {dept_list}) with {len(group_names)} groups")
+            
+            # Get teacher's working days
+            teacher_days = set()
+            for dept in student_depts:
+                dept_days = self._get_days_for_department(dept)
+                teacher_days.update(dept_days)
+            teacher_days = sorted(list(teacher_days))
+            num_teacher_days = len(teacher_days)
+            
+            teacher_shift_vars = self.teacher_shift_vars[teacher_id]
+            
+            # Apply constraints for each group taught by this teacher
+            for group_name in group_names:
+                if group_name not in group_timeslot_vars:
+                    continue
+                
+                # Create coordination constraints between teacher shifts and theory slot usage
+                for day_idx in range(num_teacher_days):
+                    if day_idx not in group_timeslot_vars[group_name]:
+                        continue
+                    
+                    for shift_id in self.get_available_shifts():
+                        allowed_slots = self.get_shift_theory_slots(shift_id)
+                        forbidden_slots = [s for s in range(self.num_theory_slots) if s not in allowed_slots]
+                        
+                        if forbidden_slots:
+                            # Create coordination penalty for violating teacher's shift pattern
+                            teacher_theory_coord_violation = model.NewBoolVar(
+                                f'cross_teacher_theory_coord_{teacher_id}_{group_name}_day_{day_idx}_shift_{shift_id}'
+                            )
+                            
+                            # Collect forbidden slot usage for this group
+                            forbidden_slot_usage = []
+                            for slot_idx in forbidden_slots:
+                                if slot_idx in group_timeslot_vars[group_name][day_idx]:
+                                    forbidden_slot_usage.append(group_timeslot_vars[group_name][day_idx][slot_idx])
+                            
+                            if forbidden_slot_usage:
+                                # Create helper variable for forbidden slots being used
+                                forbidden_used = model.NewBoolVar(
+                                    f'cross_teacher_theory_forbidden_{teacher_id}_{group_name}_day_{day_idx}_shift_{shift_id}'
+                                )
+                                model.Add(sum(forbidden_slot_usage) >= 1).OnlyEnforceIf(forbidden_used)
+                                model.Add(sum(forbidden_slot_usage) == 0).OnlyEnforceIf(forbidden_used.Not())
+                                
+                                # Coordination violation occurs when teacher's shift is active AND group uses forbidden slots
+                                model.AddBoolAnd([teacher_shift_vars[day_idx][shift_id], forbidden_used]).OnlyEnforceIf(teacher_theory_coord_violation)
+                                model.AddBoolOr([teacher_shift_vars[day_idx][shift_id].Not(), forbidden_used.Not()]).OnlyEnforceIf(teacher_theory_coord_violation.Not())
+                                
+                                # Add this as a soft penalty (theory should respect teacher shift patterns)
+                                self.shift_preference_vars.append(teacher_theory_coord_violation)
+                                constraints_applied += 3
+        
+        self.logger.info(f"Applied {constraints_applied} cross-department teacher theory shift constraints")
+        self.logger.info(f"Cross-department teachers with theory groups: {len(cross_teacher_groups)}")
         return constraints_applied
     
     def _apply_fallback_theory_shifts(self, model, group_timeslot_vars, dept_groups):
@@ -6671,7 +7483,15 @@ class CombinedScheduler:
         # Log coordination status
         self.logger.info(f"✅ Department-centric shift coordination verified for {dept_count} departments")
         self.logger.info("✅ Lab and theory constraints will use the same department shift variables")
-        self.logger.info("✅ All teachers in each department follow the same department shift pattern")
+        self.logger.info("✅ Single-department teachers follow their department's shift pattern")
+        
+        # Check cross-department teacher coordination
+        cross_teacher_count = len(self.teacher_shift_vars) if hasattr(self, 'teacher_shift_vars') else 0
+        if cross_teacher_count > 0:
+            self.logger.info(f"✅ Individual shift patterns verified for {cross_teacher_count} cross-department teachers")
+            self.logger.info("✅ Cross-department teachers have individual shift patterns coordinated with their student departments")
+        else:
+            self.logger.info("✅ No cross-department teachers require individual shift patterns")
         
         # Generate pattern names for logging
         pattern_names = [f"{p[0]}-{p[1]}-{p[2]}" for p in self.valid_shift_patterns]
@@ -6951,3 +7771,83 @@ class CombinedScheduler:
         
         self.logger.info("✅ All teachers limited to maximum 2 consecutive lab slots is preferred")
         return constraints_applied + soft_constraints_applied
+    
+    def apply_teacher_daily_presence_lab_constraint(self, model, lab_variables):
+        """
+        Apply HARD constraint to prevent teacher violation days (11+ hour campus presence) for lab sessions.
+        Prevents teachers from having lab sessions spanning from early morning (L1: 8AM) to late evening (L6: 7PM).
+        Based on shift report violation criteria: normalized_start_hour <= 8 AND end_hour >= 19.
+        """
+        self.logger.info("Applying teacher daily presence constraint for lab sessions: prevent 11+ hour violation days...")
+        constraints_applied = 0
+        
+        # Define violation lab sessions based on time mappings
+        # Early morning: L1 (8:00-9:40) - corresponds to 8AM block
+        # Late evening: L6 (5:10-6:50) - extends into 7PM hour (violation threshold)
+        early_lab_sessions = ['L1']  # 8:00-9:40
+        late_lab_sessions = ['L6']   # 5:10-6:50 (extends into 7PM hour)
+        
+        # Apply constraint for each teacher with lab courses
+        for teacher_id in lab_variables:
+            teacher_courses = list(lab_variables[teacher_id].keys())
+            if not teacher_courses:
+                continue
+            
+            # Get department days for the first course (assuming same pattern for teacher)
+            dept_days = ["monday", "tuesday", "wed", "thur", "fri"]  # Default
+            if hasattr(self, 'instance_group_mapping') and teacher_courses[0] in self.instance_group_mapping:
+                mapping = self.instance_group_mapping[teacher_courses[0]]
+                dept_days = self._get_days_for_department(mapping['department'], mapping.get('semester'))
+            
+            num_dept_days = len(dept_days)
+            
+            self.logger.debug(f"Applying lab presence constraint for Teacher {teacher_id} with {len(teacher_courses)} courses")
+            
+            # Apply constraint for each day
+            for day_idx in range(num_dept_days):
+                # Check if teacher has early lab sessions (L1)
+                early_lab_vars = []
+                for course_instance_id in teacher_courses:
+                    if (course_instance_id in lab_variables[teacher_id] and
+                        day_idx < len(lab_variables[teacher_id][course_instance_id])):
+                        for session_name in early_lab_sessions:
+                            if session_name in lab_variables[teacher_id][course_instance_id][day_idx]:
+                                early_lab_vars.extend(
+                                    lab_variables[teacher_id][course_instance_id][day_idx][session_name].values()
+                                )
+                
+                # Check if teacher has late lab sessions (L6)
+                late_lab_vars = []
+                for course_instance_id in teacher_courses:
+                    if (course_instance_id in lab_variables[teacher_id] and
+                        day_idx < len(lab_variables[teacher_id][course_instance_id])):
+                        for session_name in late_lab_sessions:
+                            if session_name in lab_variables[teacher_id][course_instance_id][day_idx]:
+                                late_lab_vars.extend(
+                                    lab_variables[teacher_id][course_instance_id][day_idx][session_name].values()
+                                )
+                
+                # HARD CONSTRAINT: Prevent both early AND late lab sessions on the same day
+                if early_lab_vars and late_lab_vars:
+                    # Create boolean variables for early and late lab presence
+                    has_early_lab = model.NewBoolVar(f'teacher_{teacher_id}_day_{day_idx}_early_lab')
+                    has_late_lab = model.NewBoolVar(f'teacher_{teacher_id}_day_{day_idx}_late_lab')
+                    
+                    # Link boolean variables to actual lab assignments
+                    model.Add(sum(early_lab_vars) > 0).OnlyEnforceIf(has_early_lab)
+                    model.Add(sum(early_lab_vars) == 0).OnlyEnforceIf(has_early_lab.Not())
+                    
+                    model.Add(sum(late_lab_vars) > 0).OnlyEnforceIf(has_late_lab)
+                    model.Add(sum(late_lab_vars) == 0).OnlyEnforceIf(has_late_lab.Not())
+                    
+                    # PREVENT VIOLATION: Cannot have both early AND late lab sessions on same day
+                    model.Add(has_early_lab + has_late_lab <= 1)
+                    constraints_applied += 1
+                    
+                    day_name = dept_days[day_idx] if day_idx < len(dept_days) else f"day_{day_idx}"
+                    self.logger.debug(f"Teacher {teacher_id}: blocked lab violation pattern on {day_name} (L1 + L6)")
+                    self.logger.debug(f"  Early lab: L1 (8:00-9:40), Late lab: L6 (5:10-6:50)")
+        
+        self.logger.info(f"Applied {constraints_applied} teacher daily presence constraints for lab sessions")
+        self.logger.info("✅ LAB VIOLATION PREVENTION: No teacher can have 11+ hour lab days (L1 + L6 span)")
+        return constraints_applied

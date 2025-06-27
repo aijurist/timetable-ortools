@@ -1,0 +1,54 @@
+Combined Course-Group Distribution Summary
+Department: Mechatronics Engineering
+Semester: 3
+Generated: 2025-06-26 10:20:43
+============================================================
+
+OVERVIEW:
+- Total Courses: 6
+  └─ Lab Courses: 5
+  └─ Theory Courses: 6
+  └─ Overlap (Both): 5
+- Total Groups: 6
+- Total Teacher Assignments: 6
+- Courses with Multiple Group Options: 0 (0.0%)
+
+COURSE DISTRIBUTION BY TYPE:
+- CS23336 [Lab + Theory]: 1 groups, 1 teacher assignments
+  └─ G4: 1 teachers
+- MA23311 [Theory]: 1 groups, 1 teacher assignments
+  └─ G1: 1 teachers
+- MT23331 [Lab + Theory]: 1 groups, 1 teacher assignments
+  └─ G2: 1 teachers
+- MT23332 [Lab + Theory]: 1 groups, 1 teacher assignments
+  └─ G5: 1 teachers
+- MT23333 [Lab + Theory]: 1 groups, 1 teacher assignments
+  └─ G3: 1 teachers
+- MT23334 [Lab + Theory]: 1 groups, 1 teacher assignments
+  └─ G6: 1 teachers
+
+GROUP COMPOSITION:
+- G1: 1 courses, 1 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ MA23311 [T]: 1 teachers, 1 instances
+- G2: 1 courses, 1 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 1
+    └─ MT23331 [L+T]: 1 teachers, 1 instances
+- G3: 1 courses, 1 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 1
+    └─ MT23333 [L+T]: 1 teachers, 1 instances
+- G4: 1 courses, 1 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 1
+    └─ CS23336 [L+T]: 1 teachers, 1 instances
+- G5: 1 courses, 1 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 1
+    └─ MT23332 [L+T]: 1 teachers, 1 instances
+- G6: 1 courses, 1 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 1
+    └─ MT23334 [L+T]: 1 teachers, 1 instances

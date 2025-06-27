@@ -1,0 +1,54 @@
+Combined Course-Group Distribution Summary
+Department: Computer Science & Business Systems
+Semester: 7
+Generated: 2025-06-26 08:53:20
+============================================================
+
+OVERVIEW:
+- Total Courses: 6
+  └─ Lab Courses: 4
+  └─ Theory Courses: 5
+  └─ Overlap (Both): 3
+- Total Groups: 6
+- Total Teacher Assignments: 12
+- Courses with Multiple Group Options: 6 (100.0%)
+
+COURSE DISTRIBUTION BY TYPE:
+- BA19701 [Theory]: 1 groups, 2 teacher assignments
+  └─ G6: 2 teachers
+- BA19702 [Theory]: 1 groups, 2 teacher assignments
+  └─ G5: 2 teachers
+- CB19711 [Lab]: 1 groups, 2 teacher assignments
+  └─ G1: 2 teachers
+- CB19741 [Lab + Theory]: 1 groups, 2 teacher assignments
+  └─ G4: 2 teachers
+- CB19742 [Lab + Theory]: 1 groups, 2 teacher assignments
+  └─ G2: 2 teachers
+- CB19P45 [Lab + Theory]: 1 groups, 2 teacher assignments
+  └─ G3: 2 teachers
+
+GROUP COMPOSITION:
+- G1: 1 courses, 2 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 0
+    └─ CB19711 [L]: 2 teachers, 2 instances
+- G2: 1 courses, 2 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 1
+    └─ CB19742 [L+T]: 2 teachers, 2 instances
+- G3: 1 courses, 2 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 1
+    └─ CB19P45 [L+T]: 2 teachers, 2 instances
+- G4: 1 courses, 2 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 1
+    └─ CB19741 [L+T]: 2 teachers, 2 instances
+- G5: 1 courses, 2 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ BA19702 [T]: 2 teachers, 2 instances
+- G6: 1 courses, 2 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ BA19701 [T]: 2 teachers, 2 instances

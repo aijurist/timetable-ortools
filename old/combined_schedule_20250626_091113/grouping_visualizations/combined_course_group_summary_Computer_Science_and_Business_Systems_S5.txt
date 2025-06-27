@@ -1,0 +1,58 @@
+Combined Course-Group Distribution Summary
+Department: Computer Science & Business Systems
+Semester: 5
+Generated: 2025-06-26 10:20:35
+============================================================
+
+OVERVIEW:
+- Total Courses: 5
+  └─ Lab Courses: 4
+  └─ Theory Courses: 5
+  └─ Overlap (Both): 4
+- Total Groups: 5
+- Total Teacher Assignments: 10
+- Courses with Multiple Group Options: 5 (100.0%)
+
+COURSE DISTRIBUTION BY TYPE:
+- BA23511 [Theory]: 2 groups, 2 teacher assignments
+  └─ G4: 1 teachers
+  └─ G5: 1 teachers
+- CB23521 [Lab + Theory]: 2 groups, 2 teacher assignments
+  └─ G4: 1 teachers
+  └─ G5: 1 teachers
+- CB23531 [Lab + Theory]: 2 groups, 2 teacher assignments
+  └─ G2: 1 teachers
+  └─ G3: 1 teachers
+- CB23532 [Lab + Theory]: 2 groups, 2 teacher assignments
+  └─ G1: 1 teachers
+  └─ G3: 1 teachers
+- CB23D31 [Lab + Theory]: 2 groups, 2 teacher assignments
+  └─ G1: 1 teachers
+  └─ G2: 1 teachers
+
+GROUP COMPOSITION:
+- G1: 2 courses, 2 teachers
+  └─ Lab courses: 2
+  └─ Theory courses: 2
+    └─ CB23532 [L+T]: 1 teachers, 1 instances
+    └─ CB23D31 [L+T]: 1 teachers, 1 instances
+- G2: 2 courses, 2 teachers
+  └─ Lab courses: 2
+  └─ Theory courses: 2
+    └─ CB23531 [L+T]: 1 teachers, 1 instances
+    └─ CB23D31 [L+T]: 1 teachers, 1 instances
+- G3: 2 courses, 2 teachers
+  └─ Lab courses: 2
+  └─ Theory courses: 2
+    └─ CB23531 [L+T]: 1 teachers, 1 instances
+    └─ CB23532 [L+T]: 1 teachers, 1 instances
+- G4: 2 courses, 2 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 2
+    └─ BA23511 [T]: 1 teachers, 1 instances
+    └─ CB23521 [L+T]: 1 teachers, 1 instances
+- G5: 2 courses, 2 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 2
+    └─ BA23511 [T]: 1 teachers, 1 instances
+    └─ CB23521 [L+T]: 1 teachers, 1 instances

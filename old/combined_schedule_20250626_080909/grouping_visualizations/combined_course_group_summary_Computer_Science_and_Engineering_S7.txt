@@ -1,0 +1,40 @@
+Combined Course-Group Distribution Summary
+Department: Computer Science & Engineering
+Semester: 7
+Generated: 2025-06-26 08:53:22
+============================================================
+
+OVERVIEW:
+- Total Courses: 3
+  └─ Lab Courses: 3
+  └─ Theory Courses: 3
+  └─ Overlap (Both): 3
+- Total Groups: 3
+- Total Teacher Assignments: 14
+- Courses with Multiple Group Options: 3 (100.0%)
+
+COURSE DISTRIBUTION BY TYPE:
+- CS19741 [Lab + Theory]: 2 groups, 5 teacher assignments
+  └─ G1: 3 teachers
+  └─ G2: 2 teachers
+- CS19P18 [Lab + Theory]: 2 groups, 5 teacher assignments
+  └─ G1: 2 teachers
+  └─ G2: 3 teachers
+- CS19PE04 [Lab + Theory]: 1 groups, 4 teacher assignments
+  └─ G3: 4 teachers
+
+GROUP COMPOSITION:
+- G1: 2 courses, 5 teachers
+  └─ Lab courses: 2
+  └─ Theory courses: 2
+    └─ CS19741 [L+T]: 3 teachers, 3 instances
+    └─ CS19P18 [L+T]: 2 teachers, 2 instances
+- G2: 2 courses, 5 teachers
+  └─ Lab courses: 2
+  └─ Theory courses: 2
+    └─ CS19741 [L+T]: 2 teachers, 2 instances
+    └─ CS19P18 [L+T]: 3 teachers, 3 instances
+- G3: 1 courses, 4 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 1
+    └─ CS19PE04 [L+T]: 4 teachers, 5 instances

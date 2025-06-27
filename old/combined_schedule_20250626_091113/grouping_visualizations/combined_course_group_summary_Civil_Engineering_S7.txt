@@ -1,0 +1,60 @@
+Combined Course-Group Distribution Summary
+Department: Civil Engineering
+Semester: 7
+Generated: 2025-06-26 10:20:42
+============================================================
+
+OVERVIEW:
+- Total Courses: 7
+  └─ Lab Courses: 4
+  └─ Theory Courses: 3
+  └─ Overlap (Both): 0
+- Total Groups: 7
+- Total Teacher Assignments: 7
+- Courses with Multiple Group Options: 0 (0.0%)
+
+COURSE DISTRIBUTION BY TYPE:
+- CE19701 [Theory]: 1 groups, 1 teacher assignments
+  └─ G5: 1 teachers
+- CE19702 [Theory]: 1 groups, 1 teacher assignments
+  └─ G6: 1 teachers
+- CE19711 [Lab]: 1 groups, 1 teacher assignments
+  └─ G1: 1 teachers
+- CE19712 [Lab]: 1 groups, 1 teacher assignments
+  └─ G3: 1 teachers
+- CE19713 [Lab]: 1 groups, 1 teacher assignments
+  └─ G2: 1 teachers
+- CE19714 [Lab]: 1 groups, 1 teacher assignments
+  └─ G4: 1 teachers
+- CE19P01 [Theory]: 1 groups, 1 teacher assignments
+  └─ G7: 1 teachers
+
+GROUP COMPOSITION:
+- G1: 1 courses, 1 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 0
+    └─ CE19711 [L]: 1 teachers, 1 instances
+- G2: 1 courses, 1 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 0
+    └─ CE19713 [L]: 1 teachers, 1 instances
+- G3: 1 courses, 1 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 0
+    └─ CE19712 [L]: 1 teachers, 1 instances
+- G4: 1 courses, 1 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 0
+    └─ CE19714 [L]: 1 teachers, 1 instances
+- G5: 1 courses, 1 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ CE19701 [T]: 1 teachers, 1 instances
+- G6: 1 courses, 1 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ CE19702 [T]: 1 teachers, 1 instances
+- G7: 1 courses, 1 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ CE19P01 [T]: 1 teachers, 1 instances

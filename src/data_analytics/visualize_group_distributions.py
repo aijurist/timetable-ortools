@@ -32,11 +32,11 @@ THEORY_SLOTS = [
 ]
 LAB_SESSIONS = {
     'L1': {'slots': [0, 1], 'time_range': '8:00 - 9:40'},
-    'L2': {'slots': [2, 3], 'time_range': '9:50 - 11:30'},
-    'L3': {'slots': [4, 5], 'time_range': '11:50 - 1:30'},
-    'L4': {'slots': [6, 7], 'time_range': '1:50 - 3:30'},
-    'L5': {'slots': [8, 9], 'time_range': '3:50 - 5:30'},
-    'L6': {'slots': [10, 11], 'time_range': '5:30 - 7:10'}
+    'L2': {'slots': [2, 3], 'time_range': '10:00 - 11:40'},
+    'L3': {'slots': [4, 5], 'time_range': '11:50 - 1:20'},
+    'L4': {'slots': [6, 7], 'time_range': '1:20 - 3:00'},
+    'L5': {'slots': [8, 9], 'time_range': '3:00 - 4:40'},
+    'L6': {'slots': [10, 11], 'time_range': '5:10 - 6:50'}
 }
 
 LAB_SLOTS = list(LAB_SESSIONS.keys())  # ['L1', 'L2', 'L3', 'L4', 'L5', 'L6']
@@ -257,7 +257,7 @@ def visualize_group_timetable(timetable, groups, title, filename, pattern_days, 
                 slot_counts[slot_idx] += len(present_groups)
                 for group in present_groups:
                     group_slot_counts[group] += 1
-                    
+               
                 # If multiple groups in this slot, blend their colors
                 if len(present_groups) > 1:
                     # Create a hatched pattern or blend of colors

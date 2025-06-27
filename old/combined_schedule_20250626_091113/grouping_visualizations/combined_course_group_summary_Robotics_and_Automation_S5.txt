@@ -1,0 +1,54 @@
+Combined Course-Group Distribution Summary
+Department: Robotics & Automation
+Semester: 5
+Generated: 2025-06-26 10:20:42
+============================================================
+
+OVERVIEW:
+- Total Courses: 6
+  └─ Lab Courses: 2
+  └─ Theory Courses: 4
+  └─ Overlap (Both): 0
+- Total Groups: 6
+- Total Teacher Assignments: 6
+- Courses with Multiple Group Options: 0 (0.0%)
+
+COURSE DISTRIBUTION BY TYPE:
+- ME23511 [Theory]: 1 groups, 1 teacher assignments
+  └─ G4: 1 teachers
+- RO23511 [Theory]: 1 groups, 1 teacher assignments
+  └─ G6: 1 teachers
+- RO23512 [Theory]: 1 groups, 1 teacher assignments
+  └─ G5: 1 teachers
+- RO23521 [Lab]: 1 groups, 1 teacher assignments
+  └─ G1: 1 teachers
+- RO23522 [Lab]: 1 groups, 1 teacher assignments
+  └─ G2: 1 teachers
+- RO23C13 [Theory]: 1 groups, 1 teacher assignments
+  └─ G3: 1 teachers
+
+GROUP COMPOSITION:
+- G1: 1 courses, 1 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 0
+    └─ RO23521 [L]: 1 teachers, 1 instances
+- G2: 1 courses, 1 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 0
+    └─ RO23522 [L]: 1 teachers, 1 instances
+- G3: 1 courses, 1 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ RO23C13 [T]: 1 teachers, 1 instances
+- G4: 1 courses, 1 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ ME23511 [T]: 1 teachers, 1 instances
+- G5: 1 courses, 1 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ RO23512 [T]: 1 teachers, 1 instances
+- G6: 1 courses, 1 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ RO23511 [T]: 1 teachers, 1 instances

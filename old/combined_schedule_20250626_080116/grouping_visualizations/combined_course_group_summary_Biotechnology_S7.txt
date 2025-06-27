@@ -1,0 +1,80 @@
+Combined Course-Group Distribution Summary
+Department: Biotechnology
+Semester: 7
+Generated: 2025-06-26 08:06:52
+============================================================
+
+OVERVIEW:
+- Total Courses: 8
+  └─ Lab Courses: 3
+  └─ Theory Courses: 5
+  └─ Overlap (Both): 0
+- Total Groups: 8
+- Total Teacher Assignments: 24
+- Courses with Multiple Group Options: 8 (100.0%)
+
+COURSE DISTRIBUTION BY TYPE:
+- BT19701 [Theory]: 2 groups, 3 teacher assignments
+  └─ G4: 1 teachers
+  └─ G5: 2 teachers
+- BT19702 [Theory]: 2 groups, 3 teacher assignments
+  └─ G4: 2 teachers
+  └─ G5: 1 teachers
+- BT19705 [Theory]: 2 groups, 3 teacher assignments
+  └─ G6: 1 teachers
+  └─ G7: 2 teachers
+- BT19711 [Lab]: 2 groups, 3 teacher assignments
+  └─ G1: 1 teachers
+  └─ G2: 2 teachers
+- BT19712 [Lab]: 2 groups, 3 teacher assignments
+  └─ G2: 1 teachers
+  └─ G3: 2 teachers
+- BT19713 [Lab]: 2 groups, 3 teacher assignments
+  └─ G1: 2 teachers
+  └─ G3: 1 teachers
+- BT19P01 [Theory]: 1 groups, 3 teacher assignments
+  └─ G8: 3 teachers
+- BT19P71 [Theory]: 2 groups, 3 teacher assignments
+  └─ G6: 2 teachers
+  └─ G7: 1 teachers
+
+GROUP COMPOSITION:
+- G1: 2 courses, 3 teachers
+  └─ Lab courses: 2
+  └─ Theory courses: 0
+    └─ BT19711 [L]: 1 teachers, 1 instances
+    └─ BT19713 [L]: 2 teachers, 2 instances
+- G2: 2 courses, 3 teachers
+  └─ Lab courses: 2
+  └─ Theory courses: 0
+    └─ BT19711 [L]: 2 teachers, 2 instances
+    └─ BT19712 [L]: 1 teachers, 1 instances
+- G3: 2 courses, 3 teachers
+  └─ Lab courses: 2
+  └─ Theory courses: 0
+    └─ BT19712 [L]: 2 teachers, 2 instances
+    └─ BT19713 [L]: 1 teachers, 1 instances
+- G4: 2 courses, 3 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 2
+    └─ BT19701 [T]: 1 teachers, 1 instances
+    └─ BT19702 [T]: 2 teachers, 2 instances
+- G5: 2 courses, 3 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 2
+    └─ BT19701 [T]: 2 teachers, 2 instances
+    └─ BT19702 [T]: 1 teachers, 1 instances
+- G6: 2 courses, 3 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 2
+    └─ BT19705 [T]: 1 teachers, 1 instances
+    └─ BT19P71 [T]: 2 teachers, 2 instances
+- G7: 2 courses, 3 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 2
+    └─ BT19705 [T]: 2 teachers, 2 instances
+    └─ BT19P71 [T]: 1 teachers, 1 instances
+- G8: 1 courses, 3 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ BT19P01 [T]: 3 teachers, 3 instances

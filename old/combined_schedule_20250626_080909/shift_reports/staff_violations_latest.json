@@ -1,0 +1,2157 @@
+{
+  "violations": [
+    {
+      "staff_code": "CS289",
+      "staff_name": "Mr. S Umamaheswararao",
+      "day": "monday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "CS176",
+      "staff_name": "Mr. Vijayakumar R",
+      "day": "wed",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "CS296",
+      "staff_name": "Mrs. Kalpana D",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 2
+    },
+    {
+      "staff_code": "CS296",
+      "staff_name": "Mrs. Kalpana D",
+      "day": "wed",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "CS306",
+      "staff_name": "Mr. Thirumalairajan G",
+      "day": "fri",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "CS315",
+      "staff_name": "Dr. Balasubramanian V",
+      "day": "monday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "CS305",
+      "staff_name": "Mr. Dr Parthasarathy C",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "CS49",
+      "staff_name": "Mr. Suresh Kumar S",
+      "day": "fri",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 2
+    },
+    {
+      "staff_code": "IT252",
+      "staff_name": "Mrs. J Jasmine Gabriel",
+      "day": "saturday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "IT242",
+      "staff_name": "Mrs. Priya M",
+      "day": "saturday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "IT264",
+      "staff_name": "Dr. Raja Ramamoorthi",
+      "day": "fri",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "IT212",
+      "staff_name": "Ms. V Akshaya",
+      "day": "saturday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "CS175",
+      "staff_name": "Mr. Vijay K",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "CS175",
+      "staff_name": "Mr. Vijay K",
+      "day": "saturday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "IT224",
+      "staff_name": "Mrs. Jayasri Archana Devi P",
+      "day": "wed",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "CS66",
+      "staff_name": "Mrs. Sorna Shanthi D",
+      "day": "fri",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "IT243",
+      "staff_name": "Mr. Preejith P",
+      "day": "fri",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "AU35",
+      "staff_name": "Mr. Magesh M P",
+      "day": "saturday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 2
+    },
+    {
+      "staff_code": "IT259",
+      "staff_name": "Ms. Bhuvaneshwari Muthukumaran",
+      "day": "wed",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 2
+    },
+    {
+      "staff_code": "IT198",
+      "staff_name": "Mr. Dr.S.Subbiah",
+      "day": "saturday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "IT187",
+      "staff_name": "Mrs. A.P.Aruna Jameela",
+      "day": "wed",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 2
+    },
+    {
+      "staff_code": "IT260",
+      "staff_name": "Mr. Vimalan M",
+      "day": "wed",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 2
+    },
+    {
+      "staff_code": "IT249",
+      "staff_name": "Ms. Priyanka D",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 2
+    },
+    {
+      "staff_code": "IT249",
+      "staff_name": "Ms. Priyanka D",
+      "day": "wed",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "EC172",
+      "staff_name": "Mrs. Shanmuga Priya P",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "IT172",
+      "staff_name": "Mrs. Nisha R S",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 2
+    },
+    {
+      "staff_code": "CS327",
+      "staff_name": "Mrs. Rajammal K",
+      "day": "wed",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 2
+    },
+    {
+      "staff_code": "IT228",
+      "staff_name": "Mrs. Nirmala Anandhi Y",
+      "day": "fri",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "IT265",
+      "staff_name": "Mr. Aswin Jeba Mahir A",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "IT270",
+      "staff_name": "Kapilamithran  S",
+      "day": "wed",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 5
+    },
+    {
+      "staff_code": "IT270",
+      "staff_name": "Kapilamithran  S",
+      "day": "saturday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "CS250",
+      "staff_name": "Mrs. S.Bakiyalakshmi",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "NS3",
+      "staff_name": "New Staff 3 N",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "TCH2006",
+      "staff_name": "Mrs. Fowzia Sihana",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 7
+    },
+    {
+      "staff_code": "TCH2006",
+      "staff_name": "Mrs. Fowzia Sihana",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 5
+    },
+    {
+      "staff_code": "IT199",
+      "staff_name": "Mrs. Dr.A.Kalaivani",
+      "day": "wed",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "IT274",
+      "staff_name": "savithri R",
+      "day": "saturday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "IT216",
+      "staff_name": "Ms. S Renuka Devi",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 5
+    },
+    {
+      "staff_code": "IT269",
+      "staff_name": "Dhivya Bhavani V",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "CS226",
+      "staff_name": "Mrs. Santhiya M",
+      "day": "wed",
+      "earliest_start": "9:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 9,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "CS272",
+      "staff_name": "Mrs. S.Vinothini",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 6
+    },
+    {
+      "staff_code": "CS238",
+      "staff_name": "Mrs. Sathiyavathi S",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "CS335",
+      "staff_name": "Mr. Adhithyan.S",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 5
+    },
+    {
+      "staff_code": "IT272",
+      "staff_name": "Mr. N.Karthikeyan",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 5
+    },
+    {
+      "staff_code": "CS182",
+      "staff_name": "Ms. Jananee",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 6
+    },
+    {
+      "staff_code": "CS182",
+      "staff_name": "Ms. Jananee",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 5
+    },
+    {
+      "staff_code": "CS251",
+      "staff_name": "Mr. Dr.P.Shanmugam",
+      "day": "wed",
+      "earliest_start": "9:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 9,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "CS239",
+      "staff_name": "Mr. Srinivasan N",
+      "day": "wed",
+      "earliest_start": "9:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 9,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "CS239",
+      "staff_name": "Mr. Srinivasan N",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "IT251",
+      "staff_name": "Mr. Suresh Kumar K",
+      "day": "fri",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 2
+    },
+    {
+      "staff_code": "CS313",
+      "staff_name": "Mr. Ayyadurai M",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 5
+    },
+    {
+      "staff_code": "AIML-NS6",
+      "staff_name": "New Faculty Artificial Intelligence & Machine Learning (NS-AIML-NS6)",
+      "day": "saturday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 2
+    },
+    {
+      "staff_code": "CS208",
+      "staff_name": "Mr. Dr. N. Duraimurugan",
+      "day": "monday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "NF2",
+      "staff_name": "New Faculty Artificial Intelligence & Data Science (NS-NF2)",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "New Staff-3",
+      "staff_name": "New Faculty Computer Science & Engineering (NS-New Staff-3)",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 6
+    },
+    {
+      "staff_code": "New Staff-3",
+      "staff_name": "New Faculty Computer Science & Engineering (NS-New Staff-3)",
+      "day": "wed",
+      "earliest_start": "9:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 9,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "New Staff-3",
+      "staff_name": "New Faculty Computer Science & Engineering (NS-New Staff-3)",
+      "day": "fri",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 6
+    },
+    {
+      "staff_code": "CS298",
+      "staff_name": "Ms. Divya M",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "CS291",
+      "staff_name": "Mrs. Mahesmeena",
+      "day": "wed",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 5
+    },
+    {
+      "staff_code": "New Staff-2",
+      "staff_name": "New Faculty Computer Science & Engineering (NS-New Staff-2)",
+      "day": "wed",
+      "earliest_start": "9:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 9,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "CS338",
+      "staff_name": "Ms. T.Ramala",
+      "day": "wed",
+      "earliest_start": "9:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 9,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 2
+    },
+    {
+      "staff_code": "CS308",
+      "staff_name": "Mrs. Aswana Lal",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "CS308",
+      "staff_name": "Mrs. Aswana Lal",
+      "day": "wed",
+      "earliest_start": "9:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 9,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 2
+    },
+    {
+      "staff_code": "CS224",
+      "staff_name": "Mrs. Bhavani M",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "IT194",
+      "staff_name": "Mrs. Farjana U",
+      "day": "wed",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 5
+    },
+    {
+      "staff_code": "IT194",
+      "staff_name": "Mrs. Farjana U",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "CS322",
+      "staff_name": "Ms. Dharshini B S",
+      "day": "wed",
+      "earliest_start": "9:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 9,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "CS322",
+      "staff_name": "Ms. Dharshini B S",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "CS237",
+      "staff_name": "Mr. Dr.S.Anantha Sivaprakasam",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 5
+    },
+    {
+      "staff_code": "CS237",
+      "staff_name": "Mr. Dr.S.Anantha Sivaprakasam",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "CS314",
+      "staff_name": "Mrs. Deepa B",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "FT08",
+      "staff_name": "Mrs. Aruthra Devi G",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "FT08",
+      "staff_name": "Mrs. Aruthra Devi G",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "EC162",
+      "staff_name": "Mrs. Benazir Begam R",
+      "day": "fri",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "EC197",
+      "staff_name": "Mrs. Ms. Indhumathi G",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "EC210",
+      "staff_name": "Mr. Senthilraja B",
+      "day": "monday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 5
+    },
+    {
+      "staff_code": "EC175",
+      "staff_name": "Mrs. Sasirekha D",
+      "day": "monday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 6
+    },
+    {
+      "staff_code": "AU49",
+      "staff_name": "Mr. R. Edwin Joseph",
+      "day": "wed",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 2
+    },
+    {
+      "staff_code": "CV29",
+      "staff_name": "Mrs. S. Muthu Lakshmi",
+      "day": "wed",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "CV61",
+      "staff_name": "Dr. S Premkumar",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "CV67",
+      "staff_name": "Mr. Ammaiappan.M",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "AE60",
+      "staff_name": "Mr. Balaji Rajendran",
+      "day": "thur",
+      "earliest_start": "9:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 9,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "AE72",
+      "staff_name": "Mr. D.L. Vasthadu Vasu Kannah",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 2
+    },
+    {
+      "staff_code": "AE72",
+      "staff_name": "Mr. D.L. Vasthadu Vasu Kannah",
+      "day": "saturday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 2
+    },
+    {
+      "staff_code": "ME147",
+      "staff_name": "Mrs. Uma Maheswari M",
+      "day": "wed",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 6
+    },
+    {
+      "staff_code": "ME256",
+      "staff_name": "Mr. Dr Ramesh Shanmugam",
+      "day": "saturday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "ME239",
+      "staff_name": "Mr. Dr.P.Chandramohan",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "BT181",
+      "staff_name": "Dr. Preethy K R",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "EC163",
+      "staff_name": "Mr. Karthi J",
+      "day": "fri",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 5
+    },
+    {
+      "staff_code": "EC163",
+      "staff_name": "Mr. Karthi J",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 2
+    },
+    {
+      "staff_code": "EC167",
+      "staff_name": "Mr. Asokan V",
+      "day": "monday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "EC167",
+      "staff_name": "Mr. Asokan V",
+      "day": "saturday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "EC177",
+      "staff_name": "Mrs. Tamilarasi M",
+      "day": "fri",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "EE135",
+      "staff_name": "Mrs. Aswini A",
+      "day": "saturday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "ME186",
+      "staff_name": "Mr. P T Dineshkumar",
+      "day": "fri",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "EE96",
+      "staff_name": "Mr. D Shyam",
+      "day": "saturday",
+      "earliest_start": "9:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 9,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 5
+    },
+    {
+      "staff_code": "ME210",
+      "staff_name": "Mr. Dr.S.Kumar",
+      "day": "fri",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "EE77",
+      "staff_name": "Mrs. Jayashree K",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "CL11",
+      "staff_name": "Mrs. N Kalaiarasi",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "CL05",
+      "staff_name": "Mrs. Dr. Mary Rosana Nt",
+      "day": "monday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "BM22",
+      "staff_name": "Ms. S. Sudha",
+      "day": "saturday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "BM22",
+      "staff_name": "Ms. S. Sudha",
+      "day": "wed",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 5
+    },
+    {
+      "staff_code": "BM82",
+      "staff_name": "Mrs. Nithyakalyani Krishnan",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "BM83",
+      "staff_name": "Ms. Revathy P",
+      "day": "tuesday",
+      "earliest_start": "9:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 9,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "BM60",
+      "staff_name": "Ms. Karuppathal E",
+      "day": "fri",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "BM86",
+      "staff_name": "Mrs. Shanthipriya A",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "BM86",
+      "staff_name": "Mrs. Shanthipriya A",
+      "day": "fri",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "BM78",
+      "staff_name": "Mr. Ramachandran.R",
+      "day": "wed",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "BM78",
+      "staff_name": "Mr. Ramachandran.R",
+      "day": "thur",
+      "earliest_start": "9:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 9,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "BM78",
+      "staff_name": "Mr. Ramachandran.R",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 7
+    },
+    {
+      "staff_code": "EC192",
+      "staff_name": "Mr. S Sudharsan",
+      "day": "saturday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "EE59",
+      "staff_name": "Mr. Dr. P. Thirusenthil Kumaran",
+      "day": "fri",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 2
+    },
+    {
+      "staff_code": "EE23",
+      "staff_name": "Mr. Santhanakrishnan T",
+      "day": "monday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "FT23",
+      "staff_name": "Mr. Anand R",
+      "day": "fri",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "FT09",
+      "staff_name": "Ms. Dr. Niveadhitha S",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "BT171",
+      "staff_name": "Mrs. Sangeetha Gandhi S",
+      "day": "tuesday",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "FT24",
+      "staff_name": "Dr. Priyadarshini S R",
+      "day": "wed",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "FT26",
+      "staff_name": "Ms. Divyashree J S",
+      "day": "wed",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 5
+    },
+    {
+      "staff_code": "MA116",
+      "staff_name": "Mrs. V. Shakila",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "MA130",
+      "staff_name": "Mrs. Anbarasi.V",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "MA129",
+      "staff_name": "Mrs. M. Subha",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "EC205",
+      "staff_name": "Mr. Ganesamoorthy R",
+      "day": "fri",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "EC147",
+      "staff_name": "Mrs. R Bharathy",
+      "day": "fri",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "EC200",
+      "staff_name": "Ms. M.Brenda",
+      "day": "fri",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "MA144",
+      "staff_name": "Dr. Ramalakshmi K",
+      "day": "wed",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "MA104",
+      "staff_name": "Mrs. S.Vasanthi",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "MA141",
+      "staff_name": "Dr. Thilagavathi R",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    },
+    {
+      "staff_code": "MA08",
+      "staff_name": "Mrs. Dr.V.Lakshmi",
+      "day": "wed",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "MA136",
+      "staff_name": "Mr. Sathiragavan M",
+      "day": "wed",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "MA148",
+      "staff_name": "Dr. Vinod Kumar R",
+      "day": "wed",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "MA118",
+      "staff_name": "Mrs. C.Shanthini",
+      "day": "wed",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 3
+    },
+    {
+      "staff_code": "EC34",
+      "staff_name": "Mrs. Dr. A. Asha",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    }
+  ],
+  "summary": {
+    "total_violation_instances": 132,
+    "staff_with_violations": 111,
+    "violation_days": {
+      "monday": 8,
+      "wed": 32,
+      "tuesday": 27,
+      "fri": 20,
+      "thur": 29,
+      "saturday": 16
+    },
+    "worst_offenders": [
+      {
+        "staff_code": "New Staff-3",
+        "staff_name": "New Faculty Computer Science & Engineering (NS-New Staff-3)",
+        "violation_count": 3
+      },
+      {
+        "staff_code": "BM78",
+        "staff_name": "Mr. Ramachandran.R",
+        "violation_count": 3
+      },
+      {
+        "staff_code": "CS296",
+        "staff_name": "Mrs. Kalpana D",
+        "violation_count": 2
+      },
+      {
+        "staff_code": "CS175",
+        "staff_name": "Mr. Vijay K",
+        "violation_count": 2
+      },
+      {
+        "staff_code": "IT249",
+        "staff_name": "Ms. Priyanka D",
+        "violation_count": 2
+      },
+      {
+        "staff_code": "IT270",
+        "staff_name": "Kapilamithran  S",
+        "violation_count": 2
+      },
+      {
+        "staff_code": "TCH2006",
+        "staff_name": "Mrs. Fowzia Sihana",
+        "violation_count": 2
+      },
+      {
+        "staff_code": "CS182",
+        "staff_name": "Ms. Jananee",
+        "violation_count": 2
+      },
+      {
+        "staff_code": "CS239",
+        "staff_name": "Mr. Srinivasan N",
+        "violation_count": 2
+      },
+      {
+        "staff_code": "CS308",
+        "staff_name": "Mrs. Aswana Lal",
+        "violation_count": 2
+      },
+      {
+        "staff_code": "IT194",
+        "staff_name": "Mrs. Farjana U",
+        "violation_count": 2
+      },
+      {
+        "staff_code": "CS322",
+        "staff_name": "Ms. Dharshini B S",
+        "violation_count": 2
+      },
+      {
+        "staff_code": "CS237",
+        "staff_name": "Mr. Dr.S.Anantha Sivaprakasam",
+        "violation_count": 2
+      },
+      {
+        "staff_code": "FT08",
+        "staff_name": "Mrs. Aruthra Devi G",
+        "violation_count": 2
+      },
+      {
+        "staff_code": "AE72",
+        "staff_name": "Mr. D.L. Vasthadu Vasu Kannah",
+        "violation_count": 2
+      },
+      {
+        "staff_code": "EC163",
+        "staff_name": "Mr. Karthi J",
+        "violation_count": 2
+      },
+      {
+        "staff_code": "EC167",
+        "staff_name": "Mr. Asokan V",
+        "violation_count": 2
+      },
+      {
+        "staff_code": "BM22",
+        "staff_name": "Ms. S. Sudha",
+        "violation_count": 2
+      },
+      {
+        "staff_code": "BM86",
+        "staff_name": "Mrs. Shanthipriya A",
+        "violation_count": 2
+      },
+      {
+        "staff_code": "CS289",
+        "staff_name": "Mr. S Umamaheswararao",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CS176",
+        "staff_name": "Mr. Vijayakumar R",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CS306",
+        "staff_name": "Mr. Thirumalairajan G",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CS315",
+        "staff_name": "Dr. Balasubramanian V",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CS305",
+        "staff_name": "Mr. Dr Parthasarathy C",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CS49",
+        "staff_name": "Mr. Suresh Kumar S",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "IT252",
+        "staff_name": "Mrs. J Jasmine Gabriel",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "IT242",
+        "staff_name": "Mrs. Priya M",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "IT264",
+        "staff_name": "Dr. Raja Ramamoorthi",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "IT212",
+        "staff_name": "Ms. V Akshaya",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "IT224",
+        "staff_name": "Mrs. Jayasri Archana Devi P",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CS66",
+        "staff_name": "Mrs. Sorna Shanthi D",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "IT243",
+        "staff_name": "Mr. Preejith P",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "AU35",
+        "staff_name": "Mr. Magesh M P",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "IT259",
+        "staff_name": "Ms. Bhuvaneshwari Muthukumaran",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "IT198",
+        "staff_name": "Mr. Dr.S.Subbiah",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "IT187",
+        "staff_name": "Mrs. A.P.Aruna Jameela",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "IT260",
+        "staff_name": "Mr. Vimalan M",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "EC172",
+        "staff_name": "Mrs. Shanmuga Priya P",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "IT172",
+        "staff_name": "Mrs. Nisha R S",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CS327",
+        "staff_name": "Mrs. Rajammal K",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "IT228",
+        "staff_name": "Mrs. Nirmala Anandhi Y",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "IT265",
+        "staff_name": "Mr. Aswin Jeba Mahir A",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CS250",
+        "staff_name": "Mrs. S.Bakiyalakshmi",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "NS3",
+        "staff_name": "New Staff 3 N",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "IT199",
+        "staff_name": "Mrs. Dr.A.Kalaivani",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "IT274",
+        "staff_name": "savithri R",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "IT216",
+        "staff_name": "Ms. S Renuka Devi",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "IT269",
+        "staff_name": "Dhivya Bhavani V",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CS226",
+        "staff_name": "Mrs. Santhiya M",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CS272",
+        "staff_name": "Mrs. S.Vinothini",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CS238",
+        "staff_name": "Mrs. Sathiyavathi S",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CS335",
+        "staff_name": "Mr. Adhithyan.S",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "IT272",
+        "staff_name": "Mr. N.Karthikeyan",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CS251",
+        "staff_name": "Mr. Dr.P.Shanmugam",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "IT251",
+        "staff_name": "Mr. Suresh Kumar K",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CS313",
+        "staff_name": "Mr. Ayyadurai M",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "AIML-NS6",
+        "staff_name": "New Faculty Artificial Intelligence & Machine Learning (NS-AIML-NS6)",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CS208",
+        "staff_name": "Mr. Dr. N. Duraimurugan",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "NF2",
+        "staff_name": "New Faculty Artificial Intelligence & Data Science (NS-NF2)",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CS298",
+        "staff_name": "Ms. Divya M",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CS291",
+        "staff_name": "Mrs. Mahesmeena",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "New Staff-2",
+        "staff_name": "New Faculty Computer Science & Engineering (NS-New Staff-2)",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CS338",
+        "staff_name": "Ms. T.Ramala",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CS224",
+        "staff_name": "Mrs. Bhavani M",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CS314",
+        "staff_name": "Mrs. Deepa B",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "EC162",
+        "staff_name": "Mrs. Benazir Begam R",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "EC197",
+        "staff_name": "Mrs. Ms. Indhumathi G",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "EC210",
+        "staff_name": "Mr. Senthilraja B",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "EC175",
+        "staff_name": "Mrs. Sasirekha D",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "AU49",
+        "staff_name": "Mr. R. Edwin Joseph",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CV29",
+        "staff_name": "Mrs. S. Muthu Lakshmi",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CV61",
+        "staff_name": "Dr. S Premkumar",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CV67",
+        "staff_name": "Mr. Ammaiappan.M",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "AE60",
+        "staff_name": "Mr. Balaji Rajendran",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "ME147",
+        "staff_name": "Mrs. Uma Maheswari M",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "ME256",
+        "staff_name": "Mr. Dr Ramesh Shanmugam",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "ME239",
+        "staff_name": "Mr. Dr.P.Chandramohan",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "BT181",
+        "staff_name": "Dr. Preethy K R",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "EC177",
+        "staff_name": "Mrs. Tamilarasi M",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "EE135",
+        "staff_name": "Mrs. Aswini A",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "ME186",
+        "staff_name": "Mr. P T Dineshkumar",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "EE96",
+        "staff_name": "Mr. D Shyam",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "ME210",
+        "staff_name": "Mr. Dr.S.Kumar",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "EE77",
+        "staff_name": "Mrs. Jayashree K",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CL11",
+        "staff_name": "Mrs. N Kalaiarasi",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "CL05",
+        "staff_name": "Mrs. Dr. Mary Rosana Nt",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "BM82",
+        "staff_name": "Mrs. Nithyakalyani Krishnan",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "BM83",
+        "staff_name": "Ms. Revathy P",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "BM60",
+        "staff_name": "Ms. Karuppathal E",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "EC192",
+        "staff_name": "Mr. S Sudharsan",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "EE59",
+        "staff_name": "Mr. Dr. P. Thirusenthil Kumaran",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "EE23",
+        "staff_name": "Mr. Santhanakrishnan T",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "FT23",
+        "staff_name": "Mr. Anand R",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "FT09",
+        "staff_name": "Ms. Dr. Niveadhitha S",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "BT171",
+        "staff_name": "Mrs. Sangeetha Gandhi S",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "FT24",
+        "staff_name": "Dr. Priyadarshini S R",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "FT26",
+        "staff_name": "Ms. Divyashree J S",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "MA116",
+        "staff_name": "Mrs. V. Shakila",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "MA130",
+        "staff_name": "Mrs. Anbarasi.V",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "MA129",
+        "staff_name": "Mrs. M. Subha",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "EC205",
+        "staff_name": "Mr. Ganesamoorthy R",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "EC147",
+        "staff_name": "Mrs. R Bharathy",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "EC200",
+        "staff_name": "Ms. M.Brenda",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "MA144",
+        "staff_name": "Dr. Ramalakshmi K",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "MA104",
+        "staff_name": "Mrs. S.Vasanthi",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "MA141",
+        "staff_name": "Dr. Thilagavathi R",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "MA08",
+        "staff_name": "Mrs. Dr.V.Lakshmi",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "MA136",
+        "staff_name": "Mr. Sathiragavan M",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "MA148",
+        "staff_name": "Dr. Vinod Kumar R",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "MA118",
+        "staff_name": "Mrs. C.Shanthini",
+        "violation_count": 1
+      },
+      {
+        "staff_code": "EC34",
+        "staff_name": "Mrs. Dr. A. Asha",
+        "violation_count": 1
+      }
+    ]
+  }
+}
