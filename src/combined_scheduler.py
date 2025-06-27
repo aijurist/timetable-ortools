@@ -249,10 +249,10 @@ class CombinedScheduler:
             #     'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
             #     'pattern': 'Monday-Saturday'
             # },
-            ('Electronics & Communication Engineering', 5): {
-                'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
-                'pattern': 'Monday-Saturday'
-            },
+            # ('Electronics & Communication Engineering', 5): {
+            #     'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
+            #     'pattern': 'Monday-Saturday'
+            # },
             #   ('Electrical & Electronics Engineering', 5): {
             #     'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
             #     'pattern': 'Monday-Saturday'
@@ -4224,50 +4224,50 @@ class CombinedScheduler:
         # Rewarding every lab assignment incentivizes over-allocation beyond required sessions
         
         # OPTIONAL: Add penalty for over-allocation (courses getting more sessions than base_sessions)
-        if hasattr(self, 'lab_requirements'):
-            for teacher_id in self.lab_requirements:
-                for course_req in self.lab_requirements[teacher_id]:
-                    course_instance_id = course_req['course_instance_id']
-                    base_sessions = course_req['base_sessions']
+        # if hasattr(self, 'lab_requirements'):
+        #     for teacher_id in self.lab_requirements:
+        #         for course_req in self.lab_requirements[teacher_id]:
+        #             course_instance_id = course_req['course_instance_id']
+        #             base_sessions = course_req['base_sessions']
                     
-                    if teacher_id in lab_variables and course_instance_id in lab_variables[teacher_id]:
-                        # Count total assignments for this course
-                        total_assignments = []
+        #             if teacher_id in lab_variables and course_instance_id in lab_variables[teacher_id]:
+        #                 # Count total assignments for this course
+        #                 total_assignments = []
                         
-                        # Get department for this course instance
-                        dept_name = "Computer Science & Engineering"  # Default
-                        semester = None
-                        if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
-                            mapping = self.instance_group_mapping[course_instance_id]
-                            dept_name = mapping['department']
-                            semester = mapping.get('semester')
-                        else:
-                            # Fallback: look up in courses_df
-                            base_id = self._get_base_course_id(course_instance_id)
-                            course_matches = self.courses_df[self.courses_df['id'] == int(base_id)]
-                            if not course_matches.empty:
-                                dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
+        #                 # Get department for this course instance
+        #                 dept_name = "Computer Science & Engineering"  # Default
+        #                 semester = None
+        #                 if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
+        #                     mapping = self.instance_group_mapping[course_instance_id]
+        #                     dept_name = mapping['department']
+        #                     semester = mapping.get('semester')
+        #                 else:
+        #                     # Fallback: look up in courses_df
+        #                     base_id = self._get_base_course_id(course_instance_id)
+        #                     course_matches = self.courses_df[self.courses_df['id'] == int(base_id)]
+        #                     if not course_matches.empty:
+        #                         dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
                         
-                        dept_days = self._get_days_for_department(dept_name, semester)
-                        num_dept_days = len(dept_days)
+        #                 dept_days = self._get_days_for_department(dept_name, semester)
+        #                 num_dept_days = len(dept_days)
                         
-                        for day_idx in range(num_dept_days):
-                            if day_idx in lab_variables[teacher_id][course_instance_id]:
-                                for session_name in self.lab_sessions.keys():
-                                    if session_name in lab_variables[teacher_id][course_instance_id][day_idx]:
-                                        for room_id in self.lab_room_ids:
-                                            if room_id in lab_variables[teacher_id][course_instance_id][day_idx][session_name]:
-                                                total_assignments.append(lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id])
+        #                 for day_idx in range(num_dept_days):
+        #                     if day_idx in lab_variables[teacher_id][course_instance_id]:
+        #                         for session_name in self.lab_sessions.keys():
+        #                             if session_name in lab_variables[teacher_id][course_instance_id][day_idx]:
+        #                                 for room_id in self.lab_room_ids:
+        #                                     if room_id in lab_variables[teacher_id][course_instance_id][day_idx][session_name]:
+        #                                         total_assignments.append(lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id])
                         
-                        if total_assignments:
-                            # Create penalty for over-allocation (sessions > base_sessions)
-                            over_allocation_penalty = model.NewIntVar(0, len(total_assignments), f'over_alloc_penalty_{course_instance_id}')
-                            model.Add(over_allocation_penalty >= sum(total_assignments) - base_sessions)
-                            model.Add(over_allocation_penalty >= 0)
+        #                 if total_assignments:
+        #                     # Create penalty for over-allocation (sessions > base_sessions)
+        #                     over_allocation_penalty = model.NewIntVar(0, len(total_assignments), f'over_alloc_penalty_{course_instance_id}')
+        #                     model.Add(over_allocation_penalty >= sum(total_assignments) - base_sessions)
+        #                     model.Add(over_allocation_penalty >= 0)
                             
-                            # Apply penalty to objective (subtract penalty to discourage over-allocation)
-                            over_allocation_weight = 1000  # Strong penalty for over-allocation
-                            objective_terms.append(-over_allocation_weight * over_allocation_penalty)
+        #                     # Apply penalty to objective (subtract penalty to discourage over-allocation)
+        #                     over_allocation_weight = 1000  # Strong penalty for over-allocation
+        #                     objective_terms.append(-over_allocation_weight * over_allocation_penalty)
         
         # Theory objective: maximize group timeslot allocations (all time slots equal)
         for group_name, day_slots in group_timeslot_vars.items():
@@ -4413,11 +4413,11 @@ class CombinedScheduler:
         """Solve the combined scheduling model using two-phase approach."""
         # Create the solver
         solver = cp_model.CpSolver()
-        solver.parameters.max_time_in_seconds = 1000
+        solver.parameters.max_time_in_seconds = 2000
         solver.parameters.num_search_workers = 16
         solver.parameters.max_memory_in_mb = 30000
         solver.parameters.log_search_progress = True
-        solver.parameters.stop_after_first_solution= True
+        # solver.parameters.stop_after_first_solution= True
         
         self.logger.info("Solving combined scheduling model...")
         status = solver.Solve(model)
