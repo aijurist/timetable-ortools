@@ -1,0 +1,337 @@
+{
+  "department": "Computer Science & Business Systems",
+  "semester": "7",
+  "solution_found": true,
+  "objective_value": 0.0,
+  "num_groups": 6,
+  "groups": [
+    {
+      "group_id": 1,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1018,
+          "course_id": 2193,
+          "course_code": "CB19742",
+          "course_name": "IT Workshop",
+          "course_type": "LoT",
+          "teacher_id": "164.0",
+          "semester": 7,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1070,
+          "course_id": 2193,
+          "course_code": "CB19742",
+          "course_name": "IT Workshop",
+          "course_type": "LoT",
+          "teacher_id": "1866.0",
+          "semester": 7,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "1866.0",
+        "164.0"
+      ],
+      "courses": [
+        "CB19742"
+      ],
+      "total_workload": 8
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1005,
+          "course_id": 2192,
+          "course_code": "CB19711",
+          "course_name": "Project Evaluation I",
+          "course_type": "L",
+          "teacher_id": "165.0",
+          "semester": 7,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1019,
+          "course_id": 2192,
+          "course_code": "CB19711",
+          "course_name": "Project Evaluation I",
+          "course_type": "L",
+          "teacher_id": "164.0",
+          "semester": 7,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "164.0",
+        "165.0"
+      ],
+      "courses": [
+        "CB19711"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1008,
+          "course_id": 2200,
+          "course_code": "CB19P45",
+          "course_name": "Modern Web Applications",
+          "course_type": "LoT",
+          "teacher_id": "170.0",
+          "semester": 7,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1069,
+          "course_id": 2200,
+          "course_code": "CB19P45",
+          "course_name": "Modern Web Applications",
+          "course_type": "LoT",
+          "teacher_id": "1864.0",
+          "semester": 7,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "1864.0",
+        "170.0"
+      ],
+      "courses": [
+        "CB19P45"
+      ],
+      "total_workload": 10
+    },
+    {
+      "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1022,
+          "course_id": 2194,
+          "course_code": "CB19741",
+          "course_name": "Usability Design of Software Applications",
+          "course_type": "LoT",
+          "teacher_id": "1865.0",
+          "semester": 7,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1038,
+          "course_id": 2194,
+          "course_code": "CB19741",
+          "course_name": "Usability Design of Software Applications",
+          "course_type": "LoT",
+          "teacher_id": "167.0",
+          "semester": 7,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "1865.0",
+        "167.0"
+      ],
+      "courses": [
+        "CB19741"
+      ],
+      "total_workload": 10
+    },
+    {
+      "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1838,
+          "course_id": 1871,
+          "course_code": "BA19701",
+          "course_name": "Principles of Financial Management",
+          "course_type": "T",
+          "teacher_id": "468.0",
+          "semester": 7,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1840,
+          "course_id": 1871,
+          "course_code": "BA19701",
+          "course_name": "Principles of Financial Management",
+          "course_type": "T",
+          "teacher_id": "475.0",
+          "semester": 7,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "468.0",
+        "475.0"
+      ],
+      "courses": [
+        "BA19701"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1833,
+          "course_id": 2195,
+          "course_code": "BA19702",
+          "course_name": "Essentials of Human Resources Management",
+          "course_type": "T",
+          "teacher_id": "478.0",
+          "semester": 7,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1835,
+          "course_id": 2195,
+          "course_code": "BA19702",
+          "course_name": "Essentials of Human Resources Management",
+          "course_type": "T",
+          "teacher_id": "492.0",
+          "semester": 7,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "478.0",
+        "492.0"
+      ],
+      "courses": [
+        "BA19702"
+      ],
+      "total_workload": 4
+    }
+  ],
+  "pe_group_included": false,
+  "summary": {
+    "total_instances": 12,
+    "pe_instances": 0,
+    "lab_instances": 8,
+    "theory_instances": 10,
+    "unique_courses": 6,
+    "unique_teachers": 11,
+    "pe_course_codes": []
+  }
+}

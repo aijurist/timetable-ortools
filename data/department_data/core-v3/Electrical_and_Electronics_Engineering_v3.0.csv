@@ -39,3 +39,4 @@ id,student_count,academic_year,semester,requires_special_scheduling,is_assistant
 1213,70,2,3,0,0,430.0,MA125,Mrs.,Dr. Priya Nair,priyanair@rajalakshmi.edu.in,,,,,,423,MA23312,Fourier series and Number theory,T,3,0,1,4.0,Electrical & Electronics Engineering,Mathematics,22.0,Electrical & Electronics Engineering,,,,,,,,,,NE
 1214,70,2,3,0,0,414.0,MA21,Mr.,V James,james.v@rajalakshmi.edu.in,,,,,,423,MA23312,Fourier series and Number theory,T,3,0,1,4.0,Electrical & Electronics Engineering,Mathematics,22.0,Electrical & Electronics Engineering,,,,,,,,,,NE
 2081,70,3,5,0,1,303.0,EE48,Mrs.,V Devi Maheswaran,devimaheswaran.v@rajalakshmi.edu.in,338.0,EE138,Dr.,Dhandayuthapani S,dhandayuthapani.s@rajalakshmi.edu.in,330,EE23521,Control and Instrumentation Laboratory,L,0,2,0,1.0,Electrical & Electronics Engineering,Electrical & Electronics Engineering,15.0,Electrical & Electronics Engineering,NTL,,,Core-Lab,LAB,B318,B Block,Power System Simulation Lab,High-tech,NE
+

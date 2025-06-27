@@ -202,7 +202,7 @@ RO23422,Robotics and Automation,1,Industrial Automation Lab,,,,,"Industrial Auto
  Laboratory-I"
 RO23522,Robotics and Automation,1,Industrial Automation Lab,,,,,"Industrial Automation 
  Laboratory-II"
-RO23332,Robotics and Automation,2,Strength of Materials Lab,Dynamics Lab,,,,Mechanics of Materials
+RO23332,Robotics and Automation,2,Strength of Materials Lab,,,,,Mechanics of Materials
 RO23421,Robotics and Automation,1,Isaac Asimov Laboratory,,,,,Mechanisms and  Robotics laboratory
 RO23521,Robotics and Automation,1,Isaac Asimov Laboratory,,,,,Mobile Robotics laboratory
 RO23731,Robotics and Automation,1,Isaac Asimov Laboratory,,,,,"Robot Path Planning and 
@@ -239,3 +239,5 @@ EE23622,Electrical and Electronics Engineering,1,Power System Simulation Lab,,,,
 EC23632,Electronics and Communication Engineering,1,Networks Lab,,,,,Communication Networks
 MT23722,Mechatronics Engineering,1,Industrial Automation Lab,,,,,Industrial Automation Laboratory
 CD19741,Computer Science & Design,1,Mech CAD Lab,,,,,3D Printing and Design
+AT23522,Automobile Engineering,1,TANCAM,,,,,Computer Aided Vehicle Design Data Characteristics Laboratory
+CH19713,Chemical Engineering,1,Computer Application in Chemical Engg Lab,,,,,Computer Applications In  Chemical Engineering Lab

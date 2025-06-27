@@ -1,0 +1,418 @@
+{
+  "department": "Mechanical Engineering",
+  "semester": "5",
+  "solution_found": true,
+  "objective_value": 0.0,
+  "num_groups": 6,
+  "groups": [
+    {
+      "group_id": 1,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 2050,
+          "course_id": 452,
+          "course_code": "ME23521",
+          "course_name": "Component Modeling Laboratory",
+          "course_type": "L",
+          "teacher_id": "498.0",
+          "semester": 5,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 2046,
+          "course_id": 832,
+          "course_code": "ME23VAP1",
+          "course_name": "Windchill Training",
+          "course_type": "L",
+          "teacher_id": "507.0",
+          "semester": 5,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "507.0",
+        "498.0"
+      ],
+      "courses": [
+        "ME23521",
+        "ME23VAP1"
+      ],
+      "total_workload": 6
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 736,
+          "course_id": 453,
+          "course_code": "ME23531",
+          "course_name": "Heat and Mass Transfer",
+          "course_type": "LoT",
+          "teacher_id": "522.0",
+          "semester": 5,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 737,
+          "course_id": 454,
+          "course_code": "ME23532",
+          "course_name": "Metrology and Measurements",
+          "course_type": "LoT",
+          "teacher_id": "533.0",
+          "semester": 5,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "522.0",
+        "533.0"
+      ],
+      "courses": [
+        "ME23531",
+        "ME23532"
+      ],
+      "total_workload": 10
+    },
+    {
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 740,
+          "course_id": 452,
+          "course_code": "ME23521",
+          "course_name": "Component Modeling Laboratory",
+          "course_type": "L",
+          "teacher_id": "524.0",
+          "semester": 5,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 2047,
+          "course_id": 832,
+          "course_code": "ME23VAP1",
+          "course_name": "Windchill Training",
+          "course_type": "L",
+          "teacher_id": "560.0",
+          "semester": 5,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "560.0",
+        "524.0"
+      ],
+      "courses": [
+        "ME23521",
+        "ME23VAP1"
+      ],
+      "total_workload": 6
+    },
+    {
+      "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 735,
+          "course_id": 453,
+          "course_code": "ME23531",
+          "course_name": "Heat and Mass Transfer",
+          "course_type": "LoT",
+          "teacher_id": "521.0",
+          "semester": 5,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 738,
+          "course_id": 454,
+          "course_code": "ME23532",
+          "course_name": "Metrology and Measurements",
+          "course_type": "LoT",
+          "teacher_id": "514.0",
+          "semester": 5,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "521.0",
+        "514.0"
+      ],
+      "courses": [
+        "ME23531",
+        "ME23532"
+      ],
+      "total_workload": 10
+    },
+    {
+      "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 710,
+          "course_id": 451,
+          "course_code": "ME23511",
+          "course_name": "Machine Design",
+          "course_type": "T",
+          "teacher_id": "543.0",
+          "semester": 5,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 724,
+          "course_id": 388,
+          "course_code": "GE23511",
+          "course_name": "Economics for Engineers",
+          "course_type": "T",
+          "teacher_id": "540.0",
+          "semester": 5,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "540.0",
+        "543.0"
+      ],
+      "courses": [
+        "GE23511",
+        "ME23511"
+      ],
+      "total_workload": 6
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 664,
+          "course_id": 451,
+          "course_code": "ME23511",
+          "course_name": "Machine Design",
+          "course_type": "T",
+          "teacher_id": "506.0",
+          "semester": 5,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 723,
+          "course_id": 388,
+          "course_code": "GE23511",
+          "course_name": "Economics for Engineers",
+          "course_type": "T",
+          "teacher_id": "520.0",
+          "semester": 5,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "520.0",
+        "506.0"
+      ],
+      "courses": [
+        "GE23511",
+        "ME23511"
+      ],
+      "total_workload": 6
+    },
+    {
+      "group_id": 7,
+      "is_pe_group": true,
+      "group_type": "PE",
+      "instances": [
+        {
+          "id": 726,
+          "course_id": 530,
+          "course_code": "ME23P01",
+          "course_name": "Industrial Safety",
+          "course_type": "T",
+          "teacher_id": "528.0",
+          "semester": 5,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 777,
+          "course_id": 529,
+          "course_code": "ME23P01",
+          "course_name": "Automobile Engineering",
+          "course_type": "T",
+          "teacher_id": "517.0",
+          "semester": 5,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 778,
+          "course_id": 529,
+          "course_code": "ME23P01",
+          "course_name": "Automobile Engineering",
+          "course_type": "T",
+          "teacher_id": "529.0",
+          "semester": 5,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "529.0",
+        "517.0",
+        "528.0"
+      ],
+      "courses": [
+        "ME23P01"
+      ],
+      "total_workload": 9
+    }
+  ],
+  "pe_group_included": true,
+  "summary": {
+    "total_instances": 12,
+    "pe_instances": 3,
+    "lab_instances": 8,
+    "theory_instances": 8,
+    "unique_courses": 6,
+    "unique_teachers": 12,
+    "pe_course_codes": [
+      "ME23P01"
+    ]
+  }
+}
