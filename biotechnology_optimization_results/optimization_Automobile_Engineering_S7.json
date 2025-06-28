@@ -44,6 +44,39 @@
       "group_type": "Regular",
       "instances": [
         {
+          "id": 231,
+          "course_id": 656,
+          "course_code": "AT19711",
+          "course_name": "AI and ML for Automobile  Engineers",
+          "course_type": "L",
+          "teacher_id": "64.0",
+          "semester": 7,
+          "course_dept": "Automobile Engineering",
+          "student_dept": "Automobile Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 6,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 35,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "64.0"
+      ],
+      "courses": [
+        "AT19711"
+      ],
+      "total_workload": 6
+    },
+    {
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
           "id": 229,
           "course_id": 653,
           "course_code": "AT19722",
@@ -72,7 +105,7 @@
       "total_workload": 2
     },
     {
-      "group_id": 3,
+      "group_id": 4,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -103,39 +136,6 @@
         "AT19723"
       ],
       "total_workload": 2
-    },
-    {
-      "group_id": 4,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 231,
-          "course_id": 656,
-          "course_code": "AT19711",
-          "course_name": "AI and ML for Automobile  Engineers",
-          "course_type": "L",
-          "teacher_id": "64.0",
-          "semester": 7,
-          "course_dept": "Automobile Engineering",
-          "student_dept": "Automobile Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 6,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 35,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "64.0"
-      ],
-      "courses": [
-        "AT19711"
-      ],
-      "total_workload": 6
     },
     {
       "group_id": 5,
@@ -176,39 +176,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 825,
-          "course_id": 650,
-          "course_code": "AT19P73",
-          "course_name": "Automotive Safety",
-          "course_type": "T",
-          "teacher_id": "56.0",
-          "semester": 7,
-          "course_dept": "Automobile Engineering",
-          "student_dept": "Automobile Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 35,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "56.0"
-      ],
-      "courses": [
-        "AT19P73"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 7,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 224,
           "course_id": 648,
           "course_code": "AT19702",
@@ -233,6 +200,39 @@
       ],
       "courses": [
         "AT19702"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 7,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 825,
+          "course_id": 650,
+          "course_code": "AT19P73",
+          "course_name": "Automotive Safety",
+          "course_type": "T",
+          "teacher_id": "56.0",
+          "semester": 7,
+          "course_dept": "Automobile Engineering",
+          "student_dept": "Automobile Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 35,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "56.0"
+      ],
+      "courses": [
+        "AT19P73"
       ],
       "total_workload": 3
     }

@@ -11,45 +11,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 2276,
-          "course_id": 425,
-          "course_code": "MA23331",
-          "course_name": "Transforms and Statistics",
-          "course_type": "LoT",
-          "teacher_id": "420.0",
-          "semester": 3,
-          "course_dept": "Civil Engineering",
-          "student_dept": "Civil Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "420.0"
-      ],
-      "courses": [
-        "MA23331"
-      ],
-      "total_workload": 5
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 264,
-          "course_id": 188,
-          "course_code": "CE23321",
-          "course_name": "Construction Materials Laboratory",
+          "id": 337,
+          "course_id": 263,
+          "course_code": "CS23422",
+          "course_name": "Python Programming for Machine Learning",
           "course_type": "L",
-          "teacher_id": "159.0",
+          "teacher_id": "183.0",
           "semester": 3,
           "course_dept": "Civil Engineering",
           "student_dept": "Civil Engineering",
@@ -64,15 +31,15 @@
         }
       ],
       "teachers": [
-        "159.0"
+        "183.0"
       ],
       "courses": [
-        "CE23321"
+        "CS23422"
       ],
       "total_workload": 4
     },
     {
-      "group_id": 3,
+      "group_id": 2,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -105,17 +72,50 @@
       "total_workload": 5
     },
     {
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 2276,
+          "course_id": 425,
+          "course_code": "MA23331",
+          "course_name": "Transforms and Statistics",
+          "course_type": "LoT",
+          "teacher_id": "420.0",
+          "semester": 3,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "420.0"
+      ],
+      "courses": [
+        "MA23331"
+      ],
+      "total_workload": 5
+    },
+    {
       "group_id": 4,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
         {
-          "id": 337,
-          "course_id": 263,
-          "course_code": "CS23422",
-          "course_name": "Python Programming for Machine Learning",
+          "id": 264,
+          "course_id": 188,
+          "course_code": "CE23321",
+          "course_name": "Construction Materials Laboratory",
           "course_type": "L",
-          "teacher_id": "183.0",
+          "teacher_id": "159.0",
           "semester": 3,
           "course_dept": "Civil Engineering",
           "student_dept": "Civil Engineering",
@@ -130,10 +130,10 @@
         }
       ],
       "teachers": [
-        "183.0"
+        "159.0"
       ],
       "courses": [
-        "CS23422"
+        "CE23321"
       ],
       "total_workload": 4
     },
@@ -176,39 +176,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 262,
-          "course_id": 186,
-          "course_code": "CE23312",
-          "course_name": "Fluid Mechanics",
-          "course_type": "T",
-          "teacher_id": "159.0",
-          "semester": 3,
-          "course_dept": "Civil Engineering",
-          "student_dept": "Civil Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "159.0"
-      ],
-      "courses": [
-        "CE23312"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 7,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 291,
           "course_id": 185,
           "course_code": "CE23311",
@@ -233,6 +200,39 @@
       ],
       "courses": [
         "CE23311"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 7,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 262,
+          "course_id": 186,
+          "course_code": "CE23312",
+          "course_name": "Fluid Mechanics",
+          "course_type": "T",
+          "teacher_id": "159.0",
+          "semester": 3,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "159.0"
+      ],
+      "courses": [
+        "CE23312"
       ],
       "total_workload": 3
     }

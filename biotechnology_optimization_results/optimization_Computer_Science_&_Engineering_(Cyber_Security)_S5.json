@@ -11,39 +11,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 1039,
-          "course_id": 1530,
-          "course_code": "CR23532",
-          "course_name": "Cyber and Digital Forensics",
-          "course_type": "LoT",
-          "teacher_id": "1791.0",
-          "semester": 5,
-          "course_dept": "Computer Science & Engineering (Cyber Security)",
-          "student_dept": "Computer Science & Engineering (Cyber Security)",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "1791.0"
-      ],
-      "courses": [
-        "CR23532"
-      ],
-      "total_workload": 5
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 1035,
           "course_id": 2206,
           "course_code": "CS23533",
@@ -72,7 +39,7 @@
       "total_workload": 5
     },
     {
-      "group_id": 3,
+      "group_id": 2,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -105,40 +72,7 @@
       "total_workload": 7
     },
     {
-      "group_id": 4,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 980,
-          "course_id": 1529,
-          "course_code": "CR23531",
-          "course_name": "Ethical Hacking",
-          "course_type": "LoT",
-          "teacher_id": "238.0",
-          "semester": 5,
-          "course_dept": "Computer Science & Engineering (Cyber Security)",
-          "student_dept": "Computer Science & Engineering (Cyber Security)",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "238.0"
-      ],
-      "courses": [
-        "CR23531"
-      ],
-      "total_workload": 5
-    },
-    {
-      "group_id": 5,
+      "group_id": 3,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -167,6 +101,72 @@
       ],
       "courses": [
         "CS23432"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1039,
+          "course_id": 1530,
+          "course_code": "CR23532",
+          "course_name": "Cyber and Digital Forensics",
+          "course_type": "LoT",
+          "teacher_id": "1791.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Engineering (Cyber Security)",
+          "student_dept": "Computer Science & Engineering (Cyber Security)",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "1791.0"
+      ],
+      "courses": [
+        "CR23532"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 980,
+          "course_id": 1529,
+          "course_code": "CR23531",
+          "course_name": "Ethical Hacking",
+          "course_type": "LoT",
+          "teacher_id": "238.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Engineering (Cyber Security)",
+          "student_dept": "Computer Science & Engineering (Cyber Security)",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "238.0"
+      ],
+      "courses": [
+        "CR23531"
       ],
       "total_workload": 5
     }

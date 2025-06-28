@@ -11,119 +11,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 819,
-          "course_id": 257,
-          "course_code": "CS23331",
-          "course_name": "Design and Analysis of Algorithms",
-          "course_type": "LoT",
-          "teacher_id": "393.0",
-          "semester": 3,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 820,
-          "course_id": 257,
-          "course_code": "CS23331",
-          "course_name": "Design and Analysis of Algorithms",
-          "course_type": "LoT",
-          "teacher_id": "415.0",
-          "semester": 3,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 821,
-          "course_id": 257,
-          "course_code": "CS23331",
-          "course_name": "Design and Analysis of Algorithms",
-          "course_type": "LoT",
-          "teacher_id": "429.0",
-          "semester": 3,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 822,
-          "course_id": 257,
-          "course_code": "CS23331",
-          "course_name": "Design and Analysis of Algorithms",
-          "course_type": "LoT",
-          "teacher_id": "391.0",
-          "semester": 3,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 823,
-          "course_id": 257,
-          "course_code": "CS23331",
-          "course_name": "Design and Analysis of Algorithms",
-          "course_type": "LoT",
-          "teacher_id": "400.0",
-          "semester": 3,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "429.0",
-        "415.0",
-        "391.0",
-        "393.0",
-        "400.0"
-      ],
-      "courses": [
-        "CS23331"
-      ],
-      "total_workload": 25
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 2088,
           "course_id": 826,
           "course_code": "IT23331",
@@ -220,16 +107,128 @@
         }
       ],
       "teachers": [
+        "269.0",
         "395.0",
-        "401.0",
-        "305.0",
         "315.0",
-        "269.0"
+        "401.0",
+        "305.0"
       ],
       "courses": [
         "IT23331"
       ],
       "total_workload": 25
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": "813-A",
+          "course_id": 258,
+          "course_code": "CS23332",
+          "course_name": "Database Management Systems",
+          "course_type": "LoT",
+          "teacher_id": "408.0",
+          "semester": 3,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": "813-A",
+          "co_scheduled_id": 1
+        },
+        {
+          "id": "813-B",
+          "course_id": 258,
+          "course_code": "CS23332",
+          "course_name": "Database Management Systems",
+          "course_type": "LoT",
+          "teacher_id": "408.0",
+          "semester": 3,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": "813-B",
+          "co_scheduled_id": 1
+        },
+        {
+          "id": 814,
+          "course_id": 258,
+          "course_code": "CS23332",
+          "course_name": "Database Management Systems",
+          "course_type": "LoT",
+          "teacher_id": "405.0",
+          "semester": 3,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 815,
+          "course_id": 258,
+          "course_code": "CS23332",
+          "course_name": "Database Management Systems",
+          "course_type": "LoT",
+          "teacher_id": "404.0",
+          "semester": 3,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 816,
+          "course_id": 258,
+          "course_code": "CS23332",
+          "course_name": "Database Management Systems",
+          "course_type": "LoT",
+          "teacher_id": "421.0",
+          "semester": 3,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "404.0",
+        "405.0",
+        "421.0",
+        "408.0"
+      ],
+      "courses": [
+        "CS23332"
+      ],
+      "total_workload": 35
     },
     {
       "group_id": 3,
@@ -333,11 +332,11 @@
         }
       ],
       "teachers": [
-        "378.0",
-        "1856.0",
+        "383.0",
         "402.0",
         "384.0",
-        "383.0"
+        "378.0",
+        "1856.0"
       ],
       "courses": [
         "CS23333"
@@ -350,56 +349,18 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": "813-A",
-          "course_id": 258,
-          "course_code": "CS23332",
-          "course_name": "Database Management Systems",
+          "id": 819,
+          "course_id": 257,
+          "course_code": "CS23331",
+          "course_name": "Design and Analysis of Algorithms",
           "course_type": "LoT",
-          "teacher_id": "408.0",
+          "teacher_id": "393.0",
           "semester": 3,
           "course_dept": "Information Technology",
           "student_dept": "Information Technology",
           "has_lab": true,
           "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": "813-A",
-          "co_scheduled_id": 1
-        },
-        {
-          "id": "813-B",
-          "course_id": 258,
-          "course_code": "CS23332",
-          "course_name": "Database Management Systems",
-          "course_type": "LoT",
-          "teacher_id": "408.0",
-          "semester": 3,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": "813-B",
-          "co_scheduled_id": 1
-        },
-        {
-          "id": 814,
-          "course_id": 258,
-          "course_code": "CS23332",
-          "course_name": "Database Management Systems",
-          "course_type": "LoT",
-          "teacher_id": "405.0",
-          "semester": 3,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
+          "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
@@ -407,18 +368,18 @@
           "co_scheduled_id": null
         },
         {
-          "id": 815,
-          "course_id": 258,
-          "course_code": "CS23332",
-          "course_name": "Database Management Systems",
+          "id": 820,
+          "course_id": 257,
+          "course_code": "CS23331",
+          "course_name": "Design and Analysis of Algorithms",
           "course_type": "LoT",
-          "teacher_id": "404.0",
+          "teacher_id": "415.0",
           "semester": 3,
           "course_dept": "Information Technology",
           "student_dept": "Information Technology",
           "has_lab": true,
           "has_theory": true,
-          "practical_hours": 4,
+          "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
@@ -426,18 +387,56 @@
           "co_scheduled_id": null
         },
         {
-          "id": 816,
-          "course_id": 258,
-          "course_code": "CS23332",
-          "course_name": "Database Management Systems",
+          "id": 821,
+          "course_id": 257,
+          "course_code": "CS23331",
+          "course_name": "Design and Analysis of Algorithms",
           "course_type": "LoT",
-          "teacher_id": "421.0",
+          "teacher_id": "429.0",
           "semester": 3,
           "course_dept": "Information Technology",
           "student_dept": "Information Technology",
           "has_lab": true,
           "has_theory": true,
-          "practical_hours": 4,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 822,
+          "course_id": 257,
+          "course_code": "CS23331",
+          "course_name": "Design and Analysis of Algorithms",
+          "course_type": "LoT",
+          "teacher_id": "391.0",
+          "semester": 3,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 823,
+          "course_id": 257,
+          "course_code": "CS23331",
+          "course_name": "Design and Analysis of Algorithms",
+          "course_type": "LoT",
+          "teacher_id": "400.0",
+          "semester": 3,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
@@ -446,15 +445,16 @@
         }
       ],
       "teachers": [
-        "405.0",
-        "421.0",
-        "408.0",
-        "404.0"
+        "400.0",
+        "391.0",
+        "429.0",
+        "415.0",
+        "393.0"
       ],
       "courses": [
-        "CS23332"
+        "CS23331"
       ],
-      "total_workload": 35
+      "total_workload": 25
     },
     {
       "group_id": 5,
@@ -558,10 +558,10 @@
         }
       ],
       "teachers": [
+        "293.0",
+        "263.0",
         "296.0",
         "282.0",
-        "263.0",
-        "293.0",
         "287.0"
       ],
       "courses": [
@@ -671,11 +671,11 @@
         }
       ],
       "teachers": [
-        "463.0",
-        "418.0",
-        "485.0",
+        "406.0",
         "426.0",
-        "406.0"
+        "463.0",
+        "485.0",
+        "418.0"
       ],
       "courses": [
         "MA23312"

@@ -143,6 +143,39 @@
       "group_type": "Regular",
       "instances": [
         {
+          "id": 401,
+          "course_id": 503,
+          "course_code": "RO23311",
+          "course_name": "Analog and Digital Electronics",
+          "course_type": "T",
+          "teacher_id": "563.0",
+          "semester": 3,
+          "course_dept": "Robotics & Automation",
+          "student_dept": "Robotics & Automation",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "563.0"
+      ],
+      "courses": [
+        "RO23311"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
           "id": 349,
           "course_id": 505,
           "course_code": "RO23313",
@@ -171,7 +204,7 @@
       "total_workload": 3
     },
     {
-      "group_id": 6,
+      "group_id": 7,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -202,39 +235,6 @@
         "RO23312"
       ],
       "total_workload": 4
-    },
-    {
-      "group_id": 7,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 401,
-          "course_id": 503,
-          "course_code": "RO23311",
-          "course_name": "Analog and Digital Electronics",
-          "course_type": "T",
-          "teacher_id": "563.0",
-          "semester": 3,
-          "course_dept": "Robotics & Automation",
-          "student_dept": "Robotics & Automation",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "563.0"
-      ],
-      "courses": [
-        "RO23311"
-      ],
-      "total_workload": 3
     }
   ],
   "pe_group_included": false,

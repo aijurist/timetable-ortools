@@ -88,10 +88,10 @@
         }
       ],
       "teachers": [
+        "277.0",
         "276.0",
-        "281.0",
         "264.0",
-        "277.0"
+        "281.0"
       ],
       "courses": [
         "EC23531",
@@ -182,10 +182,10 @@
         }
       ],
       "teachers": [
+        "272.0",
         "270.0",
-        "279.0",
         "256.0",
-        "272.0"
+        "279.0"
       ],
       "courses": [
         "EC23531",
@@ -199,106 +199,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 126,
-          "course_id": 613,
-          "course_code": "EC23B11",
-          "course_name": "Information theory and coding",
-          "course_type": "T",
-          "teacher_id": "279.0",
-          "semester": 5,
-          "course_dept": "Electronics & Communication Engineering",
-          "student_dept": "Electronics & Communication Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 127,
-          "course_id": 615,
-          "course_code": "EC23E01",
-          "course_name": "Medical electronics",
-          "course_type": "T",
-          "teacher_id": "270.0",
-          "semester": 5,
-          "course_dept": "Electronics & Communication Engineering",
-          "student_dept": "Electronics & Communication Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 128,
-          "course_id": 615,
-          "course_code": "EC23E01",
-          "course_name": "Medical electronics",
-          "course_type": "T",
-          "teacher_id": "260.0",
-          "semester": 5,
-          "course_dept": "Electronics & Communication Engineering",
-          "student_dept": "Electronics & Communication Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 130,
-          "course_id": 616,
-          "course_code": "EC23E01",
-          "course_name": "Introduction to MEMS",
-          "course_type": "T",
-          "teacher_id": "317.0",
-          "semester": 5,
-          "course_dept": "Electronics & Communication Engineering",
-          "student_dept": "Electronics & Communication Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "317.0",
-        "270.0",
-        "279.0",
-        "260.0"
-      ],
-      "courses": [
-        "EC23B11",
-        "EC23E01"
-      ],
-      "total_workload": 12
-    },
-    {
-      "group_id": 4,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 945,
+          "id": 113,
           "course_id": 297,
           "course_code": "EC23512",
           "course_name": "Modern Digital Communication",
           "course_type": "T",
-          "teacher_id": "261.0",
+          "teacher_id": "281.0",
           "semester": 5,
           "course_dept": "Electronics & Communication Engineering",
           "student_dept": "Electronics & Communication Engineering",
@@ -370,10 +276,10 @@
         }
       ],
       "teachers": [
+        "260.0",
         "256.0",
-        "262.0",
-        "261.0",
-        "260.0"
+        "281.0",
+        "262.0"
       ],
       "courses": [
         "EC23512",
@@ -382,10 +288,29 @@
       "total_workload": 12
     },
     {
-      "group_id": 5,
+      "group_id": 4,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
+        {
+          "id": 127,
+          "course_id": 615,
+          "course_code": "EC23E01",
+          "course_name": "Medical electronics",
+          "course_type": "T",
+          "teacher_id": "270.0",
+          "semester": 5,
+          "course_dept": "Electronics & Communication Engineering",
+          "student_dept": "Electronics & Communication Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
         {
           "id": 129,
           "course_id": 616,
@@ -406,12 +331,12 @@
           "co_scheduled_id": null
         },
         {
-          "id": 111,
-          "course_id": 297,
-          "course_code": "EC23512",
-          "course_name": "Modern Digital Communication",
+          "id": 130,
+          "course_id": 616,
+          "course_code": "EC23E01",
+          "course_name": "Introduction to MEMS",
           "course_type": "T",
-          "teacher_id": "247.0",
+          "teacher_id": "317.0",
           "semester": 5,
           "course_dept": "Electronics & Communication Engineering",
           "student_dept": "Electronics & Communication Engineering",
@@ -425,58 +350,39 @@
           "co_scheduled_id": null
         },
         {
-          "id": 112,
-          "course_id": 297,
-          "course_code": "EC23512",
-          "course_name": "Modern Digital Communication",
+          "id": 121,
+          "course_id": 296,
+          "course_code": "EC23511",
+          "course_name": "Control System Engineering",
           "course_type": "T",
-          "teacher_id": "249.0",
+          "teacher_id": "284.0",
           "semester": 5,
           "course_dept": "Electronics & Communication Engineering",
           "student_dept": "Electronics & Communication Engineering",
           "has_lab": false,
           "has_theory": true,
           "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 113,
-          "course_id": 297,
-          "course_code": "EC23512",
-          "course_name": "Modern Digital Communication",
-          "course_type": "T",
-          "teacher_id": "281.0",
-          "semester": 5,
-          "course_dept": "Electronics & Communication Engineering",
-          "student_dept": "Electronics & Communication Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 1,
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         }
       ],
       "teachers": [
+        "270.0",
         "259.0",
-        "247.0",
-        "249.0",
-        "281.0"
+        "284.0",
+        "317.0"
       ],
       "courses": [
-        "EC23512",
-        "EC23E01"
+        "EC23E01",
+        "EC23511"
       ],
       "total_workload": 12
     },
     {
-      "group_id": 6,
+      "group_id": 5,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -519,6 +425,119 @@
           "co_scheduled_id": null
         },
         {
+          "id": 126,
+          "course_id": 613,
+          "course_code": "EC23B11",
+          "course_name": "Information theory and coding",
+          "course_type": "T",
+          "teacher_id": "279.0",
+          "semester": 5,
+          "course_dept": "Electronics & Communication Engineering",
+          "student_dept": "Electronics & Communication Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 128,
+          "course_id": 615,
+          "course_code": "EC23E01",
+          "course_name": "Medical electronics",
+          "course_type": "T",
+          "teacher_id": "260.0",
+          "semester": 5,
+          "course_dept": "Electronics & Communication Engineering",
+          "student_dept": "Electronics & Communication Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "260.0",
+        "251.0",
+        "279.0",
+        "247.0"
+      ],
+      "courses": [
+        "EC23B11",
+        "EC23E01"
+      ],
+      "total_workload": 12
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 111,
+          "course_id": 297,
+          "course_code": "EC23512",
+          "course_name": "Modern Digital Communication",
+          "course_type": "T",
+          "teacher_id": "247.0",
+          "semester": 5,
+          "course_dept": "Electronics & Communication Engineering",
+          "student_dept": "Electronics & Communication Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 112,
+          "course_id": 297,
+          "course_code": "EC23512",
+          "course_name": "Modern Digital Communication",
+          "course_type": "T",
+          "teacher_id": "249.0",
+          "semester": 5,
+          "course_dept": "Electronics & Communication Engineering",
+          "student_dept": "Electronics & Communication Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 945,
+          "course_id": 297,
+          "course_code": "EC23512",
+          "course_name": "Modern Digital Communication",
+          "course_type": "T",
+          "teacher_id": "261.0",
+          "semester": 5,
+          "course_dept": "Electronics & Communication Engineering",
+          "student_dept": "Electronics & Communication Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
           "id": 125,
           "course_id": 613,
           "course_code": "EC23B11",
@@ -536,36 +555,17 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
-        },
-        {
-          "id": 121,
-          "course_id": 296,
-          "course_code": "EC23511",
-          "course_name": "Control System Engineering",
-          "course_type": "T",
-          "teacher_id": "284.0",
-          "semester": 5,
-          "course_dept": "Electronics & Communication Engineering",
-          "student_dept": "Electronics & Communication Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 2,
-          "tutorial_hours": 1,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "251.0",
-        "284.0",
+        "283.0",
         "247.0",
-        "283.0"
+        "261.0",
+        "249.0"
       ],
       "courses": [
-        "EC23B11",
-        "EC23511"
+        "EC23512",
+        "EC23B11"
       ],
       "total_workload": 12
     }

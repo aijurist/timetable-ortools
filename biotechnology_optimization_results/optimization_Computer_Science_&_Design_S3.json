@@ -11,72 +11,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 87,
-          "course_id": 169,
-          "course_code": "CD23321",
-          "course_name": "Python Programming for Design",
-          "course_type": "L",
-          "teacher_id": "184.0",
-          "semester": 3,
-          "course_dept": "Computer Science & Design",
-          "student_dept": "Computer Science & Design",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 6,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "184.0"
-      ],
-      "courses": [
-        "CD23321"
-      ],
-      "total_workload": 6
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 92,
-          "course_id": 170,
-          "course_code": "CD23331",
-          "course_name": "Design Processes and Perspectives",
-          "course_type": "LoT",
-          "teacher_id": "182.0",
-          "semester": 3,
-          "course_dept": "Computer Science & Design",
-          "student_dept": "Computer Science & Design",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "182.0"
-      ],
-      "courses": [
-        "CD23331"
-      ],
-      "total_workload": 5
-    },
-    {
-      "group_id": 3,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 1224,
           "course_id": 424,
           "course_code": "MA23313",
@@ -105,7 +39,40 @@
       "total_workload": 4
     },
     {
-      "group_id": 4,
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 87,
+          "course_id": 169,
+          "course_code": "CD23321",
+          "course_name": "Python Programming for Design",
+          "course_type": "L",
+          "teacher_id": "184.0",
+          "semester": 3,
+          "course_dept": "Computer Science & Design",
+          "student_dept": "Computer Science & Design",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 6,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "184.0"
+      ],
+      "courses": [
+        "CD23321"
+      ],
+      "total_workload": 6
+    },
+    {
+      "group_id": 3,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -138,40 +105,7 @@
       "total_workload": 6
     },
     {
-      "group_id": 5,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 89,
-          "course_id": 258,
-          "course_code": "CS23332",
-          "course_name": "Database Management Systems",
-          "course_type": "LoT",
-          "teacher_id": "171.0",
-          "semester": 3,
-          "course_dept": "Computer Science & Design",
-          "student_dept": "Computer Science & Design",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "171.0"
-      ],
-      "courses": [
-        "CS23332"
-      ],
-      "total_workload": 7
-    },
-    {
-      "group_id": 6,
+      "group_id": 4,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -202,6 +136,72 @@
         "CS23331"
       ],
       "total_workload": 5
+    },
+    {
+      "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 92,
+          "course_id": 170,
+          "course_code": "CD23331",
+          "course_name": "Design Processes and Perspectives",
+          "course_type": "LoT",
+          "teacher_id": "182.0",
+          "semester": 3,
+          "course_dept": "Computer Science & Design",
+          "student_dept": "Computer Science & Design",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "182.0"
+      ],
+      "courses": [
+        "CD23331"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 89,
+          "course_id": 258,
+          "course_code": "CS23332",
+          "course_name": "Database Management Systems",
+          "course_type": "LoT",
+          "teacher_id": "171.0",
+          "semester": 3,
+          "course_dept": "Computer Science & Design",
+          "student_dept": "Computer Science & Design",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "171.0"
+      ],
+      "courses": [
+        "CS23332"
+      ],
+      "total_workload": 7
     }
   ],
   "pe_group_included": false,

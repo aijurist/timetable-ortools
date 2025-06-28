@@ -3796,7 +3796,7 @@ class CombinedScheduler:
         constraints_applied = 0
         
         # Maximum theory time slots that can be used per day
-        MAX_THEORY_SLOTS_PER_DAY = 5
+        MAX_THEORY_SLOTS_PER_DAY = 6
         
         # Get all unique department patterns to determine which days to apply constraints
         unique_dept_patterns = set()
@@ -4297,8 +4297,14 @@ class CombinedScheduler:
             self.logger.info("  • Encourages 70+ capacity labs for courses with 4-6 practical hours")
             self.logger.info("  • Allows 35-capacity labs with batching as fallback")
         
-        # Add preference for 70-capacity labs
-        labs_70_bonus = 1000  # Strong preference for using 70-capacity labs
+        # Add preference for 70-capacity labs with CS department priority
+        labs_70_bonus = 1000  # Standard preference for using 70-capacity labs
+        cs_labs_70_bonus = 5000  # VERY HIGH preference for CS departments using 70-capacity labs
+        
+        # Define CS department names
+        cs_departments = {
+            'Computer Science & Engineering'
+        }
         
         # PERFORMANCE OPTIMIZATION: Pre-cache room capacities to avoid repeated DataFrame lookups
         room_capacities = {}
@@ -4307,8 +4313,26 @@ class CombinedScheduler:
         
         # PERFORMANCE OPTIMIZATION: Streamlined loop with minimal operations
         capacity_terms_added = 0
+        cs_capacity_terms_added = 0
         for teacher_id in lab_variables:
             for course_instance_id in lab_variables[teacher_id]:
+                # Get department for this course instance
+                dept_name = "Computer Science & Engineering"  # Default
+                if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
+                    mapping = self.instance_group_mapping[course_instance_id]
+                    dept_name = mapping['department']
+                else:
+                    # Fallback: look up in courses_df
+                    base_id = self._get_base_course_id(course_instance_id)
+                    try:
+                        course_matches = self.courses_df[self.courses_df['id'] == int(base_id)]
+                        if not course_matches.empty:
+                            dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
+                    except:
+                        pass  # Keep default
+                
+                is_cs_department = dept_name in cs_departments
+                
                 for day_idx in lab_variables[teacher_id][course_instance_id]:
                     for session_name in lab_variables[teacher_id][course_instance_id][day_idx]:
                         for room_id in lab_variables[teacher_id][course_instance_id][day_idx][session_name]:
@@ -4318,12 +4342,21 @@ class CombinedScheduler:
                             room_capacity = room_capacities.get(room_id, 0)
                             
                             if room_capacity == 70:
-                                # BONUS for using 70-capacity labs (perfect size for single instances)
-                                objective_terms.append(var * labs_70_bonus)
-                                capacity_terms_added += 1
+                                if is_cs_department:
+                                    # VERY HIGH BONUS for CS departments using 70-capacity labs (even for 2 lab sessions)
+                                    objective_terms.append(var * cs_labs_70_bonus)
+                                    cs_capacity_terms_added += 1
+                                else:
+                                    # Standard bonus for non-CS departments using 70-capacity labs
+                                    objective_terms.append(var * labs_70_bonus)
+                                    capacity_terms_added += 1
         
-        self.logger.info(f"Added {capacity_terms_added} room capacity preference terms to objective (OPTIMIZED)")
-        self.logger.info(f"  • 70-capacity lab preference bonus: +{labs_70_bonus}")
+        self.logger.info(f"Added {capacity_terms_added + cs_capacity_terms_added} room capacity preference terms to objective (OPTIMIZED)")
+        self.logger.info(f"  • Standard 70-capacity lab preference bonus: +{labs_70_bonus}")
+        self.logger.info(f"  • CS DEPARTMENT 70-capacity lab preference bonus: +{cs_labs_70_bonus} (HIGHEST PRIORITY)")
+        self.logger.info(f"  • CS capacity terms added: {cs_capacity_terms_added}")
+        self.logger.info(f"  • Non-CS capacity terms added: {capacity_terms_added}")
+        self.logger.info(f"  ✅ CS departments get 5x higher priority for 70-capacity labs even for 2 lab sessions")
         
         # Add penalty for consecutive slots (soft constraint - minimize penalties)
         if hasattr(self, 'consecutive_slot_penalties') and self.consecutive_slot_penalties:
@@ -4397,6 +4430,8 @@ class CombinedScheduler:
             self.logger.info("  1. Over-allocation penalty (FIXED: prevent courses from getting more sessions than needed)")
             self.logger.info("  2. Group timeslots (no time slot preference)")
             self.logger.info("  3. Room capacity optimization (prefer appropriate room sizes)")
+            self.logger.info("     • CS DEPARTMENTS: 5x higher priority for 70-capacity labs (bonus: +5000)")
+            self.logger.info("     • OTHER DEPARTMENTS: Standard priority for 70-capacity labs (bonus: +1000)")
             self.logger.info("  4. Consecutive slot penalty (avoid >2 consecutive slots per group per day)")
             self.logger.info("  5. Late scheduling penalty (strongly prefer theory before 3:00 PM)")
             self.logger.info("  6. Core lab group slot penalty (prefer ≤8 slots for groups with core labs)")
@@ -4406,6 +4441,7 @@ class CombinedScheduler:
             self.logger.info("  10. Teacher consecutive lab penalty (discourage 3+ consecutive labs for Biotechnology, allow experimental continuity)")
             self.logger.info("  11. Teacher daily presence constraint (HARD: prevent 11+ hour violation days)")
             self.logger.info("  ✅ CRITICAL FIX: Removed lab assignment rewards that caused over-allocation")
+            self.logger.info("  🎯 NEW: CS departments get HIGHEST PRIORITY for 70-capacity labs even for 2 lab sessions")
         else:
             self.logger.warning("No objective terms created for group allocation")
     
@@ -4413,11 +4449,11 @@ class CombinedScheduler:
         """Solve the combined scheduling model using two-phase approach."""
         # Create the solver
         solver = cp_model.CpSolver()
-        solver.parameters.max_time_in_seconds = 2000
+        solver.parameters.max_time_in_seconds = 2200
         solver.parameters.num_search_workers = 16
         solver.parameters.max_memory_in_mb = 30000
         solver.parameters.log_search_progress = True
-        # solver.parameters.stop_after_first_solution= True
+        solver.parameters.stop_after_first_solution= True
         
         self.logger.info("Solving combined scheduling model...")
         status = solver.Solve(model)

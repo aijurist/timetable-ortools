@@ -11,39 +11,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 419,
-          "course_id": 483,
-          "course_code": "CS23422",
-          "course_name": "Python Programming for Machine Learning",
-          "course_type": "L",
-          "teacher_id": "496.0",
-          "semester": 5,
-          "course_dept": "Mechatronics Engineering",
-          "student_dept": "Mechatronics Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "496.0"
-      ],
-      "courses": [
-        "CS23422"
-      ],
-      "total_workload": 4
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 421,
           "course_id": 720,
           "course_code": "MT23522",
@@ -70,6 +37,39 @@
         "MT23522"
       ],
       "total_workload": 2
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 419,
+          "course_id": 483,
+          "course_code": "CS23422",
+          "course_name": "Python Programming for Machine Learning",
+          "course_type": "L",
+          "teacher_id": "496.0",
+          "semester": 5,
+          "course_dept": "Mechatronics Engineering",
+          "student_dept": "Mechatronics Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "496.0"
+      ],
+      "courses": [
+        "CS23422"
+      ],
+      "total_workload": 4
     },
     {
       "group_id": 3,
@@ -143,12 +143,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 2094,
-          "course_id": 2411,
-          "course_code": "MT23D11",
-          "course_name": "NEURAL NETWORKS AND FUZZY SYSTEMS",
+          "id": 417,
+          "course_id": 716,
+          "course_code": "MT23511",
+          "course_name": "Semiconductor Manufacturing",
           "course_type": "T",
-          "teacher_id": "479.0",
+          "teacher_id": "482.0",
           "semester": 5,
           "course_dept": "Mechatronics Engineering",
           "student_dept": "Mechatronics Engineering",
@@ -163,10 +163,10 @@
         }
       ],
       "teachers": [
-        "479.0"
+        "482.0"
       ],
       "courses": [
-        "MT23D11"
+        "MT23511"
       ],
       "total_workload": 3
     },
@@ -209,39 +209,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 417,
-          "course_id": 716,
-          "course_code": "MT23511",
-          "course_name": "Semiconductor Manufacturing",
-          "course_type": "T",
-          "teacher_id": "482.0",
-          "semester": 5,
-          "course_dept": "Mechatronics Engineering",
-          "student_dept": "Mechatronics Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "482.0"
-      ],
-      "courses": [
-        "MT23511"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 8,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 430,
           "course_id": 384,
           "course_code": "GE23311",
@@ -266,6 +233,39 @@
       ],
       "courses": [
         "GE23311"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 8,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 2049,
+          "course_id": 2411,
+          "course_code": "MT23D11",
+          "course_name": "NEURAL NETWORKS AND FUZZY SYSTEMS",
+          "course_type": "T",
+          "teacher_id": "479.0",
+          "semester": 5,
+          "course_dept": "Mechatronics Engineering",
+          "student_dept": "Mechatronics Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "479.0"
+      ],
+      "courses": [
+        "MT23D11"
       ],
       "total_workload": 3
     }

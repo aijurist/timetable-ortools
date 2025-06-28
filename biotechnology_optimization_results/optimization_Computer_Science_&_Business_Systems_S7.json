@@ -11,59 +11,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 1018,
-          "course_id": 2193,
-          "course_code": "CB19742",
-          "course_name": "IT Workshop",
-          "course_type": "LoT",
-          "teacher_id": "164.0",
-          "semester": 7,
-          "course_dept": "Computer Science & Business Systems",
-          "student_dept": "Computer Science & Business Systems",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 2,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1070,
-          "course_id": 2193,
-          "course_code": "CB19742",
-          "course_name": "IT Workshop",
-          "course_type": "LoT",
-          "teacher_id": "1866.0",
-          "semester": 7,
-          "course_dept": "Computer Science & Business Systems",
-          "student_dept": "Computer Science & Business Systems",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 2,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "1866.0",
-        "164.0"
-      ],
-      "courses": [
-        "CB19742"
-      ],
-      "total_workload": 8
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 1005,
           "course_id": 2192,
           "course_code": "CB19711",
@@ -112,6 +59,59 @@
       "total_workload": 4
     },
     {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1018,
+          "course_id": 2193,
+          "course_code": "CB19742",
+          "course_name": "IT Workshop",
+          "course_type": "LoT",
+          "teacher_id": "164.0",
+          "semester": 7,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1070,
+          "course_id": 2193,
+          "course_code": "CB19742",
+          "course_name": "IT Workshop",
+          "course_type": "LoT",
+          "teacher_id": "1866.0",
+          "semester": 7,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "164.0",
+        "1866.0"
+      ],
+      "courses": [
+        "CB19742"
+      ],
+      "total_workload": 8
+    },
+    {
       "group_id": 3,
       "is_pe_group": false,
       "group_type": "Regular",
@@ -156,8 +156,8 @@
         }
       ],
       "teachers": [
-        "1864.0",
-        "170.0"
+        "170.0",
+        "1864.0"
       ],
       "courses": [
         "CB19P45"
@@ -315,8 +315,8 @@
         }
       ],
       "teachers": [
-        "478.0",
-        "492.0"
+        "492.0",
+        "478.0"
       ],
       "courses": [
         "BA19702"

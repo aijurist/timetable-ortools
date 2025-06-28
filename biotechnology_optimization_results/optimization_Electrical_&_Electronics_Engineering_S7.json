@@ -11,18 +11,18 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 652,
-          "course_id": 630,
-          "course_code": "EE19701",
-          "course_name": "Hybrid Electric Vehicles",
-          "course_type": "T",
-          "teacher_id": "303.0",
+          "id": 755,
+          "course_id": 631,
+          "course_code": "EE19741",
+          "course_name": "Renewable Energy Systems",
+          "course_type": "LoT",
+          "teacher_id": "298.0",
           "semester": 7,
           "course_dept": "Electrical & Electronics Engineering",
           "student_dept": "Electrical & Electronics Engineering",
-          "has_lab": false,
+          "has_lab": true,
           "has_theory": true,
-          "practical_hours": 0,
+          "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
@@ -51,13 +51,13 @@
       ],
       "teachers": [
         "307.0",
-        "303.0"
+        "298.0"
       ],
       "courses": [
-        "EE19742",
-        "EE19701"
+        "EE19741",
+        "EE19742"
       ],
-      "total_workload": 8
+      "total_workload": 10
     },
     {
       "group_id": 2,
@@ -65,31 +65,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 755,
-          "course_id": 631,
-          "course_code": "EE19741",
-          "course_name": "Renewable Energy Systems",
-          "course_type": "LoT",
-          "teacher_id": "298.0",
-          "semester": 7,
-          "course_dept": "Electrical & Electronics Engineering",
-          "student_dept": "Electrical & Electronics Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 650,
+          "id": 652,
           "course_id": 630,
           "course_code": "EE19701",
           "course_name": "Hybrid Electric Vehicles",
           "course_type": "T",
-          "teacher_id": "312.0",
+          "teacher_id": "303.0",
           "semester": 7,
           "course_dept": "Electrical & Electronics Engineering",
           "student_dept": "Electrical & Electronics Engineering",
@@ -101,23 +82,7 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "312.0",
-        "298.0"
-      ],
-      "courses": [
-        "EE19741",
-        "EE19701"
-      ],
-      "total_workload": 8
-    },
-    {
-      "group_id": 3,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
+        },
         {
           "id": 752,
           "course_id": 631,
@@ -131,6 +96,41 @@
           "has_lab": true,
           "has_theory": true,
           "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "303.0",
+        "334.0"
+      ],
+      "courses": [
+        "EE19741",
+        "EE19701"
+      ],
+      "total_workload": 8
+    },
+    {
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 650,
+          "course_id": 630,
+          "course_code": "EE19701",
+          "course_name": "Hybrid Electric Vehicles",
+          "course_type": "T",
+          "teacher_id": "312.0",
+          "semester": 7,
+          "course_dept": "Electrical & Electronics Engineering",
+          "student_dept": "Electrical & Electronics Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
           "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
@@ -158,14 +158,14 @@
         }
       ],
       "teachers": [
-        "313.0",
-        "334.0"
+        "312.0",
+        "313.0"
       ],
       "courses": [
-        "EE19741",
+        "EE19701",
         "EE19742"
       ],
-      "total_workload": 10
+      "total_workload": 8
     },
     {
       "group_id": 4,

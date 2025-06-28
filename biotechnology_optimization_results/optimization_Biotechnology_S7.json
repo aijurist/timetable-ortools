@@ -69,8 +69,8 @@
         }
       ],
       "teachers": [
-        "119.0",
         "98.0",
+        "119.0",
         "133.0"
       ],
       "courses": [
@@ -143,9 +143,9 @@
         }
       ],
       "teachers": [
-        "113.0",
         "111.0",
-        "105.0"
+        "105.0",
+        "113.0"
       ],
       "courses": [
         "BT19711",
@@ -217,9 +217,9 @@
         }
       ],
       "teachers": [
-        "124.0",
+        "121.0",
         "128.0",
-        "121.0"
+        "124.0"
       ],
       "courses": [
         "BT19712",
@@ -233,12 +233,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 192,
-          "course_id": 544,
-          "course_code": "BT19705",
-          "course_name": "PROTEIN ENGINEERING TECHNIQUES",
+          "id": 1179,
+          "course_id": 547,
+          "course_code": "BT19P71",
+          "course_name": "Comprehensive Course for Biotechnologists",
           "course_type": "T",
-          "teacher_id": "1860.0",
+          "teacher_id": "119.0",
           "semester": 7,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -252,12 +252,86 @@
           "co_scheduled_id": null
         },
         {
-          "id": 1256,
+          "id": 2062,
+          "course_id": 547,
+          "course_code": "BT19P71",
+          "course_name": "Comprehensive Course for Biotechnologists",
+          "course_type": "T",
+          "teacher_id": "109.0",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 191,
           "course_id": 544,
           "course_code": "BT19705",
           "course_name": "PROTEIN ENGINEERING TECHNIQUES",
           "course_type": "T",
-          "teacher_id": "1861.0",
+          "teacher_id": "102.0",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "119.0",
+        "109.0",
+        "102.0"
+      ],
+      "courses": [
+        "BT19705",
+        "BT19P71"
+      ],
+      "total_workload": 9
+    },
+    {
+      "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 552,
+          "course_id": 542,
+          "course_code": "BT19702",
+          "course_name": "Bioinformatics",
+          "course_type": "T",
+          "teacher_id": "124.0",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1156,
+          "course_id": 542,
+          "course_code": "BT19702",
+          "course_name": "Bioinformatics",
+          "course_type": "T",
+          "teacher_id": "133.0",
           "semester": 7,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -291,28 +365,28 @@
         }
       ],
       "teachers": [
-        "1860.0",
-        "1861.0",
-        "98.0"
+        "133.0",
+        "98.0",
+        "124.0"
       ],
       "courses": [
-        "BT19705",
-        "BT19701"
+        "BT19701",
+        "BT19702"
       ],
       "total_workload": 9
     },
     {
-      "group_id": 5,
+      "group_id": 6,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
         {
-          "id": 191,
-          "course_id": 544,
-          "course_code": "BT19705",
-          "course_name": "PROTEIN ENGINEERING TECHNIQUES",
+          "id": 2064,
+          "course_id": 542,
+          "course_code": "BT19702",
+          "course_name": "Bioinformatics",
           "course_type": "T",
-          "teacher_id": "102.0",
+          "teacher_id": "124.0",
           "semester": 7,
           "course_dept": "Biotechnology",
           "student_dept": "Biotechnology",
@@ -365,59 +439,21 @@
         }
       ],
       "teachers": [
-        "102.0",
+        "121.0",
         "113.0",
-        "121.0"
+        "124.0"
       ],
       "courses": [
-        "BT19705",
-        "BT19701"
+        "BT19701",
+        "BT19702"
       ],
       "total_workload": 9
     },
     {
-      "group_id": 6,
+      "group_id": 7,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
-        {
-          "id": 552,
-          "course_id": 542,
-          "course_code": "BT19702",
-          "course_name": "Bioinformatics",
-          "course_type": "T",
-          "teacher_id": "124.0",
-          "semester": 7,
-          "course_dept": "Biotechnology",
-          "student_dept": "Biotechnology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1156,
-          "course_id": 542,
-          "course_code": "BT19702",
-          "course_name": "Bioinformatics",
-          "course_type": "T",
-          "teacher_id": "133.0",
-          "semester": 7,
-          "course_dept": "Biotechnology",
-          "student_dept": "Biotechnology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
         {
           "id": 1246,
           "course_id": 547,
@@ -436,89 +472,53 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
+        },
+        {
+          "id": 192,
+          "course_id": 544,
+          "course_code": "BT19705",
+          "course_name": "PROTEIN ENGINEERING TECHNIQUES",
+          "course_type": "T",
+          "teacher_id": "1860.0",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1256,
+          "course_id": 544,
+          "course_code": "BT19705",
+          "course_name": "PROTEIN ENGINEERING TECHNIQUES",
+          "course_type": "T",
+          "teacher_id": "1861.0",
+          "semester": 7,
+          "course_dept": "Biotechnology",
+          "student_dept": "Biotechnology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "124.0",
         "112.0",
-        "133.0"
+        "1860.0",
+        "1861.0"
       ],
       "courses": [
-        "BT19702",
-        "BT19P71"
-      ],
-      "total_workload": 9
-    },
-    {
-      "group_id": 7,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 2064,
-          "course_id": 542,
-          "course_code": "BT19702",
-          "course_name": "Bioinformatics",
-          "course_type": "T",
-          "teacher_id": "124.0",
-          "semester": 7,
-          "course_dept": "Biotechnology",
-          "student_dept": "Biotechnology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1179,
-          "course_id": 547,
-          "course_code": "BT19P71",
-          "course_name": "Comprehensive Course for Biotechnologists",
-          "course_type": "T",
-          "teacher_id": "119.0",
-          "semester": 7,
-          "course_dept": "Biotechnology",
-          "student_dept": "Biotechnology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 2062,
-          "course_id": 547,
-          "course_code": "BT19P71",
-          "course_name": "Comprehensive Course for Biotechnologists",
-          "course_type": "T",
-          "teacher_id": "109.0",
-          "semester": 7,
-          "course_dept": "Biotechnology",
-          "student_dept": "Biotechnology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "109.0",
-        "119.0",
-        "124.0"
-      ],
-      "courses": [
-        "BT19702",
+        "BT19705",
         "BT19P71"
       ],
       "total_workload": 9
@@ -587,8 +587,8 @@
         }
       ],
       "teachers": [
-        "92.0",
         "1859.0",
+        "92.0",
         "99.0"
       ],
       "courses": [

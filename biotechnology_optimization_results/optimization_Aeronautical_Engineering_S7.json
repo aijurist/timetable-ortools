@@ -11,19 +11,19 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 378,
-          "course_id": 702,
-          "course_code": "AE19713",
-          "course_name": "Artificial Intelligence And Machine Learning For Aeronautical Engineering",
-          "course_type": "L",
-          "teacher_id": "8.0",
+          "id": 338,
+          "course_id": 692,
+          "course_code": "AE19741",
+          "course_name": "Avionics",
+          "course_type": "LoT",
+          "teacher_id": "7.0",
           "semester": 7,
           "course_dept": "Aeronautical Engineering",
           "student_dept": "Aeronautical Engineering",
           "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
           "virtual_id": null,
@@ -31,12 +31,12 @@
         }
       ],
       "teachers": [
-        "8.0"
+        "7.0"
       ],
       "courses": [
-        "AE19713"
+        "AE19741"
       ],
-      "total_workload": 4
+      "total_workload": 5
     },
     {
       "group_id": 2,
@@ -77,19 +77,19 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 338,
-          "course_id": 692,
-          "course_code": "AE19741",
-          "course_name": "Avionics",
-          "course_type": "LoT",
-          "teacher_id": "7.0",
+          "id": 378,
+          "course_id": 702,
+          "course_code": "AE19713",
+          "course_name": "Artificial Intelligence And Machine Learning For Aeronautical Engineering",
+          "course_type": "L",
+          "teacher_id": "8.0",
           "semester": 7,
           "course_dept": "Aeronautical Engineering",
           "student_dept": "Aeronautical Engineering",
           "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
           "tutorial_hours": 0,
           "student_count": 70,
           "virtual_id": null,
@@ -97,48 +97,15 @@
         }
       ],
       "teachers": [
-        "7.0"
+        "8.0"
       ],
       "courses": [
-        "AE19741"
+        "AE19713"
       ],
-      "total_workload": 5
+      "total_workload": 4
     },
     {
       "group_id": 4,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 382,
-          "course_id": 601,
-          "course_code": "AE19701",
-          "course_name": "Computational Fluid Dynamics",
-          "course_type": "T",
-          "teacher_id": "11.0",
-          "semester": 7,
-          "course_dept": "Aeronautical Engineering",
-          "student_dept": "Aeronautical Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "11.0"
-      ],
-      "courses": [
-        "AE19701"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 5,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -171,7 +138,7 @@
       "total_workload": 3
     },
     {
-      "group_id": 6,
+      "group_id": 5,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -200,6 +167,39 @@
       ],
       "courses": [
         "AE19P72"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 382,
+          "course_id": 601,
+          "course_code": "AE19701",
+          "course_name": "Computational Fluid Dynamics",
+          "course_type": "T",
+          "teacher_id": "11.0",
+          "semester": 7,
+          "course_dept": "Aeronautical Engineering",
+          "student_dept": "Aeronautical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "11.0"
+      ],
+      "courses": [
+        "AE19701"
       ],
       "total_workload": 3
     }

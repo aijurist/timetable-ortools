@@ -11,6 +11,39 @@
       "group_type": "Regular",
       "instances": [
         {
+          "id": 2055,
+          "course_id": 726,
+          "course_code": "FT19711",
+          "course_name": "Food Packaging Technology Laboratory",
+          "course_type": "L",
+          "teacher_id": "369.0",
+          "semester": 7,
+          "course_dept": "Food Technology",
+          "student_dept": "Food Technology",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "369.0"
+      ],
+      "courses": [
+        "FT19711"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
           "id": 962,
           "course_id": 729,
           "course_code": "FT19714",
@@ -39,7 +72,7 @@
       "total_workload": 4
     },
     {
-      "group_id": 2,
+      "group_id": 3,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -72,73 +105,7 @@
       "total_workload": 4
     },
     {
-      "group_id": 3,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 2055,
-          "course_id": 726,
-          "course_code": "FT19711",
-          "course_name": "Food Packaging Technology Laboratory",
-          "course_type": "L",
-          "teacher_id": "369.0",
-          "semester": 7,
-          "course_dept": "Food Technology",
-          "student_dept": "Food Technology",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "369.0"
-      ],
-      "courses": [
-        "FT19711"
-      ],
-      "total_workload": 4
-    },
-    {
       "group_id": 4,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 2056,
-          "course_id": 929,
-          "course_code": "FT19P79",
-          "course_name": "Comprehension in Food Technology",
-          "course_type": "T",
-          "teacher_id": "366.0",
-          "semester": 7,
-          "course_dept": "Food Technology",
-          "student_dept": "Food Technology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "366.0"
-      ],
-      "courses": [
-        "FT19P79"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 5,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -171,17 +138,17 @@
       "total_workload": 3
     },
     {
-      "group_id": 6,
+      "group_id": 5,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
         {
-          "id": 442,
-          "course_id": 722,
-          "course_code": "FT19704",
-          "course_name": "Professional Ethics",
+          "id": 2036,
+          "course_id": 930,
+          "course_code": "NPTEL IV Year",
+          "course_name": "Thermal Processing of Foods",
           "course_type": "T",
-          "teacher_id": "372.0",
+          "teacher_id": "390.0",
           "semester": 7,
           "course_dept": "Food Technology",
           "student_dept": "Food Technology",
@@ -196,15 +163,15 @@
         }
       ],
       "teachers": [
-        "372.0"
+        "390.0"
       ],
       "courses": [
-        "FT19704"
+        "NPTEL IV Year"
       ],
       "total_workload": 3
     },
     {
-      "group_id": 7,
+      "group_id": 6,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -233,6 +200,39 @@
       ],
       "courses": [
         "FT19703"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 7,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 442,
+          "course_id": 722,
+          "course_code": "FT19704",
+          "course_name": "Professional Ethics",
+          "course_type": "T",
+          "teacher_id": "372.0",
+          "semester": 7,
+          "course_dept": "Food Technology",
+          "student_dept": "Food Technology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "372.0"
+      ],
+      "courses": [
+        "FT19704"
       ],
       "total_workload": 3
     },
@@ -275,12 +275,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 2036,
-          "course_id": 930,
-          "course_code": "NPTEL IV Year",
-          "course_name": "Thermal Processing of Foods",
+          "id": 2056,
+          "course_id": 929,
+          "course_code": "FT19P79",
+          "course_name": "Comprehension in Food Technology",
           "course_type": "T",
-          "teacher_id": "390.0",
+          "teacher_id": "366.0",
           "semester": 7,
           "course_dept": "Food Technology",
           "student_dept": "Food Technology",
@@ -295,10 +295,10 @@
         }
       ],
       "teachers": [
-        "390.0"
+        "366.0"
       ],
       "courses": [
-        "NPTEL IV Year"
+        "FT19P79"
       ],
       "total_workload": 3
     },

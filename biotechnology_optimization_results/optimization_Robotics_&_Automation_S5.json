@@ -110,12 +110,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 1360,
-          "course_id": 451,
-          "course_code": "ME23511",
-          "course_name": "Machine Design",
+          "id": 454,
+          "course_id": 735,
+          "course_code": "RO23C13",
+          "course_name": "Farm Automation",
           "course_type": "T",
-          "teacher_id": "500.0",
+          "teacher_id": "572.0",
           "semester": 5,
           "course_dept": "Robotics & Automation",
           "student_dept": "Robotics & Automation",
@@ -130,10 +130,10 @@
         }
       ],
       "teachers": [
-        "500.0"
+        "572.0"
       ],
       "courses": [
-        "ME23511"
+        "RO23C13"
       ],
       "total_workload": 3
     },
@@ -176,12 +176,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 454,
-          "course_id": 735,
-          "course_code": "RO23C13",
-          "course_name": "Farm Automation",
+          "id": 1360,
+          "course_id": 451,
+          "course_code": "ME23511",
+          "course_name": "Machine Design",
           "course_type": "T",
-          "teacher_id": "572.0",
+          "teacher_id": "500.0",
           "semester": 5,
           "course_dept": "Robotics & Automation",
           "student_dept": "Robotics & Automation",
@@ -196,10 +196,10 @@
         }
       ],
       "teachers": [
-        "572.0"
+        "500.0"
       ],
       "courses": [
-        "RO23C13"
+        "ME23511"
       ],
       "total_workload": 3
     }

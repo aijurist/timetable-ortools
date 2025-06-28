@@ -11,18 +11,18 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 692,
-          "course_id": 270,
-          "course_code": "CS23532",
-          "course_name": "Computer Networks",
+          "id": 1076,
+          "course_id": 39,
+          "course_code": "AI23531",
+          "course_name": "Deep Learning",
           "course_type": "LoT",
-          "teacher_id": "14.0",
+          "teacher_id": "21.0",
           "semester": 5,
           "course_dept": "Artificial Intelligence & Data Science",
           "student_dept": "Artificial Intelligence & Data Science",
           "has_lab": true,
           "has_theory": true,
-          "practical_hours": 4,
+          "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
@@ -30,18 +30,18 @@
           "co_scheduled_id": null
         },
         {
-          "id": 1041,
-          "course_id": 270,
-          "course_code": "CS23532",
-          "course_name": "Computer Networks",
+          "id": 1086,
+          "course_id": 39,
+          "course_code": "AI23531",
+          "course_name": "Deep Learning",
           "course_type": "LoT",
-          "teacher_id": "1800.0",
+          "teacher_id": "1801.0",
           "semester": 5,
           "course_dept": "Artificial Intelligence & Data Science",
           "student_dept": "Artificial Intelligence & Data Science",
           "has_lab": true,
           "has_theory": true,
-          "practical_hours": 4,
+          "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
@@ -49,18 +49,18 @@
           "co_scheduled_id": null
         },
         {
-          "id": 1874,
-          "course_id": 270,
-          "course_code": "CS23532",
-          "course_name": "Computer Networks",
+          "id": 1871,
+          "course_id": 39,
+          "course_code": "AI23531",
+          "course_name": "Deep Learning",
           "course_type": "LoT",
-          "teacher_id": "1812.0",
+          "teacher_id": "1844.0",
           "semester": 5,
           "course_dept": "Artificial Intelligence & Data Science",
           "student_dept": "Artificial Intelligence & Data Science",
           "has_lab": true,
           "has_theory": true,
-          "practical_hours": 4,
+          "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
@@ -69,17 +69,90 @@
         }
       ],
       "teachers": [
-        "1800.0",
-        "1812.0",
-        "14.0"
+        "21.0",
+        "1844.0",
+        "1801.0"
       ],
       "courses": [
-        "CS23532"
+        "AI23531"
       ],
-      "total_workload": 21
+      "total_workload": 15
     },
     {
       "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 373,
+          "course_id": 573,
+          "course_code": "AD23532",
+          "course_name": "Principles of Data Science",
+          "course_type": "LoT",
+          "teacher_id": "29.0",
+          "semester": 5,
+          "course_dept": "Artificial Intelligence & Data Science",
+          "student_dept": "Artificial Intelligence & Data Science",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 374,
+          "course_id": 573,
+          "course_code": "AD23532",
+          "course_name": "Principles of Data Science",
+          "course_type": "LoT",
+          "teacher_id": "21.0",
+          "semester": 5,
+          "course_dept": "Artificial Intelligence & Data Science",
+          "student_dept": "Artificial Intelligence & Data Science",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 680,
+          "course_id": 573,
+          "course_code": "AD23532",
+          "course_name": "Principles of Data Science",
+          "course_type": "LoT",
+          "teacher_id": "25.0",
+          "semester": 5,
+          "course_dept": "Artificial Intelligence & Data Science",
+          "student_dept": "Artificial Intelligence & Data Science",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "29.0",
+        "25.0",
+        "21.0"
+      ],
+      "courses": [
+        "AD23532"
+      ],
+      "total_workload": 18
+    },
+    {
+      "group_id": 3,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -152,135 +225,62 @@
       "total_workload": 15
     },
     {
-      "group_id": 3,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 1076,
-          "course_id": 39,
-          "course_code": "AI23531",
-          "course_name": "Deep Learning",
-          "course_type": "LoT",
-          "teacher_id": "21.0",
-          "semester": 5,
-          "course_dept": "Artificial Intelligence & Data Science",
-          "student_dept": "Artificial Intelligence & Data Science",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1086,
-          "course_id": 39,
-          "course_code": "AI23531",
-          "course_name": "Deep Learning",
-          "course_type": "LoT",
-          "teacher_id": "1801.0",
-          "semester": 5,
-          "course_dept": "Artificial Intelligence & Data Science",
-          "student_dept": "Artificial Intelligence & Data Science",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1871,
-          "course_id": 39,
-          "course_code": "AI23531",
-          "course_name": "Deep Learning",
-          "course_type": "LoT",
-          "teacher_id": "1844.0",
-          "semester": 5,
-          "course_dept": "Artificial Intelligence & Data Science",
-          "student_dept": "Artificial Intelligence & Data Science",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "1844.0",
-        "21.0",
-        "1801.0"
-      ],
-      "courses": [
-        "AI23531"
-      ],
-      "total_workload": 15
-    },
-    {
       "group_id": 4,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
         {
-          "id": 373,
-          "course_id": 573,
-          "course_code": "AD23532",
-          "course_name": "Principles of Data Science",
+          "id": 692,
+          "course_id": 270,
+          "course_code": "CS23532",
+          "course_name": "Computer Networks",
           "course_type": "LoT",
-          "teacher_id": "29.0",
+          "teacher_id": "14.0",
           "semester": 5,
           "course_dept": "Artificial Intelligence & Data Science",
           "student_dept": "Artificial Intelligence & Data Science",
           "has_lab": true,
           "has_theory": true,
           "practical_hours": 4,
-          "lecture_hours": 2,
+          "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
         {
-          "id": 374,
-          "course_id": 573,
-          "course_code": "AD23532",
-          "course_name": "Principles of Data Science",
+          "id": 1041,
+          "course_id": 270,
+          "course_code": "CS23532",
+          "course_name": "Computer Networks",
           "course_type": "LoT",
-          "teacher_id": "21.0",
+          "teacher_id": "1800.0",
           "semester": 5,
           "course_dept": "Artificial Intelligence & Data Science",
           "student_dept": "Artificial Intelligence & Data Science",
           "has_lab": true,
           "has_theory": true,
           "practical_hours": 4,
-          "lecture_hours": 2,
+          "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
         },
         {
-          "id": 680,
-          "course_id": 573,
-          "course_code": "AD23532",
-          "course_name": "Principles of Data Science",
+          "id": 1874,
+          "course_id": 270,
+          "course_code": "CS23532",
+          "course_name": "Computer Networks",
           "course_type": "LoT",
-          "teacher_id": "25.0",
+          "teacher_id": "1812.0",
           "semester": 5,
           "course_dept": "Artificial Intelligence & Data Science",
           "student_dept": "Artificial Intelligence & Data Science",
           "has_lab": true,
           "has_theory": true,
           "practical_hours": 4,
-          "lecture_hours": 2,
+          "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
           "virtual_id": null,
@@ -288,14 +288,14 @@
         }
       ],
       "teachers": [
-        "29.0",
-        "21.0",
-        "25.0"
+        "1812.0",
+        "14.0",
+        "1800.0"
       ],
       "courses": [
-        "AD23532"
+        "CS23532"
       ],
-      "total_workload": 18
+      "total_workload": 21
     },
     {
       "group_id": 5,
@@ -361,8 +361,8 @@
         }
       ],
       "teachers": [
-        "41.0",
-        "nan"
+        "nan",
+        "41.0"
       ],
       "courses": [
         "IT23PE11"

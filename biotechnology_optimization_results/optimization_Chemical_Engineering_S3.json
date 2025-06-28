@@ -110,12 +110,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 74,
-          "course_id": 212,
-          "course_code": "CH23311",
-          "course_name": "Solid Mechanics",
+          "id": 75,
+          "course_id": 213,
+          "course_code": "CH23312",
+          "course_name": "Chemical Process Calculations",
           "course_type": "T",
-          "teacher_id": "130.0",
+          "teacher_id": "131.0",
           "semester": 3,
           "course_dept": "Chemical Engineering",
           "student_dept": "Chemical Engineering",
@@ -130,10 +130,10 @@
         }
       ],
       "teachers": [
-        "130.0"
+        "131.0"
       ],
       "courses": [
-        "CH23311"
+        "CH23312"
       ],
       "total_workload": 3
     },
@@ -176,12 +176,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 75,
-          "course_id": 213,
-          "course_code": "CH23312",
-          "course_name": "Chemical Process Calculations",
+          "id": 74,
+          "course_id": 212,
+          "course_code": "CH23311",
+          "course_name": "Solid Mechanics",
           "course_type": "T",
-          "teacher_id": "131.0",
+          "teacher_id": "130.0",
           "semester": 3,
           "course_dept": "Chemical Engineering",
           "student_dept": "Chemical Engineering",
@@ -196,10 +196,10 @@
         }
       ],
       "teachers": [
-        "131.0"
+        "130.0"
       ],
       "courses": [
-        "CH23312"
+        "CH23311"
       ],
       "total_workload": 3
     }

@@ -11,12 +11,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 380,
-          "course_id": 691,
-          "course_code": "AE23332",
-          "course_name": "Fluid Mechanics and Fluid Machinery",
+          "id": 364,
+          "course_id": 12,
+          "course_code": "AE23331",
+          "course_name": "Solid Mechanics",
           "course_type": "LoT",
-          "teacher_id": "13.0",
+          "teacher_id": "3.0",
           "semester": 3,
           "course_dept": "Aeronautical Engineering",
           "student_dept": "Aeronautical Engineering",
@@ -31,48 +31,15 @@
         }
       ],
       "teachers": [
-        "13.0"
+        "3.0"
       ],
       "courses": [
-        "AE23332"
+        "AE23331"
       ],
       "total_workload": 5
     },
     {
       "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 1546,
-          "course_id": 263,
-          "course_code": "CS23422",
-          "course_name": "Python Programming for Machine Learning",
-          "course_type": "L",
-          "teacher_id": "11.0",
-          "semester": 3,
-          "course_dept": "Aeronautical Engineering",
-          "student_dept": "Aeronautical Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "11.0"
-      ],
-      "courses": [
-        "CS23422"
-      ],
-      "total_workload": 4
-    },
-    {
-      "group_id": 3,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -101,6 +68,39 @@
       ],
       "courses": [
         "MA23311"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1546,
+          "course_id": 263,
+          "course_code": "CS23422",
+          "course_name": "Python Programming for Machine Learning",
+          "course_type": "L",
+          "teacher_id": "11.0",
+          "semester": 3,
+          "course_dept": "Aeronautical Engineering",
+          "student_dept": "Aeronautical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "11.0"
+      ],
+      "courses": [
+        "CS23422"
       ],
       "total_workload": 4
     },
@@ -143,39 +143,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 364,
-          "course_id": 12,
-          "course_code": "AE23331",
-          "course_name": "Solid Mechanics",
-          "course_type": "LoT",
-          "teacher_id": "3.0",
-          "semester": 3,
-          "course_dept": "Aeronautical Engineering",
-          "student_dept": "Aeronautical Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 2,
-          "tutorial_hours": 1,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "3.0"
-      ],
-      "courses": [
-        "AE23331"
-      ],
-      "total_workload": 5
-    },
-    {
-      "group_id": 6,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 386,
           "course_id": 690,
           "course_code": "AE23333",
@@ -200,6 +167,39 @@
       ],
       "courses": [
         "AE23333"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 380,
+          "course_id": 691,
+          "course_code": "AE23332",
+          "course_name": "Fluid Mechanics and Fluid Machinery",
+          "course_type": "LoT",
+          "teacher_id": "13.0",
+          "semester": 3,
+          "course_dept": "Aeronautical Engineering",
+          "student_dept": "Aeronautical Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 1,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "13.0"
+      ],
+      "courses": [
+        "AE23332"
       ],
       "total_workload": 5
     }

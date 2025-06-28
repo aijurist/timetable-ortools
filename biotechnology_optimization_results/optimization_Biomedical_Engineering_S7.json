@@ -11,25 +11,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 923,
-          "course_id": 619,
-          "course_code": "BM19713",
-          "course_name": "AI-ML-DL in Healthcare",
-          "course_type": "L",
-          "teacher_id": "84.0",
-          "semester": 7,
-          "course_dept": "Biomedical Engineering",
-          "student_dept": "Biomedical Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 6,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
           "id": 914,
           "course_id": 614,
           "course_code": "BM19741",
@@ -47,30 +28,14 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "84.0",
-        "73.0"
-      ],
-      "courses": [
-        "BM19713",
-        "BM19741"
-      ],
-      "total_workload": 11
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
+        },
         {
-          "id": 922,
+          "id": 923,
           "course_id": 619,
           "course_code": "BM19713",
           "course_name": "AI-ML-DL in Healthcare",
           "course_type": "L",
-          "teacher_id": "101.0",
+          "teacher_id": "84.0",
           "semester": 7,
           "course_dept": "Biomedical Engineering",
           "student_dept": "Biomedical Engineering",
@@ -82,7 +47,23 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
-        },
+        }
+      ],
+      "teachers": [
+        "84.0",
+        "73.0"
+      ],
+      "courses": [
+        "BM19741",
+        "BM19713"
+      ],
+      "total_workload": 11
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
         {
           "id": 864,
           "course_id": 614,
@@ -101,15 +82,34 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
+        },
+        {
+          "id": 922,
+          "course_id": 619,
+          "course_code": "BM19713",
+          "course_name": "AI-ML-DL in Healthcare",
+          "course_type": "L",
+          "teacher_id": "101.0",
+          "semester": 7,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 6,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "101.0",
-        "74.0"
+        "74.0",
+        "101.0"
       ],
       "courses": [
-        "BM19713",
-        "BM19741"
+        "BM19741",
+        "BM19713"
       ],
       "total_workload": 11
     },
@@ -158,12 +158,12 @@
         }
       ],
       "teachers": [
-        "85.0",
-        "70.0"
+        "70.0",
+        "85.0"
       ],
       "courses": [
-        "24NBM01",
-        "BM19721"
+        "BM19721",
+        "24NBM01"
       ],
       "total_workload": 2
     },
@@ -172,79 +172,6 @@
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
-        {
-          "id": 916,
-          "course_id": 621,
-          "course_code": "BM19P72",
-          "course_name": "Rehabilitation Engineering",
-          "course_type": "T",
-          "teacher_id": "72.0",
-          "semester": 7,
-          "course_dept": "Biomedical Engineering",
-          "student_dept": "Biomedical Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 912,
-          "course_id": 612,
-          "course_code": "BM19701",
-          "course_name": "Hospital Engineering and Management",
-          "course_type": "T",
-          "teacher_id": "84.0",
-          "semester": 7,
-          "course_dept": "Biomedical Engineering",
-          "student_dept": "Biomedical Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "84.0",
-        "72.0"
-      ],
-      "courses": [
-        "BM19P72",
-        "BM19701"
-      ],
-      "total_workload": 6
-    },
-    {
-      "group_id": 5,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 915,
-          "course_id": 621,
-          "course_code": "BM19P72",
-          "course_name": "Rehabilitation Engineering",
-          "course_type": "T",
-          "teacher_id": "110.0",
-          "semester": 7,
-          "course_dept": "Biomedical Engineering",
-          "student_dept": "Biomedical Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
         {
           "id": 913,
           "course_id": 612,
@@ -263,6 +190,25 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
+        },
+        {
+          "id": 915,
+          "course_id": 621,
+          "course_code": "BM19P72",
+          "course_name": "Rehabilitation Engineering",
+          "course_type": "T",
+          "teacher_id": "110.0",
+          "semester": 7,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
@@ -270,13 +216,13 @@
         "81.0"
       ],
       "courses": [
-        "BM19P72",
-        "BM19701"
+        "BM19701",
+        "BM19P72"
       ],
       "total_workload": 6
     },
     {
-      "group_id": 6,
+      "group_id": 5,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -320,14 +266,68 @@
         }
       ],
       "teachers": [
-        "101.0",
-        "83.0"
+        "83.0",
+        "101.0"
       ],
       "courses": [
-        "24NBM01",
-        "BM19721"
+        "BM19721",
+        "24NBM01"
       ],
       "total_workload": 2
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 912,
+          "course_id": 612,
+          "course_code": "BM19701",
+          "course_name": "Hospital Engineering and Management",
+          "course_type": "T",
+          "teacher_id": "84.0",
+          "semester": 7,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 916,
+          "course_id": 621,
+          "course_code": "BM19P72",
+          "course_name": "Rehabilitation Engineering",
+          "course_type": "T",
+          "teacher_id": "72.0",
+          "semester": 7,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "84.0",
+        "72.0"
+      ],
+      "courses": [
+        "BM19701",
+        "BM19P72"
+      ],
+      "total_workload": 6
     }
   ],
   "pe_group_included": false,

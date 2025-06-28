@@ -77,12 +77,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 769,
-          "course_id": 223,
-          "course_code": "CH23514",
-          "course_name": "Chemical Reaction Engineering I",
+          "id": 1353,
+          "course_id": 221,
+          "course_code": "CH23512",
+          "course_name": "Chemical Engineering Thermodynamics",
           "course_type": "T",
-          "teacher_id": "140.0",
+          "teacher_id": "120.0",
           "semester": 5,
           "course_dept": "Chemical Engineering",
           "student_dept": "Chemical Engineering",
@@ -97,10 +97,10 @@
         }
       ],
       "teachers": [
-        "140.0"
+        "120.0"
       ],
       "courses": [
-        "CH23514"
+        "CH23512"
       ],
       "total_workload": 3
     },
@@ -176,12 +176,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 1353,
-          "course_id": 221,
-          "course_code": "CH23512",
-          "course_name": "Chemical Engineering Thermodynamics",
+          "id": 769,
+          "course_id": 223,
+          "course_code": "CH23514",
+          "course_name": "Chemical Reaction Engineering I",
           "course_type": "T",
-          "teacher_id": "120.0",
+          "teacher_id": "140.0",
           "semester": 5,
           "course_dept": "Chemical Engineering",
           "student_dept": "Chemical Engineering",
@@ -196,10 +196,10 @@
         }
       ],
       "teachers": [
-        "120.0"
+        "140.0"
       ],
       "courses": [
-        "CH23512"
+        "CH23514"
       ],
       "total_workload": 3
     },

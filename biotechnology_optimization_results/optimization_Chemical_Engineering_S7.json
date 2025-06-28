@@ -11,6 +11,39 @@
       "group_type": "Regular",
       "instances": [
         {
+          "id": 856,
+          "course_id": 837,
+          "course_code": "CH19711",
+          "course_name": "Chemical Reaction Engineering  lab",
+          "course_type": "L",
+          "teacher_id": "140.0",
+          "semester": 7,
+          "course_dept": "Chemical Engineering",
+          "student_dept": "Chemical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "140.0"
+      ],
+      "courses": [
+        "CH19711"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
           "id": 774,
           "course_id": 236,
           "course_code": "CH19712",
@@ -39,7 +72,7 @@
       "total_workload": 4
     },
     {
-      "group_id": 2,
+      "group_id": 3,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -72,50 +105,17 @@
       "total_workload": 4
     },
     {
-      "group_id": 3,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 856,
-          "course_id": 837,
-          "course_code": "CH19711",
-          "course_name": "Chemical Reaction Engineering  lab",
-          "course_type": "L",
-          "teacher_id": "140.0",
-          "semester": 7,
-          "course_dept": "Chemical Engineering",
-          "student_dept": "Chemical Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "140.0"
-      ],
-      "courses": [
-        "CH19711"
-      ],
-      "total_workload": 4
-    },
-    {
       "group_id": 4,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
         {
-          "id": 855,
-          "course_id": 835,
-          "course_code": "CH19702",
-          "course_name": "Comprehensive Chemical  Engineering",
+          "id": 1339,
+          "course_id": 836,
+          "course_code": "CH19703",
+          "course_name": "Computer Applications in Chemical Engineering",
           "course_type": "T",
-          "teacher_id": "120.0",
+          "teacher_id": "125.0",
           "semester": 7,
           "course_dept": "Chemical Engineering",
           "student_dept": "Chemical Engineering",
@@ -130,10 +130,10 @@
         }
       ],
       "teachers": [
-        "120.0"
+        "125.0"
       ],
       "courses": [
-        "CH19702"
+        "CH19703"
       ],
       "total_workload": 3
     },
@@ -209,12 +209,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 1339,
-          "course_id": 836,
-          "course_code": "CH19703",
-          "course_name": "Computer Applications in Chemical Engineering",
+          "id": 855,
+          "course_id": 835,
+          "course_code": "CH19702",
+          "course_name": "Comprehensive Chemical  Engineering",
           "course_type": "T",
-          "teacher_id": "125.0",
+          "teacher_id": "120.0",
           "semester": 7,
           "course_dept": "Chemical Engineering",
           "student_dept": "Chemical Engineering",
@@ -229,10 +229,10 @@
         }
       ],
       "teachers": [
-        "125.0"
+        "120.0"
       ],
       "courses": [
-        "CH19703"
+        "CH19702"
       ],
       "total_workload": 3
     }

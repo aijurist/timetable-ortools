@@ -26,7 +26,6 @@ AE23431,Aeronautical Engineering,1,Aerodynamics Lab,,,,,Incompressible Aerodynam
 AE23622,Aeronautical Engineering,1,Aerodynamics Lab,,,,,Jet propulsion Laboratory
 PH23131,Aeronautical Engineering,2,Physics LAB - 1,Physics LAB - 2,,,,Physics of Materials
 AE23331,Aeronautical Engineering,1,Strength of Materials Lab,,,,,Solid Mechanics
-IT23231,Artificial Intelligence and Data Science,2,Digital Lab-1,Digital Lab-2,,,,
 PH23132,Artificial Intelligence and Data Science,2,Physics LAB - 1,Physics LAB - 2,,,,Physics for Information Science
 AT23332,Automobile Engineering,2,Thermal Lab 2,Thermal Lab 1,,,,Applied Thermodynamics
 AT23431,Automobile Engineering,1,Automotive Components Lab,,,,,Automotive Drive Line and Chassis
@@ -111,7 +110,7 @@ PH23133,Computer Science and Business Systems,2,Physics LAB - 1,Physics LAB - 2,
 EE23131,Computer Science and Business Systems,2,Electrical Machines II Lab,Electrical Machines I Lab,,,,Principles of Electrical Engineering
 EC23242,Computer Science and Business Systems,1,Engineering Practices Lab (Electronics),,,,,Principles of Electronics
 EC23232,Computer Science and Engineering,2,Microprocessor Lab-1,Microprocessor Lab-2,,,,Digital Logic and Microprocessor
-GE23627,Electrical & Electronics Engineering,1,Electronic Devices & Circuits Lab,,,,,Problem Solving Techniques
+GE23627,Electrical & Electronics Engineering,1,Power Electronics Lab,,,,,Problem Solving Techniques
 ET23121,Electrical & Electronics Engineering,1,Embedded System Laboratory(EEE),,,,,Embedded System Laboratory I
 EE23821,Electrical & Electronics Engineering,1,Power System Simulation Lab,,,,,Project Work (Phase - II)
 ET23322,Electrical & Electronics Engineering,1,Embedded System Laboratory(EEE),,,,,IOT for Embedded Applications Laboratory
@@ -241,4 +240,3 @@ MT23722,Mechatronics Engineering,1,Industrial Automation Lab,,,,,Industrial Auto
 CD19741,Computer Science & Design,1,Mech CAD Lab,,,,,3D Printing and Design
 AT23522,Automobile Engineering,1,TANCAM,,,,,Computer Aided Vehicle Design Data Characteristics Laboratory
 IT23231,Artificial Intelligence and Data Science,2,Digital Lab-1,Digital Lab-2,,,,
-IT23331,Information Technology,1,Digital Lab-2,Digital Lab-1,,,,Digital Logic and Computer Architecture

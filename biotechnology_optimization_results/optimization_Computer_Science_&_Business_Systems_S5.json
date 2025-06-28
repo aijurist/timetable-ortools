@@ -11,26 +11,7 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 1836,
-          "course_id": 1368,
-          "course_code": "BA23511",
-          "course_name": "Principles of Financial Management",
-          "course_type": "T",
-          "teacher_id": "471.0",
-          "semester": 5,
-          "course_dept": "Computer Science & Business Systems",
-          "student_dept": "Computer Science & Business Systems",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 2,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1011,
+          "id": 1010,
           "course_id": 1445,
           "course_code": "GE23627",
           "course_name": "Design Thinking and Innovation",
@@ -47,11 +28,30 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
+        },
+        {
+          "id": 1837,
+          "course_id": 1368,
+          "course_code": "BA23511",
+          "course_name": "Principles of Financial Management",
+          "course_type": "T",
+          "teacher_id": "471.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "172.0",
-        "471.0"
+        "471.0",
+        "172.0"
       ],
       "courses": [
         "GE23627",
@@ -61,6 +61,112 @@
     },
     {
       "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1014,
+          "course_id": 1446,
+          "course_code": "CB23531",
+          "course_name": "Computer Network Technology",
+          "course_type": "LoT",
+          "teacher_id": "173.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1028,
+          "course_id": 1446,
+          "course_code": "CB23531",
+          "course_name": "Computer Network Technology",
+          "course_type": "LoT",
+          "teacher_id": "180.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "173.0",
+        "180.0"
+      ],
+      "courses": [
+        "CB23531"
+      ],
+      "total_workload": 10
+    },
+    {
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1066,
+          "course_id": 1447,
+          "course_code": "CB23532",
+          "course_name": "Artificial Intelligence",
+          "course_type": "LoT",
+          "teacher_id": "170.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1067,
+          "course_id": 1447,
+          "course_code": "CB23532",
+          "course_name": "Artificial Intelligence",
+          "course_type": "LoT",
+          "teacher_id": "1865.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "170.0",
+        "1865.0"
+      ],
+      "courses": [
+        "CB23532"
+      ],
+      "total_workload": 10
+    },
+    {
+      "group_id": 4,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -104,119 +210,11 @@
         }
       ],
       "teachers": [
-        "180.0",
-        "1863.0"
-      ],
-      "courses": [
-        "CB23D31"
-      ],
-      "total_workload": 10
-    },
-    {
-      "group_id": 3,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 1014,
-          "course_id": 1446,
-          "course_code": "CB23531",
-          "course_name": "Computer Network Technology",
-          "course_type": "LoT",
-          "teacher_id": "173.0",
-          "semester": 5,
-          "course_dept": "Computer Science & Business Systems",
-          "student_dept": "Computer Science & Business Systems",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1066,
-          "course_id": 1447,
-          "course_code": "CB23532",
-          "course_name": "Artificial Intelligence",
-          "course_type": "LoT",
-          "teacher_id": "170.0",
-          "semester": 5,
-          "course_dept": "Computer Science & Business Systems",
-          "student_dept": "Computer Science & Business Systems",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "173.0",
-        "170.0"
-      ],
-      "courses": [
-        "CB23531",
-        "CB23532"
-      ],
-      "total_workload": 10
-    },
-    {
-      "group_id": 4,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 1028,
-          "course_id": 1446,
-          "course_code": "CB23531",
-          "course_name": "Computer Network Technology",
-          "course_type": "LoT",
-          "teacher_id": "180.0",
-          "semester": 5,
-          "course_dept": "Computer Science & Business Systems",
-          "student_dept": "Computer Science & Business Systems",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1067,
-          "course_id": 1447,
-          "course_code": "CB23532",
-          "course_name": "Artificial Intelligence",
-          "course_type": "LoT",
-          "teacher_id": "1865.0",
-          "semester": 5,
-          "course_dept": "Computer Science & Business Systems",
-          "student_dept": "Computer Science & Business Systems",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "1865.0",
+        "1863.0",
         "180.0"
       ],
       "courses": [
-        "CB23531",
-        "CB23532"
+        "CB23D31"
       ],
       "total_workload": 10
     },
@@ -226,26 +224,7 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 1837,
-          "course_id": 1368,
-          "course_code": "BA23511",
-          "course_name": "Principles of Financial Management",
-          "course_type": "T",
-          "teacher_id": "471.0",
-          "semester": 5,
-          "course_dept": "Computer Science & Business Systems",
-          "student_dept": "Computer Science & Business Systems",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 2,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1010,
+          "id": 1011,
           "course_id": 1445,
           "course_code": "GE23627",
           "course_name": "Design Thinking and Innovation",
@@ -262,11 +241,30 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
+        },
+        {
+          "id": 1836,
+          "course_id": 1368,
+          "course_code": "BA23511",
+          "course_name": "Principles of Financial Management",
+          "course_type": "T",
+          "teacher_id": "471.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "172.0",
-        "471.0"
+        "471.0",
+        "172.0"
       ],
       "courses": [
         "GE23627",
