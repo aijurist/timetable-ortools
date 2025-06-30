@@ -81,7 +81,7 @@ CE23531,Civil Engineering,1,Computer Lab (Arch),,,,,Structural Analysis
 CE23721,Civil Engineering,1,MCT CAD Lab,,,,,Building Information Modelling
 CH19711,Chemical Engineering,2,Chemical Reaction Engineering Lab,Chemical Reaction Engineering Lab,,,,Chemical Reaction Engineering  lab
 CH19712,Chemical Engineering,1,Process Control Lab,,,,,Process Control Lab
-CH19713,Chemical Engineering,1,Computer Application in Chemical Engg Lab,,,,,Computer Applications In  Chemical Engineering Lab
+CH19713,Chemical Engineering,1,Computer Aided Application-Chem Engineering,,,,,Computer Applications In  Chemical Engineering Lab
 CH23331,Chemical Engineering,1,Fluid Mechanics Lab,,,,,Fluid Mechanics for Chemical Engineers
 CH23421,Chemical Engineering,1,Technical Analysis Lab,,,,,Technical Analysis Lab
 CH23431,Chemical Engineering,1,Particle Science and Technology Lab,,,,,Particle science and Technology
@@ -129,7 +129,7 @@ EE23421,Electrical and Electronics Engineering,1,Electrical Machines I Lab,,,,,E
 EE23431,Electrical and Electronics Engineering,1,Power Electronics Lab,,,,,Digital Logic Circuits
 EE23432,Electrical and Electronics Engineering,1,Electronic Devices & Circuits Lab,,,,,Linear Integrated Circuits and Applications
 EE23521,Electrical and Electronics Engineering,1,Power System Simulation Lab,,,,,Control and Instrumentation Laboratory
-EE23531,Electrical and Electronics Engineering,1,Electronic Devices & Circuits Lab,,,,,"Microprocessors, Microcontrollers and Applications"
+EE23531,Electrical and Electronics Engineering,1,Electronic Devices & Circuits Lab,Microprocessor and Microcontrollers Lab,,,,"Microprocessors, Microcontrollers and Applications"
 EE23621,Electrical and Electronics Engineering,1,Power Electronics Lab,,,,,Power Electronics and Drives Laboratory
 EE23622,Electrical and Electronics Engineering,1,Power System Simulation Lab,,,,,Applications of AI and ML in Electrical Engineering
 EE23631,Electrical and Electronics Engineering,1,Power System Simulation Lab,,,,,Applications of IoT in Electrical Engineering
@@ -168,8 +168,7 @@ GE23521,Information Technology,3,TIFAC IV01/02,TIFAC IV03/04,TIFAC V01/02,,,Soft
 GE23521,Mechanical Engineering,3,TIFAC IV01/02,TIFAC IV03/04,TIFAC V01/02,,,Soft Skills – II
 GE23521,Mechatronics Engineering,3,TIFAC IV01/02,TIFAC IV03/04,TIFAC V01/02,,,Soft Skills – II
 GE23521,Robotics and Automation,3,TIFAC IV01/02,TIFAC IV03/04,TIFAC V01/02,,,Soft Skills – II
-GE23627,Electrical & Electronics Engineering,1,Power Electronics Lab,,,,,Problem Solving Techniques
-IT23231,Artificial Intelligence and Data Science,2,Digital Lab-1,Digital Lab-2,,,,
+GE23627,Electrical & Electronics Engineering,1,Electronic Devices & Circuits Lab,,,,,Problem Solving Techniques
 ME19741,Mechanical Engineering,1,Mechatronics Lab,,,,,Mechatronics
 ME23321,Mechanical Engineering,1,Manufacturing Technology I,,,,,Manufacturing Technology Laboratory I
 ME23331,Mechanical Engineering,1,Strength of Materials Lab,,,,,Strength of Materials
