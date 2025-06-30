@@ -11,6 +11,10 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 185,TLGL2,Techlounge,Computer Lab (TLGL2),1,Laboratory,50,70,1,0,Advanced,13,0,0,0
 186,TLGL3,Techlounge,Computer Lab (TLGL3),1,Laboratory,20,35,1,0,None,13,0,0,0
 187,TLGL4,Techlounge,Computer Lab (TLGL4),1,Laboratory,20,35,1,0,Basic,4,0,0,0
+166,KFL01,K Block,Computer Lab (KFL01),1,Laboratory,20,35,1,0,Advanced,12,0,0,0
+167,KFL02,K Block,Computer Lab (KFL02),1,Laboratory,20,35,1,0,Advanced,4,0,0,0
+169,KFR01,K Block,Computer Lab (KFR01),1,Laboratory,20,35,1,0,Advanced,4,0,0,0
+170,KFR02,K Block,Computer Lab (KFR02),1,Laboratory,20,35,1,0,High-tech,3,0,0,0
 168,KFL03,K Block,Computer Lab (KFL03),1,Laboratory,20,35,1,0,High-tech,12,0,0,0
 171,KFR03,K Block,Computer Lab (KFR03),1,Laboratory,20,35,1,0,Advanced,13,0,0,0
 160,JL1,J Block,Computer Lab (JL1),1,Laboratory,20,35,1,0,None,13,0,0,0

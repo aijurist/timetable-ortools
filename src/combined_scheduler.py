@@ -2000,6 +2000,8 @@ class CombinedScheduler:
         # Apply CORE lab constraints (optimized - removed redundancies)
         constraints_applied += self.apply_course_lab_requirements_constraint(model, lab_variables)
         constraints_applied += self.apply_lab_room_single_assignment_constraint(model, lab_variables)
+        # Apply block-specific lab priority constraints for AIML/AIDS/CSD departments
+        constraints_applied += self.apply_block_specific_lab_priority_constraint(model, lab_variables)
         # REMOVED: apply_teacher_clash_constraint - handled by unified constraint
         # REMOVED: apply_capacity_constraint - redundant with course_lab_requirements_constraint
         constraints_applied += self.apply_group_based_scheduling_constraint(model, lab_variables)
@@ -2031,8 +2033,32 @@ class CombinedScheduler:
         return constraints_applied
 
     def apply_course_lab_requirements_constraint(self, model, lab_variables):
-        """CONSTRAINT: Each course must be scheduled for its required number of lab sessions."""
-        self.logger.info("Applying course lab requirements constraint...")
+        """CONSTRAINT: Each course must be scheduled for its required number of lab sessions.
+        
+        DEPARTMENT PRIORITY SYSTEM for 70-capacity labs:
+        - Computer Science & Engineering: PRIORITY access to 70-capacity labs
+        - Information Technology: PRIORITY access to 70-capacity labs  
+        - Other departments: Standard priority based on practical hours only
+        
+        BLOCK PRIORITY SYSTEM for 35-capacity labs:
+        - AIML, AIDS, CSD: PRIORITY access to K Block & J Block labs
+        - AIML, AIDS, CSD: RESTRICTED from Techlounge 35-capacity labs
+        - All three departments must use K/J blocks only for 35-capacity needs
+        
+        Priority weights:
+        - CS/IT 6+ hours: 1300 (HIGHEST priority)
+        - CS/IT 4+ hours: 1300 (EQUAL priority as 6+ hours for CS/IT)  
+        - CS/IT 2-3 hours: 150 (positive preference for 70+ capacity)
+        - Other 6+ hours: 1000 (standard priority)
+        - Other 4+ hours: 200 (REDUCED priority for non-CS/IT departments)
+        - Other 2-3 hours: -100 (preference for 35-capacity)
+        - AIML/AIDS/CSD K/J block preference: +400 weight bonus
+        """
+        self.logger.info("Applying course lab requirements constraint with department-based 70-capacity lab priority...")
+        self.logger.info("PRIORITY DEPARTMENTS for 70-capacity labs: Computer Science & Engineering, Information Technology")
+        self.logger.info("CS/IT 4-hour and 6-hour courses receive EQUAL highest priority (weight: 1300) for 70-capacity labs")
+        self.logger.info("Other departments' 4-hour courses have REDUCED priority (weight: 200) for 70-capacity labs")
+        self.logger.info("BLOCK PRIORITY: AIML, AIDS, CSD get priority for K & J blocks; ALL THREE restricted from Techlounge 35-cap labs")
         constraints_applied = 0
         
         for teacher_id, lab_courses in self.lab_requirements.items():
@@ -2170,10 +2196,21 @@ class CombinedScheduler:
                                     model.Add(sum(total_assignments) == max_batched_sessions_adjusted).OnlyEnforceIf(use_35_cap_strategy)
                                     model.Add(sum(total_assignments) == max_unbatched_sessions_adjusted).OnlyEnforceIf(use_35_cap_strategy.Not())
                                     
-                                    # Add preference based on student count and core lab status
+                                    # Add preference based on student count, core lab status, and department
                                     if needs_large_capacity and not is_core_lab:
-                                        # Strong preference for 70+ capacity labs for large student counts
-                                        self._add_capacity_preference(model, use_35_cap_strategy, 800, course_req['course_code'], "2h course with 100+ students - prefer large labs")
+                                        # Check if this is a priority department for 70 capacity labs
+                                        is_priority_dept = dept_name in ['Computer Science & Engineering', 'Information Technology']
+                                        
+                                        base_weight = 800
+                                        if is_priority_dept:
+                                            # Extra boost for CS & IT departments
+                                            weight = base_weight + 250  # 1050 total
+                                            description = "2h course with 100+ students - prefer large labs + CS/IT dept boost"
+                                        else:
+                                            weight = base_weight
+                                            description = "2h course with 100+ students - prefer large labs"
+                                        
+                                        self._add_capacity_preference(model, use_35_cap_strategy, weight, course_req['course_code'], description)
                                     
                                     constraints_applied += 6
                                     lab_type = "CORE LAB" if is_core_lab else "LARGE STUDENT"
@@ -2211,16 +2248,43 @@ class CombinedScheduler:
                                 model.Add(sum(total_assignments) == max_batched_sessions).OnlyEnforceIf(use_35_cap_strategy)
                                 model.Add(sum(total_assignments) == max_unbatched_sessions).OnlyEnforceIf(use_35_cap_strategy.Not())
                                 
-                                # PRIORITY SYSTEM: Add preference for 70+ capacity labs based on practical hours
+                                # PRIORITY SYSTEM: Add preference for 70+ capacity labs based on practical hours AND department
+                                # Check if this is a priority department for 70 capacity labs
+                                is_priority_dept = dept_name in ['Computer Science & Engineering', 'Information Technology']
+                                
                                 if priority_level == 1:  # 6+ hours: HIGHEST priority for 70+ labs
-                                    # Strong preference for 70+ capacity labs (weight = 1000)
-                                    self._add_capacity_preference(model, use_35_cap_strategy, 1000, course_req['course_code'], "6+ hours HIGHEST priority")
+                                    base_weight = 1000
+                                    if is_priority_dept:
+                                        # Extra boost for CS & IT departments
+                                        weight = base_weight + 300  # 1300 total
+                                        description = f"6+ hours HIGHEST priority + CS/IT dept boost"
+                                    else:
+                                        weight = base_weight
+                                        description = "6+ hours HIGHEST priority"
+                                    self._add_capacity_preference(model, use_35_cap_strategy, weight, course_req['course_code'], description)
+                                    
                                 elif priority_level == 2:  # 4+ hours: SECOND priority for 70+ labs
-                                    # Medium preference for 70+ capacity labs (weight = 500)
-                                    self._add_capacity_preference(model, use_35_cap_strategy, 500, course_req['course_code'], "4+ hours SECOND priority")
+                                    if is_priority_dept:
+                                        # CS & IT departments get EQUAL priority as 6+ hour courses for 70+ capacity labs
+                                        weight = 1600  # Same as 6+ hours for CS/IT
+                                        description = f"4+ hours EQUAL priority as 6hrs for CS/IT dept"
+                                    else:
+                                        # Reduced priority for other departments' 4-hour courses
+                                        weight = 200  # Lower than original 500
+                                        description = "4+ hours REDUCED priority for non-CS/IT dept"
+                                    self._add_capacity_preference(model, use_35_cap_strategy, weight, course_req['course_code'], description)
+                                    
                                 else:  # 2-3 hours: Lower priority
-                                    # Slight preference for 35-capacity labs (weight = 100)
-                                    self._add_capacity_preference(model, use_35_cap_strategy, -100, course_req['course_code'], "2-3 hours lower priority")
+                                    if is_priority_dept:
+                                        # CS & IT departments get preference for 70+ capacity even for 2-3 hours
+                                        weight = 150  # Positive weight for 70+ capacity preference
+                                        description = f"2-3 hours CS/IT dept priority for 70+ capacity"
+                                        self._add_capacity_preference(model, use_35_cap_strategy, weight, course_req['course_code'], description)
+                                    else:
+                                        # Other departments get slight preference for 35-capacity labs (original behavior)
+                                        weight = -100
+                                        description = "2-3 hours lower priority"
+                                        self._add_capacity_preference(model, use_35_cap_strategy, weight, course_req['course_code'], description)
                                 
                                 constraints_applied += 6
                                 self.logger.info(f"Course {course_req['course_code']} ({practical_hours}h, Priority {priority_level}): EITHER {max_batched_sessions} sessions (35-cap batched) OR {max_unbatched_sessions} sessions (70+ cap unbatched)")
@@ -2386,6 +2450,131 @@ class CombinedScheduler:
         
         self.logger.info(f"Applied {constraints_applied} optimized lab room single assignment constraints")
         self.logger.info(f"Processed {len(time_slot_assignments)} unique session-room combinations")
+        return constraints_applied
+
+    def apply_block_specific_lab_priority_constraint(self, model, lab_variables):
+        """Apply block-specific lab priority for AIML, AIDS, CSD departments.
+        
+        Priority Rules:
+        1. AIML, AIDS, CSD get priority for K Block and J Block labs
+        2. AIML, AIDS, and CSD are RESTRICTED from using Techlounge 35-capacity labs
+        3. All three departments must use K/J blocks only for 35-capacity lab assignments
+        """
+        self.logger.info("Applying block-specific lab priority constraints for AIML/AIDS/CSD departments...")
+        constraints_applied = 0
+        
+        # Define room categories by block and capacity
+        k_block_35_labs = [166, 167, 168, 169, 170, 171]  # KFL01, KFL02, KFL03, KFR01, KFR02, KFR03
+        j_block_35_labs = [160, 161, 162, 163, 164, 165]  # JL1, JL2, JL3, JR1, JR2, JR3
+        techlounge_35_labs = [174, 175, 176, 177, 178, 179, 181, 183, 186, 187]  # TLFL1-5, TLFR1,3,5, TLGL3,4
+        
+        # Priority departments for K/J blocks (with common variations)
+        block_priority_depts = [
+            'Artificial Intelligence & Machine Learning',  # AIML
+            'Artificial Intelligence and Machine Learning',  # AIML variant
+            'Artificial Intelligence & Data Science',       # AIDS  
+            'Artificial Intelligence and Data Science',     # AIDS variant
+            'Computer Science & Design',                    # CSD
+            'Computer Science and Design'                   # CSD variant
+        ]
+        
+        # Departments restricted from Techlounge 35-capacity labs
+        techlounge_restricted_depts = [
+            'Artificial Intelligence & Machine Learning',  # AIML
+            'Artificial Intelligence and Machine Learning',  # AIML variant
+            'Artificial Intelligence & Data Science',       # AIDS
+            'Artificial Intelligence and Data Science',     # AIDS variant
+            'Computer Science & Design',                    # CSD
+            'Computer Science and Design'                   # CSD variant
+        ]
+        
+        self.logger.info(f"K/J Block priority departments: {block_priority_depts}")
+        self.logger.info(f"Techlounge 35-cap restricted departments: {techlounge_restricted_depts}")
+        self.logger.info(f"K Block 35-cap labs: {k_block_35_labs} (6 labs)")
+        self.logger.info(f"J Block 35-cap labs: {j_block_35_labs} (6 labs)")
+        self.logger.info(f"Techlounge 35-cap labs (restricted for AIML/AIDS/CSD): {techlounge_35_labs} (10 labs)")
+        
+        for teacher_id, lab_courses in self.lab_requirements.items():
+            for course_req in lab_courses:
+                course_instance_id = course_req['course_instance_id']
+                
+                if teacher_id in lab_variables and course_instance_id in lab_variables[teacher_id]:
+                    # Get department for this course
+                    dept_name = "Computer Science & Engineering"  # Default
+                    if hasattr(self, 'instance_group_mapping') and course_instance_id in self.instance_group_mapping:
+                        dept_name = self.instance_group_mapping[course_instance_id]['department']
+                    else:
+                        # Fallback: look up in courses_df
+                        base_id = self._get_base_course_id(course_instance_id)
+                        course_matches = self.courses_df[self.courses_df['id'] == int(base_id)]
+                        if not course_matches.empty:
+                            dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
+                    
+                    dept_days = self._get_days_for_department(dept_name)
+                    num_dept_days = len(dept_days)
+                    
+                    # Apply constraints based on department
+                    if dept_name in techlounge_restricted_depts:
+                        # HARD CONSTRAINT: AIML, AIDS, and CSD CANNOT use Techlounge 35-capacity labs
+                        for day_idx in range(num_dept_days):
+                            for session_name in self.lab_sessions.keys():
+                                for room_id in techlounge_35_labs:
+                                    if (day_idx in lab_variables[teacher_id][course_instance_id] and
+                                        session_name in lab_variables[teacher_id][course_instance_id][day_idx] and
+                                        room_id in lab_variables[teacher_id][course_instance_id][day_idx][session_name]):
+                                        # Force assignment to be 0 (cannot use this room)
+                                        model.Add(lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id] == 0)
+                                        constraints_applied += 1
+                        
+                        self.logger.info(f"RESTRICTED: {dept_name} course {course_req['course_code']} CANNOT use Techlounge 35-capacity labs")
+                    
+                    if dept_name in block_priority_depts:
+                        # Add soft preference for K/J block labs through objective function
+                        k_j_block_assignments = []
+                        other_lab_assignments = []
+                        
+                        for day_idx in range(num_dept_days):
+                            for session_name in self.lab_sessions.keys():
+                                for room_id in self.lab_room_ids:
+                                    if (day_idx in lab_variables[teacher_id][course_instance_id] and
+                                        session_name in lab_variables[teacher_id][course_instance_id][day_idx] and
+                                        room_id in lab_variables[teacher_id][course_instance_id][day_idx][session_name]):
+                                        
+                                        assignment_var = lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id]
+                                        
+                                        if room_id in k_block_35_labs or room_id in j_block_35_labs:
+                                            k_j_block_assignments.append(assignment_var)
+                                        else:
+                                            other_lab_assignments.append(assignment_var)
+                        
+                        # Add preference variables for objective function
+                        if k_j_block_assignments:
+                            prefer_k_j_blocks = model.NewBoolVar(f'prefer_kj_blocks_{course_instance_id}')
+                            
+                            # If prefer_k_j_blocks = 1, then prioritize K/J block assignments
+                            if k_j_block_assignments and other_lab_assignments:
+                                k_j_assignments_sum = sum(k_j_block_assignments)
+                                
+                                # Add to capacity preferences with high weight for K/J block priority
+                                block_priority_weight = 400  # High priority for K/J blocks
+                                self.capacity_preferences.append(prefer_k_j_blocks * block_priority_weight)
+                                
+                                # Create boolean variable to track if any K/J block is used
+                                uses_k_j_blocks = model.NewBoolVar(f'uses_kj_blocks_{course_instance_id}')
+                                
+                                # uses_k_j_blocks = 1 if k_j_assignments_sum >= 1, else 0
+                                model.Add(k_j_assignments_sum >= 1).OnlyEnforceIf(uses_k_j_blocks)
+                                model.Add(k_j_assignments_sum == 0).OnlyEnforceIf(uses_k_j_blocks.Not())
+                                
+                                # Link preference variable to actual usage
+                                model.Add(prefer_k_j_blocks == 1).OnlyEnforceIf(uses_k_j_blocks)
+                                model.Add(prefer_k_j_blocks == 0).OnlyEnforceIf(uses_k_j_blocks.Not())
+                                
+                                constraints_applied += 4
+                        
+                        self.logger.info(f"PRIORITY: {dept_name} course {course_req['course_code']} gets K/J block preference (weight: 400)")
+        
+        self.logger.info(f"Applied {constraints_applied} block-specific lab priority constraints")
         return constraints_applied
 
     def apply_140_lab_restriction_constraint(self, model, lab_variables):
