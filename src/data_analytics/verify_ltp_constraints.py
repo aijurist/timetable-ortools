@@ -183,7 +183,7 @@ def verify_ltp_constraints():
     
     # Count lab assignments from lab schedule (if available)
     if has_lab_schedule:
-        # Enhanced counting for batched vs non-batched courses
+        # Enhanced counting for mixed batched/non-batched courses
         for _, row in lab_schedule_df.iterrows():
             try:
                 instance_id = str(int(float(row['course_instance_id'])))  # Handle float conversion issues
@@ -193,29 +193,47 @@ def verify_ltp_constraints():
             # Check if this is a batched course
             is_batched = row.get('is_batched', False)
             
+            # Initialize tracking structures if needed
+            if 'mixed_batching' not in scheduled_hours[instance_id]:
+                scheduled_hours[instance_id]['mixed_batching'] = {
+                    'batched_hours': 0,
+                    'non_batched_hours': 0,
+                    'batch_sessions': {},
+                    'has_mixed_batching': False
+                }
+            
             if is_batched:
-                # For batched courses: each lab session = 2 practical hours per batch
-                # Each batch should get enough sessions to meet the practical hour requirement
+                # For batched sessions: each lab session = 2 practical hours per batch
                 batch_info = row.get('batch_info', '')
-                if batch_info:
+                
+                # Handle case where batch_info might be NaN or not a string
+                if pd.notna(batch_info) and str(batch_info).strip():
                     # Track sessions per batch
                     if 'batch_sessions' not in scheduled_hours[instance_id]:
                         scheduled_hours[instance_id]['batch_sessions'] = {}
                     
-                    batch_key = batch_info.strip()
+                    batch_key = str(batch_info).strip()
                     if batch_key not in scheduled_hours[instance_id]['batch_sessions']:
                         scheduled_hours[instance_id]['batch_sessions'][batch_key] = 0
                     
-                    # Each session = 2 practical hours
+                    # Each session = 2 practical hours per batch
                     scheduled_hours[instance_id]['batch_sessions'][batch_key] += 2
                     scheduled_hours[instance_id]['batches'].add(batch_key)
+                    
+                    # Track batched hours for mixed batching detection
+                    scheduled_hours[instance_id]['mixed_batching']['batched_hours'] += 2
                 
                 # Also increment the general practical counter for overall display
-                # This is needed for correct analysis
                 scheduled_hours[instance_id]['practical'] += 2
             else:
-                # For non-batched courses: each lab session = 2 practical hours
+                # For non-batched sessions: each lab session = 2 practical hours for all students
                 scheduled_hours[instance_id]['practical'] += 2
+                scheduled_hours[instance_id]['mixed_batching']['non_batched_hours'] += 2
+            
+            # Detect mixed batching: course has both batched and non-batched sessions
+            mixed_info = scheduled_hours[instance_id]['mixed_batching']
+            if mixed_info['batched_hours'] > 0 and mixed_info['non_batched_hours'] > 0:
+                scheduled_hours[instance_id]['mixed_batching']['has_mixed_batching'] = True
     
     print(f"{'ID':<6} {'Course':<12} {'Teacher':<20} {'Sem':<4} {'P Req':<6} {'P Sch':<10} {'P Status':<15} {'Status':<25}")
     print("-" * 110)
@@ -250,11 +268,44 @@ def verify_ltp_constraints():
         # Practical status display and compliance checking
         if practical_required > 0:
             if has_lab_schedule:
-                # Check if this is a batched course
+                # Check for mixed batching scenario
+                mixed_info = scheduled_hours[instance_id].get('mixed_batching', {})
                 batch_sessions = scheduled_hours[instance_id].get('batch_sessions', {})
                 
-                if batch_sessions:
-                    # Batched course: check if each batch meets the requirement
+                if mixed_info.get('has_mixed_batching', False):
+                    # Mixed batching: course has both batched and non-batched sessions
+                    batched_hours = mixed_info['batched_hours']
+                    non_batched_hours = mixed_info['non_batched_hours']
+                    
+                    # For mixed batching, verify that total hours meet requirement
+                    # Each batch should get the required hours, plus non-batched hours
+                    if batch_sessions:
+                        # Check if each batch gets required hours from batched sessions
+                        batch_compliant = True
+                        batch_details = []
+                        
+                        for batch_key, batch_hours in batch_sessions.items():
+                            total_batch_hours = batch_hours + non_batched_hours  # Batch hours + shared non-batched hours
+                            if total_batch_hours >= practical_required:
+                                batch_details.append(f"{batch_key}:OK({batch_hours}b+{non_batched_hours}nb)")
+                            else:
+                                batch_details.append(f"{batch_key}:{total_batch_hours}/{practical_required}({batch_hours}b+{non_batched_hours}nb)")
+                                batch_compliant = False
+                        
+                        if batch_compliant:
+                            practical_status = f"MIXED OK ({len(batch_sessions)}b+{non_batched_hours//2}nb)"
+                            practical_ok = True
+                        else:
+                            practical_status = f"MIXED PARTIAL ({', '.join(batch_details)})"
+                            practical_ok = False
+                            practical_violations += 1
+                    else:
+                        practical_status = "MIXED ERROR"
+                        practical_ok = False
+                        practical_violations += 1
+                        
+                elif batch_sessions:
+                    # Pure batched course: check if each batch meets the requirement
                     batch_compliant = True
                     batch_details = []
                     
@@ -277,7 +328,7 @@ def verify_ltp_constraints():
                         # Calculate total scheduled for display
                         practical_scheduled = sum(batch_sessions.values()) // len(batch_sessions) if batch_sessions else 0
                 else:
-                    # Non-batched course: use original logic
+                    # Pure non-batched course: use original logic
                     if practical_scheduled >= practical_required:
                         practical_status = "OK"
                         practical_ok = True
@@ -333,6 +384,56 @@ def verify_ltp_constraints():
     print(f"🚫 Not scheduled at all: {not_scheduled}")
     if has_lab_schedule:
         print(f"📈 Practical compliance rate: {((courses_with_practicals - practical_violations - not_scheduled)/max(courses_with_practicals, 1))*100:.1f}%")
+        
+        # Mixed batching analysis
+        mixed_batching_courses = 0
+        pure_batched_courses = 0
+        pure_non_batched_courses = 0
+        
+        for instance_id in course_requirements:
+            if instance_id in scheduled_hours:
+                mixed_info = scheduled_hours[instance_id].get('mixed_batching', {})
+                if mixed_info.get('has_mixed_batching', False):
+                    mixed_batching_courses += 1
+                elif scheduled_hours[instance_id].get('batch_sessions', {}):
+                    pure_batched_courses += 1
+                elif scheduled_hours[instance_id]['practical'] > 0:
+                    pure_non_batched_courses += 1
+        
+        print(f"\n🔄 BATCHING ANALYSIS:")
+        print(f"Mixed batching courses: {mixed_batching_courses} (both batched + non-batched sessions)")
+        print(f"Pure batched courses: {pure_batched_courses} (only batched sessions)")
+        print(f"Pure non-batched courses: {pure_non_batched_courses} (only non-batched sessions)")
+        total_scheduled_courses = mixed_batching_courses + pure_batched_courses + pure_non_batched_courses
+        if total_scheduled_courses > 0:
+            print(f"Mixed batching rate: {(mixed_batching_courses/total_scheduled_courses)*100:.1f}%")
+        
+        # Show examples of mixed batching courses
+        if mixed_batching_courses > 0:
+            print(f"\n🔍 MIXED BATCHING EXAMPLES:")
+            print(f"{'ID':<6} {'Course':<12} {'P Req':<6} {'Batched':<8} {'Non-Batched':<12} {'Details'}")
+            print("-" * 70)
+            
+            mixed_examples = 0
+            for instance_id, requirements in sorted(course_requirements.items(), key=lambda x: int(x[0])):
+                if instance_id in scheduled_hours:
+                    mixed_info = scheduled_hours[instance_id].get('mixed_batching', {})
+                    if mixed_info.get('has_mixed_batching', False) and mixed_examples < 10:
+                        course_code = requirements['course_code']
+                        practical_required = requirements['practical_hours']
+                        batched_hours = mixed_info['batched_hours']
+                        non_batched_hours = mixed_info['non_batched_hours']
+                        
+                        batch_sessions = scheduled_hours[instance_id].get('batch_sessions', {})
+                        batch_count = len(batch_sessions)
+                        
+                        details = f"{batch_count} batches, {non_batched_hours//2} shared sessions"
+                        
+                        print(f"{instance_id:<6} {course_code:<12} {practical_required:<6} {batched_hours:<8} {non_batched_hours:<12} {details}")
+                        mixed_examples += 1
+            
+            if mixed_batching_courses > 10:
+                print(f"... and {mixed_batching_courses - 10} more mixed batching courses")
     
     if has_lab_schedule:
         print(f"\n💡 Lab scheduling features implemented:")

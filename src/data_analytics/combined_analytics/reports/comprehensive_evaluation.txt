@@ -1,28 +1,7 @@
 COMBINED SCHEDULE COMPREHENSIVE EVALUATION REPORT
 ============================================================
-Generated: 2025-06-21 11:20:05
+Generated: 2025-07-01 07:44:50
 
 1. LTP CONSTRAINT VERIFICATION
 ------------------------------
 Status: ❌ FAILED
-Compliance Rate: 89.5%
-Total Courses: 771
-Compliant Courses: 690
-Violations: 111
-
-2. THEORY-LAB CONFLICT VERIFICATION
-------------------------------
-Status: ✅ PASSED
-Total Conflicts: 0
-Conflicted Dept-Sem: 0
-Total Dept-Sem: 58
-
-3. OVERALL ASSESSMENT
-------------------------------
-Overall Status: ❌ FAILED
-
-ISSUES FOUND:
-- LTP constraint violations detected
-
-Recommendations:
-- Review course hour allocations

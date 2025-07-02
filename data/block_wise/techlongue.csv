@@ -15,7 +15,7 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 167,KFL02,K Block,Computer Lab (KFL02),1,Laboratory,20,35,1,0,Advanced,4,0,0,0
 169,KFR01,K Block,Computer Lab (KFR01),1,Laboratory,20,35,1,0,Advanced,4,0,0,0
 170,KFR02,K Block,Computer Lab (KFR02),1,Laboratory,20,35,1,0,High-tech,3,0,0,0
-168,KFL03,K Block,Computer Lab (KFL03),1,Laboratory,20,35,1,0,High-tech,12,0,0,0
+168,KFR04,K Block,Computer Lab (KFR04),1,Laboratory,20,35,1,0,High-tech,12,0,0,0
 171,KFR03,K Block,Computer Lab (KFR03),1,Laboratory,20,35,1,0,Advanced,13,0,0,0
 160,JL1,J Block,Computer Lab (JL1),1,Laboratory,20,35,1,0,None,13,0,0,0
 161,JL2,J Block,Computer Lab (JL2),1,Laboratory,20,35,1,0,High-tech,12,0,0,0
@@ -105,14 +105,14 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 112,TIFAC V04,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
 158,DG02,D Block,Computer Lab (DG02),1,Laboratory,50,70,1,0,High-tech,13,0,0,0
 159,DG03,D Block,Computer Lab (DG03),1,Laboratory,50,70,1,0,Basic,13,0,0,0
-113,B First Floor,B Block,Immunology Lab,1,Core-Lab,20,35,1,0,Advanced,7,0,0,0
+113,B First Floor,B Block,Immunology Lab,1,Core-Lab,20,70,1,0,Advanced,7,0,0,0
 114,B First Floor,B Block,Genetic Engineering Lab,1,Core-Lab,20,35,1,0,None,7,0,0,0
 115,B First Floor,B Block,Microbiology Lab,1,Core-Lab,20,35,1,0,High-tech,7,0,0,0
 116,B First Floor,B Block,Biochemistry Lab,1,Core-Lab,20,35,1,0,Basic,7,0,0,0
 117,B Ground Floor,B Block,Technical Analysis Lab,1,Core-Lab,20,35,1,0,High-tech,8,0,0,0
 118,B Ground Floor,B Block,Chemical Reaction Engineering Lab,1,Core-Lab,20,35,1,0,Basic,8,0,0,0
 119,B Second Floor,B Block,Downstream Processing Lab,1,Core-Lab,20,35,1,0,None,7,0,0,0
-120,B Second Floor,B Block,Bioprocess Lab,1,Core-Lab,20,35,1,0,None,7,0,0,0
+120,B Second Floor,B Block,Bioprocess Lab,1,Core-Lab,20,70,1,0,None,7,0,0,0
 121,B304,B Block,Computer Application in Chemical Engg Lab,1,Core-Lab,20,35,1,0,Advanced,8,0,0,0
 122,B116,B Block,Communication Systems Lab,1,Core-Lab,20,35,1,0,None,16,0,0,0
 123,B117,B Block,Embedded System Laboratory (ECE),1,Core-Lab,20,35,1,0,None,16,0,0,0

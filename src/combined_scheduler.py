@@ -161,6 +161,9 @@ class CombinedScheduler:
         # Initialize capacity preferences for priority system
         self.capacity_preferences = []
         
+        # Load teacher day preferences from pop.csv
+        self._load_teacher_day_preferences()
+        
         # GLOBAL ROOM REGISTRY FOR CROSS-SCHEDULE VALIDATION
         self.global_room_registry = {}  # (day, time_slot, room_id) -> session_info
         self._initialize_global_room_registry()
@@ -170,6 +173,127 @@ class CombinedScheduler:
         self.logger.info(f"Lab time slots: {self.num_lab_slots}")
         self.logger.info(f"Lab rooms: {len(self.lab_room_ids)}")
         self.logger.info(f"Theory rooms: {len(self.theory_room_ids)}")
+
+    def _load_teacher_day_preferences(self):
+        """Load teacher day preferences from pop.csv file."""
+        self.teacher_day_preferences = {}
+        
+        try:
+            # Try to find pop.csv in data directory
+            pop_file_paths = [
+                'data/pop.csv',
+                './data/pop.csv', 
+                '../data/pop.csv',
+                'timetable_scheduler/data/pop.csv'
+            ]
+            
+            pop_file = None
+            for path in pop_file_paths:
+                if os.path.exists(path):
+                    pop_file = path
+                    break
+            
+            if pop_file is None:
+                self.logger.warning("pop.csv not found. No teacher day preferences will be applied.")
+                return
+                
+            # Read the preferences file
+            pop_df = pd.read_csv(pop_file)
+            self.logger.info(f"Loaded teacher day preferences from {pop_file}")
+            
+            # Map day names to indices
+            day_name_mapping = {
+                'monday': 0,
+                'tuesday': 1, 
+                'wednesday': 2,
+                'wed': 2,
+                'thursday': 3,
+                'thur': 3,
+                'friday': 4,
+                'fri': 4,
+                'saturday': 5,
+                'sat': 5
+            }
+            
+            # Process each teacher's preferences
+            for _, row in pop_df.iterrows():
+                try:
+                    teacher_id = str(int(float(row['id_faculty'])))  # Ensure string format
+                    teacher_name = row['name_faculty '].strip() if pd.notna(row['name_faculty ']) else None
+                    subject_code = row['subject_code'].strip() if pd.notna(row['subject_code']) else None
+                    pref_day_1 = row['preffered_day_1'].strip().lower() if pd.notna(row['preffered_day_1']) and row['preffered_day_1'].strip() != '-' else None
+                    pref_day_2 = row['preffered_day_2'].strip().lower() if pd.notna(row['preffered_day_2']) and row['preffered_day_2'].strip() != '-' else None
+                    
+                    # Convert day names to indices
+                    preferred_days = []
+                    if pref_day_1 and pref_day_1 in day_name_mapping:
+                        preferred_days.append(day_name_mapping[pref_day_1])
+                    if pref_day_2 and pref_day_2 in day_name_mapping:
+                        preferred_days.append(day_name_mapping[pref_day_2])
+                    
+                    if teacher_id not in self.teacher_day_preferences:
+                        self.teacher_day_preferences[teacher_id] = {}
+                    
+                    # Store preferences - apply to ALL courses for this teacher (ignore subject_code for now)
+                    # This ensures the preference applies regardless of exact course code matching
+                    self.teacher_day_preferences[teacher_id]['*'] = preferred_days
+                    
+                    # Also store by subject code for debugging
+                    if subject_code:
+                        self.teacher_day_preferences[teacher_id][subject_code] = preferred_days
+                    
+                    pref_day_names = [list(day_name_mapping.keys())[list(day_name_mapping.values()).index(day)] for day in preferred_days]
+                    self.logger.info(f"🎯 Teacher {teacher_id} ({teacher_name}, subject: {subject_code or 'ALL'}): preferred days {preferred_days} ({', '.join(pref_day_names)})")
+                    
+                except Exception as e:
+                    self.logger.warning(f"Error processing teacher preference row: {row.to_dict()}, error: {e}")
+                    continue
+            
+            self.logger.info(f"Loaded day preferences for {len(self.teacher_day_preferences)} teachers")
+            self.logger.info(f"📋 Pop.csv teacher IDs: {list(self.teacher_day_preferences.keys())}")
+            
+            # DEBUG: Check teacher IDs in the course data for comparison
+            if hasattr(self, 'courses_df'):
+                unique_teacher_ids = self.courses_df['teacher_id'].unique()
+                sample_teacher_ids = [str(tid) for tid in unique_teacher_ids[:10]]  # First 10 for debugging
+                self.logger.info(f"📋 Course data teacher IDs (sample): {sample_teacher_ids}")
+                
+                # Check if any pop.csv teacher IDs exist in course data
+                matches_found = []
+                for pop_teacher_id in self.teacher_day_preferences.keys():
+                    if int(pop_teacher_id) in unique_teacher_ids:
+                        matches_found.append(pop_teacher_id)
+                
+                self.logger.info(f"✅ Pop.csv teachers found in course data: {matches_found}")
+                if not matches_found:
+                    self.logger.warning("⚠️  NO MATCHES between pop.csv teacher IDs and course data teacher IDs!")
+                else:
+                    self.logger.info(f"🎯 {len(matches_found)} out of {len(self.teacher_day_preferences)} pop.csv teachers found in course data")
+            
+        except Exception as e:
+            self.logger.error(f"Error loading teacher day preferences: {e}")
+            self.teacher_day_preferences = {}
+
+    def _get_teacher_preferred_days(self, teacher_id, course_code=None):
+        """Get preferred days for a teacher and optionally specific course.
+        
+        Returns:
+            list: List of preferred day indices, or None if no preferences found
+        """
+        if not hasattr(self, 'teacher_day_preferences') or teacher_id not in self.teacher_day_preferences:
+            return None
+            
+        teacher_prefs = self.teacher_day_preferences[teacher_id]
+        
+        # Check for course-specific preferences first
+        if course_code and course_code in teacher_prefs:
+            return teacher_prefs[course_code]
+        
+        # Check for general preferences (all courses for this teacher)
+        if '*' in teacher_prefs:
+            return teacher_prefs['*']
+            
+        return None
     
     def _load_day_order(self):
         """Load day order information from day_order.csv."""
@@ -363,6 +487,7 @@ class CombinedScheduler:
             # 'Electronics & Communication Engineering', 
             # 'Mechanical Engineering',
             # 'Biomedical Engineering',
+            "Electronics & Communication Engineering",
             'Electrical & Electronics Engineering'
         ]
         
@@ -395,9 +520,6 @@ class CombinedScheduler:
             ('Mechanical Engineering', 5): 4,  # S5: 12:00-12:50
             ('Mechanical Engineering', 7): 4,  # S7: 1:00-1:50
 
-            ('Electronics & Communication Engineering', 3): 4,  # S3: 11:00-11:50
-            ('Electronics & Communication Engineering', 5): 4,  # S5: 12:00-12:50
-            ('Electronics & Communication Engineering', 7): 4,  # S7: 1:00-1:50
 
             ('Computer Science & Business Systems', 3): 4,  # S3: 12:00-12:50
             ('Computer Science & Business Systems', 5): 3,  # S5: 11:00-11:50
@@ -1978,6 +2100,9 @@ class CombinedScheduler:
         # 2. Theory-specific constraints (excluding the old teacher clash)
         constraints_applied += self._apply_theory_constraints(model, theory_variables, lab_variables)
         
+        # 2.5. Teacher day preference constraints (from pop.csv)
+        constraints_applied += self._apply_teacher_day_preference_constraints(model, theory_variables)
+        
         # 3. Cross-system constraints (now only for dept/semester group conflicts)
         constraints_applied += self._apply_cross_system_constraints(model, lab_variables, theory_variables)
 
@@ -2266,7 +2391,7 @@ class CombinedScheduler:
                                 elif priority_level == 2:  # 4+ hours: SECOND priority for 70+ labs
                                     if is_priority_dept:
                                         # CS & IT departments get EQUAL priority as 6+ hour courses for 70+ capacity labs
-                                        weight = 1600  # Same as 6+ hours for CS/IT
+                                        weight = 2000  # Same as 6+ hours for CS/IT
                                         description = f"4+ hours EQUAL priority as 6hrs for CS/IT dept"
                                     else:
                                         # Reduced priority for other departments' 4-hour courses
@@ -3541,8 +3666,12 @@ class CombinedScheduler:
         """
         Apply constraint to prevent over-concentration of course sessions on the same day.
         Limits each course instance to maximum 2 sessions (lecture/tutorial) per day.
+        
+        EXCEPTION: Teachers in pop.csv get relaxed limits (up to 4 sessions per day) to accommodate
+        their strict day preferences.
         """
         self.logger.info("Applying course instance daily session limit constraint (max 2 sessions per course per day)...")
+        self.logger.info("EXCEPTION: Teachers in pop.csv get relaxed limits (up to 4 sessions per day)")
         constraints_applied = 0
         
         # Build mapping of course instances to their sessions across all groups
@@ -3622,7 +3751,34 @@ class CombinedScheduler:
                 self.logger.debug(f"Applying daily limits for {course_code} (ID: {course_instance_id}) in {group_name}")
                 self.logger.debug(f"  Total sessions: {total_sessions}, Department days: {num_dept_days}")
                 
-                # Apply constraint for each day
+                # Check if any teacher in this group is in pop.csv preferences (needs exception)
+                has_pop_teacher = False
+                pop_teachers_in_group = []
+                if hasattr(self, 'course_groups'):
+                    for (check_dept, check_sem), check_groups in self.course_groups.items():
+                        for check_group_idx, check_group in enumerate(check_groups):
+                            check_group_name = f"{check_dept}_S{check_sem}_G{check_group_idx + 1}"
+                            if check_group_name == group_name:
+                                # Check if any teacher in this group is in pop.csv
+                                for instance in check_group:
+                                    teacher_key = str(instance['teacher_id'])
+                                    if (hasattr(self, 'teacher_day_preferences') and 
+                                        teacher_key in self.teacher_day_preferences):
+                                        has_pop_teacher = True
+                                        pop_teachers_in_group.append(teacher_key)
+                                break
+                        if has_pop_teacher:
+                            break
+                
+                # Apply constraint for each day with different limits based on pop.csv exception
+                max_sessions_per_day = 4 if has_pop_teacher else 2
+                limit_description = "RELAXED (pop.csv teacher)" if has_pop_teacher else "STANDARD"
+                
+                if has_pop_teacher:
+                    self.logger.info(f"🔄 RELAXED CONSTRAINTS for group {group_name} - teachers {pop_teachers_in_group} from pop.csv")
+                    self.logger.info(f"   - Max sessions per day: {max_sessions_per_day} (instead of 2)")
+                    self.logger.info(f"   - Multi-day distribution: DISABLED (can use preferred days only)")
+                
                 for day_idx in range(num_dept_days):
                     if day_idx not in group_timeslot_vars[group_name]:
                         continue
@@ -3632,18 +3788,19 @@ class CombinedScheduler:
                     for slot_idx in group_timeslot_vars[group_name][day_idx]:
                         day_slots.append(group_timeslot_vars[group_name][day_idx][slot_idx])
                     
-                    if len(day_slots) > 2:
-                        # CONSTRAINT: At most 2 time slots can be assigned to this group per day
+                    if len(day_slots) > max_sessions_per_day:
+                        # CONSTRAINT: At most max_sessions_per_day time slots can be assigned to this group per day
                         # This indirectly limits course sessions since group scheduling distributes sessions across allocated slots
-                        model.Add(sum(day_slots) <= 2)
+                        model.Add(sum(day_slots) <= max_sessions_per_day)
                         constraints_applied += 1
                         
                         day_name = dept_days[day_idx] if day_idx < len(dept_days) else f"day_{day_idx}"
-                        self.logger.debug(f"Applied daily limit: {group_name} on {day_name} - max 2 slots (affects {course_code})")
+                        self.logger.debug(f"Applied daily limit: {group_name} on {day_name} - max {max_sessions_per_day} slots {limit_description} (affects {course_code})")
                 
                 # Additional constraint: For courses with many sessions, ensure distribution across multiple days
-                if total_sessions >= 4:
-                    # For courses with 4+ sessions, must use at least 2 different days
+                # EXCEPTION: Skip this constraint for pop.csv teachers to allow all sessions on preferred days
+                if total_sessions >= 4 and not has_pop_teacher:
+                    # For courses with 4+ sessions, must use at least 2 different days (except pop.csv teachers)
                     all_group_slots = []
                     day_usage_vars = []
                     
@@ -3662,11 +3819,13 @@ class CombinedScheduler:
                                 model.Add(sum(day_slots) <= len(day_slots) * day_used)
                                 day_usage_vars.append(day_used)
                     
-                    # Must use at least 2 days for courses with 4+ sessions
+                    # Must use at least 2 days for courses with 4+ sessions (except pop.csv teachers)
                     if len(day_usage_vars) >= 2:
                         model.Add(sum(day_usage_vars) >= 2)
                         constraints_applied += 1
                         self.logger.debug(f"Multi-day distribution: {course_code} ({total_sessions} sessions) must use ≥2 days")
+                elif total_sessions >= 4 and has_pop_teacher:
+                    self.logger.debug(f"Multi-day distribution SKIPPED for pop.csv teacher: {course_code} ({total_sessions} sessions) can use preferred days only")
         
         # Log constraint summary
         self.logger.info(f"Applied {constraints_applied} course instance daily session limit constraints")
@@ -4175,6 +4334,133 @@ class CombinedScheduler:
         self.logger.info(f"   - BIOTECHNOLOGY S5: Unlimited (exempt)")
         self.logger.info(f"   - ELECTRONICS & COMMUNICATION ENGINEERING S5: Unlimited (exempt)")
         self.logger.info(f"✅ Core departments: {', '.join(sorted(core_departments))}")
+        return constraints_applied
+
+    def _apply_teacher_day_preference_constraints(self, model, group_timeslot_vars):
+        """CRITICAL CONSTRAINT: Groups containing pop.csv teachers can ONLY be scheduled on their preferred days.
+        
+        This is a HARD constraint that completely blocks any group that contains a pop.csv teacher
+        from being scheduled on non-preferred days. This ensures the groups fall on the correct days.
+        """
+        self.logger.info("🎯 APPLYING CRITICAL POP.CSV DAY PREFERENCE CONSTRAINTS...")
+        constraints_applied = 0
+        
+        if not hasattr(self, 'teacher_day_preferences') or not self.teacher_day_preferences:
+            self.logger.error("❌ CRITICAL: No teacher day preferences loaded from pop.csv!")
+            return 0
+        
+        # Build mapping of teacher to their groups
+        teacher_to_groups = {}
+        for (dept, sem), groups in self.course_groups.items():
+            for group_idx, group_instances in enumerate(groups):
+                group_name = f"{dept}_S{sem}_G{group_idx + 1}"
+                for instance in group_instances:
+                    teacher_key = str(instance['teacher_id'])
+                    if teacher_key not in teacher_to_groups:
+                        teacher_to_groups[teacher_key] = []
+                    if group_name not in teacher_to_groups[teacher_key]:
+                        teacher_to_groups[teacher_key].append(group_name)
+        
+        self.logger.info(f"📋 LOADED POP.CSV TEACHERS: {list(self.teacher_day_preferences.keys())}")
+        self.logger.info(f"📋 TEACHERS WITH GROUPS: {list(teacher_to_groups.keys())[:10]}...")
+        
+        # CRITICAL: Apply hard day blocking for each pop.csv teacher
+        pop_teachers_processed = 0
+        total_groups_affected = 0
+        
+        for teacher_id, preferences in self.teacher_day_preferences.items():
+            # Get preferred days (use general preferences or first course-specific)
+            preferred_days = None
+            if '*' in preferences:
+                preferred_days = preferences['*']
+            else:
+                for course_code, days in preferences.items():
+                    preferred_days = days
+                    break
+            
+            if not preferred_days:
+                self.logger.error(f"❌ Teacher {teacher_id}: No valid preferred days found!")
+                continue
+            
+            if teacher_id not in teacher_to_groups:
+                self.logger.error(f"❌ CRITICAL: Teacher {teacher_id} from pop.csv NOT FOUND in any theory groups!")
+                # Show sample teacher IDs for debugging
+                sample_teachers = list(teacher_to_groups.keys())[:5]
+                self.logger.error(f"   Sample teacher IDs in system: {sample_teachers}")
+                continue
+            
+            pop_teachers_processed += 1
+            teacher_groups = teacher_to_groups[teacher_id]
+            total_groups_affected += len(teacher_groups)
+            
+            day_names = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+            pref_day_list = [day_names[d] for d in preferred_days if d < len(day_names)]
+            
+            self.logger.info(f"🎯 TEACHER {teacher_id}: MUST ONLY BE on {pref_day_list}")
+            self.logger.info(f"   📚 Teacher has {len(teacher_groups)} groups: {teacher_groups}")
+            
+            # For each group containing this teacher, BLOCK all non-preferred days
+            for group_name in teacher_groups:
+                if group_name not in group_timeslot_vars:
+                    self.logger.warning(f"   ⚠️  Group {group_name} not in timeslot variables")
+                    continue
+                
+                # Parse group info to get department days
+                dept_days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']  # Default
+                if '_S' in group_name:
+                    parts = group_name.split('_S')
+                    dept_name = parts[0]
+                    sem_part = parts[1].split('_G')[0] if '_G' in parts[1] else parts[1]
+                    try:
+                        semester = int(sem_part)
+                        dept_days = self._get_days_for_department(dept_name, semester)
+                    except ValueError:
+                        dept_days = self._get_days_for_department(dept_name)
+                
+                self.logger.info(f"   📅 Group {group_name}: Available days {dept_days}")
+                
+                # HARD BLOCK: Set all non-preferred days to ZERO for this group
+                group_constraints = 0
+                blocked_days = []
+                allowed_days = []
+                
+                for day_idx in range(len(dept_days)):
+                    day_name = dept_days[day_idx]
+                    
+                    if day_idx not in preferred_days:
+                        # COMPLETELY BLOCK this day for this group
+                        blocked_days.append(day_name)
+                        if day_idx in group_timeslot_vars[group_name]:
+                            for slot_idx in group_timeslot_vars[group_name][day_idx]:
+                                # FORCE GROUP TO NEVER SCHEDULE ON THIS DAY
+                                model.Add(group_timeslot_vars[group_name][day_idx][slot_idx] == 0)
+                                constraints_applied += 1
+                                group_constraints += 1
+                    else:
+                        # This day is ALLOWED
+                        allowed_days.append(day_name)
+                
+                self.logger.info(f"   ✅ Group {group_name} ALLOWED: {allowed_days}")
+                self.logger.info(f"   🚫 Group {group_name} BLOCKED: {blocked_days}")
+                self.logger.info(f"   🔒 Applied {group_constraints} blocking constraints for this group")
+        
+        # FINAL VERIFICATION SUMMARY
+        self.logger.info("="*70)
+        self.logger.info("🎯 POP.CSV DAY PREFERENCE CONSTRAINT SUMMARY:")
+        self.logger.info(f"   📋 Teachers in pop.csv file: {len(self.teacher_day_preferences)}")
+        self.logger.info(f"   ✅ Teachers successfully processed: {pop_teachers_processed}")
+        self.logger.info(f"   📚 Total groups affected: {total_groups_affected}")
+        self.logger.info(f"   🔒 Total day-blocking constraints: {constraints_applied}")
+        
+        if pop_teachers_processed == 0:
+            self.logger.error("❌❌❌ CRITICAL FAILURE: NO POP.CSV TEACHERS WERE PROCESSED!")
+            self.logger.error("❌❌❌ DAY PREFERENCES WILL NOT BE ENFORCED!")
+        elif constraints_applied == 0:
+            self.logger.warning("⚠️⚠️⚠️  WARNING: Teachers found but NO CONSTRAINTS applied!")
+        else:
+            self.logger.info(f"✅✅✅ SUCCESS: {pop_teachers_processed} teachers constrained with {constraints_applied} hard blocks")
+        
+        self.logger.info("="*70)
         return constraints_applied
     
     def _apply_cross_system_constraints(self, model, lab_variables, group_timeslot_vars):

@@ -1,0 +1,61 @@
+COMBINED SCHEDULE CONFLICT ANALYSIS REPORT
+============================================================
+Generated: 2025-07-01 06:56:37
+
+SUMMARY:
+Total Conflicts: 3137
+- Teacher Conflicts: 2
+- Room Conflicts: 2
+- Group Conflicts: 3133
+- Time Conflicts: 0
+
+TEACHER CONFLICTS:
+----------------------------------------
+1. TEACHER_DOUBLE_BOOKING
+   Details: {'teacher_id': 119, 'day': 'tuesday', 'conflict_type': 'TEACHER_DOUBLE_BOOKING', 'session1': {'type': 'LAB', 'course': 'BT19712', 'session': 'L1', 'time': '8:00-10:00', 'room': 'JL2'}, 'session2': {'type': 'THEORY', 'course': 'BT19P71', 'session': 'Lecture', 'time': '9:00 - 9:50', 'room': 'B302'}, 'severity': 'HIGH'}
+
+2. TEACHER_DOUBLE_BOOKING
+   Details: {'teacher_id': 495, 'day': 'wed', 'conflict_type': 'TEACHER_DOUBLE_BOOKING', 'session1': {'type': 'LAB', 'course': 'MT19713', 'session': 'L2', 'time': '10:00-12:00', 'room': 'KFR02'}, 'session2': {'type': 'LAB', 'course': 'MT19713', 'session': 'L2', 'time': '10:00-12:00', 'room': 'KFR02'}, 'severity': 'HIGH'}
+
+ROOM CONFLICTS:
+----------------------------------------
+1. ROOM_DOUBLE_BOOKING
+   Details: {'room_id': 170, 'day': 'wed', 'conflict_type': 'ROOM_DOUBLE_BOOKING', 'session1': {'type': 'LAB', 'course': 'MT19713', 'teacher': 495, 'session': 'L2', 'time': '10:00-12:00'}, 'session2': {'type': 'LAB', 'course': 'MT19713', 'teacher': 495, 'session': 'L2', 'time': '10:00-12:00'}, 'severity': 'HIGH'}
+
+2. ROOM_DOUBLE_BOOKING
+   Details: {'room_id': 223, 'day': 'fri', 'conflict_type': 'ROOM_DOUBLE_BOOKING', 'session1': {'type': 'LAB', 'course': 'CS23333', 'teacher': 1846, 'session': 'L1', 'time': '8:00-10:00'}, 'session2': {'type': 'LAB', 'course': 'CS23532', 'teacher': 1755, 'session': 'L1', 'time': '8:00-10:00'}, 'severity': 'HIGH'}
+
+GROUP CONFLICTS:
+----------------------------------------
+1. GROUP_OVERLAP
+   Details: {'department': 'Artificial Intelligence & Data Science', 'semester': 5, 'group_index': 3, 'day': 'thur', 'conflict_type': 'GROUP_OVERLAP', 'session1': {'type': 'LAB', 'course': 'AD23531', 'session': 'L5', 'time': '16:00-18:00'}, 'session2': {'type': 'LAB', 'course': 'AD23531', 'session': 'L5', 'time': '16:00-18:00'}, 'severity': 'MEDIUM'}
+
+2. GROUP_OVERLAP
+   Details: {'department': 'Artificial Intelligence & Data Science', 'semester': 5, 'group_index': 3, 'day': 'fri', 'conflict_type': 'GROUP_OVERLAP', 'session1': {'type': 'LAB', 'course': 'AD23531', 'session': 'L2', 'time': '10:00-12:00'}, 'session2': {'type': 'LAB', 'course': 'AD23531', 'session': 'L2', 'time': '10:00-12:00'}, 'severity': 'MEDIUM'}
+
+3. GROUP_OVERLAP
+   Details: {'department': 'Artificial Intelligence & Data Science', 'semester': 5, 'group_index': 3, 'day': 'fri', 'conflict_type': 'GROUP_OVERLAP', 'session1': {'type': 'LAB', 'course': 'AD23531', 'session': 'L2', 'time': '10:00-12:00'}, 'session2': {'type': 'LAB', 'course': 'AD23531', 'session': 'L2', 'time': '10:00-12:00'}, 'severity': 'MEDIUM'}
+
+4. GROUP_OVERLAP
+   Details: {'department': 'Artificial Intelligence & Data Science', 'semester': 5, 'group_index': 3, 'day': 'fri', 'conflict_type': 'GROUP_OVERLAP', 'session1': {'type': 'LAB', 'course': 'AD23531', 'session': 'L2', 'time': '10:00-12:00'}, 'session2': {'type': 'LAB', 'course': 'AD23531', 'session': 'L2', 'time': '10:00-12:00'}, 'severity': 'MEDIUM'}
+
+5. GROUP_OVERLAP
+   Details: {'department': 'Artificial Intelligence & Data Science', 'semester': 5, 'group_index': 3, 'day': 'fri', 'conflict_type': 'GROUP_OVERLAP', 'session1': {'type': 'THEORY', 'course': 'AD23531', 'session': 'Lecture', 'time': '8:00 - 8:50'}, 'session2': {'type': 'THEORY', 'course': 'AD23531', 'session': 'Lecture', 'time': '8:00 - 8:50'}, 'severity': 'MEDIUM'}
+
+6. GROUP_OVERLAP
+   Details: {'department': 'Artificial Intelligence & Data Science', 'semester': 5, 'group_index': 3, 'day': 'fri', 'conflict_type': 'GROUP_OVERLAP', 'session1': {'type': 'THEORY', 'course': 'AD23531', 'session': 'Lecture', 'time': '8:00 - 8:50'}, 'session2': {'type': 'THEORY', 'course': 'AD23531', 'session': 'Lecture', 'time': '8:00 - 8:50'}, 'severity': 'MEDIUM'}
+
+7. GROUP_OVERLAP
+   Details: {'department': 'Artificial Intelligence & Data Science', 'semester': 5, 'group_index': 3, 'day': 'fri', 'conflict_type': 'GROUP_OVERLAP', 'session1': {'type': 'THEORY', 'course': 'AD23531', 'session': 'Lecture', 'time': '8:00 - 8:50'}, 'session2': {'type': 'THEORY', 'course': 'AD23531', 'session': 'Lecture', 'time': '8:00 - 8:50'}, 'severity': 'MEDIUM'}
+
+8. GROUP_OVERLAP
+   Details: {'department': 'Artificial Intelligence & Data Science', 'semester': 5, 'group_index': 3, 'day': 'fri', 'conflict_type': 'GROUP_OVERLAP', 'session1': {'type': 'THEORY', 'course': 'AD23531', 'session': 'Lecture', 'time': '9:00 - 9:50'}, 'session2': {'type': 'THEORY', 'course': 'AD23531', 'session': 'Lecture', 'time': '9:00 - 9:50'}, 'severity': 'MEDIUM'}
+
+9. GROUP_OVERLAP
+   Details: {'department': 'Artificial Intelligence & Data Science', 'semester': 5, 'group_index': 3, 'day': 'fri', 'conflict_type': 'GROUP_OVERLAP', 'session1': {'type': 'THEORY', 'course': 'AD23531', 'session': 'Lecture', 'time': '9:00 - 9:50'}, 'session2': {'type': 'THEORY', 'course': 'AD23531', 'session': 'Lecture', 'time': '9:00 - 9:50'}, 'severity': 'MEDIUM'}
+
+10. GROUP_OVERLAP
+   Details: {'department': 'Artificial Intelligence & Data Science', 'semester': 5, 'group_index': 3, 'day': 'fri', 'conflict_type': 'GROUP_OVERLAP', 'session1': {'type': 'THEORY', 'course': 'AD23531', 'session': 'Lecture', 'time': '9:00 - 9:50'}, 'session2': {'type': 'THEORY', 'course': 'AD23531', 'session': 'Lecture', 'time': '9:00 - 9:50'}, 'severity': 'MEDIUM'}
+
+   ... and 3123 more conflicts
+
