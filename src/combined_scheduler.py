@@ -16,8 +16,8 @@ from itertools import combinations
 from ortools.sat.python import cp_model
 import matplotlib.pyplot as plt
 import seaborn as sns
-from .course_group_optimizer import CourseGroupOptimizer
-from .shift_report_generator import ShiftReportGenerator
+from course_group_optimizer import CourseGroupOptimizer
+from shift_report_generator import ShiftReportGenerator
 
 class CombinedScheduler:
     """
@@ -364,10 +364,10 @@ class CombinedScheduler:
         # Set up semester-specific overrides for Monday-Saturday scheduling
         self.semester_day_overrides = {
             # Format: (dept_name, semester) -> day_pattern_config
-            ('Biotechnology', 5): {
-                'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
-                'pattern': 'Monday-Saturday'
-            },
+            # ('Biotechnology', 5): {
+            #     'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
+            #     'pattern': 'Monday-Saturday'
+            # },
             # Electronics & Communication Engineering Monday-Saturday semesters
             # ('Electronics & Communication Engineering', 5): {
             #     'days': ["monday", "tuesday", "wed", "thur", "fri", "saturday"],
@@ -1202,7 +1202,18 @@ class CombinedScheduler:
     
     def _initialize_global_room_registry(self):
         """Initialize global room registry for cross-schedule conflict detection."""
-        self.global_room_registry = {}
+        # Preserve existing entries that are marked as from existing schedules
+        existing_entries = {}
+        if hasattr(self, 'global_room_registry'):
+            existing_entries = {
+                key: value for key, value in self.global_room_registry.items() 
+                if value.get('from_existing', False)
+            }
+        
+        self.global_room_registry = existing_entries
+        
+        if existing_entries:
+            self.logger.info(f"Preserved {len(existing_entries)} existing room occupancies during registry reset")
         self.logger.info("Initialized global room registry for cross-schedule validation")
 
     def _register_room_usage(self, day, time_slot, room_id, session_info):
@@ -2110,6 +2121,7 @@ class CombinedScheduler:
         constraints_applied += self._apply_unified_teacher_clash_constraint(model, lab_variables, theory_variables)
         
         self.logger.info(f"Applied {constraints_applied} unified constraints")
+        return constraints_applied
     
     def _apply_lab_constraints(self, model, lab_variables):
         """Apply lab-specific constraints."""
@@ -7136,6 +7148,16 @@ class CombinedScheduler:
         for room_id in self.theory_room_ids:
             if not self._is_room_available_global(day_name, time_slot, room_id):
                 global_occupied_rooms.add(room_id)
+                # Debug logging for room conflicts
+                if room_id <= 10:  # Only log for small room IDs to avoid spam
+                    registry_key = (day_name, time_slot, room_id)
+                    if registry_key in self.global_room_registry:
+                        existing_session = self.global_room_registry[registry_key]
+                        self.logger.debug(f"🚫 Global registry blocked room {room_id} at {day_name} {time_slot} "
+                                        f"(occupied by {existing_session.get('course_code', 'UNKNOWN')})")
+                    else:
+                        self.logger.debug(f"⚠️  Global registry blocked room {room_id} at {day_name} {time_slot} "
+                                        f"but no registry entry found")
         
         # Check lab schedule for overlapping times (if provided)
         lab_conflict_rooms = set()

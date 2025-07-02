@@ -1,0 +1,43 @@
+MERGED SCHEDULE SUMMARY (After Biotechnology S5 Regeneration)
+======================================================================
+
+Total scheduled sessions: 2873
+  Lab sessions: 986
+  Theory sessions: 1887
+
+BIOTECHNOLOGY S5 REGENERATION RESULTS:
+  New Biotechnology S5 lab sessions: 18
+  New Biotechnology S5 theory sessions: 39
+  Biotechnology S5 lab courses: BT23521, BT23522, BT23523
+  Biotechnology S5 theory courses: BT23511, BT23512, BT23513, BT23514
+
+SESSIONS BY DEPARTMENT:
+  Aeronautical Engineering: 69 total (29 lab, 40 theory)
+  Artificial Intelligence & Data Science: 223 total (78 lab, 145 theory)
+  Artificial Intelligence & Machine Learning: 232 total (79 lab, 153 theory)
+  Automobile Engineering: 56 total (17 lab, 39 theory)
+  Biomedical Engineering: 150 total (59 lab, 91 theory)
+  Biotechnology: 194 total (53 lab, 141 theory)
+  Chemical Engineering: 66 total (18 lab, 48 theory)
+  Civil Engineering: 70 total (24 lab, 46 theory)
+  Computer Science & Business Systems: 142 total (52 lab, 90 theory)
+  Computer Science & Design: 73 total (34 lab, 39 theory)
+  Computer Science & Engineering: 457 total (148 lab, 309 theory)
+  Computer Science & Engineering (Cyber Security): 79 total (32 lab, 47 theory)
+  Electrical & Electronics Engineering: 131 total (40 lab, 91 theory)
+  Electronics & Communication Engineering: 316 total (106 lab, 210 theory)
+  Food Technology: 79 total (27 lab, 52 theory)
+  Information Technology: 243 total (82 lab, 161 theory)
+  Mechanical Engineering: 153 total (57 lab, 96 theory)
+  Mechatronics Engineering: 71 total (26 lab, 45 theory)
+  Robotics & Automation: 69 total (25 lab, 44 theory)
+
+Teachers with assignments: 444
+  Lab only: 12
+  Theory only: 145
+  Both lab and theory: 287
+
+Room utilization:
+  Lab rooms used: 80
+  Theory rooms used: 73
+  Total unique rooms: 152
