@@ -24,7 +24,7 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 164,JR2,J Block,Computer Lab (JR2),1,Laboratory,20,35,1,0,High-tech,20,0,0,0
 165,JR3,J Block,Computer Lab (JR3),1,Laboratory,20,35,1,0,Basic,13,0,0,0
 172,KSL03,K Block,Computer Lab (KSL03),1,Laboratory,110,140,1,0,Advanced,13,0,0,0
-1000,KSL02,K Block,Classroom,0,Classroom,120,140,0,0,None,13,0,0,0
+220,KSL02,K Block,Classroom,0,Classroom,120,140,0,0,None,13,0,0,0
 173,TIFAC I01,A Block,Computer Lab (Arch),1,Laboratory,50,70,1,0,None,13,0,0,0
 1,A102,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
 2,A103,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
