@@ -11,14 +11,14 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 1035,
-          "course_id": 2206,
-          "course_code": "CS23533",
-          "course_name": "Foundations of Artificial Intelligence",
+          "id": 1039,
+          "course_id": 1530,
+          "course_code": "CR23532",
+          "course_name": "Cyber and Digital Forensics",
           "course_type": "LoT",
-          "teacher_id": "1790.0",
+          "teacher_id": "1791.0",
           "semester": 5,
-          "course_dept": "Computer Science & Engineering",
+          "course_dept": "Computer Science & Engineering (Cyber Security)",
           "student_dept": "Computer Science & Engineering (Cyber Security)",
           "has_lab": true,
           "has_theory": true,
@@ -31,10 +31,10 @@
         }
       ],
       "teachers": [
-        "1790.0"
+        "1791.0"
       ],
       "courses": [
-        "CS23533"
+        "CR23532"
       ],
       "total_workload": 5
     },
@@ -77,12 +77,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 1043,
-          "course_id": 2209,
-          "course_code": "CS23432",
-          "course_name": "Software Construction",
-          "course_type": "L",
-          "teacher_id": "1855.0",
+          "id": 1035,
+          "course_id": 2206,
+          "course_code": "CS23533",
+          "course_name": "Foundations of Artificial Intelligence",
+          "course_type": "LoT",
+          "teacher_id": "1790.0",
           "semester": 5,
           "course_dept": "Computer Science & Engineering",
           "student_dept": "Computer Science & Engineering (Cyber Security)",
@@ -97,48 +97,15 @@
         }
       ],
       "teachers": [
-        "1855.0"
+        "1790.0"
       ],
       "courses": [
-        "CS23432"
+        "CS23533"
       ],
       "total_workload": 5
     },
     {
       "group_id": 4,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 1039,
-          "course_id": 1530,
-          "course_code": "CR23532",
-          "course_name": "Cyber and Digital Forensics",
-          "course_type": "LoT",
-          "teacher_id": "1791.0",
-          "semester": 5,
-          "course_dept": "Computer Science & Engineering (Cyber Security)",
-          "student_dept": "Computer Science & Engineering (Cyber Security)",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "1791.0"
-      ],
-      "courses": [
-        "CR23532"
-      ],
-      "total_workload": 5
-    },
-    {
-      "group_id": 5,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -167,6 +134,39 @@
       ],
       "courses": [
         "CR23531"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1043,
+          "course_id": 2209,
+          "course_code": "CS23432",
+          "course_name": "Software Construction",
+          "course_type": "L",
+          "teacher_id": "1855.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Engineering",
+          "student_dept": "Computer Science & Engineering (Cyber Security)",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "1855.0"
+      ],
+      "courses": [
+        "CS23432"
       ],
       "total_workload": 5
     }

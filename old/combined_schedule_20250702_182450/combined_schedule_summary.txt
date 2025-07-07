@@ -1,0 +1,34 @@
+COMBINED SCHEDULE SUMMARY
+========================
+
+Total scheduled sessions: 58
+  Lab sessions: 19
+  Theory sessions: 39
+
+Lab Session Batching Analysis:
+  Batched sessions: 4
+  Non-batched sessions: 15
+  Courses requiring batching: 1
+  Batch details:
+    BT23522: 2 batches, 70 total students, ~35 per batch (room capacity: 35)
+
+Sessions by day:
+  Monday: 0 total (0 lab, 0 theory)
+  Tuesday: 13 total (4 lab, 9 theory)
+  Wed: 12 total (3 lab, 9 theory)
+  Thur: 16 total (2 lab, 14 theory)
+  Fri: 8 total (5 lab, 3 theory)
+
+Teachers with assignments: 15
+  Lab only: 5
+  Theory only: 6
+  Both lab and theory: 4
+
+Room utilization:
+  Lab rooms used: 7
+  Theory rooms used: 29
+
+Lab capacity utilization:
+  35-capacity labs: 4 sessions
+  70-capacity labs: 15 sessions
+  140+ capacity labs: 0 sessions

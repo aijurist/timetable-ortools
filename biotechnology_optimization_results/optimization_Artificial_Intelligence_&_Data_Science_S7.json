@@ -11,39 +11,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 1100,
-          "course_id": 710,
-          "course_code": "AI19741",
-          "course_name": "Big Data Technology",
-          "course_type": "LoT",
-          "teacher_id": "22.0",
-          "semester": 7,
-          "course_dept": "Artificial Intelligence & Data Science",
-          "student_dept": "Artificial Intelligence & Data Science",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "22.0"
-      ],
-      "courses": [
-        "AI19741"
-      ],
-      "total_workload": 5
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 965,
           "course_id": 586,
           "course_code": "AD19P72",
@@ -72,23 +39,23 @@
       "total_workload": 4
     },
     {
-      "group_id": 3,
+      "group_id": 2,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
         {
-          "id": 1868,
-          "course_id": 575,
-          "course_code": "AD19751",
-          "course_name": "Basics of Computer Vision",
-          "course_type": "T",
-          "teacher_id": "1843.0",
+          "id": 1100,
+          "course_id": 710,
+          "course_code": "AI19741",
+          "course_name": "Big Data Technology",
+          "course_type": "LoT",
+          "teacher_id": "22.0",
           "semester": 7,
           "course_dept": "Artificial Intelligence & Data Science",
           "student_dept": "Artificial Intelligence & Data Science",
-          "has_lab": false,
+          "has_lab": true,
           "has_theory": true,
-          "practical_hours": 0,
+          "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
@@ -97,15 +64,15 @@
         }
       ],
       "teachers": [
-        "1843.0"
+        "22.0"
       ],
       "courses": [
-        "AD19751"
+        "AI19741"
       ],
-      "total_workload": 3
+      "total_workload": 5
     },
     {
-      "group_id": 4,
+      "group_id": 3,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -134,6 +101,39 @@
       ],
       "courses": [
         "AD19P74"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1868,
+          "course_id": 575,
+          "course_code": "AD19751",
+          "course_name": "Basics of Computer Vision",
+          "course_type": "T",
+          "teacher_id": "1843.0",
+          "semester": 7,
+          "course_dept": "Artificial Intelligence & Data Science",
+          "student_dept": "Artificial Intelligence & Data Science",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "1843.0"
+      ],
+      "courses": [
+        "AD19751"
       ],
       "total_workload": 3
     }

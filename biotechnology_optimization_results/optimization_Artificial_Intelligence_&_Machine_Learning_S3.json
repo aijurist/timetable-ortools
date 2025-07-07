@@ -11,6 +11,25 @@
       "group_type": "Regular",
       "instances": [
         {
+          "id": 941,
+          "course_id": 259,
+          "course_code": "CS23333",
+          "course_name": "Object Oriented Programming Using JAVA",
+          "course_type": "LoT",
+          "teacher_id": "40.0",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
           "id": 518,
           "course_id": 257,
           "course_code": "CS23331",
@@ -30,12 +49,68 @@
           "co_scheduled_id": null
         },
         {
-          "id": 941,
+          "id": 520,
+          "course_id": 257,
+          "course_code": "CS23331",
+          "course_name": "Design and Analysis of Algorithms",
+          "course_type": "LoT",
+          "teacher_id": "53.0",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1663,
+          "course_id": 257,
+          "course_code": "CS23331",
+          "course_name": "Design and Analysis of Algorithms",
+          "course_type": "LoT",
+          "teacher_id": "1782.0",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "1782.0",
+        "53.0",
+        "40.0",
+        "48.0"
+      ],
+      "courses": [
+        "CS23333",
+        "CS23331"
+      ],
+      "total_workload": 22
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 940,
           "course_id": 259,
           "course_code": "CS23333",
           "course_name": "Object Oriented Programming Using JAVA",
           "course_type": "LoT",
-          "teacher_id": "40.0",
+          "teacher_id": "36.0",
           "semester": 3,
           "course_dept": "Artificial Intelligence & Machine Learning",
           "student_dept": "Artificial Intelligence & Machine Learning",
@@ -85,137 +160,6 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "1794.0",
-        "48.0",
-        "40.0",
-        "1829.0"
-      ],
-      "courses": [
-        "CS23333",
-        "CS23331"
-      ],
-      "total_workload": 26
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 512,
-          "course_id": 36,
-          "course_code": "AI23331",
-          "course_name": "Fundamentals of Machine Learning",
-          "course_type": "LoT",
-          "teacher_id": "54.0",
-          "semester": 3,
-          "course_dept": "Artificial Intelligence & Machine Learning",
-          "student_dept": "Artificial Intelligence & Machine Learning",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 513,
-          "course_id": 36,
-          "course_code": "AI23331",
-          "course_name": "Fundamentals of Machine Learning",
-          "course_type": "LoT",
-          "teacher_id": "50.0",
-          "semester": 3,
-          "course_dept": "Artificial Intelligence & Machine Learning",
-          "student_dept": "Artificial Intelligence & Machine Learning",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1197,
-          "course_id": 36,
-          "course_code": "AI23331",
-          "course_name": "Fundamentals of Machine Learning",
-          "course_type": "LoT",
-          "teacher_id": "1827.0",
-          "semester": 3,
-          "course_dept": "Artificial Intelligence & Machine Learning",
-          "student_dept": "Artificial Intelligence & Machine Learning",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 940,
-          "course_id": 259,
-          "course_code": "CS23333",
-          "course_name": "Object Oriented Programming Using JAVA",
-          "course_type": "LoT",
-          "teacher_id": "36.0",
-          "semester": 3,
-          "course_dept": "Artificial Intelligence & Machine Learning",
-          "student_dept": "Artificial Intelligence & Machine Learning",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "54.0",
-        "1827.0",
-        "50.0",
-        "36.0"
-      ],
-      "courses": [
-        "CS23333",
-        "AI23331"
-      ],
-      "total_workload": 22
-    },
-    {
-      "group_id": 3,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 520,
-          "course_id": 257,
-          "course_code": "CS23331",
-          "course_name": "Design and Analysis of Algorithms",
-          "course_type": "LoT",
-          "teacher_id": "53.0",
-          "semester": 3,
-          "course_dept": "Artificial Intelligence & Machine Learning",
-          "student_dept": "Artificial Intelligence & Machine Learning",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
         },
         {
           "id": 575,
@@ -235,60 +179,22 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
-        },
-        {
-          "id": 1663,
-          "course_id": 257,
-          "course_code": "CS23331",
-          "course_name": "Design and Analysis of Algorithms",
-          "course_type": "LoT",
-          "teacher_id": "1782.0",
-          "semester": 3,
-          "course_dept": "Artificial Intelligence & Machine Learning",
-          "student_dept": "Artificial Intelligence & Machine Learning",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 498,
-          "course_id": 36,
-          "course_code": "AI23331",
-          "course_name": "Fundamentals of Machine Learning",
-          "course_type": "LoT",
-          "teacher_id": "57.0",
-          "semester": 3,
-          "course_dept": "Artificial Intelligence & Machine Learning",
-          "student_dept": "Artificial Intelligence & Machine Learning",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "1782.0",
-        "57.0",
-        "53.0",
-        "48.0"
+        "1829.0",
+        "48.0",
+        "36.0",
+        "1794.0"
       ],
       "courses": [
-        "CS23331",
-        "AI23331"
+        "CS23333",
+        "CS23331"
       ],
-      "total_workload": 20
+      "total_workload": 26
     },
     {
-      "group_id": 4,
+      "group_id": 3,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -371,14 +277,107 @@
       ],
       "teachers": [
         "35.0",
-        "1787.0",
         "46.0",
+        "1787.0",
         "37.0"
       ],
       "courses": [
         "CS23332"
       ],
       "total_workload": 28
+    },
+    {
+      "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 498,
+          "course_id": 36,
+          "course_code": "AI23331",
+          "course_name": "Fundamentals of Machine Learning",
+          "course_type": "LoT",
+          "teacher_id": "57.0",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 512,
+          "course_id": 36,
+          "course_code": "AI23331",
+          "course_name": "Fundamentals of Machine Learning",
+          "course_type": "LoT",
+          "teacher_id": "54.0",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 513,
+          "course_id": 36,
+          "course_code": "AI23331",
+          "course_name": "Fundamentals of Machine Learning",
+          "course_type": "LoT",
+          "teacher_id": "50.0",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1197,
+          "course_id": 36,
+          "course_code": "AI23331",
+          "course_name": "Fundamentals of Machine Learning",
+          "course_type": "LoT",
+          "teacher_id": "1827.0",
+          "semester": 3,
+          "course_dept": "Artificial Intelligence & Machine Learning",
+          "student_dept": "Artificial Intelligence & Machine Learning",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "50.0",
+        "54.0",
+        "1827.0",
+        "57.0"
+      ],
+      "courses": [
+        "AI23331"
+      ],
+      "total_workload": 20
     },
     {
       "group_id": 5,
@@ -464,9 +463,9 @@
       ],
       "teachers": [
         "551.0",
-        "541.0",
+        "552.0",
         "556.0",
-        "552.0"
+        "541.0"
       ],
       "courses": [
         "MC23112"
@@ -556,10 +555,10 @@
         }
       ],
       "teachers": [
-        "433.0",
-        "434.0",
         "440.0",
-        "455.0"
+        "455.0",
+        "433.0",
+        "434.0"
       ],
       "courses": [
         "MA23313"

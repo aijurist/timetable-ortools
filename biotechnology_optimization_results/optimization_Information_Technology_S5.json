@@ -11,6 +11,193 @@
       "group_type": "Regular",
       "instances": [
         {
+          "id": 809,
+          "course_id": 269,
+          "course_code": "CS23531",
+          "course_name": "Web Programming",
+          "course_type": "LoT",
+          "teacher_id": "388.0",
+          "semester": 5,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 810,
+          "course_id": 269,
+          "course_code": "CS23531",
+          "course_name": "Web Programming",
+          "course_type": "LoT",
+          "teacher_id": "384.0",
+          "semester": 5,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 811,
+          "course_id": 269,
+          "course_code": "CS23531",
+          "course_name": "Web Programming",
+          "course_type": "LoT",
+          "teacher_id": "400.0",
+          "semester": 5,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 986,
+          "course_id": 405,
+          "course_code": "IT23531",
+          "course_name": "Computer Vision",
+          "course_type": "LoT",
+          "teacher_id": "394.0",
+          "semester": 5,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "400.0",
+        "394.0",
+        "384.0",
+        "388.0"
+      ],
+      "courses": [
+        "IT23531",
+        "CS23531"
+      ],
+      "total_workload": 26
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": "802-A",
+          "course_id": 404,
+          "course_code": "IT23511",
+          "course_name": "Automata Theory & Compiler Design",
+          "course_type": "T",
+          "teacher_id": "399.0",
+          "semester": 5,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": "802-A",
+          "co_scheduled_id": 1
+        },
+        {
+          "id": "802-B",
+          "course_id": 404,
+          "course_code": "IT23511",
+          "course_name": "Automata Theory & Compiler Design",
+          "course_type": "T",
+          "teacher_id": "399.0",
+          "semester": 5,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": "802-B",
+          "co_scheduled_id": 1
+        },
+        {
+          "id": 804,
+          "course_id": 404,
+          "course_code": "IT23511",
+          "course_name": "Automata Theory & Compiler Design",
+          "course_type": "T",
+          "teacher_id": "382.0",
+          "semester": 5,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 989,
+          "course_id": 269,
+          "course_code": "CS23531",
+          "course_name": "Web Programming",
+          "course_type": "LoT",
+          "teacher_id": "388.0",
+          "semester": 5,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "399.0",
+        "382.0",
+        "388.0"
+      ],
+      "courses": [
+        "IT23511",
+        "CS23531"
+      ],
+      "total_workload": 16
+    },
+    {
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
           "id": "996-A",
           "course_id": 35,
           "course_code": "AI23231",
@@ -98,100 +285,7 @@
       "total_workload": 20
     },
     {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": "802-A",
-          "course_id": 404,
-          "course_code": "IT23511",
-          "course_name": "Automata Theory & Compiler Design",
-          "course_type": "T",
-          "teacher_id": "399.0",
-          "semester": 5,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": "802-A",
-          "co_scheduled_id": 1
-        },
-        {
-          "id": "802-B",
-          "course_id": 404,
-          "course_code": "IT23511",
-          "course_name": "Automata Theory & Compiler Design",
-          "course_type": "T",
-          "teacher_id": "399.0",
-          "semester": 5,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": "802-B",
-          "co_scheduled_id": 1
-        },
-        {
-          "id": 804,
-          "course_id": 404,
-          "course_code": "IT23511",
-          "course_name": "Automata Theory & Compiler Design",
-          "course_type": "T",
-          "teacher_id": "382.0",
-          "semester": 5,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 989,
-          "course_id": 269,
-          "course_code": "CS23531",
-          "course_name": "Web Programming",
-          "course_type": "LoT",
-          "teacher_id": "388.0",
-          "semester": 5,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "382.0",
-        "399.0",
-        "388.0"
-      ],
-      "courses": [
-        "IT23511",
-        "CS23531"
-      ],
-      "total_workload": 16
-    },
-    {
-      "group_id": 3,
+      "group_id": 4,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -214,6 +308,81 @@
           "virtual_id": null,
           "co_scheduled_id": null
         },
+        {
+          "id": 805,
+          "course_id": 405,
+          "course_code": "IT23531",
+          "course_name": "Computer Vision",
+          "course_type": "LoT",
+          "teacher_id": "394.0",
+          "semester": 5,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 806,
+          "course_id": 405,
+          "course_code": "IT23531",
+          "course_name": "Computer Vision",
+          "course_type": "LoT",
+          "teacher_id": "393.0",
+          "semester": 5,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 807,
+          "course_id": 405,
+          "course_code": "IT23531",
+          "course_name": "Computer Vision",
+          "course_type": "LoT",
+          "teacher_id": "429.0",
+          "semester": 5,
+          "course_dept": "Information Technology",
+          "student_dept": "Information Technology",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "429.0",
+        "391.0",
+        "393.0",
+        "394.0"
+      ],
+      "courses": [
+        "IT23511",
+        "IT23531"
+      ],
+      "total_workload": 18
+    },
+    {
+      "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
         {
           "id": 842,
           "course_id": 270,
@@ -270,81 +439,6 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "391.0",
-        "395.0",
-        "387.0",
-        "401.0"
-      ],
-      "courses": [
-        "IT23511",
-        "CS23532"
-      ],
-      "total_workload": 24
-    },
-    {
-      "group_id": 4,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 806,
-          "course_id": 405,
-          "course_code": "IT23531",
-          "course_name": "Computer Vision",
-          "course_type": "LoT",
-          "teacher_id": "393.0",
-          "semester": 5,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 807,
-          "course_id": 405,
-          "course_code": "IT23531",
-          "course_name": "Computer Vision",
-          "course_type": "LoT",
-          "teacher_id": "429.0",
-          "semester": 5,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 986,
-          "course_id": 405,
-          "course_code": "IT23531",
-          "course_name": "Computer Vision",
-          "course_type": "LoT",
-          "teacher_id": "394.0",
-          "semester": 5,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
         },
         {
           "id": 846,
@@ -367,110 +461,15 @@
         }
       ],
       "teachers": [
+        "401.0",
+        "395.0",
         "410.0",
-        "394.0",
-        "429.0",
-        "393.0"
+        "387.0"
       ],
       "courses": [
-        "IT23531",
         "CS23532"
       ],
-      "total_workload": 22
-    },
-    {
-      "group_id": 5,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 805,
-          "course_id": 405,
-          "course_code": "IT23531",
-          "course_name": "Computer Vision",
-          "course_type": "LoT",
-          "teacher_id": "394.0",
-          "semester": 5,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 809,
-          "course_id": 269,
-          "course_code": "CS23531",
-          "course_name": "Web Programming",
-          "course_type": "LoT",
-          "teacher_id": "388.0",
-          "semester": 5,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 810,
-          "course_id": 269,
-          "course_code": "CS23531",
-          "course_name": "Web Programming",
-          "course_type": "LoT",
-          "teacher_id": "384.0",
-          "semester": 5,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 811,
-          "course_id": 269,
-          "course_code": "CS23531",
-          "course_name": "Web Programming",
-          "course_type": "LoT",
-          "teacher_id": "400.0",
-          "semester": 5,
-          "course_dept": "Information Technology",
-          "student_dept": "Information Technology",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "384.0",
-        "400.0",
-        "388.0",
-        "394.0"
-      ],
-      "courses": [
-        "IT23531",
-        "CS23531"
-      ],
-      "total_workload": 26
+      "total_workload": 28
     }
   ],
   "pe_group_included": false,

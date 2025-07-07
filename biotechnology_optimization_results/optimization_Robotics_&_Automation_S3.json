@@ -110,39 +110,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 1277,
-          "course_id": 422,
-          "course_code": "MA23311",
-          "course_name": "Transforms and Applied Partial Differential Equations",
-          "course_type": "T",
-          "teacher_id": "438.0",
-          "semester": 3,
-          "course_dept": "Robotics & Automation",
-          "student_dept": "Robotics & Automation",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 1,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "438.0"
-      ],
-      "courses": [
-        "MA23311"
-      ],
-      "total_workload": 4
-    },
-    {
-      "group_id": 5,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 401,
           "course_id": 503,
           "course_code": "RO23311",
@@ -169,6 +136,39 @@
         "RO23311"
       ],
       "total_workload": 3
+    },
+    {
+      "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1361,
+          "course_id": 504,
+          "course_code": "RO23312",
+          "course_name": "Theory of Mechanisms and Machines-I",
+          "course_type": "T",
+          "teacher_id": "560.0",
+          "semester": 3,
+          "course_dept": "Robotics & Automation",
+          "student_dept": "Robotics & Automation",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "560.0"
+      ],
+      "courses": [
+        "RO23312"
+      ],
+      "total_workload": 4
     },
     {
       "group_id": 6,
@@ -209,12 +209,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 1361,
-          "course_id": 504,
-          "course_code": "RO23312",
-          "course_name": "Theory of Mechanisms and Machines-I",
+          "id": 1277,
+          "course_id": 422,
+          "course_code": "MA23311",
+          "course_name": "Transforms and Applied Partial Differential Equations",
           "course_type": "T",
-          "teacher_id": "560.0",
+          "teacher_id": "438.0",
           "semester": 3,
           "course_dept": "Robotics & Automation",
           "student_dept": "Robotics & Automation",
@@ -229,10 +229,10 @@
         }
       ],
       "teachers": [
-        "560.0"
+        "438.0"
       ],
       "courses": [
-        "RO23312"
+        "MA23311"
       ],
       "total_workload": 4
     }

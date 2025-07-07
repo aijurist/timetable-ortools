@@ -1,0 +1,24 @@
+Combined Course-Group Distribution Summary
+Department: Chemical Engineering
+Semester: 4
+Generated: 2025-06-28 09:35:39
+============================================================
+
+OVERVIEW:
+- Total Courses: 1
+  └─ Lab Courses: 0
+  └─ Theory Courses: 1
+  └─ Overlap (Both): 0
+- Total Groups: 1
+- Total Teacher Assignments: 1
+- Courses with Multiple Group Options: 0 (0.0%)
+
+COURSE DISTRIBUTION BY TYPE:
+- CH23411 [Theory]: 1 groups, 1 teacher assignments
+  └─ G1: 1 teachers
+
+GROUP COMPOSITION:
+- G1: 1 courses, 1 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ CH23411 [T]: 1 teachers, 1 instances

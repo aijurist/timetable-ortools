@@ -11,39 +11,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 477,
-          "course_id": 747,
-          "course_code": "RO19711",
-          "course_name": "Innovation and Design thinking for Robotics and Automation",
-          "course_type": "L",
-          "teacher_id": "557.0",
-          "semester": 7,
-          "course_dept": "Robotics & Automation",
-          "student_dept": "Robotics & Automation",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "557.0"
-      ],
-      "courses": [
-        "RO19711"
-      ],
-      "total_workload": 4
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 1188,
           "course_id": 894,
           "course_code": "RO19712",
@@ -72,7 +39,73 @@
       "total_workload": 6
     },
     {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 477,
+          "course_id": 747,
+          "course_code": "RO19711",
+          "course_name": "Innovation and Design thinking for Robotics and Automation",
+          "course_type": "L",
+          "teacher_id": "557.0",
+          "semester": 7,
+          "course_dept": "Robotics & Automation",
+          "student_dept": "Robotics & Automation",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "557.0"
+      ],
+      "courses": [
+        "RO19711"
+      ],
+      "total_workload": 4
+    },
+    {
       "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 445,
+          "course_id": 732,
+          "course_code": "RO19702",
+          "course_name": "Computer Integrated Manufacturing",
+          "course_type": "T",
+          "teacher_id": "558.0",
+          "semester": 7,
+          "course_dept": "Robotics & Automation",
+          "student_dept": "Robotics & Automation",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "558.0"
+      ],
+      "courses": [
+        "RO19702"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 4,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -105,7 +138,7 @@
       "total_workload": 3
     },
     {
-      "group_id": 4,
+      "group_id": 5,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -134,39 +167,6 @@
       ],
       "courses": [
         "RO19703"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 5,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 445,
-          "course_id": 732,
-          "course_code": "RO19702",
-          "course_name": "Computer Integrated Manufacturing",
-          "course_type": "T",
-          "teacher_id": "558.0",
-          "semester": 7,
-          "course_dept": "Robotics & Automation",
-          "student_dept": "Robotics & Automation",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "558.0"
-      ],
-      "courses": [
-        "RO19702"
       ],
       "total_workload": 3
     },

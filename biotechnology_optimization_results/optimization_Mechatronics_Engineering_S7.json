@@ -110,6 +110,39 @@
       "group_type": "Regular",
       "instances": [
         {
+          "id": 470,
+          "course_id": 738,
+          "course_code": "MT19703",
+          "course_name": "Industrial Automation",
+          "course_type": "T",
+          "teacher_id": "493.0",
+          "semester": 7,
+          "course_dept": "Mechatronics Engineering",
+          "student_dept": "Mechatronics Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "493.0"
+      ],
+      "courses": [
+        "MT19703"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
           "id": 468,
           "course_id": 737,
           "course_code": "MT19702",
@@ -138,7 +171,7 @@
       "total_workload": 3
     },
     {
-      "group_id": 5,
+      "group_id": 6,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -171,7 +204,7 @@
       "total_workload": 3
     },
     {
-      "group_id": 6,
+      "group_id": 7,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -200,39 +233,6 @@
       ],
       "courses": [
         "MT19704"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 7,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 470,
-          "course_id": 738,
-          "course_code": "MT19703",
-          "course_name": "Industrial Automation",
-          "course_type": "T",
-          "teacher_id": "493.0",
-          "semester": 7,
-          "course_dept": "Mechatronics Engineering",
-          "student_dept": "Mechatronics Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "493.0"
-      ],
-      "courses": [
-        "MT19703"
       ],
       "total_workload": 3
     }

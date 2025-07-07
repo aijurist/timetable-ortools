@@ -11,39 +11,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 364,
-          "course_id": 12,
-          "course_code": "AE23331",
-          "course_name": "Solid Mechanics",
-          "course_type": "LoT",
-          "teacher_id": "3.0",
-          "semester": 3,
-          "course_dept": "Aeronautical Engineering",
-          "student_dept": "Aeronautical Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 2,
-          "tutorial_hours": 1,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "3.0"
-      ],
-      "courses": [
-        "AE23331"
-      ],
-      "total_workload": 5
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 1204,
           "course_id": 422,
           "course_code": "MA23311",
@@ -72,73 +39,7 @@
       "total_workload": 4
     },
     {
-      "group_id": 3,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 1546,
-          "course_id": 263,
-          "course_code": "CS23422",
-          "course_name": "Python Programming for Machine Learning",
-          "course_type": "L",
-          "teacher_id": "11.0",
-          "semester": 3,
-          "course_dept": "Aeronautical Engineering",
-          "student_dept": "Aeronautical Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "11.0"
-      ],
-      "courses": [
-        "CS23422"
-      ],
-      "total_workload": 4
-    },
-    {
-      "group_id": 4,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 370,
-          "course_id": 11,
-          "course_code": "AE23321",
-          "course_name": "Computer Aided Modelling Laboratory",
-          "course_type": "L",
-          "teacher_id": "24.0",
-          "semester": 3,
-          "course_dept": "Aeronautical Engineering",
-          "student_dept": "Aeronautical Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "24.0"
-      ],
-      "courses": [
-        "AE23321"
-      ],
-      "total_workload": 4
-    },
-    {
-      "group_id": 5,
+      "group_id": 2,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -171,7 +72,73 @@
       "total_workload": 5
     },
     {
-      "group_id": 6,
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 370,
+          "course_id": 11,
+          "course_code": "AE23321",
+          "course_name": "Computer Aided Modelling Laboratory",
+          "course_type": "L",
+          "teacher_id": "24.0",
+          "semester": 3,
+          "course_dept": "Aeronautical Engineering",
+          "student_dept": "Aeronautical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "24.0"
+      ],
+      "courses": [
+        "AE23321"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1546,
+          "course_id": 263,
+          "course_code": "CS23422",
+          "course_name": "Python Programming for Machine Learning",
+          "course_type": "L",
+          "teacher_id": "11.0",
+          "semester": 3,
+          "course_dept": "Aeronautical Engineering",
+          "student_dept": "Aeronautical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "11.0"
+      ],
+      "courses": [
+        "CS23422"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 5,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -200,6 +167,39 @@
       ],
       "courses": [
         "AE23332"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 364,
+          "course_id": 12,
+          "course_code": "AE23331",
+          "course_name": "Solid Mechanics",
+          "course_type": "LoT",
+          "teacher_id": "3.0",
+          "semester": 3,
+          "course_dept": "Aeronautical Engineering",
+          "student_dept": "Aeronautical Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 1,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "3.0"
+      ],
+      "courses": [
+        "AE23331"
       ],
       "total_workload": 5
     }

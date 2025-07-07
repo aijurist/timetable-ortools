@@ -11,39 +11,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 65,
-          "course_id": 557,
-          "course_code": "CD19P15",
-          "course_name": "Foundations of Machine Learning Concepts",
-          "course_type": "LoT",
-          "teacher_id": "178.0",
-          "semester": 7,
-          "course_dept": "Computer Science & Design",
-          "student_dept": "Computer Science & Design",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 2,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "178.0"
-      ],
-      "courses": [
-        "CD19P15"
-      ],
-      "total_workload": 4
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 1332,
           "course_id": 554,
           "course_code": "CD19741",
@@ -70,6 +37,39 @@
         "CD19741"
       ],
       "total_workload": 7
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 65,
+          "course_id": 557,
+          "course_code": "CD19P15",
+          "course_name": "Foundations of Machine Learning Concepts",
+          "course_type": "LoT",
+          "teacher_id": "178.0",
+          "semester": 7,
+          "course_dept": "Computer Science & Design",
+          "student_dept": "Computer Science & Design",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "178.0"
+      ],
+      "courses": [
+        "CD19P15"
+      ],
+      "total_workload": 4
     },
     {
       "group_id": 3,

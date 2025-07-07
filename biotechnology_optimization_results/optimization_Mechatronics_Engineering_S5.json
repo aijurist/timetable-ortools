@@ -11,39 +11,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 421,
-          "course_id": 720,
-          "course_code": "MT23522",
-          "course_name": "Industrial Electronics Laboratory",
-          "course_type": "L",
-          "teacher_id": "488.0",
-          "semester": 5,
-          "course_dept": "Mechatronics Engineering",
-          "student_dept": "Mechatronics Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 2,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "488.0"
-      ],
-      "courses": [
-        "MT23522"
-      ],
-      "total_workload": 2
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 419,
           "course_id": 483,
           "course_code": "CS23422",
@@ -72,7 +39,73 @@
       "total_workload": 4
     },
     {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 421,
+          "course_id": 720,
+          "course_code": "MT23522",
+          "course_name": "Industrial Electronics Laboratory",
+          "course_type": "L",
+          "teacher_id": "488.0",
+          "semester": 5,
+          "course_dept": "Mechatronics Engineering",
+          "student_dept": "Mechatronics Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "488.0"
+      ],
+      "courses": [
+        "MT23522"
+      ],
+      "total_workload": 2
+    },
+    {
       "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 430,
+          "course_id": 384,
+          "course_code": "GE23311",
+          "course_name": "Fundamentals of Management for Engineers",
+          "course_type": "T",
+          "teacher_id": "489.0",
+          "semester": 5,
+          "course_dept": "Mechatronics Engineering",
+          "student_dept": "Mechatronics Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "489.0"
+      ],
+      "courses": [
+        "GE23311"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 4,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -101,39 +134,6 @@
       ],
       "courses": [
         "MT23512"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 4,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 418,
-          "course_id": 717,
-          "course_code": "MT23513",
-          "course_name": "Basic Engineering Research Methods",
-          "course_type": "T",
-          "teacher_id": "495.0",
-          "semester": 5,
-          "course_dept": "Mechatronics Engineering",
-          "student_dept": "Mechatronics Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "495.0"
-      ],
-      "courses": [
-        "MT23513"
       ],
       "total_workload": 3
     },
@@ -176,6 +176,39 @@
       "group_type": "Regular",
       "instances": [
         {
+          "id": 2049,
+          "course_id": 2411,
+          "course_code": "MT23D11",
+          "course_name": "NEURAL NETWORKS AND FUZZY SYSTEMS",
+          "course_type": "T",
+          "teacher_id": "479.0",
+          "semester": 5,
+          "course_dept": "Mechatronics Engineering",
+          "student_dept": "Mechatronics Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "479.0"
+      ],
+      "courses": [
+        "MT23D11"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 7,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
           "id": 2093,
           "course_id": 2412,
           "course_code": "ME23A11",
@@ -204,50 +237,17 @@
       "total_workload": 3
     },
     {
-      "group_id": 7,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 430,
-          "course_id": 384,
-          "course_code": "GE23311",
-          "course_name": "Fundamentals of Management for Engineers",
-          "course_type": "T",
-          "teacher_id": "489.0",
-          "semester": 5,
-          "course_dept": "Mechatronics Engineering",
-          "student_dept": "Mechatronics Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "489.0"
-      ],
-      "courses": [
-        "GE23311"
-      ],
-      "total_workload": 3
-    },
-    {
       "group_id": 8,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
         {
-          "id": 2049,
-          "course_id": 2411,
-          "course_code": "MT23D11",
-          "course_name": "NEURAL NETWORKS AND FUZZY SYSTEMS",
+          "id": 418,
+          "course_id": 717,
+          "course_code": "MT23513",
+          "course_name": "Basic Engineering Research Methods",
           "course_type": "T",
-          "teacher_id": "479.0",
+          "teacher_id": "495.0",
           "semester": 5,
           "course_dept": "Mechatronics Engineering",
           "student_dept": "Mechatronics Engineering",
@@ -262,10 +262,10 @@
         }
       ],
       "teachers": [
-        "479.0"
+        "495.0"
       ],
       "courses": [
-        "MT23D11"
+        "MT23513"
       ],
       "total_workload": 3
     }

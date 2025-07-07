@@ -11,72 +11,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 824,
-          "course_id": 62,
-          "course_code": "AT23531",
-          "course_name": "Automotive Electrical and Electronics",
-          "course_type": "LoT",
-          "teacher_id": "65.0",
-          "semester": 5,
-          "course_dept": "Automobile Engineering",
-          "student_dept": "Automobile Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 35,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "65.0"
-      ],
-      "courses": [
-        "AT23531"
-      ],
-      "total_workload": 5
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 240,
-          "course_id": 61,
-          "course_code": "AT23522",
-          "course_name": "Computer Aided Vehicle Design Data Characteristics Laboratory",
-          "course_type": "L",
-          "teacher_id": "65.0",
-          "semester": 5,
-          "course_dept": "Automobile Engineering",
-          "student_dept": "Automobile Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 2,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 35,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "65.0"
-      ],
-      "courses": [
-        "AT23522"
-      ],
-      "total_workload": 2
-    },
-    {
-      "group_id": 3,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 238,
           "course_id": 63,
           "course_code": "AT23532",
@@ -105,7 +39,7 @@
       "total_workload": 5
     },
     {
-      "group_id": 4,
+      "group_id": 2,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -138,40 +72,73 @@
       "total_workload": 2
     },
     {
-      "group_id": 5,
+      "group_id": 3,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
         {
-          "id": 567,
-          "course_id": 756,
-          "course_code": "AT23511",
-          "course_name": "Design of Machine Elements",
-          "course_type": "T",
-          "teacher_id": "66.0",
+          "id": 824,
+          "course_id": 62,
+          "course_code": "AT23531",
+          "course_name": "Automotive Electrical and Electronics",
+          "course_type": "LoT",
+          "teacher_id": "65.0",
           "semester": 5,
           "course_dept": "Automobile Engineering",
           "student_dept": "Automobile Engineering",
-          "has_lab": false,
+          "has_lab": true,
           "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 2,
-          "tutorial_hours": 1,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
           "student_count": 35,
           "virtual_id": null,
           "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "66.0"
+        "65.0"
       ],
       "courses": [
-        "AT23511"
+        "AT23531"
       ],
-      "total_workload": 3
+      "total_workload": 5
     },
     {
-      "group_id": 6,
+      "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 240,
+          "course_id": 61,
+          "course_code": "AT23522",
+          "course_name": "Computer Aided Vehicle Design Data Characteristics Laboratory",
+          "course_type": "L",
+          "teacher_id": "65.0",
+          "semester": 5,
+          "course_dept": "Automobile Engineering",
+          "student_dept": "Automobile Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 35,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "65.0"
+      ],
+      "courses": [
+        "AT23522"
+      ],
+      "total_workload": 2
+    },
+    {
+      "group_id": 5,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -204,7 +171,7 @@
       "total_workload": 3
     },
     {
-      "group_id": 7,
+      "group_id": 6,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -233,6 +200,39 @@
       ],
       "courses": [
         "GE23311"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 7,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 567,
+          "course_id": 756,
+          "course_code": "AT23511",
+          "course_name": "Design of Machine Elements",
+          "course_type": "T",
+          "teacher_id": "66.0",
+          "semester": 5,
+          "course_dept": "Automobile Engineering",
+          "student_dept": "Automobile Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 1,
+          "student_count": 35,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "66.0"
+      ],
+      "courses": [
+        "AT23511"
       ],
       "total_workload": 3
     }

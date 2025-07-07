@@ -11,72 +11,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 469,
-          "course_id": 51,
-          "course_code": "AT23332",
-          "course_name": "Applied Thermodynamics",
-          "course_type": "LoT",
-          "teacher_id": "62.0",
-          "semester": 3,
-          "course_dept": "Automobile Engineering",
-          "student_dept": "Automobile Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 2,
-          "tutorial_hours": 1,
-          "student_count": 35,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "62.0"
-      ],
-      "courses": [
-        "AT23332"
-      ],
-      "total_workload": 5
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 473,
-          "course_id": 53,
-          "course_code": "AT23334",
-          "course_name": "Production Technology - II",
-          "course_type": "LoT",
-          "teacher_id": "59.0",
-          "semester": 3,
-          "course_dept": "Automobile Engineering",
-          "student_dept": "Automobile Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 35,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "59.0"
-      ],
-      "courses": [
-        "AT23334"
-      ],
-      "total_workload": 5
-    },
-    {
-      "group_id": 3,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 482,
           "course_id": 49,
           "course_code": "AT23321",
@@ -105,40 +39,7 @@
       "total_workload": 4
     },
     {
-      "group_id": 4,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 1206,
-          "course_id": 425,
-          "course_code": "MA23331",
-          "course_name": "Transforms and Statistics",
-          "course_type": "LoT",
-          "teacher_id": "431.0",
-          "semester": 3,
-          "course_dept": "Automobile Engineering",
-          "student_dept": "Automobile Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 35,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "431.0"
-      ],
-      "courses": [
-        "MA23331"
-      ],
-      "total_workload": 5
-    },
-    {
-      "group_id": 5,
+      "group_id": 2,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -171,7 +72,73 @@
       "total_workload": 5
     },
     {
-      "group_id": 6,
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1206,
+          "course_id": 425,
+          "course_code": "MA23331",
+          "course_name": "Transforms and Statistics",
+          "course_type": "LoT",
+          "teacher_id": "431.0",
+          "semester": 3,
+          "course_dept": "Automobile Engineering",
+          "student_dept": "Automobile Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 35,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "431.0"
+      ],
+      "courses": [
+        "MA23331"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 469,
+          "course_id": 51,
+          "course_code": "AT23332",
+          "course_name": "Applied Thermodynamics",
+          "course_type": "LoT",
+          "teacher_id": "62.0",
+          "semester": 3,
+          "course_dept": "Automobile Engineering",
+          "student_dept": "Automobile Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 1,
+          "student_count": 35,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "62.0"
+      ],
+      "courses": [
+        "AT23332"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 5,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -200,6 +167,39 @@
       ],
       "courses": [
         "AT23333"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 473,
+          "course_id": 53,
+          "course_code": "AT23334",
+          "course_name": "Production Technology - II",
+          "course_type": "LoT",
+          "teacher_id": "59.0",
+          "semester": 3,
+          "course_dept": "Automobile Engineering",
+          "student_dept": "Automobile Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 35,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "59.0"
+      ],
+      "courses": [
+        "AT23334"
       ],
       "total_workload": 5
     }

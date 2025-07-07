@@ -11,66 +11,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 994,
-          "course_id": 1439,
-          "course_code": "CB23332",
-          "course_name": "Software Engineering",
-          "course_type": "LoT",
-          "teacher_id": "165.0",
-          "semester": 3,
-          "course_dept": "Computer Science & Business Systems",
-          "student_dept": "Computer Science & Business Systems",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
           "id": 1023,
           "course_id": 1440,
           "course_code": "CB23333",
           "course_name": "Database Technology",
           "course_type": "LoT",
           "teacher_id": "1806.0",
-          "semester": 3,
-          "course_dept": "Computer Science & Business Systems",
-          "student_dept": "Computer Science & Business Systems",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "165.0",
-        "1806.0"
-      ],
-      "courses": [
-        "CB23333",
-        "CB23332"
-      ],
-      "total_workload": 10
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 1223,
-          "course_id": 1438,
-          "course_code": "CB23331",
-          "course_name": "Computational Statistics",
-          "course_type": "LoT",
-          "teacher_id": "450.0",
           "semester": 3,
           "course_dept": "Computer Science & Business Systems",
           "student_dept": "Computer Science & Business Systems",
@@ -104,39 +50,20 @@
         }
       ],
       "teachers": [
-        "1866.0",
-        "450.0"
+        "1806.0",
+        "1866.0"
       ],
       "courses": [
         "CS23333",
-        "CB23331"
+        "CB23333"
       ],
       "total_workload": 12
     },
     {
-      "group_id": 3,
+      "group_id": 2,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
-        {
-          "id": 1222,
-          "course_id": 1438,
-          "course_code": "CB23331",
-          "course_name": "Computational Statistics",
-          "course_type": "LoT",
-          "teacher_id": "422.0",
-          "semester": 3,
-          "course_dept": "Computer Science & Business Systems",
-          "student_dept": "Computer Science & Business Systems",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
         {
           "id": 1074,
           "course_id": 2222,
@@ -155,6 +82,25 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
+        },
+        {
+          "id": 1222,
+          "course_id": 1438,
+          "course_code": "CB23331",
+          "course_name": "Computational Statistics",
+          "course_type": "LoT",
+          "teacher_id": "422.0",
+          "semester": 3,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
@@ -166,6 +112,60 @@
         "CB23331"
       ],
       "total_workload": 12
+    },
+    {
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1040,
+          "course_id": 1440,
+          "course_code": "CB23333",
+          "course_name": "Database Technology",
+          "course_type": "LoT",
+          "teacher_id": "167.0",
+          "semester": 3,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1223,
+          "course_id": 1438,
+          "course_code": "CB23331",
+          "course_name": "Computational Statistics",
+          "course_type": "LoT",
+          "teacher_id": "450.0",
+          "semester": 3,
+          "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "450.0",
+        "167.0"
+      ],
+      "courses": [
+        "CB23333",
+        "CB23331"
+      ],
+      "total_workload": 10
     },
     {
       "group_id": 4,
@@ -192,12 +192,12 @@
           "co_scheduled_id": null
         },
         {
-          "id": 1040,
-          "course_id": 1440,
-          "course_code": "CB23333",
-          "course_name": "Database Technology",
+          "id": 994,
+          "course_id": 1439,
+          "course_code": "CB23332",
+          "course_name": "Software Engineering",
           "course_type": "LoT",
-          "teacher_id": "167.0",
+          "teacher_id": "165.0",
           "semester": 3,
           "course_dept": "Computer Science & Business Systems",
           "student_dept": "Computer Science & Business Systems",
@@ -212,11 +212,10 @@
         }
       ],
       "teachers": [
-        "167.0",
+        "165.0",
         "193.0"
       ],
       "courses": [
-        "CB23333",
         "CB23332"
       ],
       "total_workload": 10
@@ -226,25 +225,6 @@
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
-        {
-          "id": 1333,
-          "course_id": 2223,
-          "course_code": "MC23313",
-          "course_name": "Environmental Sciences",
-          "course_type": "T",
-          "teacher_id": "168.0",
-          "semester": 3,
-          "course_dept": "Chemistry",
-          "student_dept": "Computer Science & Business Systems",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
         {
           "id": 1334,
           "course_id": 2223,
@@ -263,22 +243,7 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "143.0",
-        "168.0"
-      ],
-      "courses": [
-        "MC23313"
-      ],
-      "total_workload": 6
-    },
-    {
-      "group_id": 6,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
+        },
         {
           "id": 1036,
           "course_id": 1437,
@@ -288,6 +253,41 @@
           "teacher_id": "175.0",
           "semester": 3,
           "course_dept": "Computer Science & Business Systems",
+          "student_dept": "Computer Science & Business Systems",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "143.0",
+        "175.0"
+      ],
+      "courses": [
+        "MC23313",
+        "CB23312"
+      ],
+      "total_workload": 6
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1333,
+          "course_id": 2223,
+          "course_code": "MC23313",
+          "course_name": "Environmental Sciences",
+          "course_type": "T",
+          "teacher_id": "168.0",
+          "semester": 3,
+          "course_dept": "Chemistry",
           "student_dept": "Computer Science & Business Systems",
           "has_lab": false,
           "has_theory": true,
@@ -319,10 +319,11 @@
         }
       ],
       "teachers": [
-        "175.0",
-        "1867.0"
+        "1867.0",
+        "168.0"
       ],
       "courses": [
+        "MC23313",
         "CB23312"
       ],
       "total_workload": 6

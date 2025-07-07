@@ -1008,21 +1008,23 @@ class CombinedScheduler:
             "Computer Science & Design_S3",
             "Biotechnology",
             "Electronics & Communication Engineering_S7",
-            "Electronics & Communication Engineering_S3",
             "Biomedical Engineering_S5",
             "Biomedical Engineering_S7",
             "Mechanical Engineering",
+            'Electrical & Electronics Engineering_S3',
+            'Electrical & Electronics Engineering_S7',
         ]
         
         # SOFT CONSTRAINT DEPARTMENTS - PREFER NOT to schedule after 5:30pm for both theory and lab
         # Format: 'Department Name' for all semesters OR 'Department Name_S5' for specific semester
         self.soft_5pm_constraint_departments = [
             # Department-wide constraints (applies to all semesters)
-      "Computer Science & Engineering_S3",
+            "Computer Science & Engineering_S3",
             "Electronics & Communication Engineering_S5",
-            'Electrical & Electronics Engineering',
-            "Biomedical Engineering_S3",
+            "Electronics & Communication Engineering_S3",
+            'Electrical & Electronics Engineering_S5',
             "Chemical Engineering_S7",
+            "Biomedical Engineering_S3",
             "Food Technology_S7",
             # Semester-specific constraints (overrides department-wide settings)SS
             # Example: "Biotechnology_S7",                   # Only S7 has soft constraint
@@ -1063,7 +1065,7 @@ class CombinedScheduler:
         
         # Constraint weights for optimization
         self.hard_5pm_constraint_weight = 10000  # Very high penalty to essentially prohibit
-        self.soft_5pm_constraint_weight = 0    # Moderate penalty to discourage
+        self.soft_5pm_constraint_weight = 3000   # Moderate penalty to discourage
         
         self.logger.info("Dual-level constraint system initialized:")
         self.logger.info(f"  - Hard constraint departments: {len(self.hard_5pm_constraint_departments)} departments (blocked after 5:30pm)")
@@ -1757,16 +1759,110 @@ class CombinedScheduler:
         self.logger.info(f"  Total lab sessions needed: {total_lab_sessions}")
         self.logger.info(f"  Total theory sessions needed: {total_theory_sessions}")
     
-    def create_course_groups(self):
-        """Create unified course groups for both lab and theory using OR-Tools optimized distribution."""
-        self.logger.info("🔥 DEBUG: create_course_groups() STARTED")
-        self.logger.info("Creating unified course groups using OR-Tools optimization...")
+    def _load_groups_from_json(self, json_file_path):
+        """Load course groups from the extracted group details JSON file."""
+        self.logger.info(f"Loading course groups from JSON file: {json_file_path}")
         
-        # Use the new OR-Tools based group creation logic
-        # This ensures optimal constraint satisfaction and student choice
-        self.logger.info("🔥 DEBUG: About to call _create_course_groups_by_dept_semester()")
-        self.course_groups = self._create_course_groups_by_dept_semester()
-        self.logger.info("🔥 DEBUG: Finished _create_course_groups_by_dept_semester()")
+        try:
+            with open(json_file_path, 'r', encoding='utf-8') as f:
+                json_data = json.load(f)
+                
+            # Convert JSON data to the expected format
+            course_groups = {}
+            
+            for dept_sem_key, dept_data in json_data.items():
+                # Parse department and semester from the key (e.g., "Computer Science & Design_S7")
+                if '_S' in dept_sem_key:
+                    dept = dept_sem_key.rsplit('_S', 1)[0]
+                    semester = int(dept_sem_key.rsplit('_S', 1)[1])
+                else:
+                    self.logger.warning(f"Skipping invalid key format: {dept_sem_key}")
+                    continue
+                    
+                # Extract groups and sort them by group_id to maintain proper order
+                groups_dict = {}
+                if 'groups' in dept_data:
+                    for group_data in dept_data['groups']:
+                        group = []
+                        group_id = group_data.get('group_id', 1)  # Default to 1 if not found
+                        
+                        if 'instances' in group_data:
+                            for instance in group_data['instances']:
+                                # Convert instance data to match expected format
+                                processed_instance = {
+                                    'id': str(instance['id']),
+                                    'teacher_id': str(instance['teacher_id']),
+                                    'course_id': instance.get('course_id', ''),
+                                    'course_code': instance['course_code'],
+                                    'course_name': instance['course_name'],
+                                    'course_type': instance['course_type'],
+                                    'lecture_hours': instance.get('lecture_hours', 0),
+                                    'tutorial_hours': instance.get('tutorial_hours', 0),
+                                    'practical_hours': instance.get('practical_hours', 0),
+                                    'student_count': instance['student_count'],
+                                    'semester': instance['semester'],
+                                    'course_dept': instance.get('course_dept', dept),
+                                    'student_dept': instance.get('student_dept', dept),
+                                    'has_lab': instance.get('has_lab', False),
+                                    'has_theory': instance.get('has_theory', False)
+                                }
+                                
+                                # Handle virtual instances
+                                if instance.get('virtual_id'):
+                                    processed_instance['virtual_id'] = instance['virtual_id']
+                                    processed_instance['is_large_course_split'] = True
+                                    processed_instance['original_student_count'] = instance.get('original_student_count', 140)
+                                
+                                if instance.get('co_scheduled_id'):
+                                    processed_instance['co_scheduled_id'] = instance['co_scheduled_id']
+                                    
+                                group.append(processed_instance)
+                        
+                        groups_dict[group_id] = group
+                
+                # Sort groups by group_id to maintain proper ordering
+                groups = []
+                for group_id in sorted(groups_dict.keys()):
+                    groups.append(groups_dict[group_id])
+                
+                course_groups[(dept, semester)] = groups
+                self.logger.info(f"Loaded {len(groups)} groups for {dept} Semester {semester}")
+                
+            self.logger.info(f"Successfully loaded groups for {len(course_groups)} department-semester combinations")
+            return course_groups
+            
+        except FileNotFoundError:
+            self.logger.error(f"JSON file not found: {json_file_path}")
+            return {}
+        except json.JSONDecodeError as e:
+            self.logger.error(f"Error parsing JSON file: {e}")
+            return {}
+        except Exception as e:
+            self.logger.error(f"Error loading groups from JSON: {e}")
+            return {}
+
+    def create_course_groups(self):
+        """Create unified course groups for both lab and theory using pre-extracted group details."""
+        self.logger.info("🔥 DEBUG: create_course_groups() STARTED")
+        self.logger.info("Creating unified course groups from extracted group details...")
+        
+        # Try to load groups from JSON file first
+        json_file_path = "extracted_group_details_optimization_format.json"
+        
+        if os.path.exists(json_file_path):
+            self.logger.info("Found extracted group details JSON file, loading groups from it...")
+            self.course_groups = self._load_groups_from_json(json_file_path)
+            
+            if self.course_groups:
+                self.logger.info("Successfully loaded course groups from JSON file")
+            else:
+                self.logger.warning("Failed to load groups from JSON, falling back to OR-Tools optimization...")
+                # Fallback to the original OR-Tools based group creation logic
+                self.course_groups = self._create_course_groups_by_dept_semester()
+        else:
+            self.logger.warning(f"JSON file not found: {json_file_path}, using OR-Tools optimization...")
+            # Use the original OR-Tools based group creation logic
+            self.course_groups = self._create_course_groups_by_dept_semester()
         
         # Create instance-group mapping for both lab and theory
         self.instance_group_mapping = {}
@@ -1784,9 +1880,9 @@ class CombinedScheduler:
         # Identify groups that contain core lab instances
         self._identify_core_lab_groups()
         
-        self.logger.info("OR-Tools unified course grouping completed successfully")
+        self.logger.info("Unified course grouping completed successfully")
         self.logger.info("[OK] UNIFIED CONSTRAINTS: Both lab and theory respect same group structure")
-        self.logger.info("[OK] OR-TOOLS OPTIMIZATION: Maximized student choice with constraint satisfaction")
+        self.logger.info("[OK] GROUP LOADING: Using extracted group details for optimal scheduling")
 
     def _update_lab_requirements_with_virtual_instances(self):
         """Update lab requirements to include virtual instances created by CourseGroupOptimizer."""
@@ -4934,9 +5030,9 @@ class CombinedScheduler:
         # Apply unified shift constraints that coordinate both lab and theory scheduling
         constraints_applied += self.apply_unified_weekly_shift_constraint(model, lab_variables, group_timeslot_vars)
         
-        # CONSTRAINT 2: Department/Semester Group Conflict Prevention
-        # Lab groups and theory groups from the same dept/semester CANNOT overlap in time
-        # This is the only remaining cross-system constraint after unification.
+        # CONSTRAINT 2: Cross-Group Conflict Prevention
+        # Lab groups and theory groups from DIFFERENT groups in the same dept/semester CANNOT overlap
+        # SAME-GROUP overlap is now ALLOWED (teacher uniqueness constraint still enforced)
         constraints_applied += self._apply_dept_semester_group_conflict_constraint(model, lab_variables, group_timeslot_vars)
         
         self.logger.info(f"Applied {constraints_applied} cross-system constraints")
@@ -4944,23 +5040,31 @@ class CombinedScheduler:
     
     def _apply_dept_semester_group_conflict_constraint(self, model, lab_variables, group_timeslot_vars):
         """
-        Prevents ANY lab group and ANY theory group from the SAME dept/semester from overlapping in time.
-        This is a semester-wide exclusion constraint.
+        Prevents lab groups and theory groups from DIFFERENT groups in the same dept/semester from overlapping.
+        ALLOWS lab and theory groups from the SAME group to overlap if teacher uniqueness constraint holds.
         """
-        self.logger.info("Applying department/semester-wide lab-theory exclusion constraint...")
+        self.logger.info("Applying refined lab-theory exclusion constraint (same-group overlaps allowed)...")
         constraints_applied = 0
         
-        # 1. Group lab instances and theory groups by (dept, semester)
-        semester_map = defaultdict(lambda: {'lab_instances': [], 'theory_groups': []})
+        # 1. Group lab instances and theory groups by (dept, semester, group_number)
+        semester_group_map = defaultdict(lambda: {'lab_instances': [], 'theory_groups': []})
 
-        # Group lab instances
+        # Group lab instances by their group assignment
         if hasattr(self, 'instance_group_mapping'):
             for teacher_id in lab_variables:
                 for course_instance_id in lab_variables[teacher_id]:
                     if course_instance_id in self.instance_group_mapping:
                         mapping = self.instance_group_mapping[course_instance_id]
-                        key = (mapping['department'], mapping['semester'])
-                        semester_map[key]['lab_instances'].append((teacher_id, course_instance_id))
+                        # Extract group number from group_name (e.g., "Computer Science & Engineering_S3_G1" -> 1)
+                        group_number = 1  # Default
+                        if 'group_name' in mapping and '_G' in mapping['group_name']:
+                            try:
+                                group_number = int(mapping['group_name'].split('_G')[-1])
+                            except (ValueError, IndexError):
+                                pass
+                        
+                        key = (mapping['department'], mapping['semester'], group_number)
+                        semester_group_map[key]['lab_instances'].append((teacher_id, course_instance_id))
 
         # Group theory groups by parsing their names
         for theory_group_name in group_timeslot_vars.keys():
@@ -4968,81 +5072,92 @@ class CombinedScheduler:
             parts = theory_group_name.split('_S')
             if len(parts) == 2:
                 dept = parts[0]
-                semester_part = parts[1].split('_G')[0]
+                semester_and_group = parts[1]
+                semester_part = semester_and_group.split('_G')[0]
+                group_part = semester_and_group.split('_G')[1] if '_G' in semester_and_group else '1'
                 try:
                     semester = int(semester_part)
-                    key = (dept, semester)
-                    semester_map[key]['theory_groups'].append(theory_group_name)
+                    group_number = int(group_part)
+                    key = (dept, semester, group_number)
+                    semester_group_map[key]['theory_groups'].append(theory_group_name)
                 except ValueError:
-                    self.logger.warning(f"Could not parse semester from group name: {theory_group_name}")
+                    self.logger.warning(f"Could not parse semester/group from group name: {theory_group_name}")
                     continue
 
-        # 2. Apply semester-wide exclusion for each time slot
-        for (dept, semester), data in semester_map.items():
-            if not data['lab_instances'] or not data['theory_groups']:
-                continue
+        # 2. Apply cross-group exclusion constraints (different groups cannot overlap)
+        # Group by (dept, semester) to find groups that need mutual exclusion
+        dept_semester_groups = defaultdict(list)
+        for (dept, semester, group_number), data in semester_group_map.items():
+            if data['lab_instances'] or data['theory_groups']:
+                dept_semester_groups[(dept, semester)].append((group_number, data))
+
+        for (dept, semester), groups_data in dept_semester_groups.items():
+            if len(groups_data) <= 1:
+                continue  # Only one group, no cross-group conflicts possible
                 
-            self.logger.debug(f"Applying semester-wide conflicts for {dept} S{semester}...")
+            self.logger.debug(f"Applying cross-group conflicts for {dept} S{semester} ({len(groups_data)} groups)...")
 
             # Get department-specific days for this constraint
             dept_days = self._get_days_for_department(dept)
             num_dept_days = len(dept_days)
             
-            # For each time point (day, theory_slot) - use department-specific days
+            # For each time point (day, theory_slot)
             for day_idx in range(num_dept_days):
                 for theory_slot_idx in range(self.num_theory_slots):
                     
-                    # A. Determine if any theory class for this semester is active
-                    theory_vars_at_slot = []
-                    for group_name in data['theory_groups']:
-                        if (group_name in group_timeslot_vars and
-                            day_idx in group_timeslot_vars[group_name] and
-                            theory_slot_idx in group_timeslot_vars[group_name][day_idx]):
-                            theory_vars_at_slot.append(group_timeslot_vars[group_name][day_idx][theory_slot_idx])
-                    if not theory_vars_at_slot:
-                        continue
-
-                    is_theory_active_for_sem = model.NewBoolVar(f'theory_active_{dept}_S{semester}_d{day_idx}_ts{theory_slot_idx}')
-                    model.Add(sum(theory_vars_at_slot) > 0).OnlyEnforceIf(is_theory_active_for_sem)
-                    model.Add(sum(theory_vars_at_slot) == 0).OnlyEnforceIf(is_theory_active_for_sem.Not())
-
-                    # B. Determine if any lab class for this semester is active in an overlapping lab session
-                    lab_vars_at_overlapping_slot = []
-                    if theory_slot_idx in self.theory_to_lab_mapping:
-                        # Find which lab sessions overlap with this theory time slot
-                        overlapping_lab_sessions = set()
-                        for lab_time_slot_idx in self.theory_to_lab_mapping[theory_slot_idx]:
-                            for session_name, session_details in self.lab_sessions_details.items():
-                                if lab_time_slot_idx in session_details['slots']:
-                                    overlapping_lab_sessions.add(session_name)
-                                    break
+                    # Collect activity indicators for each group
+                    group_activities = {}
+                    
+                    for group_number, data in groups_data:
+                        group_activity_vars = []
                         
-                        if not overlapping_lab_sessions:
-                            continue
-                            
-                        # Get all lab variables for this semester in the overlapping sessions
-                        for session_name in overlapping_lab_sessions:
-                            for teacher_id, course_instance_id in data['lab_instances']:
-                                if (teacher_id in lab_variables and
-                                    course_instance_id in lab_variables[teacher_id] and
-                                    day_idx < len(lab_variables[teacher_id][course_instance_id]) and
-                                    session_name in lab_variables[teacher_id][course_instance_id][day_idx]):
-                                    lab_vars_at_overlapping_slot.extend(
-                                        lab_variables[teacher_id][course_instance_id][day_idx][session_name].values()
-                                    )
+                        # A. Collect theory activities for this group
+                        for group_name in data['theory_groups']:
+                            if (group_name in group_timeslot_vars and
+                                day_idx in group_timeslot_vars[group_name] and
+                                theory_slot_idx in group_timeslot_vars[group_name][day_idx]):
+                                group_activity_vars.append(group_timeslot_vars[group_name][day_idx][theory_slot_idx])
                         
-                        if not lab_vars_at_overlapping_slot:
-                            continue
-
-                        is_lab_active_for_sem = model.NewBoolVar(f'lab_active_{dept}_S{semester}_d{day_idx}_ts{theory_slot_idx}')
-                        model.Add(sum(lab_vars_at_overlapping_slot) > 0).OnlyEnforceIf(is_lab_active_for_sem)
-                        model.Add(sum(lab_vars_at_overlapping_slot) == 0).OnlyEnforceIf(is_lab_active_for_sem.Not())
+                        # B. Collect lab activities for this group at overlapping time slots
+                        if theory_slot_idx in self.theory_to_lab_mapping:
+                            # Find which lab sessions overlap with this theory time slot
+                            overlapping_lab_sessions = set()
+                            for lab_time_slot_idx in self.theory_to_lab_mapping[theory_slot_idx]:
+                                for session_name, session_details in self.lab_sessions_details.items():
+                                    if lab_time_slot_idx in session_details['slots']:
+                                        overlapping_lab_sessions.add(session_name)
+                                        break
                             
-                        # C. Add the exclusion constraint: At most one can be active
-                        model.Add(is_theory_active_for_sem + is_lab_active_for_sem <= 1)
+                            # Get all lab variables for this group in the overlapping sessions
+                            for session_name in overlapping_lab_sessions:
+                                for teacher_id, course_instance_id in data['lab_instances']:
+                                    if (teacher_id in lab_variables and
+                                        course_instance_id in lab_variables[teacher_id] and
+                                        day_idx < len(lab_variables[teacher_id][course_instance_id]) and
+                                        session_name in lab_variables[teacher_id][course_instance_id][day_idx]):
+                                        group_activity_vars.extend(
+                                            lab_variables[teacher_id][course_instance_id][day_idx][session_name].values()
+                                        )
+                        
+                        # Create group activity indicator if there are any activities
+                        if group_activity_vars:
+                            group_activity = model.NewBoolVar(f'group_activity_{dept}_S{semester}_G{group_number}_d{day_idx}_ts{theory_slot_idx}')
+                            model.Add(group_activity <= sum(group_activity_vars))
+                            model.Add(sum(group_activity_vars) <= len(group_activity_vars) * group_activity)
+                            group_activities[group_number] = group_activity
+                    
+                    # Apply mutual exclusion constraint between DIFFERENT groups
+                    # (Same group lab and theory can overlap - this is the key change)
+                    if len(group_activities) > 1:
+                        # At most one group can be active at this time slot
+                        model.Add(sum(group_activities.values()) <= 1)
                         constraints_applied += 1
+                        
+                        group_nums = list(group_activities.keys())
+                        self.logger.debug(f"Applied cross-group exclusion: {dept} S{semester} groups {group_nums} at day {day_idx} slot {theory_slot_idx}")
         
-        self.logger.info(f"Applied {constraints_applied} department/semester-wide lab-theory exclusion constraints.")
+        self.logger.info(f"Applied {constraints_applied} refined lab-theory exclusion constraints.")
+        self.logger.info("✅ SAME-GROUP OVERLAP: Lab and theory from same group can now overlap (teacher uniqueness still enforced)")
         return constraints_applied
     
     def _apply_unified_teacher_clash_constraint(self, model, lab_variables, group_timeslot_vars):
@@ -5617,11 +5732,11 @@ class CombinedScheduler:
         """Solve the combined scheduling model using two-phase approach."""
         # Create the solver
         solver = cp_model.CpSolver()
-        solver.parameters.max_time_in_seconds = 4000
+        solver.parameters.max_time_in_seconds = 2000
         solver.parameters.num_search_workers = 16
         solver.parameters.max_memory_in_mb = 30000
         solver.parameters.log_search_progress = True
-        solver.parameters.stop_after_first_solution= True
+        solver.parameters.stop_after_first_solution = True
         
         self.logger.info("Solving combined scheduling model...")
         status = solver.Solve(model)

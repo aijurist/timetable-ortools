@@ -1,0 +1,78 @@
+Combined Course-Group Distribution Summary
+Department: Food Technology
+Semester: 7
+Generated: 2025-06-28 09:35:35
+============================================================
+
+OVERVIEW:
+- Total Courses: 10
+  └─ Lab Courses: 3
+  └─ Theory Courses: 7
+  └─ Overlap (Both): 0
+- Total Groups: 10
+- Total Teacher Assignments: 10
+- Courses with Multiple Group Options: 0 (0.0%)
+
+COURSE DISTRIBUTION BY TYPE:
+- FT19701 [Theory]: 1 groups, 1 teacher assignments
+  └─ G9: 1 teachers
+- FT19702 [Theory]: 1 groups, 1 teacher assignments
+  └─ G4: 1 teachers
+- FT19703 [Theory]: 1 groups, 1 teacher assignments
+  └─ G6: 1 teachers
+- FT19704 [Theory]: 1 groups, 1 teacher assignments
+  └─ G5: 1 teachers
+- FT19705 [Theory]: 1 groups, 1 teacher assignments
+  └─ G7: 1 teachers
+- FT19711 [Lab]: 1 groups, 1 teacher assignments
+  └─ G1: 1 teachers
+- FT19712 [Lab]: 1 groups, 1 teacher assignments
+  └─ G3: 1 teachers
+- FT19714 [Lab]: 1 groups, 1 teacher assignments
+  └─ G2: 1 teachers
+- FT19P79 [Theory]: 1 groups, 1 teacher assignments
+  └─ G8: 1 teachers
+- NPTEL IV Year [Theory]: 1 groups, 1 teacher assignments
+  └─ G10: 1 teachers
+
+GROUP COMPOSITION:
+- G1: 1 courses, 1 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 0
+    └─ FT19711 [L]: 1 teachers, 1 instances
+- G2: 1 courses, 1 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 0
+    └─ FT19714 [L]: 1 teachers, 1 instances
+- G3: 1 courses, 1 teachers
+  └─ Lab courses: 1
+  └─ Theory courses: 0
+    └─ FT19712 [L]: 1 teachers, 1 instances
+- G4: 1 courses, 1 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ FT19702 [T]: 1 teachers, 1 instances
+- G5: 1 courses, 1 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ FT19704 [T]: 1 teachers, 1 instances
+- G6: 1 courses, 1 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ FT19703 [T]: 1 teachers, 1 instances
+- G7: 1 courses, 1 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ FT19705 [T]: 1 teachers, 1 instances
+- G8: 1 courses, 1 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ FT19P79 [T]: 1 teachers, 1 instances
+- G9: 1 courses, 1 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ FT19701 [T]: 1 teachers, 1 instances
+- G10: 1 courses, 1 teachers
+  └─ Lab courses: 0
+  └─ Theory courses: 1
+    └─ NPTEL IV Year [T]: 1 teachers, 1 instances

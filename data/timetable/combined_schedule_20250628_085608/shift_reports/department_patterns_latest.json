@@ -1,0 +1,116 @@
+{
+  "Computer Science & Design": {
+    "staff_count": 9,
+    "total_violations": 0,
+    "total_medium": 6,
+    "total_optimal": 28
+  },
+  "Computer Science & Engineering": {
+    "staff_count": 55,
+    "total_violations": 7,
+    "total_medium": 58,
+    "total_optimal": 156
+  },
+  "Computer Science & Engineering (Cyber Security)": {
+    "staff_count": 9,
+    "total_violations": 1,
+    "total_medium": 14,
+    "total_optimal": 24
+  },
+  "Artificial Intelligence & Data Science": {
+    "staff_count": 35,
+    "total_violations": 2,
+    "total_medium": 20,
+    "total_optimal": 109
+  },
+  "Artificial Intelligence & Machine Learning": {
+    "staff_count": 27,
+    "total_violations": 4,
+    "total_medium": 24,
+    "total_optimal": 67
+  },
+  "Automobile Engineering": {
+    "staff_count": 9,
+    "total_violations": 0,
+    "total_medium": 1,
+    "total_optimal": 34
+  },
+  "Information Technology": {
+    "staff_count": 30,
+    "total_violations": 2,
+    "total_medium": 32,
+    "total_optimal": 90
+  },
+  "Computer Science & Business Systems": {
+    "staff_count": 23,
+    "total_violations": 2,
+    "total_medium": 19,
+    "total_optimal": 59
+  },
+  "Mechanical Engineering": {
+    "staff_count": 32,
+    "total_violations": 4,
+    "total_medium": 9,
+    "total_optimal": 97
+  },
+  "Electronics & Communication Engineering": {
+    "staff_count": 49,
+    "total_violations": 4,
+    "total_medium": 20,
+    "total_optimal": 168
+  },
+  "Food Technology": {
+    "staff_count": 14,
+    "total_violations": 1,
+    "total_medium": 9,
+    "total_optimal": 37
+  },
+  "Biotechnology": {
+    "staff_count": 34,
+    "total_violations": 1,
+    "total_medium": 12,
+    "total_optimal": 111
+  },
+  "Civil Engineering": {
+    "staff_count": 10,
+    "total_violations": 0,
+    "total_medium": 10,
+    "total_optimal": 33
+  },
+  "Aeronautical Engineering": {
+    "staff_count": 11,
+    "total_violations": 0,
+    "total_medium": 9,
+    "total_optimal": 31
+  },
+  "Mechatronics Engineering": {
+    "staff_count": 11,
+    "total_violations": 2,
+    "total_medium": 7,
+    "total_optimal": 29
+  },
+  "Robotics & Automation": {
+    "staff_count": 11,
+    "total_violations": 0,
+    "total_medium": 1,
+    "total_optimal": 38
+  },
+  "Electrical & Electronics Engineering": {
+    "staff_count": 29,
+    "total_violations": 0,
+    "total_medium": 4,
+    "total_optimal": 83
+  },
+  "Chemical Engineering": {
+    "staff_count": 12,
+    "total_violations": 0,
+    "total_medium": 9,
+    "total_optimal": 34
+  },
+  "Biomedical Engineering": {
+    "staff_count": 22,
+    "total_violations": 2,
+    "total_medium": 19,
+    "total_optimal": 57
+  }
+}

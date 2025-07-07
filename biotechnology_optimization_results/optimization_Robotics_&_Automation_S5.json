@@ -11,6 +11,39 @@
       "group_type": "Regular",
       "instances": [
         {
+          "id": 415,
+          "course_id": 517,
+          "course_code": "RO23522",
+          "course_name": "Industrial Automation \r\n Laboratory-II",
+          "course_type": "L",
+          "teacher_id": "564.0",
+          "semester": 5,
+          "course_dept": "Robotics & Automation",
+          "student_dept": "Robotics & Automation",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "564.0"
+      ],
+      "courses": [
+        "RO23522"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
           "id": 404,
           "course_id": 516,
           "course_code": "RO23521",
@@ -39,73 +72,7 @@
       "total_workload": 4
     },
     {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 415,
-          "course_id": 517,
-          "course_code": "RO23522",
-          "course_name": "Industrial Automation \n Laboratory-II",
-          "course_type": "L",
-          "teacher_id": "564.0",
-          "semester": 5,
-          "course_dept": "Robotics & Automation",
-          "student_dept": "Robotics & Automation",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "564.0"
-      ],
-      "courses": [
-        "RO23522"
-      ],
-      "total_workload": 4
-    },
-    {
       "group_id": 3,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 343,
-          "course_id": 514,
-          "course_code": "RO23511",
-          "course_name": "AI for Robotics",
-          "course_type": "T",
-          "teacher_id": "564.0",
-          "semester": 5,
-          "course_dept": "Robotics & Automation",
-          "student_dept": "Robotics & Automation",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "564.0"
-      ],
-      "courses": [
-        "RO23511"
-      ],
-      "total_workload": 3
-    },
-    {
-      "group_id": 4,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -134,6 +101,39 @@
       ],
       "courses": [
         "RO23C13"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1360,
+          "course_id": 451,
+          "course_code": "ME23511",
+          "course_name": "Machine Design",
+          "course_type": "T",
+          "teacher_id": "500.0",
+          "semester": 5,
+          "course_dept": "Robotics & Automation",
+          "student_dept": "Robotics & Automation",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "500.0"
+      ],
+      "courses": [
+        "ME23511"
       ],
       "total_workload": 3
     },
@@ -176,12 +176,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 1360,
-          "course_id": 451,
-          "course_code": "ME23511",
-          "course_name": "Machine Design",
+          "id": 343,
+          "course_id": 514,
+          "course_code": "RO23511",
+          "course_name": "AI for Robotics",
           "course_type": "T",
-          "teacher_id": "500.0",
+          "teacher_id": "564.0",
           "semester": 5,
           "course_dept": "Robotics & Automation",
           "student_dept": "Robotics & Automation",
@@ -196,10 +196,10 @@
         }
       ],
       "teachers": [
-        "500.0"
+        "564.0"
       ],
       "courses": [
-        "ME23511"
+        "RO23511"
       ],
       "total_workload": 3
     }

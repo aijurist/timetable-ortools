@@ -143,39 +143,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 424,
-          "course_id": 473,
-          "course_code": "MT23332",
-          "course_name": "Digital System Design",
-          "course_type": "LoT",
-          "teacher_id": "496.0",
-          "semester": 3,
-          "course_dept": "Mechatronics Engineering",
-          "student_dept": "Mechatronics Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 2,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "496.0"
-      ],
-      "courses": [
-        "MT23332"
-      ],
-      "total_workload": 4
-    },
-    {
-      "group_id": 6,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 396,
           "course_id": 680,
           "course_code": "MT23333",
@@ -202,6 +169,39 @@
         "MT23333"
       ],
       "total_workload": 5
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 424,
+          "course_id": 473,
+          "course_code": "MT23332",
+          "course_name": "Digital System Design",
+          "course_type": "LoT",
+          "teacher_id": "496.0",
+          "semester": 3,
+          "course_dept": "Mechatronics Engineering",
+          "student_dept": "Mechatronics Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "496.0"
+      ],
+      "courses": [
+        "MT23332"
+      ],
+      "total_workload": 4
     }
   ],
   "pe_group_included": false,

@@ -44,6 +44,39 @@
       "group_type": "Regular",
       "instances": [
         {
+          "id": 92,
+          "course_id": 170,
+          "course_code": "CD23331",
+          "course_name": "Design Processes and Perspectives",
+          "course_type": "LoT",
+          "teacher_id": "182.0",
+          "semester": 3,
+          "course_dept": "Computer Science & Design",
+          "student_dept": "Computer Science & Design",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "182.0"
+      ],
+      "courses": [
+        "CD23331"
+      ],
+      "total_workload": 5
+    },
+    {
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
           "id": 87,
           "course_id": 169,
           "course_code": "CD23321",
@@ -72,7 +105,7 @@
       "total_workload": 6
     },
     {
-      "group_id": 3,
+      "group_id": 4,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -105,73 +138,7 @@
       "total_workload": 6
     },
     {
-      "group_id": 4,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 79,
-          "course_id": 257,
-          "course_code": "CS23331",
-          "course_name": "Design and Analysis of Algorithms",
-          "course_type": "LoT",
-          "teacher_id": "179.0",
-          "semester": 3,
-          "course_dept": "Computer Science & Design",
-          "student_dept": "Computer Science & Design",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "179.0"
-      ],
-      "courses": [
-        "CS23331"
-      ],
-      "total_workload": 5
-    },
-    {
       "group_id": 5,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 92,
-          "course_id": 170,
-          "course_code": "CD23331",
-          "course_name": "Design Processes and Perspectives",
-          "course_type": "LoT",
-          "teacher_id": "182.0",
-          "semester": 3,
-          "course_dept": "Computer Science & Design",
-          "student_dept": "Computer Science & Design",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "182.0"
-      ],
-      "courses": [
-        "CD23331"
-      ],
-      "total_workload": 5
-    },
-    {
-      "group_id": 6,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -202,6 +169,39 @@
         "CS23332"
       ],
       "total_workload": 7
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 79,
+          "course_id": 257,
+          "course_code": "CS23331",
+          "course_name": "Design and Analysis of Algorithms",
+          "course_type": "LoT",
+          "teacher_id": "179.0",
+          "semester": 3,
+          "course_dept": "Computer Science & Design",
+          "student_dept": "Computer Science & Design",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "179.0"
+      ],
+      "courses": [
+        "CS23331"
+      ],
+      "total_workload": 5
     }
   ],
   "pe_group_included": false,

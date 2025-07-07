@@ -84,12 +84,12 @@
           "co_scheduled_id": null
         },
         {
-          "id": 886,
+          "id": 887,
           "course_id": 88,
           "course_code": "BM23332",
           "course_name": "Sensors and Measurements",
           "course_type": "LoT",
-          "teacher_id": "70.0",
+          "teacher_id": "101.0",
           "semester": 3,
           "course_dept": "Biomedical Engineering",
           "student_dept": "Biomedical Engineering",
@@ -104,12 +104,12 @@
         }
       ],
       "teachers": [
-        "70.0",
-        "72.0"
+        "72.0",
+        "101.0"
       ],
       "courses": [
-        "BM23331",
-        "BM23332"
+        "BM23332",
+        "BM23331"
       ],
       "total_workload": 9
     },
@@ -138,12 +138,12 @@
           "co_scheduled_id": null
         },
         {
-          "id": 887,
+          "id": 886,
           "course_id": 88,
           "course_code": "BM23332",
           "course_name": "Sensors and Measurements",
           "course_type": "LoT",
-          "teacher_id": "101.0",
+          "teacher_id": "70.0",
           "semester": 3,
           "course_dept": "Biomedical Engineering",
           "student_dept": "Biomedical Engineering",
@@ -158,12 +158,12 @@
         }
       ],
       "teachers": [
-        "80.0",
-        "101.0"
+        "70.0",
+        "80.0"
       ],
       "courses": [
-        "BM23331",
-        "BM23332"
+        "BM23332",
+        "BM23331"
       ],
       "total_workload": 9
     },
@@ -212,8 +212,8 @@
         }
       ],
       "teachers": [
-        "77.0",
-        "69.0"
+        "69.0",
+        "77.0"
       ],
       "courses": [
         "BM23322",
@@ -227,7 +227,61 @@
       "group_type": "Regular",
       "instances": [
         {
+          "id": 880,
+          "course_id": 83,
+          "course_code": "BM23312",
+          "course_name": "Biomedical Instrumentation",
+          "course_type": "T",
+          "teacher_id": "77.0",
+          "semester": 3,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
           "id": 882,
+          "course_id": 84,
+          "course_code": "BM23313",
+          "course_name": "Biochemical Science",
+          "course_type": "T",
+          "teacher_id": "69.0",
+          "semester": 3,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "69.0",
+        "77.0"
+      ],
+      "courses": [
+        "BM23312",
+        "BM23313"
+      ],
+      "total_workload": 6
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 883,
           "course_id": 84,
           "course_code": "BM23313",
           "course_name": "Biochemical Science",
@@ -266,8 +320,8 @@
         }
       ],
       "teachers": [
-        "68.0",
-        "69.0"
+        "69.0",
+        "68.0"
       ],
       "courses": [
         "BM23313",
@@ -276,10 +330,29 @@
       "total_workload": 6
     },
     {
-      "group_id": 6,
+      "group_id": 7,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
+        {
+          "id": 881,
+          "course_id": 83,
+          "course_code": "BM23312",
+          "course_name": "Biomedical Instrumentation",
+          "course_type": "T",
+          "teacher_id": "85.0",
+          "semester": 3,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
         {
           "id": 1238,
           "course_id": 423,
@@ -287,6 +360,41 @@
           "course_name": "Fourier series and Number theory",
           "course_type": "T",
           "teacher_id": "448.0",
+          "semester": 3,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 1,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "448.0",
+        "85.0"
+      ],
+      "courses": [
+        "BM23312",
+        "MA23312"
+      ],
+      "total_workload": 7
+    },
+    {
+      "group_id": 8,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 1239,
+          "course_id": 423,
+          "course_code": "MA23312",
+          "course_name": "Fourier series and Number theory",
+          "course_type": "T",
+          "teacher_id": "435.0",
           "semester": 3,
           "course_dept": "Biomedical Engineering",
           "student_dept": "Biomedical Engineering",
@@ -320,120 +428,12 @@
         }
       ],
       "teachers": [
-        "448.0",
+        "435.0",
         "85.0"
       ],
       "courses": [
         "MA23312",
         "BM23311"
-      ],
-      "total_workload": 7
-    },
-    {
-      "group_id": 7,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 881,
-          "course_id": 83,
-          "course_code": "BM23312",
-          "course_name": "Biomedical Instrumentation",
-          "course_type": "T",
-          "teacher_id": "85.0",
-          "semester": 3,
-          "course_dept": "Biomedical Engineering",
-          "student_dept": "Biomedical Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 883,
-          "course_id": 84,
-          "course_code": "BM23313",
-          "course_name": "Biochemical Science",
-          "course_type": "T",
-          "teacher_id": "69.0",
-          "semester": 3,
-          "course_dept": "Biomedical Engineering",
-          "student_dept": "Biomedical Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "69.0",
-        "85.0"
-      ],
-      "courses": [
-        "BM23313",
-        "BM23312"
-      ],
-      "total_workload": 6
-    },
-    {
-      "group_id": 8,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 880,
-          "course_id": 83,
-          "course_code": "BM23312",
-          "course_name": "Biomedical Instrumentation",
-          "course_type": "T",
-          "teacher_id": "77.0",
-          "semester": 3,
-          "course_dept": "Biomedical Engineering",
-          "student_dept": "Biomedical Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1239,
-          "course_id": 423,
-          "course_code": "MA23312",
-          "course_name": "Fourier series and Number theory",
-          "course_type": "T",
-          "teacher_id": "435.0",
-          "semester": 3,
-          "course_dept": "Biomedical Engineering",
-          "student_dept": "Biomedical Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 1,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "435.0",
-        "77.0"
-      ],
-      "courses": [
-        "BM23312",
-        "MA23312"
       ],
       "total_workload": 7
     }

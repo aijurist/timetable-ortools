@@ -54,8 +54,8 @@
         "73.0"
       ],
       "courses": [
-        "BM19741",
-        "BM19713"
+        "BM19713",
+        "BM19741"
       ],
       "total_workload": 11
     },
@@ -108,8 +108,8 @@
         "101.0"
       ],
       "courses": [
-        "BM19741",
-        "BM19713"
+        "BM19713",
+        "BM19741"
       ],
       "total_workload": 11
     },
@@ -119,12 +119,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 925,
-          "course_id": 620,
-          "course_code": "BM19721",
-          "course_name": "Comprehension In Biomedical Engineering",
+          "id": 918,
+          "course_id": 622,
+          "course_code": "24NBM01",
+          "course_name": "Research Methods in Health Promotion",
           "course_type": "T",
-          "teacher_id": "70.0",
+          "teacher_id": "83.0",
           "semester": 7,
           "course_dept": "Biomedical Engineering",
           "student_dept": "Biomedical Engineering",
@@ -138,12 +138,12 @@
           "co_scheduled_id": null
         },
         {
-          "id": 917,
-          "course_id": 622,
-          "course_code": "24NBM01",
-          "course_name": "Research Methods in Health Promotion",
+          "id": 924,
+          "course_id": 620,
+          "course_code": "BM19721",
+          "course_name": "Comprehension In Biomedical Engineering",
           "course_type": "T",
-          "teacher_id": "85.0",
+          "teacher_id": "101.0",
           "semester": 7,
           "course_dept": "Biomedical Engineering",
           "student_dept": "Biomedical Engineering",
@@ -158,12 +158,12 @@
         }
       ],
       "teachers": [
-        "70.0",
-        "85.0"
+        "83.0",
+        "101.0"
       ],
       "courses": [
-        "BM19721",
-        "24NBM01"
+        "24NBM01",
+        "BM19721"
       ],
       "total_workload": 2
     },
@@ -212,71 +212,17 @@
         }
       ],
       "teachers": [
-        "110.0",
-        "81.0"
+        "81.0",
+        "110.0"
       ],
       "courses": [
-        "BM19701",
-        "BM19P72"
+        "BM19P72",
+        "BM19701"
       ],
       "total_workload": 6
     },
     {
       "group_id": 5,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 924,
-          "course_id": 620,
-          "course_code": "BM19721",
-          "course_name": "Comprehension In Biomedical Engineering",
-          "course_type": "T",
-          "teacher_id": "101.0",
-          "semester": 7,
-          "course_dept": "Biomedical Engineering",
-          "student_dept": "Biomedical Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 1,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 918,
-          "course_id": 622,
-          "course_code": "24NBM01",
-          "course_name": "Research Methods in Health Promotion",
-          "course_type": "T",
-          "teacher_id": "83.0",
-          "semester": 7,
-          "course_dept": "Biomedical Engineering",
-          "student_dept": "Biomedical Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 1,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "83.0",
-        "101.0"
-      ],
-      "courses": [
-        "BM19721",
-        "24NBM01"
-      ],
-      "total_workload": 2
-    },
-    {
-      "group_id": 6,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -320,14 +266,68 @@
         }
       ],
       "teachers": [
-        "84.0",
-        "72.0"
+        "72.0",
+        "84.0"
       ],
       "courses": [
-        "BM19701",
-        "BM19P72"
+        "BM19P72",
+        "BM19701"
       ],
       "total_workload": 6
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 917,
+          "course_id": 622,
+          "course_code": "24NBM01",
+          "course_name": "Research Methods in Health Promotion",
+          "course_type": "T",
+          "teacher_id": "85.0",
+          "semester": 7,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 1,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 925,
+          "course_id": 620,
+          "course_code": "BM19721",
+          "course_name": "Comprehension In Biomedical Engineering",
+          "course_type": "T",
+          "teacher_id": "70.0",
+          "semester": 7,
+          "course_dept": "Biomedical Engineering",
+          "student_dept": "Biomedical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 1,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "70.0",
+        "85.0"
+      ],
+      "courses": [
+        "24NBM01",
+        "BM19721"
+      ],
+      "total_workload": 2
     }
   ],
   "pe_group_included": false,

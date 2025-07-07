@@ -11,12 +11,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 337,
-          "course_id": 263,
-          "course_code": "CS23422",
-          "course_name": "Python Programming for Machine Learning",
+          "id": 264,
+          "course_id": 188,
+          "course_code": "CE23321",
+          "course_name": "Construction Materials Laboratory",
           "course_type": "L",
-          "teacher_id": "183.0",
+          "teacher_id": "159.0",
           "semester": 3,
           "course_dept": "Civil Engineering",
           "student_dept": "Civil Engineering",
@@ -31,48 +31,15 @@
         }
       ],
       "teachers": [
-        "183.0"
+        "159.0"
       ],
       "courses": [
-        "CS23422"
+        "CE23321"
       ],
       "total_workload": 4
     },
     {
       "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 335,
-          "course_id": 189,
-          "course_code": "CE23331",
-          "course_name": "Surveying",
-          "course_type": "LoT",
-          "teacher_id": "163.0",
-          "semester": 3,
-          "course_dept": "Civil Engineering",
-          "student_dept": "Civil Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "163.0"
-      ],
-      "courses": [
-        "CE23331"
-      ],
-      "total_workload": 5
-    },
-    {
-      "group_id": 3,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -105,17 +72,17 @@
       "total_workload": 5
     },
     {
-      "group_id": 4,
+      "group_id": 3,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
         {
-          "id": 264,
-          "course_id": 188,
-          "course_code": "CE23321",
-          "course_name": "Construction Materials Laboratory",
+          "id": 337,
+          "course_id": 263,
+          "course_code": "CS23422",
+          "course_name": "Python Programming for Machine Learning",
           "course_type": "L",
-          "teacher_id": "159.0",
+          "teacher_id": "183.0",
           "semester": 3,
           "course_dept": "Civil Engineering",
           "student_dept": "Civil Engineering",
@@ -130,31 +97,31 @@
         }
       ],
       "teachers": [
-        "159.0"
+        "183.0"
       ],
       "courses": [
-        "CE23321"
+        "CS23422"
       ],
       "total_workload": 4
     },
     {
-      "group_id": 5,
+      "group_id": 4,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
         {
-          "id": 303,
-          "course_id": 187,
-          "course_code": "CE23313",
-          "course_name": "Construction Techniques, Equipment and Practice",
-          "course_type": "T",
-          "teacher_id": "166.0",
+          "id": 335,
+          "course_id": 189,
+          "course_code": "CE23331",
+          "course_name": "Surveying",
+          "course_type": "LoT",
+          "teacher_id": "163.0",
           "semester": 3,
           "course_dept": "Civil Engineering",
           "student_dept": "Civil Engineering",
-          "has_lab": false,
+          "has_lab": true,
           "has_theory": true,
-          "practical_hours": 0,
+          "practical_hours": 2,
           "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
@@ -163,15 +130,15 @@
         }
       ],
       "teachers": [
-        "166.0"
+        "163.0"
       ],
       "courses": [
-        "CE23313"
+        "CE23331"
       ],
-      "total_workload": 3
+      "total_workload": 5
     },
     {
-      "group_id": 6,
+      "group_id": 5,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -200,6 +167,39 @@
       ],
       "courses": [
         "CE23311"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 303,
+          "course_id": 187,
+          "course_code": "CE23313",
+          "course_name": "Construction Techniques, Equipment and Practice",
+          "course_type": "T",
+          "teacher_id": "166.0",
+          "semester": 3,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "166.0"
+      ],
+      "courses": [
+        "CE23313"
       ],
       "total_workload": 3
     },

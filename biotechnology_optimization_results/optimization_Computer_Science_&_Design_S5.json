@@ -110,39 +110,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 80,
-          "course_id": 264,
-          "course_code": "CS23431",
-          "course_name": "Operating Systems",
-          "course_type": "LoT",
-          "teacher_id": "178.0",
-          "semester": 5,
-          "course_dept": "Computer Science & Design",
-          "student_dept": "Computer Science & Design",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 4,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "178.0"
-      ],
-      "courses": [
-        "CS23431"
-      ],
-      "total_workload": 7
-    },
-    {
-      "group_id": 5,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 88,
           "course_id": 592,
           "course_code": "IT23E31",
@@ -169,6 +136,39 @@
         "IT23E31"
       ],
       "total_workload": 4
+    },
+    {
+      "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 80,
+          "course_id": 264,
+          "course_code": "CS23431",
+          "course_name": "Operating Systems",
+          "course_type": "LoT",
+          "teacher_id": "178.0",
+          "semester": 5,
+          "course_dept": "Computer Science & Design",
+          "student_dept": "Computer Science & Design",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 4,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "178.0"
+      ],
+      "courses": [
+        "CS23431"
+      ],
+      "total_workload": 7
     }
   ],
   "pe_group_included": false,

@@ -3,51 +3,13 @@
   "semester": "7",
   "solution_found": true,
   "objective_value": 0.0,
-  "num_groups": 6,
+  "num_groups": 5,
   "groups": [
     {
       "group_id": 1,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
-        {
-          "id": 586,
-          "course_id": 558,
-          "course_code": "EC19712",
-          "course_name": "Advanced Communication Systems Laboratory",
-          "course_type": "L",
-          "teacher_id": "290.0",
-          "semester": 7,
-          "course_dept": "Electronics & Communication Engineering",
-          "student_dept": "Electronics & Communication Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1444,
-          "course_id": 558,
-          "course_code": "EC19712",
-          "course_name": "Advanced Communication Systems Laboratory",
-          "course_type": "L",
-          "teacher_id": "292.0",
-          "semester": 7,
-          "course_dept": "Electronics & Communication Engineering",
-          "student_dept": "Electronics & Communication Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
         {
           "id": 948,
           "course_id": 555,
@@ -85,32 +47,14 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "292.0",
-        "271.0",
-        "290.0",
-        "289.0"
-      ],
-      "courses": [
-        "EC19712",
-        "EC19711"
-      ],
-      "total_workload": 16
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
+        },
         {
-          "id": 582,
+          "id": 586,
           "course_id": 558,
           "course_code": "EC19712",
           "course_name": "Advanced Communication Systems Laboratory",
           "course_type": "L",
-          "teacher_id": "267.0",
+          "teacher_id": "290.0",
           "semester": 7,
           "course_dept": "Electronics & Communication Engineering",
           "student_dept": "Electronics & Communication Engineering",
@@ -124,7 +68,7 @@
           "co_scheduled_id": null
         },
         {
-          "id": 585,
+          "id": 1444,
           "course_id": 558,
           "course_code": "EC19712",
           "course_name": "Advanced Communication Systems Laboratory",
@@ -141,7 +85,25 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
-        },
+        }
+      ],
+      "teachers": [
+        "271.0",
+        "292.0",
+        "290.0",
+        "289.0"
+      ],
+      "courses": [
+        "EC19711",
+        "EC19712"
+      ],
+      "total_workload": 16
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
         {
           "id": 946,
           "course_id": 555,
@@ -179,17 +141,55 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
+        },
+        {
+          "id": 582,
+          "course_id": 558,
+          "course_code": "EC19712",
+          "course_name": "Advanced Communication Systems Laboratory",
+          "course_type": "L",
+          "teacher_id": "267.0",
+          "semester": 7,
+          "course_dept": "Electronics & Communication Engineering",
+          "student_dept": "Electronics & Communication Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 585,
+          "course_id": 558,
+          "course_code": "EC19712",
+          "course_name": "Advanced Communication Systems Laboratory",
+          "course_type": "L",
+          "teacher_id": "292.0",
+          "semester": 7,
+          "course_dept": "Electronics & Communication Engineering",
+          "student_dept": "Electronics & Communication Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "271.0",
         "267.0",
+        "271.0",
         "292.0",
         "274.0"
       ],
       "courses": [
-        "EC19712",
-        "EC19711"
+        "EC19711",
+        "EC19712"
       ],
       "total_workload": 16
     },
@@ -198,6 +198,119 @@
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
+        {
+          "id": 140,
+          "course_id": 551,
+          "course_code": "EC19703",
+          "course_name": "Embedded Systems",
+          "course_type": "T",
+          "teacher_id": "289.0",
+          "semester": 7,
+          "course_dept": "Electronics & Communication Engineering",
+          "student_dept": "Electronics & Communication Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 141,
+          "course_id": 551,
+          "course_code": "EC19703",
+          "course_name": "Embedded Systems",
+          "course_type": "T",
+          "teacher_id": "274.0",
+          "semester": 7,
+          "course_dept": "Electronics & Communication Engineering",
+          "student_dept": "Electronics & Communication Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 142,
+          "course_id": 551,
+          "course_code": "EC19703",
+          "course_name": "Embedded Systems",
+          "course_type": "T",
+          "teacher_id": "292.0",
+          "semester": 7,
+          "course_dept": "Electronics & Communication Engineering",
+          "student_dept": "Electronics & Communication Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 1458,
+          "course_id": 546,
+          "course_code": "EC19702",
+          "course_name": "Optical Communication and Networks",
+          "course_type": "T",
+          "teacher_id": "286.0",
+          "semester": 7,
+          "course_dept": "Electronics & Communication Engineering",
+          "student_dept": "Electronics & Communication Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "292.0",
+        "286.0",
+        "274.0",
+        "289.0"
+      ],
+      "courses": [
+        "EC19702",
+        "EC19703"
+      ],
+      "total_workload": 12
+    },
+    {
+      "group_id": 4,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 132,
+          "course_id": 543,
+          "course_code": "EC19701",
+          "course_name": "RF and Microwave Engineering",
+          "course_type": "T",
+          "teacher_id": "292.0",
+          "semester": 7,
+          "course_dept": "Electronics & Communication Engineering",
+          "student_dept": "Electronics & Communication Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
         {
           "id": 1455,
           "course_id": 546,
@@ -254,130 +367,17 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
-        },
-        {
-          "id": 143,
-          "course_id": 561,
-          "course_code": "EC19P01",
-          "course_name": "Wireless Networks",
-          "course_type": "T",
-          "teacher_id": "266.0",
-          "semester": 7,
-          "course_dept": "Electronics & Communication Engineering",
-          "student_dept": "Electronics & Communication Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "266.0",
         "269.0",
         "271.0",
+        "292.0",
         "301.0"
       ],
       "courses": [
         "EC19702",
-        "EC19P01"
-      ],
-      "total_workload": 12
-    },
-    {
-      "group_id": 4,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 139,
-          "course_id": 551,
-          "course_code": "EC19703",
-          "course_name": "Embedded Systems",
-          "course_type": "T",
-          "teacher_id": "262.0",
-          "semester": 7,
-          "course_dept": "Electronics & Communication Engineering",
-          "student_dept": "Electronics & Communication Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 140,
-          "course_id": 551,
-          "course_code": "EC19703",
-          "course_name": "Embedded Systems",
-          "course_type": "T",
-          "teacher_id": "289.0",
-          "semester": 7,
-          "course_dept": "Electronics & Communication Engineering",
-          "student_dept": "Electronics & Communication Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 142,
-          "course_id": 551,
-          "course_code": "EC19703",
-          "course_name": "Embedded Systems",
-          "course_type": "T",
-          "teacher_id": "292.0",
-          "semester": 7,
-          "course_dept": "Electronics & Communication Engineering",
-          "student_dept": "Electronics & Communication Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 1458,
-          "course_id": 546,
-          "course_code": "EC19702",
-          "course_name": "Optical Communication and Networks",
-          "course_type": "T",
-          "teacher_id": "286.0",
-          "semester": 7,
-          "course_dept": "Electronics & Communication Engineering",
-          "student_dept": "Electronics & Communication Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "286.0",
-        "292.0",
-        "289.0",
-        "262.0"
-      ],
-      "courses": [
-        "EC19702",
-        "EC19703"
+        "EC19701"
       ],
       "total_workload": 12
     },
@@ -406,12 +406,12 @@
           "co_scheduled_id": null
         },
         {
-          "id": 132,
+          "id": 133,
           "course_id": 543,
           "course_code": "EC19701",
           "course_name": "RF and Microwave Engineering",
           "course_type": "T",
-          "teacher_id": "292.0",
+          "teacher_id": "290.0",
           "semester": 7,
           "course_dept": "Electronics & Communication Engineering",
           "student_dept": "Electronics & Communication Engineering",
@@ -444,12 +444,12 @@
           "co_scheduled_id": null
         },
         {
-          "id": 141,
+          "id": 139,
           "course_id": 551,
           "course_code": "EC19703",
           "course_name": "Embedded Systems",
           "course_type": "T",
-          "teacher_id": "274.0",
+          "teacher_id": "262.0",
           "semester": 7,
           "course_dept": "Electronics & Communication Engineering",
           "student_dept": "Electronics & Communication Engineering",
@@ -465,28 +465,28 @@
       ],
       "teachers": [
         "267.0",
-        "292.0",
-        "274.0",
+        "290.0",
+        "262.0",
         "252.0"
       ],
       "courses": [
-        "EC19701",
-        "EC19703"
+        "EC19703",
+        "EC19701"
       ],
       "total_workload": 12
     },
     {
       "group_id": 6,
-      "is_pe_group": false,
-      "group_type": "Regular",
+      "is_pe_group": true,
+      "group_type": "PE",
       "instances": [
         {
-          "id": 133,
-          "course_id": 543,
-          "course_code": "EC19701",
-          "course_name": "RF and Microwave Engineering",
+          "id": 143,
+          "course_id": 561,
+          "course_code": "EC19P01",
+          "course_name": "Wireless Networks",
           "course_type": "T",
-          "teacher_id": "290.0",
+          "teacher_id": "266.0",
           "semester": 7,
           "course_dept": "Electronics & Communication Engineering",
           "student_dept": "Electronics & Communication Engineering",
@@ -559,25 +559,26 @@
       ],
       "teachers": [
         "264.0",
+        "251.0",
         "249.0",
-        "290.0",
-        "251.0"
+        "266.0"
       ],
       "courses": [
-        "EC19701",
         "EC19P01"
       ],
       "total_workload": 12
     }
   ],
-  "pe_group_included": false,
+  "pe_group_included": true,
   "summary": {
-    "total_instances": 24,
-    "pe_instances": 0,
+    "total_instances": 20,
+    "pe_instances": 4,
     "lab_instances": 8,
-    "theory_instances": 16,
-    "unique_courses": 6,
-    "unique_teachers": 15,
-    "pe_course_codes": []
+    "theory_instances": 12,
+    "unique_courses": 5,
+    "unique_teachers": 11,
+    "pe_course_codes": [
+      "EC19P01"
+    ]
   }
 }

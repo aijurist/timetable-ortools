@@ -11,39 +11,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 371,
-          "course_id": 29,
-          "course_code": "AE23521",
-          "course_name": "Computational Simulation Laboratory",
-          "course_type": "L",
-          "teacher_id": "24.0",
-          "semester": 5,
-          "course_dept": "Aeronautical Engineering",
-          "student_dept": "Aeronautical Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "24.0"
-      ],
-      "courses": [
-        "AE23521"
-      ],
-      "total_workload": 4
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 361,
           "course_id": 24,
           "course_code": "AE23531",
@@ -70,6 +37,39 @@
         "AE23531"
       ],
       "total_workload": 5
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 371,
+          "course_id": 29,
+          "course_code": "AE23521",
+          "course_name": "Computational Simulation Laboratory",
+          "course_type": "L",
+          "teacher_id": "24.0",
+          "semester": 5,
+          "course_dept": "Aeronautical Engineering",
+          "student_dept": "Aeronautical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "24.0"
+      ],
+      "courses": [
+        "AE23521"
+      ],
+      "total_workload": 4
     },
     {
       "group_id": 3,

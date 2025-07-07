@@ -11,25 +11,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 1143,
-          "course_id": 759,
-          "course_code": "EE23B21",
-          "course_name": "Wiring Harness Design Engineering",
-          "course_type": "L",
-          "teacher_id": "306.0",
-          "semester": 5,
-          "course_dept": "Electrical & Electronics Engineering",
-          "student_dept": "Electrical & Electronics Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 6,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
           "id": 657,
           "course_id": 332,
           "course_code": "EE23531",
@@ -47,23 +28,7 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "306.0",
-        "329.0"
-      ],
-      "courses": [
-        "EE23B21",
-        "EE23531"
-      ],
-      "total_workload": 11
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
+        },
         {
           "id": 642,
           "course_id": 331,
@@ -82,20 +47,55 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
-        },
+        }
+      ],
+      "teachers": [
+        "329.0",
+        "351.0"
+      ],
+      "courses": [
+        "EE23531",
+        "GE23627"
+      ],
+      "total_workload": 9
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
         {
-          "id": 1142,
+          "id": 1143,
           "course_id": 759,
           "course_code": "EE23B21",
           "course_name": "Wiring Harness Design Engineering",
           "course_type": "L",
-          "teacher_id": "314.0",
+          "teacher_id": "306.0",
           "semester": 5,
           "course_dept": "Electrical & Electronics Engineering",
           "student_dept": "Electrical & Electronics Engineering",
           "has_lab": true,
           "has_theory": false,
-          "practical_hours": 6,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 639,
+          "course_id": 331,
+          "course_code": "GE23627",
+          "course_name": "Design Thinking and Innovation",
+          "course_type": "L",
+          "teacher_id": "300.0",
+          "semester": 5,
+          "course_dept": "Electrical & Electronics Engineering",
+          "student_dept": "Electrical & Electronics Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
           "lecture_hours": 0,
           "tutorial_hours": 0,
           "student_count": 70,
@@ -104,14 +104,14 @@
         }
       ],
       "teachers": [
-        "351.0",
-        "314.0"
+        "300.0",
+        "306.0"
       ],
       "courses": [
-        "GE23627",
-        "EE23B21"
+        "EE23B21",
+        "GE23627"
       ],
-      "total_workload": 10
+      "total_workload": 8
     },
     {
       "group_id": 3,
@@ -119,12 +119,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 639,
-          "course_id": 331,
-          "course_code": "GE23627",
-          "course_name": "Design Thinking and Innovation",
+          "id": 1144,
+          "course_id": 759,
+          "course_code": "EE23B21",
+          "course_name": "Wiring Harness Design Engineering",
           "course_type": "L",
-          "teacher_id": "300.0",
+          "teacher_id": "320.0",
           "semester": 5,
           "course_dept": "Electrical & Electronics Engineering",
           "student_dept": "Electrical & Electronics Engineering",
@@ -158,11 +158,11 @@
         }
       ],
       "teachers": [
-        "300.0",
+        "320.0",
         "328.0"
       ],
       "courses": [
-        "GE23627",
+        "EE23B21",
         "EE23521"
       ],
       "total_workload": 6
@@ -227,12 +227,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 675,
-          "course_id": 327,
-          "course_code": "EE23511",
-          "course_name": "Power System Analysis",
+          "id": 669,
+          "course_id": 328,
+          "course_code": "EE23512",
+          "course_name": "Power Electronics",
           "course_type": "T",
-          "teacher_id": "339.0",
+          "teacher_id": "326.0",
           "semester": 5,
           "course_dept": "Electrical & Electronics Engineering",
           "student_dept": "Electrical & Electronics Engineering",
@@ -246,12 +246,12 @@
           "co_scheduled_id": null
         },
         {
-          "id": 632,
+          "id": 631,
           "course_id": 329,
           "course_code": "EE23513",
           "course_name": "Control Systems",
           "course_type": "T",
-          "teacher_id": "298.0",
+          "teacher_id": "308.0",
           "semester": 5,
           "course_dept": "Electrical & Electronics Engineering",
           "student_dept": "Electrical & Electronics Engineering",
@@ -266,11 +266,11 @@
         }
       ],
       "teachers": [
-        "339.0",
-        "298.0"
+        "308.0",
+        "326.0"
       ],
       "courses": [
-        "EE23511",
+        "EE23512",
         "EE23513"
       ],
       "total_workload": 6
@@ -281,12 +281,12 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 631,
-          "course_id": 329,
-          "course_code": "EE23513",
-          "course_name": "Control Systems",
+          "id": 675,
+          "course_id": 327,
+          "course_code": "EE23511",
+          "course_name": "Power System Analysis",
           "course_type": "T",
-          "teacher_id": "308.0",
+          "teacher_id": "339.0",
           "semester": 5,
           "course_dept": "Electrical & Electronics Engineering",
           "student_dept": "Electrical & Electronics Engineering",
@@ -321,11 +321,11 @@
       ],
       "teachers": [
         "332.0",
-        "308.0"
+        "339.0"
       ],
       "courses": [
         "EE23512",
-        "EE23513"
+        "EE23511"
       ],
       "total_workload": 6
     },
@@ -354,12 +354,12 @@
           "co_scheduled_id": null
         },
         {
-          "id": 669,
-          "course_id": 328,
-          "course_code": "EE23512",
-          "course_name": "Power Electronics",
+          "id": 632,
+          "course_id": 329,
+          "course_code": "EE23513",
+          "course_name": "Control Systems",
           "course_type": "T",
-          "teacher_id": "326.0",
+          "teacher_id": "298.0",
           "semester": 5,
           "course_dept": "Electrical & Electronics Engineering",
           "student_dept": "Electrical & Electronics Engineering",
@@ -374,12 +374,12 @@
         }
       ],
       "teachers": [
-        "307.0",
-        "326.0"
+        "298.0",
+        "307.0"
       ],
       "courses": [
-        "EE23511",
-        "EE23512"
+        "EE23513",
+        "EE23511"
       ],
       "total_workload": 6
     }

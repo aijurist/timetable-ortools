@@ -49,6 +49,42 @@
           "co_scheduled_id": null
         },
         {
+          "id": 2087,
+          "course_id": 833,
+          "course_code": "ME23VAP2",
+          "course_name": "Thors E-Learning",
+          "course_type": "L",
+          "teacher_id": "505.0",
+          "semester": 7,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "511.0",
+        "505.0",
+        "532.0"
+      ],
+      "courses": [
+        "ME23VAP2",
+        "ME19741"
+      ],
+      "total_workload": 12
+    },
+    {
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
           "id": 2038,
           "course_id": 817,
           "course_code": "ME19713",
@@ -66,24 +102,26 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "532.0",
-        "514.0",
-        "511.0"
-      ],
-      "courses": [
-        "ME19741",
-        "ME19713"
-      ],
-      "total_workload": 16
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
+        },
+        {
+          "id": 2048,
+          "course_id": 833,
+          "course_code": "ME23VAP2",
+          "course_name": "Thors E-Learning",
+          "course_type": "L",
+          "teacher_id": "511.0",
+          "semester": 7,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 2,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
         {
           "id": 2049,
           "course_id": 833,
@@ -98,6 +136,42 @@
           "has_theory": false,
           "practical_hours": 2,
           "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "511.0",
+        "525.0",
+        "514.0"
+      ],
+      "courses": [
+        "ME19713",
+        "ME23VAP2"
+      ],
+      "total_workload": 10
+    },
+    {
+      "group_id": 3,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 706,
+          "course_id": 534,
+          "course_code": "ME19741",
+          "course_name": "Mechatronics",
+          "course_type": "LoT",
+          "teacher_id": "531.0",
+          "semester": 7,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": true,
+          "has_theory": true,
+          "practical_hours": 2,
+          "lecture_hours": 3,
           "tutorial_hours": 0,
           "student_count": 70,
           "virtual_id": null,
@@ -144,88 +218,14 @@
       ],
       "teachers": [
         "522.0",
-        "525.0",
-        "521.0"
+        "521.0",
+        "531.0"
       ],
       "courses": [
-        "ME23VAP2",
-        "ME19713"
-      ],
-      "total_workload": 14
-    },
-    {
-      "group_id": 3,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 2048,
-          "course_id": 833,
-          "course_code": "ME23VAP2",
-          "course_name": "Thors E-Learning",
-          "course_type": "L",
-          "teacher_id": "511.0",
-          "semester": 7,
-          "course_dept": "Mechanical Engineering",
-          "student_dept": "Mechanical Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 2,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 2087,
-          "course_id": 833,
-          "course_code": "ME23VAP2",
-          "course_name": "Thors E-Learning",
-          "course_type": "L",
-          "teacher_id": "505.0",
-          "semester": 7,
-          "course_dept": "Mechanical Engineering",
-          "student_dept": "Mechanical Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 2,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 706,
-          "course_id": 534,
-          "course_code": "ME19741",
-          "course_name": "Mechatronics",
-          "course_type": "LoT",
-          "teacher_id": "531.0",
-          "semester": 7,
-          "course_dept": "Mechanical Engineering",
-          "student_dept": "Mechanical Engineering",
-          "has_lab": true,
-          "has_theory": true,
-          "practical_hours": 2,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "505.0",
-        "531.0",
-        "511.0"
-      ],
-      "courses": [
-        "ME23VAP2",
+        "ME19713",
         "ME19741"
       ],
-      "total_workload": 9
+      "total_workload": 17
     },
     {
       "group_id": 4,
@@ -239,173 +239,6 @@
           "course_name": "Automation in Manufacturing",
           "course_type": "T",
           "teacher_id": "510.0",
-          "semester": 7,
-          "course_dept": "Mechanical Engineering",
-          "student_dept": "Mechanical Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 750,
-          "course_id": 762,
-          "course_code": "ME19712",
-          "course_name": "COMPREHENSION",
-          "course_type": "T",
-          "teacher_id": "527.0",
-          "semester": 7,
-          "course_dept": "Mechanical Engineering",
-          "student_dept": "Mechanical Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 2,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 751,
-          "course_id": 762,
-          "course_code": "ME19712",
-          "course_name": "COMPREHENSION",
-          "course_type": "T",
-          "teacher_id": "542.0",
-          "semester": 7,
-          "course_dept": "Mechanical Engineering",
-          "student_dept": "Mechanical Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 2,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "527.0",
-        "542.0",
-        "510.0"
-      ],
-      "courses": [
-        "ME19712",
-        "ME19702"
-      ],
-      "total_workload": 7
-    },
-    {
-      "group_id": 5,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 700,
-          "course_id": 532,
-          "course_code": "ME19701",
-          "course_name": "Automobile Engineering",
-          "course_type": "T",
-          "teacher_id": "521.0",
-          "semester": 7,
-          "course_dept": "Mechanical Engineering",
-          "student_dept": "Mechanical Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 701,
-          "course_id": 532,
-          "course_code": "ME19701",
-          "course_name": "Automobile Engineering",
-          "course_type": "T",
-          "teacher_id": "538.0",
-          "semester": 7,
-          "course_dept": "Mechanical Engineering",
-          "student_dept": "Mechanical Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 749,
-          "course_id": 762,
-          "course_code": "ME19712",
-          "course_name": "COMPREHENSION",
-          "course_type": "T",
-          "teacher_id": "526.0",
-          "semester": 7,
-          "course_dept": "Mechanical Engineering",
-          "student_dept": "Mechanical Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 2,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "521.0",
-        "538.0",
-        "526.0"
-      ],
-      "courses": [
-        "ME19712",
-        "ME19701"
-      ],
-      "total_workload": 8
-    },
-    {
-      "group_id": 6,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 490,
-          "course_id": 532,
-          "course_code": "ME19701",
-          "course_name": "Automobile Engineering",
-          "course_type": "T",
-          "teacher_id": "512.0",
-          "semester": 7,
-          "course_dept": "Mechanical Engineering",
-          "student_dept": "Mechanical Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        },
-        {
-          "id": 702,
-          "course_id": 533,
-          "course_code": "ME19702",
-          "course_name": "Automation in Manufacturing",
-          "course_type": "T",
-          "teacher_id": "540.0",
           "semester": 7,
           "course_dept": "Mechanical Engineering",
           "student_dept": "Mechanical Engineering",
@@ -436,18 +269,185 @@
           "student_count": 70,
           "virtual_id": null,
           "co_scheduled_id": null
+        },
+        {
+          "id": 700,
+          "course_id": 532,
+          "course_code": "ME19701",
+          "course_name": "Automobile Engineering",
+          "course_type": "T",
+          "teacher_id": "521.0",
+          "semester": 7,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
         }
       ],
       "teachers": [
-        "512.0",
-        "540.0",
-        "505.0"
+        "510.0",
+        "505.0",
+        "521.0"
       ],
       "courses": [
         "ME19701",
         "ME19702"
       ],
       "total_workload": 9
+    },
+    {
+      "group_id": 5,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 749,
+          "course_id": 762,
+          "course_code": "ME19712",
+          "course_name": "COMPREHENSION",
+          "course_type": "T",
+          "teacher_id": "526.0",
+          "semester": 7,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 751,
+          "course_id": 762,
+          "course_code": "ME19712",
+          "course_name": "COMPREHENSION",
+          "course_type": "T",
+          "teacher_id": "542.0",
+          "semester": 7,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 702,
+          "course_id": 533,
+          "course_code": "ME19702",
+          "course_name": "Automation in Manufacturing",
+          "course_type": "T",
+          "teacher_id": "540.0",
+          "semester": 7,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "526.0",
+        "540.0",
+        "542.0"
+      ],
+      "courses": [
+        "ME19712",
+        "ME19702"
+      ],
+      "total_workload": 7
+    },
+    {
+      "group_id": 6,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 750,
+          "course_id": 762,
+          "course_code": "ME19712",
+          "course_name": "COMPREHENSION",
+          "course_type": "T",
+          "teacher_id": "527.0",
+          "semester": 7,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 2,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 490,
+          "course_id": 532,
+          "course_code": "ME19701",
+          "course_name": "Automobile Engineering",
+          "course_type": "T",
+          "teacher_id": "512.0",
+          "semester": 7,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        },
+        {
+          "id": 701,
+          "course_id": 532,
+          "course_code": "ME19701",
+          "course_name": "Automobile Engineering",
+          "course_type": "T",
+          "teacher_id": "538.0",
+          "semester": 7,
+          "course_dept": "Mechanical Engineering",
+          "student_dept": "Mechanical Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "538.0",
+        "512.0",
+        "527.0"
+      ],
+      "courses": [
+        "ME19712",
+        "ME19701"
+      ],
+      "total_workload": 8
     },
     {
       "group_id": 7,
@@ -513,9 +513,9 @@
         }
       ],
       "teachers": [
-        "527.0",
         "518.0",
-        "511.0"
+        "511.0",
+        "527.0"
       ],
       "courses": [
         "ME19E01"

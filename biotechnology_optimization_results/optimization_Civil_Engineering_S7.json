@@ -11,72 +11,6 @@
       "group_type": "Regular",
       "instances": [
         {
-          "id": 348,
-          "course_id": 583,
-          "course_code": "CE19711",
-          "course_name": "COMPUTER AIDED DESIGN AND DRAFTING LABORATORY",
-          "course_type": "L",
-          "teacher_id": "158.0",
-          "semester": 7,
-          "course_dept": "Civil Engineering",
-          "student_dept": "Civil Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "158.0"
-      ],
-      "courses": [
-        "CE19711"
-      ],
-      "total_workload": 4
-    },
-    {
-      "group_id": 2,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
-          "id": 302,
-          "course_id": 588,
-          "course_code": "CE19714",
-          "course_name": "PROBLEM SOLVING USING MACHINE LEARNING IN CIVIL ENGINEERING",
-          "course_type": "L",
-          "teacher_id": "148.0",
-          "semester": 7,
-          "course_dept": "Civil Engineering",
-          "student_dept": "Civil Engineering",
-          "has_lab": true,
-          "has_theory": false,
-          "practical_hours": 4,
-          "lecture_hours": 0,
-          "tutorial_hours": 0,
-          "student_count": 70,
-          "virtual_id": null,
-          "co_scheduled_id": null
-        }
-      ],
-      "teachers": [
-        "148.0"
-      ],
-      "courses": [
-        "CE19714"
-      ],
-      "total_workload": 4
-    },
-    {
-      "group_id": 3,
-      "is_pe_group": false,
-      "group_type": "Regular",
-      "instances": [
-        {
           "id": 292,
           "course_id": 585,
           "course_code": "CE19712",
@@ -105,7 +39,40 @@
       "total_workload": 6
     },
     {
-      "group_id": 4,
+      "group_id": 2,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 348,
+          "course_id": 583,
+          "course_code": "CE19711",
+          "course_name": "COMPUTER AIDED DESIGN AND DRAFTING LABORATORY",
+          "course_type": "L",
+          "teacher_id": "158.0",
+          "semester": 7,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "158.0"
+      ],
+      "courses": [
+        "CE19711"
+      ],
+      "total_workload": 4
+    },
+    {
+      "group_id": 3,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -138,24 +105,24 @@
       "total_workload": 2
     },
     {
-      "group_id": 5,
+      "group_id": 4,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
         {
-          "id": 288,
-          "course_id": 580,
-          "course_code": "CE19P01",
-          "course_name": "PRESTRESSED CONCRETE STRUCTURES",
-          "course_type": "T",
-          "teacher_id": "162.0",
+          "id": 302,
+          "course_id": 588,
+          "course_code": "CE19714",
+          "course_name": "PROBLEM SOLVING USING MACHINE LEARNING IN CIVIL ENGINEERING",
+          "course_type": "L",
+          "teacher_id": "148.0",
           "semester": 7,
           "course_dept": "Civil Engineering",
           "student_dept": "Civil Engineering",
-          "has_lab": false,
-          "has_theory": true,
-          "practical_hours": 0,
-          "lecture_hours": 3,
+          "has_lab": true,
+          "has_theory": false,
+          "practical_hours": 4,
+          "lecture_hours": 0,
           "tutorial_hours": 0,
           "student_count": 70,
           "virtual_id": null,
@@ -163,15 +130,15 @@
         }
       ],
       "teachers": [
-        "162.0"
+        "148.0"
       ],
       "courses": [
-        "CE19P01"
+        "CE19714"
       ],
-      "total_workload": 3
+      "total_workload": 4
     },
     {
-      "group_id": 6,
+      "group_id": 5,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -204,7 +171,7 @@
       "total_workload": 3
     },
     {
-      "group_id": 7,
+      "group_id": 6,
       "is_pe_group": false,
       "group_type": "Regular",
       "instances": [
@@ -233,6 +200,39 @@
       ],
       "courses": [
         "CE19702"
+      ],
+      "total_workload": 3
+    },
+    {
+      "group_id": 7,
+      "is_pe_group": false,
+      "group_type": "Regular",
+      "instances": [
+        {
+          "id": 288,
+          "course_id": 580,
+          "course_code": "CE19P01",
+          "course_name": "PRESTRESSED CONCRETE STRUCTURES",
+          "course_type": "T",
+          "teacher_id": "162.0",
+          "semester": 7,
+          "course_dept": "Civil Engineering",
+          "student_dept": "Civil Engineering",
+          "has_lab": false,
+          "has_theory": true,
+          "practical_hours": 0,
+          "lecture_hours": 3,
+          "tutorial_hours": 0,
+          "student_count": 70,
+          "virtual_id": null,
+          "co_scheduled_id": null
+        }
+      ],
+      "teachers": [
+        "162.0"
+      ],
+      "courses": [
+        "CE19P01"
       ],
       "total_workload": 3
     }

@@ -1,0 +1,30 @@
+{
+  "violations": [
+    {
+      "staff_code": "BT153",
+      "staff_name": "Mr. Dr. Saravanan Periasamy",
+      "day": "thur",
+      "earliest_start": "8:00",
+      "latest_end": "18:50",
+      "actual_start_hour": 8,
+      "latest_hour": 19,
+      "presence_pattern": "8-19",
+      "category": "violation",
+      "total_sessions": 4
+    }
+  ],
+  "summary": {
+    "total_violation_instances": 1,
+    "staff_with_violations": 1,
+    "violation_days": {
+      "thur": 1
+    },
+    "worst_offenders": [
+      {
+        "staff_code": "BT153",
+        "staff_name": "Mr. Dr. Saravanan Periasamy",
+        "violation_count": 1
+      }
+    ]
+  }
+}

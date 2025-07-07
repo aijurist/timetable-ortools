@@ -1,0 +1,317 @@
+{
+  "BT85": {
+    "staff_code": "BT85",
+    "staff_name": "Mrs. Dr.R.Anila",
+    "total_sessions": 5,
+    "days_worked": 4,
+    "shift_distribution": {
+      "optimal": 3,
+      "medium": 1,
+      "violation": 0
+    },
+    "leave_time_instances": {
+      "leave_3pm": 2,
+      "leave_5pm": 0,
+      "leave_7pm": 2
+    },
+    "work_hours": {
+      "earliest_start": "11:00",
+      "latest_end": "18:50"
+    },
+    "shift_consistency_score": 75.0
+  },
+  "BT107": {
+    "staff_code": "BT107",
+    "staff_name": "Mrs. Dr.M.Millicent Mabel",
+    "total_sessions": 2,
+    "days_worked": 1,
+    "shift_distribution": {
+      "optimal": 0,
+      "medium": 1,
+      "violation": 0
+    },
+    "leave_time_instances": {
+      "leave_3pm": 0,
+      "leave_5pm": 0,
+      "leave_7pm": 1
+    },
+    "work_hours": {
+      "earliest_start": "15:00",
+      "latest_end": "18:50"
+    },
+    "shift_consistency_score": 0.0
+  },
+  "BT122": {
+    "staff_code": "BT122",
+    "staff_name": "Mrs. Dr.T.Anitha",
+    "total_sessions": 5,
+    "days_worked": 4,
+    "shift_distribution": {
+      "optimal": 4,
+      "medium": 0,
+      "violation": 0
+    },
+    "leave_time_instances": {
+      "leave_3pm": 3,
+      "leave_5pm": 1,
+      "leave_7pm": 0
+    },
+    "work_hours": {
+      "earliest_start": "14:00",
+      "latest_end": "9:50"
+    },
+    "shift_consistency_score": 100.0
+  },
+  "BTN002": {
+    "staff_code": "BTN002",
+    "staff_name": "Ms. Shiny",
+    "total_sessions": 2,
+    "days_worked": 1,
+    "shift_distribution": {
+      "optimal": 0,
+      "medium": 1,
+      "violation": 0
+    },
+    "leave_time_instances": {
+      "leave_3pm": 0,
+      "leave_5pm": 0,
+      "leave_7pm": 1
+    },
+    "work_hours": {
+      "earliest_start": "15:00",
+      "latest_end": "18:50"
+    },
+    "shift_consistency_score": 0.0
+  },
+  "BT180": {
+    "staff_code": "BT180",
+    "staff_name": "Mrs. Sinduja M E",
+    "total_sessions": 2,
+    "days_worked": 1,
+    "shift_distribution": {
+      "optimal": 1,
+      "medium": 0,
+      "violation": 0
+    },
+    "leave_time_instances": {
+      "leave_3pm": 1,
+      "leave_5pm": 0,
+      "leave_7pm": 0
+    },
+    "work_hours": {
+      "earliest_start": "8:00",
+      "latest_end": "11:40"
+    },
+    "shift_consistency_score": 100.0
+  },
+  "BT153": {
+    "staff_code": "BT153",
+    "staff_name": "Mr. Dr. Saravanan Periasamy",
+    "total_sessions": 5,
+    "days_worked": 2,
+    "shift_distribution": {
+      "optimal": 1,
+      "medium": 0,
+      "violation": 1
+    },
+    "leave_time_instances": {
+      "leave_3pm": 0,
+      "leave_5pm": 1,
+      "leave_7pm": 1
+    },
+    "work_hours": {
+      "earliest_start": "16:00",
+      "latest_end": "18:50"
+    },
+    "shift_consistency_score": 50.0
+  },
+  "BT156": {
+    "staff_code": "BT156",
+    "staff_name": "Mrs. Dr. G. Carlin Geor Malar",
+    "total_sessions": 7,
+    "days_worked": 5,
+    "shift_distribution": {
+      "optimal": 5,
+      "medium": 0,
+      "violation": 0
+    },
+    "leave_time_instances": {
+      "leave_3pm": 4,
+      "leave_5pm": 1,
+      "leave_7pm": 0
+    },
+    "work_hours": {
+      "earliest_start": "10:00",
+      "latest_end": "9:50"
+    },
+    "shift_consistency_score": 100.0
+  },
+  "BT125": {
+    "staff_code": "BT125",
+    "staff_name": "Mr. Arun Kumar S",
+    "total_sessions": 2,
+    "days_worked": 2,
+    "shift_distribution": {
+      "optimal": 2,
+      "medium": 0,
+      "violation": 0
+    },
+    "leave_time_instances": {
+      "leave_3pm": 2,
+      "leave_5pm": 0,
+      "leave_7pm": 0
+    },
+    "work_hours": {
+      "earliest_start": "11:50",
+      "latest_end": "15:00"
+    },
+    "shift_consistency_score": 100.0
+  },
+  "BT178": {
+    "staff_code": "BT178",
+    "staff_name": "Mrs. Muneeswari Alias Surya S",
+    "total_sessions": 1,
+    "days_worked": 1,
+    "shift_distribution": {
+      "optimal": 1,
+      "medium": 0,
+      "violation": 0
+    },
+    "leave_time_instances": {
+      "leave_3pm": 1,
+      "leave_5pm": 0,
+      "leave_7pm": 0
+    },
+    "work_hours": {
+      "earliest_start": "11:50",
+      "latest_end": "13:20"
+    },
+    "shift_consistency_score": 100.0
+  },
+  "BTN004": {
+    "staff_code": "BTN004",
+    "staff_name": "Ebin Joel",
+    "total_sessions": 6,
+    "days_worked": 3,
+    "shift_distribution": {
+      "optimal": 3,
+      "medium": 0,
+      "violation": 0
+    },
+    "leave_time_instances": {
+      "leave_3pm": 2,
+      "leave_5pm": 1,
+      "leave_7pm": 0
+    },
+    "work_hours": {
+      "earliest_start": "14:00",
+      "latest_end": "16:50"
+    },
+    "shift_consistency_score": 100.0
+  },
+  "BT169": {
+    "staff_code": "BT169",
+    "staff_name": "Mrs. N.Premalatha",
+    "total_sessions": 8,
+    "days_worked": 5,
+    "shift_distribution": {
+      "optimal": 4,
+      "medium": 1,
+      "violation": 0
+    },
+    "leave_time_instances": {
+      "leave_3pm": 3,
+      "leave_5pm": 0,
+      "leave_7pm": 2
+    },
+    "work_hours": {
+      "earliest_start": "10:00",
+      "latest_end": "18:50"
+    },
+    "shift_consistency_score": 80.0
+  },
+  "BT171": {
+    "staff_code": "BT171",
+    "staff_name": "Mrs. Sangeetha Gandhi S",
+    "total_sessions": 4,
+    "days_worked": 3,
+    "shift_distribution": {
+      "optimal": 3,
+      "medium": 0,
+      "violation": 0
+    },
+    "leave_time_instances": {
+      "leave_3pm": 2,
+      "leave_5pm": 0,
+      "leave_7pm": 1
+    },
+    "work_hours": {
+      "earliest_start": "11:00",
+      "latest_end": "17:50"
+    },
+    "shift_consistency_score": 100.0
+  },
+  "BT33": {
+    "staff_code": "BT33",
+    "staff_name": "Mr. M Sankar",
+    "total_sessions": 3,
+    "days_worked": 2,
+    "shift_distribution": {
+      "optimal": 1,
+      "medium": 1,
+      "violation": 0
+    },
+    "leave_time_instances": {
+      "leave_3pm": 1,
+      "leave_5pm": 0,
+      "leave_7pm": 1
+    },
+    "work_hours": {
+      "earliest_start": "18:00",
+      "latest_end": "18:50"
+    },
+    "shift_consistency_score": 50.0
+  },
+  "BT109": {
+    "staff_code": "BT109",
+    "staff_name": "Dr. S.Thiruvengadam",
+    "total_sessions": 3,
+    "days_worked": 2,
+    "shift_distribution": {
+      "optimal": 1,
+      "medium": 1,
+      "violation": 0
+    },
+    "leave_time_instances": {
+      "leave_3pm": 1,
+      "leave_5pm": 0,
+      "leave_7pm": 1
+    },
+    "work_hours": {
+      "earliest_start": "18:00",
+      "latest_end": "18:50"
+    },
+    "shift_consistency_score": 50.0
+  },
+  "BT118": {
+    "staff_code": "BT118",
+    "staff_name": "Mrs. Dr. Sujata Roy",
+    "total_sessions": 3,
+    "days_worked": 2,
+    "shift_distribution": {
+      "optimal": 2,
+      "medium": 0,
+      "violation": 0
+    },
+    "leave_time_instances": {
+      "leave_3pm": 1,
+      "leave_5pm": 1,
+      "leave_7pm": 0
+    },
+    "work_hours": {
+      "earliest_start": "16:00",
+      "latest_end": "16:50"
+    },
+    "shift_consistency_score": 100.0
+  }
+}
