@@ -2691,7 +2691,7 @@ class CombinedScheduler:
                                     # Add preference based on student count, core lab status, and department
                                     if needs_large_capacity and not is_core_lab:
                                         # Check if this is a priority department for 70 capacity labs
-                                        is_priority_dept = dept_name in ['Computer Science & Engineering', 'Information Technology']
+                                        is_priority_dept = dept_name in ['Computer Science & Engineering']
                                         
                                         base_weight = 800
                                         if is_priority_dept:
@@ -2748,7 +2748,7 @@ class CombinedScheduler:
                                     base_weight = 1000
                                     if is_priority_dept:
                                         # Extra boost for CS & IT departments
-                                        weight = base_weight + 300  # 1300 totalS
+                                        weight = base_weight + 1000  # 1300 totalS
                                         description = f"6+ hours HIGHEST priority + CS/IT dept boost"
                                     else:
                                         weight = base_weight
@@ -2758,7 +2758,7 @@ class CombinedScheduler:
                                 elif priority_level == 2:  # 4+ hours: SECOND priority for 70+ labs
                                     if is_priority_dept:
                                         # CS & IT departments get EQUAL priority as 6+ hour courses for 70+ capacity labs
-                                        weight = 1100  # Same as 6+ hours for CS/IT
+                                        weight = 1500  # Same as 6+ hours for CS/IT
                                         description = f"4+ hours EQUAL priority as 6hrs for CS/IT dept"
                                     else:
                                         # Reduced priority for other departments' 4-hour courses
