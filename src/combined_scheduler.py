@@ -84,21 +84,36 @@ class CombinedScheduler:
         self.num_days = len(self.days)
         
         # LAB TIME CONFIGURATION - EXACTLY as in lab_scheduler.py
+        # self.lab_time_slots = [
+        #     "8:00 - 8:50", "8:50 - 9:40", "9:50 - 10:40", "10:40 - 11:30",
+        #     "11:50 - 12:40", "12:40 - 1:30", "1:50 - 2:40", "2:40 - 3:30", 
+        #     "3:50 - 4:40", "4:40 - 5:30", "5:30 - 6:20", "6:20 - 7:10"
+        # ]
+
         self.lab_time_slots = [
             "8:00 - 8:50", "8:50 - 9:40", "9:50 - 10:40", "10:40 - 11:30",
-            "11:50 - 12:40", "12:40 - 1:30", "1:50 - 2:40", "2:40 - 3:30", 
-            "3:50 - 4:40", "4:40 - 5:30", "5:30 - 6:20", "6:20 - 7:10"
+            "11:40 - 12:30", "12:30 - 1:20", "1:30 - 2:20", "2:20 - 3:10", 
+            "3:10 - 4:00", "4:00 - 4:50", "5:00 - 5:50", "5:50 - 6:40"
         ]
+
         self.num_lab_slots = len(self.lab_time_slots)
         
         # Group lab slots into 2-hour sessions (L1, L2, L3, etc.) - Updated with correct timings
+        # self.lab_sessions = {
+        #     'L1': {'slots': [0, 1], 'time_range': '8:00 - 9:40'},
+        #     'L2': {'slots': [2, 3], 'time_range': '9:50 - 11:30'},
+        #     'L3': {'slots': [4, 5], 'time_range': '11:50 - 1:30'},
+        #     'L4': {'slots': [6, 7], 'time_range': '1:50 - 3:30'},
+        #     'L5': {'slots': [8, 9], 'time_range': '3:50 - 5:30'},
+        #     'L6': {'slots': [10, 11], 'time_range': '5:30 - 7:10'}
+        # }
         self.lab_sessions = {
             'L1': {'slots': [0, 1], 'time_range': '8:00 - 9:40'},
             'L2': {'slots': [2, 3], 'time_range': '9:50 - 11:30'},
-            'L3': {'slots': [4, 5], 'time_range': '11:50 - 1:30'},
-            'L4': {'slots': [6, 7], 'time_range': '1:50 - 3:30'},
-            'L5': {'slots': [8, 9], 'time_range': '3:50 - 5:30'},
-            'L6': {'slots': [10, 11], 'time_range': '5:30 - 7:10'}
+            'L3': {'slots': [4, 5], 'time_range': '11:40 - 1:20'},
+            'L4': {'slots': [6, 7], 'time_range': '1:30 - 3:10'},
+            'L5': {'slots': [8, 9], 'time_range': '3:10 - 4:50'},
+            'L6': {'slots': [10, 11], 'time_range': '5:00 - 6:40'}
         }
         self.num_lab_sessions = len(self.lab_sessions)
 
@@ -108,11 +123,16 @@ class CombinedScheduler:
             self.lab_sessions_details[session_name] = {'slots': session_info['slots']}
         
         # THEORY TIME CONFIGURATION - EXACTLY as in theory_scheduler.py
+        # self.theory_time_slots = [
+        #     "8:00 - 8:50", "9:00 - 9:50", "10:00 - 10:50", "11:00 - 11:50",
+        #     "12:00 - 12:50", "1:00 - 1:50", "2:00 - 2:50", "3:00 - 3:50", 
+        #     "4:00 - 4:50", "5:00 - 5:50", "6:00 - 6:50"
+        # ]
+
         self.theory_time_slots = [
-            "8:00 - 8:50", "9:00 - 9:50", "10:00 - 10:50", "11:00 - 11:50",
-            "12:00 - 12:50", "1:00 - 1:50", "2:00 - 2:50", "3:00 - 3:50", 
-            "4:00 - 4:50", "5:00 - 5:50", "6:00 - 6:50"
+        "8:00 - 8:50", "8:55 - 9:45", "9:50 - 10:40", "10:50 - 11:40", "11:45 - 12:35", "12:40 - 1:30", "1:40 - 2:30", "3:10 - 4:00", "4:10 - 5:00", "5:00 - 5:50", "6:00 - 6:50" 
         ]
+
         self.num_theory_slots = len(self.theory_time_slots)
         
         # Build time slot mapping between lab and theory (now that both are defined)
