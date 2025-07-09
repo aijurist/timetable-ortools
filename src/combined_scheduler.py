@@ -690,21 +690,23 @@ class CombinedScheduler:
         self.logger.info("Setting up semester-specific lunch break configuration...")
         
         # Define lunch break time slots (11:00 AM to 1:30 PM)
+        # Updated to match new theory timeslot configuration
         self.lunch_break_slots = {
-            3: "11:00 - 11:50",  # Slot 3
-            4: "12:00 - 12:50",  # Slot 4
-            5: "1:00 - 1:50"     # Slot 5
+            3: "10:50 - 11:40",  # Slot 3 (new timeslot)
+            4: "11:45 - 12:35",  # Slot 4 (new timeslot)
+            5: "12:40 - 1:30"    # Slot 5 (new timeslot)
         }
         
         # Core departments with model-decided flexible lunch breaks (slots 3, 4, or 5)
         # These departments can use any of the 3 lunch slots - model will decide dynamically
         self.flexible_lunch_departments = [
-            'Biotechnology',
+            # 'Biotechnolog_S5',
+            # ('Electronics & Communication Engineering', 7): 4,  # S7: 1:00-1:50
             # 'Electronics & Communication Engineering', 
             # 'Mechanical Engineering',
             # 'Biomedical Engineering',
-            "Electronics & Communication Engineering",
-            'Electrical & Electronics Engineering'
+            # "Electronics & Communication Engineering",
+            # 'Electrical & Electronics Engineering'
         ]
         
         # Department-semester specific FIXED lunch break assignments
@@ -727,14 +729,24 @@ class CombinedScheduler:
             ('Information Technology', 3): 3,  # S3: 11:00-11:50
             ('Information Technology', 5): 4,  # S5: 12:00-12:50
             ('Information Technology', 7): 5,  # S7: 1:00-1:50
+
+            ('Electrical & Electronics Engineering', 3): 3,  # S3: 11:00-11:50
+            ('Electrical & Electronics Engineering', 5): 4,  # S5: 12:00-12:50
+            ('Electrical & Electronics Engineering', 7): 5,  # S7: 1:00-1:50
                         
-            ('Biomedical Engineering', 3): 4,  # S3: 11:00-11:50
+            ('Biomedical Engineering', 3): 3,  # S3: 11:00-11:50
             ('Biomedical Engineering', 5): 4,  # S5: 12:00-12:50
-            ('Biomedical Engineering', 7): 4,  # S7: 1:00-1:50
+            ('Biomedical Engineering', 7): 5,  # S7: 1:00-1:50
+
+            ('Electronics & Communication Engineering', 3): 5,  # S3: 11:00-11:50
+            ('Electronics & Communication Engineering', 5): 4,  # S5: 12:00-12:50
       
-            ('Mechanical Engineering', 3): 4,  # S3: 11:00-11:50
+            ('Biotechnology', 3): 4,  # S3: 11:00-11:50
+            ('Biotechnology', 7): 5,  # S7: 1:00-1:50
+
+            ('Mechanical Engineering', 3): 3,  # S3: 11:00-11:50
             ('Mechanical Engineering', 5): 4,  # S5: 12:00-12:50
-            ('Mechanical Engineering', 7): 4,  # S7: 1:00-1:50
+            ('Mechanical Engineering', 7): 5,  # S7: 1:00-1:50
 
 
             ('Computer Science & Business Systems', 3): 4,  # S3: 12:00-12:50
@@ -1023,14 +1035,12 @@ class CombinedScheduler:
             "Computer Science & Design_S7",
             "Computer Science & Engineering_S7",
             "Computer Science & Engineering_S5",
-            "Food Technology_S5",
             "Food Technology_S3",
             "Computer Science & Design_S3",
             "Biotechnology",
             "Electronics & Communication Engineering_S7",
-            "Biomedical Engineering_S5",
-            "Biomedical Engineering_S7",
-            "Mechanical Engineering",
+            "Mechanical Engineering_S5",
+            "Mechanical Engineering_S7",
             'Electrical & Electronics Engineering_S3',
             'Electrical & Electronics Engineering_S7',
         ]
@@ -1040,12 +1050,16 @@ class CombinedScheduler:
         self.soft_5pm_constraint_departments = [
             # Department-wide constraints (applies to all semesters)
             "Computer Science & Engineering_S3",
+            "Mechanical Engineering_S3"
             "Electronics & Communication Engineering_S5",
             "Electronics & Communication Engineering_S3",
             'Electrical & Electronics Engineering_S5',
             "Chemical Engineering_S7",
+            "Biomedical Engineering_S5",
             "Biomedical Engineering_S3",
+            "Biomedical Engineering_S7",
             "Food Technology_S7",
+            "Food Technology_S5",
             # Semester-specific constraints (overrides department-wide settings)SS
             # Example: "Biotechnology_S7",                   # Only S7 has soft constraint
             # Example: "Civil Engineering_S3",               # Only S3 has soft constraint
@@ -2960,8 +2974,8 @@ class CombinedScheduler:
         
         # Define computer departments that are restricted from these labs
         computer_departments = [
-            'Computer Science & Engineering',
-            'Information Technology', 
+            # 'Computer Science & Engineering',
+            # 'Information Technology', 
             'Computer Science & Business Systems',
             'Computer Science & Design',
             'Computer Science & Engineering (Cyber Security)',
@@ -5752,7 +5766,7 @@ class CombinedScheduler:
         """Solve the combined scheduling model using two-phase approach."""
         # Create the solver
         solver = cp_model.CpSolver()
-        solver.parameters.max_time_in_seconds = 2000
+        solver.parameters.max_time_in_seconds = 4000
         solver.parameters.num_search_workers = 16
         solver.parameters.max_memory_in_mb = 30000
         solver.parameters.log_search_progress = True
@@ -8484,24 +8498,24 @@ class CombinedScheduler:
 
     def _apply_lab_lunch_break_constraint(self, model, lab_variables):
         """
-        Prevent any lab session from being scheduled during its department-semester specific lunch break slot.
+        Prevent any lab session from being scheduled during its department-semester specific lunch break time.
         Flexible lunch departments (Biotechnology, ECE, Mechanical, etc.) are skipped - model decides their lunch timing.
         """
         self.logger.info("Applying lunch break constraints for lab sessions (flexible departments skipped)...")
         constraints_applied = 0
         flexible_courses_skipped = 0
         
-        # Map lunch break theory slots to lab sessions that overlap
+        # Map lunch break theory slots to lab sessions that overlap with the lunch time period
         lunch_slot_to_lab_sessions = {}
         for lunch_slot_idx, lunch_time in self.lunch_break_slots.items():
             lunch_slot_to_lab_sessions[lunch_slot_idx] = []
             
             # Check which lab sessions overlap with this lunch time slot
-            for session_name, session_times in self.lab_sessions.items():
-                for session_time in session_times:
-                    if self._times_overlap(session_time, lunch_time):
-                        lunch_slot_to_lab_sessions[lunch_slot_idx].append(session_name)
-                        break  # Session overlaps, no need to check more times
+            for session_name, session_info in self.lab_sessions.items():
+                session_time_range = session_info['time_range']
+                if self._times_overlap(session_time_range, lunch_time):
+                    lunch_slot_to_lab_sessions[lunch_slot_idx].append(session_name)
+                    self.logger.debug(f"Lab session {session_name} ({session_time_range}) overlaps with lunch slot {lunch_slot_idx} ({lunch_time})")
         
         # Apply constraints for each teacher and course
         for teacher_id in lab_variables:
@@ -8544,26 +8558,32 @@ class CombinedScheduler:
                 dept_days = self._get_days_for_department(dept_name, semester)
                 num_dept_days = len(dept_days)
                 
-                # For each day, prevent scheduling in the lunch break slot
+                # Get course code for logging
+                course_req = next((req for req in self.lab_requirements.get(teacher_id, []) 
+                                 if req['course_instance_id'] == course_instance_id), None)
+                course_code = course_req['course_code'] if course_req else 'Unknown'
+                
+                # For each day, prevent scheduling in the overlapping lab sessions
                 for day_idx in range(num_dept_days):
                     if day_idx in lab_variables[teacher_id][course_instance_id]:
                         for session_name in overlapping_sessions:
                             if session_name in lab_variables[teacher_id][course_instance_id][day_idx]:
                                 for room_id in self.lab_room_ids:
                                     if room_id in lab_variables[teacher_id][course_instance_id][day_idx][session_name]:
-                                        # Check if this session is in the lunch break slot
+                                        # Prevent scheduling in this lab session during lunch break
                                         model.Add(lab_variables[teacher_id][course_instance_id][day_idx][session_name][room_id] == 0)
                                         constraints_applied += 1
                                         
-                                        # Get course code for logging
-                                        course_req = next((req for req in self.lab_requirements.get(teacher_id, []) 
-                                                         if req['course_instance_id'] == course_instance_id), None)
-                                        course_code = course_req['course_code'] if course_req else 'Unknown'
-                                        
-                                        self.logger.debug(f"Lab lunch break constraint: {course_code} ({dept_name} S{semester}) in lunch break slot {lunch_slot_idx}")
+                                        self.logger.debug(f"Lab lunch break constraint: {course_code} ({dept_name} S{semester}) blocked from {session_name} during lunch slot {lunch_slot_idx} ({self.lunch_break_slots[lunch_slot_idx]})")
         
         self.logger.info(f"Applied {constraints_applied} lab lunch break constraints")
         self.logger.info(f"🔄 Skipped {flexible_courses_skipped} flexible lunch department courses (model will decide lunch timing)")
+        
+        # Log which lab sessions overlap with each lunch slot for debugging
+        for lunch_slot_idx, overlapping_sessions in lunch_slot_to_lab_sessions.items():
+            if overlapping_sessions:
+                self.logger.info(f"Lunch slot {lunch_slot_idx} ({self.lunch_break_slots[lunch_slot_idx]}) blocks lab sessions: {overlapping_sessions}")
+        
         return constraints_applied
 
     def apply_consecutive_batch_scheduling_constraint(self, model, lab_variables):
