@@ -739,15 +739,16 @@ class CombinedScheduler:
             ('Biomedical Engineering', 7): 5,  # S7: 1:00-1:50
 
             ('Electronics & Communication Engineering', 3): 5,  # S3: 11:00-11:50
+            ('Electronics & Communication Engineering', 7): 4,  # S3: 11:00-11:50
             ('Electronics & Communication Engineering', 5): 4,  # S5: 12:00-12:50
       
             ('Biotechnology', 3): 4,  # S3: 11:00-11:50
+            ('Biotechnology', 5): 4,  # S3: 11:00-11:50
             ('Biotechnology', 7): 5,  # S7: 1:00-1:50
 
             ('Mechanical Engineering', 3): 3,  # S3: 11:00-11:50
             ('Mechanical Engineering', 5): 4,  # S5: 12:00-12:50
             ('Mechanical Engineering', 7): 5,  # S7: 1:00-1:50
-
 
             ('Computer Science & Business Systems', 3): 4,  # S3: 12:00-12:50
             ('Computer Science & Business Systems', 5): 3,  # S5: 11:00-11:50
@@ -1037,8 +1038,8 @@ class CombinedScheduler:
             "Computer Science & Engineering_S5",
             "Food Technology_S3",
             "Computer Science & Design_S3",
-            "Biotechnology",
-            "Electronics & Communication Engineering_S7",
+            "Biotechnology_S3",
+            "Biotechnology_S7",
             "Mechanical Engineering_S5",
             "Mechanical Engineering_S7",
             'Electrical & Electronics Engineering_S3',
@@ -1049,8 +1050,10 @@ class CombinedScheduler:
         # Format: 'Department Name' for all semesters OR 'Department Name_S5' for specific semester
         self.soft_5pm_constraint_departments = [
             # Department-wide constraints (applies to all semesters)
+            "Biotechnology_S5",
             "Computer Science & Engineering_S3",
-            "Mechanical Engineering_S3"
+            "Mechanical Engineering_S3",
+            "Electronics & Communication Engineering_S7",
             "Electronics & Communication Engineering_S5",
             "Electronics & Communication Engineering_S3",
             'Electrical & Electronics Engineering_S5',
@@ -2974,8 +2977,8 @@ class CombinedScheduler:
         
         # Define computer departments that are restricted from these labs
         computer_departments = [
-            # 'Computer Science & Engineering',
-            # 'Information Technology', 
+            'Computer Science & Engineering',
+            'Information Technology', 
             'Computer Science & Business Systems',
             'Computer Science & Design',
             'Computer Science & Engineering (Cyber Security)',
