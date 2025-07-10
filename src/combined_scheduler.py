@@ -90,10 +90,16 @@ class CombinedScheduler:
         #     "3:50 - 4:40", "4:40 - 5:30", "5:30 - 6:20", "6:20 - 7:10"
         # ]
 
+        # self.lab_time_slots = [
+        #     "8:00 - 8:50", "8:50 - 9:40", "9:50 - 10:40", "10:40 - 11:30",
+        #     "11:40 - 12:30", "12:30 - 1:20", "1:30 - 2:20", "2:20 - 3:10", 
+        #     "3:10 - 4:00", "4:00 - 4:50", "5:00 - 5:50", "5:50 - 6:40"
+        # ]
+
         self.lab_time_slots = [
             "8:00 - 8:50", "8:50 - 9:40", "9:50 - 10:40", "10:40 - 11:30",
-            "11:40 - 12:30", "12:30 - 1:20", "1:30 - 2:20", "2:20 - 3:10", 
-            "3:10 - 4:00", "4:00 - 4:50", "5:00 - 5:50", "5:50 - 6:40"
+            "11:40 - 12:30", "12:30 - 1:20", "1:50 - 2:40", "2:40 - 3:20", 
+            "3:30 - 4:20", "4:20 - 5:10", "5:20 - 6:10", "5:10 - 7:00"
         ]
 
         self.num_lab_slots = len(self.lab_time_slots)
@@ -107,13 +113,22 @@ class CombinedScheduler:
         #     'L5': {'slots': [8, 9], 'time_range': '3:50 - 5:30'},
         #     'L6': {'slots': [10, 11], 'time_range': '5:30 - 7:10'}
         # }
+        # self.lab_sessions = {
+        #     'L1': {'slots': [0, 1], 'time_range': '8:00 - 9:40'},
+        #     'L2': {'slots': [2, 3], 'time_range': '9:50 - 11:30'},
+        #     'L3': {'slots': [4, 5], 'time_range': '11:40 - 1:20'},
+        #     'L4': {'slots': [6, 7], 'time_range': '1:30 - 3:10'},
+        #     'L5': {'slots': [8, 9], 'time_range': '3:10 - 4:50'},
+        #     'L6': {'slots': [10, 11], 'time_range': '5:00 - 6:40'}
+        # }
+
         self.lab_sessions = {
             'L1': {'slots': [0, 1], 'time_range': '8:00 - 9:40'},
             'L2': {'slots': [2, 3], 'time_range': '9:50 - 11:30'},
             'L3': {'slots': [4, 5], 'time_range': '11:40 - 1:20'},
-            'L4': {'slots': [6, 7], 'time_range': '1:30 - 3:10'},
-            'L5': {'slots': [8, 9], 'time_range': '3:10 - 4:50'},
-            'L6': {'slots': [10, 11], 'time_range': '5:00 - 6:40'}
+            'L4': {'slots': [6, 7], 'time_range': '1:50 - 3:20'},
+            'L5': {'slots': [8, 9], 'time_range': '3:30 - 5:10'},
+            'L6': {'slots': [10, 11], 'time_range': '5:20 - 7:00'}
         }
         self.num_lab_sessions = len(self.lab_sessions)
 
@@ -129,8 +144,13 @@ class CombinedScheduler:
         #     "4:00 - 4:50", "5:00 - 5:50", "6:00 - 6:50"
         # ]
 
+        # self.theory_time_slots = [
+        # "8:00 - 8:50", "8:55 - 9:45", "9:50 - 10:40", "10:50 - 11:40", "11:45 - 12:35", "12:40 - 1:30", "1:40 - 2:30", "3:10 - 4:00", "4:10 - 5:00", "5:00 - 5:50", "6:00 - 6:50" 
+        # ]
+        
         self.theory_time_slots = [
-        "8:00 - 8:50", "8:55 - 9:45", "9:50 - 10:40", "10:50 - 11:40", "11:45 - 12:35", "12:40 - 1:30", "1:40 - 2:30", "3:10 - 4:00", "4:10 - 5:00", "5:00 - 5:50", "6:00 - 6:50" 
+        "8:00 - 8:50", "8:55 - 9:45", "9:50 - 10:40", "10:45 - 11:35", "11:40 - 12:30", "12:35 - 1:20"
+        , "1:50 - 2:40", "3:20 - 4:10", "4:15 - 5:05", "5:10 - 6:00", "6:10 - 7:00" 
         ]
 
         self.num_theory_slots = len(self.theory_time_slots)
@@ -692,21 +712,29 @@ class CombinedScheduler:
         # Define lunch break time slots (11:00 AM to 1:30 PM)
         # Updated to match new theory timeslot configuration
         self.lunch_break_slots = {
-            3: "10:50 - 11:40",  # Slot 3 (new timeslot)
-            4: "11:45 - 12:35",  # Slot 4 (new timeslot)
-            5: "12:40 - 1:30"    # Slot 5 (new timeslot)
+            3: "10:45 - 11:35",  # Slot 3 (new timeslot)
+            4: "11:40 - 12:30",  # Slot 4 (new timeslot)
+            5: "12:35 - 1:20"    # Slot 5 (new timeslot)
         }
         
-        # Core departments with model-decided flexible lunch breaks (slots 3, 4, or 5)
-        # These departments can use any of the 3 lunch slots - model will decide dynamically
-        self.flexible_lunch_departments = [
-            # 'Biotechnolog_S5',
-            # ('Electronics & Communication Engineering', 7): 4,  # S7: 1:00-1:50
-            # 'Electronics & Communication Engineering', 
-            # 'Mechanical Engineering',
-            # 'Biomedical Engineering',
-            # "Electronics & Communication Engineering",
-            # 'Electrical & Electronics Engineering'
+        # Core department-semester combinations with model-decided flexible lunch breaks (slots 3, 4, or 5)
+        # These department-semester combinations can use any of the 3 lunch slots - model will decide dynamically
+        # Format: (department, semester) - same as department_semester_lunch_breaks
+        self.flexible_lunch_department_semesters = [
+            ('Biomedical Engineering', 3),  # S3: 11:00-11:50
+            ('Biomedical Engineering', 5),  # S5: 12:00-12:50
+            ('Biomedical Engineering', 7),  # S7: 1:00-1:50
+
+            ('Electronics & Communication Engineering', 7),  # S3: 11:00-11:50
+
+            ('Biotechnology', 5),
+
+            ('Mechanical Engineering', 3),
+
+            ('Food Technology', 5), 
+            ('Food Technology', 7),
+
+            ('Chemical Engineering', 7),
         ]
         
         # Department-semester specific FIXED lunch break assignments
@@ -714,7 +742,7 @@ class CombinedScheduler:
         # Only departments NOT in flexible_lunch_departments get fixed lunch breaks
         self.department_semester_lunch_breaks = {
             # Computer Science departments - varied lunch times by semester
-            ('Computer Science & Engineering', 3): 4,  # S3: 12:00-12:50
+            ('Computer Science & Engineering', 3):4,
             ('Computer Science & Engineering', 5): 3,  # S5: 11:00-11:50
             ('Computer Science & Engineering', 7): 5,  # S7: 1:00-1:50
             
@@ -733,20 +761,13 @@ class CombinedScheduler:
             ('Electrical & Electronics Engineering', 3): 3,  # S3: 11:00-11:50
             ('Electrical & Electronics Engineering', 5): 4,  # S5: 12:00-12:50
             ('Electrical & Electronics Engineering', 7): 5,  # S7: 1:00-1:50
-                        
-            ('Biomedical Engineering', 3): 3,  # S3: 11:00-11:50
-            ('Biomedical Engineering', 5): 4,  # S5: 12:00-12:50
-            ('Biomedical Engineering', 7): 5,  # S7: 1:00-1:50
 
-            ('Electronics & Communication Engineering', 3): 5,  # S3: 11:00-11:50
-            ('Electronics & Communication Engineering', 7): 4,  # S3: 11:00-11:50
-            ('Electronics & Communication Engineering', 5): 4,  # S5: 12:00-12:50
-      
+            ('Electronics & Communication Engineering', 3): 4,  # S3: 11:00-11:50
+            ('Electronics & Communication Engineering', 5): 5,  # S5: 12:00-12:50
+            
             ('Biotechnology', 3): 4,  # S3: 11:00-11:50
-            ('Biotechnology', 5): 4,  # S3: 11:00-11:50
             ('Biotechnology', 7): 5,  # S7: 1:00-1:50
 
-            ('Mechanical Engineering', 3): 3,  # S3: 11:00-11:50
             ('Mechanical Engineering', 5): 4,  # S5: 12:00-12:50
             ('Mechanical Engineering', 7): 5,  # S7: 1:00-1:50
 
@@ -774,11 +795,8 @@ class CombinedScheduler:
             ('Chemical Engineering', 3): 3,  # S3: 11:00-11:50
             ('Chemical Engineering', 4): 4,  # S4: 12:00-12:50
             ('Chemical Engineering', 5): 5,  # S5: 1:00-1:50
-            ('Chemical Engineering', 7): 4,  # S7: 12:00-12:50
             
             ('Food Technology', 3): 3,  # S3: 11:00-11:50
-            ('Food Technology', 5): 5,  # S5: 1:00-1:50
-            ('Food Technology', 7): 4,  # S7: 12:00-12:50
             
             ('Mechatronics Engineering', 3): 5,  # S3: 1:00-1:50
             ('Mechatronics Engineering', 5): 3,  # S5: 11:00-11:50
@@ -803,11 +821,12 @@ class CombinedScheduler:
         
         # Log lunch break configuration
         self.logger.info("Lunch break configuration:")
-        self.logger.info(f"🔄 FLEXIBLE LUNCH DEPARTMENTS ({len(self.flexible_lunch_departments)}): Model decides lunch slots (3,4,5)")
-        for dept in self.flexible_lunch_departments:
-            self.logger.info(f"    {dept}: Flexible lunch timing (slots 3,4,5)")
+        self.logger.info(f"🔄 FLEXIBLE LUNCH DEPARTMENT-SEMESTERS ({len(self.flexible_lunch_department_semesters)}): Model decides lunch slots (3,4,5)")
+        for dept_sem in self.flexible_lunch_department_semesters:
+            dept, semester = dept_sem
+            self.logger.info(f"    {dept} S{semester}: Flexible lunch timing (slots 3,4,5)")
         
-        self.logger.info(f"📋 FIXED LUNCH DEPARTMENTS: Semester-specific lunch assignments")
+        self.logger.info(f"📋 FIXED LUNCH DEPARTMENT-SEMESTERS: Specific lunch assignments")
         for slot_idx, time_slot in self.lunch_break_slots.items():
             dept_semesters = self.lunch_break_to_dept_semesters.get(slot_idx, [])
             self.logger.info(f"  Slot {slot_idx} ({time_slot}): {len(dept_semesters)} department-semester combinations")
@@ -815,7 +834,7 @@ class CombinedScheduler:
                 self.logger.info(f"    Examples: {', '.join(dept_semesters[:5])}")
         
         self.logger.info(f"Lunch break configuration completed:")
-        self.logger.info(f"  - {len(self.flexible_lunch_departments)} flexible lunch departments")
+        self.logger.info(f"  - {len(self.flexible_lunch_department_semesters)} flexible lunch department-semester combinations")
         self.logger.info(f"  - {len(self.department_semester_lunch_breaks)} fixed department-semester combinations")
 
     def get_lunch_break_slot(self, department_name, semester=None):
@@ -828,9 +847,11 @@ class CombinedScheduler:
         Returns:
             int or None: Slot index (3, 4, or 5) for the lunch break, or None if flexible/no lunch break assigned
         """
-        # Check if this is a flexible lunch department - let model decide
-        if department_name in self.flexible_lunch_departments:
-            return None  # Model will decide which lunch slot to use (3, 4, or 5)
+        # Check if this is a flexible lunch department-semester combination - let model decide
+        if semester is not None:
+            dept_semester_key = (department_name, semester)
+            if dept_semester_key in self.flexible_lunch_department_semesters:
+                return None  # Model will decide which lunch slot to use (3, 4, or 5)
         
         # Only use department-semester specific lunch breaks for fixed departments
         if semester is not None:
@@ -872,16 +893,21 @@ class CombinedScheduler:
             return False  # No lunch break assigned to this department-semester combination
         return slot_idx == lunch_slot
     
-    def is_flexible_lunch_department(self, department_name):
-        """Check if a department has flexible lunch breaks (model-decided).
+    def is_flexible_lunch_department(self, department_name, semester=None):
+        """Check if a department-semester combination has flexible lunch breaks (model-decided).
         
         Args:
             department_name (str): Name of the department
+            semester (int, optional): Semester number (e.g., 3, 5, 7)
             
         Returns:
-            bool: True if this department has flexible lunch timing
+            bool: True if this department-semester combination has flexible lunch timing
         """
-        return department_name in self.flexible_lunch_departments
+        if semester is None:
+            return False  # Must specify semester for flexible lunch check
+        
+        dept_semester_key = (department_name, semester)
+        return dept_semester_key in self.flexible_lunch_department_semesters
     
     def _setup_shift_based_constraints(self):
         """Set up department-centric shift-based constraints for ALL departments."""
@@ -1044,34 +1070,26 @@ class CombinedScheduler:
             "Mechanical Engineering_S7",
             'Electrical & Electronics Engineering_S3',
             'Electrical & Electronics Engineering_S7',
+             "Biomedical Engineering_S5",
+            "Biomedical Engineering_S3",
+            "Biomedical Engineering_S7",
+            "Electronics & Communication Engineering_S7",
+            "Biotechnology_S5",
+            "Mechanical Engineering_S3",
+            "Food Technology_S7",
+            "Food Technology_S5",
+            "Chemical Engineering_S7",
         ]
         
         # SOFT CONSTRAINT DEPARTMENTS - PREFER NOT to schedule after 5:30pm for both theory and lab
         # Format: 'Department Name' for all semesters OR 'Department Name_S5' for specific semester
         self.soft_5pm_constraint_departments = [
             # Department-wide constraints (applies to all semesters)
-            "Biotechnology_S5",
             "Computer Science & Engineering_S3",
-            "Mechanical Engineering_S3",
-            "Electronics & Communication Engineering_S7",
-            "Electronics & Communication Engineering_S5",
             "Electronics & Communication Engineering_S3",
+            "Electronics & Communication Engineering_S5",
             'Electrical & Electronics Engineering_S5',
-            "Chemical Engineering_S7",
-            "Biomedical Engineering_S5",
-            "Biomedical Engineering_S3",
-            "Biomedical Engineering_S7",
-            "Food Technology_S7",
-            "Food Technology_S5",
-            # Semester-specific constraints (overrides department-wide settings)SS
-            # Example: "Biotechnology_S7",                   # Only S7 has soft constraint
-            # Example: "Civil Engineering_S3",               # Only S3 has soft constraint
-            #    "Food Technology_S5",
-            # "Food Technology_S3",
-            #       "Mechatronics Engineering_S7",
-            # "Aeronautical Engineering_S3",
-            # "Aeronautical Engineering_S5",
-                        #  "Computer Science & Design_S3",
+           
         ]
         
         # HARD CONSTRAINTS: Block slots/sessions after 5:30pm
@@ -5773,7 +5791,7 @@ class CombinedScheduler:
         solver.parameters.num_search_workers = 16
         solver.parameters.max_memory_in_mb = 30000
         solver.parameters.log_search_progress = True
-        solver.parameters.stop_after_first_solution = True
+        # solver.parameters.stop_after_first_solution = True
         
         self.logger.info("Solving combined scheduling model...")
         status = solver.Solve(model)
@@ -8284,7 +8302,7 @@ class CombinedScheduler:
                     pass
             
             # Skip flexible lunch departments - let model decide their lunch timing
-            if self.is_flexible_lunch_department(dept_name):
+            if self.is_flexible_lunch_department(dept_name, semester):
                 flexible_departments_skipped += 1
                 self.logger.debug(f"Flexible lunch department: {dept_name} S{semester} - skipping lunch constraints (model will decide)")
                 continue
@@ -8346,7 +8364,7 @@ class CombinedScheduler:
                     pass
             
             # Only apply to flexible lunch departments
-            if not self.is_flexible_lunch_department(dept_name):
+            if not self.is_flexible_lunch_department(dept_name, semester):
                 continue
                 
             # Get department-specific days
@@ -8493,7 +8511,9 @@ class CombinedScheduler:
             self.logger.info("    - At least one traditional lunch slot (3,4,5) free, OR")
             self.logger.info("    - Natural lunch from L3 lab + theory slot 6 (40 min break), OR")
             self.logger.info("    - Natural lunch from theory slot 4 + L4 lab (30 min break)")
-            self.logger.info(f"  • Applies to: {', '.join(self.flexible_lunch_departments)}")
+            # Format department-semester combinations for logging
+            flexible_dept_sems = [f"{dept} S{sem}" for dept, sem in self.flexible_lunch_department_semesters]
+            self.logger.info(f"  • Applies to: {', '.join(flexible_dept_sems)}")
         else:
             self.logger.info("No flexible lunch constraints applied - no flexible departments found")
         
@@ -8539,7 +8559,7 @@ class CombinedScheduler:
                         dept_name = course_matches.iloc[0].get('student_dept', 'Computer Science & Engineering')
                 
                 # Skip flexible lunch departments - let model decide their lunch timing
-                if self.is_flexible_lunch_department(dept_name):
+                if self.is_flexible_lunch_department(dept_name, semester):
                     flexible_courses_skipped += 1
                     self.logger.debug(f"Flexible lunch department: {dept_name} S{semester} course - skipping lab lunch constraints (model will decide)")
                     continue
