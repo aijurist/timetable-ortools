@@ -726,6 +726,7 @@ class CombinedScheduler:
             ('Biomedical Engineering', 7),  # S7: 1:00-1:50
 
             ('Electronics & Communication Engineering', 7),  # S3: 11:00-11:50
+            ('Electronics & Communication Engineering', 5),  # S5: 12:00-12:50
 
             ('Biotechnology', 5),
 
@@ -735,6 +736,8 @@ class CombinedScheduler:
             ('Food Technology', 7),
 
             ('Chemical Engineering', 7),
+
+            ('Electrical & Electronics Engineering', 5),  # S5: 12:00-12:50
         ]
         
         # Department-semester specific FIXED lunch break assignments
@@ -742,7 +745,7 @@ class CombinedScheduler:
         # Only departments NOT in flexible_lunch_departments get fixed lunch breaks
         self.department_semester_lunch_breaks = {
             # Computer Science departments - varied lunch times by semester
-            ('Computer Science & Engineering', 3):4,
+            ('Computer Science & Engineering', 3): 4,
             ('Computer Science & Engineering', 5): 3,  # S5: 11:00-11:50
             ('Computer Science & Engineering', 7): 5,  # S7: 1:00-1:50
             
@@ -759,11 +762,9 @@ class CombinedScheduler:
             ('Information Technology', 7): 5,  # S7: 1:00-1:50
 
             ('Electrical & Electronics Engineering', 3): 3,  # S3: 11:00-11:50
-            ('Electrical & Electronics Engineering', 5): 4,  # S5: 12:00-12:50
             ('Electrical & Electronics Engineering', 7): 5,  # S7: 1:00-1:50
 
             ('Electronics & Communication Engineering', 3): 4,  # S3: 11:00-11:50
-            ('Electronics & Communication Engineering', 5): 5,  # S5: 12:00-12:50
             
             ('Biotechnology', 3): 4,  # S3: 11:00-11:50
             ('Biotechnology', 7): 5,  # S7: 1:00-1:50
