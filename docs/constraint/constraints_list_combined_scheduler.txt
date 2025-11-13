@@ -1,0 +1,165 @@
+Constraints present in `combined_scheduler.py`
+
+This file lists all constraint functions found in `combined_scheduler.py` with a short description and whether they're typically HARD or SOFT.
+
+1. apply_course_lab_requirements_constraint(model, lab_variables)
+   - Ensures each lab course receives its required practical hours and batch allocations.
+   - Type: HARD
+
+2. apply_core_only_lab_restriction_constraint(model, lab_variables)
+   - Restricts certain rooms to core-only labs (equipment-heavy rooms).
+   - Type: HARD
+
+3. apply_lab_room_single_assignment_constraint(model, lab_variables)
+   - Prevents a room from being used by more than one lab session per timeslot.
+   - Type: HARD
+
+4. apply_block_specific_lab_priority_constraint(model, lab_variables)
+   - Soft preference to allocate a department's lab sessions to its block of rooms.
+   - Type: SOFT
+
+5. apply_140_lab_restriction_constraint(model, lab_variables)
+   - Special handling for lab sessions requiring very large capacity (>=140).
+   - Type: HARD (with validation logic)
+
+6. apply_group_based_scheduling_constraint(model, lab_variables)
+   - Keep student groups/batches together and avoid splitting where not allowed.
+   - Type: HARD
+
+7. apply_core_lab_mapping_constraint(model, lab_variables)
+   - Map specific courses to mapped lab clusters (OG mapping) and enforce mappings.
+   - Type: HARD
+
+8. apply_core_lab_group_slot_limit_constraint(model, lab_variables)
+   - Limit number of lab slots a core lab group can occupy.
+   - Type: HARD (configurable)
+
+9. apply_computing_group_slot_limit_constraint(model, lab_variables)
+   - Limit number of lab slots for computing groups to prevent overload.
+   - Type: HARD (configurable)
+
+10. apply_semester_lab_slot_limit_constraint(model, lab_variables)
+    - Semester-level limit on lab slot allocations.
+    - Type: HARD
+
+11. _apply_theory_constraints(model, group_timeslot_vars, lab_variables=None)
+    - Orchestrates multiple theory-side constraints (wrapper).
+    - Type: MIXED
+
+12. _apply_no_three_consecutive_slots_constraint(model, group_timeslot_vars)
+    - Prevents any theory group from occupying 3 consecutive theory slots.
+    - Type: HARD
+
+13. _apply_early_scheduling_constraint(model, group_timeslot_vars)
+    - Controls early morning theory scheduling for groups.
+    - Type: HARD or SOFT depending on config
+
+14. apply_140_capacity_theory_room_constraint(model, group_timeslot_vars)
+    - Ensure 140+ student theory groups are placed in sufficiently large rooms.
+    - Type: HARD
+
+15. apply_course_instance_daily_limit_constraint(model, group_timeslot_vars)
+    - Limits how many times a course instance can appear in a single day.
+    - Type: HARD
+
+16. _apply_proper_theory_room_capacity_constraint(model, group_timeslot_vars)
+    - Ensures assigned theory room capacities match group sizes.
+    - Type: HARD
+
+17. apply_teacher_daily_presence_constraint(model, group_timeslot_vars)
+    - Prevents teachers from having extreme long presence days for theory sessions.
+    - Type: HARD
+
+18. _apply_daily_theory_slot_limit_constraint(model, group_timeslot_vars)
+    - Limits theory slots per day per group/teacher.
+    - Type: HARD
+
+19. _apply_teacher_day_preference_constraints(model, group_timeslot_vars)
+    - Enforces teacher day preferences from input files.
+    - Type: HARD (respected) or SOFT (configurable)
+
+20. _apply_cross_system_constraints(model, lab_variables, group_timeslot_vars)
+    - Cross-checks and prevents conflicts between lab and theory schedules.
+    - Type: HARD
+
+21. _apply_dept_semester_group_conflict_constraint(model, lab_variables, group_timeslot_vars)
+    - Prevents department-semester group conflicts across lab/theory.
+    - Type: HARD
+
+22. _apply_unified_teacher_clash_constraint(model, lab_variables, group_timeslot_vars)
+    - Prevents teacher clashes across lab and theory sessions.
+    - Type: HARD
+
+23. _add_combined_objectives(model, lab_variables, group_timeslot_vars)
+    - Adds optimization objectives (soft penalties) to combine lab and theory goals.
+    - Type: SOFT (objective terms)
+
+24. _apply_5pm_constraints(model, lab_variables, theory_variables)
+    - Department-level 5pm constraints to prevent or prefer sessions after 5pm.
+    - Type: HARD or SOFT (configurable)
+
+25. _check_140_capacity_room_availability(day_name, time_slot, room_id, lab_schedule=None, existing_theory_schedule=None)
+    - Helper that validates if a 140-capacity room is truly available across schedules.
+    - Type: Validation (used by HARD constraints)
+
+26. _find_capacity_aware_theory_room(...) and _find_capacity_aware_theory_room_original(...)
+    - Smart room selection functions that consider capacity, teacher continuity, blocks, and 140-room checks.
+    - Type: Selection/heuristic (used during assignment)
+
+27. _apply_lunch_break_constraint(model, group_timeslot_vars)
+    - Prevents scheduling groups in their lunch break slot (department-specific).
+    - Type: HARD
+
+28. _apply_flexible_lunch_constraint(model, group_timeslot_vars, lab_variables)
+    - Hard constraint that ensures flexible departments still get adequate lunch timing via either slot or natural lab-theory combos.
+    - Type: HARD
+
+29. _apply_lab_lunch_break_constraint(model, lab_variables)
+    - Prevents lab sessions overlapping the lunch break for department-specific combos.
+    - Type: HARD
+
+30. apply_consecutive_batch_scheduling_constraint(model, lab_variables)
+    - Enforces consecutive scheduling for core lab courses with 4+ practical hours.
+    - Type: HARD
+
+31. apply_shift_based_lab_constraint(model, lab_variables)
+    - Department-centric shift-based lab scheduling with pattern selection variables.
+    - Type: SOFT (pattern selection can be soft), some pattern enforcement HARD
+
+32. _apply_cross_department_teacher_shift_constraints(model, lab_variables)
+    - Individual shift constraints for cross-department teachers.
+    - Type: HARD
+
+33. apply_shift_based_theory_constraint(model, group_timeslot_vars)
+    - Ensures theory scheduling aligns with department shifts.
+    - Type: SOFT/HARD mix
+
+34. _apply_cross_department_teacher_theory_constraints(model, group_timeslot_vars)
+    - Individual theory shift constraints for cross-department teachers.
+    - Type: HARD
+
+35. _apply_fallback_theory_shifts(model, group_timeslot_vars, dept_groups)
+    - Fallback when department shift variables missing; uses teacher-level constraints.
+    - Type: SOFT/HARD mix
+
+36. apply_unified_weekly_shift_constraint(model, lab_variables, group_timeslot_vars)
+    - Verifies coordinated department-level shift variables across lab and theory modules.
+    - Type: COORDINATION/VALIDATION
+
+37. apply_teacher_max_consecutive_lab_constraint(model, lab_variables)
+    - Prevents teachers from having 3+ consecutive lab sessions (soft exception for Biotechnology).
+    - Type: HARD for most depts, SOFT for Biotechnology
+
+38. apply_teacher_daily_presence_lab_constraint(model, lab_variables)
+    - Prevents extreme lab presence days (e.g., L1 + L6). Relaxed to most extreme pattern only.
+    - Type: HARD
+
+
+Notes:
+- Many constraints have both HARD and SOFT variants depending on configuration; several soft constraints are implemented via penalty variables and added to the objective in `_add_combined_objectives`.
+- Helper functions used by constraints (room availability, time overlap) are present in the file and are crucial for correct formulation.
+
+If you want, I can:
+- Generate a CSV table with these constraints and columns for `function_name, type, inputs, affected_entities, agent_responsibility`.
+- Scaffold `src/agents/` modules to implement the agentic workflow described in the earlier document.
+- Create unit test skeletons for each constraint in `tests/constraints_tests/`.

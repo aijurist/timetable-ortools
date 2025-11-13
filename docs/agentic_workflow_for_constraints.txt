@@ -1,0 +1,234 @@
+# Agentic Workflow for Constraint Generation in Timetable Scheduler
+
+This document outlines how to implement an agentic workflow to generate constraints for a constraint-based scheduler, such as the one in `combined_scheduler.py`.
+
+
+An agentic workflow leverages autonomous agents to analyze scheduling requirements, propose constraints, and iteratively refine them based on feedback or optimization results. This approach is modular, extensible, and can adapt to new scheduling rules or institutional policies.
+
+
+- **Constraint Discovery Agent**: Scans scheduling data and identifies potential constraints (e.g., teacher availability, room capacity, lunch breaks).
+- **Constraint Formulation Agent**: Converts discovered requirements into formal constraint definitions compatible with the scheduler (e.g., OR-Tools model constraints).
+- **Constraint Validation Agent**: Simulates schedules to check for infeasibility or conflicts, providing feedback for refinement.
+- **Constraint Optimization Agent**: Suggests soft/hard constraint prioritization and penalty weights for optimization.
+
+
+- Agents ingest timetable data, teacher/course/room metadata, and historical schedules.
+- Use structured formats (JSON, CSV, DataFrames) for interoperability.
+
+
+- Agents analyze data to:
+  - Detect patterns (e.g., consecutive labs, daily presence limits).
+  - Identify department-specific rules (e.g., flexible lunch for Biotechnology).
+  - Propose constraints (e.g., `apply_teacher_daily_presence_lab_constraint`).
+- Constraints are generated as Python functions or model statements.
+
+
+- Formulated constraints are injected into the scheduler's model-building phase.
+- Agents ensure constraints are modular (each as a function/class method).
+- Example: `apply_teacher_daily_presence_lab_constraint(model, lab_variables)`
+
+### Step 5: Feedback Loop
+- Validation agent runs the scheduler and checks for infeasibility.
+- If conflicts arise, agents propose relaxations (soft constraints) or alternative formulations.
+- Optimization agent tunes penalty weights for soft constraints.
+
+### Step 6: Extensibility
+- New agents can be added for emerging requirements (e.g., AI-based fairness, student preferences).
+- Agents communicate via message passing or shared state (e.g., blackboard architecture).
+
+## 3. Implementation Tips
+- Use Python classes for agents, each with a `propose_constraints()` method.
+- Maintain a registry of constraints for easy addition/removal.
+- Log agent decisions for traceability and debugging.
+- Integrate with existing scheduler methods (see `combined_scheduler.py`).
+
+## 4. Example Agentic Constraint Generation
+```python
+class TeacherPresenceAgent:
+    def propose_constraints(self, model, lab_variables):
+        # Implements logic similar to apply_teacher_daily_presence_lab_constraint
+        # ...
+        return constraints_applied
+```
+
+## 5. Benefits
+- Modular, maintainable constraint logic
+- Easy adaptation to new rules
+- Automated feedback and optimization
+
+---
+This workflow can be adapted for any constraint-based scheduling system, enabling scalable and intelligent constraint management.
+
+## Constraint Catalog (detailed)
+This section maps the constraint functions in `combined_scheduler.py` to:
+- Purpose / intent
+- Type: HARD or SOFT
+- Inputs: what variables/data it needs
+- OR-Tools formulation sketch
+- Agent responsibility: which agent should propose/validate/tune it
+
+- `apply_course_lab_requirements_constraint(model, lab_variables)`
+  - Purpose: Ensure each lab course receives required practical hours and correct number of batches.
+  - Type: HARD
+  - Inputs: `lab_variables` (teacher -> course_instance -> day_idx -> session_name -> var), course metadata (hours, batches)
+  - Sketch: For each course_instance: sum(all session assignment vars) == required_lab_slots
+  - Agent: Constraint Formulation Agent (verify hours mapping), Validation Agent (simulate under edge student counts)
+
+- `apply_core_only_lab_restriction_constraint(model, lab_variables)`
+  - Purpose: Restrict certain lab rooms to core-only use or reserve equipment-heavy rooms.
+  - Type: HARD
+  - Inputs: room metadata (`core_only` flags), lab session-to-room mapping
+  - Sketch: For any assignment var that maps to a room marked `core_only`, OnlyEnforceIf(core_course_bool)
+  - Agent: Constraint Discovery Agent (identify core rooms from data)
+
+- `apply_lab_room_single_assignment_constraint(model, lab_variables)`
+  - Purpose: Prevent a room being assigned to multiple lab sessions in the same timeslot.
+  - Type: HARD
+  - Inputs: room registry, lab session timeslots
+  - Sketch: For each (day, timeslot, room): sum(assignments_that_use_room) <= 1
+  - Agent: Constraint Formulation Agent
+
+- `apply_block_specific_lab_priority_constraint(model, lab_variables)`
+  - Purpose: Prioritize department block rooms for sessions from their block. Soft preference.
+  - Type: SOFT
+  - Inputs: department -> preferred rooms list, penalty variables
+  - Sketch: Create penalty var for assigning outside preferred rooms; minimize weighted sum
+  - Agent: Constraint Optimization Agent (tune weights)
+
+- `apply_140_lab_restriction_constraint(model, lab_variables)`
+  - Purpose: Enforce special handling for very large labs (>=140 students) and co-scheduled splits.
+  - Type: HARD with validation checks
+  - Inputs: student_count, virtual/co_scheduled ids, 140-room availability check function
+  - Sketch: If course.student_count >=140 then only allow rooms from verified_140_rooms set; for co-scheduled pairs ensure partner placed in same room or compatible adjacent rooms
+  - Agent: Constraint Formulation Agent + Validation Agent
+
+- `apply_group_based_scheduling_constraint(model, lab_variables)`
+  - Purpose: Keep batches and student groups together, avoid splitting groups across incompatible times/rooms.
+  - Type: HARD
+  - Inputs: instance_group_mapping, group sizes, lab_variables
+  - Sketch: For each group: sum(assigned_slots) == expected_slots; tie group-to-room decisions
+  - Agent: Constraint Discovery Agent
+
+- `apply_core_lab_mapping_constraint(model, lab_variables)`
+  - Purpose: Map certain courses to specific lab clusters (OG mapping), enforce those mappings.
+  - Type: HARD
+  - Inputs: OG mapping data structures
+  - Sketch: Only allow assignment vars that correspond to mapped lab clusters.
+  - Agent: Constraint Formulation Agent
+
+- `apply_core_lab_group_slot_limit_constraint` / `apply_computing_group_slot_limit_constraint` / `apply_semester_lab_slot_limit_constraint`
+  - Purpose: Limit how many slots a group or semester can occupy (fair distribution).
+  - Type: HARD or SOFT depending on configuration
+  - Inputs: group lists, semester counts
+  - Sketch: sum(vars for group) <= max_slots
+  - Agent: Constraint Optimization Agent (if soft, tune penalties)
+
+- `apply_140_capacity_theory_room_constraint(model, group_timeslot_vars)`
+  - Purpose: Ensure 140+ student theory classes go to large rooms and handle co-schedules.
+  - Type: HARD
+  - Inputs: group size, room capacities, `_check_140_capacity_room_availability`
+  - Sketch: For group with size>=140: allowed_room_set constraint; OnlyEnforceIf on assignment booleans
+  - Agent: Constraint Formulation Agent + Validation Agent
+
+- `apply_course_instance_daily_limit_constraint(model, group_timeslot_vars)`
+  - Purpose: Limit how many times a course instance appears in a single day.
+  - Type: HARD
+  - Inputs: group_timeslot_vars, per-course daily limits
+  - Sketch: For each instance and day: sum(vars for that instance on that day) <= daily_limit
+  - Agent: Constraint Discovery Agent
+
+- `apply_teacher_daily_presence_constraint(model, group_timeslot_vars)`
+  - Purpose: Prevent teachers from being scheduled across a full-day span (long presence days) for theory.
+  - Type: HARD (or soft variant available)
+  - Inputs: teacher assignments across theory slots, start/end time mapping
+  - Sketch: Create booleans `has_early`, `has_late` and Add(has_early + has_late <= 1)
+  - Agent: Constraint Formulation Agent
+
+- `apply_consecutive_batch_scheduling_constraint(model, lab_variables)`
+  - Purpose: Force consecutive lab batches for core lab subjects requiring multi-slot continuity.
+  - Type: HARD
+  - Inputs: department core lab list, preferred consecutive session pairs
+  - Sketch: For each batch, enforce assignment to adjacent session vars (e.g., var_L1 && var_L2)
+  - Agent: Constraint Discovery Agent + Validation Agent
+
+- `apply_shift_based_lab_constraint(model, lab_variables)` and `apply_shift_based_theory_constraint(model, group_timeslot_vars)`
+  - Purpose: Enforce department weekly shift patterns (3-2 or 2-3) for lab and theory so department is on consistent shift.
+  - Type: SOFT (model currently implements as soft with preference variables) but some parts enforced as HARD (exactly one pattern)
+  - Inputs: department shift vars, teacher shift vars, department_day patterns
+  - Sketch: Encode pattern selection booleans per department, Add(sum(pattern_vars) == 1). Use OnlyEnforceIf for session assignment link.
+  - Agent: Constraint Formulation Agent + Optimization Agent (tune soft weights)
+
+- `apply_unified_weekly_shift_constraint(model, lab_variables, group_timeslot_vars)`
+  - Purpose: Wrapper to ensure lab and theory shift vars are coordinated across department.
+  - Type: LOGICAL/COORDINATION
+  - Inputs: department_shift_vars, teacher_shift_vars
+  - Sketch: No direct vars, but validation ensures consistency; can add penalty if mismatch exists.
+  - Agent: Validation Agent
+
+- `apply_teacher_max_consecutive_lab_constraint(model, lab_variables)`
+  - Purpose: Prevent teachers from having more than two consecutive lab slots; Biotechnology allowed as soft.
+  - Type: HARD for most departments, SOFT for biotech
+  - Inputs: teacher lab assignment vars, department list
+  - Sketch: For forbidden 3-consecutive sequences: Add(sum(vars_for_sequence) <= 2) OR create penalty var and Add(sum(vars) <= 2 + bigM*penalty)
+  - Agent: Constraint Optimization Agent (penalty tuning), Validation Agent
+
+- `apply_teacher_daily_presence_lab_constraint(model, lab_variables)`
+  - Purpose: Prevent teachers from having extreme long presence days (e.g., L1 + L6). Relaxed to only extreme pair in current code.
+  - Type: HARD
+  - Inputs: lab_variables, mapping dept_days
+  - Sketch: Create booleans `has_early_lab`, `has_late_lab`, link them with sums and Add(has_early_lab + has_late_lab <= 1)
+  - Agent: Constraint Formulation Agent
+
+## Agent Mapping and Responsibilities
+- Constraint Discovery Agent:
+  - Scan `combined_scheduler.py` and external data for constraint-worthy rules.
+  - Produce high-level constraint specs and edge-case notes.
+
+- Constraint Formulation Agent:
+  - Convert specs into OR-Tools model code snippets (booleans, OnlyEnforceIf, Add, penalty vars).
+  - Ensure proper indexing and domain coverage for `lab_variables` and `group_timeslot_vars`.
+
+- Constraint Validation Agent:
+  - Run the solver on toy instances; check for infeasibility and interpret conflict logs.
+  - Validate special-case functions like `_check_140_capacity_room_availability` using cross-schedules.
+
+- Constraint Optimization Agent:
+  - Propose soft vs hard decisions, generate penalty variables and objective terms.
+  - Tune weights using simple grid search or Bayesian optimization on small runs.
+
+## OR-Tools Formulation Patterns (reusable)
+- Presence boolean from sum of assignment variables:
+  - has_slot = model.NewBoolVar('has_slot')
+  - model.Add(sum(assign_vars) > 0).OnlyEnforceIf(has_slot)
+  - model.Add(sum(assign_vars) == 0).OnlyEnforceIf(has_slot.Not())
+
+- Exclusive room use in a timeslot:
+  - model.Add(sum(assign_vars_using_room) <= 1)
+
+- Enforcing co-scheduled partner in same room:
+  - model.Add(room_var_a == room_var_b).OnlyEnforceIf(is_co_scheduled_bool)
+
+- Soft penalty for undesired assignment:
+  - penalty = model.NewIntVar(0, 1, 'pen')
+  - model.Add(assign_outside_preferred).OnlyEnforceIf(penalty)
+  - objective: minimize sum(weight * penalty)
+
+## Testing and Validation Notes
+- Create small synthetic datasets that exercise each constraint independently (unit tests). Put them in `tests/constraints_tests/`.
+- For each constraint, provide a minimal JSON input and expected behavior (sat/unsat or assignment shape).
+- Use OR-Tools CP-SAT logging and `model.Validate()` to catch obvious modeling mistakes.
+
+## Penalty Weight Tuning Strategy
+- Start with interpretable weights (e.g., 1000 for HARD-like soft constraints, 10 for preferences).
+- Run short optimization on historical schedules and measure violation counts and key metrics (teacher fairness, room utilization).
+- Use automated search (grid or random search) to find weights that balance feasibility and objectives. Log configurations.
+
+## Integration Checklist
+- Add agents as modules under `src/agents/`:
+  - `constraint_discovery.py`, `constraint_formulation.py`, `constraint_validation.py`, `constraint_optimization.py`
+- Create a `ConstraintRegistry` class to register/enable/disable constraints at runtime.
+- Hook the registry into `CombinedScheduler` so agents can propose constraints before model build.
+
+## Next Steps (for me)
+- Finalize documentation edits (this file).  (IN-PROGRESS)
+- Optionally scaffold `src/agents/` and minimal unit tests if you want me to implement them.
