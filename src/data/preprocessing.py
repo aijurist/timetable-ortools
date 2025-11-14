@@ -1,819 +1,885 @@
-"""
-Data Preprocessing Module
+"""Modular data preprocessing pipeline for the timetable scheduler.
 
-Extends raw data from data_loader.py with intermediate data structures using OR-Tools optimization:
-- Group creation via CourseGroupOptimizer (optimized distribution of course instances)
-- Group requirements calculation
-- Instance-to-group mapping
-- Lab requirements extraction
-- Core lab mapping
-- Visualization of group distribution as heatmaps
+This module consumes the raw artefacts produced by :mod:`data_loader` and
+transforms them into scheduler-ready structures.  The pipeline follows three
+major stages:
 
-Transforms raw DataContainer into ExtendedDataContainer with enriched information
-for variable creation and constraint application.
+1. Normalisation – convert each raw course row into a well-defined
+   :class:`NormalizedCourseInstance` with consistent typing and feature tags.
+2. Grouping – delegate to :class:`CourseGroupOptimizer` (OR-Tools) to form
+   balanced department/semester groups while keeping a graceful fallback when
+   optimisation cannot run.
+3. Scheduling packaging – derive constraint-aware requirement bundles so the
+   solver can reason about lunch windows, five-pm policies, and teacher load.
+
+The implementation stays close to the functional design outlined in
+``docs/PROJECT_SUMMARY.md`` and ``docs/QUICK_REFERENCE_IMPLEMENTATION.md`` while
+remaining light-weight enough to plug into the existing orchestrator.
 """
+
+from __future__ import annotations
 
 import logging
-import os
-import json
-from typing import Dict, List, Set, Tuple, Any, Optional
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Tuple
 
-from course_group_optimizer import CourseGroupOptimizer
+import pandas as pd
+
+from ..config.schemas import PreprocessingConfig, SchedulerConfig
+from .course_group_optimizer import CourseGroupOptimizer
+from .schemas import DataLoadResult, DepartmentArtifacts
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass
+# ---------------------------------------------------------------------------
+# Dataclasses representing the canonical preprocessing artefacts
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class DepartmentSemesterKey:
+	"""Hashable key referencing a (department, semester) pair."""
+
+	department: str
+	semester: int
+
+	def slug(self) -> str:
+		safe_department = "".join(ch if ch.isalnum() else "_" for ch in self.department.lower()).strip("_")
+		return f"{safe_department or 'dept'}_s{self.semester}"
+
+	def label(self) -> str:
+		return f"{self.department} S{self.semester}"
+
+
+@dataclass(frozen=True)
+class NormalizedCourseInstance:
+	"""Course instance enriched with all metadata required for grouping."""
+
+	instance_id: str
+	course_id: str
+	course_code: str
+	course_name: str
+	course_type: str
+	semester: int
+	student_dept: str
+	course_dept: str
+	teacher_id: str
+	teacher_name: str
+	assistant_teacher_id: Optional[str]
+	assistant_teacher_name: Optional[str]
+	has_lab: bool
+	has_theory: bool
+	lecture_hours: int
+	tutorial_hours: int
+	practical_hours: int
+	student_count: int
+	requires_special_scheduling: bool
+	requires_assistant: bool
+	preferred_lab_type: Optional[str]
+	preferred_room_type: Optional[str]
+	required_room_type: Optional[str]
+	pe_flag: bool
+	tags: Tuple[str, ...] = field(default_factory=tuple)
+	metadata: Mapping[str, Any] = field(default_factory=dict)
+	raw_row_index: Optional[int] = None
+
+	def total_hours(self) -> int:
+		return self.lecture_hours + self.tutorial_hours + self.practical_hours
+
+	def group_category(self) -> str:
+		return "lab" if self.has_lab else "theory"
+
+	def to_optimizer_payload(self) -> Dict[str, Any]:
+		"""Convert to the dictionary structure expected by CourseGroupOptimizer."""
+
+		return {
+			"id": self.instance_id,
+			"course_id": self.course_id,
+			"course_code": self.course_code,
+			"course_name": self.course_name,
+			"course_type": self.course_type,
+			"teacher_id": self.teacher_id,
+			"semester": self.semester,
+			"course_dept": self.course_dept,
+			"student_dept": self.student_dept,
+			"lecture_hours": self.lecture_hours,
+			"tutorial_hours": self.tutorial_hours,
+			"practical_hours": self.practical_hours,
+			"student_count": self.student_count,
+			"has_lab": self.has_lab,
+			"has_theory": self.has_theory,
+		}
+
+	def as_dict(self) -> Dict[str, Any]:
+		return {
+			"instance_id": self.instance_id,
+			"course_id": self.course_id,
+			"course_code": self.course_code,
+			"course_name": self.course_name,
+			"course_type": self.course_type,
+			"semester": self.semester,
+			"student_dept": self.student_dept,
+			"course_dept": self.course_dept,
+			"teacher_id": self.teacher_id,
+			"teacher_name": self.teacher_name,
+			"assistant_teacher_id": self.assistant_teacher_id,
+			"assistant_teacher_name": self.assistant_teacher_name,
+			"has_lab": self.has_lab,
+			"has_theory": self.has_theory,
+			"lecture_hours": self.lecture_hours,
+			"tutorial_hours": self.tutorial_hours,
+			"practical_hours": self.practical_hours,
+			"student_count": self.student_count,
+			"requires_special_scheduling": self.requires_special_scheduling,
+			"requires_assistant": self.requires_assistant,
+			"preferred_lab_type": self.preferred_lab_type,
+			"preferred_room_type": self.preferred_room_type,
+			"required_room_type": self.required_room_type,
+			"pe_flag": self.pe_flag,
+			"tags": self.tags,
+			"metadata": dict(self.metadata),
+			"raw_row_index": self.raw_row_index,
+		}
+
+
+@dataclass(frozen=True)
+class GroupSummary:
+	num_instances: int
+	num_courses: int
+	num_teachers: int
+	lab_instances: int
+	theory_instances: int
+	total_student_count: int
+	lab_hours: int
+	theory_hours: int
+
+
+@dataclass(frozen=True)
+class CourseGroup:
+	key: DepartmentSemesterKey
+	group_id: str
+	ordinal: int
+	is_professional_elective: bool
+	course_instance_ids: Tuple[str, ...]
+	teacher_ids: Tuple[str, ...]
+	course_codes: Tuple[str, ...]
+	summary: GroupSummary
+	tags: Tuple[str, ...] = field(default_factory=tuple)
+
+	def as_dict(self) -> Dict[str, Any]:
+		return {
+			"group_id": self.group_id,
+			"ordinal": self.ordinal,
+			"department": self.key.department,
+			"semester": self.key.semester,
+			"is_professional_elective": self.is_professional_elective,
+			"course_instance_ids": self.course_instance_ids,
+			"teacher_ids": self.teacher_ids,
+			"course_codes": self.course_codes,
+			"summary": dataclass_to_dict(self.summary),
+			"tags": self.tags,
+		}
+
+
+@dataclass(frozen=True)
+class GroupRequirement:
+	group_id: str
+	department: str
+	semester: int
+	has_lab: bool
+	required_lab_sessions: int
+	prefer_consecutive_labs: bool
+	lunch_slot_window: Tuple[int, ...]
+	five_pm_policy: Optional[str]
+	tags: Tuple[str, ...] = field(default_factory=tuple)
+
+
+@dataclass(frozen=True)
+class GroupPenaltySpec:
+	name: str
+	weight: float
+	description: str
+	applies_to: Tuple[str, ...] = field(default_factory=tuple)
+	params: Mapping[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class TeacherWorkloadSummary:
+	teacher_id: str
+	teacher_name: str
+	groups: Tuple[str, ...]
+	course_codes: Tuple[str, ...]
+	course_instance_ids: Tuple[str, ...]
+	total_hours: int
+	lab_hours: int
+	theory_hours: int
+	total_students: int
+
+
+@dataclass(frozen=True)
+class DepartmentSchedulingPackage:
+	key: DepartmentSemesterKey
+	requirements: Tuple[GroupRequirement, ...]
+	penalties: Tuple[GroupPenaltySpec, ...]
+	teacher_workload: Mapping[str, TeacherWorkloadSummary]
+	metadata: Mapping[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class PreprocessingResult:
+	normalized_instances: Mapping[DepartmentSemesterKey, Tuple[NormalizedCourseInstance, ...]]
+	groups: Mapping[DepartmentSemesterKey, Tuple[CourseGroup, ...]]
+	scheduling_packages: Mapping[DepartmentSemesterKey, DepartmentSchedulingPackage]
+	warnings: Tuple[str, ...]
+	stats: Mapping[str, Any]
+
+	def to_dict(self) -> Dict[str, Any]:
+		return {
+			"normalized_instances": {
+				key.slug(): [instance.as_dict() for instance in instances]
+				for key, instances in self.normalized_instances.items()
+			},
+			"groups": {
+				key.slug(): [group.as_dict() for group in groups]
+				for key, groups in self.groups.items()
+			},
+			"scheduling_packages": {
+				key.slug(): {
+					"requirements": [dataclass_to_dict(req) for req in package.requirements],
+					"penalties": [dataclass_to_dict(penalty) for penalty in package.penalties],
+					"teacher_workload": {
+						teacher_id: dataclass_to_dict(summary)
+						for teacher_id, summary in package.teacher_workload.items()
+					},
+					"metadata": dict(package.metadata),
+				}
+				for key, package in self.scheduling_packages.items()
+			},
+			"warnings": list(self.warnings),
+			"stats": dict(self.stats),
+		}
+
+
+@dataclass(frozen=True)
 class ExtendedDataContainer:
-    """Extended data container with intermediate processing results."""
-    # Original data from data_loader
-    courses: List[Dict[str, Any]]
-    rooms: List[Dict[str, Any]]
-    teachers: Set[str]
-    departments: Set[str]
-    time_slots: Dict[str, List]
-    days: List[str]
-    num_days: int
-    day_order: Dict[str, List]
-    room_registry: Dict[str, Any]
-    horizon: int
-    load_timestamp: str
-    
-    # Extended data from preprocessing
-    groups: Dict[str, Dict[str, Any]] = field(default_factory=dict)
-    """
-    Format: {
-        'dept_name|sem': {
-            'name': 'dept_name|sem',
-            'department': 'dept_name',
-            'semester': sem,
-            'student_count': int,
-            'instances': [...],  # course instances optimally distributed to this group
-            'group_index': int,  # position in optimized groups list
-        },
-        ...
-    }
-    """
-    
-    group_requirements: Dict[str, Dict[str, Any]] = field(default_factory=dict)
-    """
-    Format: {
-        'group_key': {
-            'theory_slots_needed': int,
-            'courses': [list of course codes],
-            'teachers': [list of teacher IDs],
-            'lab_courses': [list of lab course codes],
-            'theory_courses': [list of theory course codes],
-        },
-        ...
-    }
-    """
-    
-    instance_group_mapping: Dict[str, str] = field(default_factory=dict)
-    """
-    Format: {
-        'course_code|teacher': 'group_key',
-        ...
-    }
-    """
-    
-    lab_requirements: Dict[str, List[Dict[str, Any]]] = field(default_factory=dict)
-    """
-    Format: {
-        'teacher_id': [
-            {
-                'course_code': str,
-                'session_count': int,
-                'core_lab': bool,
-                'capacity': int,
-                'department': str,
-                'semester': int,
-            },
-            ...
-        ],
-        ...
-    }
-    """
-    
-    core_lab_mapping: Dict[str, Set[str]] = field(default_factory=dict)
-    """
-    Format: {
-        'core_group_key': {'core_lab_1', 'core_lab_2', ...},
-        ...
-    }
-    """
-    
-    optimization_metadata: Dict[str, Any] = field(default_factory=dict)
-    """
-    Metadata about group optimization process:
-    {
-        'dept_sem': {
-            'optimizer_status': bool,
-            'num_groups': int,
-            'total_instances': int,
-            'optimization_time': float,
-        },
-        ...
-    }
-    """
+	"""Convenience bundle combining raw load artefacts with preprocessing outputs."""
+
+	raw: DataLoadResult
+	preprocessing: PreprocessingResult
 
 
-class GroupVisualization:
-    """Generate visualization matrices for group distribution."""
-    
-    def __init__(self, output_root: str = "output/course_groups"):
-        """
-        Initialize visualization generator.
-        
-        Args:
-            output_root: Root directory for all visualizations (default: output/course_groups)
-        """
-        self.output_root = output_root
-        self.logger = logging.getLogger(__name__)
-        self._ensure_output_structure()
-    
-    def _ensure_output_structure(self) -> None:
-        """Create indexed folder structure for current run."""
-        os.makedirs(self.output_root, exist_ok=True)
-        
-        # Find next run index
-        existing_runs = []
-        if os.path.exists(self.output_root):
-            existing_runs = [
-                d for d in os.listdir(self.output_root)
-                if d.startswith('run_') and os.path.isdir(os.path.join(self.output_root, d))
-            ]
-        
-        next_index = len(existing_runs) + 1
-        self.run_dir = os.path.join(self.output_root, f'run_{next_index:03d}')
-        os.makedirs(self.run_dir, exist_ok=True)
-        
-        self.logger.info(f"📂 Visualization output: {self.run_dir}")
-    
-    def visualize_group_distribution(self, groups: Dict[str, Dict[str, Any]]) -> None:
-        """
-        Generate heatmap visualization for group distribution.
-        
-        Args:
-            groups: Dictionary of groups with instances
-        """
-        try:
-            import matplotlib.pyplot as plt
-            import seaborn as sns
-            import numpy as np
-        except ImportError:
-            self.logger.warning("⚠️ matplotlib/seaborn not available, skipping visualization")
-            return
-        
-        self.logger.info("🎨 Generating group distribution visualizations...")
-        
-        # Group by department and semester
-        dept_sem_groups = defaultdict(list)
-        for group_key, group_info in groups.items():
-            dept = group_info['department']
-            sem = group_info['semester']
-            dept_sem_groups[(dept, sem)].append((group_key, group_info))
-        
-        # Create visualization for each dept-semester
-        for (dept, sem), groups_list in dept_sem_groups.items():
-            self._create_dept_sem_heatmap(dept, sem, groups_list)
-        
-        # Create metadata file
-        self._save_metadata(groups)
-        
-        self.logger.info(f"✅ Visualizations saved to: {self.run_dir}")
-    
-    def _create_dept_sem_heatmap(self, dept: str, sem: int, groups_list: List[Tuple[str, Dict]]) -> None:
-        """
-        Create heatmap for a department-semester combination.
-        
-        Args:
-            dept: Department name
-            sem: Semester number
-            groups_list: List of (group_key, group_info) tuples
-        """
-        try:
-            import matplotlib.pyplot as plt
-            import seaborn as sns
-            import numpy as np
-        except ImportError:
-            return
-        
-        self.logger.info(f"  📊 {dept} - Semester {sem}")
-        
-        # Build course-group matrix
-        course_group_matrix = {}
-        all_courses = set()
-        group_names = []
-        
-        for group_idx, (group_key, group_info) in enumerate(groups_list):
-            group_name = f"G{group_idx + 1}"
-            group_names.append(group_name)
-            
-            course_teacher_counts = {}
-            for instance in group_info['instances']:
-                course_code = instance.get('code', '')
-                teacher_id = instance.get('teacher', '')
-                all_courses.add(course_code)
-                
-                if course_code not in course_teacher_counts:
-                    course_teacher_counts[course_code] = set()
-                course_teacher_counts[course_code].add(teacher_id)
-            
-            for course_code, teachers in course_teacher_counts.items():
-                if course_code not in course_group_matrix:
-                    course_group_matrix[course_code] = {}
-                course_group_matrix[course_code][group_name] = len(teachers)
-        
-        if not all_courses or not group_names:
-            self.logger.warning(f"  ⚠️ No data for {dept} Semester {sem}")
-            return
-        
-        # Create matrix
-        courses_list = sorted(list(all_courses))
-        matrix_data = []
-        
-        for course in courses_list:
-            row = []
-            for group_name in group_names:
-                count = course_group_matrix.get(course, {}).get(group_name, 0)
-                row.append(count)
-            matrix_data.append(row)
-        
-        # Create figure
-        fig, ax = plt.subplots(figsize=(max(10, len(group_names) * 1.5), max(8, len(courses_list) * 0.5)))
-        matrix_array = np.array(matrix_data)
-        
-        # Create heatmap
-        sns.heatmap(matrix_array,
-                   xticklabels=group_names,
-                   yticklabels=courses_list,
-                   annot=True,
-                   fmt='d',
-                   cmap='YlOrRd',
-                   cbar_kws={'label': 'Teacher Assignments'},
-                   linewidths=0.5,
-                   ax=ax)
-        
-        # Labels and title
-        ax.set_title(
-            f'Course-to-Group Distribution Matrix\n{dept} - Semester {sem}',
-            fontsize=14,
-            fontweight='bold',
-            pad=20
-        )
-        ax.set_xlabel('Groups', fontsize=12, fontweight='bold')
-        ax.set_ylabel('Courses', fontsize=12, fontweight='bold')
-        
-        # Add statistics
-        total_assignments = np.sum(matrix_array)
-        max_assignments = np.max(matrix_array) if matrix_array.size > 0 else 0
-        courses_with_choice = sum(1 for course in courses_list
-                                 if np.sum([course_group_matrix.get(course, {}).get(g, 0) 
-                                          for g in group_names]) > 1)
-        
-        stats_text = (
-            f'Statistics: {len(courses_list)} courses, {len(group_names)} groups\n'
-            f'Total Assignments: {int(total_assignments)}, Max per Cell: {int(max_assignments)}\n'
-            f'Courses with Multiple Groups: {courses_with_choice}/{len(courses_list)}'
-        )
-        
-        fig.text(0.02, 0.02, stats_text, fontsize=9,
-                bbox=dict(boxstyle="round,pad=0.5", facecolor="lightgray", alpha=0.8))
-        
-        plt.tight_layout()
-        
-        # Save figure
-        safe_dept = dept.replace(" ", "_").replace("&", "and").replace("(", "").replace(")", "")
-        filename = f'distribution_{safe_dept}_S{sem}.png'
-        filepath = os.path.join(self.run_dir, filename)
-        plt.savefig(filepath, dpi=300, bbox_inches='tight')
-        plt.close()
-        
-        self.logger.info(f"    ✅ Saved: {filename}")
-        
-        # Save text summary
-        self._save_dept_sem_summary(dept, sem, courses_list, group_names, 
-                                   course_group_matrix, matrix_array)
-    
-    def _save_dept_sem_summary(self, dept: str, sem: int, courses_list: List[str],
-                               group_names: List[str], matrix: Dict, array: Any) -> None:
-        """Save text summary for dept-semester."""
-        try:
-            import numpy as np
-        except ImportError:
-            return
-        
-        safe_dept = dept.replace(" ", "_").replace("&", "and").replace("(", "").replace(")", "")
-        filename = f'summary_{safe_dept}_S{sem}.txt'
-        filepath = os.path.join(self.run_dir, filename)
-        
-        with open(filepath, 'w', encoding='utf-8') as f:
-            f.write(f"Course-Group Distribution Summary\n")
-            f.write(f"Department: {dept}\n")
-            f.write(f"Semester: {sem}\n")
-            f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-            f.write("=" * 70 + "\n\n")
-            
-            total_assignments = int(np.sum(array))
-            f.write(f"OVERVIEW:\n")
-            f.write(f"  Courses: {len(courses_list)}\n")
-            f.write(f"  Groups: {len(group_names)}\n")
-            f.write(f"  Total Teacher Assignments: {total_assignments}\n\n")
-            
-            f.write(f"COURSE DISTRIBUTION:\n")
-            for course in courses_list:
-                course_data = matrix.get(course, {})
-                groups_with_course = [g for g, count in course_data.items() if count > 0]
-                total_teachers = sum(course_data.values())
-                f.write(f"  {course}: {len(groups_with_course)} groups, {total_teachers} teachers\n")
-                for group_name in groups_with_course:
-                    f.write(f"    └─ {group_name}: {course_data[group_name]} teachers\n")
-            
-            f.write(f"\nGROUP COMPOSITION:\n")
-            for idx, group_name in enumerate(group_names):
-                col_data = array[:, idx]
-                total_in_group = int(np.sum(col_data))
-                courses_in_group = sum(1 for val in col_data if val > 0)
-                f.write(f"  {group_name}: {courses_in_group} courses, {total_in_group} teachers\n")
-    
-    def _save_metadata(self, groups: Dict[str, Dict[str, Any]]) -> None:
-        """Save metadata about the visualization run."""
-        metadata = {
-            'timestamp': datetime.now().isoformat(),
-            'total_groups': len(groups),
-            'group_keys': list(groups.keys()),
-            'summary_by_dept_sem': {},
-        }
-        
-        # Add summary stats
-        for group_key, group_info in groups.items():
-            dept = group_info['department']
-            sem = group_info['semester']
-            key = f"{dept}|{sem}"
-            
-            if key not in metadata['summary_by_dept_sem']:
-                metadata['summary_by_dept_sem'][key] = {
-                    'department': dept,
-                    'semester': sem,
-                    'groups': 0,
-                    'total_instances': 0,
-                    'total_students': 0,
-                }
-            
-            metadata['summary_by_dept_sem'][key]['groups'] += 1
-            metadata['summary_by_dept_sem'][key]['total_instances'] += len(group_info['instances'])
-            metadata['summary_by_dept_sem'][key]['total_students'] += group_info['student_count']
-        
-        metadata_path = os.path.join(self.run_dir, 'metadata.json')
-        with open(metadata_path, 'w', encoding='utf-8') as f:
-            json.dump(metadata, f, indent=2)
-        
-        self.logger.info(f"    ✅ Saved metadata.json")
+# ---------------------------------------------------------------------------
+# Helper utilities
+# ---------------------------------------------------------------------------
+
+
+def dataclass_to_dict(instance: Any) -> Dict[str, Any]:
+	if instance is None:
+		return {}
+	if hasattr(instance, "__dataclass_fields__"):
+		result: Dict[str, Any] = {}
+		for field_name in instance.__dataclass_fields__:
+			value = getattr(instance, field_name)
+			if isinstance(value, tuple) and value and hasattr(value[0], "__dataclass_fields__"):
+				result[field_name] = [dataclass_to_dict(item) for item in value]
+			elif hasattr(value, "__dataclass_fields__"):
+				result[field_name] = dataclass_to_dict(value)
+			elif isinstance(value, (tuple, list)):
+				result[field_name] = list(value)
+			elif isinstance(value, Mapping):
+				result[field_name] = dict(value)
+			else:
+				result[field_name] = value
+		return result
+	return instance
+
+
+def _clean_str(value: Any, *, default: str = "") -> str:
+	if value is None:
+		return default
+	if isinstance(value, str):
+		return value.strip()
+	try:
+		return str(value).strip()
+	except Exception:  # pragma: no cover - defensive
+		return default
+
+
+def _safe_int(value: Any, *, default: Optional[int] = None) -> Optional[int]:
+	if value is None:
+		return default
+	if isinstance(value, str) and not value.strip():
+		return default
+	try:
+		if pd.isna(value):
+			return default
+	except Exception:  # pragma: no cover - pandas errors
+		pass
+	try:
+		return int(round(float(value)))
+	except Exception:
+		return default
+
+
+def _normalise_department(value: str) -> str:
+	if not value:
+		return value
+	collapsed = " ".join(value.replace("&", " & ").split())
+	return collapsed.replace("  ", " ").strip()
+
+
+def _title_case(name: str) -> str:
+	if not name:
+		return name
+	return " ".join(part.capitalize() for part in name.split())
+
+
+# ---------------------------------------------------------------------------
+# Stage 1 – Normalisation
+# ---------------------------------------------------------------------------
+
+
+class CourseInstanceNormalizer:
+	"""Convert raw course rows into structured instances grouped by dept/semester."""
+
+	def __init__(self, config: PreprocessingConfig, *, logger: Optional[logging.Logger] = None) -> None:
+		self._config = config
+		self._logger = logger or logging.getLogger(__name__)
+		self._warnings: List[str] = []
+
+	@property
+	def warnings(self) -> Tuple[str, ...]:
+		return tuple(self._warnings)
+
+	def normalize(self, courses_df: pd.DataFrame) -> Dict[DepartmentSemesterKey, Tuple[NormalizedCourseInstance, ...]]:
+		grouped: Dict[DepartmentSemesterKey, List[NormalizedCourseInstance]] = defaultdict(list)
+		if courses_df is None or courses_df.empty:
+			self._warnings.append("Courses dataframe is empty; nothing to normalise")
+			return {}
+
+		enumerated_df = courses_df.reset_index(drop=True)
+		for row_index, row in enumerated_df.iterrows():
+			try:
+				instance = self._normalise_row(row, row_index)
+			except ValueError as exc:
+				warning = f"Row {row_index}: {exc}"
+				self._warnings.append(warning)
+				self._logger.debug("Skipping course row %s due to: %s", row_index, exc)
+				continue
+
+			key = DepartmentSemesterKey(instance.student_dept, instance.semester)
+			grouped[key].append(instance)
+
+		return {key: tuple(instances) for key, instances in grouped.items()}
+
+	def _normalise_row(self, row: pd.Series, row_index: int) -> NormalizedCourseInstance:
+		course_code = _clean_str(row.get("course_code"))
+		if not course_code:
+			raise ValueError("missing course_code")
+
+		semester = _safe_int(row.get("semester"))
+		if semester is None:
+			raise ValueError("missing semester")
+
+		student_dept = _clean_str(row.get("student_dept") or row.get("department"))
+		if not student_dept:
+			raise ValueError("missing student_dept/department")
+		if self._config.normalise_department_names:
+			student_dept = _normalise_department(student_dept)
+
+		course_dept = _clean_str(row.get("course_dept") or row.get("teaching_dept") or student_dept)
+		if self._config.normalise_department_names:
+			course_dept = _normalise_department(course_dept)
+
+		teacher_id = _clean_str(row.get("teacher_id") or row.get("teacher") or row.get("staff_code") or f"T_{row_index:04d}")
+		teacher_name = _clean_str(row.get("teacher") or row.get("teacher_name") or row.get("first_name"))
+		if self._config.normalise_teacher_names:
+			teacher_name = _title_case(teacher_name)
+
+		assistant_teacher_id = _clean_str(row.get("assist_teacher_id")) or None
+		assistant_teacher_name = _clean_str(row.get("assist_first_name")) or None
+		if assistant_teacher_name and self._config.normalise_teacher_names:
+			assistant_teacher_name = _title_case(assistant_teacher_name)
+
+		lecture_hours = _safe_int(row.get("lecture_hours"), default=0) or 0
+		tutorial_hours = _safe_int(row.get("tutorial_hours"), default=0) or 0
+		practical_hours = _safe_int(row.get("practical_hours"), default=0) or 0
+
+		course_type = _clean_str(row.get("course_type"), default="T").upper() or "T"
+		has_lab = practical_hours > 0 or course_type in {"L", "LAB", "LOT"}
+		has_theory = (lecture_hours + tutorial_hours) > 0 or course_type in {"T", "LOT"}
+
+		student_count = _safe_int(row.get("student_count"), default=None)
+		if student_count is None and self._config.fill_missing_students:
+			student_count = min(self._config.student_cap or 70, 70)
+		if student_count is not None and self._config.student_cap is not None:
+			student_count = min(student_count, self._config.student_cap)
+		student_count = student_count or 0
+
+		course_id = _clean_str(row.get("course_id") or row.get("id") or f"{course_code}-{teacher_id}-{semester}")
+		instance_id = _clean_str(row.get("id") or course_id or f"row-{row_index}")
+
+		requires_special_scheduling = bool(_safe_int(row.get("requires_special_scheduling"), default=0))
+		requires_assistant = bool(_safe_int(row.get("is_assistant"), default=0))
+		preferred_lab_type = _clean_str(row.get("lab_type")) or None
+		preferred_room_type = _clean_str(row.get("preferred_for") or row.get("lab_description")) or None
+		required_room_type = _clean_str(row.get("required_room_type") or row.get("specific_room_type")) or None
+		pe_flag = "pe" in _clean_str(row.get("pe/ne"), default="").lower()
+
+		tags = set()
+		tags.add("lab" if has_lab else "theory")
+		if pe_flag:
+			tags.add("professional_elective")
+		if requires_special_scheduling:
+			tags.add("special_schedule")
+		if required_room_type:
+			tags.add("room_specific")
+
+		metadata = {
+			"teacher_email": _clean_str(row.get("teacher_email")),
+			"assistant_teacher_email": _clean_str(row.get("assist_teacher_email")),
+			"preferred_room_type": preferred_room_type,
+			"lab_type": preferred_lab_type,
+			"raw_row": row_index,
+		}
+
+		return NormalizedCourseInstance(
+			instance_id=str(instance_id),
+			course_id=str(course_id),
+			course_code=course_code,
+			course_name=_clean_str(row.get("course_name")),
+			course_type=course_type,
+			semester=int(semester),
+			student_dept=student_dept,
+			course_dept=course_dept,
+			teacher_id=teacher_id,
+			teacher_name=teacher_name or teacher_id,
+			assistant_teacher_id=assistant_teacher_id,
+			assistant_teacher_name=assistant_teacher_name,
+			has_lab=has_lab,
+			has_theory=has_theory,
+			lecture_hours=lecture_hours,
+			tutorial_hours=tutorial_hours,
+			practical_hours=practical_hours,
+			student_count=student_count,
+			requires_special_scheduling=requires_special_scheduling,
+			requires_assistant=requires_assistant,
+			preferred_lab_type=preferred_lab_type,
+			preferred_room_type=preferred_room_type,
+			required_room_type=required_room_type,
+			pe_flag=pe_flag,
+			tags=tuple(sorted(tags)),
+			metadata=metadata,
+			raw_row_index=row_index,
+		)
+
+
+# ---------------------------------------------------------------------------
+# Stage 2 – Grouping via CourseGroupOptimizer (with fallback)
+# ---------------------------------------------------------------------------
+
+
+class DepartmentCourseGrouper:
+	def __init__(self, config: SchedulerConfig, *, base_dir: Path, logger: Optional[logging.Logger] = None) -> None:
+		self._config = config
+		self._base_dir = base_dir
+		self._logger = logger or logging.getLogger(__name__)
+		self._warnings: List[str] = []
+		self._pe_course_map_path = self._discover_pe_course_map()
+
+	@property
+	def warnings(self) -> Tuple[str, ...]:
+		return tuple(self._warnings)
+
+	def group(
+		self,
+		normalized_instances: Mapping[DepartmentSemesterKey, Tuple[NormalizedCourseInstance, ...]],
+	) -> Dict[DepartmentSemesterKey, Tuple[CourseGroup, ...]]:
+		grouped: Dict[DepartmentSemesterKey, Tuple[CourseGroup, ...]] = {}
+		for key, instances in normalized_instances.items():
+			if not instances:
+				continue
+			groups = self._group_single_cohort(key, instances)
+			grouped[key] = tuple(groups)
+		return grouped
+
+	def _group_single_cohort(
+		self,
+		key: DepartmentSemesterKey,
+		instances: Sequence[NormalizedCourseInstance],
+	) -> List[CourseGroup]:
+		optimizer_courses = [instance.to_optimizer_payload() for instance in instances]
+		optimizer = CourseGroupOptimizer(
+			courses=optimizer_courses,
+			dept=key.department,
+			semester=key.semester,
+			logger=self._logger,
+			pe_course_map_file=self._pe_course_map_path,
+		)
+
+		success = optimizer.optimize_distribution()
+		if success:
+			validator_ok = optimizer.validate_solution()
+			if not validator_ok:
+				self._warnings.append(
+					f"Group validation failed for {key.label()}; using optimiser output regardless"
+				)
+		else:
+			self._warnings.append(
+				f"Optimizer infeasible for {key.label()}; applying fallback grouping strategy"
+			)
+
+		raw_groups = optimizer.get_groups() if success else self._fallback_groups(instances)
+		num_regular_groups = optimizer.num_groups if success else len(raw_groups)
+		return self._convert_groups(key, raw_groups, num_regular_groups)
+
+	def _fallback_groups(self, instances: Sequence[NormalizedCourseInstance]) -> List[List[Dict[str, Any]]]:
+		grouped: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+		for instance in instances:
+			grouped[instance.course_code].append(instance.to_optimizer_payload())
+		return list(grouped.values())
+
+	def _convert_groups(
+		self,
+		key: DepartmentSemesterKey,
+		raw_groups: Sequence[Sequence[Mapping[str, Any]]],
+		num_regular_groups: int,
+	) -> List[CourseGroup]:
+		converted: List[CourseGroup] = []
+		for ordinal, group_instances in enumerate(raw_groups, start=1):
+			course_instance_ids = tuple(str(entry.get("id")) for entry in group_instances if entry)
+			teacher_ids = tuple(sorted({str(entry.get("teacher_id")) for entry in group_instances if entry.get("teacher_id")}))
+			course_codes = tuple(sorted({str(entry.get("course_code")) for entry in group_instances if entry.get("course_code")}))
+
+			lab_instances = sum(1 for entry in group_instances if entry.get("has_lab"))
+			theory_instances = sum(1 for entry in group_instances if entry.get("has_theory"))
+			lab_hours = sum((_safe_int(entry.get("practical_hours"), default=0) or 0) for entry in group_instances)
+			theory_hours = sum(
+				(_safe_int(entry.get("lecture_hours"), default=0) or 0)
+				+ (_safe_int(entry.get("tutorial_hours"), default=0) or 0)
+				for entry in group_instances
+			)
+			total_students = sum((_safe_int(entry.get("student_count"), default=0) or 0) for entry in group_instances)
+
+			summary = GroupSummary(
+				num_instances=len(group_instances),
+				num_courses=len(course_codes),
+				num_teachers=len(teacher_ids),
+				lab_instances=lab_instances,
+				theory_instances=theory_instances,
+				total_student_count=total_students,
+				lab_hours=lab_hours,
+				theory_hours=theory_hours,
+			)
+
+			tags = set()
+			if lab_instances:
+				tags.add("lab")
+			if ordinal > num_regular_groups:
+				tags.add("professional_elective")
+
+			converted.append(
+				CourseGroup(
+					key=key,
+					group_id=f"{key.slug()}_g{ordinal:02d}",
+					ordinal=ordinal,
+					is_professional_elective=ordinal > num_regular_groups,
+					course_instance_ids=course_instance_ids,
+					teacher_ids=teacher_ids,
+					course_codes=course_codes,
+					summary=summary,
+					tags=tuple(sorted(tags)),
+				)
+			)
+		return converted
+
+	def _discover_pe_course_map(self) -> Optional[str]:
+		candidate = self._base_dir / "data" / "pe_course_map.csv"
+		return str(candidate) if candidate.exists() else None
+
+
+# ---------------------------------------------------------------------------
+# Stage 3 – Scheduling ready packages
+# ---------------------------------------------------------------------------
+
+
+class GroupAssignmentPostProcessor:
+	def __init__(self, config: SchedulerConfig, *, logger: Optional[logging.Logger] = None) -> None:
+		self._config = config
+		self._logger = logger or logging.getLogger(__name__)
+		self._warnings: List[str] = []
+
+	@property
+	def warnings(self) -> Tuple[str, ...]:
+		return tuple(self._warnings)
+
+	def build_packages(
+		self,
+		groups: Mapping[DepartmentSemesterKey, Tuple[CourseGroup, ...]],
+		normalized_instances: Mapping[DepartmentSemesterKey, Tuple[NormalizedCourseInstance, ...]],
+		department_artifacts: DepartmentArtifacts,
+	) -> Dict[DepartmentSemesterKey, DepartmentSchedulingPackage]:
+		packages: Dict[DepartmentSemesterKey, DepartmentSchedulingPackage] = {}
+		for key, course_groups in groups.items():
+			if not course_groups:
+				continue
+			lunch_window = self._resolve_lunch_window(department_artifacts, key.department)
+			five_pm_policy = self._resolve_five_pm_policy(department_artifacts, key)
+			requirements = [
+				self._build_group_requirement(group, lunch_window, five_pm_policy)
+				for group in course_groups
+			]
+			penalties = self._build_penalties(requirements, lunch_window, five_pm_policy)
+			teacher_workload = self._aggregate_teacher_workload(
+				normalized_instances.get(key, ()),
+				course_groups,
+			)
+			packages[key] = DepartmentSchedulingPackage(
+				key=key,
+				requirements=tuple(requirements),
+				penalties=tuple(penalties),
+				teacher_workload=teacher_workload,
+				metadata={
+					"lunch_slot_window": lunch_window,
+					"five_pm_policy": five_pm_policy,
+					"num_groups": len(course_groups),
+				},
+			)
+		return packages
+
+	def _build_group_requirement(
+		self,
+		group: CourseGroup,
+		lunch_window: Tuple[int, ...],
+		five_pm_policy: Optional[Mapping[str, Any]],
+	) -> GroupRequirement:
+		lab_sessions_estimate = max(1, (group.summary.lab_hours + 3) // 4) if group.summary.lab_hours else 0
+		tags = set(group.tags)
+		if five_pm_policy:
+			tags.add(f"five_pm_{five_pm_policy['label']}")
+		return GroupRequirement(
+			group_id=group.group_id,
+			department=group.key.department,
+			semester=group.key.semester,
+			has_lab=group.summary.lab_instances > 0,
+			required_lab_sessions=lab_sessions_estimate,
+			prefer_consecutive_labs=self._config.grouping.consecutive_lab_pairs and group.summary.lab_instances > 0,
+			lunch_slot_window=lunch_window,
+			five_pm_policy=five_pm_policy.get("label") if five_pm_policy else None,
+			tags=tuple(sorted(tags)),
+		)
+
+	def _build_penalties(
+		self,
+		requirements: Sequence[GroupRequirement],
+		lunch_window: Tuple[int, ...],
+		five_pm_policy: Optional[Mapping[str, Any]],
+	) -> List[GroupPenaltySpec]:
+		penalties: List[GroupPenaltySpec] = []
+		lunch_constraint = self._config.constraints.cross_system.get("lunch_alignment")
+		if lunch_constraint and lunch_constraint.enabled and lunch_window:
+			penalties.append(
+				GroupPenaltySpec(
+					name="lunch_alignment",
+					weight=lunch_constraint.weight,
+					description="Keep lunch within approved slots",
+					applies_to=tuple(req.group_id for req in requirements),
+					params={"allowed_slots": lunch_window},
+				)
+			)
+
+		five_pm_constraint = self._config.constraints.cross_system.get("five_pm_policy")
+		if five_pm_policy and five_pm_constraint and five_pm_constraint.enabled:
+			penalties.append(
+				GroupPenaltySpec(
+					name="five_pm_policy",
+					weight=five_pm_constraint.weight,
+					description=f"Respect {five_pm_policy['label']} 5 PM policy",
+					applies_to=tuple(req.group_id for req in requirements),
+					params={k: v for k, v in five_pm_policy.items() if k != "label"},
+				)
+			)
+
+		return penalties
+
+	def _aggregate_teacher_workload(
+		self,
+		instances: Sequence[NormalizedCourseInstance],
+		groups: Sequence[CourseGroup],
+	) -> Dict[str, TeacherWorkloadSummary]:
+		group_lookup: Dict[str, str] = {}
+		for group in groups:
+			for instance_id in group.course_instance_ids:
+				group_lookup[instance_id] = group.group_id
+
+		aggregates: Dict[str, Dict[str, Any]] = {}
+		for instance in instances:
+			entry = aggregates.setdefault(
+				instance.teacher_id,
+				{
+					"teacher_id": instance.teacher_id,
+					"teacher_name": instance.teacher_name,
+					"groups": set(),
+					"course_codes": set(),
+					"course_instance_ids": [],
+					"total_hours": 0,
+					"lab_hours": 0,
+					"theory_hours": 0,
+					"total_students": 0,
+				},
+			)
+			entry["course_instance_ids"].append(instance.instance_id)
+			entry["course_codes"].add(instance.course_code)
+			entry["total_hours"] += instance.total_hours()
+			entry["lab_hours"] += instance.practical_hours
+			entry["theory_hours"] += instance.lecture_hours + instance.tutorial_hours
+			entry["total_students"] += instance.student_count
+			group_id = group_lookup.get(instance.instance_id)
+			if group_id:
+				entry["groups"].add(group_id)
+
+		return {
+			teacher_id: TeacherWorkloadSummary(
+				teacher_id=data["teacher_id"],
+				teacher_name=data["teacher_name"],
+				groups=tuple(sorted(data["groups"])),
+				course_codes=tuple(sorted(data["course_codes"])),
+				course_instance_ids=tuple(data["course_instance_ids"]),
+				total_hours=data["total_hours"],
+				lab_hours=data["lab_hours"],
+				theory_hours=data["theory_hours"],
+				total_students=data["total_students"],
+			)
+			for teacher_id, data in aggregates.items()
+		}
+
+	def _resolve_lunch_window(
+		self,
+		department_artifacts: DepartmentArtifacts,
+		department: str,
+	) -> Tuple[int, ...]:
+		windows = department_artifacts.lunch_slot_windows
+		if department in windows and windows[department]:
+			return windows[department]
+		return windows.get("__default__", tuple())
+
+	def _resolve_five_pm_policy(
+		self,
+		department_artifacts: DepartmentArtifacts,
+		key: DepartmentSemesterKey,
+	) -> Optional[Mapping[str, Any]]:
+		constraints = department_artifacts.five_pm_constraints or {}
+		dept_label = f"{key.department}_S{key.semester}"
+		for label, payload in constraints.items():
+			departments = payload.get("departments", ())
+			if dept_label in departments:
+				return {"label": label, **payload}
+		return None
+
+
+# ---------------------------------------------------------------------------
+# Orchestrator-facing façade
+# ---------------------------------------------------------------------------
 
 
 class DataPreprocessor:
-    """Preprocess raw data using OR-Tools optimization for group creation."""
-    
-    def __init__(self, data: Dict[str, Any], optimize_groups: bool = True, visualize: bool = True):
-        """
-        Initialize preprocessor with raw data.
-        
-        Args:
-            data: Raw data dictionary from data_loader.load()
-            optimize_groups: Whether to use OR-Tools for group optimization (default True)
-            visualize: Whether to generate visualization heatmaps (default True)
-        """
-        self.data = data
-        self.optimize_groups_flag = optimize_groups
-        self.visualize_flag = visualize
-        self.logger = logging.getLogger(__name__)
-        self.optimization_metadata = {}
-        self.visualizer = GroupVisualization() if visualize else None
-        
-    def process(self) -> ExtendedDataContainer:
-        """
-        Process raw data into extended container.
-        
-        Returns:
-            ExtendedDataContainer with all intermediate structures
-        """
-        self.logger.info("=" * 80)
-        self.logger.info("STARTING DATA PREPROCESSING")
-        self.logger.info("=" * 80)
-        
-        # # Create groups - using optimization if enabled
-        # if self.optimize_groups_flag:
-        groups = self._create_optimized_groups()
-        # else:
-        #     groups = self._create_simple_groups()
-        self.logger.info(f"Created {len(groups)} groups")
-        
-        if self.visualize_flag and self.visualizer:
-            self.visualizer.visualize_group_distribution(groups)
-        
-        group_requirements = self._create_group_requirements(groups)
-        self.logger.info(f"Calculated requirements for {len(group_requirements)} groups")
-        
-        instance_group_mapping = self._create_instance_group_mapping(groups)
-        self.logger.info(f"Mapped {len(instance_group_mapping)} course instances to groups")
-        
-        lab_requirements = self._extract_lab_requirements()
-        self.logger.info(f"Extracted lab requirements for {len(lab_requirements)} teachers")
-        
-        core_lab_mapping = self._create_core_lab_mapping(groups)
-        self.logger.info(f"Mapped {len(core_lab_mapping)} core groups to core labs")
-        
-        extended = ExtendedDataContainer(
-            courses=self.data['courses'],
-            rooms=self.data['rooms'],
-            teachers=self.data['teachers'],
-            departments=self.data['departments'],
-            time_slots=self.data['time_slots'],
-            days=self.data['days'],
-            num_days=self.data['num_days'],
-            day_order=self.data['day_order'],
-            room_registry=self.data['room_registry'],
-            horizon=self.data['horizon'],
-            load_timestamp=self.data['load_timestamp'],
-            groups=groups,
-            group_requirements=group_requirements,
-            instance_group_mapping=instance_group_mapping,
-            lab_requirements=lab_requirements,
-            core_lab_mapping=core_lab_mapping,
-            optimization_metadata=self.optimization_metadata,
-        )
-        
-        self.logger.info("=" * 80)
-        self.logger.info("DATA PREPROCESSING COMPLETE")
-        self.logger.info("=" * 80)
-        
-        return extended
-    
-    def _create_optimized_groups(self) -> Dict[str, Dict[str, Any]]:
-        """
-        Create groups using OR-Tools optimization.
-        
-        Groups courses by dept+semester, then optimizes distribution within each group.
-        
-        Returns:
-            Dictionary of group structures
-        """
-        groups = {}
-        
-        # First, collect courses by dept+semester
-        dept_sem_courses = defaultdict(list)
-        for course in self.data['courses']:
-            dept = course.get('department', 'Unknown')
-            sem = course.get('semester', 0)
-            key = f"{dept}|{sem}"
-            dept_sem_courses[key].append(course)
-        
-        # For each dept-semester combination, optimize group distribution
-        group_counter = 0
-        for dept_sem_key, courses_in_group in dept_sem_courses.items():
-            dept, sem = dept_sem_key.split('|')
-            
+	"""High level façade combining normalisation, grouping, and packaging."""
 
-            optimizer = CourseGroupOptimizer(dept, int(sem), self.logger)
-            success = optimizer.optimize_distribution(courses_in_group)
-            
-            self.optimization_metadata[dept_sem_key] = {
-                'optimizer_status': success,
-                'num_groups': len(optimizer.get_groups()) if success else 0,
-                'total_instances': len(courses_in_group),
-            }
-            
-            if success:
-                for group_idx, group_instances in enumerate(optimizer.get_groups()):
-                    student_count = max(
-                        (c.get('student_count', 0) for c in group_instances),
-                        default=0
-                    )
-                    
-                    group_key = f"{dept_sem_key}_g{group_idx}"
-                    groups[group_key] = {
-                        'name': group_key,
-                        'department': dept,
-                        'semester': int(sem),
-                        'student_count': student_count,
-                        'instances': group_instances,
-                        'group_index': group_idx,
-                        'optimization_applied': True,
-                    }
-                    group_counter += 1
-                    
-                self.logger.info(
-                    f"Optimized {dept_sem_key}: {len(courses_in_group)} instances → "
-                    f"{len(optimizer.get_groups())} balanced groups"
-                )
-            else:
-                self.logger.warning(f"Optimization failed for {dept_sem_key}, using simple grouping")
-                student_count = max(
-                    (c.get('student_count', 0) for c in courses_in_group),
-                    default=0
-                )
-                group_key = dept_sem_key
-                groups[group_key] = {
-                    'name': group_key,
-                    'department': dept,
-                    'semester': int(sem),
-                    'student_count': student_count,
-                    'instances': courses_in_group,
-                    'group_index': 0,
-                    'optimization_applied': False,
-                }
-                group_counter += 1
-        
-        self.logger.info(f"Created {group_counter} total groups using optimization")
+	def __init__(
+		self,
+		config: SchedulerConfig,
+		*,
+		base_dir: Optional[Path] = None,
+		logger: Optional[logging.Logger] = None,
+	) -> None:
+		self._config = config
+		self._base_dir = Path(base_dir or Path.cwd()).resolve()
+		self._logger = logger or logging.getLogger(__name__)
+		self._normalizer = CourseInstanceNormalizer(config.preprocessing, logger=self._logger)
+		self._grouper = DepartmentCourseGrouper(config, base_dir=self._base_dir, logger=self._logger)
+		self._post_processor = GroupAssignmentPostProcessor(config, logger=self._logger)
 
-        print(groups)
-        return groups
-    
-    def _create_simple_groups(self) -> Dict[str, Dict[str, Any]]:
-        """
-        Create groups by department and semester (simple approach, no optimization).
-        
-        Returns:
-            Dictionary of group structures
-        """
-        groups = {}
-        dept_sem_courses = defaultdict(list)
-        
-        for course in self.data['courses']:
-            dept = course.get('department', 'Unknown')
-            sem = course.get('semester', 0)
-            key = f"{dept}|{sem}"
-            dept_sem_courses[key].append(course)
-        
-        for key, courses_list in dept_sem_courses.items():
-            dept, sem = key.split('|')
-            groups[key] = {
-                'name': key,
-                'department': dept,
-                'semester': int(sem),
-                'student_count': max((c.get('student_count', 0) for c in courses_list), default=0),
-                'instances': courses_list,
-                'group_index': 0,
-                'optimization_applied': False,
-            }
-        
-        self.logger.debug(f"Created {len(groups)} groups (simple grouping)")
-        return groups
-    
-    def _create_group_requirements(self, groups: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
-        """
-        Calculate requirements for each group.
-        
-        Requirements include:
-        - Total theory slots needed
-        - List of courses
-        - List of teachers
-        - Lab/Theory course separation
-        
-        Args:
-            groups: Groups dictionary
-        
-        Returns:
-            Dictionary mapping group_key -> requirements
-        """
-        group_reqs = {}
-        
-        for group_key, group_info in groups.items():
-            theory_slots = 0
-            courses = []
-            teachers = set()
-            lab_courses = []
-            theory_courses = []
-            
-            for course in group_info['instances']:
-                # Count theory sessions
-                theory_sessions = course.get('sessions_theory', 0)
-                theory_slots += theory_sessions
-                
-                course_code = course.get('code', '')
-                courses.append(course_code)
-                teacher = course.get('teacher', '')
-                if teacher:
-                    teachers.add(teacher)
-                
-                # Categorize by type
-                if course.get('sessions_lab', 0) > 0:
-                    lab_courses.append(course_code)
-                if theory_sessions > 0:
-                    theory_courses.append(course_code)
-            
-            group_reqs[group_key] = {
-                'theory_slots_needed': theory_slots,
-                'courses': courses,
-                'teachers': list(teachers),
-                'lab_courses': lab_courses,
-                'theory_courses': theory_courses,
-            }
-            
-            self.logger.debug(
-                f"Group {group_key}: {theory_slots} theory slots, "
-                f"{len(courses)} courses ({len(lab_courses)} lab, {len(theory_courses)} theory), "
-                f"{len(teachers)} teachers"
-            )
-        
-        return group_reqs
-    
-    def _create_instance_group_mapping(self, groups: Dict[str, Dict[str, Any]]) -> Dict[str, str]:
-        """
-        Map each course instance to its group.
-        
-        Instance key: 'course_code|teacher_id'
-        Group key: 'dept|semester' or 'dept|semester_gX' (from optimization)
-        
-        Args:
-            groups: Groups dictionary
-        
-        Returns:
-            Dictionary mapping instance_key -> group_key
-        """
-        mapping = {}
-        
-        for group_key, group_info in groups.items():
-            for course in group_info['instances']:
-                course_code = course.get('code', '')
-                teacher_id = course.get('teacher', '')
-                
-                instance_key = f"{course_code}|{teacher_id}"
-                mapping[instance_key] = group_key
-        
-        self.logger.debug(f"Created mapping for {len(mapping)} course instances")
-        return mapping
-    
-    def _extract_lab_requirements(self) -> Dict[str, List[Dict[str, Any]]]:
-        """
-        Extract lab requirements per teacher.
-        
-        Lab requirements come from courses with lab_sessions > 0.
-        
-        Returns:
-            Dictionary mapping teacher_id -> list of lab requirements
-        """
-        lab_reqs = defaultdict(list)
-        
-        for course in self.data['courses']:
-            lab_sessions = course.get('sessions_lab', 0)
-            
-            # Only process courses with lab sessions
-            if lab_sessions > 0:
-                teacher_id = course.get('teacher', '')
-                
-                if teacher_id:
-                    lab_reqs[teacher_id].append({
-                        'course_code': course.get('code', ''),
-                        'session_count': lab_sessions,
-                        'core_lab': course.get('core_lab', False),
-                        'capacity': course.get('student_count', 0),
-                        'department': course.get('department', ''),
-                        'semester': course.get('semester', 0),
-                    })
-        
-        self.logger.debug(
-            f"Extracted lab requirements for {len(lab_reqs)} teachers, "
-            f"{sum(len(v) for v in lab_reqs.values())} total lab courses"
-        )
-        
-        return dict(lab_reqs)
-    
-    def _create_core_lab_mapping(self, groups: Dict[str, Dict[str, Any]]) -> Dict[str, Set[str]]:
-        """
-        Map core groups to core lab courses.
-        
-        Core groups: dept|semester where courses have core_lab=True
-        Core labs: course codes that are core labs
-        
-        Args:
-            groups: Groups dictionary
-        
-        Returns:
-            Dictionary mapping core_group_key -> set of compatible core lab codes
-        """
-        core_mapping = {}
-        
-        # Find all core lab courses
-        core_labs_by_dept_sem = defaultdict(set)
-        
-        for course in self.data['courses']:
-            if course.get('core_lab', False):
-                dept = course.get('department', 'Unknown')
-                sem = course.get('semester', 0)
-                code = course.get('code', '')
-                
-                key = f"{dept}|{sem}"
-                core_labs_by_dept_sem[key].add(code)
-        
-        # Map groups to core labs
-        for group_key, core_labs in core_labs_by_dept_sem.items():
-            if group_key in groups:
-                core_mapping[group_key] = core_labs
-                self.logger.debug(
-                    f"Core group {group_key} -> {len(core_labs)} core labs: {core_labs}"
-                )
-        
-        return core_mapping
+	def run(self, data: DataLoadResult) -> PreprocessingResult:
+		normalized = self._normalizer.normalize(data.courses_df)
+		grouped = self._grouper.group(normalized)
+		packages = self._post_processor.build_packages(grouped, normalized, data.departments)
+
+		warnings = (
+			list(self._normalizer.warnings)
+			+ list(self._grouper.warnings)
+			+ list(self._post_processor.warnings)
+		)
+
+		stats = self._build_stats(normalized, grouped)
+
+		return PreprocessingResult(
+			normalized_instances=normalized,
+			groups=grouped,
+			scheduling_packages=packages,
+			warnings=tuple(warnings),
+			stats=stats,
+		)
+
+	def build_extended_container(self, data: DataLoadResult) -> ExtendedDataContainer:
+		preprocessing = self.run(data)
+		return ExtendedDataContainer(raw=data, preprocessing=preprocessing)
+
+	def _build_stats(
+		self,
+		normalized: Mapping[DepartmentSemesterKey, Sequence[NormalizedCourseInstance]],
+		grouped: Mapping[DepartmentSemesterKey, Sequence[CourseGroup]],
+	) -> Dict[str, Any]:
+		dept_stats = {}
+		total_instances = 0
+		total_groups = 0
+		for key in normalized:
+			instances = len(normalized.get(key, ()))
+			groups = len(grouped.get(key, ()))
+			dept_stats[key.slug()] = {
+				"label": key.label(),
+				"instances": instances,
+				"groups": groups,
+			}
+			total_instances += instances
+			total_groups += groups
+		return {
+			"total_instances": total_instances,
+			"total_groups": total_groups,
+			"department_semesters": dept_stats,
+		}
 
 
-def preprocess_data(data: Dict[str, Any], optimize_groups: bool = True, visualize: bool = True) -> ExtendedDataContainer:
-    """
-    Convenience function to preprocess data in one call.
-    
-    Args:
-        data: Raw data dictionary from data_loader.load()
-        optimize_groups: Whether to use OR-Tools optimization for groups (default True)
-        visualize: Whether to generate visualization heatmaps (default True)
-    
-    Returns:
-        ExtendedDataContainer with all intermediate structures
-    """
-    preprocessor = DataPreprocessor(data, optimize_groups, visualize)
-    return preprocessor.process()
+def preprocess_data(
+	config: SchedulerConfig,
+	data: DataLoadResult,
+	*,
+	base_dir: Optional[Path] = None,
+	logger: Optional[logging.Logger] = None,
+) -> PreprocessingResult:
+	"""Module-level convenience helper mirroring :func:`data_loader.load_data`."""
+
+	processor = DataPreprocessor(config, base_dir=base_dir, logger=logger)
+	return processor.run(data)
 
 
-def print_preprocessing_summary(extended: ExtendedDataContainer) -> None:
-    """
-    Print summary of preprocessing results.
-    
-    Args:
-        extended: ExtendedDataContainer from preprocessing
-    """
-    print("\n" + "=" * 80)
-    print("PREPROCESSING SUMMARY")
-    print("=" * 80)
-    
-    print(f"\nGroups Created: {len(extended.groups)}")
-    for group_key, group_info in extended.groups.items():
-        count = group_info['student_count']
-        courses = len(group_info['instances'])
-        opt_status = "✓ Optimized" if group_info.get('optimization_applied', False) else "Simple"
-        print(f"  {group_key}: {courses} courses, {count} students [{opt_status}]")
-    
-    print(f"\nGroup Requirements: {len(extended.group_requirements)}")
-    total_theory_slots = 0
-    total_lab_courses = 0
-    for group_key, reqs in extended.group_requirements.items():
-        slots = reqs['theory_slots_needed']
-        total_theory_slots += slots
-        total_lab_courses += len(reqs['lab_courses'])
-        print(f"  {group_key}: {slots} theory slots, "
-              f"{len(reqs['courses'])} courses, {len(reqs['teachers'])} teachers")
-    print(f"  Total theory slots needed: {total_theory_slots}")
-    print(f"  Total lab courses: {total_lab_courses}")
-    
-    print(f"\nInstance-to-Group Mapping: {len(extended.instance_group_mapping)} instances")
-    
-    print(f"\nLab Requirements: {len(extended.lab_requirements)} teachers")
-    total_lab_assignments = sum(len(v) for v in extended.lab_requirements.values())
-    print(f"  Total lab assignments: {total_lab_assignments}")
-    for teacher_id, reqs in list(extended.lab_requirements.items())[:5]:
-        print(f"  {teacher_id}: {len(reqs)} lab courses")
-    if len(extended.lab_requirements) > 5:
-        print(f"  ... and {len(extended.lab_requirements) - 5} more teachers")
-    
-    print(f"\nCore Lab Mapping: {len(extended.core_lab_mapping)} core groups")
-    for group_key, core_labs in extended.core_lab_mapping.items():
-        print(f"  {group_key} -> {core_labs}")
-    
-    if extended.optimization_metadata:
-        print(f"\nOptimization Metadata:")
-        for dept_sem, meta in extended.optimization_metadata.items():
-            status = "✓ Success" if meta['optimizer_status'] else "✗ Fallback"
-            print(f"  {dept_sem}: {meta['num_groups']} groups from {meta['total_instances']} instances [{status}]")
-    
-    print("=" * 80 + "\n")
+__all__ = [
+	"DepartmentSemesterKey",
+	"NormalizedCourseInstance",
+	"GroupSummary",
+	"CourseGroup",
+	"GroupRequirement",
+	"GroupPenaltySpec",
+	"TeacherWorkloadSummary",
+	"DepartmentSchedulingPackage",
+	"PreprocessingResult",
+	"ExtendedDataContainer",
+	"CourseInstanceNormalizer",
+	"DepartmentCourseGrouper",
+	"GroupAssignmentPostProcessor",
+	"DataPreprocessor",
+	"preprocess_data",
+]
 
-
-if __name__ == '__main__':
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(name)s - %(levelname)s - %(message)s'
-    )
-    
-    # Load raw data
-    from data_loader import load_data
-    
-    try:
-        raw_data = load_data(
-            courses_csv='../../data/Computer-Depts-LTPC.csv',
-            rooms_csv='../../data/block_wise/techlongue.csv',
-        )
-        
-        extended = preprocess_data(raw_data, optimize_groups=True, visualize=True)
-        
-        # print_preprocessing_summary(extended)
-        
-        print("\n" + "=" * 80)
-        print("📂 Visualizations saved to: output/course_groups/")
-        print("=" * 80)
-        
-    except Exception as e:
-        logger.error(f"Failed to preprocess data: {e}")
-        import traceback
-        traceback.print_exc()

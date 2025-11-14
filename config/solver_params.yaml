@@ -1,0 +1,21 @@
+solver:
+	time_limit_sec: 900
+	thread_count: 8
+	enable_lns: true
+	enable_trace: false
+	solution_limit: null
+	search_branching: AUTOMATIC
+
+logging:
+	level: INFO
+	log_search_progress: false
+	log_file: output/combined_scheduler/solver.log
+
+stopping_conditions:
+	best_objective_gap: null
+	max_failures: null
+	max_solutions: null
+
+notes:
+	- "Derived from legacy combined scheduler runtime defaults."
+	- "Adjust thread_count to match available CPU cores on deployment host."

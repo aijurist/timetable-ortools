@@ -1,601 +1,402 @@
-"""
-Data Loader Module
+"""Configuration-driven data loading aligned with the legacy combined scheduler."""
 
-Loads and validates all input data for the scheduler:
-- Courses (from CSV)
-- Rooms (from techlongue.csv or fallback)
-- Time slots configuration (theory and lab)
-- Day order and department-specific patterns
-- Lunch break and shift configurations
+from __future__ import annotations
 
-Returns a clean, validated data dictionary with all required structures.
-"""
-
-import os
-import pandas as pd
+import dataclasses
 import logging
-import json
-from pathlib import Path
-from typing import Dict, List, Tuple, Optional, Any
+from dataclasses import dataclass
 from datetime import datetime
-from collections import defaultdict
+from pathlib import Path
+from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Tuple
 
-# Import utility modules (one level up from data folder)
-import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from utils.data_utils import (
-    DataNormalizer,
-    DataValidator,
-    DataExtractor,
-    DataTransformer,
-    DataSummary,
+import pandas as pd
+
+from ..config.schemas import (
+    DepartmentConfig,
+    DepartmentSettings,
+    SchedulerConfig,
+    ShiftTemplate,
+    TimeSystemConfig,
 )
-from utils.room_utils import (
-    RoomParser,
-    RoomValidator,
-    FloorExtractor,
-    RoomRegistry,
-)
-from utils.time_utils import (
-    TimeConfiguration,
-    DayNormalizer,
-)
-from utils.dept_utils import (
-    DepartmentParser,
-    DepartmentGrouper,
+
+# for testing purposes
+from ..config.manager import ConfigManager
+from pathlib import Path
+
+from ..utils.room_utils import RoomRegistry
+
+from .schemas import (
+    LabSessionDetail,
+    TimeSystemArtifacts,
+    ShiftDefinitionSnapshot,
+    DepartmentArtifacts,
+    RoomCollections,
+    DataLoadResult,
 )
 
 logger = logging.getLogger(__name__)
 
 
-class DataValidationError(Exception):
-    """Custom exception for data validation failures."""
-    pass
+
+class DataLoaderError(RuntimeError):
+    """Raised when required data cannot be loaded or validated."""
 
 
 class DataLoader:
-    """
-    Unified data loader for the timetable scheduler.
-    
-    Responsibilities:
-    - Load courses, rooms, time configurations
-    - Validate data integrity
-    - Normalize formats (day names, room IDs, teacher IDs)
-    - Handle missing or inconsistent data with graceful fallbacks
-    - Return a clean, structured data dictionary
-    """
-    
-    def __init__(self, 
-                 courses_csv: str,
-                 rooms_csv: str = None,
-                 config_dir: str = 'config',
-                 data_dir: str = 'data'):
-        """
-        Initialize the data loader.
-        
-        Args:
-            courses_csv: Path to courses CSV file
-            rooms_csv: Path to rooms CSV file (optional, will use techlongue.csv if exists)
-            config_dir: Directory containing config YAML files
-            data_dir: Directory containing data files (day_order.csv, etc.)
-        """
-        self.courses_csv = courses_csv
-        self.rooms_csv = rooms_csv
-        self.config_dir = config_dir
-        self.data_dir = data_dir
-        
-        logger.info(f"DataLoader initialized with courses={courses_csv}, rooms={rooms_csv}")
-    
-    def load(self) -> Dict[str, Any]:
-        """
-        Load and validate all data.
-        
-        Returns:
-            Dictionary with keys:
-            - courses: list of course dicts
-            - rooms: list of room dicts
-            - teachers: set of teacher IDs
-            - departments: set of department names
-            - time_slots: dict with 'theory' and 'lab' arrays
-            - days: list of day names
-            - num_days: int
-            - day_order: dict mapping dept -> day_pattern
-            - room_registry: dict mapping room_id -> room_info
-            - groups: dict (initially empty, populated by scheduler)
-            - horizon: int (total time slots)
-        """
-        logger.info("=" * 80)
-        logger.info("STARTING DATA LOAD")
-        logger.info("=" * 80)
+    """Load data based on `SchedulerConfig`, preserving legacy semantics."""
 
-        courses_df = self._load_courses()
-        rooms_df = self._load_rooms()
-        day_order_df = self._load_day_order()
-        
-        logger.info(f"Loaded {len(courses_df)} courses, {len(rooms_df)} rooms")
-        
-        courses = self._parse_courses(courses_df)
-        rooms = self._parse_rooms(rooms_df)
-        
-        teachers = self._extract_teachers(courses)
-        departments = self._extract_departments(courses)
-        
-        time_slots = self._load_time_slots()
-        days = self._load_days()
-        day_order = self._load_day_order_mapping(day_order_df)
-        
-        room_registry = self._build_room_registry(rooms)
-        
-        horizon = len(days) * len(time_slots.get('theory', []))
-        
-        self._validate_data_integrity(courses, rooms, teachers, departments)
-        
-        data = {
-            'courses': courses,
-            'rooms': rooms,
-            'teachers': teachers,
-            'departments': departments,
-            'time_slots': time_slots,
-            'days': days,
-            'num_days': len(days),
-            'day_order': day_order,
-            'room_registry': room_registry,
-            'groups': {},  # Populated by scheduler
-            'horizon': horizon,
-            'load_timestamp': datetime.now().isoformat(),
-        }
-        
-        logger.info(f"Data load complete. Stats: {len(courses)} courses, {len(rooms)} rooms, "
-                   f"{len(teachers)} teachers, {len(departments)} departments, horizon={horizon}")
-        logger.info("=" * 80)
-        
-        return data
-    
-    def _load_courses(self) -> pd.DataFrame:
-        """Load courses CSV, handle missing file gracefully."""
-        if not os.path.exists(self.courses_csv):
-            raise FileNotFoundError(f"Courses file not found: {self.courses_csv}")
-        
+    def __init__(self, config: SchedulerConfig, *, base_dir: Optional[Path] = None) -> None:
+        self._base_dir = Path(base_dir or Path.cwd()).resolve()
+        self._paths = config.paths.resolve(self._base_dir)
+        self._config = config
+
+    def load(self) -> DataLoadResult:
+        """Load all scheduler artefacts and return a structured result."""
+
+        courses_df = self._read_csv(self._paths.courses_csv, required=True, friendly_name="courses")
+        rooms_df = self._read_csv(self._paths.rooms_csv, required=True, friendly_name="rooms")
+        day_order_df = self._read_csv(self._paths.day_order_csv, friendly_name="day order")
+        core_lab_mapping_df = self._read_csv(
+            self._paths.core_lab_mapping_csv,
+            friendly_name="core lab mapping",
+        )
+        teacher_preferences_df = self._read_csv(
+            self._paths.preferences_csv,
+            friendly_name="teacher preferences",
+        )
+
+        courses_df = self._normalise_courses_dataframe(courses_df)
+        rooms_df = self._normalise_rooms_dataframe(rooms_df)
+
+        time_artifacts = self._build_time_artifacts(self._config.time)
+        department_artifacts = self._build_department_artifacts(self._config.departments, time_artifacts)
+        room_collections = self._build_room_collections(rooms_df)
+        room_registry = RoomRegistry.build_registry(rooms_df.to_dict("records"), key_field="id")
+
+        teachers = self._extract_sorted_unique(courses_df, ["teacher", "teacher_name", "faculty"], fallback="teacher_id")
+        departments = self._extract_sorted_unique(courses_df, ["department", "dept", "course_dept"])
+
+        result = DataLoadResult(
+            config=self._config,
+            courses_df=courses_df,
+            rooms_df=rooms_df,
+            day_order_df=day_order_df,
+            core_lab_mapping_df=core_lab_mapping_df,
+            teacher_preferences_df=teacher_preferences_df,
+            time=time_artifacts,
+            departments=department_artifacts,
+            rooms=room_collections,
+            teachers=teachers,
+            departments_list=departments,
+            room_registry=room_registry,
+            load_timestamp=datetime.utcnow(),
+        )
+
+        logger.info(
+            "Loaded %s courses, %s rooms, %s departments, %s teachers",
+            len(courses_df),
+            len(rooms_df),
+            len(result.departments_list),
+            len(result.teachers),
+        )
+        return result
+
+    # ------------------------------------------------------------------
+    # CSV helpers
+    # ------------------------------------------------------------------
+    def _read_csv(
+        self,
+        path: Optional[Path],
+        *,
+        required: bool = False,
+        friendly_name: str = "dataset",
+    ) -> Optional[pd.DataFrame]:
+        if path is None:
+            if required:
+                raise DataLoaderError(f"Missing required path for {friendly_name} CSV")
+            logger.debug("No path provided for optional %s CSV", friendly_name)
+            return None
+
         try:
-            df = pd.read_csv(self.courses_csv)
-            logger.info(f"Loaded courses from {self.courses_csv}: {len(df)} rows")
+            df = pd.read_csv(path)
+            logger.debug("Loaded %s CSV from %s (%s rows)", friendly_name, path, len(df))
             return df
-        except Exception as e:
-            logger.error(f"Error loading courses CSV: {e}")
-            raise DataValidationError(f"Failed to load courses: {e}")
-    
-    def _load_rooms(self) -> pd.DataFrame:
-        """Load rooms CSV with fallback to techlongue.csv."""
-        # Try techlongue first
-        techlongue_paths = [
-            'data/block_wise/techlongue.csv',
-            './data/block_wise/techlongue.csv',
-            os.path.join(self.data_dir, 'block_wise', 'techlongue.csv'),
-        ]
-        
-        for path in techlongue_paths:
-            if os.path.exists(path):
-                try:
-                    df = pd.read_csv(path)
-                    logger.info(f"Loaded rooms from techlongue.csv: {path} ({len(df)} rooms)")
-                    return df
-                except Exception as e:
-                    logger.warning(f"Error loading techlongue: {e}, trying fallback")
+        except FileNotFoundError as exc:
+            if required:
+                raise DataLoaderError(f"Required {friendly_name} CSV not found: {path}") from exc
+            logger.warning("Optional %s CSV not found at %s", friendly_name, path)
+            return None
+        except Exception as exc:  # pragma: no cover - defensive logging
+            message = f"Failed to load {friendly_name} CSV at {path}: {exc}"
+            if required:
+                raise DataLoaderError(message) from exc
+            logger.warning(message)
+            return None
 
-        if self.rooms_csv and os.path.exists(self.rooms_csv):
-            try:
-                df = pd.read_csv(self.rooms_csv)
-                logger.info(f"Loaded rooms from fallback: {self.rooms_csv} ({len(df)} rooms)")
-                return df
-            except Exception as e:
-                logger.error(f"Error loading fallback rooms CSV: {e}")
-                raise DataValidationError(f"Failed to load rooms: {e}")
-        
-        raise FileNotFoundError("Could not find rooms CSV (techlongue.csv or provided fallback)")
-    
-    def _load_day_order(self) -> pd.DataFrame:
-        """Load day order configuration."""
-        day_order_paths = [
-            'data/day_order.csv',
-            os.path.join(self.data_dir, 'day_order.csv'),
-        ]
-        
-        for path in day_order_paths:
-            if os.path.exists(path):
-                try:
-                    df = pd.read_csv(path)
-                    logger.info(f"Loaded day order from {path}")
-                    return df
-                except Exception as e:
-                    logger.warning(f"Error loading day_order from {path}: {e}")
-        
-        logger.warning("day_order.csv not found, using default day pattern")
-        return None
-    
-    def _parse_courses(self, df: pd.DataFrame) -> List[Dict]:
-        """Parse courses dataframe into list of course dicts."""
-        courses = []
-        
-        for course_dict in df.to_dict('records'):
-            # Normalize column names
-            normalized = DataNormalizer.normalize_dict_keys(course_dict)
-            
-            # Extract course code
-            course_code = (
-                DataNormalizer.normalize_identifier(normalized.get('course_code', '')) or
-                DataNormalizer.normalize_identifier(normalized.get('code', ''))
+    # ------------------------------------------------------------------
+    # Normalisation helpers
+    # ------------------------------------------------------------------
+    def _normalise_courses_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
+        normalised = df.copy()
+        self._ensure_primary_column(normalised, "teacher", ["Teacher", "Faculty", "Faculty Name", "faculty_name"])
+        self._ensure_primary_column(normalised, "department", ["Department", "Dept", "Department Name"])
+        self._ensure_primary_column(normalised, "semester", ["Semester", "Sem"])
+
+        if "teacher" in normalised.columns and "teacher_id" in normalised.columns:
+            normalised["teacher"] = normalised["teacher"].fillna(normalised["teacher_id"])
+
+        return normalised
+
+    def _normalise_rooms_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
+        normalised = df.copy()
+        if "id" not in normalised.columns:
+            candidate_columns = [col for col in normalised.columns if col.lower() in {"room_number", "room", "id"}]
+            if candidate_columns:
+                normalised["id"] = normalised[candidate_columns[0]].astype(str)
+            else:
+                normalised["id"] = normalised.index.to_series().apply(lambda idx: f"ROOM_{idx}")
+
+        normalised["id"] = normalised["id"].fillna("").astype(str)
+        normalised.loc[normalised["id"].eq(""), "id"] = normalised.index.astype(str)
+        return normalised
+
+    def _ensure_primary_column(self, df: pd.DataFrame, primary: str, aliases: Sequence[str]) -> None:
+        if primary in df.columns:
+            return
+        for alias in aliases:
+            if alias in df.columns:
+                df.rename(columns={alias: primary}, inplace=True)
+                return
+
+    # ------------------------------------------------------------------
+    # Artifact builders
+    # ------------------------------------------------------------------
+    def _build_time_artifacts(self, time_config: TimeSystemConfig) -> TimeSystemArtifacts:
+        theory_slots = tuple(time_config.theory_slots)
+        lab_slots = tuple(time_config.lab_slots)
+        working_days = tuple(time_config.working_days)
+
+        lab_sessions = {
+            name: LabSessionDetail(
+                name=name,
+                slots=tuple(indices),
+                time_range=self._derive_session_range(tuple(indices), lab_slots),
             )
-            
-            # Extract teacher name
-            teacher_first = DataNormalizer.normalize_identifier(normalized.get('first_name', ''))
-            teacher_last = DataNormalizer.normalize_identifier(normalized.get('last_name', ''))
-            teacher_id = DataNormalizer.normalize_identifier(normalized.get('teacher_id', ''))
-            
-            if teacher_first and teacher_last:
-                teacher_name = f"{teacher_first} {teacher_last}"
-            elif teacher_first:
-                teacher_name = teacher_first
-            elif teacher_last:
-                teacher_name = teacher_last
-            else:
-                teacher_name = str(teacher_id) if teacher_id else ""
-            
-            course = {
-                'code': course_code,
-                'name': DataNormalizer.normalize_identifier(normalized.get('course_name', '')),
-                'department': DepartmentParser.parse_department_from_course(course_dict),
-                'semester': DepartmentParser.parse_semester(course_dict),
-                'credits': DataNormalizer.safe_int(
-                    normalized.get('credits', normalized.get('credit', 0)), 0
-                ),
-                'teacher': teacher_name,
-                'teacher_id': teacher_id,
-                'sessions_lab': DataNormalizer.safe_int(
-                    normalized.get('practical_hours', normalized.get('lab_hours', normalized.get('l', 0))), 0
-                ),
-                'sessions_theory': DataNormalizer.safe_int(
-                    normalized.get('lecture_hours', normalized.get('theory_hours', normalized.get('t', 0))), 0
-                ),
-                'sessions_tutorial': DataNormalizer.safe_int(
-                    normalized.get('tutorial_hours', normalized.get('p', 0)), 0
-                ),
-                'student_count': DepartmentParser.extract_student_count(course_dict),
-                'course_type': DataNormalizer.normalize_identifier(normalized.get('course_type', '')),
-                'teaching_dept': DepartmentParser.parse_department_from_course(
-                    {**course_dict, 'dept': normalized.get('teaching_dept', normalized.get('course_dept', ''))}
-                ),
-                'core_lab': False,  # Can be overridden if needed
-            }
-            
-            if course['code'] and course['teacher']:
-                courses.append(course)
-            else:
-                if not course['code']:
-                    logger.debug(f"Skipping course with missing code: {course}")
-                if not course['teacher']:
-                    logger.debug(f"Skipping course with missing teacher: {course_code}")
-        
-        logger.info(f"Parsed {len(courses)} valid courses from {len(df)} rows")
-        return courses
-    
-    def _parse_rooms(self, df: pd.DataFrame) -> List[Dict]:
-        """Parse rooms dataframe into list of room dicts."""
-        rooms = []
-        
-        for room_dict in df.to_dict('records'):
-            try:
-                room_id = RoomParser.parse_room_id(room_dict.get('room_number', room_dict.get('id')))
-                capacity = RoomParser.parse_room_capacity(room_dict.get('capacity', room_dict.get('room_max_cap', 0)))
-                block = RoomParser.parse_room_block(room_dict.get('block'))
-                room_type = RoomParser.parse_room_type(room_dict.get('room_type', room_dict.get('type', '')))
-                
-                room = {
-                    'id': room_id,
-                    'capacity': capacity,
-                    'floor': FloorExtractor.extract_floor_from_id(room_id),
-                    'block': block,
-                    'type': room_type,
-                    'equipment': str(room_dict.get('equipment', room_dict.get('tech_level', ''))).strip().lower(),
-                }
-                
-                is_valid, error = RoomValidator.is_valid_room(room)
-                if is_valid:
-                    rooms.append(room)
-                else:
-                    logger.warning(f"Skipping invalid room: {error}")
-            except Exception as e:
-                logger.warning(f"Error parsing room record: {e}")
-        
-        logger.info(f"Parsed {len(rooms)} valid rooms from {len(df)} rows")
-        return rooms
-    
-    def _extract_teachers(self, courses: List[Dict]) -> set:
-        """Extract unique teachers from courses."""
-        teachers = DataExtractor.extract_unique_values(courses, 'teacher')
-        logger.info(f"Found {len(teachers)} unique teachers")
-        return teachers
-    
-    def _extract_departments(self, courses: List[Dict]) -> set:
-        """Extract unique departments from courses."""
-        departments = DepartmentGrouper.get_departments(courses)
-        logger.info(f"Found {len(departments)} unique departments")
-        return departments
-    
-    def _load_time_slots(self) -> Dict[str, List[str]]:
-        """Load time slot configurations for theory and lab."""
-        time_slots = {
-            'theory': TimeConfiguration.get_default_theory_slots(),
-            'lab': TimeConfiguration.get_default_lab_slots(),
+            for name, indices in time_config.lab_sessions.items()
         }
-        
-        logger.info(f"Loaded default time slots: {len(time_slots['theory'])} theory, {len(time_slots['lab'])} lab")
-        return time_slots
-    
-    def _load_days(self) -> List[str]:
-        """Load working days configuration."""
-        days = TimeConfiguration.get_default_working_days()
-        logger.info(f"Using default days: {days}")
-        return days
-    
-    def _load_day_order_mapping(self, day_order_df: Optional[pd.DataFrame]) -> Dict[str, str]:
-        """Parse day order configuration into department -> day pattern mapping."""
-        day_order = {}
-        
-        if day_order_df is None:
-            logger.info("No day_order.csv, using default M-F for all departments")
-            return day_order
-        
-        try:
-            for _, row in day_order_df.iterrows():
-                dept = str(row.get('department', row.get('dept', ''))).strip()
-                pattern = str(row.get('pattern', row.get('days', ''))).strip()
-                if dept and pattern:
-                    day_order[dept] = pattern
-            
-            logger.info(f"Loaded day patterns for {len(day_order)} departments")
-        except Exception as e:
-            logger.warning(f"Error parsing day_order: {e}")
-        
-        return day_order
-    
-    def _build_room_registry(self, rooms: List[Dict]) -> Dict[str, Dict]:
-        """Build a room lookup registry by room ID."""
-        registry = RoomRegistry.build_registry(rooms, key_field='id')
-        logger.info(f"Built room registry with {len(registry)} rooms")
-        return registry
-    
-    def _validate_data_integrity(self, 
-                                 courses: List[Dict],
-                                 rooms: List[Dict],
-                                 teachers: set,
-                                 departments: set) -> None:
-        """Perform basic data integrity checks."""
-        errors = []
-        warnings = []
-        
-        if not courses:
-            errors.append("No valid courses loaded")
-        
-        if not rooms:
-            errors.append("No valid rooms loaded")
-        
-        if not teachers:
-            warnings.append("No teachers found in courses")
-        
-        if not departments:
-            warnings.append("No departments found in courses")
-        
-        course_codes = [c['code'] for c in courses]
-        duplicates = DataValidator.check_duplicates(course_codes, "course code")
-        if duplicates:
-            warnings.append(f"Found duplicate course codes: {duplicates}")
-        
-        room_ids = [r['id'] for r in rooms]
-        dup_rooms = DataValidator.check_duplicates(room_ids, "room ID")
-        if dup_rooms:
-            warnings.append(f"Found duplicate room IDs: {dup_rooms}")
-        
-        if errors:
-            for err in errors:
-                logger.error(f"VALIDATION ERROR: {err}")
-            raise DataValidationError(f"Data validation failed: {errors}")
-        
-        if warnings:
-            for warn in warnings:
-                logger.warning(f"VALIDATION WARNING: {warn}")
-        
-        logger.info("Data validation passed")
 
-# class DataLoader:
-#     def __init__(self, 
-#                  courses_csv: str,
-#                  rooms_csv: str = None,
-#                  config_dir: str = 'config',
-#                  data_dir: str = 'data'):
-#         """
-#         Initialize the data loader.
-        
-#         Args:
-#             courses_csv: Path to courses CSV file
-#             rooms_csv: Path to rooms CSV file (optional, will use techlongue.csv if exists)
-#             config_dir: Directory containing config YAML files
-#             data_dir: Directory containing data files (day_order.csv, etc.)
-#         """
-#         self.courses_csv = courses_csv
-#         self.rooms_csv = rooms_csv
-#         self.config_dir = config_dir
-#         self.data_dir = data_dir
-        
-#         logger.info(f"DataLoader initialized with courses={courses_csv}, rooms={rooms_csv}")
-    
-#     def load(self) -> Dict[str, Any]:
-#         """
-#         Load and validate all data.
-        
-#         Returns:
-#             Dictionary with keys:
-#             - courses: list of course dicts
-#             - rooms: list of room dicts
-#             - teachers: set of teacher IDs
-#             - departments: set of department names
-#             - time_slots: dict with 'theory' and 'lab' arrays
-#             - days: list of day names
-#             - num_days: int
-#             - day_order: dict mapping dept -> day_pattern
-#             - room_registry: dict mapping room_id -> room_info
-#             - groups: dict (initially empty, populated by scheduler)
-#             - horizon: int (total time slots)
-#         """
-#         logger.info("=" * 80)
-#         logger.info("STARTING DATA LOAD")
-#         logger.info("=" * 80)
+        lab_slot_to_theory, theory_slot_to_lab = self._build_slot_overlap_maps(theory_slots, lab_slots)
+        lab_session_to_theory = {
+            name: tuple(sorted({slot for idx in detail.slots for slot in lab_slot_to_theory.get(idx, ())}))
+            for name, detail in lab_sessions.items()
+        }
 
-#         courses_df = self._load_courses()
-#         rooms_df = self._load_rooms()
-#         day_order_df = self._load_day_order()
-        
-#         logger.info(f"Loaded {len(courses_df)} courses, {len(rooms_df)} rooms")
+        return TimeSystemArtifacts(
+            theory_slots=theory_slots,
+            lab_slots=lab_slots,
+            lab_sessions=lab_sessions,
+            working_days=working_days,
+            lab_slot_to_theory=lab_slot_to_theory,
+            theory_slot_to_lab=theory_slot_to_lab,
+            lab_session_to_theory=lab_session_to_theory,
+        )
 
-#         print(courses_df.head())
+    def _build_slot_overlap_maps(
+        self,
+        theory_slots: Sequence[str],
+        lab_slots: Sequence[str],
+    ) -> Tuple[Dict[int, Tuple[int, ...]], Dict[int, Tuple[int, ...]]]:
+        theory_to_lab: Dict[int, Tuple[int, ...]] = {}
+        lab_to_theory: Dict[int, Tuple[int, ...]] = {}
 
-#         courses = self._parse_courses(courses_df)
-#         rooms = self._parse_rooms(rooms_df)
-        
+        theory_ranges = [self._parse_time_range(slot) for slot in theory_slots]
+        lab_ranges = [self._parse_time_range(slot) for slot in lab_slots]
 
-#         teachers = self._extract_teachers(courses)
-#         departments = self._extract_departments(courses)
-        
+        for theory_idx, theory_range in enumerate(theory_ranges):
+            overlaps = [lab_idx for lab_idx, lab_range in enumerate(lab_ranges) if self._ranges_overlap(theory_range, lab_range)]
+            theory_to_lab[theory_idx] = tuple(overlaps)
 
-#         time_slots = self._load_time_slots()
-#         days = self._load_days()
-#         day_order = self._load_day_order_mapping(day_order_df)
+        for lab_idx, lab_range in enumerate(lab_ranges):
+            overlaps = [theory_idx for theory_idx, theory_range in enumerate(theory_ranges) if self._ranges_overlap(lab_range, theory_range)]
+            lab_to_theory[lab_idx] = tuple(overlaps)
 
+        return lab_to_theory, theory_to_lab
 
-#         room_registry = self._build_room_registry(rooms)
-        
+    def _build_department_artifacts(
+        self,
+        department_config: DepartmentConfig,
+        time_artifacts: TimeSystemArtifacts,
+    ) -> DepartmentArtifacts:
+        default_settings = department_config.default_settings
+        overrides = dict(department_config.overrides)
 
-#         horizon = len(days) * len(time_slots.get('theory', []))
-        
+        day_patterns: Dict[str, Tuple[str, ...]] = {"__default__": tuple(default_settings.day_pattern)}
+        lunch_break_slots: Dict[str, Optional[int]] = {"__default__": default_settings.lunch_break_slot}
+        default_lunch_window = (
+            tuple(default_settings.lunch_slot_window)
+            if default_settings.lunch_slot_window
+            else tuple()
+        )
+        lunch_slot_windows: Dict[str, Tuple[int, ...]] = {"__default__": default_lunch_window}
+        shift_assignments: Dict[str, str] = {}
 
-#         self._validate_data_integrity(courses, rooms, teachers, departments)
-        
-#         data = {
-#             'courses': courses,
-#             'rooms': rooms,
-#             'teachers': teachers,
-#             'departments': departments,
-#             'time_slots': time_slots,
-#             'days': days,
-#             'num_days': len(days),
-#             'day_order': day_order,
-#             'room_registry': room_registry,
-#             'groups': {},  
-#             'horizon': horizon,
-#             'load_timestamp': datetime.now().isoformat(),
-#         }
-        
-#         logger.info(f"Data load complete. Stats: {len(courses)} courses, {len(rooms)} rooms, "
-#                    f"{len(teachers)} teachers, {len(departments)} departments, horizon={horizon}")
-#         logger.info("=" * 80)
-        
-#         return data
-    
-#     def _load_courses(self) -> pd.DataFrame:
-#         """load course data from Course Data CSV"""
+        for dept, settings in overrides.items():
+            day_patterns[dept] = tuple(settings.day_pattern)
+            lunch_break_slots[dept] = (
+                settings.lunch_break_slot
+                if settings.lunch_break_slot is not None
+                else default_settings.lunch_break_slot
+            )
+            window = settings.lunch_slot_window if settings.lunch_slot_window is not None else default_settings.lunch_slot_window
+            lunch_slot_windows[dept] = tuple(window) if window else tuple()
+            if settings.shift_id:
+                shift_assignments[dept] = settings.shift_id
 
-#         if not os.path.exists(self.courses_csv):
-#             raise FileNotFoundError(f'The given file path does not exist: {self.courses_csv}')
+        shift_definitions = self._build_shift_snapshots(department_config.shift_templates, time_artifacts)
 
-#         try:
-#             df_course = pd.read_csv(self.courses_csv)
-#             logger.info(f'Loaded Course from {self.courses_csv}')
-#             return df_course
-#         except Exception as e:
-#             logger.info(f"We encountered error {e}")
-#             raise DataValidationError(f'Failed to load Course {e}')
-       
-#     def _load_rooms(self) -> pd.DataFrame:
-#         if not os.path.exists(self.rooms_csv):
-#             raise FileNotFoundError(f'The given file path does not exist: {self.courses_csv}')
-        
-#         try:
-#             df_room = pd.read_csv(self.rooms_csv)
-#             logger.info(f"Load room data successfully fro {self.rooms_csv}")
-       
-#             return df_room
-#         except Exception as e:
-#             logger.info(f"We encountered error {e}")
-#             raise DataValidationError(f'Failed to load Course {e}')
+        valid_shift_patterns = ((3, 2),)
+        flexible_lunch_departments = tuple(department_config.flexible_lunch_departments)
 
-#     def _load_day_order(self) -> pd.DataFrame:
-#         day_order_paths = [
-#             'data/day_order.csv',
-#             os.path.join(self.data_dir, 'day_order.csv')
-#         ]
+        return DepartmentArtifacts(
+            default_settings=default_settings,
+            overrides=overrides,
+            day_patterns=day_patterns,
+            lunch_break_slots=lunch_break_slots,
+            lunch_slot_windows=lunch_slot_windows,
+            shift_assignments=shift_assignments,
+            shift_definitions=shift_definitions,
+            valid_shift_patterns=valid_shift_patterns,
+            flexible_lunch_departments=flexible_lunch_departments,
+            five_pm_constraints=department_config.five_pm_constraints,
+        )
 
-#         for path in day_order_paths:
-#             if os.path.exists(path):
-#                 try:
-#                     df_day_order = pd.read_csv(path)
-#                     logger.info(f"The day order file is loadded from {path}")
-#                     return df_day_order
-#                 except Exception as e:
-#                     logger.warning(f"Error loading day_order from {path}: {e}")
+    def _build_shift_snapshots(
+        self,
+        shift_templates: Mapping[str, ShiftTemplate],
+        time_artifacts: TimeSystemArtifacts,
+    ) -> Dict[str, ShiftDefinitionSnapshot]:
+        snapshots: Dict[str, ShiftDefinitionSnapshot] = {}
 
-#         logger.warning("day_order.csv not found, using default day pattern")
-#         return None
-    
-#     def _parse_courses(self) -> List[Dict]:
-#         return
-    
-#     def _parse_rooms(self) -> List[Dict]:
-#         return
+        for identifier, template in shift_templates.items():
+            theory_slots = tuple(template.theory_slots)
+            lab_sessions = tuple(template.lab_sessions)
+            start_time, _ = self._parse_time_bounds(time_artifacts.theory_slots[theory_slots[0]])
+            _, end_time = self._parse_time_bounds(time_artifacts.theory_slots[theory_slots[-1]])
+
+            label = template.label or identifier
+            snapshots[identifier] = ShiftDefinitionSnapshot(
+                identifier=identifier,
+                theory_slots=theory_slots,
+                lab_sessions=lab_sessions,
+                start_time=start_time,
+                end_time=end_time,
+                label=label,
+            )
+
+            lowercase_identifier = identifier.lower()
+            if lowercase_identifier not in snapshots:
+                snapshots[lowercase_identifier] = snapshots[identifier]
+
+        return snapshots
+
+    def _build_room_collections(self, rooms_df: pd.DataFrame) -> RoomCollections:
+        if "is_lab" in rooms_df.columns:
+            lab_mask = rooms_df["is_lab"].fillna(0).astype(int) == 1
+        elif "room_type" in rooms_df.columns:
+            lab_mask = rooms_df["room_type"].astype(str).str.contains("lab", case=False, na=False)
+        else:
+            lab_mask = pd.Series(False, index=rooms_df.index)
+
+        lab_rooms = rooms_df.loc[lab_mask].copy()
+        theory_rooms = rooms_df.loc[~lab_mask].copy()
+
+        laboratory_mask = pd.Series(False, index=rooms_df.index)
+        if "room_type" in rooms_df.columns:
+            laboratory_mask = rooms_df["room_type"].astype(str).str.contains("laboratory", case=False, na=False)
+
+        lab_room_ids = tuple(lab_rooms["id"].astype(str))
+        theory_room_ids = tuple(theory_rooms["id"].astype(str))
+        laboratory_room_ids = tuple(rooms_df.loc[laboratory_mask, "id"].astype(str))
+
+        return RoomCollections(
+            lab_rooms=lab_rooms,
+            theory_rooms=theory_rooms,
+            lab_room_ids=lab_room_ids,
+            theory_room_ids=theory_room_ids,
+            laboratory_room_ids=laboratory_room_ids,
+        )
+
+    # ------------------------------------------------------------------
+    # Extraction helpers
+    # ------------------------------------------------------------------
+    def _extract_sorted_unique(
+        self,
+        df: pd.DataFrame,
+        columns: Sequence[str],
+        *,
+        fallback: Optional[str] = None,
+    ) -> Tuple[str, ...]:
+        values: Iterable[str] = []
+        for column in columns:
+            if column in df.columns:
+                values = df[column].dropna().astype(str).str.strip()
+                break
+        else:
+            if fallback and fallback in df.columns:
+                values = df[fallback].dropna().astype(str).str.strip()
+            else:
+                return tuple()
+
+        unique = sorted({value for value in values if value})
+        return tuple(unique)
+
+    # ------------------------------------------------------------------
+    # Time parsing helpers
+    # ------------------------------------------------------------------
+    def _derive_session_range(self, slots: Tuple[int, ...], lab_slots: Sequence[str]) -> str:
+        start_time, _ = self._parse_time_bounds(lab_slots[slots[0]])
+        _, end_time = self._parse_time_bounds(lab_slots[slots[-1]])
+        return f"{start_time} - {end_time}"
+
+    def _parse_time_bounds(self, slot_label: str) -> Tuple[str, str]:
+        start_str, end_str = [part.strip() for part in slot_label.split("-")]
+        return start_str, end_str
+
+    def _parse_time_range(self, slot_label: str) -> Tuple[int, int]:
+        start_str, end_str = self._parse_time_bounds(slot_label)
+        return self._time_to_minutes(start_str), self._time_to_minutes(end_str)
+
+    def _time_to_minutes(self, time_str: str) -> int:
+        hour_str, minute_str = time_str.split(":")
+        hour = int(hour_str.strip())
+        minute = int(minute_str.strip())
+
+        if hour == 12:
+            hour = 12
+        elif 1 <= hour <= 7:
+            hour += 12
+
+        return hour * 60 + minute
+
+    def _ranges_overlap(self, first: Tuple[int, int], second: Tuple[int, int]) -> bool:
+        return first[0] < second[1] and first[1] > second[0]
 
 
-def load_data(courses_csv: str,
-              rooms_csv: str = None,
-              config_dir: str = 'config',
-              data_dir: str = 'data') -> Dict[str, Any]:
-    """
-    Convenience function to load data in one call.
-    
-    Args:
-        courses_csv: Path to courses CSV
-        rooms_csv: Path to rooms CSV (optional)
-        config_dir: Config directory
-        data_dir: Data directory
-    
-    Returns:
-        Clean data dictionary
-    """
-    loader = DataLoader(courses_csv, rooms_csv, config_dir, data_dir)
+def load_data(config: SchedulerConfig, *, base_dir: Optional[Path] = None) -> DataLoadResult:
+    """Convenience wrapper mirroring the legacy `load_data` helper."""
+
+    loader = DataLoader(config, base_dir=base_dir)
     return loader.load()
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO, format='%(name)s - %(levelname)s - %(message)s')
+    base_dir = Path.cwd()
+    config_manager = ConfigManager(base_dir=base_dir)
+    config = config_manager.load()
     
-    try:
-        data = load_data(
-            courses_csv='../../data/final_v4.csv',
-            rooms_csv='../../data/block_wise/techlongue.csv',
-        )
-        
-        print("\n" + "=" * 80)
-        print("DATA LOAD SUCCESSFUL")
-        print("=" * 80)
-        print(f"Courses: {len(data['courses'])}")
-        print(f"Rooms: {len(data['rooms'])}")
-        print(f"Teachers: {len(data['teachers'])}")
-        print(f"Departments: {len(data['departments'])}")
-        print(f"Time slots (theory): {len(data['time_slots']['theory'])}")
-        print(f"Time slots (lab): {len(data['time_slots']['lab'])}")
-        print(f"Days: {data['days']}")
-        print(f"Horizon: {data['horizon']}")
-        print("=" * 80)
-    
-    except Exception as e:
-        logger.error(f"Failed to load data: {e}")
-        import traceback
-        traceback.print_exc()
+    data_loader = DataLoader(config, base_dir=base_dir)
+    print(data_loader._paths)
+    res = data_loader.load()
+    print(res.departments.lunch_slot_windows)
+

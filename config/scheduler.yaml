@@ -1,0 +1,584 @@
+meta:
+  name: combined_scheduler
+  version: "1.0.0"
+  environment: legacy
+  generated_at: null
+
+paths:
+  courses_csv: data/final.csv
+  rooms_csv: data/block_wise/techlongue.csv
+  day_order_csv: data/day_order.csv
+  core_lab_mapping_csv: data/og-final.csv
+  preferences_csv: data/pop.csv
+  output_root: output/combined_scheduler
+
+data:
+  encoding: utf-8
+  delimiter: ","
+  quotechar: '"'
+  required_columns:
+    courses:
+      - course_code
+      - course_name
+      - department
+      - semester
+      - teacher
+      - student_count
+    rooms:
+      - room_number
+      - capacity
+      - block
+  optional_columns:
+    courses:
+      - teaching_dept
+      - course_type
+      - sessions_lab
+      - sessions_theory
+      - sessions_tutorial
+    rooms:
+      - room_type
+      - equipment
+  trim_strings: true
+  fill_missing_with:
+    teacher: TBD
+    course_type: elective
+
+time:
+  theory_slots:
+    - "8:00 - 8:50"
+    - "8:55 - 9:45"
+    - "9:50 - 10:40"
+    - "10:45 - 11:35"
+    - "11:40 - 12:30"
+    - "12:35 - 1:20"
+    - "1:50 - 2:40"
+    - "3:20 - 4:10"
+    - "4:15 - 5:05"
+    - "5:10 - 6:00"
+    - "6:10 - 7:00"
+  lab_slots:
+    - "8:00 - 8:50"
+    - "8:50 - 9:40"
+    - "9:50 - 10:40"
+    - "10:40 - 11:30"
+    - "11:40 - 12:30"
+    - "12:30 - 1:20"
+    - "1:50 - 2:40"
+    - "2:40 - 3:20"
+    - "3:30 - 4:20"
+    - "4:20 - 5:10"
+    - "5:20 - 6:10"
+    - "5:10 - 7:00"
+  lab_sessions:
+    L1:
+      - 0
+      - 1
+    L2:
+      - 2
+      - 3
+    L3:
+      - 4
+      - 5
+    L4:
+      - 6
+      - 7
+    L5:
+      - 8
+      - 9
+    L6:
+      - 10
+      - 11
+  working_days:
+    - monday
+    - tuesday
+    - wed
+    - thur
+    - fri
+
+departments:
+  default_settings:
+    day_pattern:
+      - monday
+      - tuesday
+      - wed
+      - thur
+      - fri
+    lunch_break_slot: null
+    lunch_slot_window:
+      - 3
+      - 4
+      - 5
+      - 6
+    shift_id: SHIFT_1
+    flexible_lunch: false
+  overrides:
+    Computer Science & Engineering:
+      day_pattern:
+        - monday
+        - tuesday
+        - wed
+        - thur
+        - fri
+      lunch_break_slot: null
+      lunch_slot_window:
+        - 3
+        - 4
+        - 5
+        - 6
+      shift_id: SHIFT_1
+      flexible_lunch: false
+    Electronics & Communication Engineering:
+      day_pattern:
+        - monday
+        - tuesday
+        - wed
+        - thur
+        - fri
+      lunch_break_slot: null
+      lunch_slot_window:
+        - 3
+        - 4
+        - 5
+        - 6
+      shift_id: SHIFT_2
+      flexible_lunch: false
+    Information Technology:
+      day_pattern:
+        - monday
+        - tuesday
+        - wed
+        - thur
+        - fri
+      lunch_break_slot: null
+      lunch_slot_window:
+        - 3
+        - 4
+        - 5
+        - 6
+      shift_id: SHIFT_1
+      flexible_lunch: false
+    Mechanical Engineering:
+      day_pattern:
+        - monday
+        - tuesday
+        - wed
+        - thur
+        - fri
+      lunch_break_slot: null
+      lunch_slot_window:
+        - 3
+        - 4
+        - 5
+        - 6
+      shift_id: SHIFT_1
+      flexible_lunch: false
+    Civil Engineering:
+      day_pattern:
+        - monday
+        - tuesday
+        - wed
+        - thur
+        - fri
+      lunch_break_slot: null
+      lunch_slot_window:
+        - 3
+        - 4
+        - 5
+        - 6
+      shift_id: SHIFT_2
+      flexible_lunch: false
+    Artificial Intelligence & Data Science:
+      day_pattern:
+        - monday
+        - tuesday
+        - wed
+        - thur
+        - fri
+      lunch_break_slot: null
+      lunch_slot_window:
+        - 3
+        - 4
+        - 5
+        - 6
+      shift_id: SHIFT_2
+      flexible_lunch: false
+    Artificial Intelligence & Machine Learning:
+      day_pattern:
+        - monday
+        - tuesday
+        - wed
+        - thur
+        - fri
+      lunch_break_slot: null
+      lunch_slot_window:
+        - 3
+        - 4
+        - 5
+        - 6
+      shift_id: SHIFT_2
+      flexible_lunch: false
+    Computer Science & Design:
+      day_pattern:
+        - monday
+        - tuesday
+        - wed
+        - thur
+        - fri
+      lunch_break_slot: null
+      lunch_slot_window:
+        - 3
+        - 4
+        - 5
+        - 6
+      shift_id: SHIFT_1
+      flexible_lunch: false
+    Robotics & Automation:
+      day_pattern:
+        - monday
+        - tuesday
+        - wed
+        - thur
+        - fri
+      lunch_break_slot: null
+      lunch_slot_window:
+        - 3
+        - 4
+        - 5
+        - 6
+      shift_id: SHIFT_2
+      flexible_lunch: false
+    Automobile Engineering:
+      day_pattern:
+        - monday
+        - tuesday
+        - wed
+        - thur
+        - fri
+      lunch_break_slot: null
+      lunch_slot_window:
+        - 3
+        - 4
+        - 5
+        - 6
+      shift_id: SHIFT_1
+      flexible_lunch: false
+    Aeronautical Engineering:
+      day_pattern:
+        - monday
+        - tuesday
+        - wed
+        - thur
+        - fri
+      lunch_break_slot: null
+      lunch_slot_window:
+        - 3
+        - 4
+        - 5
+        - 6
+      shift_id: SHIFT_2
+      flexible_lunch: false
+    Biotechnology:
+      day_pattern:
+        - monday
+        - tuesday
+        - wed
+        - thur
+        - fri
+      lunch_break_slot: null
+      lunch_slot_window:
+        - 3
+        - 4
+        - 5
+        - 6
+      shift_id: SHIFT_2
+      flexible_lunch: false
+    Chemical Engineering:
+      day_pattern:
+        - monday
+        - tuesday
+        - wed
+        - thur
+        - fri
+      lunch_break_slot: null
+      lunch_slot_window:
+        - 3
+        - 4
+        - 5
+        - 6
+      shift_id: SHIFT_1
+      flexible_lunch: false
+    Biomedical Engineering:
+      day_pattern:
+        - monday
+        - tuesday
+        - wed
+        - thur
+        - fri
+      lunch_break_slot: null
+      lunch_slot_window:
+        - 3
+        - 4
+        - 5
+        - 6
+      shift_id: SHIFT_2
+      flexible_lunch: false
+  shift_templates:
+    SHIFT_1:
+      theory_slots:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+      lab_sessions:
+        - L1
+        - L2
+        - L3
+        - L4
+      label: "Shift 1 (08:00-15:20)"
+    SHIFT_2:
+      theory_slots:
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+        - 7
+        - 8
+      lab_sessions:
+        - L2
+        - L3
+        - L4
+        - L5
+      label: "Shift 2 (10:00-17:10)"
+  flexible_lunch_departments:
+    - Master of Business Administration
+  five_pm_constraints:
+    hard:
+      departments:
+        - Artificial Intelligence & Data Science
+        - Artificial Intelligence & Machine Learning_S3
+        - Artificial Intelligence & Machine Learning_S5
+        - Artificial Intelligence & Machine Learning_S7
+        - Automobile Engineering
+        - Aeronautical Engineering_S3
+        - Aeronautical Engineering_S5
+        - Aeronautical Engineering_S7
+        - Biomedical Engineering_S3
+        - Biomedical Engineering_S5
+        - Biomedical Engineering_S7
+        - Biotechnology_S3
+        - Biotechnology_S5
+        - Biotechnology_S7
+        - Chemical Engineering_S3
+        - Chemical Engineering_S5
+        - Chemical Engineering_S7
+        - Civil Engineering
+        - Computer Science & Business Systems
+        - Computer Science & Design_S3
+        - Computer Science & Design_S5
+        - Computer Science & Design_S7
+        - Computer Science & Engineering (Cyber Security)
+        - Computer Science & Engineering_S5
+        - Computer Science & Engineering_S7
+        - Electrical & Electronics Engineering_S3
+        - Electrical & Electronics Engineering_S7
+        - Electronics & Communication Engineering_S7
+        - Food Technology_S3
+        - Food Technology_S5
+        - Food Technology_S7
+        - Information Technology
+        - Mechanical Engineering_S3
+        - Mechanical Engineering_S5
+        - Mechanical Engineering_S7
+        - Mechatronics Engineering_S3
+        - Mechatronics Engineering_S5
+        - Mechatronics Engineering_S7
+        - Robotics & Automation
+      blocked_theory_slots:
+        - 9
+        - 10
+      blocked_lab_sessions:
+        - L6
+    soft:
+      departments:
+        - Computer Science & Engineering_S3
+        - Electronics & Communication Engineering_S3
+        - Electronics & Communication Engineering_S5
+        - Electrical & Electronics Engineering_S5
+      discouraged_theory_slots:
+        - 9
+        - 10
+      discouraged_lab_sessions:
+        - L5
+        - L6
+
+preprocessing:
+  enable_visualizations: false
+  fill_missing_students: true
+  student_cap: 120
+  normalise_teacher_names: true
+  normalise_department_names: true
+  deduplicate_courses: true
+
+grouping:
+  strategy: exact
+  max_groups_per_dept_sem: 6
+  hall_theorem_tolerance: 0.05
+  consecutive_lab_pairs: true
+  random_seed: 42
+
+constraints:
+  lab:
+    session_coverage:
+      enabled: true
+      priority: 10
+      weight: 1.0
+      params: {}
+    room_capacity:
+      enabled: true
+      priority: 9
+      weight: 1.0
+      params: {}
+    core_lab_mapping:
+      enabled: true
+      priority: 8
+      weight: 0.8
+      params: {}
+    shift_alignment:
+      enabled: true
+      priority: 9
+      weight: 0.9
+      params:
+        shift_templates:
+          - SHIFT_1
+          - SHIFT_2
+  theory:
+    teacher_daily_limit:
+      enabled: true
+      priority: 9
+      weight: 1.0
+      params: {}
+    student_conflict:
+      enabled: true
+      priority: 10
+      weight: 1.0
+      params: {}
+    room_capacity:
+      enabled: true
+      priority: 8
+      weight: 0.7
+      params: {}
+    shift_alignment:
+      enabled: true
+      priority: 8
+      weight: 0.6
+      params:
+        shift_templates:
+          - SHIFT_1
+          - SHIFT_2
+  cross_system:
+    teacher_overlap:
+      enabled: true
+      priority: 10
+      weight: 1.0
+      params: {}
+    lunch_alignment:
+      enabled: true
+      priority: 6
+      weight: 0.4
+      params:
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+          - 6
+    five_pm_policy:
+      enabled: true
+      priority: 7
+      weight: 0.5
+      params:
+        hard_departments:
+          - Artificial Intelligence & Data Science
+          - Artificial Intelligence & Machine Learning_S3
+          - Artificial Intelligence & Machine Learning_S5
+          - Artificial Intelligence & Machine Learning_S7
+          - Automobile Engineering
+          - Aeronautical Engineering_S3
+          - Aeronautical Engineering_S5
+          - Aeronautical Engineering_S7
+          - Biomedical Engineering_S3
+          - Biomedical Engineering_S5
+          - Biomedical Engineering_S7
+          - Biotechnology_S3
+          - Biotechnology_S5
+          - Biotechnology_S7
+          - Chemical Engineering_S3
+          - Chemical Engineering_S5
+          - Chemical Engineering_S7
+          - Civil Engineering
+          - Computer Science & Business Systems
+          - Computer Science & Design_S3
+          - Computer Science & Design_S5
+          - Computer Science & Design_S7
+          - Computer Science & Engineering (Cyber Security)
+          - Computer Science & Engineering_S5
+          - Computer Science & Engineering_S7
+          - Electrical & Electronics Engineering_S3
+          - Electrical & Electronics Engineering_S7
+          - Electronics & Communication Engineering_S7
+          - Food Technology_S3
+          - Food Technology_S5
+          - Food Technology_S7
+          - Information Technology
+          - Mechanical Engineering_S3
+          - Mechanical Engineering_S5
+          - Mechanical Engineering_S7
+          - Mechatronics Engineering_S3
+          - Mechatronics Engineering_S5
+          - Mechatronics Engineering_S7
+          - Robotics & Automation
+        soft_departments:
+          - Computer Science & Engineering_S3
+          - Electronics & Communication Engineering_S3
+          - Electronics & Communication Engineering_S5
+          - Electrical & Electronics Engineering_S5
+        blocked_theory_slots:
+          - 9
+          - 10
+        blocked_lab_sessions:
+          - L6
+        discouraged_theory_slots:
+          - 9
+          - 10
+        discouraged_lab_sessions:
+          - L5
+          - L6
+
+model:
+  big_m_value: 1000.0
+  objective_weights:
+    lab_balance: 1.0
+    theory_balance: 1.0
+    teacher_spread: 0.5
+  slack_penalty: 1.0
+  use_sparse_variables: true
+
+runtime:
+  time_limit_sec: 900
+  thread_count: 8
+  enable_lns: true
+  enable_trace: false
+  solution_limit: null
+
+logging:
+  level: INFO
+  log_file: output/combined_scheduler/scheduler.log
+  structured: false
+
+validation:
+  enforce_room_capacity: true
+  enforce_teacher_continuity: true
+  max_conflicts_allowed: 0
