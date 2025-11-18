@@ -1,0 +1,55 @@
+Course-Group Distribution Summary
+Department: Mechanical Engineering
+Semester: 7
+Generated: 2025-11-18 14:24:55
+============================================================
+
+OVERVIEW
+- Courses: 7 (Lab 4, Theory 5)
+- Groups: 7
+- Total assignments: 21
+- Courses with multiple options: 7 (100.0%)
+
+COURSE DISTRIBUTION BY GROUP
+- ME19701 [Theory]: 2 groups, 3 teachers
+  └─ G5: 2 teacher assignments
+  └─ G6: 1 teacher assignments
+- ME19702 [Theory]: 2 groups, 3 teachers
+  └─ G5: 1 teacher assignments
+  └─ G6: 2 teacher assignments
+- ME19712 [Lab + Theory]: 2 groups, 3 teachers
+  └─ G1: 1 teacher assignments
+  └─ G4: 2 teacher assignments
+- ME19713 [Lab]: 2 groups, 3 teachers
+  └─ G2: 2 teacher assignments
+  └─ G3: 1 teacher assignments
+- ME19741 [Lab + Theory]: 2 groups, 3 teachers
+  └─ G3: 2 teacher assignments
+  └─ G4: 1 teacher assignments
+- ME19E01 [Theory]: 1 groups, 3 teachers
+  └─ G7: 3 teacher assignments
+- ME23VAP2 [Lab]: 2 groups, 3 teachers
+  └─ G1: 2 teacher assignments
+  └─ G2: 1 teacher assignments
+
+GROUP COMPOSITION
+- G1: 2 courses, 3 teachers
+  └─ ME19712 [L+T]: 1 instances, 1 teachers
+  └─ ME23VAP2 [L]: 2 instances, 2 teachers
+- G2: 2 courses, 3 teachers
+  └─ ME19713 [L]: 2 instances, 2 teachers
+  └─ ME23VAP2 [L]: 1 instances, 1 teachers
+- G3: 2 courses, 3 teachers
+  └─ ME19713 [L]: 1 instances, 1 teachers
+  └─ ME19741 [L+T]: 2 instances, 2 teachers
+- G4: 2 courses, 3 teachers
+  └─ ME19712 [L+T]: 2 instances, 2 teachers
+  └─ ME19741 [L+T]: 1 instances, 1 teachers
+- G5: 2 courses, 3 teachers
+  └─ ME19701 [T]: 2 instances, 2 teachers
+  └─ ME19702 [T]: 1 instances, 1 teachers
+- G6: 2 courses, 3 teachers
+  └─ ME19701 [T]: 1 instances, 1 teachers
+  └─ ME19702 [T]: 2 instances, 2 teachers
+- G7: 1 courses, 3 teachers
+  └─ ME19E01 [T]: 3 instances, 3 teachers

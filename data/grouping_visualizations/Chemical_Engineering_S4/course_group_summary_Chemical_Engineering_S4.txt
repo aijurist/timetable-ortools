@@ -1,0 +1,19 @@
+Course-Group Distribution Summary
+Department: Chemical Engineering
+Semester: 4
+Generated: 2025-11-18 14:24:55
+============================================================
+
+OVERVIEW
+- Courses: 1 (Lab 0, Theory 1)
+- Groups: 1
+- Total assignments: 1
+- Courses with multiple options: 0 (0.0%)
+
+COURSE DISTRIBUTION BY GROUP
+- CH23411 [Theory]: 1 groups, 1 teachers
+  └─ G1: 1 teacher assignments
+
+GROUP COMPOSITION
+- G1: 1 courses, 1 teachers
+  └─ CH23411 [T]: 1 instances, 1 teachers

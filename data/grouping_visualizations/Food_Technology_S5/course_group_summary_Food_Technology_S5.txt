@@ -1,0 +1,43 @@
+Course-Group Distribution Summary
+Department: Food Technology
+Semester: 5
+Generated: 2025-11-18 14:24:51
+============================================================
+
+OVERVIEW
+- Courses: 7 (Lab 2, Theory 5)
+- Groups: 7
+- Total assignments: 7
+- Courses with multiple options: 0 (0.0%)
+
+COURSE DISTRIBUTION BY GROUP
+- FT23501 [Theory]: 1 groups, 1 teachers
+  └─ G5: 1 teacher assignments
+- FT23502 [Theory]: 1 groups, 1 teachers
+  └─ G6: 1 teacher assignments
+- FT23503 [Theory]: 1 groups, 1 teachers
+  └─ G7: 1 teacher assignments
+- FT23511 [Lab]: 1 groups, 1 teachers
+  └─ G2: 1 teacher assignments
+- FT23512 [Lab]: 1 groups, 1 teachers
+  └─ G1: 1 teacher assignments
+- FT23F01 [Theory]: 1 groups, 1 teachers
+  └─ G3: 1 teacher assignments
+- NPTEL [Theory]: 1 groups, 1 teachers
+  └─ G4: 1 teacher assignments
+
+GROUP COMPOSITION
+- G1: 1 courses, 1 teachers
+  └─ FT23512 [L]: 1 instances, 1 teachers
+- G2: 1 courses, 1 teachers
+  └─ FT23511 [L]: 1 instances, 1 teachers
+- G3: 1 courses, 1 teachers
+  └─ FT23F01 [T]: 1 instances, 1 teachers
+- G4: 1 courses, 1 teachers
+  └─ NPTEL [T]: 1 instances, 1 teachers
+- G5: 1 courses, 1 teachers
+  └─ FT23501 [T]: 1 instances, 1 teachers
+- G6: 1 courses, 1 teachers
+  └─ FT23502 [T]: 1 instances, 1 teachers
+- G7: 1 courses, 1 teachers
+  └─ FT23503 [T]: 1 instances, 1 teachers

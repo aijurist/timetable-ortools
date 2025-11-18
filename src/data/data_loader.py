@@ -398,5 +398,6 @@ if __name__ == '__main__':
     data_loader = DataLoader(config, base_dir=base_dir)
     print(data_loader._paths)
     res = data_loader.load()
-    print(res.departments.lunch_slot_windows)
+    print(res)
+
 

@@ -1,0 +1,63 @@
+Course-Group Distribution Summary
+Department: Biomedical Engineering
+Semester: 3
+Generated: 2025-11-18 14:24:56
+============================================================
+
+OVERVIEW
+- Courses: 8 (Lab 4, Theory 6)
+- Groups: 8
+- Total assignments: 16
+- Courses with multiple options: 8 (100.0%)
+
+COURSE DISTRIBUTION BY GROUP
+- BM23311 [Theory]: 2 groups, 2 teachers
+  └─ G5: 1 teacher assignments
+  └─ G8: 1 teacher assignments
+- BM23312 [Theory]: 2 groups, 2 teachers
+  └─ G6: 1 teacher assignments
+  └─ G7: 1 teacher assignments
+- BM23313 [Theory]: 2 groups, 2 teachers
+  └─ G7: 1 teacher assignments
+  └─ G8: 1 teacher assignments
+- BM23321 [Lab]: 2 groups, 2 teachers
+  └─ G2: 1 teacher assignments
+  └─ G4: 1 teacher assignments
+- BM23322 [Lab]: 2 groups, 2 teachers
+  └─ G2: 1 teacher assignments
+  └─ G4: 1 teacher assignments
+- BM23331 [Lab + Theory]: 2 groups, 2 teachers
+  └─ G1: 1 teacher assignments
+  └─ G3: 1 teacher assignments
+- BM23332 [Lab + Theory]: 2 groups, 2 teachers
+  └─ G1: 1 teacher assignments
+  └─ G3: 1 teacher assignments
+- MA23312 [Theory]: 2 groups, 2 teachers
+  └─ G5: 1 teacher assignments
+  └─ G6: 1 teacher assignments
+
+GROUP COMPOSITION
+- G1: 2 courses, 2 teachers
+  └─ BM23331 [L+T]: 1 instances, 1 teachers
+  └─ BM23332 [L+T]: 1 instances, 1 teachers
+- G2: 2 courses, 2 teachers
+  └─ BM23321 [L]: 1 instances, 1 teachers
+  └─ BM23322 [L]: 1 instances, 1 teachers
+- G3: 2 courses, 2 teachers
+  └─ BM23331 [L+T]: 1 instances, 1 teachers
+  └─ BM23332 [L+T]: 1 instances, 1 teachers
+- G4: 2 courses, 2 teachers
+  └─ BM23321 [L]: 1 instances, 1 teachers
+  └─ BM23322 [L]: 1 instances, 1 teachers
+- G5: 2 courses, 2 teachers
+  └─ BM23311 [T]: 1 instances, 1 teachers
+  └─ MA23312 [T]: 1 instances, 1 teachers
+- G6: 2 courses, 2 teachers
+  └─ BM23312 [T]: 1 instances, 1 teachers
+  └─ MA23312 [T]: 1 instances, 1 teachers
+- G7: 2 courses, 2 teachers
+  └─ BM23312 [T]: 1 instances, 1 teachers
+  └─ BM23313 [T]: 1 instances, 1 teachers
+- G8: 2 courses, 2 teachers
+  └─ BM23311 [T]: 1 instances, 1 teachers
+  └─ BM23313 [T]: 1 instances, 1 teachers

@@ -1,0 +1,35 @@
+Course-Group Distribution Summary
+Department: Computer Science & Design
+Semester: 7
+Generated: 2025-11-18 14:24:43
+============================================================
+
+OVERVIEW
+- Courses: 5 (Lab 3, Theory 5)
+- Groups: 5
+- Total assignments: 5
+- Courses with multiple options: 0 (0.0%)
+
+COURSE DISTRIBUTION BY GROUP
+- CD19701 [Theory]: 1 groups, 1 teachers
+  └─ G5: 1 teacher assignments
+- CD19721 [Theory]: 1 groups, 1 teachers
+  └─ G4: 1 teacher assignments
+- CD19741 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G1: 1 teacher assignments
+- CD19P11 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G2: 1 teacher assignments
+- CD19P15 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G3: 1 teacher assignments
+
+GROUP COMPOSITION
+- G1: 1 courses, 1 teachers
+  └─ CD19741 [L+T]: 1 instances, 1 teachers
+- G2: 1 courses, 1 teachers
+  └─ CD19P11 [L+T]: 1 instances, 1 teachers
+- G3: 1 courses, 1 teachers
+  └─ CD19P15 [L+T]: 1 instances, 1 teachers
+- G4: 1 courses, 1 teachers
+  └─ CD19721 [T]: 1 instances, 1 teachers
+- G5: 1 courses, 1 teachers
+  └─ CD19701 [T]: 1 instances, 1 teachers

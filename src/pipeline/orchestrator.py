@@ -9,6 +9,7 @@ from typing import Any, Dict, Mapping, Optional
 from ..config.manager import ConfigManager
 from ..config.schemas import SchedulerConfig
 from ..data.data_loader import DataLoader, DataLoadResult
+from ..data.preprocessing import DataPreprocessor
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +56,13 @@ class PipelineOrchestrator:
 		loader = DataLoader(self.config, base_dir=self._base_dir)
 		self._data = loader.load()
 		return self._data
+
+	def load_preprocessed_data(self) -> DataLoadResult:
+		"""Load preprocessed data artefacts using the active configuration."""
+
+		loader = DataPreprocessor(self.config, base_dir=self._base_dir)
+		self._pre_processed_data = loader.build_extended_container()
+		return self._pre_processed_data
 
 	def bootstrap(
 		self,

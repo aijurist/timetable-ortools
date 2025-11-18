@@ -13,6 +13,8 @@ import numpy as np
 import logging
 import json
 from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Optional, Set
 from collections import defaultdict, Counter
 from ortools.sat.python import cp_model
 import matplotlib.pyplot as plt
@@ -1749,6 +1751,207 @@ class CourseGroupOptimizer:
         
         print(f"{'='*60}\n")
     
+    def generate_group_distribution_visualizations(self, output_dir: Optional[str] = None, include_summary: bool = True):
+        """Create heatmap + text summary of the current course-group distribution."""
+
+        if not self.groups:
+            self.logger.warning("No groups available to visualize")
+            return {}
+
+        if output_dir is None:
+            project_root = Path(__file__).resolve().parents[2]
+            base_dir = project_root / "data"
+        else:
+            base_dir = Path(output_dir)
+
+        viz_output_dir = base_dir / "grouping_visualizations" 
+        dept_dir = viz_output_dir / f"{self.dept.replace(' ', '_').replace('&', 'and')}_S{self.semester}"
+        dept_dir.mkdir(parents=True, exist_ok=True)
+
+        self.logger.info(
+            "🎨 Generating course-group visualization for %s Semester %s → %s",
+            self.dept,
+            self.semester,
+            dept_dir,
+        )
+
+        course_group_matrix: Dict[str, Dict[str, int]] = {}
+        all_courses: Set[str] = set()
+        group_names: List[str] = []
+        lab_courses: Set[str] = set()
+        theory_courses: Set[str] = set()
+
+        for group_idx, group in enumerate(self.groups):
+            if not group:
+                continue
+            group_name = f"G{group_idx + 1}"
+            group_names.append(group_name)
+
+            course_teacher_counts: Dict[str, Set[str]] = defaultdict(set)
+            for instance in group:
+                course_code = instance['course_code']
+                teacher_id = instance['teacher_id']
+                all_courses.add(course_code)
+
+                if instance.get('has_lab', False):
+                    lab_courses.add(course_code)
+                if instance.get('has_theory', False):
+                    theory_courses.add(course_code)
+
+                course_teacher_counts[course_code].add(teacher_id)
+
+            for course_code, teachers in course_teacher_counts.items():
+                course_group_matrix.setdefault(course_code, {})[group_name] = len(teachers)
+
+        if not all_courses or not group_names:
+            self.logger.warning("No data to visualize after processing groups")
+            return {}
+
+        courses_list = sorted(all_courses)
+        matrix_data = [
+            [course_group_matrix.get(course, {}).get(group_name, 0) for group_name in group_names]
+            for course in courses_list
+        ]
+
+        matrix_array = np.array(matrix_data)
+        plt.figure(figsize=(max(8, len(group_names) * 1.2), max(6, len(courses_list) * 0.4)))
+        ax = sns.heatmap(
+            matrix_array,
+            xticklabels=group_names,
+            yticklabels=courses_list,
+            annot=True,
+            fmt='d',
+            cmap='viridis',
+            cbar_kws={'label': 'Number of Teacher Assignments'},
+            linewidths=0.5,
+        )
+        plt.title(
+            f"Course-Group Distribution\n{self.dept} - Semester {self.semester}\n"
+            "(Teacher assignments per course per group)",
+            fontsize=14,
+            fontweight='bold',
+            pad=20,
+        )
+        plt.xlabel('Groups', fontsize=12, fontweight='bold')
+        plt.ylabel('Courses', fontsize=12, fontweight='bold')
+        plt.xticks(rotation=0, ha='center')
+        plt.yticks(rotation=0)
+        ax.set_facecolor('white')
+
+        for i, course in enumerate(courses_list):
+            tags = []
+            if course in lab_courses:
+                tags.append('L')
+            if course in theory_courses:
+                tags.append('T')
+            if tags:
+                plt.text(
+                    -0.5,
+                    i + 0.5,
+                    f"[{'+'.join(tags)}]",
+                    ha='right',
+                    va='center',
+                    fontsize=8,
+                    bbox=dict(boxstyle="round,pad=0.2", facecolor="lightblue", alpha=0.7),
+                )
+
+        total_assignments = int(matrix_array.sum()) if matrix_array.size else 0
+        max_assignments = int(matrix_array.max()) if matrix_array.size else 0
+        courses_with_choice = sum(
+            1 for course in courses_list if sum(course_group_matrix.get(course, {}).values()) > 1
+        )
+        choice_percentage = (courses_with_choice / len(courses_list) * 100) if courses_list else 0
+        stats_lines = [
+            f"Stats: {len(courses_list)} courses ({len(lab_courses)} lab, {len(theory_courses)} theory)",
+            f"Groups: {len(group_names)}, Total assignments: {total_assignments}, Max cell: {max_assignments}",
+            f"Courses with multiple groups: {courses_with_choice} ({choice_percentage:.1f}%)",
+            "[L] Lab, [T] Theory, [L+T] Both",
+        ]
+        plt.figtext(
+            0.02,
+            0.02,
+            "\n".join(stats_lines),
+            fontsize=9,
+            bbox=dict(boxstyle="round,pad=0.3", facecolor="lightgray", alpha=0.8),
+        )
+        plt.tight_layout()
+
+        safe_dept_name = (
+            self.dept.replace(' ', '_').replace('&', 'and').replace('(', '').replace(')', '')
+        )
+        heatmap_path = dept_dir / f"course_group_heatmap_{safe_dept_name}_S{self.semester}.png"
+        plt.savefig(heatmap_path, dpi=300, bbox_inches='tight')
+        plt.close()
+        self.logger.info("✅ Saved heatmap to %s", heatmap_path)
+
+        summary_path = None
+        if include_summary:
+            summary_path = dept_dir / f"course_group_summary_{safe_dept_name}_S{self.semester}.txt"
+            with open(summary_path, 'w', encoding='utf-8') as handle:
+                handle.write("Course-Group Distribution Summary\n")
+                handle.write(f"Department: {self.dept}\n")
+                handle.write(f"Semester: {self.semester}\n")
+                handle.write(f"Generated: {datetime.now():%Y-%m-%d %H:%M:%S}\n")
+                handle.write("=" * 60 + "\n\n")
+
+                handle.write("OVERVIEW\n")
+                handle.write(f"- Courses: {len(courses_list)} (Lab {len(lab_courses)}, Theory {len(theory_courses)})\n")
+                handle.write(f"- Groups: {len(group_names)}\n")
+                handle.write(f"- Total assignments: {total_assignments}\n")
+                handle.write(
+                    f"- Courses with multiple options: {courses_with_choice} ({choice_percentage:.1f}%)\n\n"
+                )
+
+                handle.write("COURSE DISTRIBUTION BY GROUP\n")
+                for course in courses_list:
+                    course_data = course_group_matrix.get(course, {})
+                    groups_with_course = [g for g, count in course_data.items() if count > 0]
+                    total_teachers = sum(course_data.values())
+                    type_tags = []
+                    if course in lab_courses:
+                        type_tags.append('Lab')
+                    if course in theory_courses:
+                        type_tags.append('Theory')
+                    type_label = ' + '.join(type_tags) if type_tags else 'Unknown'
+                    handle.write(
+                        f"- {course} [{type_label}]: {len(groups_with_course)} groups, {total_teachers} teachers\n"
+                    )
+                    for group_name in groups_with_course:
+                        handle.write(
+                            f"  └─ {group_name}: {course_data.get(group_name, 0)} teacher assignments\n"
+                        )
+
+                handle.write("\nGROUP COMPOSITION\n")
+                for group_idx, group in enumerate(self.groups):
+                    if not group:
+                        continue
+                    group_name = f"G{group_idx + 1}"
+                    courses_in_group = {inst['course_code'] for inst in group}
+                    teachers_in_group = {inst['teacher_id'] for inst in group}
+                    handle.write(
+                        f"- {group_name}: {len(courses_in_group)} courses, {len(teachers_in_group)} teachers\n"
+                    )
+                    for course in sorted(courses_in_group):
+                        instances = [inst for inst in group if inst['course_code'] == course]
+                        tags = []
+                        if any(inst.get('has_lab', False) for inst in instances):
+                            tags.append('L')
+                        if any(inst.get('has_theory', False) for inst in instances):
+                            tags.append('T')
+                        teacher_count = len({inst['teacher_id'] for inst in instances})
+                        tag_str = '+'.join(tags) if tags else ''
+                        handle.write(
+                            f"  └─ {course} [{tag_str}]: {len(instances)} instances, {teacher_count} teachers\n"
+                        )
+
+            self.logger.info("✅ Saved summary to %s", summary_path)
+
+        return {
+            'heatmap': str(heatmap_path),
+            'summary': str(summary_path) if summary_path else None,
+            'output_dir': str(dept_dir),
+        }
+    
     def save_results(self, output_file):
         """
         Save optimization results to file.
@@ -1915,6 +2118,7 @@ def main():
             
             # Save results
             optimizer.save_results("course_group_optimization_results.json")
+            optimizer.generate_group_distribution_visualizations()
             
             # Get optimized groups
             groups = optimizer.get_groups()
@@ -2008,6 +2212,7 @@ def optimize_course_groups(csv_file, dept_name, semester, pe_course_map_file=Non
                 # Save results
                 output_file = f"optimization_{dept_name.replace(' ', '_').replace('&', 'and')}_{semester}.json"
                 optimizer.save_results(output_file)
+                optimizer.generate_group_distribution_visualizations()
                 
                 # Return optimized groups
                 return optimizer.get_groups()

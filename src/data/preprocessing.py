@@ -21,281 +21,39 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from dataclasses import dataclass, field
 from pathlib import Path
+import shutil
 from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Tuple
-
 import pandas as pd
 
+from .data_loader import DataLoader
 from ..config.schemas import PreprocessingConfig, SchedulerConfig
+from ..config.manager import ConfigManager
 from .course_group_optimizer import CourseGroupOptimizer
-from .schemas import DataLoadResult, DepartmentArtifacts
+from .schemas import (
+	DataLoadResult,
+	DepartmentArtifacts,
+	DepartmentSemesterKey,
+	NormalizedCourseInstance,
+	CourseGroup,
+	DepartmentSchedulingPackage,
+	GroupSummary,
+	GroupPenaltySpec,
+	GroupRequirement,
+	TeacherWorkloadSummary,
+	PreprocessingResult,
+	ExtendedDataContainer,
+	dataclass_to_dict,
+)
+
 
 logger = logging.getLogger(__name__)
 
-
-# ---------------------------------------------------------------------------
-# Dataclasses representing the canonical preprocessing artefacts
-# ---------------------------------------------------------------------------
-
-
-@dataclass(frozen=True)
-class DepartmentSemesterKey:
-	"""Hashable key referencing a (department, semester) pair."""
-
-	department: str
-	semester: int
-
-	def slug(self) -> str:
-		safe_department = "".join(ch if ch.isalnum() else "_" for ch in self.department.lower()).strip("_")
-		return f"{safe_department or 'dept'}_s{self.semester}"
-
-	def label(self) -> str:
-		return f"{self.department} S{self.semester}"
-
-
-@dataclass(frozen=True)
-class NormalizedCourseInstance:
-	"""Course instance enriched with all metadata required for grouping."""
-
-	instance_id: str
-	course_id: str
-	course_code: str
-	course_name: str
-	course_type: str
-	semester: int
-	student_dept: str
-	course_dept: str
-	teacher_id: str
-	teacher_name: str
-	assistant_teacher_id: Optional[str]
-	assistant_teacher_name: Optional[str]
-	has_lab: bool
-	has_theory: bool
-	lecture_hours: int
-	tutorial_hours: int
-	practical_hours: int
-	student_count: int
-	requires_special_scheduling: bool
-	requires_assistant: bool
-	preferred_lab_type: Optional[str]
-	preferred_room_type: Optional[str]
-	required_room_type: Optional[str]
-	pe_flag: bool
-	tags: Tuple[str, ...] = field(default_factory=tuple)
-	metadata: Mapping[str, Any] = field(default_factory=dict)
-	raw_row_index: Optional[int] = None
-
-	def total_hours(self) -> int:
-		return self.lecture_hours + self.tutorial_hours + self.practical_hours
-
-	def group_category(self) -> str:
-		return "lab" if self.has_lab else "theory"
-
-	def to_optimizer_payload(self) -> Dict[str, Any]:
-		"""Convert to the dictionary structure expected by CourseGroupOptimizer."""
-
-		return {
-			"id": self.instance_id,
-			"course_id": self.course_id,
-			"course_code": self.course_code,
-			"course_name": self.course_name,
-			"course_type": self.course_type,
-			"teacher_id": self.teacher_id,
-			"semester": self.semester,
-			"course_dept": self.course_dept,
-			"student_dept": self.student_dept,
-			"lecture_hours": self.lecture_hours,
-			"tutorial_hours": self.tutorial_hours,
-			"practical_hours": self.practical_hours,
-			"student_count": self.student_count,
-			"has_lab": self.has_lab,
-			"has_theory": self.has_theory,
-		}
-
-	def as_dict(self) -> Dict[str, Any]:
-		return {
-			"instance_id": self.instance_id,
-			"course_id": self.course_id,
-			"course_code": self.course_code,
-			"course_name": self.course_name,
-			"course_type": self.course_type,
-			"semester": self.semester,
-			"student_dept": self.student_dept,
-			"course_dept": self.course_dept,
-			"teacher_id": self.teacher_id,
-			"teacher_name": self.teacher_name,
-			"assistant_teacher_id": self.assistant_teacher_id,
-			"assistant_teacher_name": self.assistant_teacher_name,
-			"has_lab": self.has_lab,
-			"has_theory": self.has_theory,
-			"lecture_hours": self.lecture_hours,
-			"tutorial_hours": self.tutorial_hours,
-			"practical_hours": self.practical_hours,
-			"student_count": self.student_count,
-			"requires_special_scheduling": self.requires_special_scheduling,
-			"requires_assistant": self.requires_assistant,
-			"preferred_lab_type": self.preferred_lab_type,
-			"preferred_room_type": self.preferred_room_type,
-			"required_room_type": self.required_room_type,
-			"pe_flag": self.pe_flag,
-			"tags": self.tags,
-			"metadata": dict(self.metadata),
-			"raw_row_index": self.raw_row_index,
-		}
-
-
-@dataclass(frozen=True)
-class GroupSummary:
-	num_instances: int
-	num_courses: int
-	num_teachers: int
-	lab_instances: int
-	theory_instances: int
-	total_student_count: int
-	lab_hours: int
-	theory_hours: int
-
-
-@dataclass(frozen=True)
-class CourseGroup:
-	key: DepartmentSemesterKey
-	group_id: str
-	ordinal: int
-	is_professional_elective: bool
-	course_instance_ids: Tuple[str, ...]
-	teacher_ids: Tuple[str, ...]
-	course_codes: Tuple[str, ...]
-	summary: GroupSummary
-	tags: Tuple[str, ...] = field(default_factory=tuple)
-
-	def as_dict(self) -> Dict[str, Any]:
-		return {
-			"group_id": self.group_id,
-			"ordinal": self.ordinal,
-			"department": self.key.department,
-			"semester": self.key.semester,
-			"is_professional_elective": self.is_professional_elective,
-			"course_instance_ids": self.course_instance_ids,
-			"teacher_ids": self.teacher_ids,
-			"course_codes": self.course_codes,
-			"summary": dataclass_to_dict(self.summary),
-			"tags": self.tags,
-		}
-
-
-@dataclass(frozen=True)
-class GroupRequirement:
-	group_id: str
-	department: str
-	semester: int
-	has_lab: bool
-	required_lab_sessions: int
-	prefer_consecutive_labs: bool
-	lunch_slot_window: Tuple[int, ...]
-	five_pm_policy: Optional[str]
-	tags: Tuple[str, ...] = field(default_factory=tuple)
-
-
-@dataclass(frozen=True)
-class GroupPenaltySpec:
-	name: str
-	weight: float
-	description: str
-	applies_to: Tuple[str, ...] = field(default_factory=tuple)
-	params: Mapping[str, Any] = field(default_factory=dict)
-
-
-@dataclass(frozen=True)
-class TeacherWorkloadSummary:
-	teacher_id: str
-	teacher_name: str
-	groups: Tuple[str, ...]
-	course_codes: Tuple[str, ...]
-	course_instance_ids: Tuple[str, ...]
-	total_hours: int
-	lab_hours: int
-	theory_hours: int
-	total_students: int
-
-
-@dataclass(frozen=True)
-class DepartmentSchedulingPackage:
-	key: DepartmentSemesterKey
-	requirements: Tuple[GroupRequirement, ...]
-	penalties: Tuple[GroupPenaltySpec, ...]
-	teacher_workload: Mapping[str, TeacherWorkloadSummary]
-	metadata: Mapping[str, Any] = field(default_factory=dict)
-
-
-@dataclass(frozen=True)
-class PreprocessingResult:
-	normalized_instances: Mapping[DepartmentSemesterKey, Tuple[NormalizedCourseInstance, ...]]
-	groups: Mapping[DepartmentSemesterKey, Tuple[CourseGroup, ...]]
-	scheduling_packages: Mapping[DepartmentSemesterKey, DepartmentSchedulingPackage]
-	warnings: Tuple[str, ...]
-	stats: Mapping[str, Any]
-
-	def to_dict(self) -> Dict[str, Any]:
-		return {
-			"normalized_instances": {
-				key.slug(): [instance.as_dict() for instance in instances]
-				for key, instances in self.normalized_instances.items()
-			},
-			"groups": {
-				key.slug(): [group.as_dict() for group in groups]
-				for key, groups in self.groups.items()
-			},
-			"scheduling_packages": {
-				key.slug(): {
-					"requirements": [dataclass_to_dict(req) for req in package.requirements],
-					"penalties": [dataclass_to_dict(penalty) for penalty in package.penalties],
-					"teacher_workload": {
-						teacher_id: dataclass_to_dict(summary)
-						for teacher_id, summary in package.teacher_workload.items()
-					},
-					"metadata": dict(package.metadata),
-				}
-				for key, package in self.scheduling_packages.items()
-			},
-			"warnings": list(self.warnings),
-			"stats": dict(self.stats),
-		}
-
-
-@dataclass(frozen=True)
-class ExtendedDataContainer:
-	"""Convenience bundle combining raw load artefacts with preprocessing outputs."""
-
-	raw: DataLoadResult
-	preprocessing: PreprocessingResult
 
 
 # ---------------------------------------------------------------------------
 # Helper utilities
 # ---------------------------------------------------------------------------
-
-
-def dataclass_to_dict(instance: Any) -> Dict[str, Any]:
-	if instance is None:
-		return {}
-	if hasattr(instance, "__dataclass_fields__"):
-		result: Dict[str, Any] = {}
-		for field_name in instance.__dataclass_fields__:
-			value = getattr(instance, field_name)
-			if isinstance(value, tuple) and value and hasattr(value[0], "__dataclass_fields__"):
-				result[field_name] = [dataclass_to_dict(item) for item in value]
-			elif hasattr(value, "__dataclass_fields__"):
-				result[field_name] = dataclass_to_dict(value)
-			elif isinstance(value, (tuple, list)):
-				result[field_name] = list(value)
-			elif isinstance(value, Mapping):
-				result[field_name] = dict(value)
-			else:
-				result[field_name] = value
-		return result
-	return instance
-
 
 def _clean_str(value: Any, *, default: str = "") -> str:
 	if value is None:
@@ -499,6 +257,18 @@ class DepartmentCourseGrouper:
 		normalized_instances: Mapping[DepartmentSemesterKey, Tuple[NormalizedCourseInstance, ...]],
 	) -> Dict[DepartmentSemesterKey, Tuple[CourseGroup, ...]]:
 		grouped: Dict[DepartmentSemesterKey, Tuple[CourseGroup, ...]] = {}
+
+		filedir = Path(__file__).resolve() / "grouping_visualizations"
+		try:
+			if filedir.exists() and filedir.is_dir():
+				shutil.rmtree(filedir)
+			print(f"Clear existing Group Visualizations at {filedir}")
+		except PermissionError:
+			self._logger.warning("Permission denied when trying to clear existing grouping visualizations at %s", filedir)
+			raise PermissionError("Cannot clear existing grouping visualizations")
+		except OSError as e:
+			print(f"Error {e}")
+
 		for key, instances in normalized_instances.items():
 			if not instances:
 				continue
@@ -522,6 +292,7 @@ class DepartmentCourseGrouper:
 
 		success = optimizer.optimize_distribution()
 		if success:
+			optimizer.generate_group_distribution_visualizations()
 			validator_ok = optimizer.validate_solution()
 			if not validator_ok:
 				self._warnings.append(
@@ -883,3 +654,13 @@ __all__ = [
 	"preprocess_data",
 ]
 
+if __name__ == '__main__':
+	base_dir = Path.cwd()
+	config_manager = ConfigManager(base_dir=base_dir)
+	config = config_manager.load()
+    
+	data_loader = DataLoader(config, base_dir=base_dir)
+	res = data_loader.load()
+
+	pre = DataPreprocessor(config)
+	output = pre.build_extended_container(data=res)

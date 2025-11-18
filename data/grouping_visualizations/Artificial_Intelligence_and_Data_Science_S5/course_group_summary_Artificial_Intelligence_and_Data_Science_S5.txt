@@ -1,0 +1,35 @@
+Course-Group Distribution Summary
+Department: Artificial Intelligence & Data Science
+Semester: 5
+Generated: 2025-11-18 14:24:39
+============================================================
+
+OVERVIEW
+- Courses: 5 (Lab 4, Theory 5)
+- Groups: 5
+- Total assignments: 14
+- Courses with multiple options: 5 (100.0%)
+
+COURSE DISTRIBUTION BY GROUP
+- AD23531 [Lab + Theory]: 1 groups, 3 teachers
+  └─ G4: 3 teacher assignments
+- AD23532 [Lab + Theory]: 1 groups, 3 teachers
+  └─ G2: 3 teacher assignments
+- AI23531 [Lab + Theory]: 1 groups, 3 teachers
+  └─ G1: 3 teacher assignments
+- CS23532 [Lab + Theory]: 1 groups, 3 teachers
+  └─ G3: 3 teacher assignments
+- IT23PE11 [Theory]: 1 groups, 2 teachers
+  └─ G5: 2 teacher assignments
+
+GROUP COMPOSITION
+- G1: 1 courses, 3 teachers
+  └─ AI23531 [L+T]: 3 instances, 3 teachers
+- G2: 1 courses, 3 teachers
+  └─ AD23532 [L+T]: 3 instances, 3 teachers
+- G3: 1 courses, 3 teachers
+  └─ CS23532 [L+T]: 3 instances, 3 teachers
+- G4: 1 courses, 3 teachers
+  └─ AD23531 [L+T]: 3 instances, 3 teachers
+- G5: 1 courses, 2 teachers
+  └─ IT23PE11 [T]: 2 instances, 2 teachers

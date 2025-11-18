@@ -1,0 +1,156 @@
+Outstanding Modules & Tasks — November 14, 2025
+================================================
+
+Context
+-------
+The legacy combined scheduler has been decomposed into modular layers, but large
+portions of the pipeline still require implementation. The sections below map
+each missing piece to concrete deliverables, dependencies, and suggested steps
+so work can be parallelized safely.
+
+1. CP-SAT Variable Creator (`src/models/variables.py`)
+------------------------------------------------------
+Goal: Provide a `VariableCreator` class that encapsulates all CP-SAT decision
+variables needed by downstream constraint builders.
+
+Deliverables:
+- Data classes / typed dicts describing handles to lab-session variables,
+  theory-slot variables, room assignments, and helper selectors
+  (e.g., day×slot×room occupancy flags).
+- Methods like `create_lab_variables(model, data)` and
+  `create_theory_variables(model, data)` returning structured dictionaries.
+- Utility lookup tables (course instance → group, room registries, slot maps)
+  sourced from `ExtendedDataContainer` to keep constraint modules stateless.
+
+Dependencies / Notes:
+- Consumes `ExtendedDataContainer` from preprocessing.
+- Must align naming conventions with `CourseGroupOptimizer` outputs and future
+  constraint modules.
+- Expose metadata for debugging (e.g., variable counts per domain).
+
+2. Model Builder Core (`src/models/model_builder.py`)
+----------------------------------------------------
+Goal: Central place that wires the CP-SAT model, variables, constraints, and
+objective weights according to configuration.
+
+Deliverables:
+- `ModelBuilder` class with `build()` returning a `ConstraintModel` structure
+  `{ model, variables, constraint_info }`.
+- Hooks to register constraint builders from `constraints/registry.py` using
+  priority/enable flags in config.
+- Objective composition logic (lab balance, theory balance, teacher spread,
+  slack penalties) derived from `config.defaults.default_model_config()`.
+
+Dependencies / Notes:
+- Requires VariableCreator implementation.
+- Should support tracing/diagnostics toggled via config.runtime/logging.
+- Prepare for incremental solving (LNS hooks) even if not immediately used.
+
+3. Constraint Framework + Modules (`src/constraints/…`)
+-------------------------------------------------------
+Goal: Implement modular constraint classes replacing the monolithic logic.
+
+Deliverables:
+- `constraints/base.py` defining an abstract `Constraint` with `apply()` and
+  metadata helpers.
+- Subpackages per the architecture plan:
+  * `lab/requirements.py`, `lab/room_allocation.py`, `lab/capacity_analysis.py`,
+    `lab/shift_based.py`, `lab/core_lab.py`
+  * `theory/group_scheduling.py`, `theory/room_capacity.py`,
+    `theory/teacher_presence.py`, `theory/daily_limits.py`,
+    `theory/consecutive_slots.py`
+  * `cross_system/teacher_clash.py`, `cross_system/department_conflicts.py`,
+    `cross_system/time_mapping.py`
+  * `utility/lunch_break.py`, `utility/five_pm_constraints.py`,
+    `utility/teacher_preferences.py`
+- `constraints/registry.py` updated to expose factory metadata, priorities,
+  and config binding for each constraint.
+
+Dependencies / Notes:
+- Each constraint consumes variable handles from VariableCreator and shared
+  data from ExtendedDataContainer.
+- Split hard vs. soft constraints (penalties vs. hard clauses).
+- Include unit tests per constraint where feasible.
+
+4. Solver Orchestration (`src/runtime/solver.py`)
+-----------------------------------------------
+Goal: Encapsulate CP-SAT solving, parameter tuning, statistics capture, and
+error handling.
+
+Deliverables:
+- `SolverRunner` (or similar) class with `solve(model_builder_result)`.
+- Configurable time limit, thread count, solution limit, LNS flags based on
+  `config.runtime` and `config.solver_params.yaml`.
+- Result object exposing status, objective value, wall-clock time, gap,
+  and optionally best-bound history for logging/metrics.
+
+Dependencies / Notes:
+- Must handle infeasibility with diagnostic hooks (e.g., export conflict ref).
+- Provide serialization helpers to store solver logs in `output/`.
+
+5. Schedule Extraction Pipeline (`src/runtime/extractor.py`)
+-----------------------------------------------------------
+Goal: Translate solver assignments into human-readable schedules and the legacy
+payload shapes expected by downstream viewers.
+
+Deliverables:
+- `ScheduleExtractor` consuming `ExtendedDataContainer` + solver result.
+- Methods to emit lab schedules, theory schedules, combined timetable, and
+  instance→timeslot/room mappings.
+- Support for generating CSV/JSON snapshots compatible with `old/room_timetable`
+  tooling.
+
+Dependencies / Notes:
+- Needs variable naming conventions from VariableCreator.
+- Should annotate entries with lunch window/five-pm tags for validation.
+
+6. Validation & Metrics Layer (`src/runtime/validator.py`, `metrics.py`)
+-----------------------------------------------------------------------
+Goal: Post-solve verification and KPI computation for quality assurance.
+
+Deliverables:
+- Validation checks: room capacity, teacher conflicts, shift compliance,
+  lunch/five-pm adherence, lab session coverage.
+- Metrics: schedule density, room utilization, group balance, penalty scores.
+- Structured report objects and optional HTML/CSV outputs for tooling.
+
+Dependencies / Notes:
+- Reuse constraint metadata for targeted validation messages.
+- Integrate with orchestrator so failing validation can block export unless
+  overridden.
+
+7. Pipeline Orchestrator Integration (`src/pipeline/orchestrator.py`)
+--------------------------------------------------------------------
+Goal: Wire the full end-to-end flow with a simple API for CLI/UI callers.
+
+Deliverables:
+- Extend existing `PipelineOrchestrator` or add a higher-level `Scheduler`
+  class to execute: load config → load data → preprocess → build model → solve
+  → extract → validate → report.
+- Provide summary dictionaries for dashboards plus persistence hooks
+  (write schedules, solver logs, validation reports to `output/`).
+- Support overrides/injection for experimentation (partial runs, what-if).
+
+Dependencies / Notes:
+- Requires all previous layers to be functional.
+- Should emit structured logging around each stage with timings.
+
+8. CLI & Tests
+--------------
+Goal: Developer ergonomics and regression protection.
+
+Deliverables:
+- CLI entry point (e.g., `scheduler.py` or Typer/Click-based tool) to run
+  pipeline with optional overrides and output locations.
+- Unit tests: variable creator, representative constraints, solver runner,
+  extractor.
+- Integration test executing a small synthetic dataset end-to-end.
+- Update `README.md` with usage instructions, add `pytest` to requirements if
+  missing, ensure CI wiring (if applicable).
+
+Dependencies / Notes:
+- Testing harness may need fixtures/mocks for OR-Tools; consider synthetic
+  dataset under `tests/data/`.
+
+---
+Please keep this file updated as modules are completed or re-scoped.
