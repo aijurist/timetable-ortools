@@ -1,0 +1,58 @@
+Step-by-step roadmap
+Baseline scaffolding (Day 0)
+
+Add src/constraints/base.py with an abstract Constraint class (name, category, priority, apply(context), metadata).
+Create package layout: constraints/lab, constraints/theory, constraints/cross_system, constraints/utility, and drop __init__.py files plus docstrings describing expected constraint bundles.
+Extend constraints/registry.py to load constraint classes dynamically and expose ConstraintSpec (id, factory, priority, enabled flag, weight).
+Quick test: python -m compileall src/constraints and a tiny unit test that instantiates a dummy constraint to ensure the base & registry wiring works.
+Constraint context + helpers
+
+Define a ConstraintContext dataclass (or reuse ModelBuilder’s version) that hands each constraint the OR-Tools model, variables, ExtendedDataContainer, configuration, and logging/tracing hooks.
+Provide shared helper mixins/utilities (e.g., lab session iterators, room lookups) in constraints/utils.py to avoid duplication later.
+Quick test: Add unit tests ensuring helpers return expected slot/group sets using a mini fixture.
+Lab phase 1 – coverage & requirements
+
+Files: lab/requirements.py (ensure each lab group meets required weekly count) and lab/core_lab.py (hard constraints for mapped core labs).
+Translate the corresponding logic blocks from combined_scheduler.py into constraint classes with clear apply() steps.
+Register them in the registry with priority="hard" and config toggles.
+Verification: Write focused tests using a synthetic lab dataset to assert feasibility/infeasibility toggles; run pytest tests/constraints/lab/test_requirements.py.
+Lab phase 2 – rooms, capacities, shifts
+
+Implement lab/room_allocation.py, lab/capacity_analysis.py, and lab/shift_based.py.
+Include helper data (room capacities, shift windows) pulled from ExtendedDataContainer.
+Introduce soft penalties where the legacy code used preference scoring (e.g., capacity slack).
+Verification: Add tests for room conflicts and shift violations; also run a smoke ModelBuilder build with only lab constraints to ensure integration still compiles.
+Theory phase 1 – group scheduling & teacher presence
+
+Files: theory/group_scheduling.py, theory/teacher_presence.py.
+Port logic ensuring theory groups are assigned to valid slots, teachers aren’t double-booked, and that teacher availability windows are respected (including pop.csv preferences).
+Verification: Unit tests for no double-booking + optional penalty scoring for preference misses.
+Theory phase 2 – room & temporal structure
+
+Files: theory/room_capacity.py, theory/daily_limits.py, theory/consecutive_slots.py.
+Capture daily load limits, avoid undesirable consecutive sessions, and enforce room capacity.
+Verification: Extend theory test suite; run pytest tests/constraints/theory.
+Cross-system constraints
+
+Files: cross_system/teacher_clash.py, cross_system/department_conflicts.py, cross_system/time_mapping.py.
+These coordinate lab vs. theory collisions, department-level day assignments, and lab↔theory time mapping (the _build_time_mapping() logic).
+Because they touch everything, add integration tests that run ModelBuilder.build() with both lab/theory vars and assert conflict detection works.
+Utility/quality-of-life rules
+
+Files: utility/lunch_break.py, utility/five_pm_constraints.py, utility/teacher_preferences.py.
+Encode lunch-window protection, 5 PM limits, and softer teacher-day preferences (as penalty terms).
+Verification: Unit tests plus regression config ensuring penalties appear in the objective.
+Registry finalization + config binding
+
+Populate constraints/registry.py with all constraints, grouped by priority and bound to config keys (e.g., config["constraints"]["lab"]["requirements"]["enabled"]).
+Update default config YAMLs (constraint.yaml, etc.) to toggle modules and weights.
+Verification: run python -m compileall src + a short script that iterates registry.iter_specs() and instantiates each constraint with a mocked context.
+Documentation & tracking
+
+Update outstanding_modules_todo.txt to mark completed submodules and record any deviations.
+Add a docs/constraints.md (or extend README) summarizing available constraints, their config toggles, and test coverage.
+Verification: CI-style pytest run plus lint/format checks if configured.
+Testing cadence
+After each package phase (lab1, lab2, theory1, etc.), add/extend targeted pytest modules so regressions are caught early.
+Maintain a lightweight integration harness (e.g., tests/integration/test_model_builder_smoke.py) that builds the model with subsets of constraints to ensure the registry wiring remains valid.
+Once all constraints are ported, run a full synthetic scheduling scenario and compare outputs against the legacy results for sanity.

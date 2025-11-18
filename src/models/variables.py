@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 import math
 from collections import defaultdict
-from dataclasses import dataclass, field
 from typing import Dict, Mapping, MutableMapping, Optional, Tuple
 
 from ortools.sat.python import cp_model
@@ -17,77 +16,17 @@ from ..data.schemas import (
 	NormalizedCourseInstance,
 )
 
+from .schema import (
+	LabCourseRequirement, 
+	GroupTimeslotRequirement, 
+	LabVariableBlock, 
+	TheoryVariableBlock, 
+	VariableCreationResult)
 
 LabAssignmentDict = Dict[str, Dict[str, Dict[int, Dict[str, Dict[str, cp_model.IntVar]]]]]
 GroupTimeslotDict = Dict[str, Dict[int, Dict[int, cp_model.IntVar]]]
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class LabCourseRequirement:
-	course_instance_id: str
-	teacher_id: str
-	group_id: str
-	department: str
-	semester: int
-	practical_hours: int
-	required_sessions: int
-	student_count: int
-	preferred_room_type: Optional[str]
-	required_room_type: Optional[str]
-	tags: Tuple[str, ...] = field(default_factory=tuple)
-
-
-@dataclass(frozen=True)
-class GroupTimeslotRequirement:
-	group_id: str
-	department: str
-	semester: int
-	required_theory_slots: int
-	day_pattern: Tuple[str, ...]
-	lunch_slot_window: Tuple[int, ...]
-	five_pm_policy: Optional[str]
-	tags: Tuple[str, ...] = field(default_factory=tuple)
-	base_requirement: Optional[GroupRequirement] = None
-
-	@property
-	def requires_lab(self) -> bool:
-		return bool(self.base_requirement and self.base_requirement.has_lab)
-
-	@property
-	def required_lab_sessions(self) -> int:
-		return self.base_requirement.required_lab_sessions if self.base_requirement else 0
-
-	@property
-	def prefer_consecutive_labs(self) -> bool:
-		return bool(self.base_requirement and self.base_requirement.prefer_consecutive_labs)
-
-
-@dataclass
-class LabVariableBlock:
-	assignments: LabAssignmentDict
-	requirements: Mapping[str, LabCourseRequirement]
-	teacher_courses: Mapping[str, Tuple[str, ...]]
-	day_patterns: Mapping[str, Tuple[str, ...]]
-	lab_session_names: Tuple[str, ...]
-	room_ids: Tuple[str, ...]
-	instance_group_lookup: Mapping[str, str]
-
-
-@dataclass
-class TheoryVariableBlock:
-	group_timeslots: GroupTimeslotDict
-	requirements: Mapping[str, GroupTimeslotRequirement]
-	day_patterns: Mapping[str, Tuple[str, ...]]
-	theory_slot_labels: Tuple[str, ...]
-
-
-@dataclass(frozen=True)
-class VariableCreationResult:
-	lab: LabVariableBlock
-	theory: TheoryVariableBlock
-	metadata: Mapping[str, int]
 
 
 class VariableCreator:
@@ -201,6 +140,7 @@ class VariableCreator:
 			required_sessions = max(1, math.ceil(instance.practical_hours / 2))
 			requirements[instance_id] = LabCourseRequirement(
 				course_instance_id=instance_id,
+				course_code=instance.course_code,
 				teacher_id=instance.teacher_id,
 				group_id=group.group_id,
 				department=instance.student_dept,
@@ -299,3 +239,26 @@ __all__ = [
 	"VariableCreationResult",
 	"VariableCreator",
 ]
+
+if __name__ == "__main__":
+    from ortools.sat.python import cp_model
+    from ..config.manager import ConfigManager
+    from ..data.data_loader import DataLoader
+    from ..data.preprocessing import DataPreprocessor
+    from pathlib import Path
+
+    base_dir = Path.cwd()
+    config_manager = ConfigManager(base_dir=base_dir)
+    config = config_manager.load()
+    
+    data_loader = DataLoader(config, base_dir=base_dir)
+    res = data_loader.load()
+
+    pre = DataPreprocessor(config)
+    output = pre.build_extended_container(data=res)
+	
+    model = cp_model.CpModel()
+    variable_creator = VariableCreator(data=output)
+    model_res = variable_creator.create(model=model)
+
+	
