@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Computer Science & Engineering
 Semester: 7
-Generated: 2025-11-18 17:02:02
+Generated: 2025-11-18 17:26:46
 ============================================================
 
 OVERVIEW
@@ -12,20 +12,20 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - CS19741 [Lab + Theory]: 2 groups, 5 teachers
-  └─ G1: 3 teacher assignments
-  └─ G2: 2 teacher assignments
-- CS19P18 [Lab + Theory]: 2 groups, 5 teachers
   └─ G1: 2 teacher assignments
   └─ G2: 3 teacher assignments
+- CS19P18 [Lab + Theory]: 2 groups, 5 teachers
+  └─ G1: 3 teacher assignments
+  └─ G2: 2 teacher assignments
 - CS19PE04 [Lab + Theory]: 1 groups, 4 teachers
   └─ G3: 4 teacher assignments
 
 GROUP COMPOSITION
 - G1: 2 courses, 5 teachers
-  └─ CS19741 [L+T]: 3 instances, 3 teachers
-  └─ CS19P18 [L+T]: 2 instances, 2 teachers
-- G2: 2 courses, 5 teachers
   └─ CS19741 [L+T]: 2 instances, 2 teachers
   └─ CS19P18 [L+T]: 3 instances, 3 teachers
+- G2: 2 courses, 5 teachers
+  └─ CS19741 [L+T]: 3 instances, 3 teachers
+  └─ CS19P18 [L+T]: 2 instances, 2 teachers
 - G3: 1 courses, 4 teachers
   └─ CS19PE04 [L+T]: 4 instances, 4 teachers

@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Electrical & Electronics Engineering
 Semester: 7
-Generated: 2025-11-18 17:02:15
+Generated: 2025-11-18 17:26:59
 ============================================================
 
 OVERVIEW
@@ -15,10 +15,10 @@ COURSE DISTRIBUTION BY GROUP
   └─ G1: 1 teacher assignments
   └─ G2: 1 teacher assignments
 - EE19741 [Lab + Theory]: 2 groups, 2 teachers
-  └─ G2: 1 teacher assignments
+  └─ G1: 1 teacher assignments
   └─ G3: 1 teacher assignments
 - EE19742 [Lab + Theory]: 2 groups, 2 teachers
-  └─ G1: 1 teacher assignments
+  └─ G2: 1 teacher assignments
   └─ G3: 1 teacher assignments
 - EE19P72 [Theory]: 1 groups, 3 teachers
   └─ G4: 3 teacher assignments
@@ -26,10 +26,10 @@ COURSE DISTRIBUTION BY GROUP
 GROUP COMPOSITION
 - G1: 2 courses, 2 teachers
   └─ EE19701 [T]: 1 instances, 1 teachers
-  └─ EE19742 [L+T]: 1 instances, 1 teachers
+  └─ EE19741 [L+T]: 1 instances, 1 teachers
 - G2: 2 courses, 2 teachers
   └─ EE19701 [T]: 1 instances, 1 teachers
-  └─ EE19741 [L+T]: 1 instances, 1 teachers
+  └─ EE19742 [L+T]: 1 instances, 1 teachers
 - G3: 2 courses, 2 teachers
   └─ EE19741 [L+T]: 1 instances, 1 teachers
   └─ EE19742 [L+T]: 1 instances, 1 teachers

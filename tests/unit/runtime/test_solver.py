@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import textwrap
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
@@ -90,35 +91,53 @@ def test_solver_runner_exports_infeasible_snapshot(tmp_path: Path) -> None:
 def test_solver_runner_applies_yaml_parameters(tmp_path: Path, monkeypatch) -> None:
 	params_path = tmp_path / "solver_params.yaml"
 	params_path.write_text(
-		"""
-solver:
-  search_branching: portfolio
-stopping_conditions:
-  max_solutions: 2
-""".strip(),
+		textwrap.dedent(
+			"""
+			solver:
+			  search_branching: portfolio
+			stopping_conditions:
+			  max_solutions: 1
+			"""
+		).strip(),
 		encoding="utf-8",
 	)
 	config = _config_with_output(tmp_path / "out")
 	runner = SolverRunner(config, solver_params_path=params_path, logger_=logging.getLogger("tests.solver.yaml"))
+	assert runner._params_payload.get("solver", {}).get("search_branching") == "portfolio"
 
 	captured: dict[str, Tuple[object, ...]] = {}
 	original_assign = SolverRunner._assign_parameter
 
 	def spy(self, parameters, name, value):  # type: ignore[override]
+		result = original_assign(self, parameters, name, value)
+		try:
+			applied_value = getattr(parameters, name)
+		except AttributeError:
+			applied_value = value
 		values = list(captured.get(name, ()))
-		values.append(value)
+		values.append(applied_value)
 		captured[name] = tuple(values)
-		return original_assign(self, parameters, name, value)
+		return result
 
 	monkeypatch.setattr(SolverRunner, "_assign_parameter", spy)
+	assert SolverRunner._assign_parameter is spy
+	probe_params = sat_parameters_pb2.SatParameters()
+	runner._assign_parameter(probe_params, "search_branching", "PORTFOLIO_SEARCH")
+	assert "search_branching" in captured
+	captured.clear()
+	test_params = sat_parameters_pb2.SatParameters()
+	runner._apply_yaml_parameters(test_params)
+	assert "search_branching" in captured
+	captured.clear()
 
 	model = cp_model.CpModel()
 	x = model.NewIntVar(0, 5, "x")
 	model.Maximize(x)
 
 	runner.solve(_build_constraint_model(model))
+	assert runner._params_payload.get("solver", {}).get("search_branching") == "portfolio"
 
 	assert "search_branching" in captured
 	assert captured["search_branching"][-1] == sat_parameters_pb2.SatParameters.SearchBranching.PORTFOLIO_SEARCH
-	assert "solution_limit" in captured
-	assert captured["solution_limit"][-1] == 2
+	assert "stop_after_first_solution" in captured
+	assert captured["stop_after_first_solution"][-1] is True

@@ -443,7 +443,7 @@ constraints:
       weight: 1.0
       params: {}
     core_lab_mapping:
-      enabled: true
+      enabled: false
       priority: 8
       weight: 0.8
       params: {}

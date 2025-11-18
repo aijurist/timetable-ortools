@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import logging
 import math
 import time
@@ -12,116 +11,17 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Mapping, Optional, Tuple
 
 import yaml
-from ortools.sat import sat_parameters_pb2
-from ortools.sat.python import cp_model, cp_model_pb2
+from ortools.sat import cp_model_pb2, sat_parameters_pb2
+from ortools.sat.python import cp_model
 
 from ..config.schemas import SchedulerConfig
 from ..models.model_builder import ConstraintModel
+from .solver_schema import BoundEvent, SolverResult, _BoundTracker
 
 LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class BoundEvent:
-	timestamp: float
-	best_bound: Optional[float]
-	objective_value: Optional[float]
-	solution_index: int
 
-	def to_dict(self) -> Dict[str, float | None]:
-		return {
-			"timestamp": self.timestamp,
-			"best_bound": self.best_bound,
-			"objective_value": self.objective_value,
-			"solution_index": self.solution_index,
-		}
-
-
-@dataclass
-class SolverResult:
-	status: str
-	status_code: int
-	objective_value: Optional[float]
-	best_bound: Optional[float]
-	gap: Optional[float]
-	wall_time: float
-	solution_count: int
-	best_bound_history: Tuple[BoundEvent, ...]
-	solver_statistics: Mapping[str, float]
-	response_stats: str
-	response: cp_model_pb2.CpSolverResponse = field(repr=False)
-	log_path: Optional[Path] = None
-	summary_path: Optional[Path] = None
-	diagnostics_path: Optional[Path] = None
-
-	def to_dict(self) -> Dict[str, object]:
-		return {
-			"status": self.status,
-			"status_code": self.status_code,
-			"objective_value": self.objective_value,
-			"best_bound": self.best_bound,
-			"gap": self.gap,
-			"wall_time": self.wall_time,
-			"solution_count": self.solution_count,
-			"solver_statistics": dict(self.solver_statistics),
-			"best_bound_history": [event.to_dict() for event in self.best_bound_history],
-			"response_stats": self.response_stats,
-			"log_path": str(self.log_path) if self.log_path else None,
-			"summary_path": str(self.summary_path) if self.summary_path else None,
-			"diagnostics_path": str(self.diagnostics_path) if self.diagnostics_path else None,
-		}
-
-	def write_summary(self, destination: Path) -> Path:
-		destination.parent.mkdir(parents=True, exist_ok=True)
-		destination.write_text(json.dumps(self.to_dict(), indent=2), encoding="utf-8")
-		self.summary_path = destination
-		return destination
-
-
-class _BoundTracker(cp_model.CpSolverSolutionCallback):
-	def __init__(self, *, has_objective: bool) -> None:
-		super().__init__()
-		self._has_objective = has_objective
-		self._start = time.perf_counter()
-		self._events: List[BoundEvent] = []
-		self.solution_count = 0
-
-	def on_solution_callback(self) -> None:  # pragma: no cover - executed inside CP-SAT
-		self.solution_count += 1
-		timestamp = time.perf_counter() - self._start
-		best_bound = self.BestObjectiveBound() if self._has_objective else None
-		if best_bound is not None and math.isinf(best_bound):
-			best_bound = None
-		objective_value = self.ObjectiveValue() if self._has_objective else None
-		self._events.append(
-			BoundEvent(
-				timestamp=timestamp,
-				best_bound=best_bound,
-				objective_value=objective_value,
-				solution_index=self.solution_count,
-			)
-		)
-
-	def finalize(self, best_bound: Optional[float]) -> None:
-		if not self._has_objective:
-			return
-		if best_bound is None:
-			return
-		if self._events and self._events[-1].best_bound == best_bound:
-			return
-		timestamp = time.perf_counter() - self._start
-		self._events.append(
-			BoundEvent(
-				timestamp=timestamp,
-				best_bound=best_bound,
-				objective_value=None,
-				solution_index=self.solution_count,
-			)
-		)
-
-	@property
-	def events(self) -> Tuple[BoundEvent, ...]:
-		return tuple(self._events)
 
 
 class SolverRunner:
@@ -156,7 +56,7 @@ class SolverRunner:
 	) -> SolverResult:
 		model = constraint_model.model
 		solver = cp_model.CpSolver()
-		self._apply_yaml_parameters(solver.parameters)
+		# self._apply_yaml_parameters(solver.parameters)
 		self._apply_runtime_parameters(solver.parameters)
 
 		has_objective = self._model_has_objective(model)
@@ -167,27 +67,27 @@ class SolverRunner:
 			solver.parameters.num_search_workers or 1,
 		)
 		start_time = time.perf_counter()
-		status_code = solver.SolveWithSolutionCallback(model, callback)
+		status_code = solver.Solve(model, callback)
 		elapsed = time.perf_counter() - start_time
 
 		best_bound = self._normalise_bound(solver.BestObjectiveBound()) if has_objective else None
 		callback.finalize(best_bound)
 		status_label = self._STATUS_LABELS.get(status_code, f"STATUS_{status_code}")
 		objective_value = None
-		gap = None
 		if has_objective and status_code in (cp_model.OPTIMAL, cp_model.FEASIBLE):
 			objective_value = solver.ObjectiveValue()
-			gap = solver.RelativeGap()
-		elif has_objective and best_bound is not None:
-			gap = solver.RelativeGap()
+		gap = self._compute_relative_gap(objective_value, best_bound)
 
+		response = solver.ResponseProto()
 		solver_stats = {
 			"wall_time": solver.WallTime(),
 			"user_time": solver.UserTime(),
-			"deterministic_time": solver.DeterministicTime(),
 			"branches": solver.NumBranches(),
 			"conflicts": solver.NumConflicts(),
 		}
+		deterministic_time = getattr(response, "deterministic_time", None)
+		if deterministic_time not in (None, 0):
+			solver_stats["deterministic_time"] = deterministic_time
 
 		log_directory = self._resolve_log_dir(log_dir)
 		timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
@@ -207,7 +107,7 @@ class SolverRunner:
 			best_bound_history=callback.events,
 			solver_statistics=solver_stats,
 			response_stats=solver.ResponseStats(),
-			response=solver.ResponseProto(),
+			response=response,
 			log_path=log_path,
 			diagnostics_path=diagnostics_path,
 		)
@@ -222,7 +122,7 @@ class SolverRunner:
 			parameters.max_time_in_seconds = runtime.time_limit_sec
 		parameters.num_search_workers = max(1, runtime.thread_count)
 		if runtime.solution_limit:
-			parameters.solution_limit = runtime.solution_limit
+			self._apply_solution_limit(parameters, runtime.solution_limit, source="runtime")
 		parameters.use_lns = bool(runtime.enable_lns)
 		if runtime.enable_trace:
 			parameters.log_search_progress = True
@@ -238,7 +138,10 @@ class SolverRunner:
 				"enable_lns": "use_lns",
 				"enable_trace": "log_search_progress",
 			}.get(key, key)
-			if mapped_key in {"max_time_in_seconds", "num_search_workers", "solution_limit", "use_lns", "log_search_progress"}:
+			if mapped_key == "solution_limit":
+				self._apply_solution_limit(parameters, value, source="solver")
+				continue
+			if mapped_key in {"max_time_in_seconds", "num_search_workers", "use_lns", "log_search_progress"}:
 				# These are controlled via runtime config and will be applied later
 				continue
 			self._assign_parameter(parameters, mapped_key, value)
@@ -254,8 +157,9 @@ class SolverRunner:
 			self._assign_parameter(parameters, "absolute_gap_limit", stopping_section["best_objective_gap"])
 		if stopping_section.get("max_failures") is not None:
 			self._assign_parameter(parameters, "max_number_of_conflicts", stopping_section["max_failures"])
-		if stopping_section.get("max_solutions") is not None:
-			self._assign_parameter(parameters, "solution_limit", stopping_section["max_solutions"])
+		max_solutions = stopping_section.get("max_solutions")
+		if max_solutions is not None:
+			self._apply_solution_limit(parameters, max_solutions, source="stopping_conditions")
 
 	def _assign_parameter(self, parameters: sat_parameters_pb2.SatParameters, name: str, value: object) -> None:
 		if value is None:
@@ -287,6 +191,26 @@ class SolverRunner:
 				continue
 		return None
 
+	def _apply_solution_limit(self, parameters: sat_parameters_pb2.SatParameters, value: object, *, source: str) -> None:
+		if value in (None, 0):
+			return
+		try:
+			limit = int(value)
+		except (TypeError, ValueError):
+			self._logger.warning("%s provided non-integer solution limit %r; ignoring", source, value)
+			return
+		if limit <= 0:
+			self._logger.warning("%s provided non-positive solution limit %s; ignoring", source, value)
+			return
+		if limit == 1:
+			self._assign_parameter(parameters, "stop_after_first_solution", True)
+		else:
+			self._logger.warning(
+				"%s requested solution_limit=%s but limiting beyond the first solution is not supported; ignoring",
+				source,
+				limit,
+			)
+
 	def _load_solver_params(self, path: Path) -> Mapping[str, Dict[str, object]]:
 		if not path.exists():
 			self._logger.debug("Solver parameter file %s not found; using defaults", path)
@@ -310,6 +234,17 @@ class SolverRunner:
 		if math.isinf(value) or math.isnan(value):
 			return None
 		return value
+
+	@staticmethod
+	def _compute_relative_gap(objective_value: Optional[float], best_bound: Optional[float]) -> Optional[float]:
+		if objective_value is None or best_bound is None:
+			return None
+		if not math.isfinite(objective_value) or not math.isfinite(best_bound):
+			return None
+		denominator = max(1.0, abs(objective_value))
+		if denominator == 0:
+			denominator = 1.0
+		return abs(objective_value - best_bound) / denominator
 
 	@staticmethod
 	def _model_has_objective(model: cp_model.CpModel) -> bool:
@@ -337,3 +272,28 @@ class SolverRunner:
 
 
 __all__ = ["SolverRunner", "SolverResult", "BoundEvent"]
+
+if __name__ == "__main__":
+	from ortools.sat.python import cp_model
+	from ..config.manager import ConfigManager
+	from ..data.data_loader import DataLoader
+	from ..data.preprocessing import DataPreprocessor
+	from ..models.model_builder import ModelBuilder
+	
+	from pathlib import Path
+
+	base_dir = Path.cwd()
+	config_manager = ConfigManager(base_dir=base_dir)
+	config = config_manager.load()
+	data_loader = DataLoader(config, base_dir=base_dir)
+	res = data_loader.load()
+
+	pre = DataPreprocessor(config)
+	output = pre.build_extended_container(data=res)
+	
+	
+	builder = ModelBuilder(config=config)
+	constraint_model = builder.build(data=output)
+	runner = SolverRunner(config=config, logger_=logging.getLogger("runtime.solver"))
+	final_res = runner.solve(constraint_model)
+	print(final_res)
