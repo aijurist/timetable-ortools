@@ -21,9 +21,6 @@ from .solver_schema import BoundEvent, SolverResult, _BoundTracker
 LOGGER = logging.getLogger(__name__)
 
 
-
-
-
 class SolverRunner:
 	"""High-level CP-SAT solver wrapper that manages parameters and logging."""
 
@@ -56,7 +53,7 @@ class SolverRunner:
 	) -> SolverResult:
 		model = constraint_model.model
 		solver = cp_model.CpSolver()
-		# self._apply_yaml_parameters(solver.parameters)
+		self._apply_yaml_parameters(solver.parameters)
 		self._apply_runtime_parameters(solver.parameters)
 
 		has_objective = self._model_has_objective(model)
@@ -294,6 +291,6 @@ if __name__ == "__main__":
 	
 	builder = ModelBuilder(config=config)
 	constraint_model = builder.build(data=output)
-	runner = SolverRunner(config=config, logger_=logging.getLogger("runtime.solver"))
+	runner = SolverRunner(config=config)
 	final_res = runner.solve(constraint_model)
-	print(final_res)
+	print(final_res.to_dict())

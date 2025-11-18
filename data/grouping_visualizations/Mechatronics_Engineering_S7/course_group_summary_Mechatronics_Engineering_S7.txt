@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Mechatronics Engineering
 Semester: 7
-Generated: 2025-11-18 17:26:55
+Generated: 2025-11-18 18:30:24
 ============================================================
 
 OVERVIEW
@@ -12,32 +12,32 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - MT19701 [Theory]: 1 groups, 1 teachers
-  └─ G4: 1 teacher assignments
-- MT19702 [Theory]: 1 groups, 1 teachers
-  └─ G7: 1 teacher assignments
-- MT19703 [Theory]: 1 groups, 1 teachers
-  └─ G6: 1 teacher assignments
-- MT19704 [Theory]: 1 groups, 1 teachers
   └─ G5: 1 teacher assignments
+- MT19702 [Theory]: 1 groups, 1 teachers
+  └─ G6: 1 teacher assignments
+- MT19703 [Theory]: 1 groups, 1 teachers
+  └─ G7: 1 teacher assignments
+- MT19704 [Theory]: 1 groups, 1 teachers
+  └─ G4: 1 teacher assignments
 - MT19711 [Lab]: 1 groups, 1 teachers
-  └─ G2: 1 teacher assignments
-- MT19712 [Lab]: 1 groups, 1 teachers
   └─ G3: 1 teacher assignments
-- MT19713 [Lab]: 1 groups, 1 teachers
+- MT19712 [Lab]: 1 groups, 1 teachers
   └─ G1: 1 teacher assignments
+- MT19713 [Lab]: 1 groups, 1 teachers
+  └─ G2: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
-  └─ MT19713 [L]: 1 instances, 1 teachers
-- G2: 1 courses, 1 teachers
-  └─ MT19711 [L]: 1 instances, 1 teachers
-- G3: 1 courses, 1 teachers
   └─ MT19712 [L]: 1 instances, 1 teachers
+- G2: 1 courses, 1 teachers
+  └─ MT19713 [L]: 1 instances, 1 teachers
+- G3: 1 courses, 1 teachers
+  └─ MT19711 [L]: 1 instances, 1 teachers
 - G4: 1 courses, 1 teachers
-  └─ MT19701 [T]: 1 instances, 1 teachers
-- G5: 1 courses, 1 teachers
   └─ MT19704 [T]: 1 instances, 1 teachers
+- G5: 1 courses, 1 teachers
+  └─ MT19701 [T]: 1 instances, 1 teachers
 - G6: 1 courses, 1 teachers
-  └─ MT19703 [T]: 1 instances, 1 teachers
-- G7: 1 courses, 1 teachers
   └─ MT19702 [T]: 1 instances, 1 teachers
+- G7: 1 courses, 1 teachers
+  └─ MT19703 [T]: 1 instances, 1 teachers

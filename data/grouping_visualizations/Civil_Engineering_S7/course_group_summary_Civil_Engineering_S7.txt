@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Civil Engineering
 Semester: 7
-Generated: 2025-11-18 17:26:52
+Generated: 2025-11-18 18:30:21
 ============================================================
 
 OVERVIEW
@@ -12,32 +12,32 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - CE19701 [Theory]: 1 groups, 1 teachers
-  └─ G5: 1 teacher assignments
+  └─ G7: 1 teacher assignments
 - CE19702 [Theory]: 1 groups, 1 teachers
-  └─ G6: 1 teacher assignments
+  └─ G5: 1 teacher assignments
 - CE19711 [Lab]: 1 groups, 1 teachers
-  └─ G1: 1 teacher assignments
-- CE19712 [Lab]: 1 groups, 1 teachers
   └─ G3: 1 teacher assignments
+- CE19712 [Lab]: 1 groups, 1 teachers
+  └─ G2: 1 teacher assignments
 - CE19713 [Lab + Theory]: 1 groups, 1 teachers
   └─ G4: 1 teacher assignments
 - CE19714 [Lab]: 1 groups, 1 teachers
-  └─ G2: 1 teacher assignments
+  └─ G1: 1 teacher assignments
 - CE19P01 [Theory]: 1 groups, 1 teachers
-  └─ G7: 1 teacher assignments
+  └─ G6: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
-  └─ CE19711 [L]: 1 instances, 1 teachers
-- G2: 1 courses, 1 teachers
   └─ CE19714 [L]: 1 instances, 1 teachers
-- G3: 1 courses, 1 teachers
+- G2: 1 courses, 1 teachers
   └─ CE19712 [L]: 1 instances, 1 teachers
+- G3: 1 courses, 1 teachers
+  └─ CE19711 [L]: 1 instances, 1 teachers
 - G4: 1 courses, 1 teachers
   └─ CE19713 [L+T]: 1 instances, 1 teachers
 - G5: 1 courses, 1 teachers
-  └─ CE19701 [T]: 1 instances, 1 teachers
-- G6: 1 courses, 1 teachers
   └─ CE19702 [T]: 1 instances, 1 teachers
-- G7: 1 courses, 1 teachers
+- G6: 1 courses, 1 teachers
   └─ CE19P01 [T]: 1 instances, 1 teachers
+- G7: 1 courses, 1 teachers
+  └─ CE19701 [T]: 1 instances, 1 teachers

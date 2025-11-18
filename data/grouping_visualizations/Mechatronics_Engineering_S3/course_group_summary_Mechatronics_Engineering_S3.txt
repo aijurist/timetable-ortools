@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Mechatronics Engineering
 Semester: 3
-Generated: 2025-11-18 17:26:53
+Generated: 2025-11-18 18:30:23
 ============================================================
 
 OVERVIEW
@@ -12,28 +12,28 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - CS23336 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G1: 1 teacher assignments
-- MA23311 [Theory]: 1 groups, 1 teachers
   └─ G3: 1 teacher assignments
+- MA23311 [Theory]: 1 groups, 1 teachers
+  └─ G1: 1 teacher assignments
 - MT23331 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G5: 1 teacher assignments
-- MT23332 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G2: 1 teacher assignments
-- MT23333 [Lab + Theory]: 1 groups, 1 teachers
   └─ G4: 1 teacher assignments
-- MT23334 [Lab + Theory]: 1 groups, 1 teachers
+- MT23332 [Lab + Theory]: 1 groups, 1 teachers
   └─ G6: 1 teacher assignments
+- MT23333 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G2: 1 teacher assignments
+- MT23334 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G5: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
-  └─ CS23336 [L+T]: 1 instances, 1 teachers
-- G2: 1 courses, 1 teachers
-  └─ MT23332 [L+T]: 1 instances, 1 teachers
-- G3: 1 courses, 1 teachers
   └─ MA23311 [T]: 1 instances, 1 teachers
-- G4: 1 courses, 1 teachers
+- G2: 1 courses, 1 teachers
   └─ MT23333 [L+T]: 1 instances, 1 teachers
-- G5: 1 courses, 1 teachers
+- G3: 1 courses, 1 teachers
+  └─ CS23336 [L+T]: 1 instances, 1 teachers
+- G4: 1 courses, 1 teachers
   └─ MT23331 [L+T]: 1 instances, 1 teachers
-- G6: 1 courses, 1 teachers
+- G5: 1 courses, 1 teachers
   └─ MT23334 [L+T]: 1 instances, 1 teachers
+- G6: 1 courses, 1 teachers
+  └─ MT23332 [L+T]: 1 instances, 1 teachers

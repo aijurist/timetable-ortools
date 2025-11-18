@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Aeronautical Engineering
 Semester: 3
-Generated: 2025-11-18 17:26:53
+Generated: 2025-11-18 18:30:22
 ============================================================
 
 OVERVIEW
@@ -12,15 +12,15 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - AE23321 [Lab]: 1 groups, 1 teachers
-  └─ G3: 1 teacher assignments
-- AE23331 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G5: 1 teacher assignments
-- AE23332 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G6: 1 teacher assignments
-- AE23333 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G2: 1 teacher assignments
-- CS23422 [Lab]: 1 groups, 1 teachers
   └─ G4: 1 teacher assignments
+- AE23331 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G6: 1 teacher assignments
+- AE23332 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G2: 1 teacher assignments
+- AE23333 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G5: 1 teacher assignments
+- CS23422 [Lab]: 1 groups, 1 teachers
+  └─ G3: 1 teacher assignments
 - MA23311 [Theory]: 1 groups, 1 teachers
   └─ G1: 1 teacher assignments
 
@@ -28,12 +28,12 @@ GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
   └─ MA23311 [T]: 1 instances, 1 teachers
 - G2: 1 courses, 1 teachers
-  └─ AE23333 [L+T]: 1 instances, 1 teachers
-- G3: 1 courses, 1 teachers
-  └─ AE23321 [L]: 1 instances, 1 teachers
-- G4: 1 courses, 1 teachers
-  └─ CS23422 [L]: 1 instances, 1 teachers
-- G5: 1 courses, 1 teachers
-  └─ AE23331 [L+T]: 1 instances, 1 teachers
-- G6: 1 courses, 1 teachers
   └─ AE23332 [L+T]: 1 instances, 1 teachers
+- G3: 1 courses, 1 teachers
+  └─ CS23422 [L]: 1 instances, 1 teachers
+- G4: 1 courses, 1 teachers
+  └─ AE23321 [L]: 1 instances, 1 teachers
+- G5: 1 courses, 1 teachers
+  └─ AE23333 [L+T]: 1 instances, 1 teachers
+- G6: 1 courses, 1 teachers
+  └─ AE23331 [L+T]: 1 instances, 1 teachers
