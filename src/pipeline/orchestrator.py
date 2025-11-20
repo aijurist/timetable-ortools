@@ -10,12 +10,16 @@ from ..config.manager import ConfigManager
 from ..config.schemas import SchedulerConfig
 from ..data.data_loader import DataLoader, DataLoadResult
 from ..data.preprocessing import DataPreprocessor
+from ..data.schemas import ExtendedDataContainer
+from ..models.model_builder import ConstraintModel, ModelBuilder
+from ..runtime.extractor import ScheduleExtractor, ScheduleExtractionResult
+from ..runtime.solver import SolverRunner, SolverResult
 
 logger = logging.getLogger(__name__)
 
 
 class PipelineOrchestrator:
-	"""Coordinate configuration loading and initial data extraction."""
+	"""Coordinate configuration loading, data processing, solving, and extraction."""
 
 	def __init__(self, config_path: Path | str = Path("config/scheduler.yaml"), *, base_dir: Optional[Path] = None) -> None:
 		self._base_dir = Path(base_dir or Path.cwd()).resolve()
@@ -24,6 +28,10 @@ class PipelineOrchestrator:
 		self._config_manager = ConfigManager(base_dir=self._base_dir)
 		self._config: Optional[SchedulerConfig] = None
 		self._data: Optional[DataLoadResult] = None
+		self._extended_data: Optional[ExtendedDataContainer] = None
+		self._model: Optional[ConstraintModel] = None
+		self._solver_result: Optional[SolverResult] = None
+		self._schedule: Optional[ScheduleExtractionResult] = None
 
 	@property
 	def config(self) -> SchedulerConfig:
@@ -57,12 +65,59 @@ class PipelineOrchestrator:
 		self._data = loader.load()
 		return self._data
 
-	def load_preprocessed_data(self) -> DataLoadResult:
+	def load_preprocessed_data(self) -> ExtendedDataContainer:
 		"""Load preprocessed data artefacts using the active configuration."""
+		if self._data is None:
+			self.load_data()
 
 		loader = DataPreprocessor(self.config, base_dir=self._base_dir)
-		self._pre_processed_data = loader.build_extended_container()
-		return self._pre_processed_data
+		self._extended_data = loader.build_extended_container(self._data)
+		return self._extended_data
+
+	def build_model(self) -> ConstraintModel:
+		"""Construct the CP-SAT model from preprocessed data."""
+		if self._extended_data is None:
+			self.load_preprocessed_data()
+
+		builder = ModelBuilder(self.config)
+		self._model = builder.build(self._extended_data)
+		return self._model
+
+	def solve(self) -> SolverResult:
+		"""Run the solver on the built model."""
+		if self._model is None:
+			self.build_model()
+
+		runner = SolverRunner(self.config)
+		self._solver_result = runner.solve(self._model)
+		return self._solver_result
+
+	def extract(self) -> ScheduleExtractionResult:
+		"""Extract the schedule from the solver result."""
+		if self._solver_result is None:
+			self.solve()
+
+		# Ensure output directory exists
+		output_dir = self.config.paths.output_root / "latest"
+		output_dir.mkdir(parents=True, exist_ok=True)
+
+		extractor = ScheduleExtractor(self._extended_data, self._model)
+		self._schedule = extractor.export(
+			self._solver_result,
+			write_json=True,
+			write_csv=True,
+		)
+		return self._schedule
+
+	def run(self) -> ScheduleExtractionResult:
+		"""Execute the full pipeline from config to extraction."""
+		logger.info("Starting pipeline execution")
+		self.load_config()
+		self.load_data()
+		self.load_preprocessed_data()
+		self.build_model()
+		self.solve()
+		return self.extract()
 
 	def bootstrap(
 		self,

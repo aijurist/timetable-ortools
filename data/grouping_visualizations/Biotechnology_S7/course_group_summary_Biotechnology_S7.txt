@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Biotechnology
 Semester: 7
-Generated: 2025-11-21 00:05:17
+Generated: 2025-11-21 01:27:23
 ============================================================
 
 OVERVIEW
@@ -12,50 +12,50 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - BT19701 [Theory]: 2 groups, 3 teachers
+  └─ G6: 1 teacher assignments
+  └─ G7: 2 teacher assignments
+- BT19702 [Theory]: 2 groups, 3 teachers
+  └─ G5: 1 teacher assignments
+  └─ G6: 2 teacher assignments
+- BT19705 [Theory]: 2 groups, 3 teachers
   └─ G4: 1 teacher assignments
   └─ G5: 2 teacher assignments
-- BT19702 [Theory]: 2 groups, 3 teachers
-  └─ G6: 2 teacher assignments
-  └─ G7: 1 teacher assignments
-- BT19705 [Theory]: 2 groups, 3 teachers
-  └─ G4: 2 teacher assignments
-  └─ G5: 1 teacher assignments
 - BT19711 [Lab]: 2 groups, 3 teachers
-  └─ G1: 2 teacher assignments
+  └─ G2: 2 teacher assignments
   └─ G3: 1 teacher assignments
 - BT19712 [Lab + Theory]: 2 groups, 3 teachers
-  └─ G2: 1 teacher assignments
+  └─ G1: 1 teacher assignments
   └─ G3: 2 teacher assignments
 - BT19713 [Lab]: 2 groups, 3 teachers
-  └─ G1: 1 teacher assignments
-  └─ G2: 2 teacher assignments
+  └─ G1: 2 teacher assignments
+  └─ G2: 1 teacher assignments
 - BT19P01 [Theory]: 1 groups, 3 teachers
   └─ G8: 3 teacher assignments
 - BT19P71 [Theory]: 2 groups, 3 teachers
-  └─ G6: 1 teacher assignments
-  └─ G7: 2 teacher assignments
+  └─ G4: 2 teacher assignments
+  └─ G7: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 2 courses, 3 teachers
-  └─ BT19711 [L]: 2 instances, 2 teachers
-  └─ BT19713 [L]: 1 instances, 1 teachers
-- G2: 2 courses, 3 teachers
   └─ BT19712 [L+T]: 1 instances, 1 teachers
   └─ BT19713 [L]: 2 instances, 2 teachers
+- G2: 2 courses, 3 teachers
+  └─ BT19711 [L]: 2 instances, 2 teachers
+  └─ BT19713 [L]: 1 instances, 1 teachers
 - G3: 2 courses, 3 teachers
   └─ BT19711 [L]: 1 instances, 1 teachers
   └─ BT19712 [L+T]: 2 instances, 2 teachers
 - G4: 2 courses, 3 teachers
-  └─ BT19701 [T]: 1 instances, 1 teachers
-  └─ BT19705 [T]: 2 instances, 2 teachers
-- G5: 2 courses, 3 teachers
-  └─ BT19701 [T]: 2 instances, 2 teachers
   └─ BT19705 [T]: 1 instances, 1 teachers
-- G6: 2 courses, 3 teachers
-  └─ BT19702 [T]: 2 instances, 2 teachers
-  └─ BT19P71 [T]: 1 instances, 1 teachers
-- G7: 2 courses, 3 teachers
-  └─ BT19702 [T]: 1 instances, 1 teachers
   └─ BT19P71 [T]: 2 instances, 2 teachers
+- G5: 2 courses, 3 teachers
+  └─ BT19702 [T]: 1 instances, 1 teachers
+  └─ BT19705 [T]: 2 instances, 2 teachers
+- G6: 2 courses, 3 teachers
+  └─ BT19701 [T]: 1 instances, 1 teachers
+  └─ BT19702 [T]: 2 instances, 2 teachers
+- G7: 2 courses, 3 teachers
+  └─ BT19701 [T]: 2 instances, 2 teachers
+  └─ BT19P71 [T]: 1 instances, 1 teachers
 - G8: 1 courses, 3 teachers
   └─ BT19P01 [T]: 3 instances, 3 teachers

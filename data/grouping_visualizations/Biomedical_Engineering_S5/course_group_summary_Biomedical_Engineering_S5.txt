@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Biomedical Engineering
 Semester: 5
-Generated: 2025-11-21 00:05:27
+Generated: 2025-11-21 01:27:33
 ============================================================
 
 OVERVIEW
@@ -12,33 +12,33 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - 24NCS08 [Theory]: 2 groups, 2 teachers
-  └─ G6: 1 teacher assignments
+  └─ G5: 1 teacher assignments
   └─ G7: 1 teacher assignments
 - BM23511 [Theory]: 2 groups, 2 teachers
-  └─ G5: 1 teacher assignments
+  └─ G6: 1 teacher assignments
   └─ G7: 1 teacher assignments
 - BM23512 [Theory]: 2 groups, 2 teachers
   └─ G5: 1 teacher assignments
   └─ G6: 1 teacher assignments
 - BM23521 [Lab]: 2 groups, 2 teachers
+  └─ G1: 1 teacher assignments
   └─ G2: 1 teacher assignments
-  └─ G4: 1 teacher assignments
 - BM23531 [Lab + Theory]: 2 groups, 2 teachers
-  └─ G1: 1 teacher assignments
   └─ G3: 1 teacher assignments
+  └─ G4: 1 teacher assignments
 - BM23532 [Lab + Theory]: 2 groups, 2 teachers
-  └─ G1: 1 teacher assignments
   └─ G3: 1 teacher assignments
+  └─ G4: 1 teacher assignments
 - BM23P01 [Theory]: 1 groups, 3 teachers
   └─ G8: 3 teacher assignments
 - CS23422 [Lab]: 2 groups, 2 teachers
+  └─ G1: 1 teacher assignments
   └─ G2: 1 teacher assignments
-  └─ G4: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 2 courses, 2 teachers
-  └─ BM23531 [L+T]: 1 instances, 1 teachers
-  └─ BM23532 [L+T]: 1 instances, 1 teachers
+  └─ BM23521 [L]: 1 instances, 1 teachers
+  └─ CS23422 [L]: 1 instances, 1 teachers
 - G2: 2 courses, 2 teachers
   └─ BM23521 [L]: 1 instances, 1 teachers
   └─ CS23422 [L]: 1 instances, 1 teachers
@@ -46,13 +46,13 @@ GROUP COMPOSITION
   └─ BM23531 [L+T]: 1 instances, 1 teachers
   └─ BM23532 [L+T]: 1 instances, 1 teachers
 - G4: 2 courses, 2 teachers
-  └─ BM23521 [L]: 1 instances, 1 teachers
-  └─ CS23422 [L]: 1 instances, 1 teachers
+  └─ BM23531 [L+T]: 1 instances, 1 teachers
+  └─ BM23532 [L+T]: 1 instances, 1 teachers
 - G5: 2 courses, 2 teachers
-  └─ BM23511 [T]: 1 instances, 1 teachers
+  └─ 24NCS08 [T]: 1 instances, 1 teachers
   └─ BM23512 [T]: 1 instances, 1 teachers
 - G6: 2 courses, 2 teachers
-  └─ 24NCS08 [T]: 1 instances, 1 teachers
+  └─ BM23511 [T]: 1 instances, 1 teachers
   └─ BM23512 [T]: 1 instances, 1 teachers
 - G7: 2 courses, 2 teachers
   └─ 24NCS08 [T]: 1 instances, 1 teachers

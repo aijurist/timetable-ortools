@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Computer Science & Engineering (Cyber Security)
 Semester: 3
-Generated: 2025-11-21 00:05:10
+Generated: 2025-11-21 01:31:04
 ============================================================
 
 OVERVIEW
@@ -12,34 +12,34 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - CR23331 [Lab + Theory]: 2 groups, 2 teachers
-  └─ G4: 1 teacher assignments
-  └─ G5: 1 teacher assignments
-- CS23332 [Lab + Theory]: 2 groups, 2 teachers
-  └─ G2: 1 teacher assignments
   └─ G3: 1 teacher assignments
+  └─ G4: 1 teacher assignments
+- CS23332 [Lab + Theory]: 2 groups, 2 teachers
+  └─ G1: 1 teacher assignments
+  └─ G2: 1 teacher assignments
 - CS23333 [Lab + Theory]: 2 groups, 2 teachers
   └─ G4: 1 teacher assignments
   └─ G5: 1 teacher assignments
 - CS23532 [Lab + Theory]: 2 groups, 2 teachers
-  └─ G1: 1 teacher assignments
+  └─ G2: 1 teacher assignments
   └─ G3: 1 teacher assignments
 - MA23312 [Theory]: 2 groups, 2 teachers
   └─ G1: 1 teacher assignments
-  └─ G2: 1 teacher assignments
+  └─ G5: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 2 courses, 2 teachers
-  └─ CS23532 [L+T]: 1 instances, 1 teachers
+  └─ CS23332 [L+T]: 1 instances, 1 teachers
   └─ MA23312 [T]: 1 instances, 1 teachers
 - G2: 2 courses, 2 teachers
   └─ CS23332 [L+T]: 1 instances, 1 teachers
-  └─ MA23312 [T]: 1 instances, 1 teachers
+  └─ CS23532 [L+T]: 1 instances, 1 teachers
 - G3: 2 courses, 2 teachers
-  └─ CS23332 [L+T]: 1 instances, 1 teachers
+  └─ CR23331 [L+T]: 1 instances, 1 teachers
   └─ CS23532 [L+T]: 1 instances, 1 teachers
 - G4: 2 courses, 2 teachers
   └─ CR23331 [L+T]: 1 instances, 1 teachers
   └─ CS23333 [L+T]: 1 instances, 1 teachers
 - G5: 2 courses, 2 teachers
-  └─ CR23331 [L+T]: 1 instances, 1 teachers
   └─ CS23333 [L+T]: 1 instances, 1 teachers
+  └─ MA23312 [T]: 1 instances, 1 teachers

@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Food Technology
 Semester: 5
-Generated: 2025-11-21 00:05:21
+Generated: 2025-11-21 01:27:26
 ============================================================
 
 OVERVIEW
@@ -12,9 +12,9 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - FT23501 [Theory]: 1 groups, 1 teachers
-  └─ G4: 1 teacher assignments
-- FT23502 [Theory]: 1 groups, 1 teachers
   └─ G6: 1 teacher assignments
+- FT23502 [Theory]: 1 groups, 1 teachers
+  └─ G4: 1 teacher assignments
 - FT23503 [Theory]: 1 groups, 1 teachers
   └─ G5: 1 teacher assignments
 - FT23511 [Lab]: 1 groups, 1 teachers
@@ -22,9 +22,9 @@ COURSE DISTRIBUTION BY GROUP
 - FT23512 [Lab]: 1 groups, 1 teachers
   └─ G1: 1 teacher assignments
 - FT23F01 [Theory]: 1 groups, 1 teachers
-  └─ G3: 1 teacher assignments
-- GE23311 [Theory]: 1 groups, 1 teachers
   └─ G7: 1 teacher assignments
+- GE23311 [Theory]: 1 groups, 1 teachers
+  └─ G3: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
@@ -32,12 +32,12 @@ GROUP COMPOSITION
 - G2: 1 courses, 1 teachers
   └─ FT23511 [L]: 1 instances, 1 teachers
 - G3: 1 courses, 1 teachers
-  └─ FT23F01 [T]: 1 instances, 1 teachers
+  └─ GE23311 [T]: 1 instances, 1 teachers
 - G4: 1 courses, 1 teachers
-  └─ FT23501 [T]: 1 instances, 1 teachers
+  └─ FT23502 [T]: 1 instances, 1 teachers
 - G5: 1 courses, 1 teachers
   └─ FT23503 [T]: 1 instances, 1 teachers
 - G6: 1 courses, 1 teachers
-  └─ FT23502 [T]: 1 instances, 1 teachers
+  └─ FT23501 [T]: 1 instances, 1 teachers
 - G7: 1 courses, 1 teachers
-  └─ GE23311 [T]: 1 instances, 1 teachers
+  └─ FT23F01 [T]: 1 instances, 1 teachers

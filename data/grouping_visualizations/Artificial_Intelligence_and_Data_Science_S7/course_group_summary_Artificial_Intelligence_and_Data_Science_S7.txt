@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Artificial Intelligence & Data Science
 Semester: 7
-Generated: 2025-11-21 00:05:13
+Generated: 2025-11-21 01:31:07
 ============================================================
 
 OVERVIEW
@@ -12,11 +12,11 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - AD19751 [Theory]: 1 groups, 1 teachers
-  └─ G4: 1 teacher assignments
+  └─ G3: 1 teacher assignments
 - AD19P72 [Lab + Theory]: 1 groups, 1 teachers
   └─ G1: 1 teacher assignments
 - AD19P74 [Theory]: 1 groups, 1 teachers
-  └─ G3: 1 teacher assignments
+  └─ G4: 1 teacher assignments
 - AI19741 [Lab + Theory]: 1 groups, 1 teachers
   └─ G2: 1 teacher assignments
 
@@ -26,6 +26,6 @@ GROUP COMPOSITION
 - G2: 1 courses, 1 teachers
   └─ AI19741 [L+T]: 1 instances, 1 teachers
 - G3: 1 courses, 1 teachers
-  └─ AD19P74 [T]: 1 instances, 1 teachers
-- G4: 1 courses, 1 teachers
   └─ AD19751 [T]: 1 instances, 1 teachers
+- G4: 1 courses, 1 teachers
+  └─ AD19P74 [T]: 1 instances, 1 teachers

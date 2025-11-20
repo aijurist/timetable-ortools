@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Automobile Engineering
 Semester: 5
-Generated: 2025-11-21 00:05:18
+Generated: 2025-11-21 01:27:24
 ============================================================
 
 OVERVIEW
@@ -12,17 +12,17 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - AT23511 [Theory]: 1 groups, 1 teachers
-  └─ G5: 1 teacher assignments
+  └─ G6: 1 teacher assignments
 - AT23521 [Lab]: 1 groups, 1 teachers
-  └─ G2: 1 teacher assignments
-- AT23522 [Lab]: 1 groups, 1 teachers
   └─ G4: 1 teacher assignments
+- AT23522 [Lab]: 1 groups, 1 teachers
+  └─ G2: 1 teacher assignments
 - AT23531 [Lab + Theory]: 1 groups, 1 teachers
   └─ G3: 1 teacher assignments
 - AT23532 [Lab + Theory]: 1 groups, 1 teachers
   └─ G1: 1 teacher assignments
 - AT23G12 [Theory]: 1 groups, 1 teachers
-  └─ G6: 1 teacher assignments
+  └─ G5: 1 teacher assignments
 - GE23311 [Theory]: 1 groups, 1 teachers
   └─ G7: 1 teacher assignments
 
@@ -30,14 +30,14 @@ GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
   └─ AT23532 [L+T]: 1 instances, 1 teachers
 - G2: 1 courses, 1 teachers
-  └─ AT23521 [L]: 1 instances, 1 teachers
+  └─ AT23522 [L]: 1 instances, 1 teachers
 - G3: 1 courses, 1 teachers
   └─ AT23531 [L+T]: 1 instances, 1 teachers
 - G4: 1 courses, 1 teachers
-  └─ AT23522 [L]: 1 instances, 1 teachers
+  └─ AT23521 [L]: 1 instances, 1 teachers
 - G5: 1 courses, 1 teachers
-  └─ AT23511 [T]: 1 instances, 1 teachers
-- G6: 1 courses, 1 teachers
   └─ AT23G12 [T]: 1 instances, 1 teachers
+- G6: 1 courses, 1 teachers
+  └─ AT23511 [T]: 1 instances, 1 teachers
 - G7: 1 courses, 1 teachers
   └─ GE23311 [T]: 1 instances, 1 teachers

@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Mechanical Engineering
 Semester: 5
-Generated: 2025-11-21 00:05:25
+Generated: 2025-11-21 01:27:31
 ============================================================
 
 OVERVIEW
@@ -19,18 +19,18 @@ COURSE DISTRIBUTION BY GROUP
   └─ G6: 1 teacher assignments
 - ME23521 [Lab]: 2 groups, 2 teachers
   └─ G1: 1 teacher assignments
-  └─ G4: 1 teacher assignments
+  └─ G3: 1 teacher assignments
 - ME23531 [Lab + Theory]: 2 groups, 2 teachers
   └─ G2: 1 teacher assignments
-  └─ G3: 1 teacher assignments
+  └─ G4: 1 teacher assignments
 - ME23532 [Lab + Theory]: 2 groups, 2 teachers
   └─ G2: 1 teacher assignments
-  └─ G3: 1 teacher assignments
+  └─ G4: 1 teacher assignments
 - ME23P01 [Theory]: 1 groups, 3 teachers
   └─ G7: 3 teacher assignments
 - ME23VAP1 [Lab]: 2 groups, 2 teachers
   └─ G1: 1 teacher assignments
-  └─ G4: 1 teacher assignments
+  └─ G3: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 2 courses, 2 teachers
@@ -40,11 +40,11 @@ GROUP COMPOSITION
   └─ ME23531 [L+T]: 1 instances, 1 teachers
   └─ ME23532 [L+T]: 1 instances, 1 teachers
 - G3: 2 courses, 2 teachers
-  └─ ME23531 [L+T]: 1 instances, 1 teachers
-  └─ ME23532 [L+T]: 1 instances, 1 teachers
-- G4: 2 courses, 2 teachers
   └─ ME23521 [L]: 1 instances, 1 teachers
   └─ ME23VAP1 [L]: 1 instances, 1 teachers
+- G4: 2 courses, 2 teachers
+  └─ ME23531 [L+T]: 1 instances, 1 teachers
+  └─ ME23532 [L+T]: 1 instances, 1 teachers
 - G5: 2 courses, 2 teachers
   └─ GE23511 [T]: 1 instances, 1 teachers
   └─ ME23511 [T]: 1 instances, 1 teachers

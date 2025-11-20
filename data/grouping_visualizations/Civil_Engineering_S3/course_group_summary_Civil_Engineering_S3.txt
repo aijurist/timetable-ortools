@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Civil Engineering
 Semester: 3
-Generated: 2025-11-21 00:05:19
+Generated: 2025-11-21 01:27:24
 ============================================================
 
 OVERVIEW
@@ -20,19 +20,19 @@ COURSE DISTRIBUTION BY GROUP
 - CE23321 [Lab]: 1 groups, 1 teachers
   └─ G4: 1 teacher assignments
 - CE23331 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G1: 1 teacher assignments
+  └─ G3: 1 teacher assignments
 - CS23422 [Lab]: 1 groups, 1 teachers
   └─ G2: 1 teacher assignments
 - MA23331 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G3: 1 teacher assignments
+  └─ G1: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
-  └─ CE23331 [L+T]: 1 instances, 1 teachers
+  └─ MA23331 [L+T]: 1 instances, 1 teachers
 - G2: 1 courses, 1 teachers
   └─ CS23422 [L]: 1 instances, 1 teachers
 - G3: 1 courses, 1 teachers
-  └─ MA23331 [L+T]: 1 instances, 1 teachers
+  └─ CE23331 [L+T]: 1 instances, 1 teachers
 - G4: 1 courses, 1 teachers
   └─ CE23321 [L]: 1 instances, 1 teachers
 - G5: 1 courses, 1 teachers

@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Electronics & Communication Engineering
 Semester: 7
-Generated: 2025-11-21 00:05:16
+Generated: 2025-11-21 01:27:22
 ============================================================
 
 OVERVIEW
