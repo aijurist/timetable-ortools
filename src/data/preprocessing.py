@@ -95,6 +95,15 @@ def _title_case(name: str) -> str:
 	return " ".join(part.capitalize() for part in name.split())
 
 
+def _compose_name(*parts: Any) -> str:
+	cleaned_parts: List[str] = []
+	for part in parts:
+		part_str = _clean_str(part)
+		if part_str:
+			cleaned_parts.append(part_str)
+	return " ".join(cleaned_parts).strip()
+
+
 # ---------------------------------------------------------------------------
 # Stage 1 – Normalisation
 # ---------------------------------------------------------------------------
@@ -153,12 +162,29 @@ class CourseInstanceNormalizer:
 			course_dept = _normalise_department(course_dept)
 
 		teacher_id = _clean_str(row.get("teacher_id") or row.get("teacher") or row.get("staff_code") or f"T_{row_index:04d}")
-		teacher_name = _clean_str(row.get("teacher") or row.get("teacher_name") or row.get("first_name"))
+		first_name = _clean_str(row.get("first_name"))
+		last_name = _clean_str(row.get("last_name"))
+		teacher_name_candidates = (
+			row.get("teacher"),
+			row.get("teacher_name"),
+			_compose_name(first_name, last_name),
+			first_name,
+			last_name,
+		)
+		teacher_name = ""
+		for candidate in teacher_name_candidates:
+			candidate_clean = _clean_str(candidate)
+			if candidate_clean:
+				teacher_name = candidate_clean
+				break
 		if self._config.normalise_teacher_names:
 			teacher_name = _title_case(teacher_name)
 
 		assistant_teacher_id = _clean_str(row.get("assist_teacher_id")) or None
-		assistant_teacher_name = _clean_str(row.get("assist_first_name")) or None
+		assistant_name_combo = _compose_name(row.get("assist_first_name"), row.get("assist_last_name"))
+		assistant_teacher_name = _clean_str(assistant_name_combo) or None
+		if not assistant_teacher_name:
+			assistant_teacher_name = _clean_str(row.get("assist_first_name")) or _clean_str(row.get("assist_last_name")) or None
 		if assistant_teacher_name and self._config.normalise_teacher_names:
 			assistant_teacher_name = _title_case(assistant_teacher_name)
 
