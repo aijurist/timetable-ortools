@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Computer Science & Design
 Semester: 7
-Generated: 2025-11-21 01:31:02
+Generated: 2025-11-21 01:39:43
 ============================================================
 
 OVERVIEW
@@ -16,17 +16,17 @@ COURSE DISTRIBUTION BY GROUP
 - CD19721 [Theory]: 1 groups, 1 teachers
   └─ G3: 1 teacher assignments
 - CD19741 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G2: 1 teacher assignments
+  └─ G1: 1 teacher assignments
 - CD19P11 [Lab + Theory]: 1 groups, 1 teachers
   └─ G4: 1 teacher assignments
 - CD19P15 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G1: 1 teacher assignments
+  └─ G2: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
-  └─ CD19P15 [L+T]: 1 instances, 1 teachers
-- G2: 1 courses, 1 teachers
   └─ CD19741 [L+T]: 1 instances, 1 teachers
+- G2: 1 courses, 1 teachers
+  └─ CD19P15 [L+T]: 1 instances, 1 teachers
 - G3: 1 courses, 1 teachers
   └─ CD19721 [T]: 1 instances, 1 teachers
 - G4: 1 courses, 1 teachers

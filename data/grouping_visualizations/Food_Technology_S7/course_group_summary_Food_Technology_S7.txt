@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Food Technology
 Semester: 7
-Generated: 2025-11-21 01:27:28
+Generated: 2025-11-21 01:39:57
 ============================================================
 
 OVERVIEW
@@ -12,40 +12,40 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - FT19701 [Theory]: 1 groups, 1 teachers
-  └─ G4: 1 teacher assignments
-- FT19702 [Theory]: 1 groups, 1 teachers
   └─ G8: 1 teacher assignments
+- FT19702 [Theory]: 1 groups, 1 teachers
+  └─ G4: 1 teacher assignments
 - FT19703 [Theory]: 1 groups, 1 teachers
-  └─ G6: 1 teacher assignments
-- FT19704 [Theory]: 1 groups, 1 teachers
   └─ G5: 1 teacher assignments
+- FT19704 [Theory]: 1 groups, 1 teachers
+  └─ G6: 1 teacher assignments
 - FT19705 [Theory]: 1 groups, 1 teachers
-  └─ G7: 1 teacher assignments
+  └─ G9: 1 teacher assignments
 - FT19711 [Lab]: 1 groups, 1 teachers
   └─ G1: 1 teacher assignments
 - FT19712 [Lab]: 1 groups, 1 teachers
-  └─ G3: 1 teacher assignments
-- FT19714 [Lab]: 1 groups, 1 teachers
   └─ G2: 1 teacher assignments
+- FT19714 [Lab]: 1 groups, 1 teachers
+  └─ G3: 1 teacher assignments
 - FT19P79 [Theory]: 1 groups, 1 teachers
-  └─ G9: 1 teacher assignments
+  └─ G7: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
   └─ FT19711 [L]: 1 instances, 1 teachers
 - G2: 1 courses, 1 teachers
-  └─ FT19714 [L]: 1 instances, 1 teachers
-- G3: 1 courses, 1 teachers
   └─ FT19712 [L]: 1 instances, 1 teachers
+- G3: 1 courses, 1 teachers
+  └─ FT19714 [L]: 1 instances, 1 teachers
 - G4: 1 courses, 1 teachers
-  └─ FT19701 [T]: 1 instances, 1 teachers
-- G5: 1 courses, 1 teachers
-  └─ FT19704 [T]: 1 instances, 1 teachers
-- G6: 1 courses, 1 teachers
-  └─ FT19703 [T]: 1 instances, 1 teachers
-- G7: 1 courses, 1 teachers
-  └─ FT19705 [T]: 1 instances, 1 teachers
-- G8: 1 courses, 1 teachers
   └─ FT19702 [T]: 1 instances, 1 teachers
-- G9: 1 courses, 1 teachers
+- G5: 1 courses, 1 teachers
+  └─ FT19703 [T]: 1 instances, 1 teachers
+- G6: 1 courses, 1 teachers
+  └─ FT19704 [T]: 1 instances, 1 teachers
+- G7: 1 courses, 1 teachers
   └─ FT19P79 [T]: 1 instances, 1 teachers
+- G8: 1 courses, 1 teachers
+  └─ FT19701 [T]: 1 instances, 1 teachers
+- G9: 1 courses, 1 teachers
+  └─ FT19705 [T]: 1 instances, 1 teachers

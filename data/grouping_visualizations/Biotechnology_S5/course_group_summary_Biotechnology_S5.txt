@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Biotechnology
 Semester: 5
-Generated: 2025-11-21 01:27:22
+Generated: 2025-11-21 01:39:51
 ============================================================
 
 OVERVIEW
@@ -12,46 +12,46 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - BT23511 [Theory]: 2 groups, 3 teachers
-  └─ G6: 2 teacher assignments
-  └─ G7: 1 teacher assignments
+  └─ G4: 1 teacher assignments
+  └─ G5: 2 teacher assignments
 - BT23512 [Theory]: 2 groups, 3 teachers
   └─ G6: 1 teacher assignments
   └─ G7: 2 teacher assignments
 - BT23513 [Theory]: 2 groups, 3 teachers
-  └─ G4: 1 teacher assignments
-  └─ G5: 2 teacher assignments
+  └─ G6: 2 teacher assignments
+  └─ G7: 1 teacher assignments
 - BT23514 [Theory]: 2 groups, 3 teachers
   └─ G4: 2 teacher assignments
   └─ G5: 1 teacher assignments
 - BT23521 [Lab]: 2 groups, 3 teachers
-  └─ G2: 2 teacher assignments
-  └─ G3: 1 teacher assignments
-- BT23522 [Lab]: 2 groups, 3 teachers
-  └─ G1: 2 teacher assignments
   └─ G2: 1 teacher assignments
-- BT23523 [Lab]: 2 groups, 3 teachers
-  └─ G1: 1 teacher assignments
   └─ G3: 2 teacher assignments
+- BT23522 [Lab]: 2 groups, 3 teachers
+  └─ G1: 1 teacher assignments
+  └─ G2: 2 teacher assignments
+- BT23523 [Lab]: 2 groups, 3 teachers
+  └─ G1: 2 teacher assignments
+  └─ G3: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 2 courses, 3 teachers
-  └─ BT23522 [L]: 2 instances, 2 teachers
-  └─ BT23523 [L]: 1 instances, 1 teachers
-- G2: 2 courses, 3 teachers
-  └─ BT23521 [L]: 2 instances, 2 teachers
   └─ BT23522 [L]: 1 instances, 1 teachers
-- G3: 2 courses, 3 teachers
-  └─ BT23521 [L]: 1 instances, 1 teachers
   └─ BT23523 [L]: 2 instances, 2 teachers
+- G2: 2 courses, 3 teachers
+  └─ BT23521 [L]: 1 instances, 1 teachers
+  └─ BT23522 [L]: 2 instances, 2 teachers
+- G3: 2 courses, 3 teachers
+  └─ BT23521 [L]: 2 instances, 2 teachers
+  └─ BT23523 [L]: 1 instances, 1 teachers
 - G4: 2 courses, 3 teachers
-  └─ BT23513 [T]: 1 instances, 1 teachers
+  └─ BT23511 [T]: 1 instances, 1 teachers
   └─ BT23514 [T]: 2 instances, 2 teachers
 - G5: 2 courses, 3 teachers
-  └─ BT23513 [T]: 2 instances, 2 teachers
+  └─ BT23511 [T]: 2 instances, 2 teachers
   └─ BT23514 [T]: 1 instances, 1 teachers
 - G6: 2 courses, 3 teachers
-  └─ BT23511 [T]: 2 instances, 2 teachers
   └─ BT23512 [T]: 1 instances, 1 teachers
+  └─ BT23513 [T]: 2 instances, 2 teachers
 - G7: 2 courses, 3 teachers
-  └─ BT23511 [T]: 1 instances, 1 teachers
   └─ BT23512 [T]: 2 instances, 2 teachers
+  └─ BT23513 [T]: 1 instances, 1 teachers

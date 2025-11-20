@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 from typing import Any, Dict, Mapping, Optional
+from datetime import datetime
 
 from ..config.manager import ConfigManager
 from ..config.schemas import SchedulerConfig
@@ -104,6 +105,7 @@ class PipelineOrchestrator:
 		extractor = ScheduleExtractor(self._extended_data, self._model)
 		self._schedule = extractor.export(
 			self._solver_result,
+			output_dir=self._base_dir / "output" / datetime.now().strftime("%Y-%m-%d_%H-%M-%S"),
 			write_json=True,
 			write_csv=True,
 		)
