@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Computer Science & Engineering
 Semester: 5
-Generated: 2025-11-18 18:30:11
+Generated: 2025-11-21 00:05:10
 ============================================================
 
 OVERVIEW
@@ -18,23 +18,25 @@ COURSE DISTRIBUTION BY GROUP
   └─ G4: 3 teacher assignments
   └─ G5: 3 teacher assignments
 - CS23531 [Lab + Theory]: 2 groups, 6 teachers
+  └─ G2: 2 teacher assignments
+  └─ G3: 4 teacher assignments
+- CS23532 [Lab + Theory]: 2 groups, 6 teachers
   └─ G1: 2 teacher assignments
   └─ G2: 4 teacher assignments
-- CS23532 [Lab + Theory]: 2 groups, 6 teachers
+- CS23533 [Lab + Theory]: 2 groups, 6 teachers
   └─ G1: 4 teacher assignments
-  └─ G2: 2 teacher assignments
-- CS23533 [Lab + Theory]: 1 groups, 6 teachers
-  └─ G3: 6 teacher assignments
+  └─ G3: 2 teacher assignments
 
 GROUP COMPOSITION
 - G1: 2 courses, 6 teachers
+  └─ CS23532 [L+T]: 2 instances, 2 teachers
+  └─ CS23533 [L+T]: 4 instances, 4 teachers
+- G2: 2 courses, 6 teachers
   └─ CS23531 [L+T]: 2 instances, 2 teachers
   └─ CS23532 [L+T]: 4 instances, 4 teachers
-- G2: 2 courses, 6 teachers
+- G3: 2 courses, 6 teachers
   └─ CS23531 [L+T]: 4 instances, 4 teachers
-  └─ CS23532 [L+T]: 2 instances, 2 teachers
-- G3: 1 courses, 6 teachers
-  └─ CS23533 [L+T]: 6 instances, 6 teachers
+  └─ CS23533 [L+T]: 2 instances, 2 teachers
 - G4: 2 courses, 6 teachers
   └─ CS23511 [T]: 3 instances, 3 teachers
   └─ CS23512 [T]: 3 instances, 3 teachers

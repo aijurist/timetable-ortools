@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Timetable Scheduler Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/static/css/dashboard.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">University Timetable Intelligence</a>
+            <div class="ms-auto text-white text-end">
+                <div class="small opacity-75">Latest snapshot</div>
+                <div id="snapshotLabel" class="fw-semibold">Detecting…</div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container-fluid py-4">
+        <div id="alertBanner" class="alert alert-danger d-none" role="alert"></div>
+
+        <section class="row g-3 mb-4" id="statsRow">
+            <div class="col-6 col-md-4 col-xl-2">
+                <div class="stats-card">
+                    <div class="label">Total Sessions</div>
+                    <div class="value" id="statSessions">0</div>
+                    <div class="caption">Theory + Lab</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <div class="stats-card">
+                    <div class="label">Theory Sessions</div>
+                    <div class="value" id="statTheory">0</div>
+                    <div class="caption">Lecture + Tutorial</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <div class="stats-card">
+                    <div class="label">Lab Sessions</div>
+                    <div class="value" id="statLab">0</div>
+                    <div class="caption">Hands-on blocks</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <div class="stats-card">
+                    <div class="label">Departments</div>
+                    <div class="value" id="statDepartments">0</div>
+                    <div class="caption">Represented</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <div class="stats-card">
+                    <div class="label">Teachers</div>
+                    <div class="value" id="statTeachers">0</div>
+                    <div class="caption">Faculty scheduled</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <div class="stats-card">
+                    <div class="label">Rooms Used</div>
+                    <div class="value" id="statRooms">0</div>
+                    <div class="caption">Across campus</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="row g-3 mb-4" id="chartsRow">
+            <div class="col-12 col-xl-4">
+                <div class="card h-100">
+                    <div class="card-header">Day Distribution</div>
+                    <div class="card-body">
+                        <canvas id="dayChart" height="220"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-xl-4">
+                <div class="card h-100">
+                    <div class="card-header">Department Load</div>
+                    <div class="card-body">
+                        <canvas id="departmentChart" height="220"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-xl-4">
+                <div class="card h-100">
+                    <div class="card-header">Peak Time Slots</div>
+                    <div class="card-body">
+                        <canvas id="slotChart" height="220"></canvas>
+                        <div class="mt-3 small">
+                            <span class="fw-semibold">Busiest day:</span> <span id="highlightDay">-</span><br />
+                            <span class="fw-semibold">Peak slot:</span> <span id="highlightSlot">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="card mb-4">
+            <div class="card-header d-flex flex-wrap gap-3 align-items-center">
+                <div>
+                    <h5 class="mb-0">Schedule Explorer</h5>
+                    <small class="text-muted">Filter by department, semester, day, type, or search by course, teacher, or room.</small>
+                </div>
+                <div class="ms-auto text-muted small">
+                    Last updated: <span id="lastUpdated">–</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-12 col-md-4 col-xl-2">
+                        <label class="form-label">Department</label>
+                        <select id="departmentFilter" class="form-select"></select>
+                    </div>
+                    <div class="col-6 col-md-4 col-xl-2">
+                        <label class="form-label">Semester</label>
+                        <select id="semesterFilter" class="form-select"></select>
+                    </div>
+                    <div class="col-6 col-md-4 col-xl-2">
+                        <label class="form-label">Group</label>
+                        <select id="groupFilter" class="form-select"></select>
+                    </div>
+                    <div class="col-6 col-md-4 col-xl-2">
+                        <label class="form-label">Day</label>
+                        <select id="dayFilter" class="form-select"></select>
+                    </div>
+                    <div class="col-6 col-md-4 col-xl-2">
+                        <label class="form-label">Session Type</label>
+                        <select id="sessionTypeFilter" class="form-select">
+                            <option value="">All types</option>
+                            <option value="theory">Theory</option>
+                            <option value="lab">Lab</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-8 col-xl-4">
+                        <label class="form-label">Search</label>
+                        <input id="searchInput" class="form-control" placeholder="Course, teacher, or room" />
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover" id="scheduleTable">
+                        <thead>
+                            <tr>
+                                <th>Day</th>
+                                <th>Time</th>
+                                <th>Course</th>
+                                <th>Department / Group</th>
+                                <th>Teacher</th>
+                                <th>Room</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scheduleTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">Loading timetable…</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="d-flex justify-content-between align-items-center small text-muted mt-2">
+                    <div>Results: <span id="resultCount">0</span></div>
+                    <button class="btn btn-sm btn-outline-secondary" id="resetFilters">Reset filters</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="card-header d-flex flex-wrap gap-3 align-items-center">
+                <div>
+                    <h5 class="mb-0">Room Utilization</h5>
+                    <small class="text-muted">Quickly spot highly utilized rooms and drill into their daily schedules.</small>
+                </div>
+                <div class="ms-auto d-flex flex-wrap gap-2">
+                    <select id="blockFilter" class="form-select form-select-sm">
+                        <option value="">All blocks</option>
+                    </select>
+                    <select id="roomTypeFilter" class="form-select form-select-sm">
+                        <option value="">All types</option>
+                        <option value="theory">Theory</option>
+                        <option value="lab">Lab</option>
+                        <option value="mixed">Mixed</option>
+                    </select>
+                    <input id="roomSearch" class="form-control form-control-sm" placeholder="Search rooms" />
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="roomGrid" class="room-grid">
+                    <div class="placeholder">Loading room utilization…</div>
+                </div>
+                <div class="mt-4">
+                    <h6>Unassigned sessions</h6>
+                    <p class="small text-muted mb-1">Sessions without a confirmed room are highlighted here.</p>
+                    <div id="unassignedSessions" class="unassigned-list text-muted small">Collecting data…</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="/static/js/dashboard.js" type="module"></script>
+</body>
+</html>

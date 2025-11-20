@@ -72,6 +72,7 @@ class ModelBuilder:
 
 		registrations = self._load_registrations()
 		constraint_results = self._apply_constraints(registrations, context)
+		self._apply_objective_terms(context)
 		metadata = self._compose_metadata(variables, constraint_results)
 
 		return ConstraintModel(
@@ -162,6 +163,45 @@ class ModelBuilder:
 			status=status,
 			details=dict(details or {}),
 		)
+
+	def _apply_objective_terms(self, context: ConstraintContext) -> None:
+		"""Attach a minimisation objective if constraints registered penalty terms."""
+
+		extra_bucket = context.extra.get("objective")
+		if not isinstance(extra_bucket, Mapping):
+			return
+		penalties = extra_bucket.get("penalties")
+		if not penalties:
+			return
+		proto = context.model.Proto()
+		if proto.HasField("objective") and proto.objective.vars:
+			self._logger.warning("Objective already defined; skipping penalty aggregation")
+			return
+		linear_terms = []
+		for entry in penalties:
+			weight = None
+			var = None
+			if isinstance(entry, Mapping):
+				weight = entry.get("weight")
+				var = entry.get("variable") or entry.get("var")
+			elif isinstance(entry, tuple):
+				if len(entry) >= 2:
+					weight, var = entry[0], entry[1]
+				else:
+					continue
+			if var is None:
+				continue
+			try:
+				w_value = int(weight) if weight is not None else 1
+			except (TypeError, ValueError):
+				w_value = 1
+			if w_value == 0:
+				continue
+			linear_terms.append(w_value * var)
+		if not linear_terms:
+			return
+		context.model.Minimize(sum(linear_terms))
+		self._logger.info("Objective minimises %d penalty terms", len(linear_terms))
 
 
 __all__ = [

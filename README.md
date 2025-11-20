@@ -116,7 +116,34 @@ Options:
   -h, --help                      Show help message
 ```
 
-## 📋 Data Format
+## �️ Interactive Dashboard & API Server
+
+A lightweight FastAPI server lives in `src/app` so you can explore the latest generated schedule with a modern dashboard UI.
+
+### Launch the dashboard
+
+```powershell
+python -m src.app.server --host 0.0.0.0 --port 8000
+```
+
+Then open [http://localhost:8000](http://localhost:8000). The app automatically finds the most recent folder inside `output/` (supports both `schedule.json` and `combined_*` exports) and serves:
+
+- **Snapshot-aware metrics** – key totals, busiest day/time-slot, top rooms, and department loads.
+- **Schedule explorer** – filter by department, semester, group, day, session type, or perform fuzzy text search for courses/teachers/rooms.
+- **Room utilization view** – block/type filters, utilization percentages, and inline mini-timetables for every room, plus an alert list for unassigned sessions.
+
+### Diagnostics mode
+
+To verify data without starting the HTTP server:
+
+```powershell
+python -m src.app.server --print-metrics
+```
+
+This prints the latest snapshot metadata plus the aggregate counters returned by `/api/metrics`.
+
+
+## �📋 Data Format
 
 ### Required Input Files
 

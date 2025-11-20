@@ -5,7 +5,7 @@ meta:
   generated_at: null
 
 paths:
-  courses_csv: data/final.csv
+  courses_csv: data/final_v4.csv
   rooms_csv: data/block_wise/techlongue.csv
   day_order_csv: data/day_order.csv
   core_lab_mapping_csv: data/og-final.csv
@@ -46,16 +46,16 @@ data:
 time:
   theory_slots:
     - "8:00 - 8:50"
-    - "8:55 - 9:45"
-    - "9:50 - 10:40"
-    - "10:45 - 11:35"
-    - "11:40 - 12:30"
-    - "12:35 - 1:20"
-    - "1:50 - 2:40"
-    - "3:20 - 4:10"
-    - "4:15 - 5:05"
-    - "5:10 - 6:00"
-    - "6:10 - 7:00"
+    - "9:00 - 9:50"
+    - "10:00 - 10:50"
+    - "11:00 - 11:50"
+    - "12:00 - 12:50"
+    - "1:00 - 1:50"
+    - "2:00 - 2:50"
+    - "3:00 - 3:50"
+    - "4:00 - 4:50"
+    - "5:00 - 5:50"
+    - "6:00 - 6:50"
   lab_slots:
     - "8:00 - 8:50"
     - "8:50 - 9:40"
@@ -433,7 +433,7 @@ grouping:
 constraints:
   lab:
     session_coverage:
-      enabled: true
+      enabled: false
       priority: 10
       weight: 1.0
       params: {}
@@ -443,7 +443,7 @@ constraints:
       weight: 1.0
       params: {}
     core_lab_mapping:
-      enabled: true
+      enabled: false
       priority: 8
       weight: 0.8
       params: {}
@@ -456,6 +456,51 @@ constraints:
           - SHIFT_1
           - SHIFT_2
   theory:
+    slot_coverage:
+      enabled: true
+      priority: 10
+      weight: 1.0
+      params: {}
+    daily_slot_cap:
+      enabled: false
+      priority: 9
+      weight: 0.9
+      params: {}
+    no_three_consecutive:
+      enabled: true
+      priority: 8
+      weight: 0.7
+      params:
+        window: 3
+    lunch_window:
+      enabled: true
+      priority: 8
+      weight: 0.6
+      params:
+        fallback_window:
+          - 3
+          - 4
+          - 5
+        minimum_free_slots: 1
+    flexible_lunch:
+      enabled: true
+      priority: 7
+      weight: 0.5
+      params:
+        traditional_slots:
+          - 3
+          - 4
+          - 5
+        min_traditional_free_slots: 1
+        natural_patterns:
+          - lab_session: L3
+            required_theory_slots:
+              - 6
+            description: L3 lab plus theory slot 6 keeps lunch before slot 7
+          - lab_session: L4
+            required_theory_slots:
+              - 4
+            description: Theory slot 4 + L4 lab keeps center lunch
     teacher_daily_limit:
       enabled: true
       priority: 9
@@ -556,6 +601,7 @@ constraints:
         discouraged_lab_sessions:
           - L5
           - L6
+        soft_penalty_weight: 5
 
 model:
   big_m_value: 1000.0

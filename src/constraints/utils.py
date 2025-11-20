@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Iterator, Mapping, MutableMapping, Optional, Tuple
+from typing import Iterator, Mapping, MutableMapping, Optional, Sequence, Tuple
 
 from ortools.sat.python import cp_model
 
@@ -98,6 +98,55 @@ def ensure_extra_bucket(context: ConstraintContext, bucket: str) -> MutableMappi
 	return context.extra[bucket]  # type: ignore[return-value]
 
 
+def register_objective_penalty(
+	context: ConstraintContext,
+	variable: cp_model.IntVar,
+	weight: int = 1,
+	*,
+	tag: Optional[str] = None,
+) -> None:
+	"""Register a weighted penalty term to be minimised in the global objective."""
+
+	if weight == 0:
+		return
+	objective_bucket = ensure_extra_bucket(context, "objective")
+	penalties = objective_bucket.setdefault("penalties", [])  # type: ignore[assignment]
+	penalties.append((int(weight), variable, tag or ""))
+
+
+def build_presence_literal(
+	model: cp_model.CpModel,
+	variables: Sequence[cp_model.IntVar],
+	name: str,
+) -> Optional[cp_model.IntVar]:
+	"""Return a boolean literal that is true when any variable in ``variables`` is active."""
+
+	bucket = tuple(var for var in variables if var is not None)
+	if not bucket:
+		return None
+	if len(bucket) == 1:
+		return bucket[0]
+	literal = model.NewBoolVar(name)
+	model.Add(sum(bucket) >= 1).OnlyEnforceIf(literal)
+	model.Add(sum(bucket) == 0).OnlyEnforceIf(literal.Not())
+	return literal
+
+
+def parse_department_token(token: str) -> Tuple[str, Optional[int]]:
+	"""Split ``Department_S5`` style tokens into (department, semester)."""
+
+	if not token:
+		return "", None
+	value = str(token).strip()
+	if "_S" in value:
+		dept, _, suffix = value.partition("_S")
+		try:
+			return dept.strip(), int(suffix)
+		except ValueError:
+			return dept.strip(), None
+	return value, None
+
+
 __all__ = [
 	"iter_lab_session_variables",
 	"iter_group_timeslot_variables",
@@ -105,4 +154,7 @@ __all__ = [
 	"get_room_attributes",
 	"resolve_day_pattern",
 	"ensure_extra_bucket",
+	"build_presence_literal",
+	"parse_department_token",
+	"register_objective_penalty",
 ]

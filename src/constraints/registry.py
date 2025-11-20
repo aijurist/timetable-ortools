@@ -7,8 +7,15 @@ from typing import Callable, Mapping, Sequence
 
 from ..config.schemas import ConstraintSetting, SchedulerConfig
 from .base import ConstraintMetadata
+from .cross_system.five_pm_policy import build_five_pm_policy_constraint
 from .lab.core_lab import build_core_lab_mapping_constraint
 from .lab.requirements import build_lab_session_coverage_constraint
+from .theory.adjacency import build_no_three_consecutive_slots_constraint
+from .theory.lunch import build_flexible_lunch_constraint, build_theory_lunch_break_constraint
+from .theory.requirements import (
+	build_theory_daily_slot_cap_constraint,
+	build_theory_slot_coverage_constraint,
+)
 from .schema import ConstraintRegistration
 
 
@@ -28,24 +35,92 @@ LAB_CONSTRAINT_DEFINITIONS = {
 }
 
 
+THEORY_CONSTRAINT_DEFINITIONS = {
+	"slot_coverage": {
+		"title": "Theory Slot Coverage",
+		"description": "Match each theory group with its exact required number of weekly slots.",
+		"factory": build_theory_slot_coverage_constraint,
+		"tags": ("theory", "coverage"),
+	},
+	"daily_slot_cap": {
+		"title": "Theory Daily Slot Cap",
+		"description": "Limit how many unique theory slots a department may occupy per day.",
+		"factory": build_theory_daily_slot_cap_constraint,
+		"tags": ("theory", "load"),
+	},
+	"no_three_consecutive": {
+		"title": "No Three Consecutive Theory Slots",
+		"description": "Block any group from holding three consecutive theory slots.",
+		"factory": build_no_three_consecutive_slots_constraint,
+		"tags": ("theory", "adjacency"),
+	},
+	"lunch_window": {
+		"title": "Theory Lunch Window Guard",
+		"description": "Reserve at least one lunch slot for non-flexible departments.",
+		"factory": build_theory_lunch_break_constraint,
+		"tags": ("theory", "lunch"),
+	},
+	"flexible_lunch": {
+		"title": "Flexible Lunch Options",
+		"description": "Allow eligible departments to satisfy lunch via natural lab-theory patterns.",
+		"factory": build_flexible_lunch_constraint,
+		"tags": ("theory", "lunch", "flexible"),
+	},
+}
+
+
+CROSS_SYSTEM_CONSTRAINT_DEFINITIONS = {
+	"five_pm_policy": {
+		"title": "Department 5PM Policy",
+		"description": "Block or penalize late sessions for configured departments across lab and theory.",
+		"factory": build_five_pm_policy_constraint,
+		"tags": ("cross-system", "time", "policy"),
+	},
+}
+
+
 def get_constraint_registrations(config: SchedulerConfig) -> Sequence[ConstraintRegistration]:
 	"""Return the ordered list of constraint registrations."""
 
 	registrations = []
-	registrations.extend(_build_lab_registrations(config.constraints.lab))
+	registrations.extend(
+		_build_domain_registrations(
+			domain="lab",
+			definitions=LAB_CONSTRAINT_DEFINITIONS,
+			settings=config.constraints.lab,
+		)
+	)
+	registrations.extend(
+		_build_domain_registrations(
+			domain="theory",
+			definitions=THEORY_CONSTRAINT_DEFINITIONS,
+			settings=config.constraints.theory,
+		)
+	)
+	registrations.extend(
+		_build_domain_registrations(
+			domain="cross_system",
+			definitions=CROSS_SYSTEM_CONSTRAINT_DEFINITIONS,
+			settings=config.constraints.cross_system,
+		)
+	)
 	return tuple(registrations)
 
 
-def _build_lab_registrations(settings: Mapping[str, ConstraintSetting]) -> Sequence[ConstraintRegistration]:
+def _build_domain_registrations(
+	domain: str,
+	definitions: Mapping[str, Mapping[str, object]],
+	settings: Mapping[str, ConstraintSetting],
+) -> Sequence[ConstraintRegistration]:
 	entries = []
-	for identifier, definition in LAB_CONSTRAINT_DEFINITIONS.items():
+	for identifier, definition in definitions.items():
 		setting = settings.get(identifier)
 		if setting is None:
 			continue
 		metadata = ConstraintMetadata(
-			id=f"lab.{identifier}",
+			id=f"{domain}.{identifier}",
 			name=definition["title"],
-			category="lab",
+			category=domain,
 			priority=setting.priority,
 			description=definition["description"],
 			tags=definition["tags"],

@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import csv
+import json
 import logging
+from collections import defaultdict
 from pathlib import Path
-from typing import Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Tuple
 
 from ortools.sat.python import cp_model
 
@@ -93,6 +96,10 @@ class ScheduleExtractor:
 		self._instance_lookup = self._index_instances()
 		self._group_lookup = self._index_groups()
 		self._teacher_lookup = self._index_teachers()
+		self._room_index = self._index_rooms()
+		self._course_row_lookup = self._index_course_rows()
+		self._group_display = self._build_group_display()
+		self._group_slot_sequence_cache: Dict[str, Tuple[Tuple[Optional[str], str], ...]] = {}
 		self._group_course_map = {
 			group.group_id: tuple(group.course_instance_ids)
 			for group in self._group_lookup.values()
@@ -140,6 +147,44 @@ class ScheduleExtractor:
 				course_code = requirement.course_code
 				course_name = instance.course_name if instance else course_code
 				day_pattern = self._lab_vars.day_patterns.get(course_instance_id, self._time.working_days)
+				day_pattern_label = self._format_day_pattern(day_pattern)
+				group_display = self._group_display.get(requirement.group_id, {})
+				group = self._group_lookup.get(requirement.group_id)
+				group_name = group_display.get("name") or self._format_group_name(group) or requirement.group_id
+				group_index = group_display.get("index") or (group.ordinal if group else None)
+				total_students = group_display.get("total_students") or (group.summary.total_student_count if group else requirement.student_count)
+				course_row = self._get_course_row(instance)
+				course_code_display = self._coalesce_str(
+					(course_row or {}).get("course_code_display"),
+					instance.metadata.get("course_code_display") if instance and instance.metadata else None,
+					course_code,
+				)
+				staff_code = self._coalesce_str(
+					(course_row or {}).get("staff_code"),
+					instance.metadata.get("staff_code") if instance and instance.metadata else None,
+					teacher_id,
+				)
+				batch_info = self._coalesce_str(
+					(course_row or {}).get("batch_info"),
+					(course_row or {}).get("batch_label"),
+					(course_row or {}).get("batch_name"),
+				)
+				num_batches = self._safe_int((course_row or {}).get("num_batches")) or 1
+				is_batched = bool(batch_info) or num_batches > 1
+				co_schedule_id = self._coalesce_str(
+					(course_row or {}).get("co_schedule_id"),
+					(course_row or {}).get("virtual_id"),
+					(course_row or {}).get("co_scheduled_id"),
+				)
+				co_schedule_group_size = self._safe_int((course_row or {}).get("co_schedule_group_size")) or 1
+				co_schedule_partner_teachers = self._coalesce_str(
+					(course_row or {}).get("co_schedule_partner_teachers"),
+					(course_row or {}).get("partner_teachers"),
+				)
+				co_schedule_info = self._coalesce_str(
+					(course_row or {}).get("co_schedule_info"),
+					"Single session" if not co_schedule_id else f"Co-scheduled ({co_schedule_id})",
+				)
 				for day_index, session_map in day_map.items():
 					day_label = day_pattern[day_index % len(day_pattern)] if day_pattern else str(day_index)
 					for session_name, room_map in session_map.items():
@@ -151,6 +196,20 @@ class ScheduleExtractor:
 								continue
 							is_lunch = self._lab_session_overlaps_lunch(requirement.department, session_name)
 							five_policy, five_flag = self._lab_five_pm(requirement.department, requirement.semester, session_name)
+							room_meta = self._get_room_metadata(room_id)
+							room_number = self._coalesce_str(
+								room_meta.get("room_number"),
+								room_meta.get("room_no"),
+								room_meta.get("name"),
+							)
+							block = self._coalesce_str(room_meta.get("block"), room_meta.get("building"))
+							capacity = self._safe_int(
+								room_meta.get("room_max_cap")
+								or room_meta.get("capacity")
+								or room_meta.get("room_capacity")
+								or room_meta.get("max_capacity")
+							)
+							capacity_info = f"{requirement.student_count}/{capacity}" if capacity else None
 							entry = LabScheduleEntry(
 								teacher_id=teacher_id,
 								teacher_name=teacher_name,
@@ -171,19 +230,50 @@ class ScheduleExtractor:
 								is_lunch_window=is_lunch,
 								five_pm_policy=five_policy,
 								five_pm_flag=five_flag,
+								course_code_display=course_code_display,
+								practical_hours=requirement.practical_hours,
+								staff_code=staff_code,
+								room_number=room_number,
+								block=block,
+								capacity=capacity,
+								total_students=total_students,
+								is_batched=is_batched,
+								batch_info=batch_info,
+								num_batches=num_batches,
+								schedule_type="lab",
+								group_name=group_name,
+								group_index=group_index,
+								day_pattern=day_pattern_label,
+								is_co_scheduled=bool(co_schedule_id),
+								co_schedule_id=co_schedule_id,
+								co_schedule_group_size=co_schedule_group_size,
+								co_schedule_partner_teachers=co_schedule_partner_teachers,
+								co_schedule_info=co_schedule_info,
+								capacity_info=capacity_info,
 							)
 							entries.append(entry)
 		return tuple(entries)
 
 	def _build_theory_entries(self, accessor: _SolutionAccessor) -> Tuple[TheoryScheduleEntry, ...]:
 		entries: List[TheoryScheduleEntry] = []
+		sequence_cache: Dict[str, Tuple[Tuple[Optional[str], str], ...]] = {
+			group_id: self._get_group_slot_sequence(group_id)
+			for group_id in self._theory_vars.group_timeslots.keys()
+		}
+		slot_positions: Dict[str, int] = defaultdict(int)
+		course_session_counts: Dict[str, int] = defaultdict(int)
 		for group_id, day_map in self._theory_vars.group_timeslots.items():
 			requirement = self._theory_vars.requirements.get(group_id)
 			group = self._group_lookup.get(group_id)
 			if not requirement or not group:
 				continue
 			day_pattern = self._theory_vars.day_patterns.get(group_id, self._time.working_days)
+			day_pattern_label = self._format_day_pattern(day_pattern)
 			teacher_names = tuple(self._teacher_lookup.get(tid, tid) for tid in group.teacher_ids)
+			sequence = sequence_cache.get(group_id, tuple())
+			group_display = self._group_display.get(group_id, {})
+			group_name = group_display.get("name") or self._format_group_name(group) or group_id
+			group_index = group_display.get("index") or group.ordinal
 			for day_index, slot_map in day_map.items():
 				day_label = day_pattern[day_index % len(day_pattern)] if day_pattern else str(day_index)
 				for slot_index, var in slot_map.items():
@@ -192,6 +282,31 @@ class ScheduleExtractor:
 					slot_label = self._time.theory_slots[slot_index] if slot_index < len(self._time.theory_slots) else f"slot_{slot_index}"
 					is_lunch = self._is_lunch_slot(requirement.department, slot_index)
 					five_policy, five_flag = self._theory_five_pm(requirement.department, requirement.semester, slot_index)
+					course_instance_id: Optional[str] = None
+					session_type = "Theory"
+					if sequence:
+						position = slot_positions[group_id]
+						if position < len(sequence):
+							course_instance_id, session_type = sequence[position]
+						else:
+							idx = position % len(sequence)
+							course_instance_id, session_type = sequence[idx]
+					slot_positions[group_id] += 1
+					instance = self._instance_lookup.get(course_instance_id) if course_instance_id else None
+					course_row = self._get_course_row(instance)
+					teacher_id = instance.teacher_id if instance else (group.teacher_ids[0] if group.teacher_ids else None)
+					teacher_name = instance.teacher_name if instance else (teacher_names[0] if teacher_names else teacher_id)
+					staff_code = self._coalesce_str(
+						(course_row or {}).get("staff_code"),
+						instance.metadata.get("staff_code") if instance and instance.metadata else None,
+						teacher_id,
+					)
+					if course_instance_id:
+						course_session_counts[course_instance_id] += 1
+						session_number = course_session_counts[course_instance_id]
+					else:
+						session_number = slot_positions[group_id]
+					student_count = instance.student_count if instance else group.summary.total_student_count
 					entry = TheoryScheduleEntry(
 						group_id=group_id,
 						department=requirement.department,
@@ -207,6 +322,27 @@ class ScheduleExtractor:
 						five_pm_policy=five_policy,
 						five_pm_flag=five_flag,
 						tags=requirement.tags,
+						course_instance_id=course_instance_id,
+						course_code=instance.course_code if instance else None,
+						course_name=instance.course_name if instance else None,
+						session_type=session_type,
+						session_number=session_number,
+						teacher_id=teacher_id,
+						teacher_name=teacher_name,
+						staff_code=staff_code,
+						room_id=None,
+						room_number=None,
+						block=None,
+						student_count=student_count,
+						lecture_hours=instance.lecture_hours if instance else None,
+						tutorial_hours=instance.tutorial_hours if instance else None,
+						schedule_type="theory",
+						group_name=group_name,
+						group_index=group_index,
+						day_pattern=day_pattern_label,
+						is_co_scheduled=False,
+						capacity_info=None,
+						partner_instance_id=None,
 					)
 					entries.append(entry)
 		return tuple(entries)
@@ -260,8 +396,12 @@ class ScheduleExtractor:
 			)
 			bucket["lab"].append(entry)
 		for entry in theory_entries:
-			instance_ids = self._group_course_map.get(entry.group_id, tuple())
-			for instance_id in instance_ids:
+			target_ids: Sequence[str]
+			if entry.course_instance_id:
+				target_ids = (entry.course_instance_id,)
+			else:
+				target_ids = self._group_course_map.get(entry.group_id, tuple())
+			for instance_id in target_ids:
 				bucket = buffer.setdefault(
 					instance_id,
 					{
@@ -339,6 +479,108 @@ class ScheduleExtractor:
 				lookup.setdefault(instance.teacher_id, instance.teacher_name)
 		return lookup
 
+	def _index_rooms(self) -> Dict[str, Mapping[str, Any]]:
+		registry = getattr(self._data.raw, "room_registry", None) or {}
+		return {str(room_id): payload or {} for room_id, payload in registry.items()}
+
+	def _index_course_rows(self) -> Dict[int, Mapping[str, Any]]:
+		courses_df = getattr(self._data.raw, "courses_df", None)
+		if courses_df is None:
+			return {}
+		try:
+			reset_df = courses_df.reset_index(drop=True)
+		except Exception:  # pragma: no cover - defensive for non-DataFrame inputs
+			reset_df = courses_df
+		data = reset_df.to_dict("index") if hasattr(reset_df, "to_dict") else {}
+		return {int(idx): row for idx, row in data.items()}
+
+	def _build_group_display(self) -> Dict[str, Dict[str, Any]]:
+		display: Dict[str, Dict[str, Any]] = {}
+		for group_id, group in self._group_lookup.items():
+			display[group_id] = {
+				"name": self._format_group_name(group),
+				"index": group.ordinal,
+				"total_students": group.summary.total_student_count,
+				"department": group.key.department,
+				"semester": group.key.semester,
+			}
+		return display
+
+	def _get_room_metadata(self, room_id: Optional[str]) -> Mapping[str, Any]:
+		if room_id is None:
+			return {}
+		return self._room_index.get(str(room_id), {})
+
+	def _get_course_row(self, instance: Optional[NormalizedCourseInstance]) -> Mapping[str, Any]:
+		if not instance or not instance.metadata:
+			return {}
+		row_index = instance.metadata.get("raw_row")
+		if row_index is None:
+			return {}
+		try:
+			return self._course_row_lookup.get(int(row_index), {})
+		except (TypeError, ValueError):  # pragma: no cover - defensive parsing
+			return {}
+
+	@staticmethod
+	def _coalesce_str(*values: Any) -> Optional[str]:
+		for value in values:
+			if value is None:
+				continue
+			text = str(value).strip()
+			if text:
+				return text
+		return None
+
+	@staticmethod
+	def _safe_int(value: Any) -> Optional[int]:
+		if value is None:
+			return None
+		if isinstance(value, str) and not value.strip():
+			return None
+		try:
+			return int(round(float(value)))
+		except Exception:
+			return None
+
+	@staticmethod
+	def _format_day_pattern(pattern: Sequence[str]) -> str:
+		if not pattern:
+			return ""
+		normalized = [str(day).strip().title() for day in pattern if day]
+		if not normalized:
+			return ""
+		if len(normalized) == 1:
+			return normalized[0]
+		return f"{normalized[0]}-{normalized[-1]}"
+
+	@staticmethod
+	def _format_group_name(group: Optional[CourseGroup]) -> Optional[str]:
+		if not group:
+			return None
+		return f"{group.key.department}_S{group.key.semester}_G{group.ordinal}"
+
+	def _get_group_slot_sequence(self, group_id: str) -> Tuple[Tuple[Optional[str], str], ...]:
+		if group_id in self._group_slot_sequence_cache:
+			return self._group_slot_sequence_cache[group_id]
+		group = self._group_lookup.get(group_id)
+		if not group:
+			self._group_slot_sequence_cache[group_id] = tuple()
+			return self._group_slot_sequence_cache[group_id]
+		sequence: List[Tuple[Optional[str], str]] = []
+		for instance_id in group.course_instance_ids:
+			instance = self._instance_lookup.get(instance_id)
+			if not instance:
+				continue
+			for _ in range(max(instance.lecture_hours, 0)):
+				sequence.append((instance_id, "Lecture"))
+			for _ in range(max(instance.tutorial_hours, 0)):
+				sequence.append((instance_id, "Tutorial"))
+		if not sequence:
+			sequence = [(instance_id, "Theory") for instance_id in group.course_instance_ids]
+		self._group_slot_sequence_cache[group_id] = tuple(sequence)
+		return self._group_slot_sequence_cache[group_id]
+
 
 __all__ = [
 	"ScheduleExtractor",
@@ -361,9 +603,12 @@ if __name__ == "__main__":
 	
 	from pathlib import Path
 
+	# logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+
 	base_dir = Path.cwd()
 	config_manager = ConfigManager(base_dir=base_dir)
-	config = config_manager.load()
+	config = config_manager.load(config_path=base_dir / "config" / "scheduler.yaml")
+	print(config.constraints.lab)
 	data_loader = DataLoader(config, base_dir=base_dir)
 	res = data_loader.load()
 
@@ -373,7 +618,9 @@ if __name__ == "__main__":
 	
 	builder = ModelBuilder(config=config)
 	constraint_model = builder.build(data=output)
+	print(constraint_model.constraint_results)
 	runner = SolverRunner(config=config)
 	final_res = runner.solve(constraint_model)
+	print(final_res)
 	extractor = ScheduleExtractor(data=output, constraint_model=constraint_model)
 	schedule = extractor.export(final_res, output_dir=base_dir / "output" / datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), write_csv=True)

@@ -31,28 +31,62 @@ class LabScheduleEntry:
 	is_lunch_window: bool
 	five_pm_policy: Optional[str]
 	five_pm_flag: bool
+	# Legacy export metadata
+	course_code_display: Optional[str] = None
+	practical_hours: int = 0
+	staff_code: Optional[str] = None
+	room_number: Optional[str] = None
+	block: Optional[str] = None
+	capacity: Optional[int] = None
+	total_students: Optional[int] = None
+	is_batched: bool = False
+	batch_info: Optional[str] = None
+	num_batches: int = 1
+	schedule_type: str = "lab"
+	group_name: Optional[str] = None
+	group_index: Optional[int] = None
+	day_pattern: Optional[str] = None
+	is_co_scheduled: bool = False
+	co_schedule_id: Optional[str] = None
+	co_schedule_group_size: int = 1
+	co_schedule_partner_teachers: Optional[str] = None
+	co_schedule_info: Optional[str] = None
+	capacity_info: Optional[str] = None
 
 	def to_dict(self) -> Dict[str, object]:
 		return {
-			"teacher_id": self.teacher_id,
-			"teacher_name": self.teacher_name,
+			"day": self.day,
+			"session_name": self.session_name,
+			"time_range": self.session_time,
 			"course_instance_id": self.course_instance_id,
 			"course_code": self.course_code,
+			"course_code_display": self.course_code_display or self.course_code,
 			"course_name": self.course_name,
-			"group_id": self.group_id,
+			"practical_hours": self.practical_hours,
+			"teacher_id": self.teacher_id,
+			"teacher_name": self.teacher_name,
+			"staff_code": self.staff_code or self.teacher_id,
+			"room_id": self.room_id,
+			"room_number": self.room_number,
+			"block": self.block,
+			"capacity": self.capacity,
+			"student_count": self.student_count,
+			"total_students": self.total_students or self.student_count,
+			"is_batched": self.is_batched,
+			"batch_info": self.batch_info,
+			"num_batches": self.num_batches,
+			"schedule_type": self.schedule_type,
+			"group_name": self.group_name or self.group_id,
+			"group_index": self.group_index,
 			"department": self.department,
 			"semester": self.semester,
-			"day": self.day,
-			"day_index": self.day_index,
-			"session_name": self.session_name,
-			"session_slots": self.session_slots,
-			"session_time": self.session_time,
-			"room_id": self.room_id,
-			"student_count": self.student_count,
-			"tags": self.tags,
-			"is_lunch_window": self.is_lunch_window,
-			"five_pm_policy": self.five_pm_policy,
-			"five_pm_flag": self.five_pm_flag,
+			"day_pattern": self.day_pattern or "",
+			"is_co_scheduled": self.is_co_scheduled,
+			"co_schedule_id": self.co_schedule_id,
+			"co_schedule_group_size": self.co_schedule_group_size,
+			"co_schedule_partner_teachers": self.co_schedule_partner_teachers,
+			"co_schedule_info": self.co_schedule_info,
+			"capacity_info": self.capacity_info,
 		}
 
 
@@ -72,23 +106,56 @@ class TheoryScheduleEntry:
 	five_pm_policy: Optional[str]
 	five_pm_flag: bool
 	tags: Tuple[str, ...]
+	course_instance_id: Optional[str] = None
+	course_code: Optional[str] = None
+	course_name: Optional[str] = None
+	session_type: Optional[str] = None
+	session_number: int = 0
+	teacher_id: Optional[str] = None
+	teacher_name: Optional[str] = None
+	staff_code: Optional[str] = None
+	room_id: Optional[str] = None
+	room_number: Optional[str] = None
+	block: Optional[str] = None
+	student_count: Optional[int] = None
+	lecture_hours: Optional[int] = None
+	tutorial_hours: Optional[int] = None
+	schedule_type: str = "theory"
+	group_name: Optional[str] = None
+	group_index: Optional[int] = None
+	day_pattern: Optional[str] = None
+	is_co_scheduled: bool = False
+	capacity_info: Optional[str] = None
+	partner_instance_id: Optional[str] = None
 
 	def to_dict(self) -> Dict[str, object]:
 		return {
-			"group_id": self.group_id,
+			"day": self.day,
+			"time_slot": self.slot_label,
+			"slot_index": self.slot_index,
+			"course_instance_id": self.course_instance_id,
+			"course_code": self.course_code or (self.course_codes[0] if self.course_codes else None),
+			"course_name": self.course_name,
+			"session_type": self.session_type,
+			"session_number": self.session_number,
+			"teacher_id": self.teacher_id or (self.teacher_ids[0] if self.teacher_ids else None),
+			"teacher_name": self.teacher_name or (self.teacher_names[0] if self.teacher_names else None),
+			"staff_code": self.staff_code or self.teacher_id,
+			"room_id": self.room_id,
+			"room_number": self.room_number,
+			"block": self.block,
+			"student_count": self.student_count,
+			"lecture_hours": self.lecture_hours,
+			"tutorial_hours": self.tutorial_hours,
+			"schedule_type": self.schedule_type,
+			"is_co_scheduled": self.is_co_scheduled,
+			"capacity_info": self.capacity_info,
+			"partner_instance_id": self.partner_instance_id,
+			"group_name": self.group_name or self.group_id,
+			"group_index": self.group_index,
 			"department": self.department,
 			"semester": self.semester,
-			"day": self.day,
-			"day_index": self.day_index,
-			"slot_index": self.slot_index,
-			"slot_label": self.slot_label,
-			"teacher_ids": self.teacher_ids,
-			"teacher_names": self.teacher_names,
-			"course_codes": self.course_codes,
-			"is_lunch_window": self.is_lunch_window,
-			"five_pm_policy": self.five_pm_policy,
-			"five_pm_flag": self.five_pm_flag,
-			"tags": self.tags,
+			"day_pattern": self.day_pattern or "",
 		}
 
 

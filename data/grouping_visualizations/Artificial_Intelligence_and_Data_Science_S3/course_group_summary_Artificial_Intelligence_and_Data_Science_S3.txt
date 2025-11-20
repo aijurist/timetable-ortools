@@ -1,41 +1,43 @@
 Course-Group Distribution Summary
 Department: Artificial Intelligence & Data Science
 Semester: 3
-Generated: 2025-11-18 18:30:14
+Generated: 2025-11-21 00:05:12
 ============================================================
 
 OVERVIEW
-- Courses: 5 (Lab 4, Theory 5)
-- Groups: 5
-- Total assignments: 25
-- Courses with multiple options: 5 (100.0%)
+- Courses: 6 (Lab 4, Theory 6)
+- Groups: 6
+- Total assignments: 30
+- Courses with multiple options: 6 (100.0%)
 
 COURSE DISTRIBUTION BY GROUP
-- AI23331 [Lab + Theory]: 2 groups, 5 teachers
-  └─ G3: 2 teacher assignments
-  └─ G4: 3 teacher assignments
-- CS23331 [Lab + Theory]: 1 groups, 5 teachers
-  └─ G2: 5 teacher assignments
-- CS23332 [Lab + Theory]: 2 groups, 5 teachers
-  └─ G1: 2 teacher assignments
-  └─ G3: 3 teacher assignments
-- CS23333 [Lab + Theory]: 2 groups, 5 teachers
+- AI23331 [Lab + Theory]: 1 groups, 5 teachers
+  └─ G3: 5 teacher assignments
+- CS23331 [Lab + Theory]: 2 groups, 5 teachers
   └─ G1: 3 teacher assignments
-  └─ G4: 2 teacher assignments
+  └─ G2: 2 teacher assignments
+- CS23332 [Lab + Theory]: 1 groups, 5 teachers
+  └─ G4: 5 teacher assignments
+- CS23333 [Lab + Theory]: 2 groups, 5 teachers
+  └─ G1: 2 teacher assignments
+  └─ G2: 3 teacher assignments
 - MA23313 [Theory]: 1 groups, 5 teachers
+  └─ G6: 5 teacher assignments
+- MC23112 [Theory]: 1 groups, 5 teachers
   └─ G5: 5 teacher assignments
 
 GROUP COMPOSITION
 - G1: 2 courses, 5 teachers
-  └─ CS23332 [L+T]: 2 instances, 2 teachers
-  └─ CS23333 [L+T]: 3 instances, 3 teachers
-- G2: 1 courses, 5 teachers
-  └─ CS23331 [L+T]: 5 instances, 5 teachers
-- G3: 2 courses, 5 teachers
-  └─ AI23331 [L+T]: 2 instances, 2 teachers
-  └─ CS23332 [L+T]: 3 instances, 3 teachers
-- G4: 2 courses, 5 teachers
-  └─ AI23331 [L+T]: 3 instances, 3 teachers
+  └─ CS23331 [L+T]: 3 instances, 3 teachers
   └─ CS23333 [L+T]: 2 instances, 2 teachers
+- G2: 2 courses, 5 teachers
+  └─ CS23331 [L+T]: 2 instances, 2 teachers
+  └─ CS23333 [L+T]: 3 instances, 3 teachers
+- G3: 1 courses, 5 teachers
+  └─ AI23331 [L+T]: 5 instances, 5 teachers
+- G4: 1 courses, 5 teachers
+  └─ CS23332 [L+T]: 5 instances, 5 teachers
 - G5: 1 courses, 5 teachers
+  └─ MC23112 [T]: 5 instances, 5 teachers
+- G6: 1 courses, 5 teachers
   └─ MA23313 [T]: 5 instances, 5 teachers
