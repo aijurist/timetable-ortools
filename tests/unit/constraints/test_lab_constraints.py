@@ -20,6 +20,7 @@ from src.constraints.lab.slot_caps import (
 	build_core_lab_group_slot_cap_constraint,
 	build_semester_lab_slot_cap_constraint,
 )
+from src.constraints.lab.teacher_max_consecutive import build_teacher_max_consecutive_lab_constraint
 from src.constraints.schema import ConstraintStatus
 from src.data.schemas import ExtendedDataContainer, LabSessionDetail, RoomCollections
 from src.models.variables import (
@@ -329,6 +330,107 @@ def _build_slot_cap_context() -> ConstraintContext:
 	)
 
 
+def _build_teacher_consecutive_context(
+	*,
+	course_definitions: Optional[tuple[tuple[str, str, tuple[tuple[int, str], ...]], ...]] = None,
+	session_labels: tuple[str, ...] = ("L1", "L2", "L3"),
+) -> ConstraintContext:
+	model = cp_model.CpModel()
+	course_definitions = course_definitions or (
+		(
+			"COURSE_A",
+			"Computer Science & Engineering",
+			((0, "L1"), (0, "L2"), (0, "L3")),
+		),
+	)
+
+	assignments: dict[str, dict[str, dict[int, dict[str, dict[str, cp_model.IntVar]]]]] = {"T_CON": {}}
+	lab_requirements: dict[str, LabCourseRequirement] = {}
+	instance_group_lookup: dict[str, str] = {}
+
+	for index, (course_id, department, combos) in enumerate(course_definitions):
+		lab_requirements[course_id] = LabCourseRequirement(
+			course_instance_id=course_id,
+			course_code=f"LC{index}",
+			teacher_id="T_CON",
+			group_id=f"G_CON_{index}",
+			department=department,
+			semester=5,
+			practical_hours=2,
+			required_sessions=1,
+			student_count=30,
+			preferred_room_type=None,
+			required_room_type=None,
+		)
+		instance_group_lookup[course_id] = f"G_CON_{index}"
+		course_entry = assignments["T_CON"].setdefault(course_id, {})
+		for day_index, session_name in combos:
+			day_entry = course_entry.setdefault(day_index, {})
+			session_entry = day_entry.setdefault(session_name, {})
+			session_entry["R_CON"] = model.NewBoolVar(f"{course_id}_d{day_index}_{session_name}")
+
+	lab_block = LabVariableBlock(
+		assignments=assignments,
+		requirements=lab_requirements,
+		teacher_courses={"T_CON": tuple(lab_requirements.keys())},
+		day_patterns={course_id: ("monday",) for course_id in lab_requirements},
+		lab_session_names=session_labels,
+		room_ids=("R_CON",),
+		instance_group_lookup=instance_group_lookup,
+	)
+
+	theory_var = model.NewBoolVar("theory_placeholder")
+	theory_requirement = GroupTimeslotRequirement(
+		group_id="G_CON",
+		department="Computer Science & Engineering",
+		semester=5,
+		required_theory_slots=1,
+		day_pattern=("monday",),
+		lunch_slot_window=(),
+		five_pm_policy=None,
+	)
+	theory_block = TheoryVariableBlock(
+		group_timeslots={"G_CON": {0: {0: theory_var}}},
+		requirements={"G_CON": theory_requirement},
+		day_patterns={"G_CON": ("monday",)},
+		theory_slot_labels=("Slot-1",),
+	)
+
+	time_ns = SimpleNamespace(
+		lab_sessions={
+			session: LabSessionDetail(name=session, slots=(i, i + 1), time_range=f"{8 + i}:00-{9 + i}:40")
+			for i, session in enumerate(session_labels)
+		},
+		working_days=("monday",),
+	)
+	departments_ns = SimpleNamespace(day_patterns={"__default__": ("monday",)})
+	rooms = RoomCollections(
+		lab_rooms=pd.DataFrame(),
+		theory_rooms=pd.DataFrame(),
+		lab_room_ids=("R_CON",),
+		theory_room_ids=tuple(),
+		laboratory_room_ids=("R_CON",),
+	)
+	raw = SimpleNamespace(
+		time=time_ns,
+		departments=departments_ns,
+		room_registry={"R_CON": {"capacity": 36}},
+		rooms=rooms,
+		rooms_df=pd.DataFrame(),
+		core_lab_mapping_df=None,
+	)
+	data = ExtendedDataContainer(raw=raw, preprocessing=SimpleNamespace())
+	variables = VariableCreationResult(lab=lab_block, theory=theory_block, metadata={})
+	logger = logging.getLogger("tests.constraints.lab.teacher_consecutive")
+	return ConstraintContext(
+		model=model,
+		config=SimpleNamespace(),
+		data=data,
+		variables=variables,
+		logger=logger,
+	)
+
+
 @pytest.fixture()
 def lab_constraint_context() -> ConstraintContext:
 	return _build_constraint_context()
@@ -434,3 +536,43 @@ def test_semester_slot_cap_ignores_core_courses(slot_cap_constraint_context: Con
 	assert result.status == ConstraintStatus.APPLIED
 	assert result.details["constrained_semesters"] == 1
 	assert result.details["semesters"] == ("Computer Science & Engineering S5",)
+
+
+def test_teacher_max_consecutive_blocks_hard_departments() -> None:
+	context = _build_teacher_consecutive_context()
+	constraint = build_teacher_max_consecutive_lab_constraint(
+		metadata=_metadata("teacher_max_consecutive", priority=8)
+	)
+	result = constraint.apply(context)
+	assert result.status == ConstraintStatus.APPLIED
+	assert result.details["hard_constraints"] >= 1
+	assert result.details["soft_penalties"] == 0
+	assert result.details["course_clauses"] >= 1
+
+
+def test_teacher_max_consecutive_penalises_soft_departments() -> None:
+	courses = (("COURSE_SOFT", "Biotechnology", ((0, "L1"), (0, "L2"), (0, "L3"))),)
+	context = _build_teacher_consecutive_context(course_definitions=courses)
+	constraint = build_teacher_max_consecutive_lab_constraint(
+		metadata=_metadata("teacher_max_consecutive_soft", priority=8),
+		params={"soft_departments": ("Biotechnology",), "soft_penalty_weight": 3},
+	)
+	result = constraint.apply(context)
+	assert result.status == ConstraintStatus.APPLIED
+	assert result.details["soft_penalties"] >= 1
+	assert result.details["penalty_variables"] >= 1
+	assert "T_CON" in result.details["soft_teachers"]
+
+
+def test_teacher_max_consecutive_checks_cross_course_sequences() -> None:
+	courses = (
+		("COURSE_L1", "Computer Science & Engineering", ((0, "L1"),)),
+		("COURSE_L23", "Computer Science & Engineering", ((0, "L2"), (0, "L3"))),
+	)
+	context = _build_teacher_consecutive_context(course_definitions=courses)
+	constraint = build_teacher_max_consecutive_lab_constraint(
+		metadata=_metadata("teacher_max_consecutive_cross", priority=8)
+	)
+	result = constraint.apply(context)
+	assert result.status == ConstraintStatus.APPLIED
+	assert result.details["cross_course_clauses"] >= 1

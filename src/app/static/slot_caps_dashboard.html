@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Slot Cap Telemetry</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/dashboard.css" />
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/slot-caps">
+                Slot Cap Telemetry
+            </a>
+            <div class="ms-auto d-flex flex-wrap gap-3 align-items-center text-white">
+                <div class="text-end me-2">
+                    <div class="small opacity-75">Latest snapshot</div>
+                    <div id="snapshotLabel" class="fw-semibold">Detecting…</div>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-sm btn-outline-light" href="/">
+                        <i class="fas fa-chart-line me-1"></i>
+                        Analytics Dashboard
+                    </a>
+                    <a class="btn btn-sm btn-outline-light" href="/schedule">
+                        <i class="fas fa-calendar-alt me-1"></i>
+                        Schedule View
+                    </a>
+                    <a class="btn btn-sm btn-outline-light" href="/rooms">
+                        <i class="fas fa-door-open me-1"></i>
+                        Room Timetable
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container-fluid py-4">
+        <div id="alertBanner" class="alert alert-danger d-none" role="alert"></div>
+
+        <section class="row g-3 mb-4">
+            <div class="col-12 col-md-6 col-xxl-3">
+                <div class="telemetry-card">
+                    <div class="label">Groups monitored</div>
+                    <div class="value" id="summaryGroupsMonitored">0</div>
+                    <div class="caption">Across core + computing cohorts</div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-xxl-3">
+                <div class="telemetry-card">
+                    <div class="label">Groups over limit</div>
+                    <div class="value text-danger" id="summaryGroupsBreached">0</div>
+                    <div class="caption">Triggered slot-cap penalties</div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-xxl-3">
+                <div class="telemetry-card">
+                    <div class="label">Semesters over limit</div>
+                    <div class="value text-warning" id="summarySemestersBreached">0</div>
+                    <div class="caption">Non-core semesters breaching</div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-xxl-3">
+                <div class="telemetry-card">
+                    <div class="label">Telemetry generated</div>
+                    <div class="value small" id="telemetryTimestamp">–</div>
+                    <div class="caption">UTC timestamp</div>
+                    <div class="mt-3 d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary" id="refreshTelemetry">
+                            <i class="fas fa-rotate me-1"></i>
+                            Refresh
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" id="downloadTelemetry">
+                            <i class="fas fa-download me-1"></i>
+                            Download JSON
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="card mb-4">
+            <div class="card-header d-flex flex-wrap gap-3 align-items-center">
+                <div>
+                    <h5 class="mb-0">Slot-cap policy overview</h5>
+                    <small class="text-muted">Live parameters pulled from `slot_caps_telemetry.json`.</small>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row g-3" id="limitCards">
+                    <div class="col-12">
+                        <div class="empty-hint">Loading slot limits…</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="card mb-4">
+            <div class="card-header d-flex flex-wrap gap-3 align-items-center">
+                <div>
+                    <h5 class="mb-0">Group slot usage</h5>
+                    <small class="text-muted">Filter core vs computing cohorts, focus on breaches, or search by department / group.</small>
+                </div>
+                <div class="ms-auto text-muted small">
+                    Rows: <span id="groupCount">0</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">Group type</label>
+                        <select id="groupTypeFilter" class="form-select">
+                            <option value="all">Core + Computing</option>
+                            <option value="core">Core only</option>
+                            <option value="computing">Computing only</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">Status</label>
+                        <select id="breachFilter" class="form-select">
+                            <option value="all">All groups</option>
+                            <option value="breached">Breached only</option>
+                            <option value="healthy">Within limit</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Search</label>
+                        <input id="groupSearch" class="form-control" placeholder="Department, semester, group, or slot label" />
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Department</th>
+                                <th>Semester</th>
+                                <th>Group</th>
+                                <th>Slots used</th>
+                                <th>Limit</th>
+                                <th>Status</th>
+                                <th>Slots</th>
+                            </tr>
+                        </thead>
+                        <tbody id="groupTableBody">
+                            <tr>
+                                <td colspan="8" class="text-center py-4 text-muted">Collecting group telemetry…</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="card mb-4">
+            <div class="card-header d-flex flex-wrap gap-3 align-items-center">
+                <div>
+                    <h5 class="mb-0">Semester slot usage (non-core)</h5>
+                    <small class="text-muted">Highlights departments where aggregate semester load breaches the configured cap.</small>
+                </div>
+                <div class="ms-auto text-muted small">Rows: <span id="semesterCount">0</span></div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Department</th>
+                                <th>Semester</th>
+                                <th>Slots used</th>
+                                <th>Limit</th>
+                                <th>Status</th>
+                                <th>Slots</th>
+                            </tr>
+                        </thead>
+                        <tbody id="semesterTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">Waiting for semester telemetry…</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="card-header d-flex flex-wrap gap-3 align-items-center">
+                <div>
+                    <h5 class="mb-0">Constraint instrumentation</h5>
+                    <small class="text-muted">Live copy of the solver signals used to construct these dashboards.</small>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row g-3" id="constraintPanel">
+                    <div class="col-12">
+                        <div class="empty-hint">Extracting constraint metadata…</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/js/slot_caps_dashboard.js" type="module"></script>
+</body>
+</html>

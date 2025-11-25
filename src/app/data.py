@@ -42,6 +42,7 @@ class ScheduleRepository:
         self._schedule_cache: Dict[Path, Dict[str, Sequence[Mapping[str, Any]]]] = {}
         self._room_cache: Dict[Path, Dict[str, Any]] = {}
         self._metric_cache: Dict[Path, Dict[str, Any]] = {}
+        self._slot_cap_cache: Dict[Path, Dict[str, Any]] = {}
 
     def get_latest_snapshot(self) -> ScheduleSnapshot:
         snapshot = self._scan_latest_snapshot()
@@ -51,6 +52,7 @@ class ScheduleRepository:
             self._schedule_cache.clear()
             self._room_cache.clear()
             self._metric_cache.clear()
+            self._slot_cap_cache.clear()
             self._cached_snapshot = snapshot
         return self._cached_snapshot  # type: ignore[return-value]
 
@@ -73,6 +75,12 @@ class ScheduleRepository:
             schedule = self.get_schedule()
             self._metric_cache[snapshot.root] = self._build_metrics(schedule, snapshot)
         return self._metric_cache[snapshot.root]
+
+    def get_slot_cap_telemetry(self) -> Dict[str, Any]:
+        snapshot = self.get_latest_snapshot()
+        if snapshot.root not in self._slot_cap_cache:
+            self._slot_cap_cache[snapshot.root] = self._load_slot_cap_telemetry(snapshot)
+        return self._slot_cap_cache[snapshot.root]
 
     # ------------------------------------------------------------------
     # Snapshot discovery
@@ -259,6 +267,21 @@ class ScheduleRepository:
                 "top_rooms": top_rooms,
             },
         }
+
+    def _load_slot_cap_telemetry(self, snapshot: ScheduleSnapshot) -> Dict[str, Any]:
+        telemetry_path = snapshot.root / "slot_caps_telemetry.json"
+        if not telemetry_path.exists():
+            return {
+                "generated_at": None,
+                "summary": {"groups_monitored": 0, "groups_over_limit": 0, "semesters_over_limit": 0},
+                "core_groups": [],
+                "computing_groups": [],
+                "semesters": [],
+                "limits": {},
+                "constraints": {},
+            }
+        with telemetry_path.open("r", encoding="utf-8") as handle:
+            return json.load(handle)
 
     # ------------------------------------------------------------------
     # Helpers

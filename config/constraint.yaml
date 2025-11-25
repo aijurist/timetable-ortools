@@ -28,6 +28,16 @@ lab:
 		priority: 9
 		weight: 0.9
 		description: Keep lab scheduling aligned with department shift patterns.
+	teacher_max_consecutive:
+		enabled: true
+		priority: 8
+		weight: 0.6
+		description: Limit teachers to at most two consecutive lab sessions (soft override for select departments).
+		params:
+			max_consecutive_sessions: 2
+			soft_penalty_weight: 5
+			soft_departments:
+				- Biotechnology
 
 theory:
 	slot_coverage:

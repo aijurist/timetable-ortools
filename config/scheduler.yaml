@@ -5,7 +5,7 @@ meta:
   generated_at: null
 
 paths:
-  courses_csv: data/department_data/core-v3/coputer_dept.csv
+  courses_csv: data/department_data/core-v3/computer_dept.csv
   rooms_csv: data/block_wise/techlongue.csv
   day_order_csv: data/day_order.csv
   core_lab_mapping_csv: data/og-final.csv
@@ -479,6 +479,16 @@ constraints:
         shift_templates:
           - SHIFT_1
           - SHIFT_2
+    teacher_max_consecutive:
+      enabled: true
+      priority: 8
+      weight: 0.6
+      description: Limit teachers to at most two consecutive lab sessions (soft override for select departments).
+      params:
+        max_consecutive_sessions: 2
+        soft_penalty_weight: 5
+        soft_departments:
+          - Biotechnology
   theory:
     slot_coverage:
       enabled: false

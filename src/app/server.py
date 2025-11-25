@@ -45,6 +45,13 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=500, detail="dashboard.html is missing from the static folder")
         return FileResponse(html_path)
 
+    @app.get("/slot-caps", include_in_schema=False)
+    async def serve_slot_caps_dashboard() -> FileResponse:
+        html_path = STATIC_DIR / "slot_caps_dashboard.html"
+        if not html_path.exists():
+            raise HTTPException(status_code=500, detail="slot_caps_dashboard.html is missing from the static folder")
+        return FileResponse(html_path)
+
     @app.get("/schedule", include_in_schema=False)
     async def serve_schedule_view() -> FileResponse:
         html_path = STATIC_DIR / "schedule_view.html"
@@ -84,6 +91,12 @@ def create_app() -> FastAPI:
     async def rooms() -> Dict[str, Any]:
         _snapshot_or_404()
         return repo.get_rooms()
+
+    @app.get("/api/slot-caps")
+    async def slot_caps() -> Dict[str, Any]:
+        snapshot = _snapshot_or_404()
+        data = repo.get_slot_cap_telemetry()
+        return {"snapshot": snapshot.as_dict(), "data": data}
 
     return app
 

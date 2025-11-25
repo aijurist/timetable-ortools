@@ -17,6 +17,7 @@ from .lab.slot_caps import (
 	build_core_lab_group_slot_cap_constraint,
 	build_semester_lab_slot_cap_constraint,
 )
+from .lab.teacher_max_consecutive import build_teacher_max_consecutive_lab_constraint
 from .theory.adjacency import build_no_three_consecutive_slots_constraint
 from .theory.requirements import (
 	build_theory_daily_slot_cap_constraint,
@@ -61,6 +62,12 @@ LAB_CONSTRAINT_DEFINITIONS = {
 		"description": "Cap the number of non-core lab slots consumed by each department-semester pair.",
 		"factory": build_semester_lab_slot_cap_constraint,
 		"tags": ("lab", "slots", "semester"),
+	},
+	"teacher_max_consecutive": {
+		"title": "Teacher Max Consecutive Lab Sessions",
+		"description": "Limit teachers to at most two consecutive lab sessions, with optional soft overrides per department.",
+		"factory": build_teacher_max_consecutive_lab_constraint,
+		"tags": ("lab", "teachers", "adjacency"),
 	},
 }
 

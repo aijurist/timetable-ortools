@@ -154,6 +154,188 @@ body {
     padding: 0.25rem 0.75rem;
 }
 
+.telemetry-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 1.25rem;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.09);
+    height: 100%;
+}
+
+.telemetry-card .label {
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.telemetry-card .value {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-top: 0.25rem;
+    line-height: 1.3;
+}
+
+.telemetry-card .caption {
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+
+.limit-card {
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 18px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    background: #fff;
+    min-height: 120px;
+}
+
+.limit-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.25rem;
+}
+
+.limit-label {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+}
+
+.limit-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.limit-meta {
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border-radius: 999px;
+    padding: 0.2rem 0.85rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.status-pill.success {
+    background: rgba(46, 196, 182, 0.15);
+    color: var(--success);
+}
+
+.status-pill.danger {
+    background: rgba(255, 107, 107, 0.15);
+    color: var(--danger);
+}
+
+.status-pill.warning {
+    background: rgba(255, 193, 7, 0.15);
+    color: #b58100;
+}
+
+.status-pill.info {
+    background: rgba(47, 128, 237, 0.15);
+    color: var(--primary);
+}
+
+.slot-chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.slot-chip {
+    background: #eef2ff;
+    border-radius: 999px;
+    padding: 0.2rem 0.65rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.slot-chip.muted {
+    background: #f1f5f9;
+    color: var(--muted);
+}
+
+.empty-hint {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--muted);
+    border: 1px dashed rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+}
+
+.constraint-card {
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
+    padding: 1rem 1.25rem;
+    height: 100%;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.constraint-title {
+    font-weight: 600;
+}
+
+.constraint-meta {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.detail-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.85rem;
+}
+
+.detail-key {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.detail-value {
+    color: var(--muted);
+    text-align: right;
+}
+
+@media (max-width: 768px) {
+    .detail-row {
+        flex-direction: column;
+        gap: 0.1rem;
+        text-align: left;
+    }
+
+    .detail-value {
+        text-align: left;
+    }
+}
+
 @media (max-width: 575px) {
     .stats-card {
         padding: 1rem;

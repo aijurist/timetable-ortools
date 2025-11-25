@@ -15,6 +15,7 @@ from ..data.schemas import ExtendedDataContainer
 from ..models.model_builder import ConstraintModel, ModelBuilder
 from ..runtime.extractor import ScheduleExtractor, ScheduleExtractionResult
 from ..runtime.solver import SolverRunner, SolverResult
+from ..telemetry.slot_caps import SlotCapTelemetryBuilder
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,7 @@ class PipelineOrchestrator:
 		self._model: Optional[ConstraintModel] = None
 		self._solver_result: Optional[SolverResult] = None
 		self._schedule: Optional[ScheduleExtractionResult] = None
+		self._latest_output_dir: Optional[Path] = None
 
 	@property
 	def config(self) -> SchedulerConfig:
@@ -103,12 +105,15 @@ class PipelineOrchestrator:
 		output_dir.mkdir(parents=True, exist_ok=True)
 
 		extractor = ScheduleExtractor(self._extended_data, self._model)
+		timestamp_dir = self._base_dir / "output" / datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+		self._latest_output_dir = timestamp_dir
 		self._schedule = extractor.export(
 			self._solver_result,
-			output_dir=self._base_dir / "output" / datetime.now().strftime("%Y-%m-%d_%H-%M-%S"),
+			output_dir=timestamp_dir,
 			write_json=True,
 			write_csv=True,
 		)
+		self._write_slot_cap_telemetry(timestamp_dir, self._schedule)
 		return self._schedule
 
 	def run(self) -> ScheduleExtractionResult:
@@ -160,6 +165,28 @@ class PipelineOrchestrator:
 			"lab_room_ids": len(data.rooms.lab_room_ids),
 			"theory_room_ids": len(data.rooms.theory_room_ids),
 		}
+
+	def _slot_cap_settings(self) -> Mapping[str, Mapping[str, Any]]:
+		lab_constraints = getattr(self.config.constraints, "lab", {})
+		relevant = {}
+		for key in ("core_group_slot_cap", "computing_group_slot_cap", "semester_slot_cap"):
+			setting = lab_constraints.get(key)
+			if setting is None:
+				continue
+			relevant[key] = dict(setting.params or {})
+		return relevant
+
+	def _write_slot_cap_telemetry(self, output_dir: Path, schedule: ScheduleExtractionResult) -> None:
+		if not self._model or not schedule:
+			return
+		builder = SlotCapTelemetryBuilder(
+			constraint_results=self._model.constraint_results,
+			slot_cap_settings=self._slot_cap_settings(),
+		)
+		try:
+			builder.write(schedule, output_dir / "slot_caps_telemetry.json")
+		except Exception:  # pragma: no cover - telemetry is best-effort
+			logger.exception("Failed to write slot cap telemetry")
 
 
 __all__ = ["PipelineOrchestrator"]
