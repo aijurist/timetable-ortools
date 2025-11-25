@@ -13,6 +13,11 @@ lab:
 		priority: 9
 		weight: 1.0
 		description: Prevent assigning labs to rooms below required capacity.
+		room_single_assignment:
+			enabled: true
+			priority: 9
+			weight: 1.0
+			description: Prevent double-booking rooms or courses within a lab session.
 	core_lab_mapping:
 		enabled: true
 		priority: 8
@@ -40,35 +45,6 @@ theory:
 		priority: 8
 		weight: 0.7
 		description: Prevent three consecutive theory slots for any group.
-	lunch_window:
-		enabled: true
-		priority: 8
-		weight: 0.6
-		description: Reserve at least one lunch slot for non-flexible departments.
-		params:
-			fallback_window:
-				- 3
-				- 4
-				- 5
-			minimum_free_slots: 1
-	flexible_lunch:
-		enabled: true
-		priority: 7
-		weight: 0.5
-		description: Allow flexible departments to satisfy lunch via natural lab/theory patterns.
-		params:
-			traditional_slots:
-				- 3
-				- 4
-				- 5
-			min_traditional_free_slots: 1
-			natural_patterns:
-				- lab_session: L3
-				  required_theory_slots: [6]
-				  description: L3 lab plus theory slot 6 keeps lunch before slot 7
-				- lab_session: L4
-				  required_theory_slots: [4]
-				  description: Theory slot 4 combined with L4 lab preserves middle-day lunch
 	teacher_daily_limit:
 		enabled: true
 		priority: 9

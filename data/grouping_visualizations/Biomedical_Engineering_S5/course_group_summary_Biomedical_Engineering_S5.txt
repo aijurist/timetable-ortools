@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Biomedical Engineering
 Semester: 5
-Generated: 2025-11-21 01:45:45
+Generated: 2025-11-25 13:51:12
 ============================================================
 
 OVERVIEW
@@ -13,13 +13,13 @@ OVERVIEW
 COURSE DISTRIBUTION BY GROUP
 - 24NCS08 [Theory]: 2 groups, 2 teachers
   └─ G5: 1 teacher assignments
-  └─ G7: 1 teacher assignments
-- BM23511 [Theory]: 2 groups, 2 teachers
   └─ G6: 1 teacher assignments
+- BM23511 [Theory]: 2 groups, 2 teachers
+  └─ G5: 1 teacher assignments
   └─ G7: 1 teacher assignments
 - BM23512 [Theory]: 2 groups, 2 teachers
-  └─ G5: 1 teacher assignments
   └─ G6: 1 teacher assignments
+  └─ G7: 1 teacher assignments
 - BM23521 [Lab]: 2 groups, 2 teachers
   └─ G1: 1 teacher assignments
   └─ G2: 1 teacher assignments
@@ -50,12 +50,12 @@ GROUP COMPOSITION
   └─ BM23532 [L+T]: 1 instances, 1 teachers
 - G5: 2 courses, 2 teachers
   └─ 24NCS08 [T]: 1 instances, 1 teachers
-  └─ BM23512 [T]: 1 instances, 1 teachers
-- G6: 2 courses, 2 teachers
   └─ BM23511 [T]: 1 instances, 1 teachers
+- G6: 2 courses, 2 teachers
+  └─ 24NCS08 [T]: 1 instances, 1 teachers
   └─ BM23512 [T]: 1 instances, 1 teachers
 - G7: 2 courses, 2 teachers
-  └─ 24NCS08 [T]: 1 instances, 1 teachers
   └─ BM23511 [T]: 1 instances, 1 teachers
+  └─ BM23512 [T]: 1 instances, 1 teachers
 - G8: 1 courses, 3 teachers
   └─ BM23P01 [T]: 3 instances, 3 teachers

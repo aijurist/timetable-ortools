@@ -125,12 +125,23 @@ class DayNormalizer:
     
     DAY_ABBREVIATIONS = {
         'mon': 'monday',
+        'mon.': 'monday',
         'tue': 'tuesday',
+        'tues': 'tuesday',
+        'tue.': 'tuesday',
         'wed': 'wednesday',
+        'weds': 'wednesday',
+        'wed.': 'wednesday',
         'thu': 'thursday',
+        'thur': 'thursday',
+        'thurs': 'thursday',
+        'thu.': 'thursday',
         'fri': 'friday',
+        'fri.': 'friday',
         'sat': 'saturday',
+        'sat.': 'saturday',
         'sun': 'sunday',
+        'sun.': 'sunday',
     }
     
     DAY_NUMBERS = {
@@ -158,6 +169,7 @@ class DayNormalizer:
             return None
         
         day_lower = day.strip().lower()
+        sanitized = DayNormalizer._sanitize_token(day_lower)
         
         # Check if already normalized
         if day_lower in DayNormalizer.VALID_DAYS:
@@ -166,9 +178,25 @@ class DayNormalizer:
         # Check abbreviations
         if day_lower in DayNormalizer.DAY_ABBREVIATIONS:
             return DayNormalizer.DAY_ABBREVIATIONS[day_lower]
+
+        if sanitized in DayNormalizer.VALID_DAYS:
+            return sanitized
+
+        if sanitized in DayNormalizer.DAY_ABBREVIATIONS:
+            return DayNormalizer.DAY_ABBREVIATIONS[sanitized]
+
+        for valid_day in DayNormalizer.VALID_DAYS:
+            if sanitized and valid_day.startswith(sanitized):
+                return valid_day
         
         logger.warning(f"Unknown day name: {day}")
         return None
+
+    @staticmethod
+    def _sanitize_token(day: str) -> str:
+        """Remove punctuation/whitespace characters for more forgiving matching."""
+
+        return re.sub(r"[^a-z]", "", day)
     
     @staticmethod
     def get_day_number(day: str) -> Optional[int]:

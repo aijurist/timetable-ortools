@@ -5,7 +5,7 @@ meta:
   generated_at: null
 
 paths:
-  courses_csv: data/final_v4.csv
+  courses_csv: data/department_data/core-v3/computer_dept.csv
   rooms_csv: data/block_wise/techlongue.csv
   day_order_csv: data/day_order.csv
   core_lab_mapping_csv: data/og-final.csv
@@ -433,7 +433,7 @@ grouping:
 constraints:
   lab:
     session_coverage:
-      enabled: false
+      enabled: true
       priority: 10
       weight: 1.0
       params: {}
@@ -442,8 +442,13 @@ constraints:
       priority: 9
       weight: 1.0
       params: {}
+    room_single_assignment:
+      enabled: true
+      priority: 9
+      weight: 1.0
+      params: {}
     core_lab_mapping:
-      enabled: false
+      enabled: true
       priority: 8
       weight: 0.8
       params: {}
@@ -457,7 +462,7 @@ constraints:
           - SHIFT_2
   theory:
     slot_coverage:
-      enabled: true
+      enabled: false
       priority: 10
       weight: 1.0
       params: {}
@@ -467,42 +472,13 @@ constraints:
       weight: 0.9
       params: {}
     no_three_consecutive:
-      enabled: true
+      enabled: false
       priority: 8
       weight: 0.7
       params:
         window: 3
-    lunch_window:
-      enabled: true
-      priority: 8
-      weight: 0.6
-      params:
-        fallback_window:
-          - 3
-          - 4
-          - 5
-        minimum_free_slots: 1
-    flexible_lunch:
-      enabled: true
-      priority: 7
-      weight: 0.5
-      params:
-        traditional_slots:
-          - 3
-          - 4
-          - 5
-        min_traditional_free_slots: 1
-        natural_patterns:
-          - lab_session: L3
-            required_theory_slots:
-              - 6
-            description: L3 lab plus theory slot 6 keeps lunch before slot 7
-          - lab_session: L4
-            required_theory_slots:
-              - 4
-            description: Theory slot 4 + L4 lab keeps center lunch
     teacher_daily_limit:
-      enabled: true
+      enabled: false
       priority: 9
       weight: 1.0
       params: {}
@@ -585,8 +561,8 @@ constraints:
           - Mechatronics Engineering_S5
           - Mechatronics Engineering_S7
           - Robotics & Automation
-        soft_departments:
           - Computer Science & Engineering_S3
+        soft_departments:
           - Electronics & Communication Engineering_S3
           - Electronics & Communication Engineering_S5
           - Electrical & Electronics Engineering_S5
@@ -613,8 +589,8 @@ model:
   use_sparse_variables: true
 
 runtime:
-  time_limit_sec: 900
-  thread_count: 8
+  time_limit_sec: 5000
+  thread_count: 16
   enable_lns: true
   enable_trace: false
   solution_limit: null

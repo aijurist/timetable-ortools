@@ -8,10 +8,11 @@ from typing import Callable, Mapping, Sequence
 from ..config.schemas import ConstraintSetting, SchedulerConfig
 from .base import ConstraintMetadata
 from .cross_system.five_pm_policy import build_five_pm_policy_constraint
+from .cross_system.lunch_alignment import build_lunch_alignment_constraint
 from .lab.core_lab import build_core_lab_mapping_constraint
 from .lab.requirements import build_lab_session_coverage_constraint
+from .lab.room_single_assignment import build_lab_room_single_assignment_constraint
 from .theory.adjacency import build_no_three_consecutive_slots_constraint
-from .theory.lunch import build_flexible_lunch_constraint, build_theory_lunch_break_constraint
 from .theory.requirements import (
 	build_theory_daily_slot_cap_constraint,
 	build_theory_slot_coverage_constraint,
@@ -25,6 +26,12 @@ LAB_CONSTRAINT_DEFINITIONS = {
 		"description": "Ensure each lab course receives the configured number of sessions per week.",
 		"factory": build_lab_session_coverage_constraint,
 		"tags": ("lab", "coverage"),
+	},
+	"room_single_assignment": {
+		"title": "Lab Room Single Assignment",
+		"description": "Prevent double-booking lab rooms and multi-room sessions for any course instance.",
+		"factory": build_lab_room_single_assignment_constraint,
+		"tags": ("lab", "rooms", "exclusivity"),
 	},
 	"core_lab_mapping": {
 		"title": "Core Lab Room Mapping",
@@ -54,22 +61,16 @@ THEORY_CONSTRAINT_DEFINITIONS = {
 		"factory": build_no_three_consecutive_slots_constraint,
 		"tags": ("theory", "adjacency"),
 	},
-	"lunch_window": {
-		"title": "Theory Lunch Window Guard",
-		"description": "Reserve at least one lunch slot for non-flexible departments.",
-		"factory": build_theory_lunch_break_constraint,
-		"tags": ("theory", "lunch"),
-	},
-	"flexible_lunch": {
-		"title": "Flexible Lunch Options",
-		"description": "Allow eligible departments to satisfy lunch via natural lab-theory patterns.",
-		"factory": build_flexible_lunch_constraint,
-		"tags": ("theory", "lunch", "flexible"),
-	},
 }
 
 
 CROSS_SYSTEM_CONSTRAINT_DEFINITIONS = {
+	"lunch_alignment": {
+		"title": "Unified Lunch Alignment",
+		"description": "Reserve a shared lunch window across lab and theory (flexible departments allowed).",
+		"factory": build_lunch_alignment_constraint,
+		"tags": ("cross-system", "lunch"),
+	},
 	"five_pm_policy": {
 		"title": "Department 5PM Policy",
 		"description": "Block or penalize late sessions for configured departments across lab and theory.",

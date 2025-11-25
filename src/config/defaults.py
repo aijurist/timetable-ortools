@@ -337,6 +337,7 @@ def default_constraint_config() -> ConstraintConfig:
     lab_constraints = {
         "session_coverage": ConstraintSetting(priority=10, weight=1.0, enabled=True),
         "room_capacity": ConstraintSetting(priority=9, weight=1.0, enabled=True),
+        "room_single_assignment": ConstraintSetting(priority=9, weight=1.0, enabled=True),
         "core_lab_mapping": ConstraintSetting(priority=8, weight=0.8, enabled=True),
         "shift_alignment": ConstraintSetting(priority=9, weight=0.9, enabled=True),
     }

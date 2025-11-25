@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Computer Science & Business Systems
 Semester: 7
-Generated: 2025-11-21 01:45:31
+Generated: 2025-11-25 15:43:05
 ============================================================
 
 OVERVIEW
@@ -17,22 +17,26 @@ COURSE DISTRIBUTION BY GROUP
   └─ G5: 2 teacher assignments
 - CB19711 [Lab]: 1 groups, 2 teachers
   └─ G2: 2 teacher assignments
-- CB19741 [Lab + Theory]: 1 groups, 2 teachers
-  └─ G3: 2 teacher assignments
+- CB19741 [Lab + Theory]: 2 groups, 2 teachers
+  └─ G3: 1 teacher assignments
+  └─ G4: 1 teacher assignments
 - CB19742 [Lab + Theory]: 1 groups, 2 teachers
   └─ G1: 2 teacher assignments
-- CB19P45 [Lab + Theory]: 1 groups, 2 teachers
-  └─ G4: 2 teacher assignments
+- CB19P45 [Lab + Theory]: 2 groups, 2 teachers
+  └─ G3: 1 teacher assignments
+  └─ G4: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 2 teachers
   └─ CB19742 [L+T]: 2 instances, 2 teachers
 - G2: 1 courses, 2 teachers
   └─ CB19711 [L]: 2 instances, 2 teachers
-- G3: 1 courses, 2 teachers
-  └─ CB19741 [L+T]: 2 instances, 2 teachers
-- G4: 1 courses, 2 teachers
-  └─ CB19P45 [L+T]: 2 instances, 2 teachers
+- G3: 2 courses, 2 teachers
+  └─ CB19741 [L+T]: 1 instances, 1 teachers
+  └─ CB19P45 [L+T]: 1 instances, 1 teachers
+- G4: 2 courses, 2 teachers
+  └─ CB19741 [L+T]: 1 instances, 1 teachers
+  └─ CB19P45 [L+T]: 1 instances, 1 teachers
 - G5: 1 courses, 2 teachers
   └─ BA19702 [T]: 2 instances, 2 teachers
 - G6: 1 courses, 2 teachers

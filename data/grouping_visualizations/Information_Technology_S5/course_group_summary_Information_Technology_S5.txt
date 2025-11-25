@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Information Technology
 Semester: 5
-Generated: 2025-11-21 01:45:30
+Generated: 2025-11-25 15:43:04
 ============================================================
 
 OVERVIEW
@@ -12,20 +12,20 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - CS23531 [Lab + Theory]: 2 groups, 4 teachers
-  └─ G2: 3 teacher assignments
-  └─ G3: 1 teacher assignments
+  └─ G2: 1 teacher assignments
+  └─ G3: 3 teacher assignments
 - CS23532 [Lab + Theory]: 1 groups, 4 teachers
   └─ G1: 4 teacher assignments
 - IT23531 [Lab + Theory]: 2 groups, 4 teachers
-  └─ G2: 1 teacher assignments
-  └─ G3: 3 teacher assignments
+  └─ G2: 3 teacher assignments
+  └─ G3: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 4 teachers
   └─ CS23532 [L+T]: 4 instances, 4 teachers
 - G2: 2 courses, 4 teachers
-  └─ CS23531 [L+T]: 3 instances, 3 teachers
-  └─ IT23531 [L+T]: 1 instances, 1 teachers
-- G3: 2 courses, 4 teachers
   └─ CS23531 [L+T]: 1 instances, 1 teachers
   └─ IT23531 [L+T]: 3 instances, 3 teachers
+- G3: 2 courses, 4 teachers
+  └─ CS23531 [L+T]: 3 instances, 3 teachers
+  └─ IT23531 [L+T]: 1 instances, 1 teachers

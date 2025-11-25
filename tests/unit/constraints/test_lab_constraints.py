@@ -14,6 +14,7 @@ from src.constraints.base import ConstraintMetadata
 from src.constraints.context import ConstraintContext
 from src.constraints.lab.core_lab import build_core_lab_mapping_constraint
 from src.constraints.lab.requirements import build_lab_session_coverage_constraint
+from src.constraints.lab.room_single_assignment import build_lab_room_single_assignment_constraint
 from src.constraints.schema import ConstraintStatus
 from src.data.schemas import ExtendedDataContainer, LabSessionDetail, RoomCollections
 from src.models.variables import (
@@ -220,3 +221,18 @@ def test_core_lab_mapping_falls_back_to_variable_rooms() -> None:
 	result = constraint.apply(context)
 	assert result.details["general_courses"] == 1
 	assert result.details["skipped_courses"] == ()
+
+
+def test_room_single_assignment_detects_conflicts(lab_constraint_context: ConstraintContext) -> None:
+	constraint = build_lab_room_single_assignment_constraint(metadata=_metadata("room_single_assignment", priority=9))
+	result = constraint.apply(lab_constraint_context)
+	assert result.status == ConstraintStatus.APPLIED
+	assert result.details["room_conflicts"] >= 1
+	assert result.details["course_conflicts"] >= 1
+
+
+def test_room_single_assignment_skips_when_no_conflicts() -> None:
+	context = _build_constraint_context(drop_assignments_for="C_CORE")
+	constraint = build_lab_room_single_assignment_constraint(metadata=_metadata("room_single_assignment", priority=9))
+	result = constraint.apply(context)
+	assert result.status == ConstraintStatus.SKIPPED
