@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Civil Engineering
 Semester: 3
-Generated: 2025-11-25 13:51:03
+Generated: 2025-11-25 17:51:02
 ============================================================
 
 OVERVIEW
@@ -12,32 +12,32 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - CE23311 [Theory]: 1 groups, 1 teachers
-  └─ G5: 1 teacher assignments
-- CE23312 [Theory]: 1 groups, 1 teachers
-  └─ G6: 1 teacher assignments
-- CE23313 [Theory]: 1 groups, 1 teachers
   └─ G7: 1 teacher assignments
+- CE23312 [Theory]: 1 groups, 1 teachers
+  └─ G5: 1 teacher assignments
+- CE23313 [Theory]: 1 groups, 1 teachers
+  └─ G6: 1 teacher assignments
 - CE23321 [Lab]: 1 groups, 1 teachers
-  └─ G1: 1 teacher assignments
-- CE23331 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G3: 1 teacher assignments
-- CS23422 [Lab]: 1 groups, 1 teachers
   └─ G4: 1 teacher assignments
-- MA23331 [Lab + Theory]: 1 groups, 1 teachers
+- CE23331 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G1: 1 teacher assignments
+- CS23422 [Lab]: 1 groups, 1 teachers
   └─ G2: 1 teacher assignments
+- MA23331 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G3: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
-  └─ CE23321 [L]: 1 instances, 1 teachers
-- G2: 1 courses, 1 teachers
-  └─ MA23331 [L+T]: 1 instances, 1 teachers
-- G3: 1 courses, 1 teachers
   └─ CE23331 [L+T]: 1 instances, 1 teachers
-- G4: 1 courses, 1 teachers
+- G2: 1 courses, 1 teachers
   └─ CS23422 [L]: 1 instances, 1 teachers
+- G3: 1 courses, 1 teachers
+  └─ MA23331 [L+T]: 1 instances, 1 teachers
+- G4: 1 courses, 1 teachers
+  └─ CE23321 [L]: 1 instances, 1 teachers
 - G5: 1 courses, 1 teachers
-  └─ CE23311 [T]: 1 instances, 1 teachers
-- G6: 1 courses, 1 teachers
   └─ CE23312 [T]: 1 instances, 1 teachers
-- G7: 1 courses, 1 teachers
+- G6: 1 courses, 1 teachers
   └─ CE23313 [T]: 1 instances, 1 teachers
+- G7: 1 courses, 1 teachers
+  └─ CE23311 [T]: 1 instances, 1 teachers

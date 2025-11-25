@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Robotics & Automation
 Semester: 7
-Generated: 2025-11-25 13:51:06
+Generated: 2025-11-25 17:51:06
 ============================================================
 
 OVERVIEW
@@ -12,17 +12,17 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - GE19304 [Theory]: 1 groups, 1 teachers
-  └─ G6: 1 teacher assignments
+  └─ G5: 1 teacher assignments
 - RO19702 [Theory]: 1 groups, 1 teachers
-  └─ G3: 1 teacher assignments
-- RO19703 [Theory]: 1 groups, 1 teachers
   └─ G4: 1 teacher assignments
+- RO19703 [Theory]: 1 groups, 1 teachers
+  └─ G3: 1 teacher assignments
 - RO19711 [Lab]: 1 groups, 1 teachers
   └─ G1: 1 teacher assignments
 - RO19712 [Lab]: 1 groups, 1 teachers
   └─ G2: 1 teacher assignments
 - RO19D12 [Theory]: 1 groups, 1 teachers
-  └─ G5: 1 teacher assignments
+  └─ G6: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
@@ -30,10 +30,10 @@ GROUP COMPOSITION
 - G2: 1 courses, 1 teachers
   └─ RO19712 [L]: 1 instances, 1 teachers
 - G3: 1 courses, 1 teachers
-  └─ RO19702 [T]: 1 instances, 1 teachers
-- G4: 1 courses, 1 teachers
   └─ RO19703 [T]: 1 instances, 1 teachers
+- G4: 1 courses, 1 teachers
+  └─ RO19702 [T]: 1 instances, 1 teachers
 - G5: 1 courses, 1 teachers
-  └─ RO19D12 [T]: 1 instances, 1 teachers
-- G6: 1 courses, 1 teachers
   └─ GE19304 [T]: 1 instances, 1 teachers
+- G6: 1 courses, 1 teachers
+  └─ RO19D12 [T]: 1 instances, 1 teachers

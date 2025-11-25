@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Artificial Intelligence & Machine Learning
 Semester: 5
-Generated: 2025-11-25 15:43:03
+Generated: 2025-11-25 17:50:55
 ============================================================
 
 OVERVIEW
@@ -12,9 +12,9 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - AD23632 [Lab + Theory]: 1 groups, 3 teachers
-  └─ G3: 3 teacher assignments
-- AI23512 [Theory]: 1 groups, 3 teachers
   └─ G1: 3 teacher assignments
+- AI23512 [Theory]: 1 groups, 3 teachers
+  └─ G3: 3 teacher assignments
 - AI23521 [Lab]: 1 groups, 3 teachers
   └─ G4: 3 teacher assignments
 - AI23531 [Lab + Theory]: 1 groups, 3 teachers
@@ -26,11 +26,11 @@ COURSE DISTRIBUTION BY GROUP
 
 GROUP COMPOSITION
 - G1: 1 courses, 3 teachers
-  └─ AI23512 [T]: 3 instances, 3 teachers
+  └─ AD23632 [L+T]: 3 instances, 3 teachers
 - G2: 1 courses, 3 teachers
   └─ AI23531 [L+T]: 3 instances, 3 teachers
 - G3: 1 courses, 3 teachers
-  └─ AD23632 [L+T]: 3 instances, 3 teachers
+  └─ AI23512 [T]: 3 instances, 3 teachers
 - G4: 1 courses, 3 teachers
   └─ AI23521 [L]: 3 instances, 3 teachers
 - G5: 1 courses, 3 teachers

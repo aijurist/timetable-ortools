@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Electrical & Electronics Engineering
 Semester: 5
-Generated: 2025-11-25 13:51:08
+Generated: 2025-11-25 17:51:08
 ============================================================
 
 OVERVIEW
@@ -12,45 +12,45 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - EE23511 [Theory]: 2 groups, 2 teachers
-  └─ G6: 1 teacher assignments
+  └─ G5: 1 teacher assignments
   └─ G7: 1 teacher assignments
 - EE23512 [Theory]: 2 groups, 2 teachers
-  └─ G5: 1 teacher assignments
+  └─ G6: 1 teacher assignments
   └─ G7: 1 teacher assignments
 - EE23513 [Theory]: 2 groups, 2 teachers
   └─ G5: 1 teacher assignments
   └─ G6: 1 teacher assignments
 - EE23521 [Lab]: 2 groups, 2 teachers
+  └─ G1: 1 teacher assignments
   └─ G2: 1 teacher assignments
-  └─ G4: 1 teacher assignments
 - EE23531 [Lab + Theory]: 2 groups, 2 teachers
   └─ G1: 1 teacher assignments
-  └─ G3: 1 teacher assignments
+  └─ G4: 1 teacher assignments
 - EE23B21 [Lab]: 2 groups, 2 teachers
-  └─ G1: 1 teacher assignments
   └─ G2: 1 teacher assignments
+  └─ G3: 1 teacher assignments
 - GE23627 [Lab]: 2 groups, 2 teachers
   └─ G3: 1 teacher assignments
   └─ G4: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 2 courses, 2 teachers
+  └─ EE23521 [L]: 1 instances, 1 teachers
   └─ EE23531 [L+T]: 1 instances, 1 teachers
-  └─ EE23B21 [L]: 1 instances, 1 teachers
 - G2: 2 courses, 2 teachers
   └─ EE23521 [L]: 1 instances, 1 teachers
   └─ EE23B21 [L]: 1 instances, 1 teachers
 - G3: 2 courses, 2 teachers
-  └─ EE23531 [L+T]: 1 instances, 1 teachers
+  └─ EE23B21 [L]: 1 instances, 1 teachers
   └─ GE23627 [L]: 1 instances, 1 teachers
 - G4: 2 courses, 2 teachers
-  └─ EE23521 [L]: 1 instances, 1 teachers
+  └─ EE23531 [L+T]: 1 instances, 1 teachers
   └─ GE23627 [L]: 1 instances, 1 teachers
 - G5: 2 courses, 2 teachers
-  └─ EE23512 [T]: 1 instances, 1 teachers
+  └─ EE23511 [T]: 1 instances, 1 teachers
   └─ EE23513 [T]: 1 instances, 1 teachers
 - G6: 2 courses, 2 teachers
-  └─ EE23511 [T]: 1 instances, 1 teachers
+  └─ EE23512 [T]: 1 instances, 1 teachers
   └─ EE23513 [T]: 1 instances, 1 teachers
 - G7: 2 courses, 2 teachers
   └─ EE23511 [T]: 1 instances, 1 teachers

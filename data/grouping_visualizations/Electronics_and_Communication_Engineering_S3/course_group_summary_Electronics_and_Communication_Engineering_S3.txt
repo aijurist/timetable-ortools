@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Electronics & Communication Engineering
 Semester: 3
-Generated: 2025-11-25 13:51:00
+Generated: 2025-11-25 17:50:59
 ============================================================
 
 OVERVIEW
@@ -13,45 +13,45 @@ OVERVIEW
 COURSE DISTRIBUTION BY GROUP
 - CS23336 [Lab + Theory]: 2 groups, 6 teachers
   └─ G1: 2 teacher assignments
-  └─ G3: 4 teacher assignments
+  └─ G2: 4 teacher assignments
 - EC23311 [Theory]: 2 groups, 6 teachers
-  └─ G4: 1 teacher assignments
-  └─ G6: 5 teacher assignments
-- EC23312 [Theory]: 2 groups, 6 teachers
-  └─ G5: 5 teacher assignments
+  └─ G4: 5 teacher assignments
   └─ G7: 1 teacher assignments
+- EC23312 [Theory]: 2 groups, 6 teachers
+  └─ G5: 4 teacher assignments
+  └─ G6: 2 teacher assignments
 - EC23313 [Theory]: 2 groups, 6 teachers
-  └─ G6: 1 teacher assignments
+  └─ G4: 1 teacher assignments
   └─ G7: 5 teacher assignments
 - EC23321 [Lab]: 2 groups, 6 teachers
-  └─ G2: 4 teacher assignments
-  └─ G3: 2 teacher assignments
+  └─ G2: 2 teacher assignments
+  └─ G3: 4 teacher assignments
 - EC23332 [Lab + Theory]: 2 groups, 6 teachers
   └─ G1: 4 teacher assignments
-  └─ G2: 2 teacher assignments
+  └─ G3: 2 teacher assignments
 - MA23312 [Theory]: 2 groups, 6 teachers
-  └─ G4: 5 teacher assignments
-  └─ G5: 1 teacher assignments
+  └─ G5: 2 teacher assignments
+  └─ G6: 4 teacher assignments
 
 GROUP COMPOSITION
 - G1: 2 courses, 6 teachers
   └─ CS23336 [L+T]: 2 instances, 2 teachers
   └─ EC23332 [L+T]: 4 instances, 4 teachers
 - G2: 2 courses, 6 teachers
-  └─ EC23321 [L]: 4 instances, 4 teachers
-  └─ EC23332 [L+T]: 2 instances, 2 teachers
-- G3: 2 courses, 6 teachers
   └─ CS23336 [L+T]: 4 instances, 4 teachers
   └─ EC23321 [L]: 2 instances, 2 teachers
+- G3: 2 courses, 6 teachers
+  └─ EC23321 [L]: 4 instances, 4 teachers
+  └─ EC23332 [L+T]: 2 instances, 2 teachers
 - G4: 2 courses, 6 teachers
-  └─ EC23311 [T]: 1 instances, 1 teachers
-  └─ MA23312 [T]: 5 instances, 5 teachers
-- G5: 2 courses, 6 teachers
-  └─ EC23312 [T]: 5 instances, 5 teachers
-  └─ MA23312 [T]: 1 instances, 1 teachers
-- G6: 2 courses, 6 teachers
   └─ EC23311 [T]: 5 instances, 5 teachers
   └─ EC23313 [T]: 1 instances, 1 teachers
+- G5: 2 courses, 6 teachers
+  └─ EC23312 [T]: 4 instances, 4 teachers
+  └─ MA23312 [T]: 2 instances, 2 teachers
+- G6: 2 courses, 6 teachers
+  └─ EC23312 [T]: 2 instances, 2 teachers
+  └─ MA23312 [T]: 4 instances, 4 teachers
 - G7: 2 courses, 6 teachers
-  └─ EC23312 [T]: 1 instances, 1 teachers
+  └─ EC23311 [T]: 1 instances, 1 teachers
   └─ EC23313 [T]: 5 instances, 5 teachers

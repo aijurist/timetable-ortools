@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Computer Science & Engineering
 Semester: 3
-Generated: 2025-11-25 15:43:01
+Generated: 2025-11-25 17:50:53
 ============================================================
 
 OVERVIEW
@@ -12,32 +12,32 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - CS23331 [Lab + Theory]: 2 groups, 10 teachers
+  └─ G1: 6 teacher assignments
+  └─ G2: 4 teacher assignments
+- CS23332 [Lab + Theory]: 2 groups, 10 teachers
   └─ G2: 6 teacher assignments
   └─ G3: 4 teacher assignments
-- CS23332 [Lab + Theory]: 2 groups, 10 teachers
-  └─ G2: 4 teacher assignments
-  └─ G3: 6 teacher assignments
 - CS23333 [Lab + Theory]: 2 groups, 10 teachers
-  └─ G4: 7 teacher assignments
-  └─ G5: 3 teacher assignments
+  └─ G3: 6 teacher assignments
+  └─ G4: 4 teacher assignments
 - CS23334 [Lab + Theory]: 2 groups, 10 teachers
-  └─ G4: 3 teacher assignments
-  └─ G5: 7 teacher assignments
+  └─ G1: 4 teacher assignments
+  └─ G4: 6 teacher assignments
 - MA23312 [Theory]: 1 groups, 10 teachers
-  └─ G1: 10 teacher assignments
+  └─ G5: 10 teacher assignments
 
 GROUP COMPOSITION
-- G1: 1 courses, 10 teachers
-  └─ MA23312 [T]: 10 instances, 10 teachers
-- G2: 2 courses, 10 teachers
+- G1: 2 courses, 10 teachers
   └─ CS23331 [L+T]: 6 instances, 6 teachers
-  └─ CS23332 [L+T]: 4 instances, 4 teachers
-- G3: 2 courses, 10 teachers
+  └─ CS23334 [L+T]: 4 instances, 4 teachers
+- G2: 2 courses, 10 teachers
   └─ CS23331 [L+T]: 4 instances, 4 teachers
   └─ CS23332 [L+T]: 6 instances, 6 teachers
+- G3: 2 courses, 10 teachers
+  └─ CS23332 [L+T]: 4 instances, 4 teachers
+  └─ CS23333 [L+T]: 6 instances, 6 teachers
 - G4: 2 courses, 10 teachers
-  └─ CS23333 [L+T]: 7 instances, 7 teachers
-  └─ CS23334 [L+T]: 3 instances, 3 teachers
-- G5: 2 courses, 10 teachers
-  └─ CS23333 [L+T]: 3 instances, 3 teachers
-  └─ CS23334 [L+T]: 7 instances, 7 teachers
+  └─ CS23333 [L+T]: 4 instances, 4 teachers
+  └─ CS23334 [L+T]: 6 instances, 6 teachers
+- G5: 1 courses, 10 teachers
+  └─ MA23312 [T]: 10 instances, 10 teachers

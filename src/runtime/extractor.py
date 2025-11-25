@@ -5,7 +5,10 @@ from __future__ import annotations
 import csv
 import json
 import logging
+import math
+import re
 from collections import defaultdict
+from dataclasses import replace
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Tuple
 
@@ -252,7 +255,94 @@ class ScheduleExtractor:
 								capacity_info=capacity_info,
 							)
 							entries.append(entry)
-		return tuple(entries)
+		return tuple(self._annotate_lab_batches(entries))
+
+	def _annotate_lab_batches(self, entries: Sequence[LabScheduleEntry]) -> Sequence[LabScheduleEntry]:
+		if not entries:
+			return entries
+		per_course: Dict[str, List[int]] = defaultdict(list)
+		annotated = list(entries)
+		for idx, entry in enumerate(entries):
+			per_course[entry.course_instance_id].append(idx)
+		for course_id, indices in per_course.items():
+			if not indices:
+				continue
+			requirement = self._lab_vars.requirements.get(course_id)
+			base_sessions = max(1, int(getattr(requirement, "required_sessions", 1) or 1)) if requirement else 1
+			session_groups: Dict[Tuple[int, str], List[int]] = defaultdict(list)
+			capacity_batches = 1
+			for idx in indices:
+				entry = annotated[idx]
+				key = (entry.day_index, entry.session_name)
+				session_groups[key].append(idx)
+				if entry.capacity and entry.capacity > 0 and entry.student_count:
+					capacity_batches = max(capacity_batches, math.ceil(entry.student_count / entry.capacity))
+			total_sessions = len(indices)
+			simultaneous_batches = max((len(group) for group in session_groups.values()), default=1)
+			sequential_batches = math.ceil(total_sessions / base_sessions)
+			final_batches = max(1, capacity_batches, simultaneous_batches, sequential_batches)
+			if final_batches <= 1:
+				continue
+			# First, assign batch numbers for sessions that run simultaneously (multiple rooms)
+			for group_indices in session_groups.values():
+				if len(group_indices) <= 1:
+					continue
+				sorted_group = sorted(
+					group_indices,
+					key=lambda idx: (
+						(annotated[idx].room_number or "").lower(),
+						(annotated[idx].room_id or "").lower(),
+					),
+				)
+				for batch_number, idx in enumerate(sorted_group, start=1):
+					entry = annotated[idx]
+					label = entry.batch_label or entry.batch_info or f"Batch {batch_number}"
+					annotated[idx] = replace(
+						entry,
+						batch_number=batch_number,
+						batch_label=label,
+						batch_info=entry.batch_info or label,
+						num_batches=final_batches,
+						is_batched=True,
+					)
+			# Next, handle sequential batches (same course scheduled in different slots)
+			ordered_keys = sorted(session_groups.keys(), key=lambda key: (key[1], key[0]))
+			session_rank = {key: rank for rank, key in enumerate(ordered_keys)}
+			remaining = sorted(
+				(idx for idx in indices if not annotated[idx].batch_number),
+				key=lambda idx: (
+					session_rank[(annotated[idx].day_index, annotated[idx].session_name)],
+					annotated[idx].day_index,
+					annotated[idx].session_name,
+					annotated[idx].session_slots,
+				),
+			)
+			for offset, idx in enumerate(remaining):
+				entry = annotated[idx]
+				number_hint = self._parse_batch_number(entry.batch_label or entry.batch_info)
+				batch_number = number_hint or ((offset % final_batches) + 1)
+				label = entry.batch_label or entry.batch_info or f"Batch {batch_number}"
+				annotated[idx] = replace(
+					entry,
+					batch_number=batch_number,
+					batch_label=label,
+					batch_info=entry.batch_info or label,
+					num_batches=final_batches,
+					is_batched=True,
+				)
+		return annotated
+
+	@staticmethod
+	def _parse_batch_number(label: Optional[str]) -> Optional[int]:
+		if not label:
+			return None
+		match = re.search(r"(\d+)", label)
+		if not match:
+			return None
+		try:
+			return int(match.group(1))
+		except ValueError:
+			return None
 
 	def _build_theory_entries(self, accessor: _SolutionAccessor) -> Tuple[TheoryScheduleEntry, ...]:
 		entries: List[TheoryScheduleEntry] = []

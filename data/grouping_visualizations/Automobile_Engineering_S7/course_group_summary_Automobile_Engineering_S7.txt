@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Automobile Engineering
 Semester: 7
-Generated: 2025-11-25 13:51:01
+Generated: 2025-11-25 17:51:01
 ============================================================
 
 OVERVIEW
@@ -12,32 +12,32 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - AT19701 [Theory]: 1 groups, 1 teachers
-  └─ G7: 1 teacher assignments
-- AT19702 [Theory]: 1 groups, 1 teachers
   └─ G5: 1 teacher assignments
+- AT19702 [Theory]: 1 groups, 1 teachers
+  └─ G7: 1 teacher assignments
 - AT19711 [Lab]: 1 groups, 1 teachers
-  └─ G4: 1 teacher assignments
+  └─ G1: 1 teacher assignments
 - AT19721 [Lab]: 1 groups, 1 teachers
   └─ G3: 1 teacher assignments
 - AT19722 [Lab]: 1 groups, 1 teachers
-  └─ G2: 1 teacher assignments
+  └─ G4: 1 teacher assignments
 - AT19723 [Lab]: 1 groups, 1 teachers
-  └─ G1: 1 teacher assignments
+  └─ G2: 1 teacher assignments
 - AT19P73 [Theory]: 1 groups, 1 teachers
   └─ G6: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
-  └─ AT19723 [L]: 1 instances, 1 teachers
+  └─ AT19711 [L]: 1 instances, 1 teachers
 - G2: 1 courses, 1 teachers
-  └─ AT19722 [L]: 1 instances, 1 teachers
+  └─ AT19723 [L]: 1 instances, 1 teachers
 - G3: 1 courses, 1 teachers
   └─ AT19721 [L]: 1 instances, 1 teachers
 - G4: 1 courses, 1 teachers
-  └─ AT19711 [L]: 1 instances, 1 teachers
+  └─ AT19722 [L]: 1 instances, 1 teachers
 - G5: 1 courses, 1 teachers
-  └─ AT19702 [T]: 1 instances, 1 teachers
+  └─ AT19701 [T]: 1 instances, 1 teachers
 - G6: 1 courses, 1 teachers
   └─ AT19P73 [T]: 1 instances, 1 teachers
 - G7: 1 courses, 1 teachers
-  └─ AT19701 [T]: 1 instances, 1 teachers
+  └─ AT19702 [T]: 1 instances, 1 teachers

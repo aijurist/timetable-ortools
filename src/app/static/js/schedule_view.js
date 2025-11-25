@@ -568,6 +568,8 @@ function generateScheduleTable(data) {
             sessions.forEach((session) => {
                 const isLab = session.schedule_type === "lab";
                 const isBatched = session.is_batched;
+                const batchLabel = session.batch_label || session.batch_info;
+                const batchNumber = session.batch_number;
                 const sessionClass = isLab ? "lab-session" : "theory-session";
                 const batchClass = isBatched ? "batched-session" : "";
 
@@ -585,7 +587,7 @@ function generateScheduleTable(data) {
                         Group: ${session.group_name}
                         Semester: ${semester}
                         ${isLab ? 'Capacity: ' + (session.capacity || 'NA') : ''}
-                        ${isBatched ? 'Batched: ' + (session.batch_info || 'Yes') : ''}
+                        ${isLab && (batchLabel || batchNumber) ? 'Batch: ' + (batchLabel || `Batch ${batchNumber}`) : ''}
                     ">
                         <div class="session-header">
                             <div class="session-code">${session.course_code_display || session.course_code}</div>
@@ -593,6 +595,7 @@ function generateScheduleTable(data) {
                         </div>
                         <div class="session-teacher">${session.teacher_name}</div>
                         <div class="session-room">${session.room_number || 'TBD'}</div>
+                        ${isLab && (batchLabel || batchNumber) ? `<div class="batch-label">${batchLabel || `Batch ${batchNumber}`}</div>` : ""}
                         <div class="semester-indicator">${semester}</div>
                     </div>
                 `;

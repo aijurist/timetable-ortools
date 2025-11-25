@@ -12,6 +12,11 @@ from .cross_system.lunch_alignment import build_lunch_alignment_constraint
 from .lab.core_lab import build_core_lab_mapping_constraint
 from .lab.requirements import build_lab_session_coverage_constraint
 from .lab.room_single_assignment import build_lab_room_single_assignment_constraint
+from .lab.slot_caps import (
+	build_computing_group_slot_cap_constraint,
+	build_core_lab_group_slot_cap_constraint,
+	build_semester_lab_slot_cap_constraint,
+)
 from .theory.adjacency import build_no_three_consecutive_slots_constraint
 from .theory.requirements import (
 	build_theory_daily_slot_cap_constraint,
@@ -38,6 +43,24 @@ LAB_CONSTRAINT_DEFINITIONS = {
 		"description": "Restrict mapped core labs to their designated laboratory rooms while keeping others flexible.",
 		"factory": build_core_lab_mapping_constraint,
 		"tags": ("lab", "rooms", "core"),
+	},
+	"core_group_slot_cap": {
+		"title": "Core Group Slot Cap",
+		"description": "Prefer core lab groups to occupy no more than the configured number of unique lab slots (soft cap).",
+		"factory": build_core_lab_group_slot_cap_constraint,
+		"tags": ("lab", "core", "slots"),
+	},
+	"computing_group_slot_cap": {
+		"title": "Computing Group Slot Cap",
+		"description": "Limit computing department lab groups to a strict maximum of unique lab slots (hard cap).",
+		"factory": build_computing_group_slot_cap_constraint,
+		"tags": ("lab", "slots", "computing"),
+	},
+	"semester_slot_cap": {
+		"title": "Semester Lab Slot Cap",
+		"description": "Cap the number of non-core lab slots consumed by each department-semester pair.",
+		"factory": build_semester_lab_slot_cap_constraint,
+		"tags": ("lab", "slots", "semester"),
 	},
 }
 

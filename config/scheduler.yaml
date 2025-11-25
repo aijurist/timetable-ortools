@@ -5,7 +5,7 @@ meta:
   generated_at: null
 
 paths:
-  courses_csv: data/department_data/core-v3/computer_dept.csv
+  courses_csv: data/department_data/core-v3/coputer_dept.csv
   rooms_csv: data/block_wise/techlongue.csv
   day_order_csv: data/day_order.csv
   core_lab_mapping_csv: data/og-final.csv
@@ -114,11 +114,11 @@ departments:
   overrides:
     Computer Science & Engineering:
       day_pattern:
-        - monday
         - tuesday
         - wed
         - thur
         - fri
+        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
@@ -452,6 +452,25 @@ constraints:
       priority: 8
       weight: 0.8
       params: {}
+    core_group_slot_cap:
+      enabled: true
+      priority: 7
+      weight: 0.6
+      params:
+        slot_limit: 8
+        penalty_weight: 200
+    computing_group_slot_cap:
+      enabled: true
+      priority: 8
+      weight: 1.0
+      params:
+        slot_limit: 6
+    semester_slot_cap:
+      enabled: true
+      priority: 8
+      weight: 0.8
+      params:
+        slot_limit: 12
     shift_alignment:
       enabled: true
       priority: 9
@@ -589,7 +608,7 @@ model:
   use_sparse_variables: true
 
 runtime:
-  time_limit_sec: 5000
+  time_limit_sec: 100
   thread_count: 16
   enable_lns: true
   enable_trace: false

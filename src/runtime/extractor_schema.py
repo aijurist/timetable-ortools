@@ -42,6 +42,8 @@ class LabScheduleEntry:
 	is_batched: bool = False
 	batch_info: Optional[str] = None
 	num_batches: int = 1
+	batch_number: Optional[int] = None
+	batch_label: Optional[str] = None
 	schedule_type: str = "lab"
 	group_name: Optional[str] = None
 	group_index: Optional[int] = None
@@ -75,6 +77,8 @@ class LabScheduleEntry:
 			"is_batched": self.is_batched,
 			"batch_info": self.batch_info,
 			"num_batches": self.num_batches,
+			"batch_number": self.batch_number,
+			"batch_label": self.batch_label or self.batch_info,
 			"schedule_type": self.schedule_type,
 			"group_name": self.group_name or self.group_id,
 			"group_index": self.group_index,

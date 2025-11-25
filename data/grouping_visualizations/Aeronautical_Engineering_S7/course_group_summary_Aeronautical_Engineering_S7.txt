@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Aeronautical Engineering
 Semester: 7
-Generated: 2025-11-25 13:51:04
+Generated: 2025-11-25 17:51:03
 ============================================================
 
 OVERVIEW
@@ -12,28 +12,28 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - AE19701 [Theory]: 1 groups, 1 teachers
-  └─ G4: 1 teacher assignments
+  └─ G5: 1 teacher assignments
 - AE19712 [Lab]: 1 groups, 1 teachers
-  └─ G1: 1 teacher assignments
-- AE19713 [Lab]: 1 groups, 1 teachers
   └─ G3: 1 teacher assignments
-- AE19741 [Lab + Theory]: 1 groups, 1 teachers
+- AE19713 [Lab]: 1 groups, 1 teachers
   └─ G2: 1 teacher assignments
+- AE19741 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G1: 1 teacher assignments
 - AE19P72 [Theory]: 1 groups, 1 teachers
   └─ G6: 1 teacher assignments
 - AE19P74 [Theory]: 1 groups, 1 teachers
-  └─ G5: 1 teacher assignments
+  └─ G4: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
-  └─ AE19712 [L]: 1 instances, 1 teachers
-- G2: 1 courses, 1 teachers
   └─ AE19741 [L+T]: 1 instances, 1 teachers
-- G3: 1 courses, 1 teachers
+- G2: 1 courses, 1 teachers
   └─ AE19713 [L]: 1 instances, 1 teachers
+- G3: 1 courses, 1 teachers
+  └─ AE19712 [L]: 1 instances, 1 teachers
 - G4: 1 courses, 1 teachers
-  └─ AE19701 [T]: 1 instances, 1 teachers
-- G5: 1 courses, 1 teachers
   └─ AE19P74 [T]: 1 instances, 1 teachers
+- G5: 1 courses, 1 teachers
+  └─ AE19701 [T]: 1 instances, 1 teachers
 - G6: 1 courses, 1 teachers
   └─ AE19P72 [T]: 1 instances, 1 teachers

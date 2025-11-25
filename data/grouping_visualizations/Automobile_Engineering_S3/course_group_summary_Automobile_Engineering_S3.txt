@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Automobile Engineering
 Semester: 3
-Generated: 2025-11-25 13:51:07
+Generated: 2025-11-25 17:51:07
 ============================================================
 
 OVERVIEW
@@ -12,28 +12,28 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - AT23321 [Lab]: 1 groups, 1 teachers
-  └─ G1: 1 teacher assignments
+  └─ G5: 1 teacher assignments
 - AT23331 [Lab + Theory]: 1 groups, 1 teachers
   └─ G6: 1 teacher assignments
 - AT23332 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G2: 1 teacher assignments
-- AT23333 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G4: 1 teacher assignments
-- AT23334 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G5: 1 teacher assignments
-- MA23331 [Lab + Theory]: 1 groups, 1 teachers
   └─ G3: 1 teacher assignments
+- AT23333 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G1: 1 teacher assignments
+- AT23334 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G2: 1 teacher assignments
+- MA23331 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G4: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
-  └─ AT23321 [L]: 1 instances, 1 teachers
-- G2: 1 courses, 1 teachers
-  └─ AT23332 [L+T]: 1 instances, 1 teachers
-- G3: 1 courses, 1 teachers
-  └─ MA23331 [L+T]: 1 instances, 1 teachers
-- G4: 1 courses, 1 teachers
   └─ AT23333 [L+T]: 1 instances, 1 teachers
-- G5: 1 courses, 1 teachers
+- G2: 1 courses, 1 teachers
   └─ AT23334 [L+T]: 1 instances, 1 teachers
+- G3: 1 courses, 1 teachers
+  └─ AT23332 [L+T]: 1 instances, 1 teachers
+- G4: 1 courses, 1 teachers
+  └─ MA23331 [L+T]: 1 instances, 1 teachers
+- G5: 1 courses, 1 teachers
+  └─ AT23321 [L]: 1 instances, 1 teachers
 - G6: 1 courses, 1 teachers
   └─ AT23331 [L+T]: 1 instances, 1 teachers
