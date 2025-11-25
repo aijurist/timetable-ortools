@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Teacher Lab Telemetry</title>
+    <title>Group Coverage Telemetry</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,8 +14,8 @@
 <body>
     <nav class="navbar navbar-expand-lg shadow-sm">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/teacher-labs">
-                Teacher Lab Telemetry
+            <a class="navbar-brand" href="/grouping">
+                Group Coverage Telemetry
             </a>
             <div class="ms-auto d-flex flex-wrap gap-3 align-items-center text-white">
                 <div class="text-end me-2">
@@ -31,9 +31,9 @@
                         <i class="fas fa-layer-group me-1"></i>
                         Slot Caps
                     </a>
-                    <a class="btn btn-sm btn-outline-light" href="/grouping">
-                        <i class="fas fa-users me-1"></i>
-                        Group Coverage
+                    <a class="btn btn-sm btn-outline-light" href="/teacher-labs">
+                        <i class="fas fa-user-clock me-1"></i>
+                        Teacher Labs
                     </a>
                     <a class="btn btn-sm btn-outline-light" href="/overlaps">
                         <i class="fas fa-link me-1"></i>
@@ -58,23 +58,24 @@
         <section class="row g-3 mb-4">
             <div class="col-12 col-md-6 col-xxl-3">
                 <div class="telemetry-card">
-                    <div class="label">Teachers monitored</div>
-                    <div class="value" id="summaryTeachers">0</div>
-                    <div class="caption">Active in current lab schedule</div>
+                    <div class="label">Total groups</div>
+                    <div class="value" id="summaryTotalGroups">0</div>
+                    <div class="caption">Across latest snapshot</div>
                 </div>
             </div>
             <div class="col-12 col-md-6 col-xxl-3">
                 <div class="telemetry-card">
-                    <div class="label">Days over daily cap</div>
-                    <div class="value text-danger" id="summaryDaysOverCap">0</div>
-                    <div class="caption">Teacher-days exceeding configured limit</div>
+                    <div class="label">Departments tracked</div>
+                    <div class="value" id="summaryDepartments">0</div>
+                    <div class="caption">Department-semester buckets</div>
                 </div>
             </div>
             <div class="col-12 col-md-6 col-xxl-3">
                 <div class="telemetry-card">
-                    <div class="label">Long consecutive windows</div>
-                    <div class="value text-warning" id="summaryLongRuns">0</div>
-                    <div class="caption">Teacher-days breaching max streak</div>
+                    <div class="label">Coverage gaps</div>
+                    <div class="value text-danger" id="summaryMissingLab">0</div>
+                    <div class="caption">Groups without lab sessions</div>
+                    <div class="small text-muted">No theory slots: <span id="summaryMissingTheory">0</span></div>
                 </div>
             </div>
             <div class="col-12 col-md-6 col-xxl-3">
@@ -99,15 +100,31 @@
         <section class="card mb-4">
             <div class="card-header d-flex flex-wrap gap-3 align-items-center">
                 <div>
-                    <h5 class="mb-0">Active teacher policies</h5>
-                    <small class="text-muted">Reflects settings captured from solver constraint details.</small>
+                    <h5 class="mb-0">Department coverage overview</h5>
+                    <small class="text-muted">Summarizes department-semester buckets extracted from grouping telemetry.</small>
+                </div>
+                <div class="ms-auto text-muted small">
+                    Rows: <span id="departmentCount">0</span>
                 </div>
             </div>
             <div class="card-body">
-                <div class="row g-3" id="policyCards">
-                    <div class="col-12">
-                        <div class="empty-hint">Collecting policy data…</div>
-                    </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Department</th>
+                                <th>Semester</th>
+                                <th>Groups</th>
+                                <th>Lab sessions tracked</th>
+                                <th>Theory slots tracked</th>
+                            </tr>
+                        </thead>
+                        <tbody id="departmentTableBody">
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">Collecting department telemetry…</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </section>
@@ -115,43 +132,50 @@
         <section class="card mb-4">
             <div class="card-header d-flex flex-wrap gap-3 align-items-center">
                 <div>
-                    <h5 class="mb-0">Teacher load overview</h5>
-                    <small class="text-muted">Filter by flags or search to inspect a specific teacher’s day distribution.</small>
+                    <h5 class="mb-0">Group coverage detail</h5>
+                    <small class="text-muted">Filter to identify groups missing lab or theory coverage and inspect their recorded sessions.</small>
                 </div>
                 <div class="ms-auto text-muted small">
-                    Rows: <span id="teacherCount">0</span>
+                    Rows: <span id="groupCount">0</span>
                 </div>
             </div>
             <div class="card-body">
                 <div class="row g-3 mb-3">
                     <div class="col-12 col-md-4">
-                        <label class="form-label">Flag filter</label>
-                        <select id="teacherFlagFilter" class="form-select">
-                            <option value="all">All teachers</option>
-                            <option value="over-cap">Daily cap issues</option>
-                            <option value="consecutive">Consecutive streak issues</option>
+                        <label class="form-label">Department</label>
+                        <select id="departmentFilter" class="form-select">
+                            <option value="all">All departments</option>
                         </select>
                     </div>
-                    <div class="col-12 col-md-8">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Coverage filter</label>
+                        <select id="coverageFilter" class="form-select">
+                            <option value="all">All groups</option>
+                            <option value="needs-lab">Missing lab coverage</option>
+                            <option value="needs-theory">Missing theory coverage</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4">
                         <label class="form-label">Search</label>
-                        <input id="teacherSearch" class="form-control" placeholder="Teacher, department, course or group" />
+                        <input id="groupSearch" class="form-control" placeholder="Group, course, teacher or slot" />
                     </div>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead>
                             <tr>
-                                <th>Teacher</th>
-                                <th>Departments</th>
-                                <th>Total sessions</th>
-                                <th>Flagged days</th>
-                                <th>Longest run</th>
-                                <th>Highlights</th>
+                                <th>Group</th>
+                                <th>Department / Semester</th>
+                                <th>Lab coverage</th>
+                                <th>Theory coverage</th>
+                                <th>Teachers</th>
+                                <th>Courses</th>
+                                <th>Flags</th>
                             </tr>
                         </thead>
-                        <tbody id="teacherTableBody">
+                        <tbody id="groupTableBody">
                             <tr>
-                                <td colspan="6" class="text-center py-4 text-muted">Loading teacher telemetry…</td>
+                                <td colspan="7" class="text-center py-4 text-muted">Waiting for grouping telemetry…</td>
                             </tr>
                         </tbody>
                     </table>
@@ -162,51 +186,20 @@
         <section class="card">
             <div class="card-header d-flex flex-wrap gap-3 align-items-center">
                 <div>
-                    <h5 class="mb-0">Day-level events</h5>
-                    <small class="text-muted">Inspect precise days that tripped observability flags.</small>
-                </div>
-                <div class="ms-auto text-muted small">
-                    Rows: <span id="dayEventCount">0</span>
+                    <h5 class="mb-0">Constraint instrumentation</h5>
+                    <small class="text-muted">Live copy of the solver signals referenced by the grouping telemetry.</small>
                 </div>
             </div>
             <div class="card-body">
-                <div class="row g-3 mb-3">
-                    <div class="col-12 col-md-4">
-                        <label class="form-label">Event type</label>
-                        <select id="eventTypeFilter" class="form-select">
-                            <option value="all">All events</option>
-                            <option value="over_daily">Over daily cap</option>
-                            <option value="early_late">Early + late combo</option>
-                            <option value="triple_block">Early-buffer-late</option>
-                            <option value="long_run">Consecutive streak</option>
-                        </select>
+                <div class="row g-3" id="constraintPanel">
+                    <div class="col-12">
+                        <div class="empty-hint">Extracting constraint metadata…</div>
                     </div>
-                    <div class="col-12 col-md-8">
-                        <label class="form-label">Search</label>
-                        <input id="daySearch" class="form-control" placeholder="Teacher, day, course or session" />
-                    </div>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead>
-                            <tr>
-                                <th>Teacher</th>
-                                <th>Day</th>
-                                <th>Sessions</th>
-                                <th>Flags</th>
-                            </tr>
-                        </thead>
-                        <tbody id="dayEventTableBody">
-                            <tr>
-                                <td colspan="4" class="text-center py-4 text-muted">Waiting for telemetry…</td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </section>
     </main>
 
-    <script src="/static/js/teacher_labs_dashboard.js" type="module"></script>
+    <script src="/static/js/grouping_dashboard.js" type="module"></script>
 </body>
 </html>

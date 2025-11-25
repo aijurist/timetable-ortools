@@ -15,6 +15,8 @@ from ..data.schemas import ExtendedDataContainer
 from ..models.model_builder import ConstraintModel, ModelBuilder
 from ..runtime.extractor import ScheduleExtractor, ScheduleExtractionResult
 from ..runtime.solver import SolverRunner, SolverResult
+from ..telemetry.grouping import GroupTelemetryBuilder
+from ..telemetry.overlaps import OverlapTelemetryBuilder
 from ..telemetry.slot_caps import SlotCapTelemetryBuilder
 from ..telemetry.teacher_labs import TeacherLabTelemetryBuilder
 
@@ -116,6 +118,8 @@ class PipelineOrchestrator:
 		)
 		self._write_slot_cap_telemetry(timestamp_dir, self._schedule)
 		self._write_teacher_lab_telemetry(timestamp_dir, self._schedule)
+		self._write_grouping_telemetry(timestamp_dir, self._schedule)
+		self._write_overlap_telemetry(timestamp_dir, self._schedule)
 		return self._schedule
 
 	def run(self) -> ScheduleExtractionResult:
@@ -200,6 +204,29 @@ class PipelineOrchestrator:
 			builder.write(schedule, output_dir / "teacher_lab_telemetry.json")
 		except Exception:  # pragma: no cover - telemetry is best-effort
 			logger.exception("Failed to write teacher lab telemetry")
+
+	def _write_grouping_telemetry(self, output_dir: Path, schedule: ScheduleExtractionResult) -> None:
+		if not self._model or not schedule:
+			return
+		builder = GroupTelemetryBuilder(
+			constraint_results=self._model.constraint_results,
+		)
+		try:
+			builder.write(schedule, output_dir / "grouping_telemetry.json")
+		except Exception:  # pragma: no cover - telemetry is best-effort
+			logger.exception("Failed to write grouping telemetry")
+
+	def _write_overlap_telemetry(self, output_dir: Path, schedule: ScheduleExtractionResult) -> None:
+		if not self._model or not schedule or not self._extended_data:
+			return
+		builder = OverlapTelemetryBuilder(
+			constraint_results=self._model.constraint_results,
+			time_system=self._extended_data.raw.time,
+		)
+		try:
+			builder.write(schedule, output_dir / "overlap_telemetry.json")
+		except Exception:  # pragma: no cover - telemetry is best-effort
+			logger.exception("Failed to write overlap telemetry")
 
 
 __all__ = ["PipelineOrchestrator"]

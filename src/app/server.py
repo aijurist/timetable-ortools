@@ -59,6 +59,20 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=500, detail="teacher_labs_dashboard.html is missing from the static folder")
         return FileResponse(html_path)
 
+    @app.get("/grouping", include_in_schema=False)
+    async def serve_grouping_dashboard() -> FileResponse:
+        html_path = STATIC_DIR / "grouping_dashboard.html"
+        if not html_path.exists():
+            raise HTTPException(status_code=500, detail="grouping_dashboard.html is missing from the static folder")
+        return FileResponse(html_path)
+
+    @app.get("/overlaps", include_in_schema=False)
+    async def serve_overlap_dashboard() -> FileResponse:
+        html_path = STATIC_DIR / "overlap_dashboard.html"
+        if not html_path.exists():
+            raise HTTPException(status_code=500, detail="overlap_dashboard.html is missing from the static folder")
+        return FileResponse(html_path)
+
     @app.get("/schedule", include_in_schema=False)
     async def serve_schedule_view() -> FileResponse:
         html_path = STATIC_DIR / "schedule_view.html"
@@ -109,6 +123,18 @@ def create_app() -> FastAPI:
     async def teacher_labs() -> Dict[str, Any]:
         snapshot = _snapshot_or_404()
         data = repo.get_teacher_lab_telemetry()
+        return {"snapshot": snapshot.as_dict(), "data": data}
+
+    @app.get("/api/grouping")
+    async def grouping() -> Dict[str, Any]:
+        snapshot = _snapshot_or_404()
+        data = repo.get_grouping_telemetry()
+        return {"snapshot": snapshot.as_dict(), "data": data}
+
+    @app.get("/api/overlaps")
+    async def overlaps() -> Dict[str, Any]:
+        snapshot = _snapshot_or_404()
+        data = repo.get_overlap_telemetry()
         return {"snapshot": snapshot.as_dict(), "data": data}
 
     return app

@@ -44,6 +44,8 @@ class ScheduleRepository:
         self._metric_cache: Dict[Path, Dict[str, Any]] = {}
         self._slot_cap_cache: Dict[Path, Dict[str, Any]] = {}
         self._teacher_telemetry_cache: Dict[Path, Dict[str, Any]] = {}
+        self._grouping_cache: Dict[Path, Dict[str, Any]] = {}
+        self._overlap_cache: Dict[Path, Dict[str, Any]] = {}
 
     def get_latest_snapshot(self) -> ScheduleSnapshot:
         snapshot = self._scan_latest_snapshot()
@@ -55,6 +57,8 @@ class ScheduleRepository:
             self._metric_cache.clear()
             self._slot_cap_cache.clear()
             self._teacher_telemetry_cache.clear()
+            self._grouping_cache.clear()
+            self._overlap_cache.clear()
             self._cached_snapshot = snapshot
         return self._cached_snapshot  # type: ignore[return-value]
 
@@ -89,6 +93,18 @@ class ScheduleRepository:
         if snapshot.root not in self._teacher_telemetry_cache:
             self._teacher_telemetry_cache[snapshot.root] = self._load_teacher_lab_telemetry(snapshot)
         return self._teacher_telemetry_cache[snapshot.root]
+
+    def get_grouping_telemetry(self) -> Dict[str, Any]:
+        snapshot = self.get_latest_snapshot()
+        if snapshot.root not in self._grouping_cache:
+            self._grouping_cache[snapshot.root] = self._load_grouping_telemetry(snapshot)
+        return self._grouping_cache[snapshot.root]
+
+    def get_overlap_telemetry(self) -> Dict[str, Any]:
+        snapshot = self.get_latest_snapshot()
+        if snapshot.root not in self._overlap_cache:
+            self._overlap_cache[snapshot.root] = self._load_overlap_telemetry(snapshot)
+        return self._overlap_cache[snapshot.root]
 
     # ------------------------------------------------------------------
     # Snapshot discovery
@@ -308,6 +324,44 @@ class ScheduleRepository:
                     "long_consecutive_windows": 0,
                 },
                 "teachers": [],
+                "constraints": {},
+            }
+        with telemetry_path.open("r", encoding="utf-8") as handle:
+            return json.load(handle)
+
+    def _load_grouping_telemetry(self, snapshot: ScheduleSnapshot) -> Dict[str, Any]:
+        telemetry_path = snapshot.root / "grouping_telemetry.json"
+        if not telemetry_path.exists():
+            return {
+                "generated_at": None,
+                "summary": {
+                    "total_groups": 0,
+                    "departments": 0,
+                    "groups_without_lab_sessions": 0,
+                    "groups_without_theory_slots": 0,
+                },
+                "departments": [],
+                "constraints": {},
+            }
+        with telemetry_path.open("r", encoding="utf-8") as handle:
+            return json.load(handle)
+
+    def _load_overlap_telemetry(self, snapshot: ScheduleSnapshot) -> Dict[str, Any]:
+        telemetry_path = snapshot.root / "overlap_telemetry.json"
+        if not telemetry_path.exists():
+            return {
+                "generated_at": None,
+                "group_summary": {
+                    "dept_semesters": 0,
+                    "conflict_windows": 0,
+                    "departments_impacted": 0,
+                },
+                "group_conflicts": [],
+                "teacher_summary": {
+                    "teachers_with_conflicts": 0,
+                    "conflict_windows": 0,
+                },
+                "teacher_conflicts": [],
                 "constraints": {},
             }
         with telemetry_path.open("r", encoding="utf-8") as handle:
