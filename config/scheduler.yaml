@@ -483,12 +483,23 @@ constraints:
       enabled: true
       priority: 8
       weight: 0.6
-      description: Limit teachers to at most two consecutive lab sessions (soft override for select departments).
       params:
         max_consecutive_sessions: 2
         soft_penalty_weight: 5
         soft_departments:
           - Biotechnology
+    teacher_daily_presence_lab:
+      enabled: true
+      priority: 8
+      weight: 0.7
+      params:
+        max_daily_sessions: 2
+        early_sessions:
+          - L1
+        buffer_sessions:
+          - L5
+        late_sessions:
+          - L5
   theory:
     slot_coverage:
       enabled: false

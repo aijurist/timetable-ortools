@@ -20,6 +20,7 @@ from src.constraints.lab.slot_caps import (
 	build_core_lab_group_slot_cap_constraint,
 	build_semester_lab_slot_cap_constraint,
 )
+from src.constraints.lab.teacher_daily_presence_lab import build_teacher_daily_presence_lab_constraint
 from src.constraints.lab.teacher_max_consecutive import build_teacher_max_consecutive_lab_constraint
 from src.constraints.schema import ConstraintStatus
 from src.data.schemas import ExtendedDataContainer, LabSessionDetail, RoomCollections
@@ -576,3 +577,56 @@ def test_teacher_max_consecutive_checks_cross_course_sequences() -> None:
 	result = constraint.apply(context)
 	assert result.status == ConstraintStatus.APPLIED
 	assert result.details["cross_course_clauses"] >= 1
+
+
+def test_teacher_daily_presence_blocks_early_late_combo() -> None:
+	courses = (
+		("COURSE_EARLY", "Computer Science & Engineering", ((0, "L1"),)),
+		("COURSE_LATE", "Computer Science & Engineering", ((0, "L6"),)),
+	)
+	context = _build_teacher_consecutive_context(
+		course_definitions=courses,
+		session_labels=("L1", "L2", "L3", "L4", "L5", "L6"),
+	)
+	constraint = build_teacher_daily_presence_lab_constraint(
+		metadata=_metadata("teacher_daily_presence", priority=8)
+	)
+	result = constraint.apply(context)
+	assert result.status == ConstraintStatus.APPLIED
+	assert result.details["early_late_blocks"] >= 1
+
+
+def test_teacher_daily_presence_limits_total_sessions() -> None:
+	courses = (
+		("COURSE_A", "Computer Science & Engineering", ((0, "L1"),)),
+		("COURSE_B", "Computer Science & Engineering", ((0, "L2"),)),
+		("COURSE_C", "Computer Science & Engineering", ((0, "L3"),)),
+	)
+	context = _build_teacher_consecutive_context(
+		course_definitions=courses,
+		session_labels=("L1", "L2", "L3"),
+	)
+	constraint = build_teacher_daily_presence_lab_constraint(
+		metadata=_metadata("teacher_daily_presence_daily_cap", priority=8)
+	)
+	result = constraint.apply(context)
+	assert result.status == ConstraintStatus.APPLIED
+	assert result.details["daily_cap_days"] >= 1
+
+
+def test_teacher_daily_presence_blocks_l1_l5_l6_triple() -> None:
+	courses = (
+		("COURSE_EARLY", "Computer Science & Engineering", ((0, "L1"),)),
+		("COURSE_BUFFER", "Computer Science & Engineering", ((0, "L5"),)),
+		("COURSE_LATE", "Computer Science & Engineering", ((0, "L6"),)),
+	)
+	context = _build_teacher_consecutive_context(
+		course_definitions=courses,
+		session_labels=("L1", "L2", "L3", "L4", "L5", "L6"),
+	)
+	constraint = build_teacher_daily_presence_lab_constraint(
+		metadata=_metadata("teacher_daily_presence_triple", priority=8)
+	)
+	result = constraint.apply(context)
+	assert result.status == ConstraintStatus.APPLIED
+	assert result.details["triple_window_blocks"] >= 1

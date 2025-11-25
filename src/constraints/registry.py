@@ -17,6 +17,7 @@ from .lab.slot_caps import (
 	build_core_lab_group_slot_cap_constraint,
 	build_semester_lab_slot_cap_constraint,
 )
+from .lab.teacher_daily_presence_lab import build_teacher_daily_presence_lab_constraint
 from .lab.teacher_max_consecutive import build_teacher_max_consecutive_lab_constraint
 from .theory.adjacency import build_no_three_consecutive_slots_constraint
 from .theory.requirements import (
@@ -68,6 +69,12 @@ LAB_CONSTRAINT_DEFINITIONS = {
 		"description": "Limit teachers to at most two consecutive lab sessions, with optional soft overrides per department.",
 		"factory": build_teacher_max_consecutive_lab_constraint,
 		"tags": ("lab", "teachers", "adjacency"),
+	},
+	"teacher_daily_presence_lab": {
+		"title": "Teacher Daily Lab Presence",
+		"description": "Restrict lab scheduling to avoid long teacher days (max two sessions, block early/late conflicts).",
+		"factory": build_teacher_daily_presence_lab_constraint,
+		"tags": ("lab", "teachers", "schedule"),
 	},
 }
 
