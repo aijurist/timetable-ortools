@@ -120,6 +120,8 @@ class SolverRunner:
 		parameters.num_search_workers = max(1, runtime.thread_count)
 		if runtime.solution_limit:
 			self._apply_solution_limit(parameters, runtime.solution_limit, source="runtime")
+		if runtime.stop_after_first_solution:
+			self._assign_parameter(parameters, "stop_after_first_solution", True)
 		parameters.use_lns = bool(runtime.enable_lns)
 		if runtime.enable_trace:
 			parameters.log_search_progress = True

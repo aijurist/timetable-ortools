@@ -348,6 +348,7 @@ def default_constraint_config() -> ConstraintConfig:
         "shift_alignment": ConstraintSetting(priority=8, weight=0.6, enabled=True),
     }
     cross_constraints = {
+        "group_non_overlap": ConstraintSetting(priority=9, weight=1.0, enabled=True),
         "teacher_overlap": ConstraintSetting(priority=10, weight=1.0, enabled=True),
         "lunch_alignment": ConstraintSetting(priority=6, weight=0.4, enabled=True),
         "five_pm_policy": ConstraintSetting(priority=7, weight=0.5, enabled=True),
@@ -379,6 +380,7 @@ def default_runtime_config() -> RuntimeConfig:
         enable_lns=True,
         enable_trace=False,
         solution_limit=None,
+        stop_after_first_solution=False,
     )
 
 

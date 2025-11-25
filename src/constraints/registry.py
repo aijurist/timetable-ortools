@@ -8,6 +8,7 @@ from typing import Callable, Mapping, Sequence
 from ..config.schemas import ConstraintSetting, SchedulerConfig
 from .base import ConstraintMetadata
 from .cross_system.five_pm_policy import build_five_pm_policy_constraint
+from .cross_system.group_non_overlap import build_group_non_overlap_constraint
 from .cross_system.lunch_alignment import build_lunch_alignment_constraint
 from .lab.core_lab import build_core_lab_mapping_constraint
 from .lab.requirements import build_lab_session_coverage_constraint
@@ -102,6 +103,12 @@ THEORY_CONSTRAINT_DEFINITIONS = {
 
 
 CROSS_SYSTEM_CONSTRAINT_DEFINITIONS = {
+	"group_non_overlap": {
+		"title": "Department Group Non-Overlap",
+		"description": "Prevent different groups within the same department-semester from occupying the same lab/theory time.",
+		"factory": build_group_non_overlap_constraint,
+		"tags": ("cross-system", "groups", "conflict"),
+	},
 	"lunch_alignment": {
 		"title": "Unified Lunch Alignment",
 		"description": "Reserve a shared lunch window across lab and theory (flexible departments allowed).",

@@ -470,7 +470,7 @@ constraints:
       priority: 8
       weight: 0.8
       params:
-        slot_limit: 12
+        slot_limit: 15
     shift_alignment:
       enabled: true
       priority: 9
@@ -541,6 +541,11 @@ constraints:
           - SHIFT_1
           - SHIFT_2
   cross_system:
+    group_non_overlap:
+      enabled: true
+      priority: 9
+      weight: 1.0
+      params: {}
     teacher_overlap:
       enabled: true
       priority: 10
@@ -601,8 +606,8 @@ constraints:
           - Mechatronics Engineering_S5
           - Mechatronics Engineering_S7
           - Robotics & Automation
-          - Computer Science & Engineering_S3
         soft_departments:
+          - Computer Science & Engineering_S3
           - Electronics & Communication Engineering_S3
           - Electronics & Communication Engineering_S5
           - Electrical & Electronics Engineering_S5
@@ -629,11 +634,12 @@ model:
   use_sparse_variables: true
 
 runtime:
-  time_limit_sec: 100
+  time_limit_sec: 1000
   thread_count: 16
   enable_lns: true
   enable_trace: false
   solution_limit: null
+  stop_after_first_solution: true
 
 logging:
   level: INFO

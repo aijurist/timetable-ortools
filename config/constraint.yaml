@@ -90,6 +90,11 @@ theory:
 		description: Align theory sessions with department shift windows.
 
 cross_system:
+	group_non_overlap:
+		enabled: true
+		priority: 9
+		weight: 1.0
+		description: Prevent department-semester groups from overlapping across lab and theory slots.
 	teacher_overlap:
 		enabled: true
 		priority: 10

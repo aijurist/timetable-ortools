@@ -16,6 +16,7 @@ from ..models.model_builder import ConstraintModel, ModelBuilder
 from ..runtime.extractor import ScheduleExtractor, ScheduleExtractionResult
 from ..runtime.solver import SolverRunner, SolverResult
 from ..telemetry.slot_caps import SlotCapTelemetryBuilder
+from ..telemetry.teacher_labs import TeacherLabTelemetryBuilder
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +115,7 @@ class PipelineOrchestrator:
 			write_csv=True,
 		)
 		self._write_slot_cap_telemetry(timestamp_dir, self._schedule)
+		self._write_teacher_lab_telemetry(timestamp_dir, self._schedule)
 		return self._schedule
 
 	def run(self) -> ScheduleExtractionResult:
@@ -187,6 +189,17 @@ class PipelineOrchestrator:
 			builder.write(schedule, output_dir / "slot_caps_telemetry.json")
 		except Exception:  # pragma: no cover - telemetry is best-effort
 			logger.exception("Failed to write slot cap telemetry")
+
+	def _write_teacher_lab_telemetry(self, output_dir: Path, schedule: ScheduleExtractionResult) -> None:
+		if not self._model or not schedule:
+			return
+		builder = TeacherLabTelemetryBuilder(
+			constraint_results=self._model.constraint_results,
+		)
+		try:
+			builder.write(schedule, output_dir / "teacher_lab_telemetry.json")
+		except Exception:  # pragma: no cover - telemetry is best-effort
+			logger.exception("Failed to write teacher lab telemetry")
 
 
 __all__ = ["PipelineOrchestrator"]

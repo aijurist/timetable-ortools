@@ -266,6 +266,7 @@ class RuntimeConfig:
     enable_lns: bool = False
     enable_trace: bool = False
     solution_limit: Optional[int] = None
+    stop_after_first_solution: bool = False
 
     def __post_init__(self) -> None:
         if self.time_limit_sec is not None and self.time_limit_sec <= 0:

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Slot Cap Telemetry</title>
+    <title>Teacher Lab Telemetry</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,8 +14,8 @@
 <body>
     <nav class="navbar navbar-expand-lg shadow-sm">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/slot-caps">
-                Slot Cap Telemetry
+            <a class="navbar-brand" href="/teacher-labs">
+                Teacher Lab Telemetry
             </a>
             <div class="ms-auto d-flex flex-wrap gap-3 align-items-center text-white">
                 <div class="text-end me-2">
@@ -25,19 +25,19 @@
                 <div class="d-flex flex-wrap gap-2">
                     <a class="btn btn-sm btn-outline-light" href="/">
                         <i class="fas fa-chart-line me-1"></i>
-                        Analytics Dashboard
+                        Analytics
+                    </a>
+                    <a class="btn btn-sm btn-outline-light" href="/slot-caps">
+                        <i class="fas fa-layer-group me-1"></i>
+                        Slot Caps
                     </a>
                     <a class="btn btn-sm btn-outline-light" href="/schedule">
                         <i class="fas fa-calendar-alt me-1"></i>
-                        Schedule View
+                        Schedule
                     </a>
                     <a class="btn btn-sm btn-outline-light" href="/rooms">
                         <i class="fas fa-door-open me-1"></i>
-                        Room Timetable
-                    </a>
-                    <a class="btn btn-sm btn-outline-light" href="/teacher-labs">
-                        <i class="fas fa-user-clock me-1"></i>
-                        Teacher Telemetry
+                        Rooms
                     </a>
                 </div>
             </div>
@@ -50,23 +50,23 @@
         <section class="row g-3 mb-4">
             <div class="col-12 col-md-6 col-xxl-3">
                 <div class="telemetry-card">
-                    <div class="label">Groups monitored</div>
-                    <div class="value" id="summaryGroupsMonitored">0</div>
-                    <div class="caption">Across core + computing cohorts</div>
+                    <div class="label">Teachers monitored</div>
+                    <div class="value" id="summaryTeachers">0</div>
+                    <div class="caption">Active in current lab schedule</div>
                 </div>
             </div>
             <div class="col-12 col-md-6 col-xxl-3">
                 <div class="telemetry-card">
-                    <div class="label">Groups over limit</div>
-                    <div class="value text-danger" id="summaryGroupsBreached">0</div>
-                    <div class="caption">Triggered slot-cap penalties</div>
+                    <div class="label">Days over daily cap</div>
+                    <div class="value text-danger" id="summaryDaysOverCap">0</div>
+                    <div class="caption">Teacher-days exceeding configured limit</div>
                 </div>
             </div>
             <div class="col-12 col-md-6 col-xxl-3">
                 <div class="telemetry-card">
-                    <div class="label">Semesters over limit</div>
-                    <div class="value text-warning" id="summarySemestersBreached">0</div>
-                    <div class="caption">Non-core semesters breaching</div>
+                    <div class="label">Long consecutive windows</div>
+                    <div class="value text-warning" id="summaryLongRuns">0</div>
+                    <div class="caption">Teacher-days breaching max streak</div>
                 </div>
             </div>
             <div class="col-12 col-md-6 col-xxl-3">
@@ -91,14 +91,14 @@
         <section class="card mb-4">
             <div class="card-header d-flex flex-wrap gap-3 align-items-center">
                 <div>
-                    <h5 class="mb-0">Slot-cap policy overview</h5>
-                    <small class="text-muted">Live parameters pulled from `slot_caps_telemetry.json`.</small>
+                    <h5 class="mb-0">Active teacher policies</h5>
+                    <small class="text-muted">Reflects settings captured from solver constraint details.</small>
                 </div>
             </div>
             <div class="card-body">
-                <div class="row g-3" id="limitCards">
+                <div class="row g-3" id="policyCards">
                     <div class="col-12">
-                        <div class="empty-hint">Loading slot limits…</div>
+                        <div class="empty-hint">Collecting policy data…</div>
                     </div>
                 </div>
             </div>
@@ -107,84 +107,43 @@
         <section class="card mb-4">
             <div class="card-header d-flex flex-wrap gap-3 align-items-center">
                 <div>
-                    <h5 class="mb-0">Group slot usage</h5>
-                    <small class="text-muted">Filter core vs computing cohorts, focus on breaches, or search by department / group.</small>
+                    <h5 class="mb-0">Teacher load overview</h5>
+                    <small class="text-muted">Filter by flags or search to inspect a specific teacher’s day distribution.</small>
                 </div>
                 <div class="ms-auto text-muted small">
-                    Rows: <span id="groupCount">0</span>
+                    Rows: <span id="teacherCount">0</span>
                 </div>
             </div>
             <div class="card-body">
                 <div class="row g-3 mb-3">
-                    <div class="col-12 col-md-3">
-                        <label class="form-label">Group type</label>
-                        <select id="groupTypeFilter" class="form-select">
-                            <option value="all">Core + Computing</option>
-                            <option value="core">Core only</option>
-                            <option value="computing">Computing only</option>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Flag filter</label>
+                        <select id="teacherFlagFilter" class="form-select">
+                            <option value="all">All teachers</option>
+                            <option value="over-cap">Daily cap issues</option>
+                            <option value="consecutive">Consecutive streak issues</option>
                         </select>
                     </div>
-                    <div class="col-12 col-md-3">
-                        <label class="form-label">Status</label>
-                        <select id="breachFilter" class="form-select">
-                            <option value="all">All groups</option>
-                            <option value="breached">Breached only</option>
-                            <option value="healthy">Within limit</option>
-                        </select>
-                    </div>
-                    <div class="col-12 col-md-6">
+                    <div class="col-12 col-md-8">
                         <label class="form-label">Search</label>
-                        <input id="groupSearch" class="form-control" placeholder="Department, semester, group, or slot label" />
+                        <input id="teacherSearch" class="form-control" placeholder="Teacher, department, course or group" />
                     </div>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead>
                             <tr>
-                                <th>Type</th>
-                                <th>Department</th>
-                                <th>Semester</th>
-                                <th>Group</th>
-                                <th>Slots used</th>
-                                <th>Limit</th>
-                                <th>Status</th>
-                                <th>Slots</th>
+                                <th>Teacher</th>
+                                <th>Departments</th>
+                                <th>Total sessions</th>
+                                <th>Flagged days</th>
+                                <th>Longest run</th>
+                                <th>Highlights</th>
                             </tr>
                         </thead>
-                        <tbody id="groupTableBody">
+                        <tbody id="teacherTableBody">
                             <tr>
-                                <td colspan="8" class="text-center py-4 text-muted">Collecting group telemetry…</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <section class="card mb-4">
-            <div class="card-header d-flex flex-wrap gap-3 align-items-center">
-                <div>
-                    <h5 class="mb-0">Semester slot usage (non-core)</h5>
-                    <small class="text-muted">Highlights departments where aggregate semester load breaches the configured cap.</small>
-                </div>
-                <div class="ms-auto text-muted small">Rows: <span id="semesterCount">0</span></div>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead>
-                            <tr>
-                                <th>Department</th>
-                                <th>Semester</th>
-                                <th>Slots used</th>
-                                <th>Limit</th>
-                                <th>Status</th>
-                                <th>Slots</th>
-                            </tr>
-                        </thead>
-                        <tbody id="semesterTableBody">
-                            <tr>
-                                <td colspan="6" class="text-center py-4 text-muted">Waiting for semester telemetry…</td>
+                                <td colspan="6" class="text-center py-4 text-muted">Loading teacher telemetry…</td>
                             </tr>
                         </tbody>
                     </table>
@@ -195,20 +154,51 @@
         <section class="card">
             <div class="card-header d-flex flex-wrap gap-3 align-items-center">
                 <div>
-                    <h5 class="mb-0">Constraint instrumentation</h5>
-                    <small class="text-muted">Live copy of the solver signals used to construct these dashboards.</small>
+                    <h5 class="mb-0">Day-level events</h5>
+                    <small class="text-muted">Inspect precise days that tripped observability flags.</small>
+                </div>
+                <div class="ms-auto text-muted small">
+                    Rows: <span id="dayEventCount">0</span>
                 </div>
             </div>
             <div class="card-body">
-                <div class="row g-3" id="constraintPanel">
-                    <div class="col-12">
-                        <div class="empty-hint">Extracting constraint metadata…</div>
+                <div class="row g-3 mb-3">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Event type</label>
+                        <select id="eventTypeFilter" class="form-select">
+                            <option value="all">All events</option>
+                            <option value="over_daily">Over daily cap</option>
+                            <option value="early_late">Early + late combo</option>
+                            <option value="triple_block">Early-buffer-late</option>
+                            <option value="long_run">Consecutive streak</option>
+                        </select>
                     </div>
+                    <div class="col-12 col-md-8">
+                        <label class="form-label">Search</label>
+                        <input id="daySearch" class="form-control" placeholder="Teacher, day, course or session" />
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Teacher</th>
+                                <th>Day</th>
+                                <th>Sessions</th>
+                                <th>Flags</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dayEventTableBody">
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">Waiting for telemetry…</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </section>
     </main>
 
-    <script src="/static/js/slot_caps_dashboard.js" type="module"></script>
+    <script src="/static/js/teacher_labs_dashboard.js" type="module"></script>
 </body>
 </html>

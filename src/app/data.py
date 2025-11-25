@@ -43,6 +43,7 @@ class ScheduleRepository:
         self._room_cache: Dict[Path, Dict[str, Any]] = {}
         self._metric_cache: Dict[Path, Dict[str, Any]] = {}
         self._slot_cap_cache: Dict[Path, Dict[str, Any]] = {}
+        self._teacher_telemetry_cache: Dict[Path, Dict[str, Any]] = {}
 
     def get_latest_snapshot(self) -> ScheduleSnapshot:
         snapshot = self._scan_latest_snapshot()
@@ -53,6 +54,7 @@ class ScheduleRepository:
             self._room_cache.clear()
             self._metric_cache.clear()
             self._slot_cap_cache.clear()
+            self._teacher_telemetry_cache.clear()
             self._cached_snapshot = snapshot
         return self._cached_snapshot  # type: ignore[return-value]
 
@@ -81,6 +83,12 @@ class ScheduleRepository:
         if snapshot.root not in self._slot_cap_cache:
             self._slot_cap_cache[snapshot.root] = self._load_slot_cap_telemetry(snapshot)
         return self._slot_cap_cache[snapshot.root]
+
+    def get_teacher_lab_telemetry(self) -> Dict[str, Any]:
+        snapshot = self.get_latest_snapshot()
+        if snapshot.root not in self._teacher_telemetry_cache:
+            self._teacher_telemetry_cache[snapshot.root] = self._load_teacher_lab_telemetry(snapshot)
+        return self._teacher_telemetry_cache[snapshot.root]
 
     # ------------------------------------------------------------------
     # Snapshot discovery
@@ -278,6 +286,28 @@ class ScheduleRepository:
                 "computing_groups": [],
                 "semesters": [],
                 "limits": {},
+                "constraints": {},
+            }
+        with telemetry_path.open("r", encoding="utf-8") as handle:
+            return json.load(handle)
+
+    def _load_teacher_lab_telemetry(self, snapshot: ScheduleSnapshot) -> Dict[str, Any]:
+        telemetry_path = snapshot.root / "teacher_lab_telemetry.json"
+        if not telemetry_path.exists():
+            return {
+                "generated_at": None,
+                "policies": {},
+                "summary": {
+                    "teachers_in_schedule": 0,
+                    "days_monitored": 0,
+                    "days_over_daily_cap": 0,
+                    "teachers_over_daily_cap": 0,
+                    "early_late_conflicts": 0,
+                    "triple_blocks": 0,
+                    "teachers_long_consecutive": 0,
+                    "long_consecutive_windows": 0,
+                },
+                "teachers": [],
                 "constraints": {},
             }
         with telemetry_path.open("r", encoding="utf-8") as handle:
