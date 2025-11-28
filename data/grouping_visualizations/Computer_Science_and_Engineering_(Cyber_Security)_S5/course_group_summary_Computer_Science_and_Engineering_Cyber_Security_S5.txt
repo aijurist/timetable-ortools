@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Computer Science & Engineering (Cyber Security)
 Semester: 5
-Generated: 2025-11-26 00:38:42
+Generated: 2025-11-28 23:44:54
 ============================================================
 
 OVERVIEW
@@ -12,11 +12,11 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - CR23531 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G5: 1 teacher assignments
-- CR23532 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G3: 1 teacher assignments
-- CS23432 [Lab + Theory]: 1 groups, 1 teachers
   └─ G2: 1 teacher assignments
+- CR23532 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G5: 1 teacher assignments
+- CS23432 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G3: 1 teacher assignments
 - CS23531 [Lab + Theory]: 1 groups, 1 teachers
   └─ G1: 1 teacher assignments
 - CS23533 [Lab + Theory]: 1 groups, 1 teachers
@@ -26,10 +26,10 @@ GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
   └─ CS23531 [L+T]: 1 instances, 1 teachers
 - G2: 1 courses, 1 teachers
-  └─ CS23432 [L+T]: 1 instances, 1 teachers
+  └─ CR23531 [L+T]: 1 instances, 1 teachers
 - G3: 1 courses, 1 teachers
-  └─ CR23532 [L+T]: 1 instances, 1 teachers
+  └─ CS23432 [L+T]: 1 instances, 1 teachers
 - G4: 1 courses, 1 teachers
   └─ CS23533 [L+T]: 1 instances, 1 teachers
 - G5: 1 courses, 1 teachers
-  └─ CR23531 [L+T]: 1 instances, 1 teachers
+  └─ CR23532 [L+T]: 1 instances, 1 teachers

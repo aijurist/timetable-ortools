@@ -26,6 +26,7 @@ class LabActivity:
 
 @dataclass(frozen=True)
 class TheoryActivity:
+	course_id: str
 	group_id: str
 	slots: Mapping[str, Mapping[int, cp_model.IntVar]]
 
@@ -166,15 +167,17 @@ def _build_teacher_lab_activity(context: ConstraintContext) -> Dict[str, Tuple[L
 
 def _build_teacher_theory_activity(context: ConstraintContext) -> Dict[str, Tuple[TheoryActivity, ...]]:
 	theory_block = context.variables.theory
-	teacher_groups = _resolve_teacher_group_assignments(context)
+	assignments = getattr(theory_block, "assignments", {}) or {}
+	course_requirements = getattr(theory_block, "course_requirements", {}) or {}
+	course_patterns = getattr(theory_block, "course_day_patterns", {}) or {}
 	result: Dict[str, Tuple[TheoryActivity, ...]] = {}
-	for teacher_id, group_ids in teacher_groups.items():
+	for teacher_id, course_map in assignments.items():
 		entries = []
-		for group_id in group_ids:
-			day_map = theory_block.group_timeslots.get(group_id)
-			if not day_map:
+		for course_id, day_map in course_map.items():
+			requirement = course_requirements.get(course_id)
+			if not requirement:
 				continue
-			pattern = theory_block.day_patterns.get(group_id, tuple())
+			pattern = course_patterns.get(course_id, tuple())
 			day_slots: Dict[str, Dict[int, cp_model.IntVar]] = {}
 			for day_idx, slot_map in day_map.items():
 				if not slot_map:
@@ -182,41 +185,16 @@ def _build_teacher_theory_activity(context: ConstraintContext) -> Dict[str, Tupl
 				day_name = _safe_day_name(pattern, day_idx)
 				day_slots[day_name] = dict(slot_map)
 			if day_slots:
-				entries.append(TheoryActivity(group_id=group_id, slots=day_slots))
+				entries.append(
+					TheoryActivity(
+						course_id=course_id,
+						group_id=requirement.group_id,
+						slots=day_slots,
+					)
+				)
 		if entries:
 			result[teacher_id] = tuple(entries)
 	return result
-
-
-def _resolve_teacher_group_assignments(context: ConstraintContext) -> Dict[str, Tuple[str, ...]]:
-	preprocessing = getattr(context.data, "preprocessing", None)
-	mapping: MutableMapping[str, set[str]] = {}
-
-	groups_source = getattr(preprocessing, "groups", None)
-	if isinstance(groups_source, Mapping):
-		for cohort_groups in groups_source.values():
-			for group in cohort_groups:
-				for teacher_id in getattr(group, "teacher_ids", tuple()):
-					teacher_key = str(teacher_id).strip()
-					if teacher_key:
-						mapping.setdefault(teacher_key, set()).add(group.group_id)
-
-	if not mapping:
-		scheduling_packages = getattr(preprocessing, "scheduling_packages", None)
-		if isinstance(scheduling_packages, Mapping):
-			for package in scheduling_packages.values():
-				teacher_workload = getattr(package, "teacher_workload", None)
-				if isinstance(teacher_workload, Mapping):
-					for teacher_id, summary in teacher_workload.items():
-						teacher_key = str(teacher_id).strip()
-						if not teacher_key:
-							continue
-						for group_id in getattr(summary, "groups", tuple()):
-							gid = str(group_id).strip()
-							if gid:
-								mapping.setdefault(teacher_key, set()).add(gid)
-
-	return {teacher: tuple(sorted(group_ids)) for teacher, group_ids in mapping.items() if group_ids}
 
 
 def _build_theory_slot_session_index(context: ConstraintContext) -> Dict[int, Tuple[str, ...]]:
@@ -275,6 +253,7 @@ def _collect_activity_entries(
 					ActivityEntry(
 						literal=slot_literal,
 						kind="theory",
+						course_id=entry.course_id,
 						group_id=entry.group_id,
 					)
 				)

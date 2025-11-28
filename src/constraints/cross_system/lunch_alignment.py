@@ -11,7 +11,7 @@ from ortools.sat.python import cp_model
 from ..base import Constraint, ConstraintMetadata
 from ..context import ConstraintContext
 from ..schema import ConstraintApplicationResult, ConstraintStatus
-from ..utils import build_presence_literal, parse_department_token
+from ..utils import build_presence_literal, parse_department_token, resolve_group_slot_map
 
 DepartmentToken = Tuple[str, Optional[int]]
 
@@ -132,8 +132,9 @@ class LunchAlignmentConstraint(Constraint):
 	def apply(self, context: ConstraintContext) -> ConstraintApplicationResult:
 		config = LunchAlignmentConfig.from_context(context, self.params)
 		theory_block = context.variables.theory
+		group_slot_map = resolve_group_slot_map(context)
 		lab_block = context.variables.lab
-		if not theory_block.requirements:
+		if not theory_block.requirements or not group_slot_map:
 			return ConstraintApplicationResult(
 				name=self.metadata.name,
 				domain=self.metadata.category,
@@ -156,7 +157,7 @@ class LunchAlignmentConstraint(Constraint):
 			window = tuple(requirement.lunch_slot_window or config.fallback_window)
 			if not window:
 				continue
-			day_map = theory_block.group_timeslots.get(group_id)
+			day_map = group_slot_map.get(group_id)
 			if not day_map:
 				continue
 			if config.is_flexible(requirement.department, requirement.semester):

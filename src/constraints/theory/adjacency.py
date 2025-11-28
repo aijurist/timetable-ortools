@@ -7,6 +7,7 @@ from typing import Mapping, Optional
 from ..base import Constraint, ConstraintMetadata
 from ..context import ConstraintContext
 from ..schema import ConstraintApplicationResult, ConstraintStatus
+from ..utils import resolve_group_slot_map
 
 
 class NoThreeConsecutiveSlotsConstraint(Constraint):
@@ -23,10 +24,20 @@ class NoThreeConsecutiveSlotsConstraint(Constraint):
 	def apply(self, context: ConstraintContext) -> ConstraintApplicationResult:
 		model = context.model
 		theory_block = context.variables.theory
+		group_slot_map = resolve_group_slot_map(context)
+		if not group_slot_map:
+			return ConstraintApplicationResult(
+				name=self.metadata.name,
+				domain=self.metadata.category,
+				priority=self.metadata.priority,
+				enabled=True,
+				status=ConstraintStatus.SKIPPED,
+				details={"reason": "no theory groups available"},
+			)
 		num_slots = len(theory_block.theory_slot_labels)
 		blocked_sequences = 0
 
-		for group_id, day_map in theory_block.group_timeslots.items():
+		for group_id, day_map in group_slot_map.items():
 			for day_idx, slot_map in day_map.items():
 				for start_slot in range(0, max(0, num_slots - (self._window - 1))):
 					sequence = [

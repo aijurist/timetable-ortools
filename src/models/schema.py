@@ -5,6 +5,8 @@ from dataclasses import dataclass, field
 from typing import Dict, Mapping,Optional, Tuple
 
 LabAssignmentDict = Dict[str, Dict[str, Dict[int, Dict[str, Dict[str, cp_model.IntVar]]]]]
+TheoryAssignmentDict = Dict[str, Dict[str, Dict[int, Dict[int, cp_model.IntVar]]]]
+TheoryRoomAssignmentDict = Dict[str, Dict[str, Dict[int, Dict[int, Dict[str, cp_model.IntVar]]]]]
 GroupTimeslotDict = Dict[str, Dict[int, Dict[int, cp_model.IntVar]]]
 
 @dataclass(frozen=True)
@@ -17,6 +19,23 @@ class LabCourseRequirement:
 	semester: int
 	practical_hours: int
 	required_sessions: int
+	student_count: int
+	preferred_room_type: Optional[str]
+	required_room_type: Optional[str]
+	tags: Tuple[str, ...] = field(default_factory=tuple)
+
+
+@dataclass(frozen=True)
+class TheoryCourseRequirement:
+	course_instance_id: str
+	course_code: str
+	group_id: str
+	teacher_id: str
+	department: str
+	semester: int
+	required_slots: int
+	lecture_hours: int
+	tutorial_hours: int
 	student_count: int
 	preferred_room_type: Optional[str]
 	required_room_type: Optional[str]
@@ -61,10 +80,18 @@ class LabVariableBlock:
 
 @dataclass
 class TheoryVariableBlock:
-	group_timeslots: GroupTimeslotDict
-	requirements: Mapping[str, GroupTimeslotRequirement]
-	day_patterns: Mapping[str, Tuple[str, ...]]
-	theory_slot_labels: Tuple[str, ...]
+	assignments: TheoryAssignmentDict = field(default_factory=dict)
+	room_assignments: TheoryRoomAssignmentDict = field(default_factory=dict)
+	course_requirements: Mapping[str, TheoryCourseRequirement] = field(default_factory=dict)
+	teacher_courses: Mapping[str, Tuple[str, ...]] = field(default_factory=dict)
+	course_day_patterns: Mapping[str, Tuple[str, ...]] = field(default_factory=dict)
+	group_timeslots: GroupTimeslotDict = field(default_factory=dict)
+	requirements: Mapping[str, GroupTimeslotRequirement] = field(default_factory=dict)
+	day_patterns: Mapping[str, Tuple[str, ...]] = field(default_factory=dict)
+	theory_slot_labels: Tuple[str, ...] = field(default_factory=tuple)
+	group_course_index: Mapping[str, Tuple[str, ...]] = field(default_factory=dict)
+	instance_group_lookup: Mapping[str, str] = field(default_factory=dict)
+	room_ids: Tuple[str, ...] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True)

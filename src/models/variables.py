@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import math
 from collections import defaultdict
-from typing import Dict, Mapping, MutableMapping, Optional, Tuple
+from typing import Any, Dict, Mapping, MutableMapping, Optional, Sequence, Tuple
 
 from ortools.sat.python import cp_model
 
@@ -17,11 +17,14 @@ from ..data.schemas import (
 )
 
 from .schema import (
-	LabCourseRequirement, 
-	GroupTimeslotRequirement, 
-	LabVariableBlock, 
-	TheoryVariableBlock, 
-	VariableCreationResult)
+	LabCourseRequirement,
+	GroupTimeslotRequirement,
+	LabVariableBlock,
+	TheoryAssignmentDict,
+	TheoryCourseRequirement,
+	TheoryVariableBlock,
+	VariableCreationResult,
+)
 
 LabAssignmentDict = Dict[str, Dict[str, Dict[int, Dict[str, Dict[str, cp_model.IntVar]]]]]
 GroupTimeslotDict = Dict[str, Dict[int, Dict[int, cp_model.IntVar]]]
@@ -45,6 +48,7 @@ class VariableCreator:
 		self._group_requirement_index = self._build_group_requirement_index()
 		self._day_pattern_cache: Dict[str, Tuple[str, ...]] = {}
 		self._lab_room_ids = tuple(str(room_id) for room_id in data.raw.rooms.lab_room_ids)
+		self._theory_room_ids = tuple(str(room_id) for room_id in getattr(data.raw.rooms, "theory_room_ids", tuple()))
 		self._theory_slot_labels = tuple(str(label) for label in data.raw.time.theory_slots)
 		self._lab_session_names = tuple(data.raw.time.lab_sessions.keys())
 
@@ -57,13 +61,17 @@ class VariableCreator:
 		metadata = {
 			"lab_courses": len(lab_block.requirements),
 			"lab_teachers": len(lab_block.teacher_courses),
+			"theory_courses": len(theory_block.course_requirements),
+			"theory_teachers": len(theory_block.teacher_courses),
 			"groups": len(theory_block.requirements),
 		}
 
 		self._logger.info(
-			"VariableCreator initialised %s lab courses across %s teachers and %s groups",
+			"VariableCreator initialised %s lab courses across %s teachers and %s theory courses across %s teachers spanning %s groups",
 			metadata["lab_courses"],
 			metadata["lab_teachers"],
+			metadata["theory_courses"],
+			metadata["theory_teachers"],
 			metadata["groups"],
 		)
 
@@ -107,11 +115,59 @@ class VariableCreator:
 		)
 
 	def _create_theory_variables(self, model: cp_model.CpModel) -> TheoryVariableBlock:
-		requirements = self._build_group_timeslot_requirements()
+		group_requirements = self._build_group_timeslot_requirements()
+		course_requirements = self._build_theory_course_requirements()
+		assignments: TheoryAssignmentDict = {}
+		room_assignments: Dict[str, Dict[str, Dict[int, Dict[int, Dict[str, cp_model.IntVar]]]]] = {}
+		teacher_courses: Dict[str, Tuple[str, ...]] = {}
+		course_day_patterns: Dict[str, Tuple[str, ...]] = {}
+		group_course_buffer: MutableMapping[str, set[str]] = defaultdict(set)
+		group_slot_sources: MutableMapping[
+			str,
+			MutableMapping[int, MutableMapping[int, list[cp_model.IntVar]]],
+		] = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+
+		for teacher_id, course_list in self._group_requirements_by_teacher(course_requirements).items():
+			assignments[teacher_id] = {}
+			room_assignments[teacher_id] = {}
+			teacher_courses[teacher_id] = tuple(req.course_instance_id for req in course_list)
+			for requirement in course_list:
+				course_id = requirement.course_instance_id
+				course_vars: Dict[int, Dict[int, cp_model.IntVar]] = {}
+				room_course_vars: Dict[int, Dict[int, Dict[str, cp_model.IntVar]]] = {}
+				assignments[teacher_id][course_id] = course_vars
+				room_assignments[teacher_id][course_id] = room_course_vars
+				pattern = self._resolve_day_pattern(requirement.department)
+				course_day_patterns[course_id] = pattern
+				group_course_buffer[requirement.group_id].add(course_id)
+				for day_index, _ in enumerate(pattern):
+					slot_map: Dict[int, cp_model.IntVar] = {}
+					room_day_map: Dict[int, Dict[str, cp_model.IntVar]] = {}
+					course_vars[day_index] = slot_map
+					room_course_vars[day_index] = {}
+					for slot_index, _ in enumerate(self._theory_slot_labels):
+						var_name = (
+							f"theory_{teacher_id}_{course_id}_d{day_index}_s{slot_index}"
+						)
+						literal = model.NewBoolVar(var_name)
+						slot_map[slot_index] = literal
+						room_bucket: Dict[str, cp_model.IntVar] = {}
+						if self._theory_room_ids:
+							for room_id in self._theory_room_ids:
+								room_var = model.NewBoolVar(
+									f"theory_{teacher_id}_{course_id}_d{day_index}_s{slot_index}_r{room_id}"
+								)
+								room_bucket[room_id] = room_var
+							model.Add(sum(room_bucket.values()) == literal)
+						else:
+							model.Add(literal == 0)
+						room_day_map = room_course_vars[day_index]
+						room_day_map[slot_index] = room_bucket
+						group_slot_sources[requirement.group_id][day_index][slot_index].append(literal)
+
 		group_timeslots: GroupTimeslotDict = {}
 		day_patterns: Dict[str, Tuple[str, ...]] = {}
-
-		for group_id, requirement in requirements.items():
+		for group_id, requirement in group_requirements.items():
 			pattern = requirement.day_pattern or self._default_day_pattern()
 			day_patterns[group_id] = pattern
 			group_timeslots[group_id] = {}
@@ -119,13 +175,37 @@ class VariableCreator:
 				group_timeslots[group_id][day_index] = {}
 				for slot_index, _ in enumerate(self._theory_slot_labels):
 					var_name = f"grp_{group_id}_d{day_index}_t{slot_index}"
-					group_timeslots[group_id][day_index][slot_index] = model.NewBoolVar(var_name)
+					group_var = model.NewBoolVar(var_name)
+					group_timeslots[group_id][day_index][slot_index] = group_var
+					sources = (
+						group_slot_sources.get(group_id, {})
+						.get(day_index, {})
+						.get(slot_index, [])
+					)
+					if sources:
+						model.Add(sum(sources) >= group_var)
+						model.Add(sum(sources) <= len(sources) * group_var)
+					else:
+						model.Add(group_var == 0)
+
+		group_course_index = {
+			group_id: tuple(sorted(course_ids))
+			for group_id, course_ids in group_course_buffer.items()
+		}
 
 		return TheoryVariableBlock(
+			assignments=assignments,
+			room_assignments=room_assignments,
+			course_requirements=course_requirements,
+			teacher_courses=teacher_courses,
+			course_day_patterns=course_day_patterns,
 			group_timeslots=group_timeslots,
-			requirements=requirements,
+			requirements=group_requirements,
 			day_patterns=day_patterns,
 			theory_slot_labels=self._theory_slot_labels,
+			group_course_index=group_course_index,
+			instance_group_lookup=self._instance_group_lookup,
+			room_ids=self._theory_room_ids,
 		)
 
 	def _build_lab_course_requirements(self) -> Dict[str, LabCourseRequirement]:
@@ -154,16 +234,50 @@ class VariableCreator:
 			)
 		return requirements
 
+	def _build_theory_course_requirements(self) -> Dict[str, TheoryCourseRequirement]:
+		requirements: Dict[str, TheoryCourseRequirement] = {}
+		for instance_id, instance in self._instance_index.items():
+			if not instance.has_theory:
+				continue
+			required_slots = max(instance.lecture_hours + instance.tutorial_hours, 0)
+			if required_slots <= 0:
+				continue
+			group = self._instance_group_index.get(instance_id)
+			if not group:
+				self._logger.debug("Skipping theory instance %s without group assignment", instance_id)
+				continue
+			requirements[instance_id] = TheoryCourseRequirement(
+				course_instance_id=instance_id,
+				course_code=instance.course_code,
+				group_id=group.group_id,
+				teacher_id=instance.teacher_id,
+				department=instance.student_dept,
+				semester=instance.semester,
+				required_slots=required_slots,
+				lecture_hours=max(instance.lecture_hours, 0),
+				tutorial_hours=max(instance.tutorial_hours, 0),
+				student_count=instance.student_count,
+				preferred_room_type=instance.preferred_room_type,
+				required_room_type=instance.required_room_type,
+				tags=instance.tags,
+			)
+		return requirements
+
 	def _group_requirements_by_teacher(
 		self,
-		requirements: Mapping[str, LabCourseRequirement],
-	) -> Dict[str, Tuple[LabCourseRequirement, ...]]:
-		grouped: Dict[str, Tuple[LabCourseRequirement, ...]] = {}
+		requirements: Mapping[str, Any],
+	) -> Dict[str, Tuple[Any, ...]]:
+		grouped: Dict[str, Tuple[Any, ...]] = {}
 		buffer: MutableMapping[str, list] = defaultdict(list)
 		for requirement in requirements.values():
-			buffer[requirement.teacher_id].append(requirement)
+			teacher_id = getattr(requirement, "teacher_id", None)
+			if not teacher_id:
+				continue
+			buffer[str(teacher_id)].append(requirement)
 		for teacher_id, entries in buffer.items():
-			grouped[teacher_id] = tuple(sorted(entries, key=lambda item: item.course_instance_id))
+			grouped[teacher_id] = tuple(
+				sorted(entries, key=lambda item: getattr(item, "course_instance_id", ""))
+			)
 		return grouped
 
 	def _build_group_timeslot_requirements(self) -> Dict[str, GroupTimeslotRequirement]:
@@ -235,6 +349,7 @@ __all__ = [
 	"LabVariableBlock",
 	"TheoryVariableBlock",
 	"LabCourseRequirement",
+	"TheoryCourseRequirement",
 	"GroupTimeslotRequirement",
 	"VariableCreationResult",
 	"VariableCreator",

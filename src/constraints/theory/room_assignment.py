@@ -1,0 +1,397 @@
+"""Theory classroom assignment constraint covering block policies and room tiering."""
+
+from __future__ import annotations
+
+from collections import defaultdict
+from dataclasses import dataclass
+from typing import Dict, Iterable, Mapping, MutableMapping, Optional, Sequence, Tuple
+
+from ortools.sat.python import cp_model
+
+from ..base import Constraint, ConstraintMetadata
+from ..context import ConstraintContext
+from ..schema import ConstraintApplicationResult, ConstraintStatus
+from ..utils import iter_theory_room_variables, register_objective_penalty
+
+
+@dataclass(frozen=True)
+class RoomInventory:
+	block_capacity: Mapping[str, int]
+	big_block_capacity: Mapping[str, int]
+	small_block_capacity: Mapping[str, int]
+	blocks: Tuple[str, ...]
+	total_rooms: int
+	rooms_by_block: Mapping[str, Tuple[Mapping[str, object], ...]]
+	room_index: Mapping[str, Mapping[str, object]]
+
+
+@dataclass(frozen=True)
+class CoursePolicy:
+	allowed_blocks: Tuple[str, ...]
+	primary_block: Optional[str]
+	is_big_course: bool
+	allowed_rooms: Tuple[str, ...]
+
+
+class TheoryClassroomAssignmentConstraint(Constraint):
+	"""Assign theory sessions to block buckets while honoring 140-capacity prioritisation."""
+
+	def __init__(self, metadata: ConstraintMetadata, params: Optional[Mapping[str, object]] = None) -> None:
+		super().__init__(metadata, params=params)
+		settings = dict(params or {})
+		self._big_threshold = max(1, int(settings.get("big_capacity_threshold", 140)))
+		self._overflow_penalty = max(0, int(settings.get("overflow_penalty", 5)))
+		self._default_blocks = self._normalise_block_list(settings.get("default_blocks") or ("A Block", "B Block", "C Block"))
+		self._senior_blocks = self._normalise_block_list(settings.get("senior_blocks") or ("A Block", "B Block"))
+		self._second_year_blocks = self._normalise_block_list(settings.get("second_year_blocks") or ("B Block", "C Block"))
+		self._year_block_preferences = self._build_year_block_preferences(settings.get("year_block_preferences"))
+
+	def apply(self, context: ConstraintContext) -> ConstraintApplicationResult:
+		inventory = self._build_inventory(context)
+		theory_block = context.variables.theory
+		if inventory.total_rooms == 0 or not getattr(theory_block, "course_requirements", {}):
+			return self._result(ConstraintStatus.SKIPPED, {"reason": "no_theory_rooms"})
+
+		course_policies = self._build_course_policies(theory_block.course_requirements, inventory)
+		if not course_policies:
+			return self._result(ConstraintStatus.SKIPPED, {"reason": "no_course_policies"})
+
+		stats = self._assign_blocks(context, course_policies, inventory)
+		status = ConstraintStatus.APPLIED if any(
+			stats[key] for key in ("active_literals", "room_conflict_constraints", "penalties", "disabled_literals")
+		) else ConstraintStatus.SKIPPED
+		return self._result(status, {
+			"rooms": inventory.total_rooms,
+			"blocks": len(inventory.blocks),
+			"enabled_literals": stats["active_literals"],
+			"disabled_literals": stats["disabled_literals"],
+			"room_conflict_constraints": stats["room_conflict_constraints"],
+			"overflow_penalties": stats["penalties"],
+		})
+
+	def _assign_blocks(
+		self,
+		context: ConstraintContext,
+		course_policies: Mapping[str, CoursePolicy],
+		inventory: RoomInventory,
+	) -> Mapping[str, int]:
+		model = context.model
+		room_lookup = inventory.room_index
+		room_slot_usage: MutableMapping[Tuple[str, int, int], list[cp_model.IntVar]] = defaultdict(list)
+		stats = {
+			"active_literals": 0,
+			"disabled_literals": 0,
+			"room_conflict_constraints": 0,
+			"penalties": 0,
+		}
+
+		for _tid, course_id, day_idx, slot_idx, room_id, var in iter_theory_room_variables(context):
+			policy = course_policies.get(course_id)
+			room_meta = room_lookup.get(str(room_id))
+			if (
+				not policy
+				or not policy.allowed_rooms
+				or room_meta is None
+				or str(room_id) not in policy.allowed_rooms
+			):
+				model.Add(var == 0)
+				stats["disabled_literals"] += 1
+				continue
+			if (
+				policy.is_big_course
+				and self._safe_int(room_meta.get("capacity")) is not None
+				and self._safe_int(room_meta.get("capacity")) < self._big_threshold
+			):
+				model.Add(var == 0)
+				stats["disabled_literals"] += 1
+				continue
+			stats["active_literals"] += 1
+			room_slot_usage[(str(room_id), day_idx, slot_idx)].append(var)
+			block = room_meta.get("block") or room_meta.get("Block") or room_meta.get("building")
+			block_label = self._normalise_block(block)
+			if self._overflow_penalty and policy.primary_block and block_label != policy.primary_block:
+				register_objective_penalty(context, var, weight=self._overflow_penalty, tag="block_overflow")
+				stats["penalties"] += 1
+
+		for vars_list in room_slot_usage.values():
+			if len(vars_list) <= 1:
+				continue
+			model.Add(sum(vars_list) <= 1)
+			stats["room_conflict_constraints"] += 1
+
+		return stats
+
+
+	def _build_course_policies(
+		self,
+		course_requirements: Mapping[str, object],
+		inventory: RoomInventory,
+	) -> Mapping[str, CoursePolicy]:
+		policies: Dict[str, CoursePolicy] = {}
+		for course_id, requirement in course_requirements.items():
+			semester = getattr(requirement, "semester", None)
+			student_count = getattr(requirement, "student_count", 0) or 0
+			allowed = self._resolve_allowed_blocks(semester, inventory)
+			if not allowed:
+				continue
+			is_big = student_count >= self._big_threshold
+			primary = self._resolve_primary_block(semester, allowed)
+			candidate_rooms: list[str] = []
+			for block in allowed:
+				for room in inventory.rooms_by_block.get(block, tuple()):
+					room_id = str(room.get("room_id")) if isinstance(room, Mapping) else None
+					if room_id:
+						candidate_rooms.append(room_id)
+			if not candidate_rooms:
+				candidate_rooms = list(inventory.room_index.keys())
+			filtered_rooms: Tuple[str, ...]
+			if is_big:
+				sized = tuple(
+					room_id
+					for room_id in candidate_rooms
+					if self._safe_int(inventory.room_index.get(room_id, {}).get("capacity"))
+					and self._safe_int(inventory.room_index.get(room_id, {}).get("capacity")) >= self._big_threshold
+				)
+				filtered_rooms = sized or tuple(candidate_rooms)
+			else:
+				small_only = tuple(
+					room_id
+					for room_id in candidate_rooms
+					if self._safe_int(inventory.room_index.get(room_id, {}).get("capacity")) is None
+					or self._safe_int(inventory.room_index.get(room_id, {}).get("capacity")) < self._big_threshold
+				)
+				filtered_rooms = small_only
+			policies[course_id] = CoursePolicy(
+				allowed_blocks=allowed,
+				primary_block=primary,
+				is_big_course=is_big,
+				allowed_rooms=filtered_rooms,
+			)
+		return policies
+
+	def _build_inventory(self, context: ConstraintContext) -> RoomInventory:
+		rooms_payload = getattr(context.data.raw, "rooms", None)
+		room_registry = getattr(context.data.raw, "room_registry", None) or {}
+		if not rooms_payload:
+			return RoomInventory({}, {}, {}, tuple(), 0, {}, {})
+		theory_room_ids = tuple(getattr(rooms_payload, "theory_room_ids", tuple()) or tuple())
+		if not theory_room_ids:
+			return RoomInventory({}, {}, {}, tuple(), 0, {}, {})
+
+		block_capacity: Dict[str, int] = {}
+		big_capacity: Dict[str, int] = {}
+		small_capacity: Dict[str, int] = {}
+		room_details: Dict[str, list[Mapping[str, object]]] = defaultdict(list)
+		room_lookup: Dict[str, Mapping[str, object]] = {}
+		total = 0
+
+		for room_id in theory_room_ids:
+			meta = room_registry.get(room_id)
+			if not isinstance(meta, Mapping):
+				continue
+			block = self._normalise_block(meta.get("block") or meta.get("Block") or meta.get("building"))
+			capacity = self._safe_int(
+				meta.get("room_max_cap")
+				or meta.get("capacity")
+				or meta.get("room_capacity")
+				or meta.get("max_capacity")
+			)
+			if capacity is None or capacity <= 0:
+				continue
+			total += 1
+			block_capacity[block] = block_capacity.get(block, 0) + 1
+			if capacity >= self._big_threshold:
+				big_capacity[block] = big_capacity.get(block, 0) + 1
+			else:
+				small_capacity[block] = small_capacity.get(block, 0) + 1
+			room_payload = {
+				"room_id": str(room_id),
+				"room_number": self._coalesce_room_number(meta, room_id),
+				"capacity": capacity,
+				"block": block,
+				"metadata": dict(meta),
+			}
+			room_details[block].append(room_payload)
+			room_lookup[str(room_id)] = room_payload
+
+		for block, count in block_capacity.items():
+			small_capacity.setdefault(block, max(0, count - big_capacity.get(block, 0)))
+			big_capacity.setdefault(block, big_capacity.get(block, 0))
+
+		return RoomInventory(
+			block_capacity=block_capacity,
+			big_block_capacity=big_capacity,
+			small_block_capacity=small_capacity,
+			blocks=tuple(block_capacity.keys()),
+			total_rooms=total,
+			rooms_by_block={block: tuple(details) for block, details in room_details.items()},
+			room_index=room_lookup,
+		)
+
+	def _resolve_allowed_blocks(self, semester: Optional[int], inventory: RoomInventory) -> Tuple[str, ...]:
+		if not inventory.blocks:
+			return tuple()
+		candidate = self._default_blocks
+		if semester is not None:
+			if semester >= 5:
+				candidate = self._senior_blocks or candidate
+			elif semester in (3, 4):
+				candidate = self._second_year_blocks or candidate
+		allowed = tuple(block for block in candidate if block in inventory.block_capacity)
+		if allowed:
+			return allowed
+		return inventory.blocks
+
+	def _resolve_primary_block(self, semester: Optional[int], allowed: Sequence[str]) -> Optional[str]:
+		year = self._semester_to_year(semester)
+		preference_order: list[Tuple[str, ...]] = []
+		if year is not None:
+			year_prefs = self._year_block_preferences.get(year)
+			if year_prefs:
+				preference_order.append(year_prefs)
+		if semester is not None:
+			if semester >= 5:
+				preference_order.append(self._senior_blocks)
+			elif semester in (3, 4):
+				preference_order.append(self._second_year_blocks)
+		for block_list in preference_order:
+			block = self._first_available_block(block_list, allowed)
+			if block:
+				return block
+		return None
+
+	@staticmethod
+	def _first_available_block(candidates: Sequence[str], allowed: Sequence[str]) -> Optional[str]:
+		if not candidates or not allowed:
+			return None
+		allowed_set = set(allowed)
+		for block in candidates:
+			if block in allowed_set:
+				return block
+		return None
+
+	def _result(self, status: str, details: Mapping[str, object]) -> ConstraintApplicationResult:
+		return ConstraintApplicationResult(
+			name=self.metadata.name,
+			domain=self.metadata.category,
+			priority=self.metadata.priority,
+			enabled=True,
+			status=status,
+			details=dict(details),
+		)
+
+	@staticmethod
+	def _normalise_block(value: object) -> str:
+		if value is None:
+			return "Unknown Block"
+		text = str(value).strip()
+		if not text:
+			return "Unknown Block"
+		upper = text.upper()
+		mapping = {
+			"A": "A Block",
+			"A BLOCK": "A Block",
+			"BLOCK A": "A Block",
+			"ADMIN": "A Block",
+			"ADMIN BLOCK": "A Block",
+			"B": "B Block",
+			"B BLOCK": "B Block",
+			"BLOCK B": "B Block",
+			"C": "C Block",
+			"C BLOCK": "C Block",
+			"BLOCK C": "C Block",
+		}
+		if upper in mapping:
+			return mapping[upper]
+		if upper.startswith("A"):
+			return "A Block"
+		if upper.startswith("B"):
+			return "B Block"
+		if upper.startswith("C"):
+			return "C Block"
+		return text.title()
+
+	@staticmethod
+	def _normalise_block_list(values: Iterable[object]) -> Tuple[str, ...]:
+		seen = set()
+		result = []
+		for value in values:
+			block = TheoryClassroomAssignmentConstraint._normalise_block(value)
+			if block in seen:
+				continue
+			seen.add(block)
+			result.append(block)
+		return tuple(result)
+
+	def _build_year_block_preferences(self, raw_preferences: Optional[Mapping[object, object]]) -> Mapping[int, Tuple[str, ...]]:
+		defaults = {
+			2: ("B Block",),
+			3: ("A Block",),
+			4: ("A Block",),
+		}
+		if not raw_preferences:
+			return defaults
+		preferences = dict(defaults)
+		for year_key, blocks in raw_preferences.items():
+			try:
+				year = int(year_key)
+			except (TypeError, ValueError):
+				continue
+			candidate_blocks: Tuple[str, ...]
+			if isinstance(blocks, str):
+				candidate_blocks = self._normalise_block_list((blocks,))
+			else:
+				candidate_blocks = self._normalise_block_list(blocks)
+			if candidate_blocks:
+				preferences[year] = candidate_blocks
+		return preferences
+
+	@staticmethod
+	def _semester_to_year(semester: Optional[int]) -> Optional[int]:
+		if semester is None:
+			return None
+		try:
+			value = int(semester)
+		except (TypeError, ValueError):
+			return None
+		if value <= 0:
+			return None
+		return (value + 1) // 2
+
+	@staticmethod
+	def _safe_int(value: object) -> Optional[int]:
+		if value is None:
+			return None
+		try:
+			return int(round(float(value)))
+		except (TypeError, ValueError):
+			return None
+
+	@staticmethod
+	def _coalesce_room_number(metadata: Mapping[str, object], room_id: object) -> str:
+		candidates = ("room_number", "room_no", "name", "RoomNumber")
+		for key in candidates:
+			value = metadata.get(key) if isinstance(metadata, Mapping) else None
+			if value:
+				text = str(value).strip()
+				if text:
+					return text
+		return str(room_id)
+
+	@staticmethod
+	def _slug(block: str) -> str:
+		return block.lower().replace(" ", "_")
+
+
+def build_theory_room_assignment_constraint(
+	metadata: ConstraintMetadata,
+	*,
+	params: Optional[Mapping[str, object]] = None,
+) -> TheoryClassroomAssignmentConstraint:
+	return TheoryClassroomAssignmentConstraint(metadata=metadata, params=params)
+
+
+__all__ = [
+	"TheoryClassroomAssignmentConstraint",
+	"build_theory_room_assignment_constraint",
+]

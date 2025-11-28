@@ -31,6 +31,7 @@ from src.models.schema import (
     GroupTimeslotRequirement,
     LabCourseRequirement,
     LabVariableBlock,
+    TheoryCourseRequirement,
     TheoryVariableBlock,
     VariableCreationResult,
 )
@@ -74,9 +75,9 @@ def build_extended_container() -> ExtendedDataContainer:
     )
     room_collections = RoomCollections(
         lab_rooms=pd.DataFrame({"id": ["Lab1"]}),
-        theory_rooms=pd.DataFrame({"id": ["T1"]}),
+        theory_rooms=pd.DataFrame({"id": ["A202"]}),
         lab_room_ids=("Lab1",),
-        theory_room_ids=("T1",),
+        theory_room_ids=("A202",),
         laboratory_room_ids=("Lab1",),
     )
     config = default_scheduler_config()
@@ -92,7 +93,10 @@ def build_extended_container() -> ExtendedDataContainer:
         rooms=room_collections,
         teachers=("t1",),
         departments_list=("Engineering",),
-        room_registry={},
+        room_registry={
+            "Lab1": {"room_number": "Lab1", "block": "Lab Block", "capacity": 30},
+            "A202": {"room_number": "A202", "block": "A Block", "capacity": 70},
+        },
         load_timestamp=datetime.utcnow(),
     )
     dept_key = DepartmentSemesterKey("Engineering", 3)
@@ -111,7 +115,7 @@ def build_extended_container() -> ExtendedDataContainer:
         assistant_teacher_name=None,
         has_lab=True,
         has_theory=True,
-        lecture_hours=2,
+        lecture_hours=1,
         tutorial_hours=0,
         practical_hours=2,
         student_count=60,
@@ -133,7 +137,7 @@ def build_extended_container() -> ExtendedDataContainer:
         theory_instances=1,
         total_student_count=60,
         lab_hours=2,
-        theory_hours=2,
+        theory_hours=1,
     )
     course_group = CourseGroup(
         key=dept_key,
@@ -163,9 +167,9 @@ def build_extended_container() -> ExtendedDataContainer:
         groups=("G1",),
         course_codes=("CS101",),
         course_instance_ids=("C1",),
-        total_hours=4,
+        total_hours=3,
         lab_hours=2,
-        theory_hours=2,
+        theory_hours=1,
         total_students=60,
     )
     scheduling_package = DepartmentSchedulingPackage(
@@ -189,7 +193,9 @@ def build_constraint_model() -> ConstraintModel:
     data = build_extended_container()
     model = cp_model.CpModel()
     lab_var = model.NewBoolVar("lab_t1_C1_d0_L1_Lab1")
-    theory_var = model.NewBoolVar("grp_G1_d0_t1")
+    theory_var = model.NewBoolVar("grp_G1_d0_t0")
+    theory_room_var = model.NewBoolVar("theory_t1_C1_d1_s0_A202")
+    model.Add(theory_room_var == theory_var)
     lab_block = LabVariableBlock(
         assignments={"t1": {"C1": {0: {"L1": {"Lab1": lab_var}}}}},
         requirements={
@@ -215,6 +221,27 @@ def build_constraint_model() -> ConstraintModel:
         instance_group_lookup={"C1": "G1"},
     )
     theory_block = TheoryVariableBlock(
+        assignments={"t1": {"C1": {1: {0: theory_var}}}},
+        room_assignments={"t1": {"C1": {1: {0: {"A202": theory_room_var}}}}},
+        course_requirements={
+            "C1": TheoryCourseRequirement(
+                course_instance_id="C1",
+                course_code="CS101",
+                group_id="G1",
+                teacher_id="t1",
+                department="Engineering",
+                semester=3,
+                required_slots=1,
+                lecture_hours=1,
+                tutorial_hours=0,
+                student_count=60,
+                preferred_room_type=None,
+                required_room_type=None,
+                tags=tuple(),
+            )
+        },
+        teacher_courses={"t1": ("C1",)},
+        course_day_patterns={"C1": ("monday", "tuesday")},
         group_timeslots={"G1": {1: {0: theory_var}}},
         requirements={
             "G1": GroupTimeslotRequirement(
@@ -231,6 +258,9 @@ def build_constraint_model() -> ConstraintModel:
         },
         day_patterns={"G1": ("monday", "tuesday")},
         theory_slot_labels=("08:00-09:00", "09:00-10:00"),
+        group_course_index={"G1": ("C1",)},
+        instance_group_lookup={"C1": "G1"},
+        room_ids=("A202",),
     )
     variables = VariableCreationResult(lab=lab_block, theory=theory_block, metadata={})
     return ConstraintModel(
@@ -238,13 +268,15 @@ def build_constraint_model() -> ConstraintModel:
         variables=variables,
         constraint_results=tuple(),
         metadata={},
+        extras={},
     )
 
 
 def build_solver_result(model: cp_model.CpModel) -> SolverResult:
     response = cp_model_pb2.CpSolverResponse()
     response.status = cp_model.OPTIMAL
-    response.solution.extend([1, 1])
+    variable_count = len(model.Proto().variables)
+    response.solution.extend([1] * variable_count)
     return SolverResult(
         status="OPTIMAL",
         status_code=cp_model.OPTIMAL,

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Iterator, Mapping, MutableMapping, Optional, Sequence, Tuple
+from collections import defaultdict
+from typing import Dict, Iterator, Mapping, MutableMapping, Optional, Sequence, Tuple
 
 from ortools.sat.python import cp_model
 
@@ -12,6 +13,8 @@ from .context import ConstraintContext
 
 LabSessionVarTuple = Tuple[str, str, int, str, str, cp_model.IntVar]
 GroupSlotVarTuple = Tuple[str, int, int, cp_model.IntVar]
+TheorySlotVarTuple = Tuple[str, str, int, int, cp_model.IntVar]
+TheoryRoomVarTuple = Tuple[str, str, int, int, str, cp_model.IntVar]
 
 
 def iter_lab_session_variables(
@@ -55,6 +58,57 @@ def iter_group_timeslot_variables(
 		for day_index, slot_map in day_map.items():
 			for slot_index, var in slot_map.items():
 				yield gid, day_index, slot_index, var
+
+
+def iter_course_timeslot_variables(
+	context: ConstraintContext,
+	*,
+	teacher_id: Optional[str] = None,
+	course_instance_id: Optional[str] = None,
+) -> Iterator[TheorySlotVarTuple]:
+	"""Yield per-course theory slot variables with optional filters."""
+
+	theory_block = context.variables.theory
+	assignments = getattr(theory_block, "assignments", {}) or {}
+	teacher_ids = (teacher_id,) if teacher_id else tuple(assignments.keys())
+	for tid in teacher_ids:
+		teacher_assignments = assignments.get(tid)
+		if not teacher_assignments:
+			continue
+		course_ids = (course_instance_id,) if course_instance_id else tuple(teacher_assignments.keys())
+		for cid in course_ids:
+			day_map = teacher_assignments.get(cid)
+			if not day_map:
+				continue
+			for day_index, slot_map in day_map.items():
+				for slot_index, var in slot_map.items():
+					yield tid, cid, day_index, slot_index, var
+
+
+def iter_theory_room_variables(
+	context: ConstraintContext,
+	*,
+	teacher_id: Optional[str] = None,
+	course_instance_id: Optional[str] = None,
+) -> Iterator[TheoryRoomVarTuple]:
+	"""Yield per-room theory assignment variables for optional filters."""
+
+	theory_block = context.variables.theory
+	assignments = getattr(theory_block, "room_assignments", {}) or {}
+	teacher_ids = (teacher_id,) if teacher_id else tuple(assignments.keys())
+	for tid in teacher_ids:
+		teacher_assignments = assignments.get(tid)
+		if not teacher_assignments:
+			continue
+		course_ids = (course_instance_id,) if course_instance_id else tuple(teacher_assignments.keys())
+		for cid in course_ids:
+			day_map = teacher_assignments.get(cid)
+			if not day_map:
+				continue
+			for day_index, slot_map in day_map.items():
+				for slot_index, room_map in slot_map.items():
+					for room_id, var in room_map.items():
+						yield tid, cid, day_index, slot_index, room_id, var
 
 
 def get_lab_session_detail(context: ConstraintContext, session_name: str) -> LabSessionDetail:
@@ -132,6 +186,61 @@ def build_presence_literal(
 	return literal
 
 
+def resolve_group_slot_map(
+	context: ConstraintContext,
+) -> Mapping[str, Mapping[int, Mapping[int, cp_model.IntVar]]]:
+	"""Return a mapping of group -> day -> slot -> presence literal.
+
+	The helper falls back to synthesising literals from per-course assignments when
+	pre-computed group timeslot variables are unavailable.
+	"""
+
+	theory_block = context.variables.theory
+	precomputed = getattr(theory_block, "group_timeslots", {}) or {}
+	if precomputed:
+		return precomputed
+
+	extra_bucket = ensure_extra_bucket(context, "group_slot_literals")
+	cached = extra_bucket.get("literal_map")
+	if cached is not None:
+		return cached  # type: ignore[return-value]
+
+	assignments = getattr(theory_block, "assignments", {}) or {}
+	group_lookup = getattr(theory_block, "instance_group_lookup", {}) or {}
+	collector: MutableMapping[str, MutableMapping[int, MutableMapping[int, list[cp_model.IntVar]]]] = defaultdict(
+		lambda: defaultdict(lambda: defaultdict(list))
+	)
+	for teacher_map in assignments.values():
+		for course_id, day_map in teacher_map.items():
+			group_id = group_lookup.get(course_id)
+			if not group_id:
+				continue
+			for day_idx, slot_map in day_map.items():
+				for slot_idx, var in slot_map.items():
+					collector[group_id][day_idx][slot_idx].append(var)
+
+	literal_map: Dict[str, Dict[int, Dict[int, cp_model.IntVar]]] = {}
+	for group_id, day_map in collector.items():
+		group_entry: Dict[int, Dict[int, cp_model.IntVar]] = {}
+		for day_idx, slot_map in day_map.items():
+			day_entry: Dict[int, cp_model.IntVar] = {}
+			for slot_idx, vars_list in slot_map.items():
+				literal = build_presence_literal(
+					context.model,
+					vars_list,
+					f"group_slot_{group_id}_d{day_idx}_s{slot_idx}",
+				)
+				if literal is not None:
+					day_entry[slot_idx] = literal
+			if day_entry:
+				group_entry[day_idx] = day_entry
+		if group_entry:
+			literal_map[group_id] = group_entry
+
+	extra_bucket["literal_map"] = literal_map
+	return literal_map
+
+
 def parse_department_token(token: str) -> Tuple[str, Optional[int]]:
 	"""Split ``Department_S5`` style tokens into (department, semester)."""
 
@@ -150,9 +259,12 @@ def parse_department_token(token: str) -> Tuple[str, Optional[int]]:
 __all__ = [
 	"iter_lab_session_variables",
 	"iter_group_timeslot_variables",
+	"iter_course_timeslot_variables",
+	"iter_theory_room_variables",
 	"get_lab_session_detail",
 	"get_room_attributes",
 	"resolve_day_pattern",
+	"resolve_group_slot_map",
 	"ensure_extra_bucket",
 	"build_presence_literal",
 	"parse_department_token",

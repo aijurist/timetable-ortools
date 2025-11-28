@@ -48,6 +48,7 @@ def _build_constraint_model(model: cp_model.CpModel) -> ConstraintModel:
 		variables=_empty_variables(),
 		constraint_results=tuple(),
 		metadata={},
+		extras={},
 	)
 
 

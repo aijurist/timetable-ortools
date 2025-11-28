@@ -10,7 +10,7 @@ from ortools.sat.python import cp_model
 from ..base import Constraint, ConstraintMetadata
 from ..context import ConstraintContext
 from ..schema import ConstraintApplicationResult, ConstraintStatus
-from ..utils import iter_lab_session_variables, resolve_day_pattern
+from ..utils import iter_lab_session_variables, resolve_day_pattern, resolve_group_slot_map
 
 GroupKey = Tuple[str, int]
 LabSessionPresenceMap = Mapping[str, Mapping[int, Mapping[str, Tuple[cp_model.IntVar, ...]]]]
@@ -22,7 +22,8 @@ class GroupNonOverlapConstraint(Constraint):
 
 	def apply(self, context: ConstraintContext) -> ConstraintApplicationResult:
 		theory_block = context.variables.theory
-		if not theory_block.group_timeslots:
+		group_slot_map = resolve_group_slot_map(context)
+		if not group_slot_map:
 			return ConstraintApplicationResult(
 				name=self.metadata.name,
 				domain=self.metadata.category,
@@ -74,7 +75,7 @@ class GroupNonOverlapConstraint(Constraint):
 					for group_id in group_ids:
 						literal = _build_activity_literal(
 							context.model,
-							theory_block,
+							group_slot_map,
 							lab_sessions,
 							overlap_index,
 							group_id,
@@ -163,7 +164,7 @@ def _resolve_day_count(
 
 def _build_activity_literal(
 	model: cp_model.CpModel,
-	theory_block,
+	group_slot_map: Mapping[str, Mapping[int, Mapping[int, cp_model.IntVar]]],
 	lab_sessions: LabSessionPresenceMap,
 	overlap_index: TheorySlotSessionMap,
 	group_id: str,
@@ -171,7 +172,7 @@ def _build_activity_literal(
 	slot_idx: int,
 ) -> Optional[cp_model.IntVar]:
 	activity_vars = []
-	day_map = theory_block.group_timeslots.get(group_id, {})
+	day_map = group_slot_map.get(group_id, {})
 	slot_map = day_map.get(day_idx, {})
 	theory_var = slot_map.get(slot_idx)
 	if theory_var is not None:

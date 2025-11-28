@@ -85,6 +85,11 @@ class ScheduleValidator:
 		self._time = data.raw.time
 		self._lab_requirements = constraint_model.variables.lab.requirements
 		self._theory_requirements = constraint_model.variables.theory.requirements
+		self._theory_course_requirements = getattr(
+			constraint_model.variables.theory,
+			"course_requirements",
+			{},
+		)
 		self._instance_lookup = self._build_instance_lookup(data)
 		self._instance_group_lookup = dict(constraint_model.variables.lab.instance_group_lookup)
 		self._check_registry = self._build_check_registry()
@@ -304,6 +309,43 @@ class ScheduleValidator:
 		return issues
 
 	def _check_theory_slot_coverage(self, schedule: ScheduleExtractionResult) -> List[ValidationIssue]:
+		if self._theory_course_requirements:
+			counts = Counter(
+				entry.course_instance_id
+				for entry in schedule.theory_entries
+				if entry.course_instance_id
+			)
+			issues: List[ValidationIssue] = []
+			for requirement in self._theory_course_requirements.values():
+				required = max(0, requirement.required_slots)
+				scheduled = counts.get(requirement.course_instance_id, 0)
+				if scheduled == required:
+					continue
+				severity = (
+					ValidationSeverity.ERROR
+					if scheduled < required
+					else ValidationSeverity.WARNING
+				)
+				issues.append(
+					ValidationIssue(
+						category="theory_coverage",
+						severity=severity,
+						message=(
+							f"Course {requirement.course_code} ({requirement.course_instance_id}) expected {required} theory slots "
+							f"but found {scheduled}"
+						),
+						context={
+							"course_instance_id": requirement.course_instance_id,
+							"group_id": requirement.group_id,
+							"department": requirement.department,
+							"semester": requirement.semester,
+							"required_slots": required,
+							"scheduled_slots": scheduled,
+						},
+					),
+				)
+			return issues
+
 		counts = Counter(entry.group_id for entry in schedule.theory_entries)
 		issues: List[ValidationIssue] = []
 		for requirement in self._theory_requirements.values():
@@ -336,7 +378,12 @@ class ScheduleValidator:
 
 	def _check_instance_presence(self, schedule: ScheduleExtractionResult) -> List[ValidationIssue]:
 		lab_counts = Counter(entry.course_instance_id for entry in schedule.lab_entries)
-		theory_counts = Counter(entry.group_id for entry in schedule.theory_entries)
+		theory_counts = Counter(
+			entry.course_instance_id
+			for entry in schedule.theory_entries
+			if entry.course_instance_id
+		)
+		group_counts = Counter(entry.group_id for entry in schedule.theory_entries)
 		issues: List[ValidationIssue] = []
 		for instance in self._instance_lookup.values():
 			if instance.has_lab and instance.practical_hours > 0:
@@ -355,16 +402,20 @@ class ScheduleValidator:
 						),
 					)
 			group_id = self._instance_group_lookup.get(instance.instance_id)
-			if instance.has_theory and (instance.lecture_hours + instance.tutorial_hours) > 0 and group_id:
+			if instance.has_theory and (instance.lecture_hours + instance.tutorial_hours) > 0:
 				required = instance.lecture_hours + instance.tutorial_hours
-				scheduled = theory_counts.get(group_id, 0)
+				scheduled = theory_counts.get(instance.instance_id)
+				if scheduled is None and group_id:
+					scheduled = group_counts.get(group_id, 0)
+				if scheduled is None:
+					scheduled = 0
 				if scheduled == 0:
 					issues.append(
 						ValidationIssue(
 							category="ltp_presence",
 							severity=ValidationSeverity.WARNING,
 							message=(
-								f"Theory slots missing for {instance.course_code} via group {group_id}"
+								f"Theory slots missing for {instance.course_code}"
 							),
 							context={
 								"course_instance_id": instance.instance_id,

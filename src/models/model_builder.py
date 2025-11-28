@@ -31,6 +31,7 @@ class ConstraintModel:
 	variables: VariableCreationResult
 	constraint_results: Tuple[ConstraintApplicationResult, ...]
 	metadata: Mapping[str, object]
+	extras: Mapping[str, object]
 
 
 class ModelBuilder:
@@ -80,6 +81,7 @@ class ModelBuilder:
 			variables=variables,
 			constraint_results=constraint_results,
 			metadata=metadata,
+			extras=dict(context.extra),
 		)
 
 	def _load_registrations(self) -> Sequence[ConstraintRegistration]:

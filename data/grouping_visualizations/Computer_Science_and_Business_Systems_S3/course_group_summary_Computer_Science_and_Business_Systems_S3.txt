@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Computer Science & Business Systems
 Semester: 3
-Generated: 2025-11-26 00:38:43
+Generated: 2025-11-28 23:44:55
 ============================================================
 
 OVERVIEW
@@ -12,32 +12,36 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - CB23311 [Theory]: 1 groups, 2 teachers
-  └─ G5: 2 teacher assignments
+  └─ G7: 2 teacher assignments
 - CB23312 [Theory]: 1 groups, 2 teachers
   └─ G6: 2 teacher assignments
 - CB23331 [Lab + Theory]: 1 groups, 2 teachers
-  └─ G4: 2 teacher assignments
-- CB23332 [Lab + Theory]: 1 groups, 2 teachers
-  └─ G1: 2 teacher assignments
-- CB23333 [Lab + Theory]: 1 groups, 2 teachers
-  └─ G2: 2 teacher assignments
-- CS23333 [Lab + Theory]: 1 groups, 2 teachers
   └─ G3: 2 teacher assignments
+- CB23332 [Lab + Theory]: 1 groups, 2 teachers
+  └─ G2: 2 teacher assignments
+- CB23333 [Lab + Theory]: 2 groups, 2 teachers
+  └─ G1: 1 teacher assignments
+  └─ G4: 1 teacher assignments
+- CS23333 [Lab + Theory]: 2 groups, 2 teachers
+  └─ G1: 1 teacher assignments
+  └─ G4: 1 teacher assignments
 - MC23313 [Theory]: 1 groups, 2 teachers
-  └─ G7: 2 teacher assignments
+  └─ G5: 2 teacher assignments
 
 GROUP COMPOSITION
-- G1: 1 courses, 2 teachers
-  └─ CB23332 [L+T]: 2 instances, 2 teachers
+- G1: 2 courses, 2 teachers
+  └─ CB23333 [L+T]: 1 instances, 1 teachers
+  └─ CS23333 [L+T]: 1 instances, 1 teachers
 - G2: 1 courses, 2 teachers
-  └─ CB23333 [L+T]: 2 instances, 2 teachers
+  └─ CB23332 [L+T]: 2 instances, 2 teachers
 - G3: 1 courses, 2 teachers
-  └─ CS23333 [L+T]: 2 instances, 2 teachers
-- G4: 1 courses, 2 teachers
   └─ CB23331 [L+T]: 2 instances, 2 teachers
+- G4: 2 courses, 2 teachers
+  └─ CB23333 [L+T]: 1 instances, 1 teachers
+  └─ CS23333 [L+T]: 1 instances, 1 teachers
 - G5: 1 courses, 2 teachers
-  └─ CB23311 [T]: 2 instances, 2 teachers
+  └─ MC23313 [T]: 2 instances, 2 teachers
 - G6: 1 courses, 2 teachers
   └─ CB23312 [T]: 2 instances, 2 teachers
 - G7: 1 courses, 2 teachers
-  └─ MC23313 [T]: 2 instances, 2 teachers
+  └─ CB23311 [T]: 2 instances, 2 teachers

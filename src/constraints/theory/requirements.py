@@ -11,37 +11,45 @@ from ortools.sat.python import cp_model
 from ..base import Constraint, ConstraintMetadata
 from ..context import ConstraintContext
 from ..schema import ConstraintApplicationResult, ConstraintStatus
-from ..utils import build_presence_literal, iter_group_timeslot_variables, parse_department_token
+from ..utils import (
+	build_presence_literal,
+	iter_course_timeslot_variables,
+	iter_group_timeslot_variables,
+	parse_department_token,
+)
 
 
 @dataclass
 class CoverageStats:
-	groups_with_constraints: int = 0
+	courses_with_constraints: int = 0
 	constraints_added: int = 0
 
 
 class TheorySlotCoverageConstraint(Constraint):
-	"""Ensure every theory group receives exactly its required number of slots."""
+	"""Ensure every theory course instance receives exactly its required number of slots."""
 
 	def apply(self, context: ConstraintContext) -> ConstraintApplicationResult:
 		model = context.model
 		theory_block = context.variables.theory
 		stats = CoverageStats()
 
-		for group_id, requirement in theory_block.requirements.items():
-			required_slots = max(0, requirement.required_theory_slots)
+		for course_id, requirement in theory_block.course_requirements.items():
+			required_slots = max(0, requirement.required_slots)
 			if required_slots <= 0:
 				continue
 
 			slot_variables = [
 				var
-				for _gid, _day, _slot, var in iter_group_timeslot_variables(context, group_id=group_id)
+				for _tid, _cid, _day, _slot, var in iter_course_timeslot_variables(
+					context,
+					course_instance_id=course_id,
+				)
 			]
 			if not slot_variables:
 				continue
 
 			model.Add(sum(slot_variables) == required_slots)
-			stats.groups_with_constraints += 1
+			stats.courses_with_constraints += 1
 			stats.constraints_added += 1
 
 		status = ConstraintStatus.APPLIED if stats.constraints_added else ConstraintStatus.SKIPPED
@@ -52,7 +60,7 @@ class TheorySlotCoverageConstraint(Constraint):
 			enabled=True,
 			status=status,
 			details={
-				"groups": stats.groups_with_constraints,
+				"courses": stats.courses_with_constraints,
 				"constraints": stats.constraints_added,
 			},
 		)

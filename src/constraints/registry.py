@@ -26,6 +26,7 @@ from .theory.requirements import (
 	build_theory_daily_slot_cap_constraint,
 	build_theory_slot_coverage_constraint,
 )
+from .theory.room_assignment import build_theory_room_assignment_constraint
 from .schema import ConstraintRegistration
 
 
@@ -99,6 +100,12 @@ THEORY_CONSTRAINT_DEFINITIONS = {
 		"description": "Block any group from holding three consecutive theory slots.",
 		"factory": build_no_three_consecutive_slots_constraint,
 		"tags": ("theory", "adjacency"),
+	},
+	"room_assignment": {
+		"title": "Theory Classroom Assignment",
+		"description": "Reserve 140-capacity rooms for large courses and enforce block preferences (A/B/C).",
+		"factory": build_theory_room_assignment_constraint,
+		"tags": ("theory", "rooms"),
 	},
 }
 

@@ -35,3 +35,16 @@ def test_schedule_extractor_builds_and_exports(tmp_path: Path) -> None:
 	theory_csv = csv_dir / "theory_schedule.csv"
 	assert lab_csv.exists()
 	assert theory_csv.exists()
+
+
+def test_theory_block_metadata_is_applied() -> None:
+	data = build_extended_container()
+	constraint_model = build_constraint_model()
+	extractor = ScheduleExtractor(data, constraint_model)
+	solver_result = build_solver_result(constraint_model.model)
+	result = extractor.extract(solver_result)
+	assert result.theory_entries, "Expected at least one theory entry"
+	entry = result.theory_entries[0]
+	assert entry.block == "A Block"
+	assert entry.room_number == "A202"
+	assert entry.room_id == "A202"

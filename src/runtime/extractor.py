@@ -102,11 +102,8 @@ class ScheduleExtractor:
 		self._room_index = self._index_rooms()
 		self._course_row_lookup = self._index_course_rows()
 		self._group_display = self._build_group_display()
-		self._group_slot_sequence_cache: Dict[str, Tuple[Tuple[Optional[str], str], ...]] = {}
-		self._group_course_map = {
-			group.group_id: tuple(group.course_instance_ids)
-			for group in self._group_lookup.values()
-		}
+		self._course_slot_sequence_cache: Dict[str, Tuple[str, ...]] = {}
+		self._theory_room_assignments = getattr(self._theory_vars, "room_assignments", {}) or {}
 
 	def extract(self, solver_result: SolverResult) -> ScheduleExtractionResult:
 		accessor = _SolutionAccessor(self._constraint_model.model, solver_result.response)
@@ -346,95 +343,129 @@ class ScheduleExtractor:
 
 	def _build_theory_entries(self, accessor: _SolutionAccessor) -> Tuple[TheoryScheduleEntry, ...]:
 		entries: List[TheoryScheduleEntry] = []
-		sequence_cache: Dict[str, Tuple[Tuple[Optional[str], str], ...]] = {
-			group_id: self._get_group_slot_sequence(group_id)
-			for group_id in self._theory_vars.group_timeslots.keys()
-		}
-		slot_positions: Dict[str, int] = defaultdict(int)
 		course_session_counts: Dict[str, int] = defaultdict(int)
-		for group_id, day_map in self._theory_vars.group_timeslots.items():
-			requirement = self._theory_vars.requirements.get(group_id)
-			group = self._group_lookup.get(group_id)
-			if not requirement or not group:
-				continue
-			day_pattern = self._theory_vars.day_patterns.get(group_id, self._time.working_days)
-			day_pattern_label = self._format_day_pattern(day_pattern)
-			teacher_names = tuple(self._teacher_lookup.get(tid, tid) for tid in group.teacher_ids)
-			sequence = sequence_cache.get(group_id, tuple())
-			group_display = self._group_display.get(group_id, {})
-			group_name = group_display.get("name") or self._format_group_name(group) or group_id
-			group_index = group_display.get("index") or group.ordinal
-			for day_index, slot_map in day_map.items():
-				day_label = day_pattern[day_index % len(day_pattern)] if day_pattern else str(day_index)
-				for slot_index, var in slot_map.items():
-					if not accessor.bool_value(var):
-						continue
-					slot_label = self._time.theory_slots[slot_index] if slot_index < len(self._time.theory_slots) else f"slot_{slot_index}"
-					is_lunch = self._is_lunch_slot(requirement.department, slot_index)
-					five_policy, five_flag = self._theory_five_pm(requirement.department, requirement.semester, slot_index)
-					course_instance_id: Optional[str] = None
-					session_type = "Theory"
-					if sequence:
-						position = slot_positions[group_id]
-						if position < len(sequence):
-							course_instance_id, session_type = sequence[position]
-						else:
-							idx = position % len(sequence)
-							course_instance_id, session_type = sequence[idx]
-					slot_positions[group_id] += 1
-					instance = self._instance_lookup.get(course_instance_id) if course_instance_id else None
-					course_row = self._get_course_row(instance)
-					teacher_id = instance.teacher_id if instance else (group.teacher_ids[0] if group.teacher_ids else None)
-					teacher_name = instance.teacher_name if instance else (teacher_names[0] if teacher_names else teacher_id)
-					staff_code = self._coalesce_str(
-						(course_row or {}).get("staff_code"),
-						instance.metadata.get("staff_code") if instance and instance.metadata else None,
-						teacher_id,
-					)
-					if course_instance_id:
+		assignments = getattr(self._theory_vars, "assignments", {}) or {}
+		course_requirements = getattr(self._theory_vars, "course_requirements", {}) or {}
+		course_patterns = getattr(self._theory_vars, "course_day_patterns", {}) or {}
+		group_requirements = getattr(self._theory_vars, "requirements", {}) or {}
+		for teacher_id, course_map in assignments.items():
+			for course_instance_id, day_map in course_map.items():
+				requirement = course_requirements.get(course_instance_id)
+				if not requirement:
+					continue
+				group_requirement = group_requirements.get(requirement.group_id)
+				instance = self._instance_lookup.get(course_instance_id)
+				group = self._group_lookup.get(requirement.group_id)
+				day_pattern = course_patterns.get(course_instance_id, self._time.working_days)
+				day_pattern_label = self._format_day_pattern(day_pattern)
+				group_display = self._group_display.get(requirement.group_id, {})
+				group_name = group_display.get("name") or self._format_group_name(group) or requirement.group_id
+				group_index = group_display.get("index") or (group.ordinal if group else None)
+				teacher_ids = tuple(group.teacher_ids) if group and group.teacher_ids else (teacher_id,)
+				teacher_names = tuple(self._teacher_lookup.get(tid, tid) for tid in teacher_ids)
+				course_codes = group.course_codes if group else (requirement.course_code,)
+				course_row = self._get_course_row(instance)
+				staff_code = self._coalesce_str(
+					(course_row or {}).get("staff_code"),
+					instance.metadata.get("staff_code") if instance and instance.metadata else None,
+					teacher_id,
+				)
+				sorted_days = sorted(day_map.keys())
+				for day_index in sorted_days:
+					slot_map = day_map.get(day_index, {})
+					day_label = day_pattern[day_index % len(day_pattern)] if day_pattern else str(day_index)
+					for slot_index in sorted(slot_map.keys()):
+						var = slot_map.get(slot_index)
+						if var is None or not accessor.bool_value(var):
+							continue
 						course_session_counts[course_instance_id] += 1
 						session_number = course_session_counts[course_instance_id]
-					else:
-						session_number = slot_positions[group_id]
-					student_count = instance.student_count if instance else group.summary.total_student_count
-					entry = TheoryScheduleEntry(
-						group_id=group_id,
-						department=requirement.department,
-						semester=requirement.semester,
-						day=day_label,
-						day_index=day_index,
-						slot_index=slot_index,
-						slot_label=slot_label,
-						teacher_ids=group.teacher_ids,
-						teacher_names=teacher_names,
-						course_codes=group.course_codes,
-						is_lunch_window=is_lunch,
-						five_pm_policy=five_policy,
-						five_pm_flag=five_flag,
-						tags=requirement.tags,
-						course_instance_id=course_instance_id,
-						course_code=instance.course_code if instance else None,
-						course_name=instance.course_name if instance else None,
-						session_type=session_type,
-						session_number=session_number,
-						teacher_id=teacher_id,
-						teacher_name=teacher_name,
-						staff_code=staff_code,
-						room_id=None,
-						room_number=None,
-						block=None,
-						student_count=student_count,
-						lecture_hours=instance.lecture_hours if instance else None,
-						tutorial_hours=instance.tutorial_hours if instance else None,
-						schedule_type="theory",
-						group_name=group_name,
-						group_index=group_index,
-						day_pattern=day_pattern_label,
-						is_co_scheduled=False,
-						capacity_info=None,
-						partner_instance_id=None,
-					)
-					entries.append(entry)
+						session_type = self._resolve_course_session_type(course_instance_id, session_number)
+						slot_label = (
+							self._time.theory_slots[slot_index]
+							if slot_index < len(self._time.theory_slots)
+							else f"slot_{slot_index}"
+						)
+						is_lunch = self._is_lunch_slot(requirement.department, slot_index)
+						five_policy, five_flag = self._theory_five_pm(
+							requirement.department,
+							requirement.semester,
+							slot_index,
+						)
+						tags = set(requirement.tags)
+						if group_requirement:
+							tags.update(group_requirement.tags)
+						student_count: Optional[int]
+						if instance:
+							student_count = instance.student_count
+						elif group:
+							student_count = group.summary.total_student_count
+						else:
+							student_count = None
+						teacher_name = (
+							instance.teacher_name
+							if instance and instance.teacher_name
+							else self._teacher_lookup.get(teacher_id, teacher_id)
+						)
+						room_assignment = self._resolve_theory_room_variable(
+							teacher_id,
+							course_instance_id,
+							day_index,
+							slot_index,
+							accessor,
+						)
+						capacity_info = None
+						capacity_value = room_assignment.get("capacity")
+						if capacity_value and student_count:
+							capacity_info = f"{student_count}/{capacity_value}"
+						entry = TheoryScheduleEntry(
+							group_id=requirement.group_id,
+							department=requirement.department,
+							semester=requirement.semester,
+							day=day_label,
+							day_index=day_index,
+							slot_index=slot_index,
+							slot_label=slot_label,
+							teacher_ids=teacher_ids,
+							teacher_names=teacher_names,
+							course_codes=course_codes,
+							is_lunch_window=is_lunch,
+							five_pm_policy=five_policy,
+							five_pm_flag=five_flag,
+							tags=tuple(sorted(tags)),
+							course_instance_id=course_instance_id,
+							course_code=instance.course_code if instance else requirement.course_code,
+							course_name=instance.course_name if instance else requirement.course_code,
+							session_type=session_type,
+							session_number=session_number,
+							teacher_id=teacher_id,
+							teacher_name=teacher_name,
+							staff_code=staff_code,
+							room_id=room_assignment.get("room_id"),
+							room_number=room_assignment.get("room_number"),
+							block=room_assignment.get("block"),
+							student_count=student_count,
+							lecture_hours=instance.lecture_hours if instance else None,
+							tutorial_hours=instance.tutorial_hours if instance else None,
+							schedule_type="theory",
+							group_name=group_name,
+							group_index=group_index,
+							day_pattern=day_pattern_label,
+							is_co_scheduled=False,
+							capacity_info=capacity_info,
+							partner_instance_id=None,
+						)
+						entries.append(entry)
+		entries.sort(
+			key=lambda entry: (
+				entry.department,
+				entry.semester,
+				entry.group_id,
+				entry.day_index,
+				entry.slot_index,
+				entry.course_instance_id or "",
+			)
+		)
 		return tuple(entries)
 
 	@staticmethod
@@ -458,16 +489,21 @@ class ScheduleExtractor:
 				)
 			)
 		for entry in theory_entries:
+			identifier = (
+				f"{entry.course_instance_id}_{entry.day_index}_{entry.slot_index}"
+				if entry.course_instance_id
+				else f"{entry.group_id}_{entry.day_index}_{entry.slot_index}"
+			)
 			combined.append(
 				CombinedScheduleEntry(
 					entry_type="theory",
 					department=entry.department,
 					semester=entry.semester,
 					group_id=entry.group_id,
-					identifier=f"{entry.group_id}_{entry.day_index}_{entry.slot_index}",
+					identifier=identifier,
 					day=entry.day,
 					label=entry.slot_label,
-					resource_id=None,
+					resource_id=entry.room_id or entry.block,
 					payload=entry.to_dict(),
 				)
 			)
@@ -486,23 +522,20 @@ class ScheduleExtractor:
 			)
 			bucket["lab"].append(entry)
 		for entry in theory_entries:
-			target_ids: Sequence[str]
-			if entry.course_instance_id:
-				target_ids = (entry.course_instance_id,)
-			else:
-				target_ids = self._group_course_map.get(entry.group_id, tuple())
-			for instance_id in target_ids:
-				bucket = buffer.setdefault(
-					instance_id,
-					{
-						"group_id": entry.group_id,
-						"department": entry.department,
-						"semester": entry.semester,
-						"lab": [],
-						"theory": [],
-					},
-				)
-				bucket["theory"].append(entry)
+			course_id = entry.course_instance_id
+			if not course_id:
+				continue
+			bucket = buffer.setdefault(
+				course_id,
+				{
+					"group_id": entry.group_id,
+					"department": entry.department,
+					"semester": entry.semester,
+					"lab": [],
+					"theory": [],
+				},
+			)
+			bucket["theory"].append(entry)
 		return {
 			course_instance_id: InstanceAssignment(
 				course_instance_id=course_instance_id,
@@ -650,26 +683,73 @@ class ScheduleExtractor:
 			return None
 		return f"{group.key.department}_S{group.key.semester}_G{group.ordinal}"
 
-	def _get_group_slot_sequence(self, group_id: str) -> Tuple[Tuple[Optional[str], str], ...]:
-		if group_id in self._group_slot_sequence_cache:
-			return self._group_slot_sequence_cache[group_id]
-		group = self._group_lookup.get(group_id)
-		if not group:
-			self._group_slot_sequence_cache[group_id] = tuple()
-			return self._group_slot_sequence_cache[group_id]
-		sequence: List[Tuple[Optional[str], str]] = []
-		for instance_id in group.course_instance_ids:
-			instance = self._instance_lookup.get(instance_id)
-			if not instance:
-				continue
-			for _ in range(max(instance.lecture_hours, 0)):
-				sequence.append((instance_id, "Lecture"))
-			for _ in range(max(instance.tutorial_hours, 0)):
-				sequence.append((instance_id, "Tutorial"))
+	def _get_course_session_sequence(self, course_instance_id: str) -> Tuple[str, ...]:
+		if course_instance_id in self._course_slot_sequence_cache:
+			return self._course_slot_sequence_cache[course_instance_id]
+		instance = self._instance_lookup.get(course_instance_id)
+		if not instance:
+			self._course_slot_sequence_cache[course_instance_id] = ("Theory",)
+			return self._course_slot_sequence_cache[course_instance_id]
+		sequence: List[str] = []
+		sequence.extend(["Lecture"] * max(instance.lecture_hours, 0))
+		sequence.extend(["Tutorial"] * max(instance.tutorial_hours, 0))
 		if not sequence:
-			sequence = [(instance_id, "Theory") for instance_id in group.course_instance_ids]
-		self._group_slot_sequence_cache[group_id] = tuple(sequence)
-		return self._group_slot_sequence_cache[group_id]
+			total = max(instance.total_hours(), 0)
+			sequence = ["Theory"] * (total or 1)
+		self._course_slot_sequence_cache[course_instance_id] = tuple(sequence)
+		return self._course_slot_sequence_cache[course_instance_id]
+
+	def _resolve_course_session_type(self, course_instance_id: str, session_number: int) -> str:
+		sequence = self._get_course_session_sequence(course_instance_id)
+		if not sequence:
+			return "Theory"
+		index = (max(session_number, 1) - 1) % len(sequence)
+		return sequence[index]
+
+	def _resolve_theory_room_variable(
+		self,
+		teacher_id: str,
+		course_instance_id: Optional[str],
+		day_index: int,
+		slot_index: int,
+		accessor: _SolutionAccessor,
+	) -> Mapping[str, Any]:
+		if not teacher_id or not course_instance_id:
+			return {}
+		teacher_bucket = self._theory_room_assignments.get(teacher_id)
+		if not teacher_bucket:
+			return {}
+		course_bucket = teacher_bucket.get(course_instance_id)
+		if not course_bucket:
+			return {}
+		day_bucket = course_bucket.get(day_index)
+		if not day_bucket:
+			return {}
+		room_map = day_bucket.get(slot_index, {})
+		for room_id, var in room_map.items():
+			if accessor.bool_value(var):
+				metadata = self._get_room_metadata(room_id)
+				block = self._coalesce_str(metadata.get("block"), metadata.get("building"))
+				room_number = self._coalesce_str(
+					metadata.get("room_number"),
+					metadata.get("room_no"),
+					metadata.get("name"),
+					room_id,
+				)
+				capacity = self._safe_int(
+					metadata.get("room_max_cap")
+					or metadata.get("capacity")
+					or metadata.get("room_capacity")
+					or metadata.get("max_capacity")
+				)
+				return {
+					"room_id": str(room_id),
+					"room_number": room_number,
+					"block": block,
+					"capacity": capacity,
+				}
+		return {}
+
 
 
 __all__ = [

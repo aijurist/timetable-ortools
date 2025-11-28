@@ -344,7 +344,7 @@ def default_constraint_config() -> ConstraintConfig:
     theory_constraints = {
         "teacher_daily_limit": ConstraintSetting(priority=9, weight=1.0, enabled=True),
         "student_conflict": ConstraintSetting(priority=10, weight=1.0, enabled=True),
-        "room_capacity": ConstraintSetting(priority=8, weight=0.7, enabled=True),
+        "room_assignment": ConstraintSetting(priority=8, weight=0.7, enabled=True),
         "shift_alignment": ConstraintSetting(priority=8, weight=0.6, enabled=True),
     }
     cross_constraints = {

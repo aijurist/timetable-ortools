@@ -502,7 +502,7 @@ constraints:
           - L5
   theory:
     slot_coverage:
-      enabled: false
+      enabled: true
       priority: 10
       weight: 1.0
       params: {}
@@ -512,13 +512,13 @@ constraints:
       weight: 0.9
       params: {}
     no_three_consecutive:
-      enabled: false
+      enabled: true
       priority: 8
       weight: 0.7
       params:
         window: 3
     teacher_daily_limit:
-      enabled: false
+      enabled: true
       priority: 9
       weight: 1.0
       params: {}
@@ -527,11 +527,30 @@ constraints:
       priority: 10
       weight: 1.0
       params: {}
-    room_capacity:
+    room_assignment:
       enabled: true
       priority: 8
       weight: 0.7
-      params: {}
+      params:
+        big_capacity_threshold: 140
+        overflow_penalty: 5
+        default_blocks:
+          - A Block
+          - B Block
+          - C Block
+        senior_blocks:
+          - A Block
+          - B Block
+        second_year_blocks:
+          - B Block
+          - C Block
+        year_block_preferences:
+          "2":
+            - B Block
+          "3":
+            - A Block
+          "4":
+            - A Block
     shift_alignment:
       enabled: true
       priority: 8
@@ -634,10 +653,10 @@ model:
   use_sparse_variables: true
 
 runtime:
-  time_limit_sec: 1000
-  thread_count: 16
+  time_limit_sec: 10000
+  thread_count: 12
   enable_lns: true
-  enable_trace: false
+  enable_trace: true
   solution_limit: null
   stop_after_first_solution: true
 

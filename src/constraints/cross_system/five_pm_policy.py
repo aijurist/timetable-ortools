@@ -16,6 +16,7 @@ from ..utils import (
 	iter_lab_session_variables,
 	parse_department_token,
 	register_objective_penalty,
+	resolve_group_slot_map,
 )
 
 DepartmentToken = Tuple[str, Optional[int]]
@@ -105,6 +106,16 @@ class FivePmPolicyConstraint(Constraint):
 
 		model = context.model
 		theory_block = context.variables.theory
+		group_slot_map = resolve_group_slot_map(context)
+		if not group_slot_map:
+			return ConstraintApplicationResult(
+				name=self.metadata.name,
+				domain=self.metadata.category,
+				priority=self.metadata.priority,
+				enabled=True,
+				status=ConstraintStatus.SKIPPED,
+				details={"reason": "no theory groups available"},
+			)
 		lab_block = context.variables.lab
 		lab_sessions = (
 			_index_lab_sessions(context)
@@ -120,7 +131,7 @@ class FivePmPolicyConstraint(Constraint):
 			for group_id, requirement in theory_block.requirements.items():
 				if policy.severity(requirement.department, requirement.semester) != "hard":
 					continue
-				day_map = theory_block.group_timeslots.get(group_id, {})
+				day_map = group_slot_map.get(group_id, {})
 				for day_idx, slot_vars in day_map.items():
 					for slot_idx in policy.blocked_theory_slots:
 						var = slot_vars.get(slot_idx)
@@ -148,7 +159,7 @@ class FivePmPolicyConstraint(Constraint):
 			for group_id, requirement in theory_block.requirements.items():
 				if policy.severity(requirement.department, requirement.semester) != "soft":
 					continue
-				day_map = theory_block.group_timeslots.get(group_id, {})
+				day_map = group_slot_map.get(group_id, {})
 				for day_idx, slot_vars in day_map.items():
 					for slot_idx in policy.discouraged_theory_slots:
 						var = slot_vars.get(slot_idx)
