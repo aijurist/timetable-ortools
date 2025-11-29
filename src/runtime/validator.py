@@ -6,7 +6,7 @@ import logging
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Callable, Dict, Iterable, List, Mapping, MutableMapping, Optional, Tuple
+from typing import Callable, Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Tuple
 
 from ..data.schemas import ExtendedDataContainer, NormalizedCourseInstance
 from ..models.model_builder import ConstraintModel
@@ -140,6 +140,7 @@ class ScheduleValidator:
 			"lab_teacher_conflicts": self._check_lab_teacher_conflicts,
 			"theory_teacher_conflicts": self._check_theory_teacher_conflicts,
 			"lab_room_conflicts": self._check_lab_room_conflicts,
+			"theory_room_conflicts": self._check_theory_room_conflicts,
 			"group_overlaps": self._check_group_overlaps,
 			"theory_lab_conflicts": self._check_theory_lab_conflicts,
 			"lab_coverage": self._check_lab_session_coverage,
@@ -148,73 +149,152 @@ class ScheduleValidator:
 		}
 
 	def _check_lab_teacher_conflicts(self, schedule: ScheduleExtractionResult) -> List[ValidationIssue]:
-		bucket: MutableMapping[Tuple[str, int, str], List[LabScheduleEntry]] = defaultdict(list)
+		bucket: MutableMapping[Tuple[str, str, str], List[LabScheduleEntry]] = defaultdict(list)
 		for entry in schedule.lab_entries:
-			bucket[(entry.teacher_id, entry.day_index, entry.session_name)].append(entry)
+			teacher_key = entry.teacher_id or entry.teacher_name or "unknown"
+			day_key = self._normalize_day_token(entry.day, entry.day_index)
+			bucket[(teacher_key, day_key, entry.session_name)].append(entry)
 		issues: List[ValidationIssue] = []
-		for key, entries in bucket.items():
+		for (teacher_id, _, session_name), entries in bucket.items():
 			if len(entries) <= 1:
 				continue
-			teacher_id, day_index, session_name = key
+			day_index = entries[0].day_index if entries else None
+			day_label = entries[0].day if entries else None
+			teacher_name = entries[0].teacher_name or teacher_id
 			issues.append(
 				ValidationIssue(
 					category="lab_teacher_conflict",
 					severity=ValidationSeverity.ERROR,
-					message=f"Teacher {teacher_id} double-booked for lab session {session_name} on day {day_index}",
+					message=(
+						f"Teacher {teacher_name or teacher_id} double-booked for lab session {session_name}"
+						f" on {day_label or f'day {day_index}'}"
+					),
 					context={
 						"teacher_id": teacher_id,
+						"teacher_name": teacher_name,
 						"day_index": day_index,
+						"day_label": day_label,
 						"session": session_name,
+						"session_time": entries[0].session_time if entries else None,
+						"room_ids": [entry.room_id for entry in entries],
 						"course_instance_ids": [entry.course_instance_id for entry in entries],
-						"rooms": [entry.room_id for entry in entries],
+						"course_codes": [entry.course_code for entry in entries],
+						"departments": sorted({entry.department for entry in entries if entry.department}),
+						"semesters": sorted({entry.semester for entry in entries if entry.semester is not None}),
 					},
 				)
 			)
 		return issues
 
 	def _check_theory_teacher_conflicts(self, schedule: ScheduleExtractionResult) -> List[ValidationIssue]:
-		bucket: MutableMapping[Tuple[str, int, int], List[str]] = defaultdict(list)
+		bucket: MutableMapping[Tuple[str, int, int], List[TheoryScheduleEntry]] = defaultdict(list)
 		for entry in schedule.theory_entries:
-			for teacher_id in entry.teacher_ids:
+			if entry.teacher_ids:
+				teacher_iter = entry.teacher_ids
+			elif entry.teacher_id:
+				teacher_iter = (entry.teacher_id,)
+			else:
+				teacher_iter = tuple()
+			for teacher_id in teacher_iter:
 				key = (teacher_id, entry.day_index, entry.slot_index)
-				bucket[key].append(entry.group_id)
+				bucket[key].append(entry)
 		issues: List[ValidationIssue] = []
-		for (teacher_id, day_index, slot_index), groups in bucket.items():
-			if len(groups) <= 1:
+		for (teacher_id, day_index, slot_index), entries in bucket.items():
+			if len(entries) <= 1:
 				continue
+			day_label = entries[0].day if entries else None
+			slot_label = self._slot_label(slot_index)
+			teacher_name = _resolve_teacher_name(teacher_id, entries)
 			issues.append(
 				ValidationIssue(
 					category="theory_teacher_conflict",
 					severity=ValidationSeverity.ERROR,
-					message=f"Teacher {teacher_id} assigned to multiple theory groups at slot {slot_index} on day {day_index}",
+					message=(
+						f"Teacher {teacher_name or teacher_id} assigned to multiple theory groups at {slot_label}"
+						f" on {day_label or f'day {day_index}'}"
+					),
 					context={
 						"teacher_id": teacher_id,
+						"teacher_name": teacher_name,
 						"day_index": day_index,
+						"day_label": day_label,
 						"slot_index": slot_index,
-						"group_ids": groups,
+						"slot_label": slot_label,
+						"group_ids": [entry.group_id for entry in entries],
+						"course_instance_ids": [entry.course_instance_id for entry in entries if entry.course_instance_id],
+						"course_codes": [entry.course_code or (entry.course_codes[0] if entry.course_codes else None) for entry in entries],
+						"departments": sorted({entry.department for entry in entries if entry.department}),
+						"semesters": sorted({entry.semester for entry in entries if entry.semester is not None}),
 					},
 				)
 			)
 		return issues
 
 	def _check_lab_room_conflicts(self, schedule: ScheduleExtractionResult) -> List[ValidationIssue]:
-		bucket: MutableMapping[Tuple[str, int, str], List[LabScheduleEntry]] = defaultdict(list)
+		bucket: MutableMapping[Tuple[str, str, str], List[LabScheduleEntry]] = defaultdict(list)
 		for entry in schedule.lab_entries:
-			bucket[(entry.room_id, entry.day_index, entry.session_name)].append(entry)
+			day_key = self._normalize_day_token(entry.day, entry.day_index)
+			bucket[(entry.room_id, day_key, entry.session_name)].append(entry)
 		issues: List[ValidationIssue] = []
-		for (room_id, day_index, session_name), entries in bucket.items():
+		for (room_id, day_key, session_name), entries in bucket.items():
 			if len(entries) <= 1:
 				continue
+			day_index = entries[0].day_index if entries else None
+			day_label = entries[0].day if entries else None
 			issues.append(
 				ValidationIssue(
 					category="lab_room_conflict",
 					severity=ValidationSeverity.ERROR,
-					message=f"Room {room_id} allocated to multiple labs during {session_name} on day {day_index}",
+					message=(
+						f"Room {room_id} allocated to multiple labs during {session_name}"
+						f" on {day_label or f'day {day_index}'}"
+					),
 					context={
 						"room_id": room_id,
 						"day_index": day_index,
+						"day_label": day_label,
+						"normalized_day": day_key,
 						"session": session_name,
+						"session_time": entries[0].session_time if entries else None,
 						"course_instance_ids": [entry.course_instance_id for entry in entries],
+					},
+				)
+			)
+		return issues
+
+	def _check_theory_room_conflicts(self, schedule: ScheduleExtractionResult) -> List[ValidationIssue]:
+		bucket: MutableMapping[Tuple[str, str, int], List[TheoryScheduleEntry]] = defaultdict(list)
+		for entry in schedule.theory_entries:
+			if not entry.room_id:
+				continue
+			day_key = self._normalize_day_token(entry.day, entry.day_index)
+			bucket[(entry.room_id, day_key, entry.slot_index)].append(entry)
+		issues: List[ValidationIssue] = []
+		for (room_id, day_key, slot_index), entries in bucket.items():
+			if len(entries) <= 1:
+				continue
+			day_index = entries[0].day_index if entries else None
+			day_label = entries[0].day if entries else None
+			slot_label = self._slot_label(slot_index)
+			issues.append(
+				ValidationIssue(
+					category="theory_room_conflict",
+					severity=ValidationSeverity.ERROR,
+					message=(
+						f"Room {room_id} allocated to multiple theory slots during {slot_label}"
+						f" on {day_label or f'day {day_index}'}"
+					),
+					context={
+						"room_id": room_id,
+						"day_index": day_index,
+						"day_label": day_label,
+						"normalized_day": day_key,
+						"slot_index": slot_index,
+						"slot_label": slot_label,
+						"course_instance_ids": [entry.course_instance_id for entry in entries if entry.course_instance_id],
+						"group_ids": [entry.group_id for entry in entries if entry.group_id],
+						"departments": sorted({entry.department for entry in entries if entry.department}),
+						"semesters": sorted({entry.semester for entry in entries if entry.semester is not None}),
 					},
 				)
 			)
@@ -433,6 +513,43 @@ class ScheduleValidator:
 			for instance in instances:
 				lookup[instance.instance_id] = instance
 		return lookup
+
+	def _slot_label(self, slot_index: int) -> str:
+		slots = getattr(self._time, "theory_slots", tuple())
+		if 0 <= slot_index < len(slots):
+			return slots[slot_index]
+		return f"Slot {slot_index}"
+
+	@staticmethod
+	def _normalize_day_token(day: Optional[str], day_index: Optional[int]) -> str:
+		if day:
+			return day.strip().lower()
+		if day_index is None:
+			return "unspecified"
+		return f"day_{day_index}"
+
+
+
+def _resolve_teacher_name(
+	teacher_id: Optional[str],
+	entries: Sequence[TheoryScheduleEntry],
+) -> Optional[str]:
+	if not entries:
+		return teacher_id
+	for entry in entries:
+		if entry.teacher_ids and teacher_id in entry.teacher_ids:
+			index = entry.teacher_ids.index(teacher_id)
+			if entry.teacher_names and index < len(entry.teacher_names):
+				name = entry.teacher_names[index]
+				if name:
+					return name
+		if entry.teacher_name and entry.teacher_id == teacher_id:
+			return entry.teacher_name
+		if entry.teacher_names:
+			for name in entry.teacher_names:
+				if name:
+					return name
+	return teacher_id
 
 
 __all__ = [

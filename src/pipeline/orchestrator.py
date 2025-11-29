@@ -15,10 +15,12 @@ from ..data.schemas import ExtendedDataContainer
 from ..models.model_builder import ConstraintModel, ModelBuilder
 from ..runtime.extractor import ScheduleExtractor, ScheduleExtractionResult
 from ..runtime.solver import SolverRunner, SolverResult
+from ..runtime.validator import ScheduleValidator, ValidationReport
 from ..telemetry.grouping import GroupTelemetryBuilder
 from ..telemetry.overlaps import OverlapTelemetryBuilder
 from ..telemetry.slot_caps import SlotCapTelemetryBuilder
 from ..telemetry.teacher_labs import TeacherLabTelemetryBuilder
+from ..telemetry.validation import ValidationTelemetryBuilder
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +40,7 @@ class PipelineOrchestrator:
 		self._solver_result: Optional[SolverResult] = None
 		self._schedule: Optional[ScheduleExtractionResult] = None
 		self._latest_output_dir: Optional[Path] = None
+		self._validation_report: Optional[ValidationReport] = None
 
 	@property
 	def config(self) -> SchedulerConfig:
@@ -51,6 +54,18 @@ class PipelineOrchestrator:
 		if self._data is None:
 			raise RuntimeError("Data not loaded; call load_data() or bootstrap() first")
 		return self._data
+
+	@property
+	def latest_output_dir(self) -> Optional[Path]:
+		"""Absolute path to the most recent output bundle, if available."""
+
+		return self._latest_output_dir
+
+	@property
+	def validation_report(self) -> Optional[ValidationReport]:
+		"""Expose the cached validation report for the latest run."""
+
+		return self._validation_report
 
 	def load_config(
 		self,
@@ -116,10 +131,13 @@ class PipelineOrchestrator:
 			write_json=True,
 			write_csv=True,
 		)
+		validator = ScheduleValidator(self._extended_data, self._model)
+		self._validation_report = validator.validate(self._schedule)
 		self._write_slot_cap_telemetry(timestamp_dir, self._schedule)
 		self._write_teacher_lab_telemetry(timestamp_dir, self._schedule)
 		self._write_grouping_telemetry(timestamp_dir, self._schedule)
 		self._write_overlap_telemetry(timestamp_dir, self._schedule)
+		self._write_validation_telemetry(timestamp_dir)
 		return self._schedule
 
 	def run(self) -> ScheduleExtractionResult:
@@ -227,6 +245,18 @@ class PipelineOrchestrator:
 			builder.write(schedule, output_dir / "overlap_telemetry.json")
 		except Exception:  # pragma: no cover - telemetry is best-effort
 			logger.exception("Failed to write overlap telemetry")
+
+	def _write_validation_telemetry(self, output_dir: Path) -> None:
+		if not self._validation_report or not self._extended_data:
+			return
+		builder = ValidationTelemetryBuilder(
+			report=self._validation_report,
+			day_labels=tuple(self._extended_data.raw.time.working_days),
+		)
+		try:
+			builder.write(output_dir / "validation_telemetry.json")
+		except Exception:  # pragma: no cover - telemetry is best-effort
+			logger.exception("Failed to write validation telemetry")
 
 
 __all__ = ["PipelineOrchestrator"]

@@ -46,6 +46,7 @@ class ScheduleRepository:
         self._teacher_telemetry_cache: Dict[Path, Dict[str, Any]] = {}
         self._grouping_cache: Dict[Path, Dict[str, Any]] = {}
         self._overlap_cache: Dict[Path, Dict[str, Any]] = {}
+        self._validation_cache: Dict[Path, Dict[str, Any]] = {}
 
     def get_latest_snapshot(self) -> ScheduleSnapshot:
         snapshot = self._scan_latest_snapshot()
@@ -59,6 +60,7 @@ class ScheduleRepository:
             self._teacher_telemetry_cache.clear()
             self._grouping_cache.clear()
             self._overlap_cache.clear()
+            self._validation_cache.clear()
             self._cached_snapshot = snapshot
         return self._cached_snapshot  # type: ignore[return-value]
 
@@ -105,6 +107,12 @@ class ScheduleRepository:
         if snapshot.root not in self._overlap_cache:
             self._overlap_cache[snapshot.root] = self._load_overlap_telemetry(snapshot)
         return self._overlap_cache[snapshot.root]
+
+    def get_validation_telemetry(self) -> Dict[str, Any]:
+        snapshot = self.get_latest_snapshot()
+        if snapshot.root not in self._validation_cache:
+            self._validation_cache[snapshot.root] = self._load_validation_telemetry(snapshot)
+        return self._validation_cache[snapshot.root]
 
     # ------------------------------------------------------------------
     # Snapshot discovery
@@ -363,6 +371,33 @@ class ScheduleRepository:
                 },
                 "teacher_conflicts": [],
                 "constraints": {},
+            }
+        with telemetry_path.open("r", encoding="utf-8") as handle:
+            return json.load(handle)
+
+    def _load_validation_telemetry(self, snapshot: ScheduleSnapshot) -> Dict[str, Any]:
+        telemetry_path = snapshot.root / "validation_telemetry.json"
+        if not telemetry_path.exists():
+            return {
+                "generated_at": None,
+                "executed_checks": [],
+                "severity_counts": {},
+                "room_conflicts": {
+                    "summary": {
+                        "conflict_count": 0,
+                        "rooms_impacted": 0,
+                        "windows_impacted": 0,
+                    },
+                    "conflicts": [],
+                },
+                "ltp_presence": {
+                    "summary": {
+                        "lab_gaps": 0,
+                        "theory_gaps": 0,
+                    },
+                    "lab_gaps": [],
+                    "theory_gaps": [],
+                },
             }
         with telemetry_path.open("r", encoding="utf-8") as handle:
             return json.load(handle)

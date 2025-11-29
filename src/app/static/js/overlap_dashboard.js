@@ -49,6 +49,7 @@ function defaultTelemetry() {
         },
         teacher_conflicts: [],
         constraints: {},
+        metadata: {},
     };
 }
 
@@ -76,6 +77,7 @@ function normalizeTelemetry(raw = {}) {
         },
         teacher_conflicts: Array.isArray(raw.teacher_conflicts) ? raw.teacher_conflicts : [],
         constraints: raw.constraints || {},
+        metadata: raw.metadata || {},
     };
 }
 
@@ -134,12 +136,26 @@ function attachEvents() {
 
 function renderAll() {
     updateSnapshotBanner();
+    renderPolicyNote();
     renderSummary();
     renderGroupFilters();
     renderGroupConflicts();
     renderTeacherFilters();
     renderTeacherConflicts();
     renderConstraints();
+}
+
+function renderPolicyNote() {
+    const container = document.getElementById('policyNote');
+    if (!container) return;
+    const note = state.telemetry.metadata?.policy_note;
+    if (!note) {
+        container.classList.add('d-none');
+        container.textContent = '';
+        return;
+    }
+    container.textContent = note;
+    container.classList.remove('d-none');
 }
 
 function updateSnapshotBanner() {
@@ -214,6 +230,7 @@ function renderGroupConflicts() {
                         <div class="small text-muted">Index ${conflict.slot_index ?? '—'}</div>
                     </td>
                     <td>${formatGroups(conflict.groups)}</td>
+                    <td>${formatConflictStatus(conflict)}</td>
                     <td>${formatActivities(conflict.activities)}</td>
                 </tr>`)
             .join('');
@@ -277,6 +294,7 @@ function renderTeacherConflicts() {
                         <div class="fw-semibold">${conflict.slot_label || 'Slot'}</div>
                         <div class="small text-muted">Index ${conflict.slot_index ?? '—'}</div>
                     </td>
+                    <td>${formatConflictStatus(conflict)}</td>
                     <td>${formatActivities(conflict.activities)}</td>
                 </tr>`)
             .join('');
@@ -335,6 +353,18 @@ function formatActivities(activities = []) {
         .join('');
     const remainder = activities.length > 4 ? `<span class="slot-chip muted">+${activities.length - 4} more</span>` : '';
     return `<div class="slot-chip-group">${chips}${remainder}</div>`;
+}
+
+function formatConflictStatus(conflict) {
+    if (!conflict) {
+        return '<span class="text-muted small">No metadata</span>';
+    }
+    const label = conflict.conflict_type?.replace(/_/g, ' ') || 'Conflict window';
+    const detail = conflict.status_detail || 'Multiple assignments share this window';
+    return `<div class="d-flex flex-column gap-1">
+        <span class="badge bg-warning-subtle text-dark">${label}</span>
+        <span class="text-muted small">${detail}</span>
+    </div>`;
 }
 
 function renderConstraints() {

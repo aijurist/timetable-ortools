@@ -58,6 +58,7 @@ function defaultTelemetry() {
         },
         teachers: [],
         constraints: {},
+        metadata: {},
     };
 }
 
@@ -93,6 +94,7 @@ function normalizeTelemetry(raw = {}) {
         },
         teachers: Array.isArray(raw.teachers) ? raw.teachers : [],
         constraints: raw.constraints || {},
+        metadata: raw.metadata || fallback.metadata,
     };
 }
 
@@ -151,10 +153,24 @@ function attachEvents() {
 
 function renderAll() {
     updateSnapshotBanner();
+    renderPolicyNote();
     renderSummary();
     renderPolicies();
     renderTeacherTable();
     renderDayEvents();
+}
+
+function renderPolicyNote() {
+    const container = document.getElementById('policyNote');
+    if (!container) return;
+    const note = state.telemetry.metadata?.policy_note;
+    if (!note) {
+        container.classList.add('d-none');
+        container.textContent = '';
+        return;
+    }
+    container.textContent = note;
+    container.classList.remove('d-none');
 }
 
 function updateSnapshotBanner() {
@@ -228,19 +244,21 @@ function renderTeacherTable() {
         .sort((a, b) => (a.teacher_name || '').localeCompare(b.teacher_name || ''));
 
     if (!filtered.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No teachers match the current filters.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No teachers match the current filters.</td></tr>';
     } else {
         tbody.innerHTML = filtered
             .map((teacher) => {
-                const flaggedDays = teacher.day_usage?.filter((day) => hasAnyFlag(day.flags)) || [];
-                const overCapDays = teacher.day_usage?.filter((day) => day.flags?.over_daily_cap).length || 0;
-                const longRunDays = teacher.day_usage?.filter((day) => day.flags?.long_consecutive_run).length || 0;
-                const earlyLateDays = teacher.day_usage?.filter((day) => day.flags?.early_and_late).length || 0;
-                const tripleDays = teacher.day_usage?.filter((day) => day.flags?.triple_block).length || 0;
-                const longestRun = Math.max(0, ...((teacher.day_usage || []).map((day) => day.longest_run || 0)));
-                const highlights = buildTeacherHighlights({ overCapDays, longRunDays, earlyLateDays, tripleDays });
+                const counts = getFlagCounts(teacher);
                 const departments = formatList(teacher.departments);
-                const flaggedCount = flaggedDays.length;
+                const flaggedCount = counts.total;
+                const longestRun = Math.max(0, ...((teacher.day_usage || []).map((day) => day.longest_run || 0)));
+                const highlights = buildTeacherHighlights({
+                    overCapDays: counts.over_daily,
+                    longRunDays: counts.long_run,
+                    earlyLateDays: counts.early_late,
+                    tripleDays: counts.triple_block,
+                });
+                const statusCell = formatTeacherStatus(teacher, counts);
 
                 return `
                     <tr>
@@ -251,6 +269,7 @@ function renderTeacherTable() {
                         <td>${departments || '—'}</td>
                         <td>${teacher.total_sessions ?? 0}</td>
                         <td>${flaggedCount ? `${flaggedCount} flagged` : 'Healthy'}</td>
+                        <td>${statusCell}</td>
                         <td>${longestRun}</td>
                         <td>${highlights}</td>
                     </tr>`;
@@ -379,6 +398,39 @@ function buildTeacherHighlights({ overCapDays, longRunDays, earlyLateDays, tripl
         return '<span class="badge bg-success-subtle text-success">Healthy</span>';
     }
     return `<div class="d-flex flex-wrap gap-1">${badges.join('')}</div>`;
+}
+
+function getFlagCounts(teacher) {
+    if (teacher.flag_counts) {
+        const counts = {
+            over_daily: teacher.flag_counts.over_daily || 0,
+            long_run: teacher.flag_counts.long_run || 0,
+            early_late: teacher.flag_counts.early_late || 0,
+            triple_block: teacher.flag_counts.triple_block || 0,
+        };
+        const total = Object.values(counts).reduce((acc, value) => acc + Number(value || 0), 0);
+        return { ...counts, total };
+    }
+    const usage = teacher.day_usage || [];
+    const counts = {
+        over_daily: usage.filter((day) => day.flags?.over_daily_cap).length,
+        long_run: usage.filter((day) => day.flags?.long_consecutive_run).length,
+        early_late: usage.filter((day) => day.flags?.early_and_late).length,
+        triple_block: usage.filter((day) => day.flags?.triple_block).length,
+    };
+    const total = Object.values(counts).reduce((acc, value) => acc + Number(value || 0), 0);
+    return { ...counts, total };
+}
+
+function formatTeacherStatus(teacher, counts = getFlagCounts(teacher)) {
+    const status = teacher.status || (counts.total ? 'attention' : 'healthy');
+    const label = teacher.status_label || (status === 'healthy' ? 'Healthy' : 'Needs review');
+    const detail = teacher.status_detail || (counts.total ? `${counts.total} policy flag(s)` : 'All observed days within limits');
+    const cls = status === 'healthy' ? 'status-pill success' : 'status-pill warning';
+    return `<div class="d-flex flex-column gap-1">
+        <span class="${cls}">${label}</span>
+        <span class="text-muted small">${detail}</span>
+    </div>`;
 }
 
 function formatSessions(sessions = []) {

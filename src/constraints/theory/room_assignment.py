@@ -12,6 +12,7 @@ from ..base import Constraint, ConstraintMetadata
 from ..context import ConstraintContext
 from ..schema import ConstraintApplicationResult, ConstraintStatus
 from ..utils import iter_theory_room_variables, register_objective_penalty
+from ...utils.time_utils import DayNormalizer
 
 
 @dataclass(frozen=True)
@@ -76,14 +77,24 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 		inventory: RoomInventory,
 	) -> Mapping[str, int]:
 		model = context.model
+		theory_block = context.variables.theory
 		room_lookup = inventory.room_index
-		room_slot_usage: MutableMapping[Tuple[str, int, int], list[cp_model.IntVar]] = defaultdict(list)
+		room_slot_usage: MutableMapping[Tuple[str, str, int], list[cp_model.IntVar]] = defaultdict(list)
 		stats = {
 			"active_literals": 0,
 			"disabled_literals": 0,
 			"room_conflict_constraints": 0,
 			"penalties": 0,
 		}
+		course_day_patterns = getattr(theory_block, "course_day_patterns", {}) or {}
+		time_config = getattr(context.data.raw, "time", None)
+		working_days = getattr(time_config, "working_days", tuple()) or tuple()
+		default_day_pattern = self._canonical_day_pattern(working_days)
+		if not default_day_pattern:
+			fallback_range = range(len(working_days)) if working_days else (0,)
+			default_day_pattern = tuple(f"day_{idx}" for idx in fallback_range)
+		pattern_cache: Dict[str, Tuple[str, ...]] = {}
+		day_key_cache: Dict[Tuple[str, int], str] = {}
 
 		for _tid, course_id, day_idx, slot_idx, room_id, var in iter_theory_room_variables(context):
 			policy = course_policies.get(course_id)
@@ -106,7 +117,15 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 				stats["disabled_literals"] += 1
 				continue
 			stats["active_literals"] += 1
-			room_slot_usage[(str(room_id), day_idx, slot_idx)].append(var)
+			day_key = self._resolve_day_key(
+				course_id,
+				day_idx,
+				course_day_patterns,
+				default_day_pattern,
+				pattern_cache,
+				day_key_cache,
+			)
+			room_slot_usage[(str(room_id), day_key, slot_idx)].append(var)
 			block = room_meta.get("block") or room_meta.get("Block") or room_meta.get("building")
 			block_label = self._normalise_block(block)
 			if self._overflow_penalty and policy.primary_block and block_label != policy.primary_block:
@@ -168,6 +187,51 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 				allowed_rooms=filtered_rooms,
 			)
 		return policies
+
+	def _resolve_day_key(
+		self,
+		course_id: str,
+		day_index: int,
+		course_day_patterns: Mapping[str, Sequence[object]],
+		default_day_pattern: Tuple[str, ...],
+		pattern_cache: MutableMapping[str, Tuple[str, ...]],
+		day_key_cache: MutableMapping[Tuple[str, int], str],
+	) -> str:
+		cache_key = (course_id, day_index)
+		if cache_key in day_key_cache:
+			return day_key_cache[cache_key]
+		pattern = pattern_cache.get(course_id)
+		if pattern is None:
+			raw_pattern = course_day_patterns.get(course_id)
+			pattern = self._canonical_day_pattern(raw_pattern) or default_day_pattern
+			pattern_cache[course_id] = pattern
+		if pattern:
+			label = pattern[day_index % len(pattern)]
+		else:
+			label = f"day_{day_index}"
+		day_label = DayNormalizer.normalize_day_name(label) or label
+		day_key_cache[cache_key] = day_label
+		return day_label
+
+	def _canonical_day_pattern(self, raw_pattern: Optional[Iterable[object]]) -> Tuple[str, ...]:
+		if not raw_pattern:
+			return tuple()
+		seen = set()
+		ordered: list[str] = []
+		for value in raw_pattern:
+			if value is None:
+				continue
+			text = str(value).strip()
+			if not text:
+				continue
+			label = DayNormalizer.normalize_day_name(text)
+			if not label:
+				label = text.lower()
+			if not label or label in seen:
+				continue
+			seen.add(label)
+			ordered.append(label)
+		return tuple(ordered)
 
 	def _build_inventory(self, context: ConstraintContext) -> RoomInventory:
 		rooms_payload = getattr(context.data.raw, "rooms", None)

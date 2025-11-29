@@ -26,6 +26,11 @@ CONSTRAINT_TITLE_BY_KEY = {
 	"semester_slot_cap": "Semester Lab Slot Cap",
 }
 
+POLICY_NOTE = (
+	"Theory and lab windows of the same course/group may now overlap provided the teacher overlap guard"
+	" keeps instructors from being double-booked. Slot-cap metrics continue to track lab slots only."
+)
+
 
 @dataclass
 class SlotCapTelemetryBuilder:
@@ -58,10 +63,22 @@ class SlotCapTelemetryBuilder:
 			self._semester_tokens_from_constraints(),
 		)
 
+		core_breaches = sum(1 for entry in core_payload if entry["breached"])
+		computing_breaches = sum(1 for entry in computing_payload if entry["breached"])
+		sem_breaches = sum(1 for entry in semester_payload if entry["breached"])
 		summary = {
 			"groups_monitored": len(core_payload) + len(computing_payload),
-			"groups_over_limit": sum(1 for entry in (*core_payload, *computing_payload) if entry["breached"]),
-			"semesters_over_limit": sum(1 for entry in semester_payload if entry["breached"]),
+			"groups_over_limit": core_breaches + computing_breaches,
+			"semesters_over_limit": sem_breaches,
+			"core_over_limit": core_breaches,
+			"computing_over_limit": computing_breaches,
+		}
+
+		metadata = {
+			"policy_note": POLICY_NOTE,
+			"core_groups_tracked": len(core_payload),
+			"computing_groups_tracked": len(computing_payload),
+			"semester_tokens_tracked": len(semester_payload),
 		}
 
 		payload = {
@@ -72,6 +89,7 @@ class SlotCapTelemetryBuilder:
 			"computing_groups": computing_payload,
 			"semesters": semester_payload,
 			"constraints": self._serialize_constraint_results(),
+			"metadata": metadata,
 		}
 		return payload
 
@@ -109,6 +127,7 @@ class SlotCapTelemetryBuilder:
 			department = info.get("department") if info else meta.get("department")
 			semester = info.get("semester") if info else meta.get("semester")
 			breached = bool(limit is not None and slots_used > limit)
+			status_payload = _slot_usage_status(slots_used, limit)
 			records.append(
 				{
 					"group_id": group_id,
@@ -118,6 +137,7 @@ class SlotCapTelemetryBuilder:
 					"slot_limit": limit,
 					"breached": breached,
 					"slots": slot_labels,
+					**status_payload,
 				}
 			)
 		records.sort(key=lambda entry: (entry["department"] or "", entry["semester"] or 0, entry["group_id"]))
@@ -139,6 +159,7 @@ class SlotCapTelemetryBuilder:
 			slot_labels = _format_slots(unique_slots) if unique_slots else []
 			slots_used = len(unique_slots)
 			breached = bool(limit is not None and slots_used > limit)
+			status_payload = _slot_usage_status(slots_used, limit)
 			records.append(
 				{
 					"department": dept,
@@ -147,6 +168,7 @@ class SlotCapTelemetryBuilder:
 					"slot_limit": limit,
 					"breached": breached,
 					"slots": slot_labels,
+					**status_payload,
 				}
 			)
 		records.sort(key=lambda entry: (entry["department"], entry["semester"]))
@@ -213,6 +235,31 @@ def _collect_group_metadata(assignments: Iterable[InstanceAssignment]) -> Mappin
 			"semester": assignment.semester,
 		}
 	return metadata
+
+
+def _slot_usage_status(slots_used: int, limit: Optional[int]) -> Mapping[str, Any]:
+	if limit is None:
+		return {
+			"status": "unbounded",
+			"status_label": "No cap configured",
+			"status_detail": "No slot cap defined for this bucket",
+			"delta": None,
+		}
+	delta = slots_used - limit
+	if delta > 0:
+		return {
+			"status": "breached",
+			"status_label": "Over limit",
+			"status_detail": f"Over by {delta} slot{'s' if delta != 1 else ''}",
+			"delta": delta,
+		}
+	buffer = limit - slots_used
+	return {
+		"status": "healthy",
+		"status_label": "Within limit",
+		"status_detail": f"{slots_used}/{limit} slots used (buffer {buffer})",
+		"delta": -buffer,
+	}
 
 
 def _build_group_usage(entries: Sequence[LabScheduleEntry]) -> Mapping[str, Mapping[str, Any]]:

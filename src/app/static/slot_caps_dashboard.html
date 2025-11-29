@@ -47,6 +47,10 @@
                         <i class="fas fa-link me-1"></i>
                         Overlap Watch
                     </a>
+                    <a class="btn btn-sm btn-outline-light" href="/validation">
+                        <i class="fas fa-shield-halved me-1"></i>
+                        Validation Watch
+                    </a>
                 </div>
             </div>
         </div>
@@ -95,6 +99,8 @@
                 </div>
             </div>
         </section>
+
+        <div id="policyNote" class="alert alert-info d-none" role="alert"></div>
 
         <section class="card mb-4">
             <div class="card-header d-flex flex-wrap gap-3 align-items-center">
@@ -156,12 +162,13 @@
                                 <th>Slots used</th>
                                 <th>Limit</th>
                                 <th>Status</th>
+                                <th>Detailed status</th>
                                 <th>Slots</th>
                             </tr>
                         </thead>
                         <tbody id="groupTableBody">
                             <tr>
-                                <td colspan="8" class="text-center py-4 text-muted">Collecting group telemetry…</td>
+                                <td colspan="9" class="text-center py-4 text-muted">Collecting group telemetry…</td>
                             </tr>
                         </tbody>
                     </table>
@@ -187,12 +194,13 @@
                                 <th>Slots used</th>
                                 <th>Limit</th>
                                 <th>Status</th>
+                                <th>Detailed status</th>
                                 <th>Slots</th>
                             </tr>
                         </thead>
                         <tbody id="semesterTableBody">
                             <tr>
-                                <td colspan="6" class="text-center py-4 text-muted">Waiting for semester telemetry…</td>
+                                <td colspan="7" class="text-center py-4 text-muted">Waiting for semester telemetry…</td>
                             </tr>
                         </tbody>
                     </table>

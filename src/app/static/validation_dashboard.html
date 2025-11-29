@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Validation Telemetry</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/dashboard.css" />
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/validation">
+                Validation Telemetry
+            </a>
+            <div class="ms-auto d-flex flex-wrap gap-3 align-items-center text-white">
+                <div class="text-end me-2">
+                    <div class="small opacity-75">Latest snapshot</div>
+                    <div id="snapshotLabel" class="fw-semibold">Detecting…</div>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-sm btn-outline-light" href="/">
+                        <i class="fas fa-chart-line me-1"></i>
+                        Analytics Dashboard
+                    </a>
+                    <a class="btn btn-sm btn-outline-light" href="/schedule">
+                        <i class="fas fa-calendar-alt me-1"></i>
+                        Schedule View
+                    </a>
+                    <a class="btn btn-sm btn-outline-light" href="/rooms">
+                        <i class="fas fa-door-open me-1"></i>
+                        Room Timetable
+                    </a>
+                    <a class="btn btn-sm btn-outline-light" href="/slot-caps">
+                        <i class="fas fa-chart-area me-1"></i>
+                        Slot Caps
+                    </a>
+                    <a class="btn btn-sm btn-outline-light" href="/teacher-labs">
+                        <i class="fas fa-user-clock me-1"></i>
+                        Teacher Labs
+                    </a>
+                    <a class="btn btn-sm btn-outline-light" href="/grouping">
+                        <i class="fas fa-users me-1"></i>
+                        Group Coverage
+                    </a>
+                    <a class="btn btn-sm btn-outline-light" href="/overlaps">
+                        <i class="fas fa-link me-1"></i>
+                        Overlap Watch
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container-fluid py-4">
+        <div id="alertBanner" class="alert alert-danger d-none" role="alert"></div>
+
+        <section class="row g-3 mb-4">
+            <div class="col-12 col-md-6 col-xxl-3">
+                <div class="telemetry-card">
+                    <div class="label">Room conflicts</div>
+                    <div class="value" id="roomConflictCount">0</div>
+                    <div class="caption">
+                        Lab <span id="roomLabConflictCount">0</span> · Theory <span id="roomTheoryConflictCount">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-xxl-3">
+                <div class="telemetry-card">
+                    <div class="label">Rooms impacted</div>
+                    <div class="value" id="roomConflictRooms">0</div>
+                    <div class="caption">Unique rooms double-booked</div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-xxl-3">
+                <div class="telemetry-card">
+                    <div class="label">Missing lab sets</div>
+                    <div class="value" id="ltpLabGaps">0</div>
+                    <div class="caption">Courses lacking practical hours</div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-xxl-3">
+                <div class="telemetry-card">
+                    <div class="label">Missing theory slots</div>
+                    <div class="value" id="ltpTheoryGaps">0</div>
+                    <div class="caption">Lecture/tutorial gaps</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="card mb-4">
+            <div class="card-header d-flex flex-wrap gap-3 align-items-center">
+                <div>
+                    <h5 class="mb-0">Room double-booking radar</h5>
+                    <small class="text-muted">Surfaces validator findings for lab and classroom (theory) room conflicts.</small>
+                </div>
+                <div class="ms-auto d-flex flex-wrap gap-2">
+                    <input id="roomSearch" class="form-control form-control-sm" placeholder="Filter by room, session, or course" />
+                    <button class="btn btn-sm btn-outline-secondary" id="refreshTelemetry">
+                        <i class="fas fa-rotate"></i> Refresh
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" id="downloadTelemetry">
+                        <i class="fas fa-download"></i> Download JSON
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table" id="roomConflictTable">
+                        <thead>
+                            <tr>
+                                <th>Room</th>
+                                <th>Day</th>
+                                <th>Window</th>
+                                <th>Impacted entities</th>
+                                <th>Severity</th>
+                            </tr>
+                        </thead>
+                        <tbody id="roomConflictTableBody">
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">Loading room telemetry…</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="small text-muted">Generated at <span id="telemetryTimestamp">—</span>.</div>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="card-header">
+                <h5 class="mb-0">LTPC verification</h5>
+                <small class="text-muted">Highlights courses without required lab or theory coverage.</small>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-xl-6">
+                        <h6>Missing lab sessions</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Course instance</th>
+                                        <th>Department</th>
+                                        <th>Semester</th>
+                                        <th>Message</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ltpLabTableBody">
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4 text-muted">No lab gaps detected.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-12 col-xl-6">
+                        <h6>Missing theory slots</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Course / Group</th>
+                                        <th>Expected hrs</th>
+                                        <th>Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ltpTheoryTableBody">
+                                    <tr>
+                                        <td colspan="3" class="text-center py-4 text-muted">No theory gaps detected.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/js/validation_dashboard.js"></script>
+</body>
+</html>

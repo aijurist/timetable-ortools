@@ -73,6 +73,13 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=500, detail="overlap_dashboard.html is missing from the static folder")
         return FileResponse(html_path)
 
+    @app.get("/validation", include_in_schema=False)
+    async def serve_validation_dashboard() -> FileResponse:
+        html_path = STATIC_DIR / "validation_dashboard.html"
+        if not html_path.exists():
+            raise HTTPException(status_code=500, detail="validation_dashboard.html is missing from the static folder")
+        return FileResponse(html_path)
+
     @app.get("/schedule", include_in_schema=False)
     async def serve_schedule_view() -> FileResponse:
         html_path = STATIC_DIR / "schedule_view.html"
@@ -135,6 +142,12 @@ def create_app() -> FastAPI:
     async def overlaps() -> Dict[str, Any]:
         snapshot = _snapshot_or_404()
         data = repo.get_overlap_telemetry()
+        return {"snapshot": snapshot.as_dict(), "data": data}
+
+    @app.get("/api/validation")
+    async def validation() -> Dict[str, Any]:
+        snapshot = _snapshot_or_404()
+        data = repo.get_validation_telemetry()
         return {"snapshot": snapshot.as_dict(), "data": data}
 
     return app

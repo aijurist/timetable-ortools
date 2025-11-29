@@ -12,6 +12,10 @@ from ..constraints.schema import ConstraintApplicationResult
 from ..data.schemas import TimeSystemArtifacts
 from ..runtime.extractor_schema import LabScheduleEntry, ScheduleExtractionResult, TheoryScheduleEntry
 
+POLICY_NOTE = (
+	"Theory and lab sessions of the same course/group are permitted to overlap when teachers remain unique."
+	" Overlap telemetry now highlights only genuine multi-group or teacher double-bookings."
+)
 
 @dataclass(frozen=True)
 class _ActivitySnapshot:
@@ -56,6 +60,12 @@ class OverlapTelemetryBuilder:
 			"conflict_windows": len(teacher_conflicts),
 		}
 
+		metadata = {
+			"policy_note": POLICY_NOTE,
+			"group_windows_tracked": len(group_buckets),
+			"teacher_windows_tracked": len(teacher_buckets),
+		}
+
 		return {
 			"generated_at": (self.timestamp or datetime.now(timezone.utc)).isoformat(),
 			"group_summary": group_summary,
@@ -69,6 +79,7 @@ class OverlapTelemetryBuilder:
 					"teacher_overlap": "Teacher Overlap Guard",
 				},
 			),
+			"metadata": metadata,
 		}
 
 	def write(self, schedule: ScheduleExtractionResult, destination: Path) -> Path:
@@ -152,6 +163,7 @@ def _detect_group_conflicts(
 			group_ids = sorted({activity.group_id for activity in activities if activity.group_id})
 			if len(group_ids) <= 1:
 				continue
+			conflict_type, status_detail = _conflict_descriptor(activities)
 			conflicts.append(
 				{
 					"department": department,
@@ -161,6 +173,8 @@ def _detect_group_conflicts(
 					"slot_label": _slot_label(theory_slots, slot_index),
 					"groups": group_ids,
 					"activities": [_serialize_activity(activity) for activity in activities],
+					"conflict_type": conflict_type,
+					"status_detail": status_detail,
 				},
 			)
 	return tuple(sorted(conflicts, key=lambda entry: (entry["department"], entry["semester"], entry["day"], entry["slot_index"])))
@@ -183,6 +197,7 @@ def _detect_teacher_conflicts(
 		for (day_key, slot_index), activities in day_map.items():
 			if len(activities) <= 1:
 				continue
+			conflict_type, status_detail = _conflict_descriptor(activities)
 			conflicts.append(
 				{
 					"teacher_id": teacher_id,
@@ -191,6 +206,8 @@ def _detect_teacher_conflicts(
 					"slot_index": slot_index,
 					"slot_label": _slot_label(theory_slots, slot_index),
 					"activities": [_serialize_activity(activity) for activity in activities],
+					"conflict_type": conflict_type,
+					"status_detail": status_detail,
 				},
 			)
 	return tuple(sorted(conflicts, key=lambda entry: (entry["teacher_id"], entry["day"], entry["slot_index"])))
@@ -227,6 +244,22 @@ def _serialize_constraints(
 			"details": _normalize(result.details),
 		}
 	return payload
+
+
+def _conflict_descriptor(activities: Sequence[_ActivitySnapshot]) -> Tuple[str, str]:
+	kinds = {activity.kind for activity in activities}
+	if kinds == {"lab"}:
+		conflict_type = "lab_only"
+	elif kinds == {"theory"}:
+		conflict_type = "theory_only"
+	else:
+		conflict_type = "lab_vs_theory"
+	group_ids = sorted({activity.group_id for activity in activities if activity.group_id})
+	group_label = ", ".join(group_ids[:3]) if group_ids else "multiple cohorts"
+	status_detail = f"{len(activities)} assignments collide ({conflict_type.replace('_', ' ')})"
+	if group_label:
+		status_detail = f"{status_detail} · {group_label}"
+	return conflict_type, status_detail
 
 
 def _find_constraint(

@@ -52,12 +52,15 @@ function defaultTelemetry() {
             groups_monitored: 0,
             groups_over_limit: 0,
             semesters_over_limit: 0,
+            core_over_limit: 0,
+            computing_over_limit: 0,
         },
         limits: {},
         core_groups: [],
         computing_groups: [],
         semesters: [],
         constraints: {},
+        metadata: {},
     };
 }
 
@@ -77,12 +80,15 @@ function normalizeTelemetry(raw = {}) {
             groups_monitored: raw.summary?.groups_monitored ?? 0,
             groups_over_limit: raw.summary?.groups_over_limit ?? 0,
             semesters_over_limit: raw.summary?.semesters_over_limit ?? 0,
+            core_over_limit: raw.summary?.core_over_limit ?? 0,
+            computing_over_limit: raw.summary?.computing_over_limit ?? 0,
         },
         limits: raw.limits || {},
         core_groups: Array.isArray(raw.core_groups) ? raw.core_groups : [],
         computing_groups: Array.isArray(raw.computing_groups) ? raw.computing_groups : [],
         semesters: Array.isArray(raw.semesters) ? raw.semesters : [],
         constraints: raw.constraints || {},
+        metadata: raw.metadata || {},
     };
 }
 
@@ -136,11 +142,25 @@ function attachEvents() {
 
 function renderAll() {
     updateSnapshotBanner();
+    renderPolicyNote();
     renderSummary();
     renderLimitCards();
     renderGroupTable();
     renderSemesters();
     renderConstraints();
+}
+
+function renderPolicyNote() {
+    const container = document.getElementById('policyNote');
+    if (!container) return;
+    const note = state.telemetry.metadata?.policy_note;
+    if (!note) {
+        container.classList.add('d-none');
+        container.textContent = '';
+        return;
+    }
+    container.textContent = note;
+    container.classList.remove('d-none');
 }
 
 function updateSnapshotBanner() {
@@ -210,7 +230,8 @@ function renderGroupTable() {
                     <td>${group.group_id}</td>
                     <td>${group.slots_used}</td>
                     <td>${group.slot_limit ?? '—'}</td>
-                    <td>${statusPill(group.breached)}</td>
+                    <td>${statusPill(group)}</td>
+                    <td>${formatStatusDetail(group)}</td>
                     <td>${formatSlots(group.slots)}</td>
                 </tr>`;
         }).join('');
@@ -239,7 +260,8 @@ function renderSemesters() {
                 <td>${entry.semester ?? '—'}</td>
                 <td>${entry.slots_used}</td>
                 <td>${entry.slot_limit ?? '—'}</td>
-                <td>${statusPill(entry.breached)}</td>
+                <td>${statusPill(entry)}</td>
+                <td>${formatStatusDetail(entry)}</td>
                 <td>${formatSlots(entry.slots)}</td>
             </tr>
         `).join('');
@@ -340,10 +362,24 @@ function formatDetailList(details) {
     return `<div class="detail-list">${rows.join('')}</div>`;
 }
 
-function statusPill(isBreached) {
-    const cls = isBreached ? 'status-pill danger' : 'status-pill success';
-    const label = isBreached ? 'Over limit' : 'Within limit';
+function statusPill(entry) {
+    const status = entry?.status || (entry?.breached ? 'breached' : 'healthy');
+    const label = entry?.status_label || (status === 'breached' ? 'Over limit' : status === 'healthy' ? 'Within limit' : 'No cap');
+    let cls = 'status-pill secondary';
+    if (status === 'breached') cls = 'status-pill danger';
+    else if (status === 'healthy') cls = 'status-pill success';
+    else if (status === 'unbounded') cls = 'status-pill info';
     return `<span class="${cls}">${label}</span>`;
+}
+
+function formatStatusDetail(entry = {}) {
+    if (entry.status_detail) {
+        return `<span class="text-muted small">${entry.status_detail}</span>`;
+    }
+    if (entry.slot_limit == null) {
+        return '<span class="text-muted small">No cap configured</span>';
+    }
+    return `<span class="text-muted small">${entry.slots_used ?? 0}/${entry.slot_limit} slots</span>`;
 }
 
 function formatTimestamp(timestamp) {

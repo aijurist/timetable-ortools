@@ -23,6 +23,11 @@ CONSTRAINT_TITLES = {
     "max_consecutive": "Teacher Max Consecutive Lab Sessions",
 }
 
+POLICY_NOTE = (
+    "Theory and lab slots for the same course/group may overlap as long as the teacher overlap guard"
+    " prevents double-booking. Teacher lab telemetry therefore focuses on lab load distribution only."
+)
+
 
 @dataclass(frozen=True)
 class TeacherPolicy:
@@ -67,12 +72,19 @@ class TeacherLabTelemetryBuilder:
         usage = _aggregate_teacher_usage(lab_entries)
         teachers, summary = _summarize_usage(usage, policy)
 
+        metadata = {
+            "policy_note": POLICY_NOTE,
+            "teachers_monitored": summary.get("teachers_in_schedule", 0),
+            "days_observed": summary.get("days_monitored", 0),
+        }
+
         payload = {
             "generated_at": (self.timestamp or datetime.now(timezone.utc)).isoformat(),
             "policies": policy.to_dict(),
             "summary": summary,
             "teachers": teachers,
             "constraints": self._serialize_constraints(),
+            "metadata": metadata,
         }
         return payload
 
@@ -191,6 +203,12 @@ def _summarize_usage(
         record = usage[teacher_id]
         day_sessions: Mapping[str, Sequence[Mapping[str, Any]]] = record.get("day_sessions", {})  # type: ignore[assignment]
         day_entries: list[Mapping[str, Any]] = []
+        flag_counts = {
+            "over_daily": 0,
+            "early_late": 0,
+            "triple_block": 0,
+            "long_run": 0,
+        }
         for day in sorted(day_sessions.keys(), key=_day_sort_key):
             sessions = list(day_sessions[day])
             if not sessions:
@@ -201,17 +219,22 @@ def _summarize_usage(
             if day_summary["flags"]["over_daily_cap"]:
                 summary["days_over_daily_cap"] += 1
                 over_daily_teachers.add(teacher_id)
+                flag_counts["over_daily"] += 1
             if day_summary["flags"]["early_and_late"]:
                 summary["early_late_conflicts"] += 1
+                flag_counts["early_late"] += 1
             if day_summary["flags"]["triple_block"]:
                 summary["triple_blocks"] += 1
+                flag_counts["triple_block"] += 1
             if day_summary["flags"]["long_consecutive_run"]:
                 summary["long_consecutive_windows"] += 1
                 long_run_teachers.add(teacher_id)
+                flag_counts["long_run"] += 1
 
         if not day_entries:
             continue
 
+        status_payload = _teacher_status(flag_counts, len(day_entries))
         teacher_payload.append(
             {
                 "teacher_id": teacher_id,
@@ -224,6 +247,8 @@ def _summarize_usage(
                     "over_daily_cap": teacher_id in over_daily_teachers,
                     "long_consecutive_run": teacher_id in long_run_teachers,
                 },
+                "flag_counts": flag_counts,
+                **status_payload,
             }
         )
 
@@ -282,6 +307,31 @@ def _summarize_day(day: str, sessions: Sequence[Mapping[str, Any]], policy: Teac
             "triple_block": triple_block,
             "long_consecutive_run": long_consecutive,
         },
+    }
+
+
+def _teacher_status(flag_counts: Mapping[str, int], days_tracked: int) -> Mapping[str, Any]:
+    breach_days = sum(flag_counts.values())
+    if breach_days == 0:
+        return {
+            "status": "healthy",
+            "status_label": "Healthy",
+            "status_detail": f"All {days_tracked} tracked day(s) within policy",
+        }
+    label_parts = []
+    if flag_counts.get("over_daily"):
+        label_parts.append(f"daily cap ×{flag_counts['over_daily']}")
+    if flag_counts.get("long_run"):
+        label_parts.append(f"long run ×{flag_counts['long_run']}")
+    if flag_counts.get("early_late"):
+        label_parts.append(f"early+late ×{flag_counts['early_late']}")
+    if flag_counts.get("triple_block"):
+        label_parts.append(f"triple window ×{flag_counts['triple_block']}")
+    detail = ", ".join(label_parts)
+    return {
+        "status": "attention",
+        "status_label": "Attention",
+        "status_detail": detail or f"Policy flags detected across {breach_days} day(s)",
     }
 
 
