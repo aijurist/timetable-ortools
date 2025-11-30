@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Robotics & Automation
 Semester: 3
-Generated: 2025-11-30 03:24:50
+Generated: 2025-11-30 17:10:53
 ============================================================
 
 OVERVIEW
@@ -16,11 +16,11 @@ COURSE DISTRIBUTION BY GROUP
 - MA23311 [Theory]: 1 groups, 1 teachers
   └─ G6: 1 teacher assignments
 - RO23311 [Theory]: 1 groups, 1 teachers
-  └─ G7: 1 teacher assignments
+  └─ G5: 1 teacher assignments
 - RO23312 [Theory]: 1 groups, 1 teachers
   └─ G4: 1 teacher assignments
 - RO23313 [Theory]: 1 groups, 1 teachers
-  └─ G5: 1 teacher assignments
+  └─ G7: 1 teacher assignments
 - RO23331 [Lab + Theory]: 1 groups, 1 teachers
   └─ G3: 1 teacher assignments
 - RO23332 [Lab + Theory]: 1 groups, 1 teachers
@@ -36,8 +36,8 @@ GROUP COMPOSITION
 - G4: 1 courses, 1 teachers
   └─ RO23312 [T]: 1 instances, 1 teachers
 - G5: 1 courses, 1 teachers
-  └─ RO23313 [T]: 1 instances, 1 teachers
+  └─ RO23311 [T]: 1 instances, 1 teachers
 - G6: 1 courses, 1 teachers
   └─ MA23311 [T]: 1 instances, 1 teachers
 - G7: 1 courses, 1 teachers
-  └─ RO23311 [T]: 1 instances, 1 teachers
+  └─ RO23313 [T]: 1 instances, 1 teachers

@@ -5,7 +5,7 @@ meta:
   generated_at: null
 
 paths:
-  courses_csv: data/department_data/core-v3/Chemical_Engineering_v3.0.csv
+  courses_csv: data/department_data/core-v3/Biotechnology_v3.0.csv
   rooms_csv: data/block_wise/techlongue.csv
   day_order_csv: data/day_order.csv
   core_lab_mapping_csv: data/og-final.csv
@@ -114,6 +114,21 @@ departments:
   overrides:
     Computer Science & Engineering:
       day_pattern:
+        - monday
+        - tuesday
+        - wed
+        - thur
+        - fri
+      lunch_break_slot: null
+      lunch_slot_window:
+        - 3
+        - 4
+        - 5
+        - 6
+      shift_id: SHIFT_1
+      flexible_lunch: false
+    Electronics & Communication Engineering:
+      day_pattern:
         - tuesday
         - wed
         - thur
@@ -125,30 +140,15 @@ departments:
         - 4
         - 5
         - 6
-      shift_id: SHIFT_1
-      flexible_lunch: false
-    Electronics & Communication Engineering:
-      day_pattern:
-        - monday
-        - tuesday
-        - wed
-        - thur
-        - fri
-      lunch_break_slot: null
-      lunch_slot_window:
-        - 3
-        - 4
-        - 5
-        - 6
       shift_id: SHIFT_2
       flexible_lunch: false
     Information Technology:
       day_pattern:
-        - monday
         - tuesday
         - wed
         - thur
         - fri
+        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
@@ -174,11 +174,11 @@ departments:
       flexible_lunch: false
     Civil Engineering:
       day_pattern:
-        - monday
         - tuesday
         - wed
         - thur
         - fri
+        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
@@ -189,11 +189,11 @@ departments:
       flexible_lunch: false
     Artificial Intelligence & Data Science:
       day_pattern:
-        - monday
         - tuesday
         - wed
         - thur
         - fri
+        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
@@ -204,11 +204,11 @@ departments:
       flexible_lunch: false
     Artificial Intelligence & Machine Learning:
       day_pattern:
-        - monday
         - tuesday
         - wed
         - thur
         - fri
+        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
@@ -234,11 +234,11 @@ departments:
       flexible_lunch: false
     Robotics & Automation:
       day_pattern:
-        - monday
         - tuesday
         - wed
         - thur
         - fri
+        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
@@ -264,11 +264,11 @@ departments:
       flexible_lunch: false
     Aeronautical Engineering:
       day_pattern:
-        - monday
         - tuesday
         - wed
         - thur
         - fri
+        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
@@ -279,11 +279,11 @@ departments:
       flexible_lunch: false
     Biotechnology:
       day_pattern:
-        - monday
         - tuesday
         - wed
         - thur
         - fri
+        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
@@ -309,11 +309,11 @@ departments:
       flexible_lunch: false
     Biomedical Engineering:
       day_pattern:
-        - monday
         - tuesday
         - wed
         - thur
         - fri
+        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
@@ -488,6 +488,18 @@ constraints:
         soft_penalty_weight: 5
         soft_departments:
           - Biotechnology
+    consecutive_batches:
+      enabled: true
+      priority: 7
+      weight: 1.0
+      params:
+        course_codes: ['BT23523']
+        preferred_pairs:
+          - [L1, L2]
+          - [L3, L4]
+          - [L5, L6]
+        min_practical_hours: 4
+        min_student_count: 36
     teacher_daily_presence_lab:
       enabled: true
       priority: 8

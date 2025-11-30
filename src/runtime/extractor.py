@@ -10,7 +10,7 @@ import re
 from collections import defaultdict
 from dataclasses import replace
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Set, Tuple
 
 from ortools.sat.python import cp_model
 
@@ -257,6 +257,7 @@ class ScheduleExtractor:
 	def _annotate_lab_batches(self, entries: Sequence[LabScheduleEntry]) -> Sequence[LabScheduleEntry]:
 		if not entries:
 			return entries
+		session_pair_lookup = self._session_pair_lookup()
 		per_course: Dict[str, List[int]] = defaultdict(list)
 		annotated = list(entries)
 		for idx, entry in enumerate(entries):
@@ -314,10 +315,56 @@ class ScheduleExtractor:
 					annotated[idx].session_slots,
 				),
 			)
-			for offset, idx in enumerate(remaining):
+			batch_counter = 0
+			assigned_indices: Set[int] = set()
+
+			def _next_batch_number() -> int:
+				nonlocal batch_counter
+				if final_batches <= 0:
+					return 1
+				number = (batch_counter % final_batches) + 1
+				batch_counter += 1
+				return number
+
+			for idx in remaining:
+				if idx in assigned_indices or annotated[idx].batch_number:
+					continue
 				entry = annotated[idx]
+				partner_idx = None
+				partner_session = session_pair_lookup.get(entry.session_name)
+				if partner_session:
+					partner_candidates = session_groups.get((entry.day_index, partner_session), [])
+					for candidate in partner_candidates:
+						if candidate in assigned_indices or annotated[candidate].batch_number:
+							continue
+						partner_idx = candidate
+						break
+				if partner_idx is not None:
+					primary_hint = self._parse_batch_number(entry.batch_label or entry.batch_info)
+					partner_entry = annotated[partner_idx]
+					partner_hint = self._parse_batch_number(partner_entry.batch_label or partner_entry.batch_info)
+					batch_number = primary_hint or partner_hint or _next_batch_number()
+					label = (
+						entry.batch_label
+						or entry.batch_info
+						or partner_entry.batch_label
+						or partner_entry.batch_info
+						or f"Batch {batch_number}"
+					)
+					for target_idx in (idx, partner_idx):
+						current = annotated[target_idx]
+						annotated[target_idx] = replace(
+							current,
+							batch_number=batch_number,
+							batch_label=label,
+							batch_info=current.batch_info or label,
+							num_batches=final_batches,
+							is_batched=True,
+						)
+					assigned_indices.update({idx, partner_idx})
+					continue
 				number_hint = self._parse_batch_number(entry.batch_label or entry.batch_info)
-				batch_number = number_hint or ((offset % final_batches) + 1)
+				batch_number = number_hint or _next_batch_number()
 				label = entry.batch_label or entry.batch_info or f"Batch {batch_number}"
 				annotated[idx] = replace(
 					entry,
@@ -327,7 +374,25 @@ class ScheduleExtractor:
 					num_batches=final_batches,
 					is_batched=True,
 				)
+				assigned_indices.add(idx)
 		return annotated
+
+	def _session_pair_lookup(self) -> Mapping[str, str]:
+		cache = getattr(self, "_session_pair_cache", None)
+		if cache is not None:
+			return cache
+		pairs: Dict[str, str] = {}
+		session_items = list(self._time.lab_sessions.items())
+		sorted_sessions = sorted(session_items, key=lambda item: min(item[1].slots) if item[1].slots else 0)
+		for idx in range(0, len(sorted_sessions), 2):
+			if idx + 1 >= len(sorted_sessions):
+				break
+			a_name, _ = sorted_sessions[idx]
+			b_name, _ = sorted_sessions[idx + 1]
+			pairs[a_name] = b_name
+			pairs[b_name] = a_name
+		self._session_pair_cache = pairs
+		return pairs
 
 	@staticmethod
 	def _parse_batch_number(label: Optional[str]) -> Optional[int]:

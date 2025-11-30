@@ -17,9 +17,11 @@ from ..utils import ensure_extra_bucket, iter_lab_session_variables
 class CoreLabStats:
 	mapped_courses: int = 0
 	general_courses: int = 0
+	catalog_courses: int = 0
 	forbidden_assignments: int = 0
 	skipped_courses: list[str] = field(default_factory=list)
 	missing_mappings: list[str] = field(default_factory=list)
+	unresolved_catalog_courses: list[str] = field(default_factory=list)
 
 
 class CoreLabMappingConstraint(Constraint):
@@ -31,7 +33,7 @@ class CoreLabMappingConstraint(Constraint):
 		logger = context.child_logger("core_lab")
 		stats = CoreLabStats()
 
-		mapping, general_rooms = self._ensure_payload(context, logger)
+		mapping, general_rooms, catalog = self._ensure_payload(context, logger)
 		if mapping is None or general_rooms is None:
 			logger.info("Core lab mapping data unavailable; skipping constraint")
 			return self._result(ConstraintStatus.SKIPPED, stats)
@@ -43,10 +45,21 @@ class CoreLabMappingConstraint(Constraint):
 			if not assignments:
 				continue
 
-			core_rooms = mapping.get(requirement.course_code)
+			course_code = self._normalise_course_code(requirement.course_code)
+			core_rooms = mapping.get(course_code)
+			in_catalog = course_code in catalog
+			if in_catalog:
+				stats.catalog_courses += 1
+
 			if core_rooms:
 				stats.mapped_courses += 1
-				allowed_rooms = core_rooms
+				allowed_rooms: Set[str] = set(core_rooms)
+			elif in_catalog:
+				stats.unresolved_catalog_courses.append(course_code)
+				allowed_rooms = general_room_set
+				if not allowed_rooms:
+					stats.skipped_courses.append(requirement.course_code)
+					continue
 			else:
 				stats.general_courses += 1
 				allowed_rooms = general_room_set
@@ -64,7 +77,7 @@ class CoreLabMappingConstraint(Constraint):
 					stats.forbidden_assignments += 1
 					added_constraint = True
 
-			if added_constraint and not core_rooms:
+			if added_constraint and not core_rooms and in_catalog:
 				stats.missing_mappings.append(requirement.course_code)
 
 		status = ConstraintStatus.APPLIED if stats.forbidden_assignments else ConstraintStatus.SKIPPED
@@ -80,9 +93,11 @@ class CoreLabMappingConstraint(Constraint):
 			details={
 				"mapped_courses": stats.mapped_courses,
 				"general_courses": stats.general_courses,
+				"catalog_courses": stats.catalog_courses,
 				"forbidden_assignments": stats.forbidden_assignments,
 				"skipped_courses": tuple(stats.skipped_courses),
 				"missing_mappings": tuple(stats.missing_mappings),
+				"unresolved_catalog_courses": tuple(stats.unresolved_catalog_courses),
 			},
 		)
 
@@ -90,10 +105,10 @@ class CoreLabMappingConstraint(Constraint):
 		self,
 		context: ConstraintContext,
 		logger,
-	) -> Tuple[Optional[Mapping[str, Set[str]]], Optional[Sequence[str]]]:
+	) -> Tuple[Optional[Mapping[str, Set[str]]], Optional[Sequence[str]], Set[str]]:
 		extra = ensure_extra_bucket(context, self.CACHE_KEY)
-		if "room_map" in extra and "general_rooms" in extra:
-			return extra["room_map"], extra["general_rooms"]
+		if {"room_map", "general_rooms", "catalog"} <= extra.keys():
+			return extra["room_map"], extra["general_rooms"], extra["catalog"]
 
 		core_df = getattr(context.data.raw, "core_lab_mapping_df", None)
 		rooms_df = getattr(context.data.raw, "rooms_df", None)
@@ -105,15 +120,18 @@ class CoreLabMappingConstraint(Constraint):
 		if not general_rooms:
 			general_rooms = context.variables.lab.room_ids
 
+		catalog = self._build_catalog(core_df)
 		if core_df is None or rooms_df is None or core_df.empty:
 			extra["room_map"] = None
 			extra["general_rooms"] = general_rooms
-			return None, general_rooms
+			extra["catalog"] = catalog
+			return None, general_rooms, catalog
 
 		room_map = self._build_room_map(core_df, rooms_df, logger)
 		extra["room_map"] = room_map
 		extra["general_rooms"] = general_rooms
-		return room_map, general_rooms
+		extra["catalog"] = catalog
+		return room_map, general_rooms, catalog
 
 	def _build_room_map(
 		self,
@@ -125,7 +143,7 @@ class CoreLabMappingConstraint(Constraint):
 		mapping: Dict[str, Set[str]] = {}
 
 		for _, row in core_df.iterrows():
-			course_code = str(row.get("course_code") or "").strip()
+			course_code = self._normalise_course_code(row.get("course_code"))
 			if not course_code:
 				continue
 
@@ -206,6 +224,20 @@ class CoreLabMappingConstraint(Constraint):
 		if not value:
 			return ""
 		return "".join(ch for ch in str(value).lower() if ch.isalnum())
+
+	@staticmethod
+	def _normalise_course_code(value: Optional[str]) -> str:
+		return str(value or "").strip().upper()
+
+	def _build_catalog(self, core_df: Optional[pd.DataFrame]) -> Set[str]:
+		if core_df is None or core_df.empty:
+			return set()
+		catalog: Set[str] = set()
+		for raw_code in core_df.get("course_code", tuple()):
+			normalised = self._normalise_course_code(raw_code)
+			if normalised:
+				catalog.add(normalised)
+		return catalog
 
 
 def build_core_lab_mapping_constraint(

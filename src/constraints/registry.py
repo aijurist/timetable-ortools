@@ -12,6 +12,7 @@ from .cross_system.group_non_overlap import build_group_non_overlap_constraint
 from .cross_system.lunch_alignment import build_lunch_alignment_constraint
 from .cross_system.teacher_overlap import build_teacher_overlap_constraint
 from .cross_system.teacher_daily_workload import build_teacher_daily_workload_constraint
+from .lab.consecutive_batches import build_consecutive_batch_lab_constraint
 from .lab.core_lab import build_core_lab_mapping_constraint
 from .lab.requirements import build_lab_session_coverage_constraint
 from .lab.room_single_assignment import build_lab_room_single_assignment_constraint
@@ -73,6 +74,12 @@ LAB_CONSTRAINT_DEFINITIONS = {
 		"description": "Limit teachers to at most two consecutive lab sessions, with optional soft overrides per department.",
 		"factory": build_teacher_max_consecutive_lab_constraint,
 		"tags": ("lab", "teachers", "adjacency"),
+	},
+	"consecutive_batches": {
+		"title": "Course Consecutive Lab Batches",
+		"description": "Force configured course codes to occupy paired lab sessions (e.g. L1+L2) when they run multiple batches in a day.",
+		"factory": build_consecutive_batch_lab_constraint,
+		"tags": ("lab", "courses", "adjacency"),
 	},
 	"teacher_daily_presence_lab": {
 		"title": "Teacher Daily Lab Presence",
