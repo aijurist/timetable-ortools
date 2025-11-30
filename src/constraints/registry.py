@@ -11,6 +11,7 @@ from .cross_system.five_pm_policy import build_five_pm_policy_constraint
 from .cross_system.group_non_overlap import build_group_non_overlap_constraint
 from .cross_system.lunch_alignment import build_lunch_alignment_constraint
 from .cross_system.teacher_overlap import build_teacher_overlap_constraint
+from .cross_system.teacher_daily_workload import build_teacher_daily_workload_constraint
 from .lab.core_lab import build_core_lab_mapping_constraint
 from .lab.requirements import build_lab_session_coverage_constraint
 from .lab.room_single_assignment import build_lab_room_single_assignment_constraint
@@ -122,6 +123,12 @@ CROSS_SYSTEM_CONSTRAINT_DEFINITIONS = {
 		"description": "Block teachers from holding multiple lab/theory activities at the same time (with co-scheduling exceptions).",
 		"factory": build_teacher_overlap_constraint,
 		"tags": ("cross-system", "teachers", "conflict"),
+	},
+	"teacher_daily_workload": {
+		"title": "Teacher Daily Workload",
+		"description": "Limit the combined lab + theory hours a teacher can hold per day with optional soft slack.",
+		"factory": build_teacher_daily_workload_constraint,
+		"tags": ("cross-system", "teachers", "load"),
 	},
 	"lunch_alignment": {
 		"title": "Unified Lunch Alignment",

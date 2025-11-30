@@ -5,7 +5,7 @@ meta:
   generated_at: null
 
 paths:
-  courses_csv: data/department_data/core-v3/computer_dept.csv
+  courses_csv: data/department_data/core-v3/Chemical_Engineering_v3.0.csv
   rooms_csv: data/block_wise/techlongue.csv
   day_order_csv: data/day_order.csv
   core_lab_mapping_csv: data/og-final.csv
@@ -61,10 +61,10 @@ time:
     - "8:50 - 9:40"
     - "9:50 - 10:40"
     - "10:40 - 11:30"
-    - "11:40 - 12:30"
-    - "12:30 - 1:20"
+    - "11:50 - 12:40"
+    - "12:40 - 1:30"
     - "1:50 - 2:40"
-    - "2:40 - 3:20"
+    - "2:40 - 3:30"
     - "3:30 - 4:20"
     - "4:20 - 5:10"
     - "5:20 - 6:10"
@@ -570,16 +570,26 @@ constraints:
       priority: 10
       weight: 1.0
       params: {}
+    teacher_daily_workload:
+      enabled: true
+      priority: 9
+      weight: 1.0
+      params:
+        max_daily_hours: 5
+        mode: hard
+        soft_cap_hours: 6
+        soft_penalty_weight: 5
     lunch_alignment:
       enabled: true
-      priority: 6
-      weight: 0.4
+      priority: 9
+      weight: 0.8
       params:
         lunch_slot_window:
           - 3
           - 4
           - 5
           - 6
+        minimum_free_slots: 1
     five_pm_policy:
       enabled: true
       priority: 7
@@ -609,6 +619,7 @@ constraints:
           - Computer Science & Design_S5
           - Computer Science & Design_S7
           - Computer Science & Engineering (Cyber Security)
+          - Computer Science & Engineering_S3
           - Computer Science & Engineering_S5
           - Computer Science & Engineering_S7
           - Electrical & Electronics Engineering_S3
@@ -626,10 +637,9 @@ constraints:
           - Mechatronics Engineering_S7
           - Robotics & Automation
         soft_departments:
-          - Computer Science & Engineering_S3
           - Electronics & Communication Engineering_S3
-          - Electronics & Communication Engineering_S5
           - Electrical & Electronics Engineering_S5
+          - Electronics & Communication Engineering_S5
         blocked_theory_slots:
           - 9
           - 10

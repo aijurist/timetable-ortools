@@ -153,34 +153,54 @@ class LunchAlignmentConstraint(Constraint):
 		lab_guards = 0
 		flexible_guards = 0
 
+		dept_sem_groups: Dict[Tuple[str, Optional[int]], list[str]] = defaultdict(list)
+		group_windows: Dict[Tuple[str, Optional[int]], Tuple[int, ...]] = {}
 		for group_id, requirement in theory_block.requirements.items():
+			dept = getattr(requirement, "department", None)
+			semester = getattr(requirement, "semester", None)
+			if not dept:
+				continue
+			key = (dept, semester if semester is None else int(semester))
+			dept_sem_groups[key].append(group_id)
 			window = tuple(requirement.lunch_slot_window or config.fallback_window)
+			if window:
+				group_windows[key] = window
+
+		working_days = tuple(getattr(context.data.raw.time, "working_days", tuple()))
+
+		for key, group_ids in dept_sem_groups.items():
+			dept, semester = key
+			window = group_windows.get(key, config.fallback_window)
 			if not window:
 				continue
-			day_map = group_slot_map.get(group_id)
-			if not day_map:
-				continue
-			if config.is_flexible(requirement.department, requirement.semester):
-				flexible_groups += 1
-				flexible_guards += self._apply_flexible_lunch(
-					context.model,
-					config,
-					group_id,
-					day_map,
-					lab_sessions_by_group.get(group_id, {}),
-				)
+			if config.is_flexible(dept, semester):
+				for group_id in group_ids:
+					day_map = group_slot_map.get(group_id)
+					if not day_map:
+						continue
+					flexible_groups += 1
+					flexible_guards += self._apply_flexible_lunch(
+						context.model,
+						config,
+						group_id,
+						day_map,
+						lab_sessions_by_group.get(group_id, {}),
+					)
 			else:
-				standard_groups += 1
+				cohort_group_ids = tuple(group_ids)
 				theory_delta, lab_delta = self._apply_standard_lunch(
 					context.model,
 					config,
-					group_id,
-					day_map,
-					window,
-					lab_sessions_by_group.get(group_id, {}),
+					key,
+					cohort_group_ids,
+					group_slot_map,
+					lab_sessions_by_group,
 					lab_overlap_cache,
 					context.data.raw.time.lab_session_to_theory,
+					working_days,
+					window,
 				)
+				standard_groups += len(cohort_group_ids)
 				theory_guards += theory_delta
 				lab_guards += lab_delta
 
@@ -208,43 +228,68 @@ class LunchAlignmentConstraint(Constraint):
 		self,
 		model: cp_model.CpModel,
 		config: LunchAlignmentConfig,
-		group_id: str,
-		day_map: Mapping[int, Mapping[int, cp_model.IntVar]],
-		window: Tuple[int, ...],
-		lab_sessions: Mapping[int, Mapping[str, Tuple[cp_model.IntVar, ...]]],
+		cohort_key: Tuple[str, Optional[int]],
+		group_ids: Sequence[str],
+		group_slot_map: Mapping[str, Mapping[int, Mapping[int, cp_model.IntVar]]],
+		lab_sessions: Mapping[str, Mapping[int, Mapping[str, Tuple[cp_model.IntVar, ...]]]],
 		lab_overlap_cache: Dict[int, Tuple[str, ...]],
 		lab_session_to_theory: Mapping[str, Sequence[int]],
+		working_days: Sequence[str],
+		window: Tuple[int, ...],
 	) -> Tuple[int, int]:
+		cohort_label = self._cohort_label(*cohort_key)
 		theory_clauses = 0
 		lab_clauses = 0
+		session_literal_cache: Dict[Tuple[str, int, str], cp_model.IntVar] = {}
 
-		for day_idx, slot_map in day_map.items():
+		day_indices: set[int] = set()
+		for group_id in group_ids:
+			day_indices.update(group_slot_map.get(group_id, {}).keys())
+			day_indices.update(lab_sessions.get(group_id, {}).keys())
+		if not day_indices:
+			day_indices = set(range(len(working_days))) if working_days else {0}
+
+		for day_idx in sorted(day_indices):
 			slot_literals: list[cp_model.IntVar] = []
-			day_sessions = lab_sessions.get(day_idx, {})
-			session_literals: Dict[str, cp_model.IntVar] = {}
-			for session_name, vars_tuple in day_sessions.items():
-				literal = build_presence_literal(
-					model,
-					vars_tuple,
-					f"lunch_lab_{group_id}_d{day_idx}_{session_name}",
-				)
-				if literal is not None:
-					session_literals[session_name] = literal
-
 			for slot in window:
-				slot_literal = model.NewBoolVar(f"lunch_slot_{group_id}_d{day_idx}_s{slot}")
+				slot_literal = model.NewBoolVar(f"lunch_free_{cohort_label}_d{day_idx}_s{slot}")
 				slot_literals.append(slot_literal)
-				slot_var = slot_map.get(slot)
-				if slot_var is not None:
-					model.Add(slot_var == 0).OnlyEnforceIf(slot_literal)
-					theory_clauses += 1
-				sessions_for_slot = self._lab_sessions_for_slot(slot, lab_overlap_cache, lab_session_to_theory)
-				for session_name in sessions_for_slot:
-					session_literal = session_literals.get(session_name)
-					if session_literal is None:
-						continue
-					model.Add(session_literal == 0).OnlyEnforceIf(slot_literal)
-					lab_clauses += 1
+				slot_busy_terms: list[cp_model.IntVar] = []
+
+				for group_id in group_ids:
+					day_map = group_slot_map.get(group_id, {})
+					slot_map = day_map.get(day_idx, {}) if isinstance(day_map, Mapping) else {}
+					slot_var = slot_map.get(slot) if isinstance(slot_map, Mapping) else None
+					if slot_var is not None:
+						slot_busy_terms.append(slot_var)
+					group_day_sessions = lab_sessions.get(group_id, {}).get(day_idx, {})
+					for session_name in self._lab_sessions_for_slot(slot, lab_overlap_cache, lab_session_to_theory):
+						vars_tuple = group_day_sessions.get(session_name)
+						if not vars_tuple:
+							continue
+						cache_key = (group_id, day_idx, session_name)
+						literal = session_literal_cache.get(cache_key)
+						if literal is None:
+							literal = build_presence_literal(
+								model,
+								vars_tuple,
+								f"lunch_lab_{group_id}_d{day_idx}_{session_name}",
+							)
+							if literal is None:
+								continue
+							session_literal_cache[cache_key] = literal
+							lab_clauses += 1
+						slot_busy_terms.append(literal)
+
+				if slot_busy_terms:
+					busy_literal = build_presence_literal(
+						model,
+						tuple(slot_busy_terms),
+						f"lunch_busy_{cohort_label}_d{day_idx}_s{slot}",
+					)
+					if busy_literal is not None:
+						model.Add(slot_literal + busy_literal == 1)
+						theory_clauses += 1
 
 			if slot_literals:
 				required_free = min(config.minimum_free_slots, len(slot_literals))
@@ -339,6 +384,13 @@ class LunchAlignmentConstraint(Constraint):
 				if slot in slots
 			)
 		return cache[slot]
+
+	@staticmethod
+	def _cohort_label(department: str, semester: Optional[int]) -> str:
+		label = (department or "unknown").replace(" ", "_")
+		if semester is None:
+			return label
+		return f"{label}_S{semester}"
 
 
 def build_lunch_alignment_constraint(

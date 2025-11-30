@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Chemical Engineering
 Semester: 7
-Generated: 2025-11-25 17:51:10
+Generated: 2025-11-30 11:33:35
 ============================================================
 
 OVERVIEW
@@ -12,11 +12,11 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - CH19701 [Theory]: 1 groups, 1 teachers
-  └─ G4: 1 teacher assignments
-- CH19702 [Theory]: 1 groups, 1 teachers
-  └─ G7: 1 teacher assignments
-- CH19703 [Theory]: 1 groups, 1 teachers
   └─ G6: 1 teacher assignments
+- CH19702 [Theory]: 1 groups, 1 teachers
+  └─ G5: 1 teacher assignments
+- CH19703 [Theory]: 1 groups, 1 teachers
+  └─ G4: 1 teacher assignments
 - CH19711 [Lab]: 1 groups, 1 teachers
   └─ G3: 1 teacher assignments
 - CH19712 [Lab]: 1 groups, 1 teachers
@@ -24,7 +24,7 @@ COURSE DISTRIBUTION BY GROUP
 - CH19713 [Lab]: 1 groups, 1 teachers
   └─ G1: 1 teacher assignments
 - CH19P71 [Theory]: 1 groups, 1 teachers
-  └─ G5: 1 teacher assignments
+  └─ G7: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
@@ -34,10 +34,10 @@ GROUP COMPOSITION
 - G3: 1 courses, 1 teachers
   └─ CH19711 [L]: 1 instances, 1 teachers
 - G4: 1 courses, 1 teachers
-  └─ CH19701 [T]: 1 instances, 1 teachers
-- G5: 1 courses, 1 teachers
-  └─ CH19P71 [T]: 1 instances, 1 teachers
-- G6: 1 courses, 1 teachers
   └─ CH19703 [T]: 1 instances, 1 teachers
-- G7: 1 courses, 1 teachers
+- G5: 1 courses, 1 teachers
   └─ CH19702 [T]: 1 instances, 1 teachers
+- G6: 1 courses, 1 teachers
+  └─ CH19701 [T]: 1 instances, 1 teachers
+- G7: 1 courses, 1 teachers
+  └─ CH19P71 [T]: 1 instances, 1 teachers
