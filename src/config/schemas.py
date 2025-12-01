@@ -267,6 +267,10 @@ class RuntimeConfig:
     enable_trace: bool = False
     solution_limit: Optional[int] = None
     stop_after_first_solution: bool = False
+    probing_level: Optional[int] = None
+    search_branching: Optional[str] = None
+    restart_log_size: Optional[float] = None
+    max_number_of_conflicts: Optional[int] = None
 
     def __post_init__(self) -> None:
         if self.time_limit_sec is not None and self.time_limit_sec <= 0:
@@ -275,6 +279,14 @@ class RuntimeConfig:
             raise ValueError("thread_count must be positive")
         if self.solution_limit is not None and self.solution_limit <= 0:
             raise ValueError("solution_limit must be positive when provided")
+        if self.probing_level is not None and self.probing_level not in (0, 1, 2):
+            raise ValueError("probing_level must be 0, 1, 2, or null for solver default")
+        if self.search_branching is not None and not str(self.search_branching).strip():
+            raise ValueError("search_branching cannot be empty when provided")
+        if self.restart_log_size is not None and self.restart_log_size <= 0:
+            raise ValueError("restart_log_size must be positive when provided")
+        if self.max_number_of_conflicts is not None and self.max_number_of_conflicts <= 0:
+            raise ValueError("max_number_of_conflicts must be positive when provided")
 
 
 @dataclass(frozen=True)

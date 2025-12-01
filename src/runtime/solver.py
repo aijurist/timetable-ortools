@@ -125,6 +125,14 @@ class SolverRunner:
 		parameters.use_lns = bool(runtime.enable_lns)
 		if runtime.enable_trace:
 			parameters.log_search_progress = True
+		if runtime.probing_level is not None:
+			self._assign_parameter(parameters, "cp_model_probing_level", runtime.probing_level)
+		if runtime.search_branching is not None:
+			self._assign_parameter(parameters, "search_branching", runtime.search_branching)
+		if runtime.restart_log_size is not None:
+			self._assign_parameter(parameters, "restart_log_size", runtime.restart_log_size)
+		if runtime.max_number_of_conflicts is not None:
+			self._assign_parameter(parameters, "max_number_of_conflicts", runtime.max_number_of_conflicts)
 
 	def _apply_yaml_parameters(self, parameters: sat_parameters_pb2.SatParameters) -> None:
 		payload = self._params_payload

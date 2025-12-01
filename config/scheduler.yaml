@@ -5,7 +5,7 @@ meta:
   generated_at: null
 
 paths:
-  courses_csv: data/department_data/core-v3/Biotechnology_v3.0.csv
+  courses_csv: data/department_data/core-v3/computer_dept.csv
   rooms_csv: data/block_wise/techlongue.csv
   day_order_csv: data/day_order.csv
   core_lab_mapping_csv: data/og-final.csv
@@ -127,6 +127,21 @@ departments:
         - 6
       shift_id: SHIFT_1
       flexible_lunch: false
+    Computer Science & Engineering (Cyber Security):
+      day_pattern:
+        - monday
+        - tuesday
+        - wed
+        - thur
+        - fri
+      lunch_break_slot: null
+      lunch_slot_window:
+        - 3
+        - 4
+        - 5
+        - 6
+      shift_id: SHIFT_1
+      flexible_lunch: false
     Electronics & Communication Engineering:
       day_pattern:
         - tuesday
@@ -144,11 +159,11 @@ departments:
       flexible_lunch: false
     Information Technology:
       day_pattern:
+        - monday
         - tuesday
         - wed
         - thur
         - fri
-        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
@@ -189,11 +204,11 @@ departments:
       flexible_lunch: false
     Artificial Intelligence & Data Science:
       day_pattern:
+        - monday
         - tuesday
         - wed
         - thur
         - fri
-        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
@@ -204,11 +219,11 @@ departments:
       flexible_lunch: false
     Artificial Intelligence & Machine Learning:
       day_pattern:
+        - monday
         - tuesday
         - wed
         - thur
         - fri
-        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
@@ -231,6 +246,36 @@ departments:
         - 5
         - 6
       shift_id: SHIFT_1
+      flexible_lunch: false
+    Computer Science & Business Systems:
+      day_pattern:
+        - monday
+        - tuesday
+        - wed
+        - thur
+        - fri
+      lunch_break_slot: null
+      lunch_slot_window:
+        - 3
+        - 4
+        - 5
+        - 6
+      shift_id: SHIFT_1
+      flexible_lunch: false
+    Electrical & Electronics Engineering:
+      day_pattern:
+        - tuesday
+        - wed
+        - thur
+        - fri
+        - saturday
+      lunch_break_slot: null
+      lunch_slot_window:
+        - 3
+        - 4
+        - 5
+        - 6
+      shift_id: SHIFT_2
       flexible_lunch: false
     Robotics & Automation:
       day_pattern:
@@ -292,6 +337,21 @@ departments:
         - 6
       shift_id: SHIFT_2
       flexible_lunch: false
+    Food Technology:
+      day_pattern:
+        - tuesday
+        - wed
+        - thur
+        - fri
+        - saturday
+      lunch_break_slot: null
+      lunch_slot_window:
+        - 3
+        - 4
+        - 5
+        - 6
+      shift_id: SHIFT_2
+      flexible_lunch: false
     Chemical Engineering:
       day_pattern:
         - monday
@@ -321,6 +381,21 @@ departments:
         - 5
         - 6
       shift_id: SHIFT_2
+      flexible_lunch: false
+    Mechatronics Engineering:
+      day_pattern:
+        - monday
+        - tuesday
+        - wed
+        - thur
+        - fri
+      lunch_break_slot: null
+      lunch_slot_window:
+        - 3
+        - 4
+        - 5
+        - 6
+      shift_id: SHIFT_1
       flexible_lunch: false
   shift_templates:
     SHIFT_1:
@@ -518,6 +593,12 @@ constraints:
       priority: 10
       weight: 1.0
       params: {}
+    course_daily_limit:
+      enabled: true
+      priority: 9
+      weight: 1.0
+      params:
+        max_daily_slots: 2
     daily_slot_cap:
       enabled: false
       priority: 9
@@ -631,7 +712,6 @@ constraints:
           - Computer Science & Design_S5
           - Computer Science & Design_S7
           - Computer Science & Engineering (Cyber Security)
-          - Computer Science & Engineering_S3
           - Computer Science & Engineering_S5
           - Computer Science & Engineering_S7
           - Electrical & Electronics Engineering_S3
@@ -647,6 +727,7 @@ constraints:
           - Mechatronics Engineering_S3
           - Mechatronics Engineering_S5
           - Mechatronics Engineering_S7
+          - Computer Science & Engineering_S3
           - Robotics & Automation
         soft_departments:
           - Electronics & Communication Engineering_S3
@@ -676,11 +757,15 @@ model:
 
 runtime:
   time_limit_sec: 10000
-  thread_count: 12
+  thread_count: 16
   enable_lns: true
   enable_trace: true
   solution_limit: null
   stop_after_first_solution: true
+  probing_level: 0
+  search_branching: FIXED_SEARCH
+  restart_log_size: 18.0
+  max_number_of_conflicts: 150000
 
 logging:
   level: INFO

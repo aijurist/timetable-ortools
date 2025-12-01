@@ -80,7 +80,21 @@ DEPARTMENT_OVERRIDES: Mapping[str, DepartmentSettings] = {
         shift_id="SHIFT_1",
         flexible_lunch=False,
     ),
+    "Computer Science & Engineering (Cyber Security)": DepartmentSettings(
+        day_pattern=DEFAULT_WORKING_DAYS,
+        lunch_break_slot=None,
+        lunch_slot_window=DEFAULT_LUNCH_SLOT_WINDOW,
+        shift_id="SHIFT_1",
+        flexible_lunch=False,
+    ),
     "Electronics & Communication Engineering": DepartmentSettings(
+        day_pattern=DEFAULT_WORKING_DAYS,
+        lunch_break_slot=None,
+        lunch_slot_window=DEFAULT_LUNCH_SLOT_WINDOW,
+        shift_id="SHIFT_2",
+        flexible_lunch=False,
+    ),
+    "Electrical & Electronics Engineering": DepartmentSettings(
         day_pattern=DEFAULT_WORKING_DAYS,
         lunch_break_slot=None,
         lunch_slot_window=DEFAULT_LUNCH_SLOT_WINDOW,
@@ -122,6 +136,13 @@ DEPARTMENT_OVERRIDES: Mapping[str, DepartmentSettings] = {
         shift_id="SHIFT_2",
         flexible_lunch=False,
     ),
+    "Computer Science & Business Systems": DepartmentSettings(
+        day_pattern=DEFAULT_WORKING_DAYS,
+        lunch_break_slot=None,
+        lunch_slot_window=DEFAULT_LUNCH_SLOT_WINDOW,
+        shift_id="SHIFT_1",
+        flexible_lunch=False,
+    ),
     "Computer Science & Design": DepartmentSettings(
         day_pattern=DEFAULT_WORKING_DAYS,
         lunch_break_slot=None,
@@ -157,6 +178,13 @@ DEPARTMENT_OVERRIDES: Mapping[str, DepartmentSettings] = {
         shift_id="SHIFT_2",
         flexible_lunch=False,
     ),
+    "Food Technology": DepartmentSettings(
+        day_pattern=DEFAULT_WORKING_DAYS,
+        lunch_break_slot=None,
+        lunch_slot_window=DEFAULT_LUNCH_SLOT_WINDOW,
+        shift_id="SHIFT_2",
+        flexible_lunch=False,
+    ),
     "Chemical Engineering": DepartmentSettings(
         day_pattern=DEFAULT_WORKING_DAYS,
         lunch_break_slot=None,
@@ -169,6 +197,13 @@ DEPARTMENT_OVERRIDES: Mapping[str, DepartmentSettings] = {
         lunch_break_slot=None,
         lunch_slot_window=DEFAULT_LUNCH_SLOT_WINDOW,
         shift_id="SHIFT_2",
+        flexible_lunch=False,
+    ),
+    "Mechatronics Engineering": DepartmentSettings(
+        day_pattern=DEFAULT_WORKING_DAYS,
+        lunch_break_slot=None,
+        lunch_slot_window=DEFAULT_LUNCH_SLOT_WINDOW,
+        shift_id="SHIFT_1",
         flexible_lunch=False,
     ),
 }
@@ -342,6 +377,7 @@ def default_constraint_config() -> ConstraintConfig:
         "shift_alignment": ConstraintSetting(priority=9, weight=0.9, enabled=True),
     }
     theory_constraints = {
+        "course_daily_limit": ConstraintSetting(priority=9, weight=1.0, enabled=True, params={"max_daily_slots": 2}),
         "teacher_daily_limit": ConstraintSetting(priority=9, weight=1.0, enabled=True),
         "student_conflict": ConstraintSetting(priority=10, weight=1.0, enabled=True),
         "room_assignment": ConstraintSetting(priority=8, weight=0.7, enabled=True),
@@ -381,6 +417,10 @@ def default_runtime_config() -> RuntimeConfig:
         enable_trace=False,
         solution_limit=None,
         stop_after_first_solution=False,
+        probing_level=None,
+        search_branching=None,
+        restart_log_size=None,
+        max_number_of_conflicts=None,
     )
 
 
