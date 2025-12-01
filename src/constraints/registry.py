@@ -10,6 +10,7 @@ from .base import ConstraintMetadata
 from .cross_system.five_pm_policy import build_five_pm_policy_constraint
 from .cross_system.group_non_overlap import build_group_non_overlap_constraint
 from .cross_system.lunch_alignment import build_lunch_alignment_constraint
+from .cross_system.shift_pattern import build_shift_pattern_constraint
 from .cross_system.teacher_overlap import build_teacher_overlap_constraint
 from .cross_system.teacher_daily_workload import build_teacher_daily_workload_constraint
 from .lab.consecutive_batches import build_consecutive_batch_lab_constraint
@@ -155,6 +156,12 @@ CROSS_SYSTEM_CONSTRAINT_DEFINITIONS = {
 		"description": "Block or penalize late sessions for configured departments across lab and theory.",
 		"factory": build_five_pm_policy_constraint,
 		"tags": ("cross-system", "time", "policy"),
+	},
+	"shift_pattern": {
+		"title": "Shift Pattern Ratio",
+		"description": "Softly enforce allowed SHIFT_1 vs SHIFT_2 day ratios for each department across lab/theory.",
+		"factory": build_shift_pattern_constraint,
+		"tags": ("cross-system", "shifts", "distribution"),
 	},
 }
 

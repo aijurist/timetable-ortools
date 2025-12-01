@@ -177,7 +177,7 @@ class LabCourseRequirementConstraint(Constraint):
 
 		prefer_large, weight = self._capacity_preference_weight(dept_label, practical_hours)
 		if weight > 0:
-			tag = f"course:{requirement.course_instance_id}:capacity"
+			tag = f"lab_balance:course:{requirement.course_instance_id}:capacity"
 			literal = strategy if prefer_large else strategy.Not()
 			register_objective_penalty(context, literal, weight, tag=tag)
 
@@ -192,7 +192,7 @@ class LabCourseRequirementConstraint(Constraint):
 					context,
 					non_kj_literal,
 					self._block_penalty_weight(),
-					tag=f"block:{requirement.course_instance_id}",
+					tag=f"room_spread:block:{requirement.course_instance_id}",
 				)
 				stats.block_preferences += 1
 

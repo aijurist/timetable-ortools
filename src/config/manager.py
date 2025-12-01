@@ -30,6 +30,7 @@ from .schemas import (
 	ShiftTemplate,
 	TimeSystemConfig,
 	ValidationConfig,
+	WarmStartConfig,
 )
 
 logger = logging.getLogger(__name__)
@@ -209,7 +210,13 @@ class ConfigManager:
 		)
 
 		model = ModelConfig(**data["model"])
-		runtime = RuntimeConfig(**data["runtime"])
+		runtime_payload = dict(data["runtime"])
+		warm_start_payload = runtime_payload.get("warm_start")
+		if isinstance(warm_start_payload, Mapping):
+			runtime_payload["warm_start"] = WarmStartConfig(**warm_start_payload)
+		elif not isinstance(warm_start_payload, WarmStartConfig):
+			runtime_payload["warm_start"] = WarmStartConfig()
+		runtime = RuntimeConfig(**runtime_payload)
 		logging_cfg = LoggingConfig(**data["logging"])
 		validation = ValidationConfig(**data["validation"])
 

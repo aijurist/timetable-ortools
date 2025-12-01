@@ -256,7 +256,7 @@ class TeacherMaxConsecutiveLabConstraint(Constraint):
 					context,
 					violation,
 					weight=penalty_weight,
-					tag=f"teacher_max_consecutive:{scope}:{teacher_id}:{entity_id}:d{day_index}",
+					tag=f"teacher_spread:max_consecutive:{scope}:{teacher_id}:{entity_id}:d{day_index}",
 				)
 				stats.soft_penalties += 1
 				stats.penalty_variables += 1

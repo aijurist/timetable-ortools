@@ -104,7 +104,7 @@ class TeacherDailyWorkloadConstraint(Constraint):
 							context,
 							overage,
 							weight=config.penalty_weight,
-							tag=f"teacher_daily_workload:{teacher_id}:{day_name}",
+							tag=f"teacher_spread:daily_workload:{teacher_id}:{day_name}",
 						)
 						stats.soft_penalties += 1
 					else:

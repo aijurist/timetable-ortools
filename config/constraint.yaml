@@ -120,3 +120,16 @@ cross_system:
 		description: Apply department-specific no-evening scheduling rules.
 		params:
 			soft_penalty_weight: 5
+		shift_pattern:
+			enabled: true
+			priority: 8
+			weight: 0.7
+			description: Softly keep departments within approved SHIFT_1 vs SHIFT_2 day ratios.
+			params:
+				shift_templates:
+					- SHIFT_1
+					- SHIFT_2
+				allowed_patterns:
+					- [3, 2]
+					- [2, 3]
+				penalty_weight: 12

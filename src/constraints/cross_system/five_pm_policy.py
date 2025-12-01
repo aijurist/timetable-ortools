@@ -169,7 +169,7 @@ class FivePmPolicyConstraint(Constraint):
 							context,
 							var,
 							self._penalty_weight,
-							tag=f"theory:{group_id}:d{day_idx}:s{slot_idx}",
+							tag=f"teacher_spread:five_pm_theory:{group_id}:d{day_idx}:s{slot_idx}",
 						)
 						penalty_terms += 1
 
@@ -196,7 +196,7 @@ class FivePmPolicyConstraint(Constraint):
 							context,
 							literal,
 							self._penalty_weight,
-							tag=f"lab:{course_id}:{session_name}",
+								tag=f"teacher_spread:five_pm_lab:{course_id}:{session_name}",
 						)
 						penalty_terms += 1
 

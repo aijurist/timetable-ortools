@@ -102,7 +102,12 @@ class CoreLabGroupSlotCapConstraint(Constraint):
 
 			excess = context.model.NewIntVar(0, max(len(slot_literals) - limit, 0), f"{group_id}_core_slot_excess")
 			context.model.AddMaxEquality(excess, [total_slots - limit, 0])
-			register_objective_penalty(context, excess, penalty_weight, tag=f"core_group:{group_id}")
+			register_objective_penalty(
+				context,
+				excess,
+				penalty_weight,
+				tag=f"lab_balance:core_group:{group_id}",
+			)
 			stats.penalty_variables += 1
 
 		status = ConstraintStatus.APPLIED if stats.targeted_groups else ConstraintStatus.SKIPPED

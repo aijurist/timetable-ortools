@@ -255,7 +255,7 @@ class DataLoader:
 
         shift_definitions = self._build_shift_snapshots(department_config.shift_templates, time_artifacts)
 
-        valid_shift_patterns = ((3, 2),)
+        valid_shift_patterns = ((3, 2), (2, 3))
         flexible_lunch_departments = tuple(department_config.flexible_lunch_departments)
 
         return DepartmentArtifacts(

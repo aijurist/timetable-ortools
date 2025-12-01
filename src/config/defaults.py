@@ -22,6 +22,7 @@ from .schemas import (
     ShiftTemplate,
     TimeSystemConfig,
     ValidationConfig,
+    WarmStartConfig,
 )
 
 
@@ -388,6 +389,16 @@ def default_constraint_config() -> ConstraintConfig:
         "teacher_overlap": ConstraintSetting(priority=10, weight=1.0, enabled=True),
         "lunch_alignment": ConstraintSetting(priority=6, weight=0.4, enabled=True),
         "five_pm_policy": ConstraintSetting(priority=7, weight=0.5, enabled=True),
+        "shift_pattern": ConstraintSetting(
+            priority=8,
+            weight=0.7,
+            enabled=True,
+            params={
+                "shift_templates": ("SHIFT_1", "SHIFT_2"),
+                "allowed_patterns": ((3, 2), (2, 3)),
+                "penalty_weight": 12,
+            },
+        ),
     }
     return ConstraintConfig(
         lab=lab_constraints,
@@ -409,6 +420,10 @@ def default_model_config() -> ModelConfig:
     )
 
 
+def default_warm_start_config() -> WarmStartConfig:
+    return WarmStartConfig()
+
+
 def default_runtime_config() -> RuntimeConfig:
     return RuntimeConfig(
         time_limit_sec=900,
@@ -421,6 +436,7 @@ def default_runtime_config() -> RuntimeConfig:
         search_branching=None,
         restart_log_size=None,
         max_number_of_conflicts=None,
+        warm_start=default_warm_start_config(),
     )
 
 
@@ -463,6 +479,7 @@ __all__ = [
     "default_grouping_config",
     "default_constraint_config",
     "default_model_config",
+    "default_warm_start_config",
     "default_runtime_config",
     "default_logging_config",
     "default_validation_config",

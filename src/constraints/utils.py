@@ -163,9 +163,39 @@ def register_objective_penalty(
 
 	if weight == 0:
 		return
+	multiplier = _resolve_objective_multiplier(context, tag)
+	final_weight = int(round(weight * multiplier))
+	if final_weight == 0:
+		return
 	objective_bucket = ensure_extra_bucket(context, "objective")
 	penalties = objective_bucket.setdefault("penalties", [])  # type: ignore[assignment]
-	penalties.append((int(weight), variable, tag or ""))
+	penalties.append((final_weight, variable, tag or ""))
+
+
+def _resolve_objective_multiplier(context: ConstraintContext, tag: Optional[str]) -> float:
+	model_config = getattr(context.config, "model", None)
+	weights: Mapping[str, float] = getattr(model_config, "objective_weights", {}) or {}
+	if not weights:
+		return 1.0
+	lookup_keys = []
+	if tag:
+		tag_text = str(tag).strip()
+		if tag_text:
+			lookup_keys.append(tag_text)
+			if ":" in tag_text:
+				lookup_keys.append(tag_text.split(":", 1)[0])
+	lookup_keys.append("__default__")
+	for key in lookup_keys:
+		if key is None:
+			continue
+		value = weights.get(key)
+		if value is None:
+			continue
+		try:
+			return float(value)
+		except (TypeError, ValueError):
+			continue
+	return 1.0
 
 
 def build_presence_literal(

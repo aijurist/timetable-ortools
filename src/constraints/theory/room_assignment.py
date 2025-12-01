@@ -129,7 +129,12 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 			block = room_meta.get("block") or room_meta.get("Block") or room_meta.get("building")
 			block_label = self._normalise_block(block)
 			if self._overflow_penalty and policy.primary_block and block_label != policy.primary_block:
-				register_objective_penalty(context, var, weight=self._overflow_penalty, tag="block_overflow")
+				register_objective_penalty(
+					context,
+					var,
+					weight=self._overflow_penalty,
+					tag="room_spread:block_overflow",
+				)
 				stats["penalties"] += 1
 
 		for vars_list in room_slot_usage.values():

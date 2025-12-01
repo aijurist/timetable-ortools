@@ -260,6 +260,22 @@ class ModelConfig:
 
 
 @dataclass(frozen=True)
+class WarmStartConfig:
+    enabled: bool = False
+    snapshot_dir: Optional[Path] = None
+    max_hint_literals: int = 2000
+    max_snapshot_age_hours: Optional[int] = 72
+    require_signature_match: bool = True
+
+    def __post_init__(self) -> None:
+        if self.max_hint_literals <= 0:
+            raise ValueError("max_hint_literals must be positive")
+        if self.max_snapshot_age_hours is not None and self.max_snapshot_age_hours <= 0:
+            raise ValueError("max_snapshot_age_hours must be positive when provided")
+        object.__setattr__(self, "snapshot_dir", _to_path(self.snapshot_dir))
+
+
+@dataclass(frozen=True)
 class RuntimeConfig:
     time_limit_sec: Optional[int] = 300
     thread_count: int = 4
@@ -271,6 +287,7 @@ class RuntimeConfig:
     search_branching: Optional[str] = None
     restart_log_size: Optional[float] = None
     max_number_of_conflicts: Optional[int] = None
+    warm_start: WarmStartConfig = field(default_factory=WarmStartConfig)
 
     def __post_init__(self) -> None:
         if self.time_limit_sec is not None and self.time_limit_sec <= 0:
@@ -343,6 +360,7 @@ __all__ = [
     "ConstraintSetting",
     "ConstraintConfig",
     "ModelConfig",
+    "WarmStartConfig",
     "RuntimeConfig",
     "LoggingConfig",
     "ValidationConfig",

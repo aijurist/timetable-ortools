@@ -15,6 +15,7 @@ from src.constraints.utils import (
 	get_room_attributes,
 	iter_group_timeslot_variables,
 	iter_lab_session_variables,
+	register_objective_penalty,
 	resolve_day_pattern,
 )
 from src.data.schemas import ExtendedDataContainer, LabSessionDetail
@@ -92,7 +93,7 @@ def sample_context() -> ConstraintContext:
 	departments_ns = SimpleNamespace(day_patterns={"__default__": ("monday", "tuesday")})
 	raw = SimpleNamespace(time=time_ns, departments=departments_ns, room_registry={"R1": {"capacity": 60}})
 	data = ExtendedDataContainer(raw=raw, preprocessing=SimpleNamespace())
-	config = SimpleNamespace()
+	config = SimpleNamespace(model=SimpleNamespace(objective_weights={}))
 	logger = logging.getLogger("tests.constraints.utils")
 	return ConstraintContext(
 		model=model,
@@ -135,3 +136,19 @@ def test_ensure_extra_bucket(sample_context: ConstraintContext) -> None:
 	first = ensure_extra_bucket(sample_context, "cache")
 	second = ensure_extra_bucket(sample_context, "cache")
 	assert first is second
+
+
+def test_register_objective_penalty_scales_with_tag(sample_context: ConstraintContext) -> None:
+	sample_context.config.model.objective_weights = {"teacher_spread": 2.0}
+	var = sample_context.model.NewIntVar(0, 5, "penalty_var")
+	register_objective_penalty(sample_context, var, weight=10, tag="teacher_spread:max")
+	penalties = sample_context.extra["objective"]["penalties"]
+	assert penalties[0][0] == 20
+
+
+def test_register_objective_penalty_uses_default(sample_context: ConstraintContext) -> None:
+	sample_context.config.model.objective_weights = {"__default__": 0.5}
+	var = sample_context.model.NewIntVar(0, 5, "default_penalty_var")
+	register_objective_penalty(sample_context, var, weight=10)
+	penalties = sample_context.extra["objective"]["penalties"]
+	assert penalties[0][0] == 5

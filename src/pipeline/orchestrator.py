@@ -16,9 +16,11 @@ from ..models.model_builder import ConstraintModel, ModelBuilder
 from ..runtime.extractor import ScheduleExtractor, ScheduleExtractionResult
 from ..runtime.solver import SolverRunner, SolverResult
 from ..runtime.validator import ScheduleValidator, ValidationReport
+from ..runtime.warm_start import WarmStartManager
 from ..telemetry.grouping import GroupTelemetryBuilder
 from ..telemetry.overlaps import OverlapTelemetryBuilder
 from ..telemetry.slot_caps import SlotCapTelemetryBuilder
+from ..telemetry.solver_metrics import SolverMetricsTelemetryBuilder
 from ..telemetry.teacher_labs import TeacherLabTelemetryBuilder
 from ..telemetry.validation import ValidationTelemetryBuilder
 
@@ -41,6 +43,7 @@ class PipelineOrchestrator:
 		self._schedule: Optional[ScheduleExtractionResult] = None
 		self._latest_output_dir: Optional[Path] = None
 		self._validation_report: Optional[ValidationReport] = None
+		self._warm_start_manager: Optional[WarmStartManager] = None
 
 	@property
 	def config(self) -> SchedulerConfig:
@@ -110,6 +113,7 @@ class PipelineOrchestrator:
 			self.build_model()
 
 		runner = SolverRunner(self.config)
+		self._apply_warm_start_hints()
 		self._solver_result = runner.solve(self._model)
 		return self._solver_result
 
@@ -138,7 +142,32 @@ class PipelineOrchestrator:
 		self._write_grouping_telemetry(timestamp_dir, self._schedule)
 		self._write_overlap_telemetry(timestamp_dir, self._schedule)
 		self._write_validation_telemetry(timestamp_dir)
+		self._write_solver_metrics(timestamp_dir)
+		self._persist_warm_start_snapshot(timestamp_dir)
 		return self._schedule
+
+	def _apply_warm_start_hints(self) -> None:
+		if not self._model or not self.config.runtime.warm_start.enabled:
+			return
+		manager = self._get_warm_start_manager()
+		try:
+			manager.apply_hints(self._model)
+		except Exception:  # pragma: no cover - warm start is best-effort
+			logger.exception("Warm-start hint application failed")
+
+	def _persist_warm_start_snapshot(self, output_dir: Path) -> None:
+		if not self._model or not self._schedule or not self.config.runtime.warm_start.enabled:
+			return
+		manager = self._get_warm_start_manager()
+		try:
+			manager.write_snapshot(self._schedule, self._model, output_dir=output_dir)
+		except Exception:  # pragma: no cover - warm start persistence is best-effort
+			logger.exception("Failed to write warm-start snapshot")
+
+	def _get_warm_start_manager(self) -> WarmStartManager:
+		if self._warm_start_manager is None:
+			self._warm_start_manager = WarmStartManager(self.config, base_dir=self._base_dir)
+		return self._warm_start_manager
 
 	def run(self) -> ScheduleExtractionResult:
 		"""Execute the full pipeline from config to extraction."""
@@ -257,6 +286,21 @@ class PipelineOrchestrator:
 			builder.write(output_dir / "validation_telemetry.json")
 		except Exception:  # pragma: no cover - telemetry is best-effort
 			logger.exception("Failed to write validation telemetry")
+
+	def _write_solver_metrics(self, output_dir: Path) -> None:
+		if not self._solver_result or not self._model:
+			return
+		builder = SolverMetricsTelemetryBuilder(
+			solver_result=self._solver_result,
+			model_metadata=self._model.metadata,
+			run_label=output_dir.name,
+		)
+		try:
+			builder.write(output_dir / "solver_metrics.json")
+			trend_dir = self.config.paths.output_root / "metrics"
+			builder.append(trend_dir / "solver_metrics.jsonl")
+		except Exception:  # pragma: no cover - telemetry is best-effort
+			logger.exception("Failed to write solver metrics telemetry")
 
 
 __all__ = ["PipelineOrchestrator"]
