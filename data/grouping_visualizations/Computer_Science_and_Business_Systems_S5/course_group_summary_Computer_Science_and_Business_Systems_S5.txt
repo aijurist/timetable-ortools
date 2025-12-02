@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Computer Science & Business Systems
 Semester: 5
-Generated: 2025-12-01 18:56:22
+Generated: 2025-12-02 11:30:10
 ============================================================
 
 OVERVIEW
@@ -15,20 +15,20 @@ COURSE DISTRIBUTION BY GROUP
   └─ G4: 1 teacher assignments
   └─ G5: 1 teacher assignments
 - CB23531 [Lab + Theory]: 1 groups, 2 teachers
-  └─ G2: 2 teacher assignments
+  └─ G1: 2 teacher assignments
 - CB23532 [Lab + Theory]: 1 groups, 2 teachers
   └─ G3: 2 teacher assignments
 - CB23D31 [Lab + Theory]: 1 groups, 2 teachers
-  └─ G1: 2 teacher assignments
+  └─ G2: 2 teacher assignments
 - GE23627 [Lab + Theory]: 2 groups, 2 teachers
   └─ G4: 1 teacher assignments
   └─ G5: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 2 teachers
-  └─ CB23D31 [L+T]: 2 instances, 2 teachers
-- G2: 1 courses, 2 teachers
   └─ CB23531 [L+T]: 2 instances, 2 teachers
+- G2: 1 courses, 2 teachers
+  └─ CB23D31 [L+T]: 2 instances, 2 teachers
 - G3: 1 courses, 2 teachers
   └─ CB23532 [L+T]: 2 instances, 2 teachers
 - G4: 2 courses, 2 teachers

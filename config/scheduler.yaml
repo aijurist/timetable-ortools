@@ -5,7 +5,7 @@ meta:
   generated_at: null
 
 paths:
-  courses_csv: data/department_data/core-v3/Computer_Science_and_Engineering_v3.0.csv
+  courses_csv: data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
   rooms_csv: data/block_wise/techlongue.csv
   day_order_csv: data/day_order.csv
   core_lab_mapping_csv: data/og-final.csv
@@ -594,7 +594,7 @@ constraints:
       weight: 1.0
       params: {}
     course_daily_limit:
-      enabled: true
+      enabled: false
       priority: 9
       weight: 1.0
       params:
@@ -757,6 +757,7 @@ constraints:
           - [3, 2]
           - [2, 3]
         penalty_weight: 15
+        strict_ratios: true
 
 model:
   big_m_value: 1000.0
@@ -770,7 +771,7 @@ model:
   use_sparse_variables: true
 
 runtime:
-  time_limit_sec: 600
+  time_limit_sec: 1000
   thread_count: 14
   enable_lns: true
   enable_trace: true
@@ -779,11 +780,11 @@ runtime:
   probing_level: 0
   search_branching: FIXED_SEARCH
   restart_log_size: 18.0
-  max_number_of_conflicts: 150000
+  max_number_of_conflicts: 500000
   warm_start:
     enabled: true
     snapshot_dir: output/combined_scheduler/warm_start_cache
-    max_hint_literals: 5000
+    max_hint_literals: 50000
     max_snapshot_age_hours: 168
     require_signature_match: false
 

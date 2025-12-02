@@ -44,6 +44,7 @@ class ShiftPatternSettings:
     allowed_patterns: Tuple[ShiftCounts, ...]
     lab_session_map: Mapping[str, Tuple[str, ...]]
     theory_slot_map: Mapping[int, Tuple[str, ...]]
+    strict_ratios: bool = False
 
     @staticmethod
     def from_context(context: ConstraintContext, params: Optional[Mapping[str, object]]) -> "ShiftPatternSettings":
@@ -91,11 +92,15 @@ class ShiftPatternSettings:
                 counts = tuple(int(value) for value in entry)
                 if counts and len(counts) >= len(shift_ids):
                     allowed_patterns.append(counts)
+        
+        strict_ratios = bool((params or {}).get("strict_ratios", False))
+        
         return ShiftPatternSettings(
             shift_ids=tuple(shift_ids),
             allowed_patterns=tuple(allowed_patterns),
             lab_session_map={name: tuple(sorted(ids)) for name, ids in session_map.items()},
             theory_slot_map={slot: tuple(sorted(ids)) for slot, ids in slot_map.items()},
+            strict_ratios=strict_ratios,
         )
 
 
@@ -112,6 +117,15 @@ class ShiftPatternConstraint(Constraint):
             except (TypeError, ValueError):
                 base_weight = max(1, base_weight)
         self._penalty_weight = base_weight
+        
+        self._ratio_penalty_weight = base_weight
+        if params:
+            ratio_override = params.get("ratio_penalty_weight")
+            if ratio_override is not None:
+                try:
+                    self._ratio_penalty_weight = max(1, int(ratio_override))
+                except (TypeError, ValueError):
+                    pass
 
     def apply(self, context: ConstraintContext) -> ConstraintApplicationResult:
         settings = ShiftPatternSettings.from_context(context, self.params)
@@ -279,12 +293,16 @@ class ShiftPatternConstraint(Constraint):
 
             violation = model.NewIntVar(0, max_distance, f"shift_pattern_{_slug(dept)}_violation")
             model.AddMinEquality(violation, pattern_distances)
-            register_objective_penalty(
-                context,
-                violation,
-                self._penalty_weight,
-                tag=f"shift_pattern:{dept}",
-            )
+            
+            if settings.strict_ratios:
+                model.Add(violation == 0)
+            else:
+                register_objective_penalty(
+                    context,
+                    violation,
+                    self._ratio_penalty_weight,
+                    tag=f"shift_pattern:{dept}",
+                )
             penalties += 1
         return penalties
 

@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Computer Science & Design
 Semester: 3
-Generated: 2025-12-01 18:56:23
+Generated: 2025-12-02 11:30:04
 ============================================================
 
 OVERVIEW
@@ -12,28 +12,28 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - CD23321 [Lab]: 1 groups, 1 teachers
-  └─ G1: 1 teacher assignments
-- CD23331 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G4: 1 teacher assignments
-- CD23332 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G5: 1 teacher assignments
-- CS23331 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G6: 1 teacher assignments
-- CS23332 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G2: 1 teacher assignments
-- MA23313 [Theory]: 1 groups, 1 teachers
   └─ G3: 1 teacher assignments
+- CD23331 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G6: 1 teacher assignments
+- CD23332 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G1: 1 teacher assignments
+- CS23331 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G2: 1 teacher assignments
+- CS23332 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G5: 1 teacher assignments
+- MA23313 [Theory]: 1 groups, 1 teachers
+  └─ G4: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
-  └─ CD23321 [L]: 1 instances, 1 teachers
-- G2: 1 courses, 1 teachers
-  └─ CS23332 [L+T]: 1 instances, 1 teachers
-- G3: 1 courses, 1 teachers
-  └─ MA23313 [T]: 1 instances, 1 teachers
-- G4: 1 courses, 1 teachers
-  └─ CD23331 [L+T]: 1 instances, 1 teachers
-- G5: 1 courses, 1 teachers
   └─ CD23332 [L+T]: 1 instances, 1 teachers
-- G6: 1 courses, 1 teachers
+- G2: 1 courses, 1 teachers
   └─ CS23331 [L+T]: 1 instances, 1 teachers
+- G3: 1 courses, 1 teachers
+  └─ CD23321 [L]: 1 instances, 1 teachers
+- G4: 1 courses, 1 teachers
+  └─ MA23313 [T]: 1 instances, 1 teachers
+- G5: 1 courses, 1 teachers
+  └─ CS23332 [L+T]: 1 instances, 1 teachers
+- G6: 1 courses, 1 teachers
+  └─ CD23331 [L+T]: 1 instances, 1 teachers
