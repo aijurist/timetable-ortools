@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Electronics & Communication Engineering
 Semester: 5
-Generated: 2025-12-02 01:16:57
+Generated: 2025-12-04 09:06:14
 ============================================================
 
 OVERVIEW
@@ -12,11 +12,11 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - EC23511 [Theory]: 2 groups, 4 teachers
-  └─ G4: 3 teacher assignments
-  └─ G5: 1 teacher assignments
+  └─ G4: 1 teacher assignments
+  └─ G5: 3 teacher assignments
 - EC23512 [Theory]: 2 groups, 4 teachers
   └─ G3: 1 teacher assignments
-  └─ G5: 3 teacher assignments
+  └─ G4: 3 teacher assignments
 - EC23521 [Lab]: 2 groups, 4 teachers
   └─ G1: 2 teacher assignments
   └─ G2: 2 teacher assignments
@@ -25,7 +25,7 @@ COURSE DISTRIBUTION BY GROUP
   └─ G2: 2 teacher assignments
 - EC23B11 [Theory]: 2 groups, 4 teachers
   └─ G3: 3 teacher assignments
-  └─ G4: 1 teacher assignments
+  └─ G5: 1 teacher assignments
 - EC23E01 [Theory]: 1 groups, 4 teachers
   └─ G6: 4 teacher assignments
 
@@ -40,10 +40,10 @@ GROUP COMPOSITION
   └─ EC23512 [T]: 1 instances, 1 teachers
   └─ EC23B11 [T]: 3 instances, 3 teachers
 - G4: 2 courses, 4 teachers
-  └─ EC23511 [T]: 3 instances, 3 teachers
-  └─ EC23B11 [T]: 1 instances, 1 teachers
-- G5: 2 courses, 4 teachers
   └─ EC23511 [T]: 1 instances, 1 teachers
   └─ EC23512 [T]: 3 instances, 3 teachers
+- G5: 2 courses, 4 teachers
+  └─ EC23511 [T]: 3 instances, 3 teachers
+  └─ EC23B11 [T]: 1 instances, 1 teachers
 - G6: 1 courses, 4 teachers
   └─ EC23E01 [T]: 4 instances, 4 teachers

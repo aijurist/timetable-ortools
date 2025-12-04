@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Artificial Intelligence & Machine Learning
 Semester: 3
-Generated: 2025-12-02 12:21:59
+Generated: 2025-12-04 11:33:58
 ============================================================
 
 OVERVIEW
@@ -12,15 +12,15 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - AI23331 [Lab + Theory]: 1 groups, 4 teachers
-  └─ G4: 4 teacher assignments
+  └─ G1: 4 teacher assignments
 - CS23331 [Lab + Theory]: 2 groups, 4 teachers
   └─ G2: 3 teacher assignments
   └─ G3: 1 teacher assignments
-- CS23332 [Lab + Theory]: 1 groups, 4 teachers
-  └─ G1: 4 teacher assignments
-- CS23333 [Lab + Theory]: 2 groups, 4 teachers
+- CS23332 [Lab + Theory]: 2 groups, 4 teachers
   └─ G2: 1 teacher assignments
   └─ G3: 3 teacher assignments
+- CS23333 [Lab + Theory]: 1 groups, 4 teachers
+  └─ G4: 4 teacher assignments
 - MA23313 [Theory]: 1 groups, 4 teachers
   └─ G6: 4 teacher assignments
 - MC23112 [Theory]: 1 groups, 4 teachers
@@ -28,15 +28,15 @@ COURSE DISTRIBUTION BY GROUP
 
 GROUP COMPOSITION
 - G1: 1 courses, 4 teachers
-  └─ CS23332 [L+T]: 4 instances, 4 teachers
+  └─ AI23331 [L+T]: 4 instances, 4 teachers
 - G2: 2 courses, 4 teachers
   └─ CS23331 [L+T]: 3 instances, 3 teachers
-  └─ CS23333 [L+T]: 1 instances, 1 teachers
+  └─ CS23332 [L+T]: 1 instances, 1 teachers
 - G3: 2 courses, 4 teachers
   └─ CS23331 [L+T]: 1 instances, 1 teachers
-  └─ CS23333 [L+T]: 3 instances, 3 teachers
+  └─ CS23332 [L+T]: 3 instances, 3 teachers
 - G4: 1 courses, 4 teachers
-  └─ AI23331 [L+T]: 4 instances, 4 teachers
+  └─ CS23333 [L+T]: 4 instances, 4 teachers
 - G5: 1 courses, 4 teachers
   └─ MC23112 [T]: 4 instances, 4 teachers
 - G6: 1 courses, 4 teachers

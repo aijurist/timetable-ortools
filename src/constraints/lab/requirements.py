@@ -56,13 +56,14 @@ class AssignmentBundle:
 	all_vars: List[cp_model.IntVar]
 	small_vars: List[cp_model.IntVar]
 	large_vars: List[cp_model.IntVar]
+	large_140_vars: List[cp_model.IntVar]
 	kj_vars: List[cp_model.IntVar]
 	techlounge_vars: List[cp_model.IntVar]
 	non_kj_small_vars: List[cp_model.IntVar]
 
 	@classmethod
 	def empty(cls) -> "AssignmentBundle":
-		return cls([], [], [], [], [], [])
+		return cls([], [], [], [], [], [], [])
 
 	@property
 	def has_any(self) -> bool:
@@ -143,6 +144,18 @@ class LabCourseRequirementConstraint(Constraint):
 		practical_hours = max(0, int(requirement.practical_hours or 0))
 		total_sum = sum(bundle.all_vars)
 		dept_label = (requirement.department or "").strip().lower()
+
+		# Handle large courses (100+ students, typically 140)
+		# Priority 1: Schedule in 140-capacity labs
+		if student_count >= 100:
+			if bundle.large_140_vars:
+				# Enforce use of 140-capacity rooms
+				model.Add(sum(bundle.large_140_vars) == total_sum)
+			
+			# For 140 students in 140 capacity room, we don't need batching
+			# We just need the base required sessions
+			model.Add(total_sum == base_sessions)
+			return
 
 		if student_count == 35 and bundle.small_vars:
 			model.Add(sum(bundle.small_vars) == total_sum)
@@ -271,6 +284,8 @@ class LabCourseRequirementConstraint(Constraint):
 					bundle.techlounge_vars.append(var)
 			else:
 				bundle.large_vars.append(var)
+				if room_key in room_index.large_140:
+					bundle.large_140_vars.append(var)
 		return bundle
 
 	def _get_room_index(self, context: ConstraintContext) -> RoomCategoryIndex:

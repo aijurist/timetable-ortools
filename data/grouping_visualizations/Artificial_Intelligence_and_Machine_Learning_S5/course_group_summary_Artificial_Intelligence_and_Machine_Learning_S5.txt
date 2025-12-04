@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Artificial Intelligence & Machine Learning
 Semester: 5
-Generated: 2025-12-02 12:21:59
+Generated: 2025-12-04 11:33:58
 ============================================================
 
 OVERVIEW
@@ -11,37 +11,29 @@ OVERVIEW
 - Courses with multiple options: 6 (100.0%)
 
 COURSE DISTRIBUTION BY GROUP
-- AD23632 [Lab + Theory]: 2 groups, 3 teachers
-  └─ G1: 2 teacher assignments
-  └─ G2: 1 teacher assignments
-- AI23512 [Theory]: 2 groups, 3 teachers
-  └─ G2: 2 teacher assignments
-  └─ G4: 1 teacher assignments
+- AD23632 [Lab + Theory]: 1 groups, 3 teachers
+  └─ G4: 3 teacher assignments
+- AI23512 [Theory]: 1 groups, 3 teachers
+  └─ G1: 3 teacher assignments
 - AI23521 [Lab]: 1 groups, 3 teachers
   └─ G3: 3 teacher assignments
-- AI23531 [Lab + Theory]: 2 groups, 3 teachers
-  └─ G4: 2 teacher assignments
-  └─ G5: 1 teacher assignments
+- AI23531 [Lab + Theory]: 1 groups, 3 teachers
+  └─ G2: 3 teacher assignments
 - AI23PE1 [Lab + Theory]: 1 groups, 3 teachers
   └─ G6: 3 teacher assignments
-- CS23532 [Lab + Theory]: 2 groups, 3 teachers
-  └─ G1: 1 teacher assignments
-  └─ G5: 2 teacher assignments
+- CS23532 [Lab + Theory]: 1 groups, 3 teachers
+  └─ G5: 3 teacher assignments
 
 GROUP COMPOSITION
-- G1: 2 courses, 3 teachers
-  └─ AD23632 [L+T]: 2 instances, 2 teachers
-  └─ CS23532 [L+T]: 1 instances, 1 teachers
-- G2: 2 courses, 3 teachers
-  └─ AD23632 [L+T]: 1 instances, 1 teachers
-  └─ AI23512 [T]: 2 instances, 2 teachers
+- G1: 1 courses, 3 teachers
+  └─ AI23512 [T]: 3 instances, 3 teachers
+- G2: 1 courses, 3 teachers
+  └─ AI23531 [L+T]: 3 instances, 3 teachers
 - G3: 1 courses, 3 teachers
   └─ AI23521 [L]: 3 instances, 3 teachers
-- G4: 2 courses, 3 teachers
-  └─ AI23512 [T]: 1 instances, 1 teachers
-  └─ AI23531 [L+T]: 2 instances, 2 teachers
-- G5: 2 courses, 3 teachers
-  └─ AI23531 [L+T]: 1 instances, 1 teachers
-  └─ CS23532 [L+T]: 2 instances, 2 teachers
+- G4: 1 courses, 3 teachers
+  └─ AD23632 [L+T]: 3 instances, 3 teachers
+- G5: 1 courses, 3 teachers
+  └─ CS23532 [L+T]: 3 instances, 3 teachers
 - G6: 1 courses, 3 teachers
   └─ AI23PE1 [L+T]: 3 instances, 3 teachers

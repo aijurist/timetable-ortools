@@ -1,31 +1,35 @@
 Course-Group Distribution Summary
 Department: Artificial Intelligence & Machine Learning
 Semester: 7
-Generated: 2025-12-02 12:21:58
+Generated: 2025-12-04 11:33:57
 ============================================================
 
 OVERVIEW
-- Courses: 4 (Lab 2, Theory 4)
-- Groups: 4
-- Total assignments: 12
-- Courses with multiple options: 4 (100.0%)
+- Courses: 5 (Lab 3, Theory 5)
+- Groups: 5
+- Total assignments: 14
+- Courses with multiple options: 5 (100.0%)
 
 COURSE DISTRIBUTION BY GROUP
 - AI19701 [Theory]: 1 groups, 3 teachers
-  └─ G2: 3 teacher assignments
+  └─ G4: 3 teacher assignments
 - AI19702 [Theory]: 1 groups, 3 teachers
   └─ G3: 3 teacher assignments
 - AI19741 [Lab + Theory]: 1 groups, 3 teachers
-  └─ G1: 3 teacher assignments
+  └─ G2: 3 teacher assignments
+- AI19P71 [Lab + Theory]: 1 groups, 2 teachers
+  └─ G1: 2 teacher assignments
 - AI19PE2 [Lab + Theory]: 1 groups, 3 teachers
-  └─ G4: 3 teacher assignments
+  └─ G5: 3 teacher assignments
 
 GROUP COMPOSITION
-- G1: 1 courses, 3 teachers
-  └─ AI19741 [L+T]: 3 instances, 3 teachers
+- G1: 1 courses, 2 teachers
+  └─ AI19P71 [L+T]: 2 instances, 2 teachers
 - G2: 1 courses, 3 teachers
-  └─ AI19701 [T]: 3 instances, 3 teachers
+  └─ AI19741 [L+T]: 3 instances, 3 teachers
 - G3: 1 courses, 3 teachers
   └─ AI19702 [T]: 3 instances, 3 teachers
 - G4: 1 courses, 3 teachers
+  └─ AI19701 [T]: 3 instances, 3 teachers
+- G5: 1 courses, 3 teachers
   └─ AI19PE2 [L+T]: 3 instances, 3 teachers

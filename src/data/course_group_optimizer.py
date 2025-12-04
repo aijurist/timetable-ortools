@@ -210,54 +210,42 @@ class CourseGroupOptimizer:
     
     def _preprocess_large_courses(self, courses):
         """
-        Split large courses (140+ students) into virtual instances for distribution,
-        but mark them for post-processing merge back to unified instances.
-        This allows normal distribution while maintaining the ability to use 140-capacity labs.
+        Calculate logical weights for courses based on student count.
+        Replaces the old splitting logic.
         """
+        # Determine base student count (most common student count)
+        # We use 70 as the standard base count as per requirements
+        base_count = 70
+        
         new_courses = []
-        co_schedule_counter = 1
-        large_courses_found = []
         
         for course in courses:
-            if course.get('student_count', 0) >= 140:
-                large_courses_found.append({
-                    'id': course['id'],
-                    'course_code': course['course_code'],
-                    'student_count': course['student_count']
-                })
-                
-                # Create two virtual instances for distribution
-                instance1 = course.copy()
-                instance1['student_count'] = 70
-                instance1['virtual_id'] = f"{course['id']}-A"
-                instance1['id'] = f"{course['id']}-A"
-                instance1['co_scheduled_id'] = co_schedule_counter
-                instance1['original_student_count'] = course['student_count']  # Store original count
-                instance1['is_large_course_split'] = True  # Mark for post-processing
-                
-                instance2 = course.copy()
-                instance2['student_count'] = 70
-                instance2['virtual_id'] = f"{course['id']}-B"
-                instance2['id'] = f"{course['id']}-B"
-                instance2['co_scheduled_id'] = co_schedule_counter
-                instance2['original_student_count'] = course['student_count']  # Store original count
-                instance2['is_large_course_split'] = True  # Mark for post-processing
-                
-                new_courses.extend([instance1, instance2])
-                co_schedule_counter += 1
+            count = course.get('student_count', 0)
+            
+            # Calculate weight: round(count / 70)
+            # But ensure at least 1
+            if count <= 0:
+                weight = 1
             else:
-                new_courses.append(course)
-        
-        # Only log if large courses found, keep it minimal
-        if large_courses_found:
-            self.logger.debug(f"Split {len(large_courses_found)} large courses (140+ students) into virtual instances for group distribution")
+                # Use standard rounding
+                weight = int(round(count / base_count))
+                if weight < 1: weight = 1
+            
+            # Store weight in the course dictionary
+            course['weight'] = weight
+            
+            # Log if weight > 1
+            if weight > 1:
+                self.logger.debug(f"Course {course.get('course_code')} ({count} students) assigned weight {weight}")
+            
+            new_courses.append(course)
             
         return new_courses
     
     def _filter_courses_by_instance_count(self, courses):
         """
-        Filter courses based on instance count. Remove courses that have fewer instances
-        than the most common instance count.
+        Filter courses based on instance count (weighted). Remove courses that have fewer 
+        weighted instances than the most common weighted instance count.
         
         Args:
             courses: List of all course instances
@@ -265,12 +253,12 @@ class CourseGroupOptimizer:
         Returns:
             list: Filtered list of course instances
         """
-        # Count instances per course
+        # Count instances (weights) per course
         course_instance_counts = defaultdict(int)
         for course in courses:
-            course_instance_counts[course['course_code']] += 1
+            course_instance_counts[course['course_code']] += course.get('weight', 1)
         
-        # Find the most common instance count
+        # Find the most common weighted instance count
         instance_count_frequency = defaultdict(int)
         for course_code, count in course_instance_counts.items():
             instance_count_frequency[count] += 1
@@ -279,10 +267,10 @@ class CourseGroupOptimizer:
                                key=lambda x: instance_count_frequency[x])
         
         # Log instance count distribution
-        self.logger.info(f"Course instance count analysis:")
+        self.logger.info(f"Course instance count (weighted) analysis:")
         for count, freq in sorted(instance_count_frequency.items()):
-            self.logger.info(f"  {freq} courses have {count} instances each")
-        self.logger.info(f"Most common instance count: {most_common_count}")
+            self.logger.info(f"  {freq} courses have {count} weighted instances each")
+        self.logger.info(f"Most common weighted instance count: {most_common_count}")
         
         # Process courses based on instance count
         courses_to_keep = set()
@@ -300,7 +288,7 @@ class CourseGroupOptimizer:
         
         # Store removed courses for verification
         if courses_to_remove:
-            self.logger.warning(f"Removing courses with insufficient instances:")
+            self.logger.warning(f"Removing courses with insufficient weighted instances:")
             for course_code in sorted(courses_to_remove):
                 count = course_instance_counts[course_code]
                 removed_instances = [c for c in courses if c['course_code'] == course_code]
@@ -308,17 +296,17 @@ class CourseGroupOptimizer:
                 # Store removed course info
                 self.removed_courses.extend(removed_instances)
                 
-                self.logger.warning(f"  {course_code}: {count} instances (< {most_common_count}) - REMOVED")
+                self.logger.warning(f"  {course_code}: {count} weighted instances (< {most_common_count}) - REMOVED")
         
         if courses_to_keep:
             self.logger.info(f"Keeping courses:")
             for course_code in sorted(courses_to_keep):
                 count = course_instance_counts[course_code]
                 if count == most_common_count:
-                    self.logger.info(f"  {course_code}: {count} instances (= {most_common_count}) - KEPT")
+                    self.logger.info(f"  {course_code}: {count} weighted instances (= {most_common_count}) - KEPT")
                 elif course_code in courses_to_trim:
                     target_count = courses_to_trim[course_code]
-                    self.logger.info(f"  {course_code}: {count} instances -> trimming to {target_count} instances")
+                    self.logger.info(f"  {course_code}: {count} weighted instances -> trimming to {target_count} weighted instances")
         
         # Filter and trim course instances
         import random
@@ -328,21 +316,37 @@ class CourseGroupOptimizer:
             course_instances = [c for c in courses if c['course_code'] == course_code]
             
             if course_code in courses_to_trim:
-                # Randomly select target_count instances from this course
                 target_count = courses_to_trim[course_code]
-                selected_instances = random.sample(course_instances, target_count)
+                
+                # Sort by weight descending to prioritize keeping large instances
+                course_instances.sort(key=lambda x: x.get('weight', 1), reverse=True)
+                
+                selected_instances = []
+                current_weight = 0
+                
+                for inst in course_instances:
+                    w = inst.get('weight', 1)
+                    if current_weight + w <= target_count:
+                        selected_instances.append(inst)
+                        current_weight += w
+                
+                if current_weight < target_count:
+                    self.logger.warning(f"  {course_code}: Could not trim to exactly {target_count} weight (got {current_weight}). Removing course.")
+                    self.removed_courses.extend(course_instances)
+                    continue
+                
                 removed_instances = [inst for inst in course_instances if inst not in selected_instances]
                 
                 # Store trimming info
                 self.trimmed_courses[course_code] = {
                     'original_count': len(course_instances),
-                    'kept_count': target_count,
+                    'kept_count': len(selected_instances),
                     'removed_instances': removed_instances,
                     'kept_instances': selected_instances
                 }
                 
                 filtered_courses.extend(selected_instances)
-                self.logger.info(f"  {course_code}: selected {target_count} out of {len(course_instances)} instances")
+                self.logger.info(f"  {course_code}: selected {len(selected_instances)} instances (weight {current_weight}) out of {len(course_instances)}")
             else:
                 # Keep all instances
                 filtered_courses.extend(course_instances)
@@ -384,14 +388,14 @@ class CourseGroupOptimizer:
             self.logger.error("INFEASIBLE: No groups available")
             return False
         
-        # Count instances per course
+        # Count instances (weights) per course
         course_instance_counts = defaultdict(int)
         course_teacher_counts = defaultdict(set)
         
         for course in self.courses:
             course_code = course['course_code']
             teacher_id = course['teacher_id']
-            course_instance_counts[course_code] += 1
+            course_instance_counts[course_code] += course.get('weight', 1)
             course_teacher_counts[course_code].add(teacher_id)
         
         # Find the most common instance count (target group size)
@@ -403,20 +407,20 @@ class CourseGroupOptimizer:
                                key=lambda x: instance_count_frequency[x])
         
         # Check if total instances can be evenly distributed
-        total_instances = len(self.courses)
+        total_instances = sum(c.get('weight', 1) for c in self.courses)
         required_instances = self.num_groups * target_group_size
         
         if total_instances != required_instances:
-            self.logger.error(f"INFEASIBLE: Cannot distribute {total_instances} instances into "
-                            f"{self.num_groups} groups of {target_group_size} instances each "
+            self.logger.error(f"INFEASIBLE: Cannot distribute {total_instances} weighted instances into "
+                            f"{self.num_groups} groups of {target_group_size} weighted instances each "
                             f"(requires {required_instances} instances)")
             return False
         
         # Log distribution info
         self.logger.info(f"Feasibility analysis:")
-        self.logger.info(f"  Total instances: {total_instances}")
+        self.logger.info(f"  Total weighted instances: {total_instances}")
         self.logger.info(f"  Number of groups: {self.num_groups}")
-        self.logger.info(f"  Target group size: {target_group_size}")
+        self.logger.info(f"  Target group size (weighted): {target_group_size}")
         self.logger.info(f"  Required total: {required_instances}")
         
         # Check course distribution requirements
@@ -428,15 +432,15 @@ class CourseGroupOptimizer:
             
             if instance_count == 1:
                 single_instance_courses += 1
-                self.logger.info(f"Course {course_code}: {instance_count} instance, "
+                self.logger.info(f"Course {course_code}: {instance_count} weighted instance, "
                                f"{teacher_count} teacher -> will be in 1 group")
             elif instance_count > 1:
                 multi_instance_courses += 1
                 if self.num_groups < 2:
-                    self.logger.error(f"INFEASIBLE: Course {course_code} has {instance_count} instances "
+                    self.logger.error(f"INFEASIBLE: Course {course_code} has {instance_count} weighted instances "
                                     f"but only {self.num_groups} groups available (need at least 2 groups)")
                     return False
-                self.logger.info(f"Course {course_code}: {instance_count} instances, "
+                self.logger.info(f"Course {course_code}: {instance_count} weighted instances, "
                                f"{teacher_count} different teachers -> must be in exactly 2 groups")
         
         self.logger.info(f"Course distribution: {single_instance_courses} single-instance, "
@@ -671,17 +675,17 @@ class CourseGroupOptimizer:
     
     def _apply_group_size_constraints(self, model, assignment_vars):
         """
-        Apply group size constraints: each group should have the same number of instances,
+        Apply group size constraints: each group should have the same number of instances (weighted),
         equal to the most common number of course instances per course.
         
         Args:
             model: CP-SAT model
             assignment_vars: Assignment variables
         """
-        # Calculate the most common number of instances per course
+        # Calculate the most common number of instances per course (weighted)
         course_instance_counts = defaultdict(int)
         for course in self.courses:
-            course_instance_counts[course['course_code']] += 1
+            course_instance_counts[course['course_code']] += course.get('weight', 1)
         
         # Find the most frequent instance count
         instance_count_frequency = defaultdict(int)
@@ -694,24 +698,25 @@ class CourseGroupOptimizer:
         
         self.target_group_size = target_group_size
         
-        self.logger.info(f"Course instance distribution:")
+        self.logger.info(f"Course instance distribution (weighted):")
         for count, freq in sorted(instance_count_frequency.items()):
-            self.logger.info(f"  {freq} courses have {count} instances each")
-        self.logger.info(f"Target group size: {target_group_size} instances per group")
+            self.logger.info(f"  {freq} courses have {count} weighted instances each")
+        self.logger.info(f"Target group size: {target_group_size} weighted instances per group")
         
-        # Apply constraint: each group must have exactly target_group_size instances
+        # Apply constraint: each group must have exactly target_group_size instances (weighted)
         group_size_constraints_added = 0
         for group_idx in range(self.num_groups):
-            group_assignments = []
+            group_assignments_weighted = []
             for i, instance in enumerate(self.courses):
-                group_assignments.append(assignment_vars[(i, group_idx)])
+                weight = instance.get('weight', 1)
+                group_assignments_weighted.append(assignment_vars[(i, group_idx)] * weight)
             
             # Each group must have exactly target_group_size instances
-            model.Add(sum(group_assignments) == target_group_size)
+            model.Add(sum(group_assignments_weighted) == target_group_size)
             group_size_constraints_added += 1
         
         self.logger.info(f"Applied {group_size_constraints_added} group size constraints "
-                        f"(each group = {target_group_size} instances)")
+                        f"(each group = {target_group_size} weighted instances)")
     
     def _apply_lab_priority_constraints(self, model, assignment_vars):
         """
@@ -1484,7 +1489,7 @@ class CourseGroupOptimizer:
         return True
     
     def _validate_group_sizes(self):
-        """Validate that all regular groups have the same size equal to target group size."""
+        """Validate that all regular groups have the same size equal to target group size (weighted)."""
         if not hasattr(self, 'target_group_size'):
             self.logger.warning("Target group size not set, skipping group size validation")
             return True
@@ -1497,20 +1502,20 @@ class CourseGroupOptimizer:
         
         for group_idx in range(groups_to_validate):
             group = self.groups[group_idx]
-            actual_size = len(group)
+            actual_size = sum(inst.get('weight', 1) for inst in group)
             if actual_size != expected_size:
                 violations += 1
-                self.logger.error(f"Group {group_idx + 1} has {actual_size} instances, "
+                self.logger.error(f"Group {group_idx + 1} has {actual_size} weighted instances, "
                                 f"expected {expected_size}")
         
         # Log PE group separately if it exists
         if len(self.groups) > self.num_groups:
             pe_group = self.groups[-1]  # PE group is always the last group
-            pe_size = len(pe_group)
-            self.logger.info(f"PE Group {len(self.groups)} has {pe_size} instances (validation skipped - special group)")
+            pe_size = sum(inst.get('weight', 1) for inst in pe_group)
+            self.logger.info(f"PE Group {len(self.groups)} has {pe_size} weighted instances (validation skipped - special group)")
         
         if violations == 0:
-            self.logger.info(f"[OK] All {groups_to_validate} regular groups have {expected_size} instances each")
+            self.logger.info(f"[OK] All {groups_to_validate} regular groups have {expected_size} weighted instances each")
             return True
         else:
             self.logger.error(f"[ERROR] {violations} group size violations in regular groups")

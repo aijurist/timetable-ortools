@@ -5,7 +5,7 @@ meta:
   generated_at: null
 
 paths:
-  courses_csv: data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
+  courses_csv: data/department_data/core-v3/Computer_Science_and_Engineering_v3.0.csv
   rooms_csv: data/block_wise/techlongue.csv
   day_order_csv: data/day_order.csv
   core_lab_mapping_csv: data/og-final.csv
@@ -594,7 +594,7 @@ constraints:
       weight: 1.0
       params: {}
     course_daily_limit:
-      enabled: false
+      enabled: true
       priority: 9
       weight: 1.0
       params:
@@ -771,7 +771,7 @@ model:
   use_sparse_variables: true
 
 runtime:
-  time_limit_sec: 1000
+  time_limit_sec: 400
   thread_count: 14
   enable_lns: true
   enable_trace: true

@@ -1,19 +1,22 @@
 Course-Group Distribution Summary
 Department: Computer Science & Engineering
 Semester: 3
-Generated: 2025-12-02 11:30:05
+Generated: 2025-12-04 11:52:19
 ============================================================
 
 OVERVIEW
-- Courses: 5 (Lab 4, Theory 5)
-- Groups: 5
-- Total assignments: 50
-- Courses with multiple options: 5 (100.0%)
+- Courses: 6 (Lab 4, Theory 6)
+- Groups: 6
+- Total assignments: 59
+- Courses with multiple options: 6 (100.0%)
 
 COURSE DISTRIBUTION BY GROUP
+- CS23311 [Theory]: 2 groups, 9 teachers
+  └─ G5: 8 teacher assignments
+  └─ G6: 1 teacher assignments
 - CS23331 [Lab + Theory]: 2 groups, 10 teachers
-  └─ G2: 5 teacher assignments
   └─ G3: 5 teacher assignments
+  └─ G4: 5 teacher assignments
 - CS23332 [Lab + Theory]: 2 groups, 10 teachers
   └─ G3: 5 teacher assignments
   └─ G4: 5 teacher assignments
@@ -22,22 +25,27 @@ COURSE DISTRIBUTION BY GROUP
   └─ G2: 5 teacher assignments
 - CS23334 [Lab + Theory]: 2 groups, 10 teachers
   └─ G1: 5 teacher assignments
-  └─ G4: 5 teacher assignments
-- MA23312 [Theory]: 1 groups, 10 teachers
-  └─ G5: 10 teacher assignments
+  └─ G2: 5 teacher assignments
+- MA23312 [Theory]: 2 groups, 10 teachers
+  └─ G5: 1 teacher assignments
+  └─ G6: 9 teacher assignments
 
 GROUP COMPOSITION
 - G1: 2 courses, 10 teachers
   └─ CS23333 [L+T]: 5 instances, 5 teachers
   └─ CS23334 [L+T]: 5 instances, 5 teachers
 - G2: 2 courses, 10 teachers
-  └─ CS23331 [L+T]: 5 instances, 5 teachers
   └─ CS23333 [L+T]: 5 instances, 5 teachers
+  └─ CS23334 [L+T]: 5 instances, 5 teachers
 - G3: 2 courses, 10 teachers
   └─ CS23331 [L+T]: 5 instances, 5 teachers
   └─ CS23332 [L+T]: 5 instances, 5 teachers
 - G4: 2 courses, 10 teachers
+  └─ CS23331 [L+T]: 5 instances, 5 teachers
   └─ CS23332 [L+T]: 5 instances, 5 teachers
-  └─ CS23334 [L+T]: 5 instances, 5 teachers
-- G5: 1 courses, 10 teachers
-  └─ MA23312 [T]: 10 instances, 10 teachers
+- G5: 2 courses, 9 teachers
+  └─ CS23311 [T]: 8 instances, 8 teachers
+  └─ MA23312 [T]: 1 instances, 1 teachers
+- G6: 2 courses, 10 teachers
+  └─ CS23311 [T]: 1 instances, 1 teachers
+  └─ MA23312 [T]: 9 instances, 9 teachers
