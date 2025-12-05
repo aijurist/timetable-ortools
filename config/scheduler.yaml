@@ -7,7 +7,7 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
+  courses_csv: data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
   rooms_csv: data/block_wise/techlongue.csv
   day_order_csv: data/day_order.csv
   core_lab_mapping_csv: data/og-final.csv
@@ -546,14 +546,14 @@ constraints:
       weight: 0.8
       params:
         slot_limit: 15
-    shift_alignment:
-      enabled: true
-      priority: 9
-      weight: 0.9
-      params:
-        shift_templates:
-          - SHIFT_1
-          - SHIFT_2
+    # shift_alignment:
+    #   enabled: true
+    #   priority: 9
+    #   weight: 0.9
+    #   params:
+    #     shift_templates:
+    #       - SHIFT_1
+    #       - SHIFT_2
     teacher_max_consecutive:
       enabled: true
       priority: 8
@@ -599,27 +599,27 @@ constraints:
       weight: 1.0
       params:
         max_daily_slots: 2
-    daily_slot_cap:
-      enabled: false
-      priority: 9
-      weight: 0.9
-      params: {}
+    # daily_slot_cap:
+    #   enabled: false
+    #   priority: 9
+    #   weight: 0.9
+    #   params: {}
     no_three_consecutive:
       enabled: true
       priority: 8
       weight: 0.7
       params:
         window: 3
-    teacher_daily_limit:
-      enabled: false
-      priority: 9
-      weight: 1.0
-      params: {}
-    student_conflict:
-      enabled: false
-      priority: 10
-      weight: 1.0
-      params: {}
+    # teacher_daily_limit:
+    #   enabled: false
+    #   priority: 9
+    #   weight: 1.0
+    #   params: {}
+    # student_conflict:
+    #   enabled: false
+    #   priority: 10
+    #   weight: 1.0
+    #   params: {}
     room_assignment:
       enabled: true
       priority: 8
@@ -644,14 +644,14 @@ constraints:
             - A Block
           "4":
             - A Block
-    shift_alignment:
-      enabled: true
-      priority: 8
-      weight: 0.6
-      params:
-        shift_templates:
-          - SHIFT_1
-          - SHIFT_2
+    # shift_alignment:
+    #   enabled: true
+    #   priority: 8
+    #   weight: 0.6
+    #   params:
+    #     shift_templates:
+    #       - SHIFT_1
+    #       - SHIFT_2
   cross_system:
     dept_day_span:
       enabled: true
@@ -769,7 +769,7 @@ constraints:
         allowed_patterns:
           - [3, 2]
           - [2, 3]
-        penalty_weight: 50
+        penalty_weight: 30
         strict_ratios: true
 
 model:
