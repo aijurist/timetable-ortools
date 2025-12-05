@@ -1,0 +1,31 @@
+Course-Group Distribution Summary
+Department: Aeronautical Engineering
+Semester: 8
+Generated: 2025-12-06 00:51:27
+============================================================
+
+OVERVIEW
+- Courses: 4 (Lab 0, Theory 4)
+- Groups: 4
+- Total assignments: 4
+- Courses with multiple options: 0 (0.0%)
+
+COURSE DISTRIBUTION BY GROUP
+- AE19A19 [Theory]: 1 groups, 1 teachers
+  └─ G4: 1 teacher assignments
+- AE19B16 [Theory]: 1 groups, 1 teachers
+  └─ G1: 1 teacher assignments
+- AE19PE01 [Theory]: 1 groups, 1 teachers
+  └─ G3: 1 teacher assignments
+- AE19PE02 [Theory]: 1 groups, 1 teachers
+  └─ G2: 1 teacher assignments
+
+GROUP COMPOSITION
+- G1: 1 courses, 1 teachers
+  └─ AE19B16 [T]: 1 instances, 1 teachers
+- G2: 1 courses, 1 teachers
+  └─ AE19PE02 [T]: 1 instances, 1 teachers
+- G3: 1 courses, 1 teachers
+  └─ AE19PE01 [T]: 1 instances, 1 teachers
+- G4: 1 courses, 1 teachers
+  └─ AE19A19 [T]: 1 instances, 1 teachers

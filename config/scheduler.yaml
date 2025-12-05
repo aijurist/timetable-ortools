@@ -7,10 +7,12 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
+  courses_csv: data/sem2026/year_wise/Year_4_course_data.csv
   rooms_csv: data/block_wise/techlongue.csv
   day_order_csv: data/day_order.csv
-  core_lab_mapping_csv: data/og-final.csv
+  # data/CoreMappingSimplified_StudentDept.csv
+  # data/og-final.csv
+  core_lab_mapping_csv: data/CoreMappingSimplified_StudentDept.csv
   preferences_csv: data/pop.csv
   output_root: output/combined_scheduler
 
@@ -512,6 +514,22 @@ constraints:
       priority: 10
       weight: 1.0
       params: {}
+    first_year_computer_lab_rooms:
+      enabled: false
+      priority: 9
+      weight: 1.0
+      params:
+        allowed_rooms:
+          - DG02
+          - DG03
+          - TIFAC I01
+          - C401
+          - KSL02
+        target_semesters:
+          - 1
+          - 2
+        room_keywords:
+          - computer
     room_capacity:
       enabled: true
       priority: 9

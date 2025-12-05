@@ -1,0 +1,27 @@
+Course-Group Distribution Summary
+Department: Information Technology
+Semester: 8
+Generated: 2025-12-06 00:51:29
+============================================================
+
+OVERVIEW
+- Courses: 2 (Lab 0, Theory 2)
+- Groups: 2
+- Total assignments: 4
+- Courses with multiple options: 2 (100.0%)
+
+COURSE DISTRIBUTION BY GROUP
+- IT19PE01 [Theory]: 2 groups, 2 teachers
+  └─ G1: 1 teacher assignments
+  └─ G2: 1 teacher assignments
+- IT19PE02 [Theory]: 2 groups, 2 teachers
+  └─ G1: 1 teacher assignments
+  └─ G2: 1 teacher assignments
+
+GROUP COMPOSITION
+- G1: 2 courses, 2 teachers
+  └─ IT19PE01 [T]: 1 instances, 1 teachers
+  └─ IT19PE02 [T]: 1 instances, 1 teachers
+- G2: 2 courses, 2 teachers
+  └─ IT19PE01 [T]: 1 instances, 1 teachers
+  └─ IT19PE02 [T]: 1 instances, 1 teachers

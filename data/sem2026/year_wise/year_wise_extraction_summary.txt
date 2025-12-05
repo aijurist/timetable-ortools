@@ -1,0 +1,27 @@
+=== YEAR-WISE DATA EXTRACTION SUMMARY ===
+
+Total courses across all years: 2267
+Years covered: 4
+
+Year-wise breakdown:
+--------------------------------------------------
+Year 1:
+  Courses: 1070
+  Departments: N/A
+  File: Year_1_course_data.csv
+------------------------------
+Year 2:
+  Courses: 574
+  Departments: N/A
+  File: Year_2_course_data.csv
+------------------------------
+Year 3:
+  Courses: 505
+  Departments: N/A
+  File: Year_3_course_data.csv
+------------------------------
+Year 4:
+  Courses: 118
+  Departments: N/A
+  File: Year_4_course_data.csv
+------------------------------

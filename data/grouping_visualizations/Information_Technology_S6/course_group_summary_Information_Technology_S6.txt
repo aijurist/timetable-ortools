@@ -1,0 +1,39 @@
+Course-Group Distribution Summary
+Department: Information Technology
+Semester: 6
+Generated: 2025-12-06 00:26:59
+============================================================
+
+OVERVIEW
+- Courses: 6 (Lab 4, Theory 4)
+- Groups: 6
+- Total assignments: 22
+- Courses with multiple options: 6 (100.0%)
+
+COURSE DISTRIBUTION BY GROUP
+- AI23331 [Lab + Theory]: 1 groups, 3 teachers
+  └─ G2: 3 teacher assignments
+- CS23512 [Theory]: 1 groups, 4 teachers
+  └─ G6: 4 teacher assignments
+- CS23621 [Lab]: 1 groups, 4 teachers
+  └─ G4: 4 teacher assignments
+- CS23632 [Lab + Theory]: 1 groups, 3 teachers
+  └─ G3: 3 teacher assignments
+- GE23627 [Lab]: 1 groups, 4 teachers
+  └─ G1: 4 teacher assignments
+- IT23PE01 [Theory]: 1 groups, 4 teachers
+  └─ G5: 4 teacher assignments
+
+GROUP COMPOSITION
+- G1: 1 courses, 4 teachers
+  └─ GE23627 [L]: 4 instances, 4 teachers
+- G2: 1 courses, 3 teachers
+  └─ AI23331 [L+T]: 3 instances, 3 teachers
+- G3: 1 courses, 3 teachers
+  └─ CS23632 [L+T]: 3 instances, 3 teachers
+- G4: 1 courses, 4 teachers
+  └─ CS23621 [L]: 4 instances, 4 teachers
+- G5: 1 courses, 4 teachers
+  └─ IT23PE01 [T]: 4 instances, 4 teachers
+- G6: 1 courses, 4 teachers
+  └─ CS23512 [T]: 4 instances, 4 teachers
