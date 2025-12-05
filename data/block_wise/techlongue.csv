@@ -27,83 +27,15 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 220,KSL02,K Block,Classroom,0,Classroom,120,140,0,0,None,13,0,0,0
 173,TIFAC I01,A Block,Computer Lab (Arch),1,Laboratory,50,70,1,0,None,13,0,0,0
 158,DG02,D Block,Computer Lab (DG02),1,Laboratory,50,70,1,0,High-tech,13,0,0,0
-1,A102,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-2,A103,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
+
 3,A104/105,A Block,Classroom,0,Classroom,110,140,0,0,None,29,0,0,0
-4,A108,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-5,A109,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-6,A110,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-7,A202,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-8,A203,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-9,A204,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-10,A205,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-11,A208,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-12,A209,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-13,A210,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-14,A211,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-15,A302,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-16,A303,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-17,A304,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-18,A305,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-19,A308,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-20,A309,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-21,A310,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-22,A311,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-23,B106,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-24,B107,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-25,B210,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-26,B211,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-27,B212,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-28,B213,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-29,B218,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-30,B219,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-31,B220,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-32,B221,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-33,B222,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-34,B302,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-35,B320,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-36,B321,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-37,B322,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-38,B325,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-39,B401,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-40,B402,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-41,B403,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-42,B404,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-43,B405,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-44,B408,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-45,B409,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-46,B410,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-47,B411,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-48,B412,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-49,B415,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-50,B416,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-51,B417,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-52,B418,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-53,B419,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-54,B422,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-55,B423,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-56,B424,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-57,B425,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-58,B426,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-59,C101,C Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-60,C102,C Block,Classroom,0,Classroom,50,70,1,0,None,29,0,0,0
-61,C103,C Block,Classroom,0,Classroom,50,70,1,0,None,29,0,0,0
-62,C108,C Block,Classroom,0,Classroom,15,30,1,0,None,29,0,0,0
-63,C201,C Block,Classroom,0,Classroom,50,70,1,0,None,29,0,0,0
-64,C202,C Block,Classroom,0,Classroom,50,70,1,0,None,29,0,0,0
-65,C301,C Block,Classroom,0,Classroom,50,70,1,0,None,29,0,0,0
-66,C302,C Block,Classroom,0,Classroom,50,70,1,0,None,29,0,0,0
-67,C307,C Block,Classroom,0,Classroom,50,70,1,0,None,29,0,0,0
-68,C308,C Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-102,TIFAC I01,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-103,TIFAC I02,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-104,TIFAC I03,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-105,TIFAC I04,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-106,TIFAC I11,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-107,TIFAC I12,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-108,TIFAC I13,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-111,TIFAC V03,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-112,TIFAC V04,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
+
+221,ANEW101,A Block,Classroom (ANEW101),0,Classroom,150,180,1,0,None,29,0,0,0
+222,ANEW102,A Block,Classroom (ANEW102),0,Classroom,150,180,1,0,None,29,0,0,0
+223,ANEW103,A Block,Classroom (ANEW103),0,Classroom,140,165,1,0,None,29,0,0,0
+224,ANEW104,A Block,Classroom (ANEW104),0,Classroom,140,165,1,0,None,29,0,0,0
+225,ANEW201,A Block,Classroom (ANEW201),0,Classroom,300,355,1,0,None,29,0,0,0
+
 113,B First Floor,B Block,Immunology Lab,1,Core-Lab,20,70,1,0,Advanced,7,0,0,0
 114,B First Floor,B Block,Genetic Engineering Lab,1,Core-Lab,20,35,1,0,None,7,0,0,0
 115,B First Floor,B Block,Microbiology Lab,1,Core-Lab,20,35,1,0,High-tech,7,0,0,0
@@ -176,9 +108,5 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 217,D603,D block,Physics LAB - 1,1,Core-Lab,30,70,0,0,Advanced,31,0,0,0
 218,D403,D block,Physics LAB - 2,1,Core-Lab,30,70,0,0,Advanced,31,0,0,0
 219,TIFAC V01/02,A Block,Soft Skills – II,1,Core-Lab,70,140,0,0,None,29,0,0,0
-221,ANEW101,Techlounge,Classroom (ANEW101),0,Classroom,150,180,1,0,None,29,0,0,0
-222,ANEW102,Techlounge,Classroom (ANEW102),0,Classroom,150,180,1,0,None,29,0,0,0
-223,ANEW103,Techlounge,Classroom (ANEW103),0,Classroom,140,165,1,0,None,29,0,0,0
-224,ANEW104,Techlounge,Classroom (ANEW104),0,Classroom,140,165,1,0,None,29,0,0,0
-225,ANEW201,Techlounge,Classroom (ANEW201),0,Classroom,300,355,1,0,None,29,0,0,0
-226,ANEW202,Techlounge,Classroom (ANEW202),0,Classroom,300,355,1,0,None,29,0,0,0
+
+

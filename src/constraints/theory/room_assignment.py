@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Dict, Iterable, Mapping, MutableMapping, Optional, Sequence, Tuple
+from typing import DefaultDict, Dict, Iterable, Mapping, MutableMapping, Optional, Sequence, Tuple
 
 from ortools.sat.python import cp_model
 
@@ -79,7 +79,8 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 		model = context.model
 		theory_block = context.variables.theory
 		room_lookup = inventory.room_index
-		room_slot_usage: MutableMapping[Tuple[str, str, int], list[cp_model.IntVar]] = defaultdict(list)
+		# Store (course_id, var) tuples to allow grouping by course code later
+		room_slot_usage: MutableMapping[Tuple[str, str, int], list[Tuple[str, cp_model.IntVar]]] = defaultdict(list)
 		stats = {
 			"active_literals": 0,
 			"disabled_literals": 0,
@@ -108,14 +109,10 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 				model.Add(var == 0)
 				stats["disabled_literals"] += 1
 				continue
-			if (
-				policy.is_big_course
-				and self._safe_int(room_meta.get("capacity")) is not None
-				and self._safe_int(room_meta.get("capacity")) < self._big_threshold
-			):
-				model.Add(var == 0)
-				stats["disabled_literals"] += 1
-				continue
+			
+			# Strict capacity check for large courses is handled in _build_course_policies via allowed_rooms
+			# But we keep a safety check here if needed, though policy.allowed_rooms should cover it.
+			
 			stats["active_literals"] += 1
 			day_key = self._resolve_day_key(
 				course_id,
@@ -125,7 +122,7 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 				pattern_cache,
 				day_key_cache,
 			)
-			room_slot_usage[(str(room_id), day_key, slot_idx)].append(var)
+			room_slot_usage[(str(room_id), day_key, slot_idx)].append((course_id, var))
 			block = room_meta.get("block") or room_meta.get("Block") or room_meta.get("building")
 			block_label = self._normalise_block(block)
 			if self._overflow_penalty and policy.primary_block and block_label != policy.primary_block:
@@ -137,11 +134,57 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 				)
 				stats["penalties"] += 1
 
-		for vars_list in room_slot_usage.values():
-			if len(vars_list) <= 1:
+		for (room_id, _day, _slot), usage_list in room_slot_usage.items():
+			if len(usage_list) <= 1:
 				continue
-			model.Add(sum(vars_list) <= 1)
-			stats["room_conflict_constraints"] += 1
+
+			room_meta = room_lookup.get(room_id, {})
+			capacity = self._safe_int(room_meta.get("capacity"))
+			
+			# Determine co-scheduling limit based on capacity
+			limit = 1
+			if capacity is not None:
+				if capacity >= 300:
+					limit = 5
+				elif capacity >= 170:
+					limit = 3
+				elif capacity >= 130:
+					limit = 2
+			
+			if limit == 1:
+				# Standard strict single assignment
+				vars_only = [v for _, v in usage_list]
+				model.Add(sum(vars_only) <= 1)
+				stats["room_conflict_constraints"] += 1
+			else:
+				# Co-scheduling allowed for same course code
+				# Group vars by course code
+				by_code: DefaultDict[str, list[cp_model.IntVar]] = defaultdict(list)
+				for cid, var in usage_list:
+					# Try to get course code from requirements, fallback to parsing ID
+					req = theory_block.course_requirements.get(cid)
+					code = getattr(req, "course_code", None)
+					if not code:
+						code = cid.split('_')[0]
+					by_code[code].append(var)
+				
+				# If multiple codes present, enforce mutual exclusion
+				if len(by_code) > 1:
+					active_indicators = []
+					for code, vars_for_code in by_code.items():
+						is_active = model.NewBoolVar(f"active_{room_id}_{_day}_{_slot}_{code}")
+						active_indicators.append(is_active)
+						# If active, sum <= limit. If not active, sum == 0.
+						model.Add(sum(vars_for_code) <= limit * is_active)
+					
+					# Only one code can be active
+					model.Add(sum(active_indicators) <= 1)
+				else:
+					# Only one code exists, just limit the count
+					vars_only = [v for _, v in usage_list]
+					model.Add(sum(vars_only) <= limit)
+				
+				stats["room_conflict_constraints"] += 1
 
 		return stats
 
@@ -158,7 +201,25 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 			allowed = self._resolve_allowed_blocks(semester, inventory)
 			if not allowed:
 				continue
+			
+			# Determine tier
 			is_big = student_count >= self._big_threshold
+			min_cap_needed = 0
+			specific_tier_rooms = None
+
+			if student_count > 210:
+				min_cap_needed = student_count
+				specific_tier_rooms = {"225"} # ANEW201
+			elif student_count > 165:
+				min_cap_needed = student_count
+				specific_tier_rooms = {"221", "222"} # ANEW101, ANEW102
+			elif student_count > 130:
+				min_cap_needed = student_count
+				specific_tier_rooms = {"223", "224", "220", "3"} # ANEW103, ANEW104, KSL02, A104/105
+			elif student_count >= 115:
+				min_cap_needed = 140 # Force large room for 120-student case
+				specific_tier_rooms = {"223", "224", "220", "3"} # Same set as > 130
+			
 			primary = self._resolve_primary_block(semester, allowed)
 			candidate_rooms: list[str] = []
 			for block in allowed:
@@ -168,23 +229,61 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 						candidate_rooms.append(room_id)
 			if not candidate_rooms:
 				candidate_rooms = list(inventory.room_index.keys())
+			
 			filtered_rooms: Tuple[str, ...]
-			if is_big:
+			if min_cap_needed > 0:
+				# Strict filtering for large courses
+				# For large courses, we ignore block restrictions if needed to find a room
+				# Search ALL rooms in inventory, not just candidate_rooms (which are block-restricted)
+				all_rooms = list(inventory.room_index.keys())
+				sized = [
+					room_id
+					for room_id in all_rooms
+					if self._safe_int(inventory.room_index.get(room_id, {}).get("capacity"))
+					and self._safe_int(inventory.room_index.get(room_id, {}).get("capacity")) >= min_cap_needed
+				]
+				
+				if specific_tier_rooms:
+					tier_matches = [r for r in sized if r in specific_tier_rooms]
+					if tier_matches:
+						filtered_rooms = tuple(tier_matches)
+					else:
+						# Fallback if specific rooms don't fit capacity or are missing
+						filtered_rooms = tuple(sized)
+				else:
+					filtered_rooms = tuple(sized)
+			elif is_big:
+				# Legacy big threshold check (>= 140 default)
 				sized = tuple(
 					room_id
 					for room_id in candidate_rooms
 					if self._safe_int(inventory.room_index.get(room_id, {}).get("capacity"))
 					and self._safe_int(inventory.room_index.get(room_id, {}).get("capacity")) >= self._big_threshold
 				)
-				filtered_rooms = sized or tuple(candidate_rooms)
+				# STRICT: Do not fallback
+				filtered_rooms = sized
 			else:
-				small_only = tuple(
-					room_id
-					for room_id in candidate_rooms
+				# Small courses: prefer small rooms, but allow large rooms for co-scheduling
+				# We include:
+				# 1. Candidate rooms (block-restricted) that are small (< big_threshold)
+				# 2. ANY room that is large enough to support co-scheduling (>= 130), regardless of block
+				
+				all_rooms = list(inventory.room_index.keys())
+				
+				small_candidates = [
+					room_id for room_id in candidate_rooms
 					if self._safe_int(inventory.room_index.get(room_id, {}).get("capacity")) is None
 					or self._safe_int(inventory.room_index.get(room_id, {}).get("capacity")) < self._big_threshold
-				)
-				filtered_rooms = small_only
+				]
+				
+				large_co_schedulable = [
+					room_id for room_id in all_rooms
+					if self._safe_int(inventory.room_index.get(room_id, {}).get("capacity"))
+					and self._safe_int(inventory.room_index.get(room_id, {}).get("capacity")) >= 130
+				]
+				
+				filtered_rooms = tuple(set(small_candidates + large_co_schedulable))
+			
 			policies[course_id] = CoursePolicy(
 				allowed_blocks=allowed,
 				primary_block=primary,

@@ -493,7 +493,7 @@ departments:
 preprocessing:
   enable_visualizations: false
   fill_missing_students: true
-  student_cap: 120
+  student_cap: 300
   normalise_teacher_names: true
   normalise_department_names: true
   deduplicate_courses: true
@@ -776,7 +776,7 @@ runtime:
   enable_lns: true
   enable_trace: true
   solution_limit: null
-  stop_after_first_solution: false
+  stop_after_first_solution: true
   probing_level: 0
   search_branching: FIXED_SEARCH
   restart_log_size: 18.0
