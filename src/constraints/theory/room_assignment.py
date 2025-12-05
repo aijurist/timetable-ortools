@@ -42,6 +42,7 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 		settings = dict(params or {})
 		self._big_threshold = max(1, int(settings.get("big_capacity_threshold", 140)))
 		self._overflow_penalty = max(0, int(settings.get("overflow_penalty", 5)))
+		self._utilization_penalty = max(0, int(settings.get("utilization_penalty", 10)))
 		self._default_blocks = self._normalise_block_list(settings.get("default_blocks") or ("A Block", "B Block", "C Block"))
 		self._senior_blocks = self._normalise_block_list(settings.get("senior_blocks") or ("A Block", "B Block"))
 		self._second_year_blocks = self._normalise_block_list(settings.get("second_year_blocks") or ("B Block", "C Block"))
@@ -176,6 +177,24 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 						active_indicators.append(is_active)
 						# If active, sum <= limit. If not active, sum == 0.
 						model.Add(sum(vars_for_code) <= limit * is_active)
+						
+						# Maximise usage: if active, prefer filling up to limit
+						if self._utilization_penalty > 0:
+							# Penalty = P * (limit * is_active - sum(vars_for_code))
+							# Decomposed: P*limit*is_active (penalty) + P*sum(vars) (reward / negative penalty)
+							register_objective_penalty(
+								context,
+								is_active,
+								weight=limit * self._utilization_penalty,
+								tag="room_utilization:active_cost"
+							)
+							for v in vars_for_code:
+								register_objective_penalty(
+									context,
+									v,
+									weight=-self._utilization_penalty,
+									tag="room_utilization:fill_reward"
+								)
 					
 					# Only one code can be active
 					model.Add(sum(active_indicators) <= 1)
@@ -183,6 +202,26 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 					# Only one code exists, just limit the count
 					vars_only = [v for _, v in usage_list]
 					model.Add(sum(vars_only) <= limit)
+					
+					# Maximise usage: if used, prefer filling up to limit
+					if self._utilization_penalty > 0:
+						room_used = model.NewBoolVar(f"used_{room_id}_{_day}_{_slot}")
+						model.Add(sum(vars_only) > 0).OnlyEnforceIf(room_used)
+						model.Add(sum(vars_only) == 0).OnlyEnforceIf(room_used.Not())
+						
+						register_objective_penalty(
+							context,
+							room_used,
+							weight=limit * self._utilization_penalty,
+							tag="room_utilization:active_cost"
+						)
+						for v in vars_only:
+							register_objective_penalty(
+								context,
+								v,
+								weight=-self._utilization_penalty,
+								tag="room_utilization:fill_reward"
+							)
 				
 				stats["room_conflict_constraints"] += 1
 

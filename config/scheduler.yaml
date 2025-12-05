@@ -776,7 +776,7 @@ runtime:
   enable_lns: true
   enable_trace: true
   solution_limit: null
-  stop_after_first_solution: true
+  stop_after_first_solution: false
   probing_level: 0
   search_branching: FIXED_SEARCH
   restart_log_size: 18.0
