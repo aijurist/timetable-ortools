@@ -1,0 +1,19 @@
+Course-Group Distribution Summary
+Department: Department of Mechanical Engineering
+Semester: 8
+Generated: 2025-12-05 17:02:01
+============================================================
+
+OVERVIEW
+- Courses: 1 (Lab 0, Theory 1)
+- Groups: 1
+- Total assignments: 1
+- Courses with multiple options: 0 (0.0%)
+
+COURSE DISTRIBUTION BY GROUP
+- ME19F19 [Theory]: 1 groups, 1 teachers
+  └─ G1: 1 teacher assignments
+
+GROUP COMPOSITION
+- G1: 1 courses, 1 teachers
+  └─ ME19F19 [T]: 1 instances, 1 teachers

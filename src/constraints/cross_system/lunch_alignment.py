@@ -11,7 +11,12 @@ from ortools.sat.python import cp_model
 from ..base import Constraint, ConstraintMetadata
 from ..context import ConstraintContext
 from ..schema import ConstraintApplicationResult, ConstraintStatus
-from ..utils import build_presence_literal, parse_department_token, resolve_group_slot_map
+from ..utils import (
+	build_presence_literal,
+	parse_department_token,
+	register_objective_penalty,
+	resolve_group_slot_map,
+)
 
 DepartmentToken = Tuple[str, Optional[int]]
 
@@ -53,6 +58,10 @@ class LunchAlignmentConfig:
 	min_traditional_free_slots: int
 	natural_patterns: Tuple[NaturalLunchPattern, ...]
 	flexible_tokens: Tuple[DepartmentToken, ...]
+	soft_tokens: Tuple[DepartmentToken, ...]
+	soft_semesters: Tuple[int, ...]
+	hard_overrides: Tuple[str, ...]
+	penalty_weight: int
 
 	@staticmethod
 	def from_context(context: ConstraintContext, params: Optional[Mapping[str, object]]) -> "LunchAlignmentConfig":
@@ -86,6 +95,10 @@ class LunchAlignmentConfig:
 		flexible_tokens = list(params.get("flexible_departments", ()))
 		if departments is not None:
 			flexible_tokens.extend(getattr(departments, "flexible_lunch_departments", ()) or [])
+		soft_tokens = list(params.get("soft_departments", ()))
+		soft_semesters = tuple(int(s) for s in params.get("soft_semesters", ()))
+		hard_overrides = tuple(str(d) for d in params.get("hard_overrides", ()))
+		penalty_weight = int(params.get("penalty_weight", 10))
 		return LunchAlignmentConfig(
 			fallback_window=default_window,
 			minimum_free_slots=minimum_free,
@@ -93,10 +106,21 @@ class LunchAlignmentConfig:
 			min_traditional_free_slots=min_traditional,
 			natural_patterns=natural_patterns,
 			flexible_tokens=_normalize_department_tokens(flexible_tokens),
+			soft_tokens=_normalize_department_tokens(soft_tokens),
+			soft_semesters=soft_semesters,
+			hard_overrides=hard_overrides,
+			penalty_weight=penalty_weight,
 		)
 
 	def is_flexible(self, department: str, semester: Optional[int]) -> bool:
 		return _matches_department(self.flexible_tokens, department, semester)
+
+	def is_soft(self, department: str, semester: Optional[int]) -> bool:
+		if department in self.hard_overrides:
+			return False
+		if semester is not None and semester in self.soft_semesters:
+			return True
+		return _matches_department(self.soft_tokens, department, semester)
 
 
 def _build_group_lab_session_map(lab_block) -> Dict[str, Dict[int, Dict[str, Tuple[cp_model.IntVar, ...]]]]:
@@ -149,9 +173,11 @@ class LunchAlignmentConstraint(Constraint):
 
 		standard_groups = 0
 		flexible_groups = 0
+		soft_groups = 0
 		theory_guards = 0
 		lab_guards = 0
 		flexible_guards = 0
+		soft_penalties = 0
 
 		dept_sem_groups: Dict[Tuple[str, Optional[int]], list[str]] = defaultdict(list)
 		group_windows: Dict[Tuple[str, Optional[int]], Tuple[int, ...]] = {}
@@ -186,6 +212,21 @@ class LunchAlignmentConstraint(Constraint):
 						day_map,
 						lab_sessions_by_group.get(group_id, {}),
 					)
+			elif config.is_soft(dept, semester):
+				cohort_group_ids = tuple(group_ids)
+				soft_groups += len(cohort_group_ids)
+				soft_penalties += self._apply_soft_lunch(
+					context,
+					config,
+					key,
+					cohort_group_ids,
+					group_slot_map,
+					lab_sessions_by_group,
+					lab_overlap_cache,
+					context.data.raw.time.lab_session_to_theory,
+					working_days,
+					window,
+				)
 			else:
 				cohort_group_ids = tuple(group_ids)
 				theory_delta, lab_delta = self._apply_standard_lunch(
@@ -206,7 +247,7 @@ class LunchAlignmentConstraint(Constraint):
 
 		status = (
 			ConstraintStatus.APPLIED
-			if (theory_guards or lab_guards or flexible_guards)
+			if (theory_guards or lab_guards or flexible_guards or soft_penalties)
 			else ConstraintStatus.SKIPPED
 		)
 		return ConstraintApplicationResult(
@@ -221,6 +262,8 @@ class LunchAlignmentConstraint(Constraint):
 				"theory_clauses": theory_guards,
 				"lab_clauses": lab_guards,
 				"flexible_clauses": flexible_guards,
+				"soft_groups": soft_groups,
+				"soft_penalties": soft_penalties,
 			},
 		)
 
@@ -297,6 +340,67 @@ class LunchAlignmentConstraint(Constraint):
 				theory_clauses += 1
 
 		return theory_clauses, lab_clauses
+
+	def _apply_soft_lunch(
+		self,
+		context: ConstraintContext,
+		config: LunchAlignmentConfig,
+		cohort_key: Tuple[str, Optional[int]],
+		group_ids: Sequence[str],
+		group_slot_map: Mapping[str, Mapping[int, Mapping[int, cp_model.IntVar]]],
+		lab_sessions: Mapping[str, Mapping[int, Mapping[str, Tuple[cp_model.IntVar, ...]]]],
+		lab_overlap_cache: Dict[int, Tuple[str, ...]],
+		lab_session_to_theory: Mapping[str, Sequence[int]],
+		working_days: Sequence[str],
+		window: Tuple[int, ...],
+	) -> int:
+		model = context.model
+		cohort_label = self._cohort_label(*cohort_key)
+		penalties = 0
+		day_indices: set[int] = set()
+		for group_id in group_ids:
+			day_indices.update(group_slot_map.get(group_id, {}).keys())
+			day_indices.update(lab_sessions.get(group_id, {}).keys())
+		if not day_indices:
+			day_indices = set(range(len(working_days))) if working_days else {0}
+
+		for day_idx in sorted(day_indices):
+			slot_busy_terms: list[cp_model.IntVar] = []
+			for slot in window:
+				for group_id in group_ids:
+					day_map = group_slot_map.get(group_id, {})
+					slot_map = day_map.get(day_idx, {}) if isinstance(day_map, Mapping) else {}
+					slot_var = slot_map.get(slot) if isinstance(slot_map, Mapping) else None
+					if slot_var is not None:
+						slot_busy_terms.append(slot_var)
+					group_day_sessions = lab_sessions.get(group_id, {}).get(day_idx, {})
+					for session_name in self._lab_sessions_for_slot(slot, lab_overlap_cache, lab_session_to_theory):
+						vars_tuple = group_day_sessions.get(session_name)
+						if not vars_tuple:
+							continue
+						literal = build_presence_literal(
+							model,
+							vars_tuple,
+							f"soft_lunch_lab_{group_id}_d{day_idx}_{session_name}",
+						)
+						if literal is not None:
+							slot_busy_terms.append(literal)
+			if slot_busy_terms:
+				busy_literal = build_presence_literal(
+					model,
+					slot_busy_terms,
+					f"soft_lunch_busy_{cohort_label}_d{day_idx}",
+				)
+				if busy_literal is not None:
+					register_objective_penalty(
+						context,
+						busy_literal,
+						weight=config.penalty_weight,
+						tag="lunch:soft",
+					)
+					penalties += 1
+
+		return penalties
 
 	def _apply_flexible_lunch(
 		self,

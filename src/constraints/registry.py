@@ -13,6 +13,7 @@ from .cross_system.lunch_alignment import build_lunch_alignment_constraint
 from .cross_system.shift_pattern import build_shift_pattern_constraint
 from .cross_system.teacher_overlap import build_teacher_overlap_constraint
 from .cross_system.teacher_daily_workload import build_teacher_daily_workload_constraint
+from .cross_system.dept_day_span import build_department_day_span_constraint
 from .lab.consecutive_batches import build_consecutive_batch_lab_constraint
 from .lab.core_lab import build_core_lab_mapping_constraint
 from .lab.requirements import build_lab_session_coverage_constraint
@@ -127,6 +128,12 @@ THEORY_CONSTRAINT_DEFINITIONS = {
 
 
 CROSS_SYSTEM_CONSTRAINT_DEFINITIONS = {
+	"dept_day_span": {
+		"title": "Department Day Span Limit",
+		"description": "Cap distinct active days for targeted department-semester pairs across lab/theory (e.g., 8th sem packed into two days).",
+		"factory": build_department_day_span_constraint,
+		"tags": ("cross-system", "days", "distribution"),
+	},
 	"group_non_overlap": {
 		"title": "Department Group Non-Overlap",
 		"description": "Prevent different groups within the same department-semester from occupying the same lab/theory time.",

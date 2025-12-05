@@ -255,7 +255,7 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 			elif student_count > 130:
 				min_cap_needed = student_count
 				specific_tier_rooms = {"223", "224", "220", "3"} # ANEW103, ANEW104, KSL02, A104/105
-			elif student_count >= 115:
+			elif student_count >= 100:
 				min_cap_needed = 140 # Force large room for 120-student case
 				specific_tier_rooms = {"223", "224", "220", "3"} # Same set as > 130
 			

@@ -1,0 +1,45 @@
+Course-Group Distribution Summary
+Department: Department of Artificial Intelligence and Machine Learning
+Semester: 6
+Generated: 2025-12-05 15:05:45
+============================================================
+
+OVERVIEW
+- Courses: 5 (Lab 4, Theory 4)
+- Groups: 5
+- Total assignments: 13
+- Courses with multiple options: 5 (100.0%)
+
+COURSE DISTRIBUTION BY GROUP
+- AI23611 [Theory]: 2 groups, 3 teachers
+  └─ G3: 2 teacher assignments
+  └─ G4: 1 teacher assignments
+- AI23631 [Lab + Theory]: 2 groups, 2 teachers
+  └─ G1: 1 teacher assignments
+  └─ G4: 1 teacher assignments
+- AI23632 [Lab + Theory]: 2 groups, 2 teachers
+  └─ G1: 1 teacher assignments
+  └─ G3: 1 teacher assignments
+- CS23634 [Lab + Theory]: 2 groups, 3 teachers
+  └─ G2: 1 teacher assignments
+  └─ G5: 2 teacher assignments
+- GE23627 [Lab]: 2 groups, 3 teachers
+  └─ G2: 2 teacher assignments
+  └─ G5: 1 teacher assignments
+
+GROUP COMPOSITION
+- G1: 2 courses, 2 teachers
+  └─ AI23631 [L+T]: 1 instances, 1 teachers
+  └─ AI23632 [L+T]: 1 instances, 1 teachers
+- G2: 2 courses, 3 teachers
+  └─ CS23634 [L+T]: 1 instances, 1 teachers
+  └─ GE23627 [L]: 2 instances, 2 teachers
+- G3: 2 courses, 3 teachers
+  └─ AI23611 [T]: 2 instances, 2 teachers
+  └─ AI23632 [L+T]: 1 instances, 1 teachers
+- G4: 2 courses, 2 teachers
+  └─ AI23611 [T]: 1 instances, 1 teachers
+  └─ AI23631 [L+T]: 1 instances, 1 teachers
+- G5: 2 courses, 3 teachers
+  └─ CS23634 [L+T]: 2 instances, 2 teachers
+  └─ GE23627 [L]: 1 instances, 1 teachers

@@ -1,0 +1,27 @@
+Course-Group Distribution Summary
+Department: Department of Mechatronics Engineering
+Semester: 8
+Generated: 2025-12-05 17:02:01
+============================================================
+
+OVERVIEW
+- Courses: 3 (Lab 1, Theory 2)
+- Groups: 3
+- Total assignments: 3
+- Courses with multiple options: 0 (0.0%)
+
+COURSE DISTRIBUTION BY GROUP
+- ME19E19 [Theory]: 1 groups, 1 teachers
+  └─ G3: 1 teacher assignments
+- ME19PE01 [Theory]: 1 groups, 1 teachers
+  └─ G2: 1 teacher assignments
+- MT19811 [Lab]: 1 groups, 1 teachers
+  └─ G1: 1 teacher assignments
+
+GROUP COMPOSITION
+- G1: 1 courses, 1 teachers
+  └─ MT19811 [L]: 1 instances, 1 teachers
+- G2: 1 courses, 1 teachers
+  └─ ME19PE01 [T]: 1 instances, 1 teachers
+- G3: 1 courses, 1 teachers
+  └─ ME19E19 [T]: 1 instances, 1 teachers

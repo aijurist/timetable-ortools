@@ -5,7 +5,9 @@ meta:
   generated_at: null
 
 paths:
-  courses_csv: data/department_data/core-v3/Computer_Science_and_Engineering_v3.0.csv
+  # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
+  # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
+  courses_csv: data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   rooms_csv: data/block_wise/techlongue.csv
   day_order_csv: data/day_order.csv
   core_lab_mapping_csv: data/og-final.csv
@@ -214,7 +216,6 @@ departments:
         - 3
         - 4
         - 5
-        - 6
       shift_id: SHIFT_2
       flexible_lunch: false
     Artificial Intelligence & Machine Learning:
@@ -229,7 +230,6 @@ departments:
         - 3
         - 4
         - 5
-        - 6
       shift_id: SHIFT_2
       flexible_lunch: false
     Computer Science & Design:
@@ -653,6 +653,16 @@ constraints:
           - SHIFT_1
           - SHIFT_2
   cross_system:
+    dept_day_span:
+      enabled: true
+      priority: 8
+      weight: 1.0
+      params:
+        day_limit: 2
+        target_semesters:
+          - 8
+        excluded_departments:
+          - Computer Science & Business Systems
     group_non_overlap:
       enabled: true
       priority: 9
@@ -681,8 +691,12 @@ constraints:
           - 3
           - 4
           - 5
-          - 6
         minimum_free_slots: 1
+        soft_semesters:
+          - 8
+        hard_overrides:
+          - Computer Science & Business Systems
+        penalty_weight: 10
     five_pm_policy:
       enabled: true
       priority: 7
@@ -690,9 +704,8 @@ constraints:
       params:
         hard_departments:
           - Artificial Intelligence & Data Science
-          - Artificial Intelligence & Machine Learning_S3
-          - Artificial Intelligence & Machine Learning_S5
-          - Artificial Intelligence & Machine Learning_S7
+          - Artificial Intelligence & Machine Learning
+          - Department of Artificial Intelligence and Machine Learning
           - Automobile Engineering
           - Aeronautical Engineering_S3
           - Aeronautical Engineering_S5
@@ -756,7 +769,7 @@ constraints:
         allowed_patterns:
           - [3, 2]
           - [2, 3]
-        penalty_weight: 15
+        penalty_weight: 50
         strict_ratios: true
 
 model:
@@ -771,12 +784,12 @@ model:
   use_sparse_variables: true
 
 runtime:
-  time_limit_sec: 400
+  time_limit_sec: 1200
   thread_count: 14
   enable_lns: true
   enable_trace: true
   solution_limit: null
-  stop_after_first_solution: false
+  stop_after_first_solution: true
   probing_level: 0
   search_branching: FIXED_SEARCH
   restart_log_size: 18.0
