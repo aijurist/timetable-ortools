@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Information Technology
 Semester: 4
-Generated: 2025-12-06 00:26:59
+Generated: 2025-12-12 20:19:38
 ============================================================
 
 OVERVIEW
@@ -12,7 +12,7 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - CS23431 [Lab + Theory]: 1 groups, 5 teachers
-  └─ G2: 5 teacher assignments
+  └─ G5: 5 teacher assignments
 - CS23432 [Lab + Theory]: 1 groups, 3 teachers
   └─ G3: 3 teacher assignments
 - GE23311 [Theory]: 1 groups, 4 teachers
@@ -20,16 +20,16 @@ COURSE DISTRIBUTION BY GROUP
 - IT23431 [Lab + Theory]: 1 groups, 4 teachers
   └─ G4: 4 teacher assignments
 - MA23435 [Lab + Theory]: 1 groups, 5 teachers
-  └─ G5: 5 teacher assignments
+  └─ G2: 5 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 4 teachers
   └─ GE23311 [T]: 4 instances, 4 teachers
 - G2: 1 courses, 5 teachers
-  └─ CS23431 [L+T]: 5 instances, 5 teachers
+  └─ MA23435 [L+T]: 5 instances, 5 teachers
 - G3: 1 courses, 3 teachers
   └─ CS23432 [L+T]: 3 instances, 3 teachers
 - G4: 1 courses, 4 teachers
   └─ IT23431 [L+T]: 4 instances, 4 teachers
 - G5: 1 courses, 5 teachers
-  └─ MA23435 [L+T]: 5 instances, 5 teachers
+  └─ CS23431 [L+T]: 5 instances, 5 teachers

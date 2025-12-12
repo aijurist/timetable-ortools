@@ -1,0 +1,47 @@
+Course-Group Distribution Summary
+Department: Food Technology
+Semester: 4
+Generated: 2025-12-12 20:19:37
+============================================================
+
+OVERVIEW
+- Courses: 8 (Lab 4, Theory 5)
+- Groups: 8
+- Total assignments: 8
+- Courses with multiple options: 0 (0.0%)
+
+COURSE DISTRIBUTION BY GROUP
+- CS23422 [Lab]: 1 groups, 1 teachers
+  └─ G2: 1 teacher assignments
+- FT23401 [Theory]: 1 groups, 1 teachers
+  └─ G5: 1 teacher assignments
+- FT23402 [Theory]: 1 groups, 1 teachers
+  └─ G7: 1 teacher assignments
+- FT23403 [Theory]: 1 groups, 1 teachers
+  └─ G8: 1 teacher assignments
+- FT23404 [Theory]: 1 groups, 1 teachers
+  └─ G6: 1 teacher assignments
+- FT23411 [Lab]: 1 groups, 1 teachers
+  └─ G3: 1 teacher assignments
+- FT23412 [Lab]: 1 groups, 1 teachers
+  └─ G4: 1 teacher assignments
+- MA23431 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G1: 1 teacher assignments
+
+GROUP COMPOSITION
+- G1: 1 courses, 1 teachers
+  └─ MA23431 [L+T]: 1 instances, 1 teachers
+- G2: 1 courses, 1 teachers
+  └─ CS23422 [L]: 1 instances, 1 teachers
+- G3: 1 courses, 1 teachers
+  └─ FT23411 [L]: 1 instances, 1 teachers
+- G4: 1 courses, 1 teachers
+  └─ FT23412 [L]: 1 instances, 1 teachers
+- G5: 1 courses, 1 teachers
+  └─ FT23401 [T]: 1 instances, 1 teachers
+- G6: 1 courses, 1 teachers
+  └─ FT23404 [T]: 1 instances, 1 teachers
+- G7: 1 courses, 1 teachers
+  └─ FT23402 [T]: 1 instances, 1 teachers
+- G8: 1 courses, 1 teachers
+  └─ FT23403 [T]: 1 instances, 1 teachers

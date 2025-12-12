@@ -7,9 +7,9 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data/sem2026/year_wise/2nd_year/civil_engineering.csv
+  courses_csv: data/sem2026/year_wise/2nd_year/electronics_and_communication_engineering.csv
   rooms_csv: data/block_wise/techlongue.csv
-  day_order_csv: data/day_order.csv
+  day_order_csv: data/day_order_even.csv
   # data/CoreMappingSimplified_StudentDept.csv
   # data/og-final.csv
   core_lab_mapping_csv: data/CoreMappingSimplified_StudentDept.csv
@@ -98,6 +98,7 @@ time:
     - wed
     - thur
     - fri
+    - saturday
 
 departments:
   default_settings:
@@ -112,7 +113,6 @@ departments:
       - 3
       - 4
       - 5
-      - 6
     shift_id: SHIFT_1
     flexible_lunch: false
   overrides:
@@ -128,22 +128,20 @@ departments:
         - 3
         - 4
         - 5
-        - 6
       shift_id: SHIFT_1
       flexible_lunch: false
     Computer Science & Engineering (Cyber Security):
       day_pattern:
-        - monday
         - tuesday
         - wed
         - thur
         - fri
+        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
         - 4
         - 5
-        - 6
       shift_id: SHIFT_1
       flexible_lunch: false
     Electronics & Communication Engineering:
@@ -158,7 +156,6 @@ departments:
         - 3
         - 4
         - 5
-        - 6
       shift_id: SHIFT_2
       flexible_lunch: false
     Information Technology:
@@ -173,10 +170,23 @@ departments:
         - 3
         - 4
         - 5
-        - 6
       shift_id: SHIFT_1
       flexible_lunch: false
     Mechanical Engineering:
+      day_pattern:
+        - tuesday
+        - wed
+        - thur
+        - fri
+        - saturday
+      lunch_break_slot: null
+      lunch_slot_window:
+        - 3
+        - 4
+        - 5
+      shift_id: SHIFT_1
+      flexible_lunch: false
+    Civil Engineering:
       day_pattern:
         - monday
         - tuesday
@@ -188,30 +198,15 @@ departments:
         - 3
         - 4
         - 5
-      shift_id: SHIFT_1
-      flexible_lunch: false
-    Civil Engineering:
-      day_pattern:
-        - tuesday
-        - wed
-        - thur
-        - fri
-        - saturday
-      lunch_break_slot: null
-      lunch_slot_window:
-        - 3
-        - 4
-        - 5
-        - 6
       shift_id: SHIFT_2
       flexible_lunch: false
     Artificial Intelligence & Data Science:
       day_pattern:
+        - monday
         - tuesday
         - wed
         - thur
         - fri
-        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
@@ -235,65 +230,47 @@ departments:
       flexible_lunch: false
     Computer Science & Design:
       day_pattern:
-        - monday
         - tuesday
         - wed
         - thur
         - fri
+        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
         - 4
         - 5
-        - 6
       shift_id: SHIFT_1
       flexible_lunch: false
     Computer Science & Business Systems:
       day_pattern:
-        - monday
         - tuesday
         - wed
         - thur
         - fri
+        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
         - 4
         - 5
-        - 6
       shift_id: SHIFT_1
       flexible_lunch: false
     Electrical & Electronics Engineering:
       day_pattern:
+        - monday
         - tuesday
         - wed
         - thur
         - fri
-        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
         - 4
         - 5
-        - 6
       shift_id: SHIFT_2
       flexible_lunch: false
     Robotics & Automation:
-      day_pattern:
-        - tuesday
-        - wed
-        - thur
-        - fri
-        - saturday
-      lunch_break_slot: null
-      lunch_slot_window:
-        - 3
-        - 4
-        - 5
-        - 6
-      shift_id: SHIFT_2
-      flexible_lunch: false
-    Automobile Engineering:
       day_pattern:
         - monday
         - tuesday
@@ -305,7 +282,20 @@ departments:
         - 3
         - 4
         - 5
-        - 6
+      shift_id: SHIFT_2
+      flexible_lunch: false
+    Automobile Engineering:
+      day_pattern:
+        - tuesday
+        - wed
+        - thur
+        - fri
+        - saturday
+      lunch_break_slot: null
+      lunch_slot_window:
+        - 3
+        - 4
+        - 5
       shift_id: SHIFT_1
       flexible_lunch: false
     Aeronautical Engineering:
@@ -320,16 +310,15 @@ departments:
         - 3
         - 4
         - 5
-        - 6
       shift_id: SHIFT_2
       flexible_lunch: false
     Biotechnology:
       day_pattern:
+        - monday
         - tuesday
         - wed
         - thur
         - fri
-        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
@@ -349,25 +338,9 @@ departments:
         - 3
         - 4
         - 5
-        - 6
       shift_id: SHIFT_2
       flexible_lunch: false
     Chemical Engineering:
-      day_pattern:
-        - monday
-        - tuesday
-        - wed
-        - thur
-        - fri
-      lunch_break_slot: null
-      lunch_slot_window:
-        - 3
-        - 4
-        - 5
-        - 6
-      shift_id: SHIFT_1
-      flexible_lunch: false
-    Biomedical Engineering:
       day_pattern:
         - tuesday
         - wed
@@ -379,7 +352,20 @@ departments:
         - 3
         - 4
         - 5
-        - 6
+      shift_id: SHIFT_1
+      flexible_lunch: false
+    Biomedical Engineering:
+      day_pattern:
+        - monday
+        - tuesday
+        - wed
+        - thur
+        - fri
+      lunch_break_slot: null
+      lunch_slot_window:
+        - 3
+        - 4
+        - 5
       shift_id: SHIFT_2
       flexible_lunch: false
     Mechatronics Engineering:
@@ -394,7 +380,6 @@ departments:
         - 3
         - 4
         - 5
-        - 6
       shift_id: SHIFT_1
       flexible_lunch: false
   shift_templates:
@@ -759,6 +744,9 @@ constraints:
           - Computer Science & Engineering_S8
           - Electrical & Electronics Engineering_S4
           - Electrical & Electronics Engineering_S6
+          - Electrical & Electronics Engineering_S8
+          - Electronics & Communication Engineering_S4
+          - Electronics & Communication Engineering_S6
           - Electronics & Communication Engineering_S8
           - Food Technology_S4
           - Food Technology_S6
@@ -773,9 +761,6 @@ constraints:
           - Computer Science & Engineering_S4
           - Robotics & Automation
         soft_departments:
-          - Electronics & Communication Engineering_S4
-          - Electrical & Electronics Engineering_S6
-          - Electronics & Communication Engineering_S6
         blocked_theory_slots:
           - 9
           - 10
@@ -814,7 +799,7 @@ model:
   use_sparse_variables: true
 
 runtime:
-  time_limit_sec: 1200
+  time_limit_sec: 5000
   thread_count: 14
   enable_lns: true
   enable_trace: true

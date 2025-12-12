@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Computer Science & Business Systems
 Semester: 8
-Generated: 2025-12-12 16:59:10
+Generated: 2025-12-12 20:19:24
 ============================================================
 
 OVERVIEW
@@ -17,20 +17,24 @@ COURSE DISTRIBUTION BY GROUP
 - BA19802 [Theory]: 2 groups, 2 teachers
   └─ G4: 1 teacher assignments
   └─ G5: 1 teacher assignments
-- CB19841 [Lab + Theory]: 1 groups, 2 teachers
-  └─ G1: 2 teacher assignments
-- CB19P46 [Lab + Theory]: 1 groups, 2 teachers
-  └─ G2: 2 teacher assignments
+- CB19841 [Lab + Theory]: 2 groups, 2 teachers
+  └─ G2: 1 teacher assignments
+  └─ G3: 1 teacher assignments
+- CB19P46 [Lab + Theory]: 2 groups, 2 teachers
+  └─ G2: 1 teacher assignments
+  └─ G3: 1 teacher assignments
 - CB19P49 [Lab + Theory]: 1 groups, 2 teachers
-  └─ G3: 2 teacher assignments
+  └─ G1: 2 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 2 teachers
-  └─ CB19841 [L+T]: 2 instances, 2 teachers
-- G2: 1 courses, 2 teachers
-  └─ CB19P46 [L+T]: 2 instances, 2 teachers
-- G3: 1 courses, 2 teachers
   └─ CB19P49 [L+T]: 2 instances, 2 teachers
+- G2: 2 courses, 2 teachers
+  └─ CB19841 [L+T]: 1 instances, 1 teachers
+  └─ CB19P46 [L+T]: 1 instances, 1 teachers
+- G3: 2 courses, 2 teachers
+  └─ CB19841 [L+T]: 1 instances, 1 teachers
+  └─ CB19P46 [L+T]: 1 instances, 1 teachers
 - G4: 2 courses, 2 teachers
   └─ BA19801 [T]: 1 instances, 1 teachers
   └─ BA19802 [T]: 1 instances, 1 teachers

@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Computer Science & Design
 Semester: 8
-Generated: 2025-12-12 16:59:11
+Generated: 2025-12-12 20:19:25
 ============================================================
 
 OVERVIEW
@@ -12,12 +12,12 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - CD19P05 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G2: 1 teacher assignments
-- OMT1903 [Theory]: 1 groups, 1 teachers
   └─ G1: 1 teacher assignments
+- OMT1903 [Theory]: 1 groups, 1 teachers
+  └─ G2: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
-  └─ OMT1903 [T]: 1 instances, 1 teachers
-- G2: 1 courses, 1 teachers
   └─ CD19P05 [L+T]: 1 instances, 1 teachers
+- G2: 1 courses, 1 teachers
+  └─ OMT1903 [T]: 1 instances, 1 teachers
