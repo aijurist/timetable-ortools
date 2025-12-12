@@ -1,47 +1,19 @@
 Course-Group Distribution Summary
 Department: Mechatronics Engineering
 Semester: 5
-Generated: 2025-11-30 17:10:52
+Generated: 2025-12-12 16:41:48
 ============================================================
 
 OVERVIEW
-- Courses: 8 (Lab 2, Theory 6)
-- Groups: 8
-- Total assignments: 8
+- Courses: 1 (Lab 1, Theory 1)
+- Groups: 1
+- Total assignments: 1
 - Courses with multiple options: 0 (0.0%)
 
 COURSE DISTRIBUTION BY GROUP
-- CS23422 [Lab]: 1 groups, 1 teachers
+- MT23631 [Lab + Theory]: 1 groups, 1 teachers
   └─ G1: 1 teacher assignments
-- GE23311 [Theory]: 1 groups, 1 teachers
-  └─ G5: 1 teacher assignments
-- ME23A11 [Theory]: 1 groups, 1 teachers
-  └─ G8: 1 teacher assignments
-- MT23511 [Theory]: 1 groups, 1 teachers
-  └─ G6: 1 teacher assignments
-- MT23512 [Theory]: 1 groups, 1 teachers
-  └─ G7: 1 teacher assignments
-- MT23513 [Theory]: 1 groups, 1 teachers
-  └─ G4: 1 teacher assignments
-- MT23522 [Lab]: 1 groups, 1 teachers
-  └─ G2: 1 teacher assignments
-- MT23D11 [Theory]: 1 groups, 1 teachers
-  └─ G3: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
-  └─ CS23422 [L]: 1 instances, 1 teachers
-- G2: 1 courses, 1 teachers
-  └─ MT23522 [L]: 1 instances, 1 teachers
-- G3: 1 courses, 1 teachers
-  └─ MT23D11 [T]: 1 instances, 1 teachers
-- G4: 1 courses, 1 teachers
-  └─ MT23513 [T]: 1 instances, 1 teachers
-- G5: 1 courses, 1 teachers
-  └─ GE23311 [T]: 1 instances, 1 teachers
-- G6: 1 courses, 1 teachers
-  └─ MT23511 [T]: 1 instances, 1 teachers
-- G7: 1 courses, 1 teachers
-  └─ MT23512 [T]: 1 instances, 1 teachers
-- G8: 1 courses, 1 teachers
-  └─ ME23A11 [T]: 1 instances, 1 teachers
+  └─ MT23631 [L+T]: 1 instances, 1 teachers

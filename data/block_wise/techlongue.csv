@@ -115,7 +115,7 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 116,B First Floor,B Block,Biochemistry Lab,1,Core-Lab,20,35,1,0,Basic,7,0,0,0
 117,B Ground Floor,B Block,Technical Analysis Lab,1,Core-Lab,20,35,1,0,High-tech,8,0,0,0
 118,B Ground Floor,B Block,Chemical Reaction Engineering Lab,1,Core-Lab,20,35,1,0,Basic,8,0,0,0
-119,B Second Floor,B Block,Downstream Processing Lab,1,Core-Lab,20,35,1,0,None,7,0,0,0
+119,B Second Floor,B Block,Downstream Processing Lab,1,Core-Lab,20,70,1,0,None,7,0,0,0
 120,B Second Floor,B Block,Bioprocess Lab,1,Core-Lab,20,70,1,0,None,7,0,0,0
 121,B304,B Block,Computer Application in Chemical Engg Lab,1,Core-Lab,20,35,1,0,Advanced,8,0,0,0
 122,B116,B Block,Communication Systems Lab,1,Core-Lab,20,35,1,0,None,16,0,0,0
@@ -140,7 +140,7 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 141,BG014,B Block,Electrical Machines I Lab,1,Core-Lab,20,35,1,0,None,15,0,0,0
 142,C106,C Block,Microprocessor and Microcontrollers Lab,1,Core-Lab,20,35,1,0,None,24,0,0,0
 143,C107,C Block,Mechatronics Lab,1,Core-Lab,20,35,1,0,None,23,0,0,0
-144,C401,C Block,Mech CAD Lab,1,Core-Lab,20,35,1,0,Advanced,23,0,0,0
+144,C401,C Block,Mech CAD Lab,1,Core-Lab,35,70,1,0,Advanced,23,0,0,0
 145,C407,C Block,Dynamics Lab,1,Core-Lab,20,35,1,0,None,23,0,0,0
 146,C408,C Block,Metrology & Measurement Lab,1,Core-Lab,20,35,1,0,None,23,0,0,0
 147,CG001,C Block,Food Microbiology Lab,1,Core-Lab,20,35,1,0,Advanced,18,0,0,0

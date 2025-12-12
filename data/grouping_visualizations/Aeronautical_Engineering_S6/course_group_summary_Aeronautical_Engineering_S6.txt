@@ -1,0 +1,43 @@
+Course-Group Distribution Summary
+Department: Aeronautical Engineering
+Semester: 6
+Generated: 2025-12-12 16:59:12
+============================================================
+
+OVERVIEW
+- Courses: 7 (Lab 5, Theory 3)
+- Groups: 7
+- Total assignments: 7
+- Courses with multiple options: 0 (0.0%)
+
+COURSE DISTRIBUTION BY GROUP
+- AE23611 [Theory]: 1 groups, 1 teachers
+  └─ G6: 1 teacher assignments
+- AE23622 [Lab]: 1 groups, 1 teachers
+  └─ G1: 1 teacher assignments
+- AE23623 [Lab]: 1 groups, 1 teachers
+  └─ G4: 1 teacher assignments
+- AE23631 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G2: 1 teacher assignments
+- AE23PE01 [Theory]: 1 groups, 1 teachers
+  └─ G7: 1 teacher assignments
+- GE23621 [Lab]: 1 groups, 1 teachers
+  └─ G3: 1 teacher assignments
+- GE23627 [Lab]: 1 groups, 1 teachers
+  └─ G5: 1 teacher assignments
+
+GROUP COMPOSITION
+- G1: 1 courses, 1 teachers
+  └─ AE23622 [L]: 1 instances, 1 teachers
+- G2: 1 courses, 1 teachers
+  └─ AE23631 [L+T]: 1 instances, 1 teachers
+- G3: 1 courses, 1 teachers
+  └─ GE23621 [L]: 1 instances, 1 teachers
+- G4: 1 courses, 1 teachers
+  └─ AE23623 [L]: 1 instances, 1 teachers
+- G5: 1 courses, 1 teachers
+  └─ GE23627 [L]: 1 instances, 1 teachers
+- G6: 1 courses, 1 teachers
+  └─ AE23611 [T]: 1 instances, 1 teachers
+- G7: 1 courses, 1 teachers
+  └─ AE23PE01 [T]: 1 instances, 1 teachers

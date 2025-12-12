@@ -1,31 +1,23 @@
 Course-Group Distribution Summary
 Department: Civil Engineering
 Semester: 8
-Generated: 2025-12-06 00:51:28
+Generated: 2025-12-12 16:59:10
 ============================================================
 
 OVERVIEW
-- Courses: 4 (Lab 1, Theory 3)
-- Groups: 4
-- Total assignments: 4
+- Courses: 2 (Lab 0, Theory 2)
+- Groups: 2
+- Total assignments: 2
 - Courses with multiple options: 0 (0.0%)
 
 COURSE DISTRIBUTION BY GROUP
 - CE19801 [Theory]: 1 groups, 1 teachers
-  └─ G2: 1 teacher assignments
-- CE19811 [Lab]: 1 groups, 1 teachers
-  └─ G3: 1 teacher assignments
-- CE19PE01 [Theory]: 1 groups, 1 teachers
-  └─ G4: 1 teacher assignments
-- CE19PE02 [Theory]: 1 groups, 1 teachers
   └─ G1: 1 teacher assignments
+- CE19PE01 [Theory]: 1 groups, 1 teachers
+  └─ G2: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
-  └─ CE19PE02 [T]: 1 instances, 1 teachers
-- G2: 1 courses, 1 teachers
   └─ CE19801 [T]: 1 instances, 1 teachers
-- G3: 1 courses, 1 teachers
-  └─ CE19811 [L]: 1 instances, 1 teachers
-- G4: 1 courses, 1 teachers
+- G2: 1 courses, 1 teachers
   └─ CE19PE01 [T]: 1 instances, 1 teachers

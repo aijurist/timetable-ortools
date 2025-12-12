@@ -7,7 +7,7 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data/sem2026/year_wise/Year_4_course_data.csv
+  courses_csv: data/sem2026/year_wise/2nd_year/civil_engineering.csv
   rooms_csv: data/block_wise/techlongue.csv
   day_order_csv: data/day_order.csv
   # data/CoreMappingSimplified_StudentDept.csv
@@ -188,7 +188,6 @@ departments:
         - 3
         - 4
         - 5
-        - 6
       shift_id: SHIFT_1
       flexible_lunch: false
     Civil Engineering:
@@ -336,7 +335,6 @@ departments:
         - 3
         - 4
         - 5
-        - 6
       shift_id: SHIFT_2
       flexible_lunch: false
     Food Technology:
@@ -467,12 +465,12 @@ departments:
         - Food Technology_S5
         - Food Technology_S7
         - Information Technology
-        - Mechanical Engineering_S3
-        - Mechanical Engineering_S5
-        - Mechanical Engineering_S7
-        - Mechatronics Engineering_S3
-        - Mechatronics Engineering_S5
-        - Mechatronics Engineering_S7
+        - Mechanical Engineering_S4
+        - Mechanical Engineering_S6
+        - Mechanical Engineering_S8
+        - Mechatronics Engineering_S4
+        - Mechatronics Engineering_S6
+        - Mechatronics Engineering_S8
         - Robotics & Automation
       blocked_theory_slots:
         - 9
@@ -586,7 +584,21 @@ constraints:
       priority: 7
       weight: 1.0
       params:
-        course_codes: ['BT23523']
+        course_codes:
+          - BT23523
+          - EE23421
+          - CH23621
+          - GE23627
+          - BM23421
+          - FT23211
+          - FT23411
+          - FT23412
+          - FT23611
+          - FT23612
+          - BT23621
+          # - BT23421
+          # - BT23422
+          - BT23221
         preferred_pairs:
           - [L1, L2]
           - [L3, L4]
@@ -725,45 +737,45 @@ constraints:
           - Artificial Intelligence & Machine Learning
           - Department of Artificial Intelligence and Machine Learning
           - Automobile Engineering
-          - Aeronautical Engineering_S3
-          - Aeronautical Engineering_S5
-          - Aeronautical Engineering_S7
-          - Biomedical Engineering_S3
-          - Biomedical Engineering_S5
-          - Biomedical Engineering_S7
-          - Biotechnology_S3
-          - Biotechnology_S5
-          - Biotechnology_S7
-          - Chemical Engineering_S3
-          - Chemical Engineering_S5
-          - Chemical Engineering_S7
+          - Aeronautical Engineering_S4
+          - Aeronautical Engineering_S6
+          - Aeronautical Engineering_S8
+          - Biomedical Engineering_S4
+          - Biomedical Engineering_S6
+          - Biomedical Engineering_S8
+          - Biotechnology_S4
+          - Biotechnology_S6
+          - Biotechnology_S8
+          - Chemical Engineering_S4
+          - Chemical Engineering_S6
+          - Chemical Engineering_S8
           - Civil Engineering
           - Computer Science & Business Systems
-          - Computer Science & Design_S3
-          - Computer Science & Design_S5
-          - Computer Science & Design_S7
+          - Computer Science & Design_S4
+          - Computer Science & Design_S6
+          - Computer Science & Design_S8
           - Computer Science & Engineering (Cyber Security)
-          - Computer Science & Engineering_S5
-          - Computer Science & Engineering_S7
-          - Electrical & Electronics Engineering_S3
-          - Electrical & Electronics Engineering_S7
-          - Electronics & Communication Engineering_S7
-          - Food Technology_S3
-          - Food Technology_S5
-          - Food Technology_S7
+          - Computer Science & Engineering_S6
+          - Computer Science & Engineering_S8
+          - Electrical & Electronics Engineering_S4
+          - Electrical & Electronics Engineering_S6
+          - Electronics & Communication Engineering_S8
+          - Food Technology_S4
+          - Food Technology_S6
+          - Food Technology_S8
           - Information Technology
-          - Mechanical Engineering_S3
-          - Mechanical Engineering_S5
-          - Mechanical Engineering_S7
-          - Mechatronics Engineering_S3
-          - Mechatronics Engineering_S5
-          - Mechatronics Engineering_S7
-          - Computer Science & Engineering_S3
+          - Mechanical Engineering_S4
+          - Mechanical Engineering_S6
+          - Mechanical Engineering_S8
+          - Mechatronics Engineering_S4
+          - Mechatronics Engineering_S6
+          - Mechatronics Engineering_S8
+          - Computer Science & Engineering_S4
           - Robotics & Automation
         soft_departments:
-          - Electronics & Communication Engineering_S3
-          - Electrical & Electronics Engineering_S5
-          - Electronics & Communication Engineering_S5
+          - Electronics & Communication Engineering_S4
+          - Electrical & Electronics Engineering_S6
+          - Electronics & Communication Engineering_S6
         blocked_theory_slots:
           - 9
           - 10

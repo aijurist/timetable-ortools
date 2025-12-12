@@ -253,10 +253,18 @@ class CourseGroupOptimizer:
         Returns:
             list: Filtered list of course instances
         """
+        if not courses:
+            self.logger.warning("No regular (non-PE) courses found after preprocessing; skipping optimization cohort")
+            return []
+
         # Count instances (weights) per course
         course_instance_counts = defaultdict(int)
         for course in courses:
             course_instance_counts[course['course_code']] += course.get('weight', 1)
+
+        if not course_instance_counts:
+            self.logger.warning("No course instance counts available after weighting; skipping optimization cohort")
+            return []
         
         # Find the most common weighted instance count
         instance_count_frequency = defaultdict(int)

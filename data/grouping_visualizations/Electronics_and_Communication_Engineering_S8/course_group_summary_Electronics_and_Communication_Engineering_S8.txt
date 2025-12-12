@@ -1,27 +1,23 @@
 Course-Group Distribution Summary
 Department: Electronics & Communication Engineering
 Semester: 8
-Generated: 2025-12-06 00:51:29
+Generated: 2025-12-12 16:59:11
 ============================================================
 
 OVERVIEW
 - Courses: 2 (Lab 0, Theory 2)
 - Groups: 2
-- Total assignments: 4
-- Courses with multiple options: 2 (100.0%)
+- Total assignments: 2
+- Courses with multiple options: 0 (0.0%)
 
 COURSE DISTRIBUTION BY GROUP
-- EC19P83 [Theory]: 2 groups, 2 teachers
+- EC19P83 [Theory]: 1 groups, 1 teachers
   └─ G1: 1 teacher assignments
-  └─ G2: 1 teacher assignments
-- EC19P88 [Theory]: 2 groups, 2 teachers
-  └─ G1: 1 teacher assignments
+- EC19P88 [Theory]: 1 groups, 1 teachers
   └─ G2: 1 teacher assignments
 
 GROUP COMPOSITION
-- G1: 2 courses, 2 teachers
+- G1: 1 courses, 1 teachers
   └─ EC19P83 [T]: 1 instances, 1 teachers
-  └─ EC19P88 [T]: 1 instances, 1 teachers
-- G2: 2 courses, 2 teachers
-  └─ EC19P83 [T]: 1 instances, 1 teachers
+- G2: 1 courses, 1 teachers
   └─ EC19P88 [T]: 1 instances, 1 teachers

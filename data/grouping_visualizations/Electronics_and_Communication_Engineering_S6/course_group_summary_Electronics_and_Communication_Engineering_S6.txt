@@ -1,0 +1,45 @@
+Course-Group Distribution Summary
+Department: Electronics & Communication Engineering
+Semester: 6
+Generated: 2025-12-12 16:59:17
+============================================================
+
+OVERVIEW
+- Courses: 5 (Lab 4, Theory 4)
+- Groups: 5
+- Total assignments: 20
+- Courses with multiple options: 5 (100.0%)
+
+COURSE DISTRIBUTION BY GROUP
+- EC23611 [Theory]: 2 groups, 4 teachers
+  └─ G1: 1 teacher assignments
+  └─ G3: 3 teacher assignments
+- EC23631 [Lab + Theory]: 2 groups, 4 teachers
+  └─ G2: 3 teacher assignments
+  └─ G3: 1 teacher assignments
+- EC23632 [Lab + Theory]: 2 groups, 4 teachers
+  └─ G1: 3 teacher assignments
+  └─ G2: 1 teacher assignments
+- EC23633 [Lab + Theory]: 2 groups, 4 teachers
+  └─ G4: 1 teacher assignments
+  └─ G5: 3 teacher assignments
+- GE23627 [Lab]: 2 groups, 4 teachers
+  └─ G4: 3 teacher assignments
+  └─ G5: 1 teacher assignments
+
+GROUP COMPOSITION
+- G1: 2 courses, 4 teachers
+  └─ EC23611 [T]: 1 instances, 1 teachers
+  └─ EC23632 [L+T]: 3 instances, 3 teachers
+- G2: 2 courses, 4 teachers
+  └─ EC23631 [L+T]: 3 instances, 3 teachers
+  └─ EC23632 [L+T]: 1 instances, 1 teachers
+- G3: 2 courses, 4 teachers
+  └─ EC23611 [T]: 3 instances, 3 teachers
+  └─ EC23631 [L+T]: 1 instances, 1 teachers
+- G4: 2 courses, 4 teachers
+  └─ EC23633 [L+T]: 1 instances, 1 teachers
+  └─ GE23627 [L]: 3 instances, 3 teachers
+- G5: 2 courses, 4 teachers
+  └─ EC23633 [L+T]: 3 instances, 3 teachers
+  └─ GE23627 [L]: 1 instances, 1 teachers
