@@ -1,0 +1,55 @@
+Course-Group Distribution Summary
+Department: Mechatronics Engineering
+Semester: 2
+Generated: 2025-12-14 19:48:44
+============================================================
+
+OVERVIEW
+- Courses: 7 (Lab 5, Theory 7)
+- Groups: 7
+- Total assignments: 13
+- Courses with multiple options: 6 (85.7%)
+
+COURSE DISTRIBUTION BY GROUP
+- CY23131 [Lab + Theory]: 2 groups, 2 teachers
+  └─ G4: 1 teacher assignments
+  └─ G5: 1 teacher assignments
+- GE23117 [Theory]: 2 groups, 2 teachers
+  └─ G6: 1 teacher assignments
+  └─ G7: 1 teacher assignments
+- GE2313 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G3: 1 teacher assignments
+- HS23221 [Lab + Theory]: 2 groups, 2 teachers
+  └─ G1: 1 teacher assignments
+  └─ G2: 1 teacher assignments
+- MA23212 [Theory]: 2 groups, 2 teachers
+  └─ G6: 1 teacher assignments
+  └─ G7: 1 teacher assignments
+- MT23131 [Lab + Theory]: 2 groups, 2 teachers
+  └─ G1: 1 teacher assignments
+  └─ G2: 1 teacher assignments
+- PH23131 [Lab + Theory]: 2 groups, 2 teachers
+  └─ G4: 1 teacher assignments
+  └─ G5: 1 teacher assignments
+
+GROUP COMPOSITION
+- G1: 2 courses, 2 teachers
+  └─ HS23221 [L+T]: 1 instances, 1 teachers
+  └─ MT23131 [L+T]: 1 instances, 1 teachers
+- G2: 2 courses, 2 teachers
+  └─ HS23221 [L+T]: 1 instances, 1 teachers
+  └─ MT23131 [L+T]: 1 instances, 1 teachers
+- G3: 1 courses, 1 teachers
+  └─ GE2313 [L+T]: 1 instances, 1 teachers
+- G4: 2 courses, 2 teachers
+  └─ CY23131 [L+T]: 1 instances, 1 teachers
+  └─ PH23131 [L+T]: 1 instances, 1 teachers
+- G5: 2 courses, 2 teachers
+  └─ CY23131 [L+T]: 1 instances, 1 teachers
+  └─ PH23131 [L+T]: 1 instances, 1 teachers
+- G6: 2 courses, 2 teachers
+  └─ GE23117 [T]: 1 instances, 1 teachers
+  └─ MA23212 [T]: 1 instances, 1 teachers
+- G7: 2 courses, 2 teachers
+  └─ GE23117 [T]: 1 instances, 1 teachers
+  └─ MA23212 [T]: 1 instances, 1 teachers

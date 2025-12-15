@@ -7,13 +7,13 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data/sem2026/year_wise/2nd_year/electronics_and_communication_engineering.csv
+  courses_csv: data/sem2026/year_wise/1st_year/all.csv
   rooms_csv: data/block_wise/techlongue.csv
   day_order_csv: data/day_order_even.csv
   # data/CoreMappingSimplified_StudentDept.csv
   # data/og-final.csv
   core_lab_mapping_csv: data/CoreMappingSimplified_StudentDept.csv
-  preferences_csv: data/pop.csv
+  preferences_csv: data/Data for Timetable Scheduler - POP.csv
   output_root: output/combined_scheduler
 
 data:
@@ -423,6 +423,7 @@ departments:
         - Artificial Intelligence & Machine Learning_S5
         - Artificial Intelligence & Machine Learning_S7
         - Automobile Engineering
+        - Aeronautical Engineering_S2
         - Aeronautical Engineering_S3
         - Aeronautical Engineering_S5
         - Aeronautical Engineering_S7
@@ -709,9 +710,10 @@ constraints:
         minimum_free_slots: 1
         soft_semesters:
           - 8
+          - 2
         hard_overrides:
           - Computer Science & Business Systems
-        penalty_weight: 10
+        penalty_weight: 15
     five_pm_policy:
       enabled: true
       priority: 7
@@ -722,45 +724,56 @@ constraints:
           - Artificial Intelligence & Machine Learning
           - Department of Artificial Intelligence and Machine Learning
           - Automobile Engineering
+          - Aeronautical Engineering_S2
           - Aeronautical Engineering_S4
           - Aeronautical Engineering_S6
           - Aeronautical Engineering_S8
+          - Biomedical Engineering_S2
           - Biomedical Engineering_S4
           - Biomedical Engineering_S6
           - Biomedical Engineering_S8
+          - Biotechnology_S2
           - Biotechnology_S4
           - Biotechnology_S6
           - Biotechnology_S8
+          - Chemical Engineering_S2
           - Chemical Engineering_S4
           - Chemical Engineering_S6
           - Chemical Engineering_S8
           - Civil Engineering
           - Computer Science & Business Systems
+          - Computer Science & Design_S2
           - Computer Science & Design_S4
           - Computer Science & Design_S6
           - Computer Science & Design_S8
           - Computer Science & Engineering (Cyber Security)
+          - Computer Science & Engineering_S2
+          - Computer Science & Engineering_S4
           - Computer Science & Engineering_S6
           - Computer Science & Engineering_S8
+          - Electrical & Electronics Engineering_S2
           - Electrical & Electronics Engineering_S4
           - Electrical & Electronics Engineering_S6
           - Electrical & Electronics Engineering_S8
           - Electronics & Communication Engineering_S4
           - Electronics & Communication Engineering_S6
           - Electronics & Communication Engineering_S8
+          - Food Technology_S2
           - Food Technology_S4
           - Food Technology_S6
           - Food Technology_S8
           - Information Technology
+          - Mechanical Engineering_S2
           - Mechanical Engineering_S4
           - Mechanical Engineering_S6
           - Mechanical Engineering_S8
+          - Mechatronics Engineering_S2
           - Mechatronics Engineering_S4
           - Mechatronics Engineering_S6
           - Mechatronics Engineering_S8
-          - Computer Science & Engineering_S4
           - Robotics & Automation
         soft_departments:
+          - Electronics & Communication Engineering_S2
         blocked_theory_slots:
           - 9
           - 10
@@ -772,7 +785,7 @@ constraints:
         discouraged_lab_sessions:
           - L5
           - L6
-        soft_penalty_weight: 5
+        soft_penalty_weight: 10
     shift_pattern:
       enabled: true
       priority: 8
@@ -799,8 +812,8 @@ model:
   use_sparse_variables: true
 
 runtime:
-  time_limit_sec: 5000
-  thread_count: 14
+  time_limit_sec: 50000
+  thread_count: 12
   enable_lns: true
   enable_trace: true
   solution_limit: null
@@ -808,7 +821,7 @@ runtime:
   probing_level: 0
   search_branching: FIXED_SEARCH
   restart_log_size: 18.0
-  max_number_of_conflicts: 500000
+  max_number_of_conflicts: 1000000
   warm_start:
     enabled: true
     snapshot_dir: output/combined_scheduler/warm_start_cache

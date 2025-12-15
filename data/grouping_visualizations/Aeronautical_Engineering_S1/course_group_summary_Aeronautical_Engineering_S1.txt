@@ -1,0 +1,19 @@
+Course-Group Distribution Summary
+Department: Aeronautical Engineering
+Semester: 1
+Generated: 2025-12-13 00:36:24
+============================================================
+
+OVERVIEW
+- Courses: 1 (Lab 0, Theory 1)
+- Groups: 1
+- Total assignments: 1
+- Courses with multiple options: 0 (0.0%)
+
+COURSE DISTRIBUTION BY GROUP
+- GE23117 [Theory]: 1 groups, 1 teachers
+  └─ G1: 1 teacher assignments
+
+GROUP COMPOSITION
+- G1: 1 courses, 1 teachers
+  └─ GE23117 [T]: 1 instances, 1 teachers

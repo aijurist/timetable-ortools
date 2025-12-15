@@ -1,0 +1,67 @@
+Course-Group Distribution Summary
+Department: Computer Science & Engineering (Cyber Security)
+Semester: 2
+Generated: 2025-12-14 19:48:42
+============================================================
+
+OVERVIEW
+- Courses: 9 (Lab 6, Theory 7)
+- Groups: 9
+- Total assignments: 25
+- Courses with multiple options: 8 (88.9%)
+
+COURSE DISTRIBUTION BY GROUP
+- CS23221 [Lab]: 2 groups, 3 teachers
+  └─ G3: 2 teacher assignments
+  └─ G4: 1 teacher assignments
+- CS23231 [Lab + Theory]: 2 groups, 3 teachers
+  └─ G2: 2 teacher assignments
+  └─ G5: 1 teacher assignments
+- EC23232 [Lab + Theory]: 2 groups, 3 teachers
+  └─ G1: 1 teacher assignments
+  └─ G5: 2 teacher assignments
+- GE23111 [Lab + Theory]: 2 groups, 3 teachers
+  └─ G1: 2 teacher assignments
+  └─ G2: 1 teacher assignments
+- GE23122 [Lab]: 2 groups, 3 teachers
+  └─ G3: 1 teacher assignments
+  └─ G6: 2 teacher assignments
+- GE23217 [Theory]: 1 groups, 1 teachers
+  └─ G8: 1 teacher assignments
+- HS23221 [Lab + Theory]: 2 groups, 3 teachers
+  └─ G4: 2 teacher assignments
+  └─ G6: 1 teacher assignments
+- MA23213 [Theory]: 2 groups, 3 teachers
+  └─ G7: 1 teacher assignments
+  └─ G9: 2 teacher assignments
+- MC23112 [Theory]: 2 groups, 3 teachers
+  └─ G7: 2 teacher assignments
+  └─ G9: 1 teacher assignments
+
+GROUP COMPOSITION
+- G1: 2 courses, 3 teachers
+  └─ EC23232 [L+T]: 1 instances, 1 teachers
+  └─ GE23111 [L+T]: 2 instances, 2 teachers
+- G2: 2 courses, 3 teachers
+  └─ CS23231 [L+T]: 2 instances, 2 teachers
+  └─ GE23111 [L+T]: 1 instances, 1 teachers
+- G3: 2 courses, 3 teachers
+  └─ CS23221 [L]: 2 instances, 2 teachers
+  └─ GE23122 [L]: 1 instances, 1 teachers
+- G4: 2 courses, 3 teachers
+  └─ CS23221 [L]: 1 instances, 1 teachers
+  └─ HS23221 [L+T]: 2 instances, 2 teachers
+- G5: 2 courses, 3 teachers
+  └─ CS23231 [L+T]: 1 instances, 1 teachers
+  └─ EC23232 [L+T]: 2 instances, 2 teachers
+- G6: 2 courses, 3 teachers
+  └─ GE23122 [L]: 2 instances, 2 teachers
+  └─ HS23221 [L+T]: 1 instances, 1 teachers
+- G7: 2 courses, 3 teachers
+  └─ MA23213 [T]: 1 instances, 1 teachers
+  └─ MC23112 [T]: 2 instances, 2 teachers
+- G8: 1 courses, 1 teachers
+  └─ GE23217 [T]: 1 instances, 1 teachers
+- G9: 2 courses, 3 teachers
+  └─ MA23213 [T]: 2 instances, 2 teachers
+  └─ MC23112 [T]: 1 instances, 1 teachers

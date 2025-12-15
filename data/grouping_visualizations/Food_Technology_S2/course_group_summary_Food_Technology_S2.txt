@@ -1,0 +1,47 @@
+Course-Group Distribution Summary
+Department: Food Technology
+Semester: 2
+Generated: 2025-12-14 19:48:43
+============================================================
+
+OVERVIEW
+- Courses: 8 (Lab 5, Theory 7)
+- Groups: 8
+- Total assignments: 8
+- Courses with multiple options: 0 (0.0%)
+
+COURSE DISTRIBUTION BY GROUP
+- EE23133 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G5: 1 teacher assignments
+- FT23201 [Theory]: 1 groups, 1 teachers
+  └─ G8: 1 teacher assignments
+- FT23211 [Lab]: 1 groups, 1 teachers
+  └─ G1: 1 teacher assignments
+- GE23117 [Theory]: 1 groups, 1 teachers
+  └─ G7: 1 teacher assignments
+- GE23233 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G3: 1 teacher assignments
+- HS23221 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G4: 1 teacher assignments
+- MA23212 [Theory]: 1 groups, 1 teachers
+  └─ G6: 1 teacher assignments
+- PH23231 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G2: 1 teacher assignments
+
+GROUP COMPOSITION
+- G1: 1 courses, 1 teachers
+  └─ FT23211 [L]: 1 instances, 1 teachers
+- G2: 1 courses, 1 teachers
+  └─ PH23231 [L+T]: 1 instances, 1 teachers
+- G3: 1 courses, 1 teachers
+  └─ GE23233 [L+T]: 1 instances, 1 teachers
+- G4: 1 courses, 1 teachers
+  └─ HS23221 [L+T]: 1 instances, 1 teachers
+- G5: 1 courses, 1 teachers
+  └─ EE23133 [L+T]: 1 instances, 1 teachers
+- G6: 1 courses, 1 teachers
+  └─ MA23212 [T]: 1 instances, 1 teachers
+- G7: 1 courses, 1 teachers
+  └─ GE23117 [T]: 1 instances, 1 teachers
+- G8: 1 courses, 1 teachers
+  └─ FT23201 [T]: 1 instances, 1 teachers

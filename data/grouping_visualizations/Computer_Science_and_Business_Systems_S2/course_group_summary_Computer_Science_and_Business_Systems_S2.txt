@@ -1,0 +1,61 @@
+Course-Group Distribution Summary
+Department: Computer Science & Business Systems
+Semester: 2
+Generated: 2025-12-14 19:48:41
+============================================================
+
+OVERVIEW
+- Courses: 9 (Lab 6, Theory 8)
+- Groups: 9
+- Total assignments: 18
+- Courses with multiple options: 9 (100.0%)
+
+COURSE DISTRIBUTION BY GROUP
+- BA23217 [Theory]: 2 groups, 2 teachers
+  └─ G8: 1 teacher assignments
+  └─ G9: 1 teacher assignments
+- CB23231 [Lab + Theory]: 2 groups, 2 teachers
+  └─ G5: 1 teacher assignments
+  └─ G6: 1 teacher assignments
+- CS23221 [Lab]: 1 groups, 2 teachers
+  └─ G3: 2 teacher assignments
+- EC23242 [Lab + Theory]: 1 groups, 2 teachers
+  └─ G4: 2 teacher assignments
+- GE23217 [Theory]: 2 groups, 2 teachers
+  └─ G8: 1 teacher assignments
+  └─ G9: 1 teacher assignments
+- HS23223 [Lab + Theory]: 1 groups, 2 teachers
+  └─ G2: 2 teacher assignments
+- MA23211 [Theory]: 1 groups, 2 teachers
+  └─ G7: 2 teacher assignments
+- MA23231 [Lab + Theory]: 2 groups, 2 teachers
+  └─ G1: 1 teacher assignments
+  └─ G5: 1 teacher assignments
+- MA23437 [Lab + Theory]: 2 groups, 2 teachers
+  └─ G1: 1 teacher assignments
+  └─ G6: 1 teacher assignments
+
+GROUP COMPOSITION
+- G1: 2 courses, 2 teachers
+  └─ MA23231 [L+T]: 1 instances, 1 teachers
+  └─ MA23437 [L+T]: 1 instances, 1 teachers
+- G2: 1 courses, 2 teachers
+  └─ HS23223 [L+T]: 2 instances, 2 teachers
+- G3: 1 courses, 2 teachers
+  └─ CS23221 [L]: 2 instances, 2 teachers
+- G4: 1 courses, 2 teachers
+  └─ EC23242 [L+T]: 2 instances, 2 teachers
+- G5: 2 courses, 2 teachers
+  └─ CB23231 [L+T]: 1 instances, 1 teachers
+  └─ MA23231 [L+T]: 1 instances, 1 teachers
+- G6: 2 courses, 2 teachers
+  └─ CB23231 [L+T]: 1 instances, 1 teachers
+  └─ MA23437 [L+T]: 1 instances, 1 teachers
+- G7: 1 courses, 2 teachers
+  └─ MA23211 [T]: 2 instances, 2 teachers
+- G8: 2 courses, 2 teachers
+  └─ BA23217 [T]: 1 instances, 1 teachers
+  └─ GE23217 [T]: 1 instances, 1 teachers
+- G9: 2 courses, 2 teachers
+  └─ BA23217 [T]: 1 instances, 1 teachers
+  └─ GE23217 [T]: 1 instances, 1 teachers

@@ -1,0 +1,39 @@
+Course-Group Distribution Summary
+Department: Electronics & Communication Engineering
+Semester: 1
+Generated: 2025-12-13 21:09:52
+============================================================
+
+OVERVIEW
+- Courses: 4 (Lab 3, Theory 4)
+- Groups: 4
+- Total assignments: 32
+- Courses with multiple options: 4 (100.0%)
+
+COURSE DISTRIBUTION BY GROUP
+- CS23231 [Lab + Theory]: 2 groups, 8 teachers
+  └─ G2: 4 teacher assignments
+  └─ G4: 4 teacher assignments
+- EE23132 [Lab + Theory]: 2 groups, 8 teachers
+  └─ G2: 4 teacher assignments
+  └─ G4: 4 teacher assignments
+- GE23117 [Theory]: 2 groups, 8 teachers
+  └─ G1: 7 teacher assignments
+  └─ G3: 1 teacher assignments
+- HS23221 [Lab + Theory]: 2 groups, 8 teachers
+  └─ G1: 1 teacher assignments
+  └─ G3: 7 teacher assignments
+
+GROUP COMPOSITION
+- G1: 2 courses, 8 teachers
+  └─ GE23117 [T]: 7 instances, 7 teachers
+  └─ HS23221 [L+T]: 1 instances, 1 teachers
+- G2: 2 courses, 8 teachers
+  └─ CS23231 [L+T]: 4 instances, 4 teachers
+  └─ EE23132 [L+T]: 4 instances, 4 teachers
+- G3: 2 courses, 8 teachers
+  └─ GE23117 [T]: 1 instances, 1 teachers
+  └─ HS23221 [L+T]: 7 instances, 7 teachers
+- G4: 2 courses, 8 teachers
+  └─ CS23231 [L+T]: 4 instances, 4 teachers
+  └─ EE23132 [L+T]: 4 instances, 4 teachers
