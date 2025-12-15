@@ -137,45 +137,80 @@ class CourseGroupOptimizer:
         
         try:
             import pandas as pd
+
             df = pd.read_csv(self.pe_course_map_file)
-            
-            # Extract GENERAL CODE values and filter by department and semester
-            if 'GENERAL CODE' in df.columns and 'DEPT' in df.columns and 'SEM' in df.columns:
-                # Filter by department and semester
-                dept_mapping = {
-                    'AI&DS': 'Artificial Intelligence & Data Science',
-                    'AIML': 'Artificial Intelligence & Machine Learning', 
-                    'CSE': 'Computer Science & Engineering',
-                    'BME': 'Biomedical Engineering',
-                    'BT': 'Biotechnology',
-                    'EEE': 'Electrical & Electronics Engineering',
-                    'ECE': 'Electronics & Communication Engineering',
-                    'MECH': 'Mechanical Engineering'
-                }
-                
-                # Find matching department abbreviation
-                dept_abbrev = None
-                for abbrev, full_name in dept_mapping.items():
-                    if full_name == self.dept:
-                        dept_abbrev = abbrev
-                        break
-                
-                if dept_abbrev:
-                    # Filter for matching department and semester
-                    filtered_df = df[(df['DEPT'] == dept_abbrev) & (df['SEM'] == self.semester)]
-                    
-                    # Extract PE course codes
-                    for _, row in filtered_df.iterrows():
-                        general_code = row['GENERAL CODE']
-                        if pd.notna(general_code) and general_code.strip():
-                            self.pe_course_codes.add(general_code.strip())
-                    
-                    self.logger.info(f"Loaded {len(self.pe_course_codes)} PE course codes for {self.dept} Semester {self.semester}: {sorted(self.pe_course_codes)}")
-                else:
-                    self.logger.warning(f"No PE course mapping found for department: {self.dept}")
-            else:
-                self.logger.error(f"PE course map file missing required columns: GENERAL CODE, DEPT, SEM")
-                
+
+            required_cols = {'GENERAL CODE', 'DEPT', 'SEM'}
+            if not required_cols.issubset(set(df.columns)):
+                self.logger.error("PE course map file missing required columns: GENERAL CODE, DEPT, SEM")
+                return
+
+            def _norm(text: object) -> str:
+                if pd.isna(text):
+                    return ""
+                return " ".join(str(text).replace("&", " and ").replace("_", " ").split()).lower()
+
+            dept_code_map = {
+                'AERO': 'Aeronautical Engineering',
+                'AIDS': 'Artificial Intelligence & Data Science',
+                'AIML': 'Artificial Intelligence & Machine Learning',
+                'AUTO': 'Automobile Engineering',
+                'BME': 'Biomedical Engineering',
+                'BT': 'Biotechnology',
+                'CIVIL': 'Civil Engineering',
+                'CSE': 'Computer Science & Engineering',
+                'CSBS': 'Computer Science & Business Systems',
+                'CSD': 'Computer Science & Design',
+                'ECE': 'Electronics & Communication Engineering',
+                'EEE': 'Electrical & Electronics Engineering',
+                'FT': 'Food Technology',
+                'IT': 'Information Technology',
+                'MCT': 'Mechatronics Engineering',
+                'MECH': 'Mechanical Engineering',
+                'RA': 'Robotics & Automation',
+            }
+
+            # Build reverse lookup: normalized full name -> code
+            full_to_code = { _norm(full): code for code, full in dept_code_map.items() }
+            dept_norm = _norm(self.dept)
+
+            candidate_codes: Set[str] = set()
+            if self.dept:
+                candidate_codes.add(str(self.dept).strip().upper())
+            if dept_norm in full_to_code:
+                candidate_codes.add(full_to_code[dept_norm])
+
+            # Normalize SEM to integers for comparison
+            df['__SEM_INT'] = pd.to_numeric(df['SEM'], errors='coerce').astype('Int64')
+            target_sem = pd.to_numeric(self.semester, errors='coerce')
+
+            if pd.isna(target_sem):
+                self.logger.error(f"Invalid semester value: {self.semester}")
+                return
+
+            def _row_matches(row) -> bool:
+                row_dept_code = str(row.get('DEPT', '')).strip().upper()
+                row_dept_full_norm = _norm(row.get('DEPT', ''))
+                return (row_dept_code in candidate_codes) or (row_dept_full_norm == dept_norm)
+
+            filtered_df = df[(df['__SEM_INT'] == target_sem) & (df.apply(_row_matches, axis=1))]
+
+            if filtered_df.empty:
+                self.logger.warning(f"No PE mappings matched dept={self.dept} sem={self.semester}; candidates: {sorted(candidate_codes) if candidate_codes else 'none'}")
+                return
+
+            for _, row in filtered_df.iterrows():
+                for col in ['GENERAL CODE', 'PE1', 'PE2', 'PE3']:
+                    code = row.get(col)
+                    if pd.notna(code):
+                        code_str = str(code).strip()
+                        if code_str:
+                            self.pe_course_codes.add(code_str)
+
+            self.logger.info(
+                f"Loaded {len(self.pe_course_codes)} PE course codes for {self.dept} Semester {self.semester}: {sorted(self.pe_course_codes)}"
+            )
+
         except Exception as e:
             self.logger.error(f"Error loading PE course mapping: {e}")
             import traceback

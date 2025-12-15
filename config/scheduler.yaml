@@ -7,11 +7,9 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data/sem2026/year_wise/1st_year/all.csv
-  rooms_csv: data/block_wise/techlongue.csv
+  courses_csv: data/sem2026/year_wise/Year_4_course_data.csv
+  rooms_csv: data/block_wise/temp.csv
   day_order_csv: data/day_order_even.csv
-  # data/CoreMappingSimplified_StudentDept.csv
-  # data/og-final.csv
   core_lab_mapping_csv: data/CoreMappingSimplified_StudentDept.csv
   preferences_csv: data/Data for Timetable Scheduler - POP.csv
   output_root: output/combined_scheduler
@@ -54,8 +52,8 @@ time:
     - "10:00 - 10:50"
     - "11:00 - 11:50"
     - "12:00 - 12:50"
-    - "1:00 - 1:50"
-    - "2:00 - 2:50"
+    - "1:20 - 2:10"
+    - "2:10 - 3:00"
     - "3:00 - 3:50"
     - "4:00 - 4:50"
     - "5:00 - 5:50"
@@ -63,14 +61,14 @@ time:
   lab_slots:
     - "8:00 - 8:50"
     - "8:50 - 9:40"
-    - "9:50 - 10:40"
-    - "10:40 - 11:30"
+    - "10:00 - 10:50"
+    - "10:50 - 11:40"
     - "11:50 - 12:40"
-    - "12:40 - 1:30"
-    - "1:50 - 2:40"
-    - "2:40 - 3:30"
-    - "3:30 - 4:20"
-    - "4:20 - 5:10"
+    - "12:40 - 1:20"
+    - "1:20 - 2:10"
+    - "2:10 - 3:00"
+    - "3:00 - 3:50"
+    - "3:50 - 4:40"
     - "5:20 - 6:10"
     - "5:10 - 7:00"
   lab_sessions:
@@ -709,11 +707,10 @@ constraints:
           - 5
         minimum_free_slots: 1
         soft_semesters:
-          - 8
           - 2
         hard_overrides:
           - Computer Science & Business Systems
-        penalty_weight: 15
+        penalty_weight: 50
     five_pm_policy:
       enabled: true
       priority: 7
@@ -722,7 +719,6 @@ constraints:
         hard_departments:
           - Artificial Intelligence & Data Science
           - Artificial Intelligence & Machine Learning
-          - Department of Artificial Intelligence and Machine Learning
           - Automobile Engineering
           - Aeronautical Engineering_S2
           - Aeronautical Engineering_S4
@@ -741,7 +737,10 @@ constraints:
           - Chemical Engineering_S6
           - Chemical Engineering_S8
           - Civil Engineering
-          - Computer Science & Business Systems
+          - Computer Science & Business Systems_S2
+          - Computer Science & Business Systems_S4
+          - Computer Science & Business Systems_S6
+          - Computer Science & Business Systems_S8
           - Computer Science & Design_S2
           - Computer Science & Design_S4
           - Computer Science & Design_S6
@@ -775,9 +774,12 @@ constraints:
         soft_departments:
           - Electronics & Communication Engineering_S2
         blocked_theory_slots:
+          - 7
+          - 8
           - 9
           - 10
         blocked_lab_sessions:
+          - L5
           - L6
         discouraged_theory_slots:
           - 9
@@ -787,7 +789,7 @@ constraints:
           - L6
         soft_penalty_weight: 10
     shift_pattern:
-      enabled: true
+      enabled: false
       priority: 8
       weight: 0.7
       params:
@@ -796,7 +798,6 @@ constraints:
           - SHIFT_2
         allowed_patterns:
           - [3, 2]
-          - [2, 3]
         penalty_weight: 30
         strict_ratios: true
 
@@ -812,12 +813,12 @@ model:
   use_sparse_variables: true
 
 runtime:
-  time_limit_sec: 50000
+  time_limit_sec: 300
   thread_count: 12
   enable_lns: true
   enable_trace: true
   solution_limit: null
-  stop_after_first_solution: true
+  stop_after_first_solution: false
   probing_level: 0
   search_branching: FIXED_SEARCH
   restart_log_size: 18.0

@@ -1,0 +1,84 @@
+[build]
+  command = "python build_netlify.py"
+  publish = "dist"
+
+[[redirects]]
+  from = "/api/latest-folder"
+  to = "/api/latest-folder.json"
+  status = 200
+
+[[redirects]]
+  from = "/api/schedule"
+  to = "/api/schedule.json"
+  status = 200
+
+[[redirects]]
+  from = "/api/metrics"
+  to = "/api/metrics.json"
+  status = 200
+
+[[redirects]]
+  from = "/api/rooms"
+  to = "/api/rooms.json"
+  status = 200
+
+[[redirects]]
+  from = "/api/slot-caps"
+  to = "/api/slot-caps.json"
+  status = 200
+
+[[redirects]]
+  from = "/api/teacher-labs"
+  to = "/api/teacher-labs.json"
+  status = 200
+
+[[redirects]]
+  from = "/api/grouping"
+  to = "/api/grouping.json"
+  status = 200
+
+[[redirects]]
+  from = "/api/overlaps"
+  to = "/api/overlaps.json"
+  status = 200
+
+[[redirects]]
+  from = "/api/validation"
+  to = "/api/validation.json"
+  status = 200
+
+# HTML Page Rewrites
+[[redirects]]
+  from = "/slot-caps"
+  to = "/slot_caps_dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/teacher-labs"
+  to = "/teacher_labs_dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/grouping"
+  to = "/grouping_dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/overlaps"
+  to = "/overlap_dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/validation"
+  to = "/validation_dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/schedule"
+  to = "/schedule_view.html"
+  status = 200
+
+[[redirects]]
+  from = "/rooms"
+  to = "/room_view.html"
+  status = 200

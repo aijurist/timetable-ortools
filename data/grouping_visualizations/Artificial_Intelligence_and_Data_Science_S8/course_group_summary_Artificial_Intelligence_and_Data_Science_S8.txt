@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
-Department: Artificial Intelligence & Data Science
+Department: Artificial Intelligence and Data Science
 Semester: 8
-Generated: 2025-12-12 20:19:23
+Generated: 2025-12-15 21:49:32
 ============================================================
 
 OVERVIEW
@@ -11,13 +11,13 @@ OVERVIEW
 - Courses with multiple options: 0 (0.0%)
 
 COURSE DISTRIBUTION BY GROUP
-- AD19PE01 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G2: 1 teacher assignments
-- AD19PE02 [Lab + Theory]: 1 groups, 1 teachers
+- AD19P78 [Lab + Theory]: 1 groups, 1 teachers
   └─ G1: 1 teacher assignments
+- AI19P75 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G2: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
-  └─ AD19PE02 [L+T]: 1 instances, 1 teachers
+  └─ AD19P78 [L+T]: 1 instances, 1 teachers
 - G2: 1 courses, 1 teachers
-  └─ AD19PE01 [L+T]: 1 instances, 1 teachers
+  └─ AI19P75 [L+T]: 1 instances, 1 teachers

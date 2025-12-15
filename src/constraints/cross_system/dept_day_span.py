@@ -115,7 +115,26 @@ class DepartmentDaySpanConstraint(Constraint):
                     day_literals.append(literal)
             if not day_literals:
                 continue
-            model.Add(sum(day_literals) <= self._day_limit)
+            total_days = sum(day_literals)
+            model.Add(total_days <= self._day_limit)
+
+            # Enforce continuity when the limit is 2: if two days are used, they must be consecutive
+            if self._day_limit == 2 and day_count >= 2:
+                consecutive_literals: list[cp_model.IntVar] = []
+                for start in range(day_count - 1):
+                    consec = model.NewBoolVar(
+                        f"day_consec_{self._sanitize(dept)}_{semester}_{start}_{start+1}"
+                    )
+                    model.Add(day_literals[start] + day_literals[start + 1] == 2).OnlyEnforceIf(consec)
+                    model.Add(day_literals[start] + day_literals[start + 1] <= 1).OnlyEnforceIf(consec.Not())
+                    consecutive_literals.append(consec)
+
+                two_days_used = model.NewBoolVar(f"two_days_used_{self._sanitize(dept)}_{semester}")
+                model.Add(total_days == 2).OnlyEnforceIf(two_days_used)
+                model.Add(total_days <= 1).OnlyEnforceIf(two_days_used.Not())
+                if consecutive_literals:
+                    model.AddBoolOr(consecutive_literals).OnlyEnforceIf(two_days_used)
+
             constraints_added += 1
             departments_constrained += 1
 

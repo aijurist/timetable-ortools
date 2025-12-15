@@ -336,7 +336,7 @@ class LunchAlignmentConstraint(Constraint):
 
 			if slot_literals:
 				required_free = min(config.minimum_free_slots, len(slot_literals))
-				model.Add(sum(slot_literals) == required_free)
+				model.Add(sum(slot_literals) >= required_free)
 				theory_clauses += 1
 
 		return theory_clauses, lab_clauses

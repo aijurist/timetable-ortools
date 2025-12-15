@@ -142,7 +142,20 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 			room_meta = room_lookup.get(room_id, {})
 			capacity = self._safe_int(room_meta.get("capacity"))
 			
-			# Determine co-scheduling limit based on capacity
+			# Always apply a student-capacity guard when capacity is known
+			if capacity is not None:
+				weights = []
+				vars_only = []
+				for cid, var in usage_list:
+					req = theory_block.course_requirements.get(cid)
+					sc = getattr(req, "student_count", 0) or 0
+					if sc <= 0:
+						sc = 70  # conservative fallback
+					weights.append(sc)
+					vars_only.append(var)
+				model.Add(sum(w * v for w, v in zip(weights, vars_only)) <= capacity)
+
+			# Determine co-scheduling limit based on capacity; disallow co-scheduling for large courses
 			limit = 1
 			if capacity is not None:
 				if capacity >= 300:
@@ -151,37 +164,32 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 					limit = 3
 				elif capacity >= 130:
 					limit = 2
-			
+
+			# If any course is large (>= big threshold), force exclusive use regardless of capacity buckets
+			if any(getattr(theory_block.course_requirements.get(cid), "student_count", 0) >= self._big_threshold for cid, _ in usage_list):
+				limit = 1
+
 			if limit == 1:
-				# Standard strict single assignment
 				vars_only = [v for _, v in usage_list]
 				model.Add(sum(vars_only) <= 1)
 				stats["room_conflict_constraints"] += 1
 			else:
-				# Co-scheduling allowed for same course code
-				# Group vars by course code
 				by_code: DefaultDict[str, list[cp_model.IntVar]] = defaultdict(list)
 				for cid, var in usage_list:
-					# Try to get course code from requirements, fallback to parsing ID
 					req = theory_block.course_requirements.get(cid)
 					code = getattr(req, "course_code", None)
 					if not code:
 						code = cid.split('_')[0]
 					by_code[code].append(var)
 				
-				# If multiple codes present, enforce mutual exclusion
 				if len(by_code) > 1:
 					active_indicators = []
 					for code, vars_for_code in by_code.items():
 						is_active = model.NewBoolVar(f"active_{room_id}_{_day}_{_slot}_{code}")
 						active_indicators.append(is_active)
-						# If active, sum <= limit. If not active, sum == 0.
 						model.Add(sum(vars_for_code) <= limit * is_active)
 						
-						# Maximise usage: if active, prefer filling up to limit
 						if self._utilization_penalty > 0:
-							# Penalty = P * (limit * is_active - sum(vars_for_code))
-							# Decomposed: P*limit*is_active (penalty) + P*sum(vars) (reward / negative penalty)
 							register_objective_penalty(
 								context,
 								is_active,
@@ -196,14 +204,11 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 									tag="room_utilization:fill_reward"
 								)
 					
-					# Only one code can be active
 					model.Add(sum(active_indicators) <= 1)
 				else:
-					# Only one code exists, just limit the count
 					vars_only = [v for _, v in usage_list]
 					model.Add(sum(vars_only) <= limit)
 					
-					# Maximise usage: if used, prefer filling up to limit
 					if self._utilization_penalty > 0:
 						room_used = model.NewBoolVar(f"used_{room_id}_{_day}_{_slot}")
 						model.Add(sum(vars_only) > 0).OnlyEnforceIf(room_used)
@@ -302,26 +307,23 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 				# STRICT: Do not fallback
 				filtered_rooms = sized
 			else:
-				# Small courses: prefer small rooms, but allow large rooms for co-scheduling
-				# We include:
-				# 1. Candidate rooms (block-restricted) that are small (< big_threshold)
-				# 2. ANY room that is large enough to support co-scheduling (>= 130), regardless of block
-				
+				# Small courses: prefer < big_threshold rooms; only use larger rooms if no smaller are available
 				all_rooms = list(inventory.room_index.keys())
+				cap_lookup = {rid: self._safe_int(inventory.room_index.get(rid, {}).get("capacity")) for rid in all_rooms}
 				
 				small_candidates = [
 					room_id for room_id in candidate_rooms
-					if self._safe_int(inventory.room_index.get(room_id, {}).get("capacity")) is None
-					or self._safe_int(inventory.room_index.get(room_id, {}).get("capacity")) < self._big_threshold
+					if cap_lookup.get(room_id) is None or cap_lookup.get(room_id, 0) < self._big_threshold
 				]
 				
-				large_co_schedulable = [
-					room_id for room_id in all_rooms
-					if self._safe_int(inventory.room_index.get(room_id, {}).get("capacity"))
-					and self._safe_int(inventory.room_index.get(room_id, {}).get("capacity")) >= 130
-				]
-				
-				filtered_rooms = tuple(set(small_candidates + large_co_schedulable))
+				if small_candidates:
+					filtered_rooms = tuple(small_candidates)
+				else:
+					fallback = [
+						room_id for room_id, cap in cap_lookup.items()
+						if cap is not None and cap >= max(student_count, 50)
+					]
+					filtered_rooms = tuple(fallback)
 			
 			policies[course_id] = CoursePolicy(
 				allowed_blocks=allowed,
