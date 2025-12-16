@@ -85,6 +85,18 @@ def main():
     # Rename dashboard.html to index.html
     (dist_dir / "dashboard.html").rename(dist_dir / "index.html")
     
+    # 1.5 Fix static paths in HTML files
+    # The FastAPI app serves static files under /static/, but in our dist build
+    # we copied them to the root. So we need to replace /static/ with / in all HTML files.
+    print("Patching HTML file paths...")
+    for html_file in dist_dir.glob("*.html"):
+        content = html_file.read_text(encoding="utf-8")
+        # Replace /static/css/ with /css/, /static/js/ with /js/, etc.
+        # Simple replacement of "/static/" with "/" should work for src and href attributes
+        new_content = content.replace('"/static/', '"/')
+        new_content = new_content.replace("'/static/", "'/")
+        html_file.write_text(new_content, encoding="utf-8")
+    
     # 2. Generate API Data
     api_dir = dist_dir / "api"
     api_dir.mkdir()
@@ -181,6 +193,30 @@ def main():
         "folder": snapshot.label,
         "generated_at": datetime.fromtimestamp(snapshot.modified_at, tz=timezone.utc).isoformat()
     })
+
+    # 4. Generate _redirects for Netlify (crucial for manual drag-and-drop)
+    print("Generating _redirects...")
+    redirects_content = """
+/api/latest-folder  /api/latest-folder.json  200
+/api/schedule       /api/schedule.json       200
+/api/metrics        /api/metrics.json        200
+/api/rooms          /api/rooms.json          200
+/api/slot-caps      /api/slot-caps.json      200
+/api/teacher-labs   /api/teacher-labs.json   200
+/api/grouping       /api/grouping.json       200
+/api/overlaps       /api/overlaps.json       200
+/api/validation     /api/validation.json     200
+
+/slot-caps          /slot_caps_dashboard.html      200
+/teacher-labs       /teacher_labs_dashboard.html   200
+/grouping           /grouping_dashboard.html       200
+/overlaps           /overlap_dashboard.html        200
+/validation         /validation_dashboard.html     200
+/schedule           /schedule_view.html            200
+/rooms              /room_view.html                200
+"""
+    with open(dist_dir / "_redirects", "w") as f:
+        f.write(redirects_content.strip())
 
     print("Build complete!")
 
