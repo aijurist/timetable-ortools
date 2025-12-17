@@ -36,6 +36,15 @@ class DepartmentDaySpanConstraint(Constraint):
         self._target_semesters = tuple(int(s) for s in (raw_semesters or ()))
         raw_excluded = params.get("excluded_departments", ("Computer Science & Business Systems",))
         self._excluded_departments = frozenset(str(dept) for dept in (raw_excluded or ()))
+        raw_allowed = params.get("allowed_days_by_department", {}) or {}
+        self._allowed_days_by_dept: Dict[str, Tuple[str, ...]] = {
+            str(dept): tuple(self._normalise_day(day) for day in (days or []) if day)
+            for dept, days in raw_allowed.items()
+        }
+        raw_default_allowed = params.get("default_allowed_days") or ()
+        self._default_allowed_days: Tuple[str, ...] = tuple(
+            self._normalise_day(day) for day in raw_default_allowed if day
+        )
 
     def apply(self, context: ConstraintContext) -> ConstraintApplicationResult:  # type: ignore[override]
         if not self._target_semesters or self._day_limit <= 0:
@@ -60,6 +69,7 @@ class DepartmentDaySpanConstraint(Constraint):
         # dept_sem -> list indexed by day -> list of variables scheduled on that day
         buckets: Dict[Tuple[str, int], Dict[int, list[cp_model.IntVar]]] = {}
         day_counts: Dict[Tuple[str, int], int] = {}
+        allowed_day_indices: Dict[Tuple[str, int], Optional[set[int]]] = {}
 
         def _bucket(key: Tuple[str, int], day_count: int) -> Dict[int, list[cp_model.IntVar]]:
             if key not in buckets:
@@ -74,8 +84,11 @@ class DepartmentDaySpanConstraint(Constraint):
             if semester is None or not self._is_target(dept, semester):
                 continue
             day_pattern = resolve_day_pattern(context, dept)
-            day_count = len(day_pattern) if day_pattern else len(working_days)
+            day_names = day_pattern if day_pattern else working_days
+            day_count = len(day_names)
             bucket = _bucket((dept, semester), day_count)
+            if (dept, semester) not in allowed_day_indices:
+                allowed_day_indices[(dept, semester)] = self._allowed_day_indices_for(dept, day_names)
             day_map = group_slot_map.get(group_id, {})
             for day_idx, slot_map in day_map.items():
                 vars_for_day = bucket.setdefault(day_idx, [])
@@ -93,8 +106,11 @@ class DepartmentDaySpanConstraint(Constraint):
             if semester is None or not self._is_target(dept, semester):
                 continue
             day_pattern = resolve_day_pattern(context, dept)
-            day_count = len(day_pattern) if day_pattern else len(working_days)
+            day_names = day_pattern if day_pattern else working_days
+            day_count = len(day_names)
             bucket = _bucket((dept, semester), day_count)
+            if (dept, semester) not in allowed_day_indices:
+                allowed_day_indices[(dept, semester)] = self._allowed_day_indices_for(dept, day_names)
             vars_for_day = bucket.setdefault(day_idx, [])
             vars_for_day.append(var)
 
@@ -103,30 +119,48 @@ class DepartmentDaySpanConstraint(Constraint):
         for key, day_map in buckets.items():
             dept, semester = key
             day_count = day_counts.get(key, len(working_days)) or len(working_days)
-            day_literals = []
+            allowed_indices = allowed_day_indices.get(key)
+            day_literal_map: Dict[int, cp_model.IntVar] = {}
             for day_idx in range(day_count):
                 vars_for_day = day_map.get(day_idx, [])
+                if allowed_indices is not None and day_idx not in allowed_indices:
+                    for var in vars_for_day:
+                        model.Add(var == 0)
+                    continue
                 literal = build_presence_literal(
                     model,
                     vars_for_day,
                     name=f"day_used_{self._sanitize(dept)}_{semester}_{day_idx}",
                 )
                 if literal is not None:
-                    day_literals.append(literal)
-            if not day_literals:
+                    day_literal_map[day_idx] = literal
+
+            if not day_literal_map:
                 continue
+
+            day_literals = list(day_literal_map.values())
+            limit = self._day_limit if self._day_limit > 0 else len(day_literals)
+            if allowed_indices is not None and day_literals:
+                limit = min(limit, len(day_literals))
+
             total_days = sum(day_literals)
-            model.Add(total_days <= self._day_limit)
+            model.Add(total_days <= limit)
 
             # Enforce continuity when the limit is 2: if two days are used, they must be consecutive
-            if self._day_limit == 2 and day_count >= 2:
+            if limit == 2 and len(day_literals) >= 2:
                 consecutive_literals: list[cp_model.IntVar] = []
-                for start in range(day_count - 1):
+                sorted_days = sorted(day_literal_map.keys())
+                for idx, start_day in enumerate(sorted_days[:-1]):
+                    next_day = sorted_days[idx + 1]
+                    if next_day - start_day != 1:
+                        continue
                     consec = model.NewBoolVar(
-                        f"day_consec_{self._sanitize(dept)}_{semester}_{start}_{start+1}"
+                        f"day_consec_{self._sanitize(dept)}_{semester}_{start_day}_{next_day}"
                     )
-                    model.Add(day_literals[start] + day_literals[start + 1] == 2).OnlyEnforceIf(consec)
-                    model.Add(day_literals[start] + day_literals[start + 1] <= 1).OnlyEnforceIf(consec.Not())
+                    model.Add(day_literal_map[start_day] + day_literal_map[next_day] == 2).OnlyEnforceIf(consec)
+                    model.Add(day_literal_map[start_day] + day_literal_map[next_day] <= 1).OnlyEnforceIf(
+                        consec.Not()
+                    )
                     consecutive_literals.append(consec)
 
                 two_days_used = model.NewBoolVar(f"two_days_used_{self._sanitize(dept)}_{semester}")
@@ -166,6 +200,18 @@ class DepartmentDaySpanConstraint(Constraint):
     @staticmethod
     def _sanitize(text: str) -> str:
         return text.replace(" ", "_").replace("/", "_")
+
+    @staticmethod
+    def _normalise_day(day: str) -> str:
+        return str(day).strip().lower()
+
+    def _allowed_day_indices_for(self, department: str, day_names: Sequence[str]) -> Optional[set[int]]:
+        allowed_days = self._allowed_days_by_dept.get(department) or self._default_allowed_days
+        if not allowed_days:
+            return None
+        lookup = {self._normalise_day(name): idx for idx, name in enumerate(day_names)}
+        indices = {idx for name, idx in lookup.items() if name in allowed_days}
+        return indices
 
 
 def build_department_day_span_constraint(

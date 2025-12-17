@@ -78,6 +78,8 @@ class CourseGroupOptimizer:
         
         # Load PE course mapping if provided
         self.pe_course_codes = set()
+        self.pe_code_to_general: Dict[str, str] = {}
+        self.pe_general_to_codes: Dict[str, Set[str]] = {}
         self.pe_courses = []
         if pe_course_map_file:
             self._load_pe_course_mapping()
@@ -200,12 +202,19 @@ class CourseGroupOptimizer:
                 return
 
             for _, row in filtered_df.iterrows():
+                general_code = str(row.get('GENERAL CODE', '')).strip()
+                mapped_codes: Set[str] = set()
                 for col in ['GENERAL CODE', 'PE1', 'PE2', 'PE3']:
                     code = row.get(col)
                     if pd.notna(code):
                         code_str = str(code).strip()
                         if code_str:
+                            mapped_codes.add(code_str)
                             self.pe_course_codes.add(code_str)
+                            if general_code:
+                                self.pe_code_to_general[code_str] = general_code
+                if general_code and mapped_codes:
+                    self.pe_general_to_codes.setdefault(general_code, set()).update(mapped_codes)
 
             self.logger.info(
                 f"Loaded {len(self.pe_course_codes)} PE course codes for {self.dept} Semester {self.semester}: {sorted(self.pe_course_codes)}"
@@ -232,6 +241,9 @@ class CourseGroupOptimizer:
         for course in courses:
             course_code = course.get('course_code', '')
             if course_code in self.pe_course_codes:
+                general_code = self.pe_code_to_general.get(course_code)
+                if general_code:
+                    course['__pe_general_code'] = general_code
                 pe_courses.append(course)
                 self.logger.debug(f"Identified PE course: {course_code}")
             else:
@@ -690,34 +702,22 @@ class CourseGroupOptimizer:
                     # This constraint ensures group_var = 1 iff at least one instance is assigned to this group
                     model.Add(group_var <= sum(course_assignments_in_group))
                 
-                # Calculate max instances per teacher for this course to ensure feasibility
-                teacher_counts = defaultdict(int)
-                for idx in course_instances:
-                    teacher_counts[self.courses[idx]['teacher_id']] += 1
-                max_teacher_load = max(teacher_counts.values()) if teacher_counts else 1
-                
-                # Apply minimum group constraint based on department flexibility and teacher load
-                min_groups = 1 if self.allows_flexible_grouping else 2
-                if self.num_groups < 2:
-                    min_groups = 1
-                
-                # We MUST have at least as many groups as the max instances of any single teacher
-                # because a teacher cannot be in the same group twice
-                min_groups = max(min_groups, max_teacher_load)
-                
-                model.Add(sum(group_has_course) >= min_groups)
-                course_constraints_added += 1
-                
+                # Apply minimum group constraint based on department flexibility
                 if self.allows_flexible_grouping:
+                    # Flexible departments: Allow courses to be in minimum 1 group (consolidation allowed)
+                    model.Add(sum(group_has_course) >= 1)
+                    course_constraints_added += 1
                     flexible_courses += 1
-                    self.logger.debug(f"Course {course_code}: {len(course_instances)} instances, max teacher load {max_teacher_load} -> flexible (min {min_groups})")
+                    self.logger.debug(f"Course {course_code}: {len(course_instances)} instances -> flexible (min 1, max 2 groups)")
                 else:
-                    self.logger.debug(f"Course {course_code}: {len(course_instances)} instances, max teacher load {max_teacher_load} -> standard (min {min_groups})")
+                    # Standard departments: Enforce minimum 2 groups for distribution
+                    if self.num_groups >= 2:
+                        model.Add(sum(group_has_course) >= 2)
+                        course_constraints_added += 1
+                    self.logger.debug(f"Course {course_code}: {len(course_instances)} instances -> standard (min 2, max 2 groups)")
                     
-                # Maximum constraint: Course can be in at most max(2, min_groups) groups
-                # We relax the limit if teacher load requires more groups
-                max_groups_limit = max(2, min_groups)
-                model.Add(sum(group_has_course) <= max_groups_limit)
+                # Maximum constraint: Course can be in at most 2 groups (always enforced)
+                model.Add(sum(group_has_course) <= 2)
                 course_constraints_added += 1
         
         self.logger.info(f"Applied {course_constraints_added} course limit constraints")
@@ -1297,8 +1297,18 @@ class CourseGroupOptimizer:
         
         # Add PE courses as a final group if any exist
         if self.pe_courses:
-            self.groups.append(self.pe_courses)
-            self.logger.debug(f"Added PE courses as Group {len(self.groups)} (final group)")
+            grouped_pe: Dict[str, list] = defaultdict(list)
+            for inst in self.pe_courses:
+                general_code = inst.get('__pe_general_code') or self.pe_code_to_general.get(inst.get('course_code', ''), "")
+                if general_code:
+                    grouped_pe[general_code].append(inst)
+                else:
+                    grouped_pe["__ungrouped__"].append(inst)
+
+            for general_code, instances in grouped_pe.items():
+                self.groups.append(instances)
+                suffix = general_code if general_code != "__ungrouped__" else "PE"
+                self.logger.debug(f"Added PE courses for {suffix} as Group {len(self.groups)} (final group)")
         
         # Log group distribution
         self.logger.info(f"Optimal group distribution for {self.dept} Semester {self.semester}:")

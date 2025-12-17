@@ -67,7 +67,6 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 36,B321,B Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
 37,B322,B Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
 38,B325,B Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
-
 113,B First Floor,B Block,Immunology Lab,1,Core-Lab,20,35,1,0,Advanced,29,0,0,0
 117,B Ground Floor,B Block,Technical Analysis Lab,1,Core-Lab,20,35,1,0,High-tech,29,0,0,0
 119,B Second Floor,B Block,Downstream Processing Lab,1,Core-Lab,20,35,1,0,,29,0,0,0

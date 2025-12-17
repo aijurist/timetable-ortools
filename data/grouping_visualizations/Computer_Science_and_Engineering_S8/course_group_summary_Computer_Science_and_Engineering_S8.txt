@@ -1,23 +1,23 @@
 Course-Group Distribution Summary
-Department: Electrical and Electronics Engineering
+Department: Computer Science & Engineering
 Semester: 8
-Generated: 2025-12-15 21:49:34
+Generated: 2025-12-18 00:11:53
 ============================================================
 
 OVERVIEW
-- Courses: 2 (Lab 0, Theory 2)
+- Courses: 2 (Lab 1, Theory 2)
 - Groups: 2
 - Total assignments: 2
 - Courses with multiple options: 0 (0.0%)
 
 COURSE DISTRIBUTION BY GROUP
-- EE19P84 [Theory]: 1 groups, 1 teachers
+- CS19P15 [Lab + Theory]: 1 groups, 1 teachers
   └─ G2: 1 teacher assignments
-- EE19P87 [Theory]: 1 groups, 1 teachers
+- OME1903 [Theory]: 1 groups, 1 teachers
   └─ G1: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
-  └─ EE19P87 [T]: 1 instances, 1 teachers
+  └─ OME1903 [T]: 1 instances, 1 teachers
 - G2: 1 courses, 1 teachers
-  └─ EE19P84 [T]: 1 instances, 1 teachers
+  └─ CS19P15 [L+T]: 1 instances, 1 teachers

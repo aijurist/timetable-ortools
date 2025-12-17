@@ -1,45 +1,39 @@
 Course-Group Distribution Summary
 Department: Computer Science & Business Systems
 Semester: 8
-Generated: 2025-12-17 00:36:17
+Generated: 2025-12-18 00:11:53
 ============================================================
 
 OVERVIEW
 - Courses: 5 (Lab 3, Theory 5)
 - Groups: 5
-- Total assignments: 10
-- Courses with multiple options: 5 (100.0%)
+- Total assignments: 8
+- Courses with multiple options: 3 (60.0%)
 
 COURSE DISTRIBUTION BY GROUP
-- BA19801 [Theory]: 2 groups, 2 teachers
-  └─ G4: 1 teacher assignments
-  └─ G5: 1 teacher assignments
+- BA19801 [Theory]: 1 groups, 2 teachers
+  └─ G2: 2 teacher assignments
 - BA19802 [Theory]: 2 groups, 2 teachers
-  └─ G4: 1 teacher assignments
-  └─ G5: 1 teacher assignments
+  └─ G1: 1 teacher assignments
+  └─ G3: 1 teacher assignments
 - CB19841 [Lab + Theory]: 2 groups, 2 teachers
   └─ G1: 1 teacher assignments
   └─ G3: 1 teacher assignments
-- CB19P46 [Lab + Theory]: 2 groups, 2 teachers
-  └─ G2: 1 teacher assignments
-  └─ G3: 1 teacher assignments
-- CB19P49 [Lab + Theory]: 2 groups, 2 teachers
-  └─ G1: 1 teacher assignments
-  └─ G2: 1 teacher assignments
+- CB19P46 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G4: 1 teacher assignments
+- CB19P49 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G5: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 2 courses, 2 teachers
+  └─ BA19802 [T]: 1 instances, 1 teachers
   └─ CB19841 [L+T]: 1 instances, 1 teachers
-  └─ CB19P49 [L+T]: 1 instances, 1 teachers
-- G2: 2 courses, 2 teachers
-  └─ CB19P46 [L+T]: 1 instances, 1 teachers
-  └─ CB19P49 [L+T]: 1 instances, 1 teachers
+- G2: 1 courses, 2 teachers
+  └─ BA19801 [T]: 2 instances, 2 teachers
 - G3: 2 courses, 2 teachers
+  └─ BA19802 [T]: 1 instances, 1 teachers
   └─ CB19841 [L+T]: 1 instances, 1 teachers
+- G4: 1 courses, 1 teachers
   └─ CB19P46 [L+T]: 1 instances, 1 teachers
-- G4: 2 courses, 2 teachers
-  └─ BA19801 [T]: 1 instances, 1 teachers
-  └─ BA19802 [T]: 1 instances, 1 teachers
-- G5: 2 courses, 2 teachers
-  └─ BA19801 [T]: 1 instances, 1 teachers
-  └─ BA19802 [T]: 1 instances, 1 teachers
+- G5: 1 courses, 1 teachers
+  └─ CB19P49 [L+T]: 1 instances, 1 teachers

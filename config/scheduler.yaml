@@ -7,8 +7,8 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data/sem2026/year_wise/1st_year/computer_science_and_engineering.csv
-  rooms_csv: data/block_wise/techlongue.csv
+  courses_csv: data/sem2026/year_wise/Year_4_course_data.csv
+  rooms_csv: data/block_wise/temp.csv
   day_order_csv: data/day_order_even.csv
   core_lab_mapping_csv: data/CoreMappingSimplified_StudentDept.csv
   preferences_csv: data/Data for Timetable Scheduler - POP.csv
@@ -106,6 +106,7 @@ departments:
       - wed
       - thur
       - fri
+      - saturday
     lunch_break_slot: null
     lunch_slot_window:
       - 3
@@ -116,6 +117,7 @@ departments:
   overrides:
     Computer Science & Engineering:
       day_pattern:
+        - monday
         - tuesday
         - wed
         - thur
@@ -130,6 +132,7 @@ departments:
       flexible_lunch: false
     Computer Science & Engineering (Cyber Security):
       day_pattern:
+        - monday
         - tuesday
         - wed
         - thur
@@ -144,6 +147,7 @@ departments:
       flexible_lunch: false
     Electronics & Communication Engineering:
       day_pattern:
+        - monday
         - tuesday
         - wed
         - thur
@@ -163,6 +167,7 @@ departments:
         - wed
         - thur
         - fri
+        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
@@ -172,6 +177,7 @@ departments:
       flexible_lunch: false
     Mechanical Engineering:
       day_pattern:
+        - monday
         - tuesday
         - wed
         - thur
@@ -191,6 +197,7 @@ departments:
         - wed
         - thur
         - fri
+        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
@@ -205,6 +212,7 @@ departments:
         - wed
         - thur
         - fri
+        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
@@ -219,6 +227,7 @@ departments:
         - wed
         - thur
         - fri
+        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
@@ -228,6 +237,7 @@ departments:
       flexible_lunch: false
     Computer Science & Design:
       day_pattern:
+        - monday
         - tuesday
         - wed
         - thur
@@ -261,6 +271,7 @@ departments:
         - wed
         - thur
         - fri
+        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
@@ -275,6 +286,7 @@ departments:
         - wed
         - thur
         - fri
+        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
@@ -284,6 +296,7 @@ departments:
       flexible_lunch: false
     Automobile Engineering:
       day_pattern:
+        - monday
         - tuesday
         - wed
         - thur
@@ -298,6 +311,7 @@ departments:
       flexible_lunch: false
     Aeronautical Engineering:
       day_pattern:
+        - monday
         - tuesday
         - wed
         - thur
@@ -317,6 +331,7 @@ departments:
         - wed
         - thur
         - fri
+        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
@@ -326,6 +341,7 @@ departments:
       flexible_lunch: false
     Food Technology:
       day_pattern:
+        - monday
         - tuesday
         - wed
         - thur
@@ -340,6 +356,7 @@ departments:
       flexible_lunch: false
     Chemical Engineering:
       day_pattern:
+        - monday
         - tuesday
         - wed
         - thur
@@ -359,6 +376,7 @@ departments:
         - wed
         - thur
         - fri
+        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
@@ -373,6 +391,7 @@ departments:
         - wed
         - thur
         - fri
+        - saturday
       lunch_break_slot: null
       lunch_slot_window:
         - 3
@@ -668,11 +687,27 @@ constraints:
     #       - SHIFT_2
   cross_system:
     dept_day_span:
-      enabled: false
+      enabled: true
       priority: 8
       weight: 1.0
       params:
         day_limit: 2
+        allowed_days_by_department:
+          Mechatronics Engineering:
+            - monday
+            - tuesday
+          Biomedical Engineering:
+            - monday
+            - tuesday
+          Civil Engineering:
+            - monday
+            - tuesday
+          Electrical & Electronics Engineering:
+            - monday
+            - tuesday
+        default_allowed_days:
+          - fri
+          - saturday
         target_semesters:
           - 8
         excluded_departments:
@@ -770,9 +805,12 @@ constraints:
           - Robotics & Automation
         soft_departments:
         blocked_theory_slots:
+          - 7
+          - 8
           - 9
           - 10
         blocked_lab_sessions:
+          - L5
           - L6
         discouraged_theory_slots:
           - 9
@@ -782,7 +820,7 @@ constraints:
           - L6
         soft_penalty_weight: 10
     shift_pattern:
-      enabled: true
+      enabled: false
       priority: 8
       weight: 0.7
       params:
