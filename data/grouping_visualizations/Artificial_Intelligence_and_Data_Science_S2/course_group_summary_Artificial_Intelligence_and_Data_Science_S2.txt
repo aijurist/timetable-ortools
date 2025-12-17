@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Artificial Intelligence & Data Science
 Semester: 2
-Generated: 2025-12-14 19:48:38
+Generated: 2025-12-16 22:52:03
 ============================================================
 
 OVERVIEW
@@ -12,45 +12,45 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - CS23221 [Lab]: 2 groups, 6 teachers
-  └─ G3: 5 teacher assignments
-  └─ G4: 1 teacher assignments
+  └─ G1: 3 teacher assignments
+  └─ G3: 3 teacher assignments
 - CS23231 [Lab + Theory]: 2 groups, 6 teachers
-  └─ G1: 1 teacher assignments
-  └─ G5: 5 teacher assignments
+  └─ G4: 4 teacher assignments
+  └─ G6: 2 teacher assignments
 - GE23111 [Lab + Theory]: 1 groups, 6 teachers
-  └─ G6: 6 teacher assignments
+  └─ G2: 6 teacher assignments
 - GE23121 [Lab]: 2 groups, 6 teachers
-  └─ G2: 1 teacher assignments
-  └─ G4: 5 teacher assignments
+  └─ G3: 3 teacher assignments
+  └─ G5: 3 teacher assignments
 - GE23217 [Theory]: 1 groups, 3 teachers
   └─ G8: 3 teacher assignments
 - HS23221 [Lab + Theory]: 2 groups, 6 teachers
-  └─ G2: 5 teacher assignments
-  └─ G3: 1 teacher assignments
+  └─ G1: 3 teacher assignments
+  └─ G5: 3 teacher assignments
 - IT23231 [Lab + Theory]: 2 groups, 6 teachers
-  └─ G1: 5 teacher assignments
-  └─ G5: 1 teacher assignments
+  └─ G4: 2 teacher assignments
+  └─ G6: 4 teacher assignments
 - MA23214 [Theory]: 1 groups, 6 teachers
   └─ G7: 6 teacher assignments
 
 GROUP COMPOSITION
 - G1: 2 courses, 6 teachers
-  └─ CS23231 [L+T]: 1 instances, 1 teachers
-  └─ IT23231 [L+T]: 5 instances, 5 teachers
-- G2: 2 courses, 6 teachers
-  └─ GE23121 [L]: 1 instances, 1 teachers
-  └─ HS23221 [L+T]: 5 instances, 5 teachers
-- G3: 2 courses, 6 teachers
-  └─ CS23221 [L]: 5 instances, 5 teachers
-  └─ HS23221 [L+T]: 1 instances, 1 teachers
-- G4: 2 courses, 6 teachers
-  └─ CS23221 [L]: 1 instances, 1 teachers
-  └─ GE23121 [L]: 5 instances, 5 teachers
-- G5: 2 courses, 6 teachers
-  └─ CS23231 [L+T]: 5 instances, 5 teachers
-  └─ IT23231 [L+T]: 1 instances, 1 teachers
-- G6: 1 courses, 6 teachers
+  └─ CS23221 [L]: 3 instances, 3 teachers
+  └─ HS23221 [L+T]: 3 instances, 3 teachers
+- G2: 1 courses, 6 teachers
   └─ GE23111 [L+T]: 6 instances, 6 teachers
+- G3: 2 courses, 6 teachers
+  └─ CS23221 [L]: 3 instances, 3 teachers
+  └─ GE23121 [L]: 3 instances, 3 teachers
+- G4: 2 courses, 6 teachers
+  └─ CS23231 [L+T]: 4 instances, 4 teachers
+  └─ IT23231 [L+T]: 2 instances, 2 teachers
+- G5: 2 courses, 6 teachers
+  └─ GE23121 [L]: 3 instances, 3 teachers
+  └─ HS23221 [L+T]: 3 instances, 3 teachers
+- G6: 2 courses, 6 teachers
+  └─ CS23231 [L+T]: 2 instances, 2 teachers
+  └─ IT23231 [L+T]: 4 instances, 4 teachers
 - G7: 1 courses, 6 teachers
   └─ MA23214 [T]: 6 instances, 6 teachers
 - G8: 1 courses, 3 teachers

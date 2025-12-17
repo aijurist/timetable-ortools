@@ -133,6 +133,12 @@ class SolverRunner:
 			self._assign_parameter(parameters, "restart_log_size", runtime.restart_log_size)
 		if runtime.max_number_of_conflicts is not None:
 			self._assign_parameter(parameters, "max_number_of_conflicts", runtime.max_number_of_conflicts)
+		if runtime.linearization_level is not None:
+			self._assign_parameter(parameters, "linearization_level", runtime.linearization_level)
+		if runtime.cp_model_presolve is not None:
+			self._assign_parameter(parameters, "cp_model_presolve", runtime.cp_model_presolve)
+		if runtime.symmetry_level is not None:
+			self._assign_parameter(parameters, "symmetry_level", runtime.symmetry_level)
 
 	def _apply_yaml_parameters(self, parameters: sat_parameters_pb2.SatParameters) -> None:
 		payload = self._params_payload
@@ -144,6 +150,9 @@ class SolverRunner:
 				"solution_limit": "solution_limit",
 				"enable_lns": "use_lns",
 				"enable_trace": "log_search_progress",
+				"linearization_level": "linearization_level",
+				"cp_model_presolve": "cp_model_presolve",
+				"symmetry_level": "symmetry_level",
 			}.get(key, key)
 			if mapped_key == "solution_limit":
 				self._apply_solution_limit(parameters, value, source="solver")

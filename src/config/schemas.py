@@ -287,6 +287,9 @@ class RuntimeConfig:
     search_branching: Optional[str] = None
     restart_log_size: Optional[float] = None
     max_number_of_conflicts: Optional[int] = None
+    linearization_level: Optional[int] = None
+    cp_model_presolve: Optional[bool] = None
+    symmetry_level: Optional[int] = None
     warm_start: WarmStartConfig = field(default_factory=WarmStartConfig)
 
     def __post_init__(self) -> None:

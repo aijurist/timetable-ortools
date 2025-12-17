@@ -7,8 +7,8 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data/sem2026/year_wise/Year_4_course_data.csv
-  rooms_csv: data/block_wise/temp.csv
+  courses_csv: data/sem2026/year_wise/1st_year/computer_science_and_engineering.csv
+  rooms_csv: data/block_wise/techlongue.csv
   day_order_csv: data/day_order_even.csv
   core_lab_mapping_csv: data/CoreMappingSimplified_StudentDept.csv
   preferences_csv: data/Data for Timetable Scheduler - POP.csv
@@ -668,7 +668,7 @@ constraints:
     #       - SHIFT_2
   cross_system:
     dept_day_span:
-      enabled: true
+      enabled: false
       priority: 8
       weight: 1.0
       params:
@@ -706,10 +706,6 @@ constraints:
           - 4
           - 5
         minimum_free_slots: 1
-        soft_semesters:
-          - 2
-        hard_overrides:
-          - Computer Science & Business Systems
         penalty_weight: 50
     five_pm_policy:
       enabled: true
@@ -754,6 +750,7 @@ constraints:
           - Electrical & Electronics Engineering_S4
           - Electrical & Electronics Engineering_S6
           - Electrical & Electronics Engineering_S8
+          - Electronics & Communication Engineering_S2
           - Electronics & Communication Engineering_S4
           - Electronics & Communication Engineering_S6
           - Electronics & Communication Engineering_S8
@@ -772,14 +769,10 @@ constraints:
           - Mechatronics Engineering_S8
           - Robotics & Automation
         soft_departments:
-          - Electronics & Communication Engineering_S2
         blocked_theory_slots:
-          - 7
-          - 8
           - 9
           - 10
         blocked_lab_sessions:
-          - L5
           - L6
         discouraged_theory_slots:
           - 9
@@ -789,7 +782,7 @@ constraints:
           - L6
         soft_penalty_weight: 10
     shift_pattern:
-      enabled: false
+      enabled: true
       priority: 8
       weight: 0.7
       params:
@@ -813,15 +806,18 @@ model:
   use_sparse_variables: true
 
 runtime:
-  time_limit_sec: 300
+  time_limit_sec: 1000
   thread_count: 12
   enable_lns: true
   enable_trace: true
   solution_limit: null
-  stop_after_first_solution: false
-  probing_level: 0
-  search_branching: FIXED_SEARCH
+  stop_after_first_solution: true
+  probing_level: 2
+  search_branching: PORTFOLIO_SEARCH
   restart_log_size: 18.0
+  linearization_level: 2
+  cp_model_presolve: true
+  symmetry_level: 2
   max_number_of_conflicts: 1000000
   warm_start:
     enabled: true

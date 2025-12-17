@@ -1,0 +1,59 @@
+Course-Group Distribution Summary
+Department: Computer Science & Engineering
+Semester: 2
+Generated: 2025-12-17 01:40:10
+============================================================
+
+OVERVIEW
+- Courses: 7 (Lab 4, Theory 6)
+- Groups: 7
+- Total assignments: 91
+- Courses with multiple options: 7 (100.0%)
+
+COURSE DISTRIBUTION BY GROUP
+- CS23221 [Lab]: 2 groups, 13 teachers
+  └─ G1: 1 teacher assignments
+  └─ G3: 12 teacher assignments
+- CS23231 [Lab + Theory]: 2 groups, 13 teachers
+  └─ G2: 6 teacher assignments
+  └─ G4: 7 teacher assignments
+- GE23111 [Lab + Theory]: 2 groups, 13 teachers
+  └─ G2: 7 teacher assignments
+  └─ G4: 6 teacher assignments
+- GE23217 [Theory]: 3 groups, 13 teachers
+  └─ G5: 2 teacher assignments
+  └─ G6: 5 teacher assignments
+  └─ G7: 6 teacher assignments
+- HS23221 [Lab + Theory]: 2 groups, 13 teachers
+  └─ G1: 12 teacher assignments
+  └─ G3: 1 teacher assignments
+- MA23213 [Theory]: 2 groups, 13 teachers
+  └─ G5: 5 teacher assignments
+  └─ G6: 8 teacher assignments
+- MC23112 [Theory]: 2 groups, 13 teachers
+  └─ G5: 6 teacher assignments
+  └─ G7: 7 teacher assignments
+
+GROUP COMPOSITION
+- G1: 2 courses, 13 teachers
+  └─ CS23221 [L]: 1 instances, 1 teachers
+  └─ HS23221 [L+T]: 12 instances, 12 teachers
+- G2: 2 courses, 13 teachers
+  └─ CS23231 [L+T]: 6 instances, 6 teachers
+  └─ GE23111 [L+T]: 7 instances, 7 teachers
+- G3: 2 courses, 13 teachers
+  └─ CS23221 [L]: 12 instances, 12 teachers
+  └─ HS23221 [L+T]: 1 instances, 1 teachers
+- G4: 2 courses, 13 teachers
+  └─ CS23231 [L+T]: 7 instances, 7 teachers
+  └─ GE23111 [L+T]: 6 instances, 6 teachers
+- G5: 3 courses, 13 teachers
+  └─ GE23217 [T]: 2 instances, 2 teachers
+  └─ MA23213 [T]: 5 instances, 5 teachers
+  └─ MC23112 [T]: 6 instances, 6 teachers
+- G6: 2 courses, 13 teachers
+  └─ GE23217 [T]: 5 instances, 5 teachers
+  └─ MA23213 [T]: 8 instances, 8 teachers
+- G7: 2 courses, 13 teachers
+  └─ GE23217 [T]: 6 instances, 6 teachers
+  └─ MC23112 [T]: 7 instances, 7 teachers

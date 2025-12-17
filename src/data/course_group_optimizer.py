@@ -690,22 +690,34 @@ class CourseGroupOptimizer:
                     # This constraint ensures group_var = 1 iff at least one instance is assigned to this group
                     model.Add(group_var <= sum(course_assignments_in_group))
                 
-                # Apply minimum group constraint based on department flexibility
+                # Calculate max instances per teacher for this course to ensure feasibility
+                teacher_counts = defaultdict(int)
+                for idx in course_instances:
+                    teacher_counts[self.courses[idx]['teacher_id']] += 1
+                max_teacher_load = max(teacher_counts.values()) if teacher_counts else 1
+                
+                # Apply minimum group constraint based on department flexibility and teacher load
+                min_groups = 1 if self.allows_flexible_grouping else 2
+                if self.num_groups < 2:
+                    min_groups = 1
+                
+                # We MUST have at least as many groups as the max instances of any single teacher
+                # because a teacher cannot be in the same group twice
+                min_groups = max(min_groups, max_teacher_load)
+                
+                model.Add(sum(group_has_course) >= min_groups)
+                course_constraints_added += 1
+                
                 if self.allows_flexible_grouping:
-                    # Flexible departments: Allow courses to be in minimum 1 group (consolidation allowed)
-                    model.Add(sum(group_has_course) >= 1)
-                    course_constraints_added += 1
                     flexible_courses += 1
-                    self.logger.debug(f"Course {course_code}: {len(course_instances)} instances -> flexible (min 1, max 2 groups)")
+                    self.logger.debug(f"Course {course_code}: {len(course_instances)} instances, max teacher load {max_teacher_load} -> flexible (min {min_groups})")
                 else:
-                    # Standard departments: Enforce minimum 2 groups for distribution
-                    if self.num_groups >= 2:
-                        model.Add(sum(group_has_course) >= 2)
-                        course_constraints_added += 1
-                    self.logger.debug(f"Course {course_code}: {len(course_instances)} instances -> standard (min 2, max 2 groups)")
+                    self.logger.debug(f"Course {course_code}: {len(course_instances)} instances, max teacher load {max_teacher_load} -> standard (min {min_groups})")
                     
-                # Maximum constraint: Course can be in at most 2 groups (always enforced)
-                model.Add(sum(group_has_course) <= 2)
+                # Maximum constraint: Course can be in at most max(2, min_groups) groups
+                # We relax the limit if teacher load requires more groups
+                max_groups_limit = max(2, min_groups)
+                model.Add(sum(group_has_course) <= max_groups_limit)
                 course_constraints_added += 1
         
         self.logger.info(f"Applied {course_constraints_added} course limit constraints")

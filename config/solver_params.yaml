@@ -5,6 +5,9 @@ solver:
   enable_trace: false
   solution_limit: null
   search_branching: AUTOMATIC
+  linearization_level: 2
+  cp_model_presolve: true
+  symmetry_level: 2
 
 logging:
   level: INFO
