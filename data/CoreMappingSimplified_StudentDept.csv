@@ -22,6 +22,7 @@ CH23431,Chemical Engineering,1,Particle Science and Technology Lab,,,,,Particle 
 CH23621,Chemical Engineering,1,Mass Transfer Lab,,,,,Mass Transfer Lab
 EE23133,Chemical Engineering,1,Electrical Machines I Lab,,,,,Basic Electrical and Electronics Engineering
 GE23122,Chemical Engineering,1,Engineering Practices Lab (Electrical),,,,,Engineering Practices - Electrical and Electronics
+GE23122,Chemical Engineering,1,Engineering Practices Lab (Electronics),,,,,Engineering Practices - Electrical and Electronics
 EE23133,Civil Engineering,1,Electrical Machines I Lab,,,,,Basic Electrical and Electronics Engineering
 GE23122,Civil Engineering,1,Engineering Practices Lab (Electrical),,,,,Engineering Practices - Electrical and Electronics
 EE23133,Electrical & Electronics Engineering,1,Electrical Machines I Lab,,,,,Basic Electrical and Electronics Engineering
@@ -35,9 +36,12 @@ EC23431,Electronics & Communication Engineering,1,LIC Lab,,,,,Analog Circuits-II
 EC23631,Electronics & Communication Engineering,1,VLSI Lab,,,,,VLSI and Chip Design
 EC23632,Electronics & Communication Engineering,1,Networks Lab,,,,,Communication Networks
 EE23132,Electronics & Communication Engineering,1,Electrical Machines II Lab,,,,,Basic Electrical Engineering
+EE23132,Electronics & Communication Engineering,1,Electrical Machines I Lab,,,,,Basic Electrical Engineering
 GE23121,Electronics & Communication Engineering,1,Machine Shop FF1 - EPL - 1,,,,,Engineering Practices Civil and Mechanical
 GE23121,Electronics & Communication Engineering,1,Machine Shop FF2 - EPL - 2,,,,,Engineering Practices Civil and Mechanical
 EE23133,Food Technology,1,Electrical Machines I Lab,,,,,Basic Electrical and Electronics Engineering
+EC23232,Computer Science & Engineering,1,Microprocessor Lab-1,,,,,Digital Logic and Microprocessor
+EC23233,Computer Science & Engineering,1,Microprocessor Lab-2,,,,,Digital Logic and Microprocessor
 FT19801,Food Technology,1,Livestock Lab,,,,,Project Work
 FT23211,Food Technology,1,Food Analysis Laboratory,,,,,Food Chemistry Laboratory
 FT23411,Food Technology,1,Process Control Lab,,,,,Unit operations in Food industries Laboratory

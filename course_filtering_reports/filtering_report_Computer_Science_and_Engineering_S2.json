@@ -1,0 +1,131 @@
+{
+  "department": "Computer Science & Engineering",
+  "semester": 2,
+  "timestamp": "2025-12-19T01:24:51.470219",
+  "summary": {
+    "original_total_instances": 123,
+    "filtered_total_instances": 117,
+    "most_common_instance_count": 13,
+    "instance_count_distribution": {
+      "13": 9,
+      "1": 6
+    },
+    "courses_removed_count": 6,
+    "courses_trimmed_count": 0,
+    "total_instances_removed": 6,
+    "courses_kept_unchanged": 9
+  },
+  "removed_courses": {
+    "total_instances": 6,
+    "unique_courses": [
+      "CP23A11",
+      "CP23231",
+      "CP23221",
+      "CP23222",
+      "CP23211",
+      "DS23A13"
+    ],
+    "instances": [
+      {
+        "id": 431,
+        "course_code": "CP23211",
+        "course_name": "Advanced Software Engineering",
+        "teacher_id": "282",
+        "student_count": 70,
+        "practical_hours": 0,
+        "lecture_hours": 3,
+        "tutorial_hours": 0,
+        "has_lab": false,
+        "has_theory": true,
+        "reason": "Insufficient instances (below most common count)"
+      },
+      {
+        "id": 435,
+        "course_code": "CP23221",
+        "course_name": "Advanced Software Engineering Laboratory",
+        "teacher_id": "282",
+        "student_count": 70,
+        "practical_hours": 4,
+        "lecture_hours": 0,
+        "tutorial_hours": 0,
+        "has_lab": true,
+        "has_theory": false,
+        "reason": "Insufficient instances (below most common count)"
+      },
+      {
+        "id": 436,
+        "course_code": "CP23222",
+        "course_name": "Mini Project with Seminar",
+        "teacher_id": "267",
+        "student_count": 70,
+        "practical_hours": 0,
+        "lecture_hours": 60,
+        "tutorial_hours": 0,
+        "has_lab": false,
+        "has_theory": true,
+        "reason": "Insufficient instances (below most common count)"
+      },
+      {
+        "id": 434,
+        "course_code": "CP23231",
+        "course_name": "Applied Machine Learning",
+        "teacher_id": "268",
+        "student_count": 70,
+        "practical_hours": 2,
+        "lecture_hours": 3,
+        "tutorial_hours": 0,
+        "has_lab": true,
+        "has_theory": true,
+        "reason": "Insufficient instances (below most common count)"
+      },
+      {
+        "id": 432,
+        "course_code": "CP23A11",
+        "course_name": "Applied Deep Learning",
+        "teacher_id": "274",
+        "student_count": 70,
+        "practical_hours": 0,
+        "lecture_hours": 3,
+        "tutorial_hours": 0,
+        "has_lab": false,
+        "has_theory": true,
+        "reason": "Insufficient instances (below most common count)"
+      },
+      {
+        "id": 433,
+        "course_code": "DS23A13",
+        "course_name": "Data Analytics",
+        "teacher_id": "266",
+        "student_count": 70,
+        "practical_hours": 0,
+        "lecture_hours": 3,
+        "tutorial_hours": 0,
+        "has_lab": false,
+        "has_theory": true,
+        "reason": "Insufficient instances (below most common count)"
+      }
+    ]
+  },
+  "trimmed_courses": {},
+  "detailed_analysis": {
+    "instance_count_breakdown": {
+      "13": 9,
+      "1": 6
+    },
+    "teacher_impact": {
+      "total_teachers_affected": 5,
+      "affected_teacher_ids": [
+        "267",
+        "282",
+        "268",
+        "266",
+        "274"
+      ]
+    },
+    "course_type_impact": {
+      "lab_instances_removed": 2,
+      "theory_instances_removed": 5,
+      "total_instances_removed": 6
+    }
+  }
+}

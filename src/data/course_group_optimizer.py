@@ -68,18 +68,20 @@ class CourseGroupOptimizer:
                 'Computer Science & Design',
                 'Artificial Intelligence & Data Science',
                 'Artificial Intelligence & Machine Learning',
-                'Information Technology'
+                'Information Technology',
+                "Computer Science & Engineering (Cyber Security)"
             }
         else:
             self.flexible_grouping_depts = set(flexible_grouping_depts)
         
         # Check if current department allows flexible grouping
         self.allows_flexible_grouping = self.dept in self.flexible_grouping_depts
+
+        # Special-case flags
+        self.is_cse_s2 = (self.dept == "Computer Science & Engineering" and self.semester == 2)
         
         # Load PE course mapping if provided
         self.pe_course_codes = set()
-        self.pe_code_to_general: Dict[str, str] = {}
-        self.pe_general_to_codes: Dict[str, Set[str]] = {}
         self.pe_courses = []
         if pe_course_map_file:
             self._load_pe_course_mapping()
@@ -139,87 +141,56 @@ class CourseGroupOptimizer:
         
         try:
             import pandas as pd
-
             df = pd.read_csv(self.pe_course_map_file)
-
-            required_cols = {'GENERAL CODE', 'DEPT', 'SEM'}
-            if not required_cols.issubset(set(df.columns)):
-                self.logger.error("PE course map file missing required columns: GENERAL CODE, DEPT, SEM")
-                return
-
-            def _norm(text: object) -> str:
-                if pd.isna(text):
-                    return ""
-                return " ".join(str(text).replace("&", " and ").replace("_", " ").split()).lower()
-
-            dept_code_map = {
-                'AERO': 'Aeronautical Engineering',
-                'AIDS': 'Artificial Intelligence & Data Science',
-                'AIML': 'Artificial Intelligence & Machine Learning',
-                'AUTO': 'Automobile Engineering',
-                'BME': 'Biomedical Engineering',
-                'BT': 'Biotechnology',
-                'CIVIL': 'Civil Engineering',
-                'CSE': 'Computer Science & Engineering',
-                'CSBS': 'Computer Science & Business Systems',
-                'CSD': 'Computer Science & Design',
-                'ECE': 'Electronics & Communication Engineering',
-                'EEE': 'Electrical & Electronics Engineering',
-                'FT': 'Food Technology',
-                'IT': 'Information Technology',
-                'MCT': 'Mechatronics Engineering',
-                'MECH': 'Mechanical Engineering',
-                'RA': 'Robotics & Automation',
-            }
-
-            # Build reverse lookup: normalized full name -> code
-            full_to_code = { _norm(full): code for code, full in dept_code_map.items() }
-            dept_norm = _norm(self.dept)
-
-            candidate_codes: Set[str] = set()
-            if self.dept:
-                candidate_codes.add(str(self.dept).strip().upper())
-            if dept_norm in full_to_code:
-                candidate_codes.add(full_to_code[dept_norm])
-
-            # Normalize SEM to integers for comparison
-            df['__SEM_INT'] = pd.to_numeric(df['SEM'], errors='coerce').astype('Int64')
-            target_sem = pd.to_numeric(self.semester, errors='coerce')
-
-            if pd.isna(target_sem):
-                self.logger.error(f"Invalid semester value: {self.semester}")
-                return
-
-            def _row_matches(row) -> bool:
-                row_dept_code = str(row.get('DEPT', '')).strip().upper()
-                row_dept_full_norm = _norm(row.get('DEPT', ''))
-                return (row_dept_code in candidate_codes) or (row_dept_full_norm == dept_norm)
-
-            filtered_df = df[(df['__SEM_INT'] == target_sem) & (df.apply(_row_matches, axis=1))]
-
-            if filtered_df.empty:
-                self.logger.warning(f"No PE mappings matched dept={self.dept} sem={self.semester}; candidates: {sorted(candidate_codes) if candidate_codes else 'none'}")
-                return
-
-            for _, row in filtered_df.iterrows():
-                general_code = str(row.get('GENERAL CODE', '')).strip()
-                mapped_codes: Set[str] = set()
-                for col in ['GENERAL CODE', 'PE1', 'PE2', 'PE3']:
-                    code = row.get(col)
-                    if pd.notna(code):
-                        code_str = str(code).strip()
-                        if code_str:
-                            mapped_codes.add(code_str)
-                            self.pe_course_codes.add(code_str)
-                            if general_code:
-                                self.pe_code_to_general[code_str] = general_code
-                if general_code and mapped_codes:
-                    self.pe_general_to_codes.setdefault(general_code, set()).update(mapped_codes)
-
-            self.logger.info(
-                f"Loaded {len(self.pe_course_codes)} PE course codes for {self.dept} Semester {self.semester}: {sorted(self.pe_course_codes)}"
-            )
-
+            
+            # Extract GENERAL CODE values and filter by department and semester
+            if 'GENERAL CODE' in df.columns and 'DEPT' in df.columns and 'SEM' in df.columns:
+                # Filter by department and semester
+                dept_mapping = {
+                    "AERO": "Aeronautical Engineering",
+                    'AIDS': 'Artificial Intelligence & Data Science',
+                    'AIML': 'Artificial Intelligence & Machine Learning', 
+                    'CSE': 'Computer Science & Engineering',
+                    'BME': 'Biomedical Engineering',
+                    'BT': 'Biotechnology',
+                    'EEE': 'Electrical & Electronics Engineering',
+                    'ECE': 'Electronics & Communication Engineering',
+                    'MECH': 'Mechanical Engineering',
+                    'MCT': 'Mechatronics Engineering',
+                    'RA': 'Robotics & Automation',
+                    'IT': 'Information Technology',
+                    "AUTO": "Automobile Engineering",
+                    "CHEM": "Chemical Engineering",
+                    "FT": "Food Technology",
+                    "CIVIL": "Civil Engineering",
+                    "CSBS": "Computer Science and Business Systems",
+                    "CSD": "Computer Science and Design",
+                    "CSECS": "Computer Science and Engineering - Cyber Security",
+                }
+                
+                # Find matching department abbreviation
+                dept_abbrev = None
+                for abbrev, full_name in dept_mapping.items():
+                    if full_name == self.dept:
+                        dept_abbrev = abbrev
+                        break
+                
+                if dept_abbrev:
+                    # Filter for matching department and semester
+                    filtered_df = df[(df['DEPT'] == dept_abbrev) & (df['SEM'] == self.semester)]
+                    
+                    # Extract PE course codes
+                    for _, row in filtered_df.iterrows():
+                        general_code = row['GENERAL CODE']
+                        if pd.notna(general_code) and general_code.strip():
+                            self.pe_course_codes.add(general_code.strip())
+                    
+                    self.logger.info(f"Loaded {len(self.pe_course_codes)} PE course codes for {self.dept} Semester {self.semester}: {sorted(self.pe_course_codes)}")
+                else:
+                    self.logger.warning(f"No PE course mapping found for department: {self.dept}")
+            else:
+                self.logger.error(f"PE course map file missing required columns: GENERAL CODE, DEPT, SEM")
+                
         except Exception as e:
             self.logger.error(f"Error loading PE course mapping: {e}")
             import traceback
@@ -241,9 +212,6 @@ class CourseGroupOptimizer:
         for course in courses:
             course_code = course.get('course_code', '')
             if course_code in self.pe_course_codes:
-                general_code = self.pe_code_to_general.get(course_code)
-                if general_code:
-                    course['__pe_general_code'] = general_code
                 pe_courses.append(course)
                 self.logger.debug(f"Identified PE course: {course_code}")
             else:
@@ -669,6 +637,15 @@ class CourseGroupOptimizer:
         single_instance_courses = 0
         multi_instance_courses = 0
         flexible_courses = 0
+
+        # CSE Semester 2 is a special case: we enforce per-course spreading across 3 groups
+        # (balanced) in _apply_special_department_constraints. Do NOT add the default
+        # max-2-groups constraint here.
+        if self.is_cse_s2:
+            self.logger.info(
+                "Skipping default course limit constraints for CSE Semester 2 (handled by special constraints: 3-group split)"
+            )
+            return
         
         for course_code in self.unique_courses:
             # Find all instances of this course
@@ -781,6 +758,16 @@ class CourseGroupOptimizer:
             model: CP-SAT model
             assignment_vars: Assignment variables
         """
+        # CSE S2 special case requires each course to span 3 groups.
+        # The current lab-priority rule is a hard partition (labs only in early groups,
+        # theory only in late groups). With typical inputs (e.g., 6 lab courses => only
+        # 2 remaining theory groups), that can make the model INFEASIBLE.
+        if getattr(self, "is_cse_s2", False):
+            self.logger.info(
+                "Skipping lab priority constraint for CSE S2 (conflicts with 3-group split requirement)"
+            )
+            return
+
         # Identify lab and theory-only courses
         lab_courses = set()
         theory_only_courses = set()
@@ -841,18 +828,168 @@ class CourseGroupOptimizer:
         """
         constraints_added = 0
         
-        # Special constraint for Electronics & Communication Engineering 7th semester
-        if (self.dept == "Electronics & Communication Engineering" and self.semester == 7):
-            constraints_added += self._apply_ece_s7_even_lab_distribution(model, assignment_vars)
-        
-        # Special constraint for Electronics & Communication Engineering 5th semester
-        if (self.dept == "Electronics & Communication Engineering" and self.semester == 5):
-            constraints_added += self._apply_ece_s5_even_lab_distribution(model, assignment_vars)
+        # Special constraint for Electronics & Communication Engineering 2nd semester
+        if (self.dept == "Electronics & Communication Engineering" and self.semester == 2):
+            constraints_added += self._apply_ece_s2_even_core_split(model, assignment_vars)
+
+        # Special constraint for Computer Science & Engineering 2nd semester
+        if (self.dept == "Computer Science & Engineering" and self.semester == 2):
+            constraints_added += self._apply_cse_s2_three_group_split(model, assignment_vars)
         
         if constraints_added > 0:
             self.logger.info(f"Applied {constraints_added} special department-specific constraints")
         else:
             self.logger.info("No special department-specific constraints applied")
+
+    def _apply_ece_s2_even_core_split(self, model, assignment_vars):
+        """Ensure GE23121 and EE23132 split evenly across the two groups (as balanced as possible)."""
+        self.logger.info("Applying ECE S2 special constraint: even split for GE23121 and EE23132")
+        constraints_added = 0
+
+        target_courses = {"GE23121", "EE23132"}
+
+        for course_code in target_courses:
+            # Collect all instances for this course
+            instance_indices = [
+                i for i, inst in enumerate(self.courses)
+                if inst.get('course_code') == course_code
+            ]
+
+            num_instances = len(instance_indices)
+            if num_instances == 0:
+                continue
+
+            # Track presence and counts per group
+            group_has_course = []
+            group_instance_counts = []
+
+            for group_idx in range(self.num_groups):
+                group_var = model.NewBoolVar(f"ece_s2_{course_code}_in_group_{group_idx}")
+                group_has_course.append(group_var)
+
+                group_count = model.NewIntVar(0, num_instances, f"ece_s2_{course_code}_count_group_{group_idx}")
+                group_instance_counts.append(group_count)
+
+                course_assignments_in_group = [assignment_vars[(i, group_idx)] for i in instance_indices]
+                model.Add(group_count == sum(course_assignments_in_group))
+
+                for instance_idx in instance_indices:
+                    model.Add(group_var >= assignment_vars[(instance_idx, group_idx)])
+                model.Add(group_var <= sum(course_assignments_in_group))
+
+                constraints_added += 3
+
+            # Even split logic: target half each if even, otherwise difference <= 1
+            if num_instances % 2 == 0:
+                target_per_group = num_instances // 2
+                for g1 in range(self.num_groups):
+                    for g2 in range(g1 + 1, self.num_groups):
+                        both_have_course = model.NewBoolVar(f"ece_s2_{course_code}_in_both_g{g1}_g{g2}")
+
+                        model.Add(both_have_course <= group_has_course[g1])
+                        model.Add(both_have_course <= group_has_course[g2])
+                        model.Add(both_have_course >= group_has_course[g1] + group_has_course[g2] - 1)
+
+                        model.Add(group_instance_counts[g1] == target_per_group).OnlyEnforceIf(both_have_course)
+                        model.Add(group_instance_counts[g2] == target_per_group).OnlyEnforceIf(both_have_course)
+
+                        constraints_added += 5
+
+                self.logger.info(f"  {course_code}: enforcing {target_per_group} instances per group (even split)")
+            else:
+                target_low = num_instances // 2
+                target_high = target_low + 1
+
+                for g1 in range(self.num_groups):
+                    for g2 in range(g1 + 1, self.num_groups):
+                        both_have_course = model.NewBoolVar(f"ece_s2_{course_code}_in_both_g{g1}_g{g2}")
+
+                        model.Add(both_have_course <= group_has_course[g1])
+                        model.Add(both_have_course <= group_has_course[g2])
+                        model.Add(both_have_course >= group_has_course[g1] + group_has_course[g2] - 1)
+
+                        g1_valid = model.NewBoolVar(f"ece_s2_{course_code}_g{g1}_valid")
+                        g2_valid = model.NewBoolVar(f"ece_s2_{course_code}_g{g2}_valid")
+
+                        model.Add(group_instance_counts[g1] >= target_low).OnlyEnforceIf([both_have_course, g1_valid])
+                        model.Add(group_instance_counts[g1] <= target_high).OnlyEnforceIf([both_have_course, g1_valid])
+
+                        model.Add(group_instance_counts[g2] >= target_low).OnlyEnforceIf([both_have_course, g2_valid])
+                        model.Add(group_instance_counts[g2] <= target_high).OnlyEnforceIf([both_have_course, g2_valid])
+
+                        model.Add(g1_valid == 1).OnlyEnforceIf(both_have_course)
+                        model.Add(g2_valid == 1).OnlyEnforceIf(both_have_course)
+
+                        constraints_added += 9
+
+                self.logger.info(f"  {course_code}: enforcing {target_low}-{target_high} instances per group (balanced split)")
+
+        return constraints_added
+
+    def _apply_cse_s2_three_group_split(self, model, assignment_vars):
+        """CSE Semester 2: force every course to span 3 groups (balanced) when possible.
+
+        Rules per course (based on number of input instances):
+        - 1 instance  -> exactly 1 group
+        - 2 instances -> exactly 2 groups (1+1)
+        - >=3         -> exactly 3 groups, balanced as evenly as possible
+        """
+        self.logger.info("Applying CSE S2 special constraint: each course split across 3 groups (balanced)")
+        constraints_added = 0
+
+        if self.num_groups < 3:
+            self.logger.warning(
+                "CSE S2 3-group split requested, but only %s groups exist; using <=num_groups where needed",
+                self.num_groups,
+            )
+
+        for course_code in self.unique_courses:
+            instance_indices = [
+                i for i, inst in enumerate(self.courses)
+                if inst.get('course_code') == course_code
+            ]
+            num_instances = len(instance_indices)
+            if num_instances == 0:
+                continue
+
+            if num_instances >= 3 and self.num_groups >= 3:
+                k = 3
+            else:
+                k = min(num_instances, self.num_groups)
+
+            group_has_course = []
+            group_instance_counts = []
+
+            for group_idx in range(self.num_groups):
+                group_var = model.NewBoolVar(f"cse_s2_{course_code}_in_group_{group_idx}")
+                group_has_course.append(group_var)
+
+                group_count = model.NewIntVar(0, num_instances, f"cse_s2_{course_code}_count_group_{group_idx}")
+                group_instance_counts.append(group_count)
+
+                course_assignments_in_group = [assignment_vars[(i, group_idx)] for i in instance_indices]
+                model.Add(group_count == sum(course_assignments_in_group))
+
+                for instance_idx in instance_indices:
+                    model.Add(group_var >= assignment_vars[(instance_idx, group_idx)])
+                model.Add(group_var <= sum(course_assignments_in_group))
+
+                constraints_added += 3
+
+            # Exactly k groups should carry this course
+            model.Add(sum(group_has_course) == k)
+            constraints_added += 1
+
+            low = num_instances // k
+            high = (num_instances + k - 1) // k  # ceil
+
+            for group_idx in range(self.num_groups):
+                model.Add(group_instance_counts[group_idx] >= low).OnlyEnforceIf(group_has_course[group_idx])
+                model.Add(group_instance_counts[group_idx] <= high).OnlyEnforceIf(group_has_course[group_idx])
+                model.Add(group_instance_counts[group_idx] == 0).OnlyEnforceIf(group_has_course[group_idx].Not())
+                constraints_added += 3
+
+        return constraints_added
     
     def _apply_ece_s7_even_lab_distribution(self, model, assignment_vars):
         """
@@ -1297,18 +1434,8 @@ class CourseGroupOptimizer:
         
         # Add PE courses as a final group if any exist
         if self.pe_courses:
-            grouped_pe: Dict[str, list] = defaultdict(list)
-            for inst in self.pe_courses:
-                general_code = inst.get('__pe_general_code') or self.pe_code_to_general.get(inst.get('course_code', ''), "")
-                if general_code:
-                    grouped_pe[general_code].append(inst)
-                else:
-                    grouped_pe["__ungrouped__"].append(inst)
-
-            for general_code, instances in grouped_pe.items():
-                self.groups.append(instances)
-                suffix = general_code if general_code != "__ungrouped__" else "PE"
-                self.logger.debug(f"Added PE courses for {suffix} as Group {len(self.groups)} (final group)")
+            self.groups.append(self.pe_courses)
+            self.logger.debug(f"Added PE courses as Group {len(self.groups)} (final group)")
         
         # Log group distribution
         self.logger.info(f"Optimal group distribution for {self.dept} Semester {self.semester}:")
@@ -1348,12 +1475,21 @@ class CourseGroupOptimizer:
         self.logger.info(f"\nCourse distribution summary (excluding PE courses):")
         total_courses = len(course_distribution)
         courses_with_choice = 0
+
+        instance_counts = Counter(inst["course_code"] for inst in self.courses)
         
         for course_code, group_list in sorted(course_distribution.items()):
             if len(group_list) > 1:
                 courses_with_choice += 1
             group_names = [f"G{g}" for g in group_list]
-            status = "[OK]" if len(group_list) <= 2 else "[ERROR]"
+
+            if getattr(self, "is_cse_s2", False):
+                # CSE S2 special case: exactly 3 groups when instances >= 3.
+                num_instances = instance_counts.get(course_code, 0)
+                expected_groups = 3 if num_instances >= 3 else num_instances
+                status = "[OK]" if len(group_list) == expected_groups else "[ERROR]"
+            else:
+                status = "[OK]" if len(group_list) <= 2 else "[ERROR]"
             self.logger.info(f"  {course_code}: {', '.join(group_names)} ({len(group_list)} groups) {status}")
         
         choice_percentage = (courses_with_choice / total_courses * 100) if total_courses > 0 else 0
@@ -1478,6 +1614,19 @@ class CourseGroupOptimizer:
             instance_count = course_instance_counts[course_code]
             group_count = len(groups_set)
             group_names = [f"G{g+1}" for g in sorted(groups_set)]
+
+            # CSE S2 special case: expected group count depends on available instances.
+            # - 1 instance  -> 1 group
+            # - 2 instances -> 2 groups
+            # - >=3         -> 3 groups
+            if self.is_cse_s2:
+                expected = 3 if instance_count >= 3 else instance_count
+                if group_count != expected:
+                    violations += 1
+                    self.logger.error(
+                        f"CSE S2 course {course_code} ({instance_count} instances) appears in {group_count} groups: {', '.join(group_names)} (should be in {expected} groups)"
+                    )
+                continue
             
             if instance_count == 1:
                 # Single instance course: should be in exactly 1 group
@@ -1588,6 +1737,10 @@ class CourseGroupOptimizer:
     
     def _validate_lab_priority(self):
         """Validate lab priority constraint."""
+        if getattr(self, "is_cse_s2", False):
+            self.logger.info("[SKIP] Lab priority constraint validation for CSE S2 (constraint skipped)")
+            return True
+
         # Identify lab and theory-only courses
         lab_courses = set()
         theory_only_courses = set()

@@ -7,8 +7,8 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data/sem2026/year_wise/Year_4_course_data.csv
-  rooms_csv: data/block_wise/temp.csv
+  courses_csv: data/sem2026/year_wise/1st_year/all.csv
+  rooms_csv: data/block_wise/techlongue.csv
   day_order_csv: data/day_order_even.csv
   core_lab_mapping_csv: data/CoreMappingSimplified_StudentDept.csv
   preferences_csv: data/Data for Timetable Scheduler - POP.csv
@@ -115,290 +115,272 @@ departments:
     shift_id: SHIFT_1
     flexible_lunch: false
   overrides:
-    Computer Science & Engineering:
-      day_pattern:
-        - monday
-        - tuesday
-        - wed
-        - thur
-        - fri
-        - saturday
-      lunch_break_slot: null
-      lunch_slot_window:
-        - 3
-        - 4
-        - 5
-      shift_id: SHIFT_1
-      flexible_lunch: false
-    Computer Science & Engineering (Cyber Security):
-      day_pattern:
-        - monday
-        - tuesday
-        - wed
-        - thur
-        - fri
-        - saturday
-      lunch_break_slot: null
-      lunch_slot_window:
-        - 3
-        - 4
-        - 5
-      shift_id: SHIFT_1
-      flexible_lunch: false
-    Electronics & Communication Engineering:
-      day_pattern:
-        - monday
-        - tuesday
-        - wed
-        - thur
-        - fri
-        - saturday
-      lunch_break_slot: null
-      lunch_slot_window:
-        - 3
-        - 4
-        - 5
-      shift_id: SHIFT_2
-      flexible_lunch: false
-    Information Technology:
-      day_pattern:
-        - monday
-        - tuesday
-        - wed
-        - thur
-        - fri
-        - saturday
-      lunch_break_slot: null
-      lunch_slot_window:
-        - 3
-        - 4
-        - 5
-      shift_id: SHIFT_1
-      flexible_lunch: false
-    Mechanical Engineering:
-      day_pattern:
-        - monday
-        - tuesday
-        - wed
-        - thur
-        - fri
-        - saturday
-      lunch_break_slot: null
-      lunch_slot_window:
-        - 3
-        - 4
-        - 5
-      shift_id: SHIFT_1
-      flexible_lunch: false
-    Civil Engineering:
-      day_pattern:
-        - monday
-        - tuesday
-        - wed
-        - thur
-        - fri
-        - saturday
-      lunch_break_slot: null
-      lunch_slot_window:
-        - 3
-        - 4
-        - 5
-      shift_id: SHIFT_2
-      flexible_lunch: false
-    Artificial Intelligence & Data Science:
-      day_pattern:
-        - monday
-        - tuesday
-        - wed
-        - thur
-        - fri
-        - saturday
-      lunch_break_slot: null
-      lunch_slot_window:
-        - 3
-        - 4
-        - 5
-      shift_id: SHIFT_2
-      flexible_lunch: false
-    Artificial Intelligence & Machine Learning:
-      day_pattern:
-        - monday
-        - tuesday
-        - wed
-        - thur
-        - fri
-        - saturday
-      lunch_break_slot: null
-      lunch_slot_window:
-        - 3
-        - 4
-        - 5
-      shift_id: SHIFT_2
-      flexible_lunch: false
-    Computer Science & Design:
-      day_pattern:
-        - monday
-        - tuesday
-        - wed
-        - thur
-        - fri
-        - saturday
-      lunch_break_slot: null
-      lunch_slot_window:
-        - 3
-        - 4
-        - 5
-      shift_id: SHIFT_1
-      flexible_lunch: false
-    Computer Science & Business Systems:
-      day_pattern:
-        - tuesday
-        - wed
-        - thur
-        - fri
-        - saturday
-      lunch_break_slot: null
-      lunch_slot_window:
-        - 3
-        - 4
-        - 5
-      shift_id: SHIFT_1
-      flexible_lunch: false
-    Electrical & Electronics Engineering:
-      day_pattern:
-        - monday
-        - tuesday
-        - wed
-        - thur
-        - fri
-        - saturday
-      lunch_break_slot: null
-      lunch_slot_window:
-        - 3
-        - 4
-        - 5
-      shift_id: SHIFT_2
-      flexible_lunch: false
-    Robotics & Automation:
-      day_pattern:
-        - monday
-        - tuesday
-        - wed
-        - thur
-        - fri
-        - saturday
-      lunch_break_slot: null
-      lunch_slot_window:
-        - 3
-        - 4
-        - 5
-      shift_id: SHIFT_2
-      flexible_lunch: false
-    Automobile Engineering:
-      day_pattern:
-        - monday
-        - tuesday
-        - wed
-        - thur
-        - fri
-        - saturday
-      lunch_break_slot: null
-      lunch_slot_window:
-        - 3
-        - 4
-        - 5
-      shift_id: SHIFT_1
-      flexible_lunch: false
-    Aeronautical Engineering:
-      day_pattern:
-        - monday
-        - tuesday
-        - wed
-        - thur
-        - fri
-        - saturday
-      lunch_break_slot: null
-      lunch_slot_window:
-        - 3
-        - 4
-        - 5
-      shift_id: SHIFT_2
-      flexible_lunch: false
-    Biotechnology:
-      day_pattern:
-        - monday
-        - tuesday
-        - wed
-        - thur
-        - fri
-        - saturday
-      lunch_break_slot: null
-      lunch_slot_window:
-        - 3
-        - 4
-        - 5
-      shift_id: SHIFT_2
-      flexible_lunch: false
-    Food Technology:
-      day_pattern:
-        - monday
-        - tuesday
-        - wed
-        - thur
-        - fri
-        - saturday
-      lunch_break_slot: null
-      lunch_slot_window:
-        - 3
-        - 4
-        - 5
-      shift_id: SHIFT_2
-      flexible_lunch: false
-    Chemical Engineering:
-      day_pattern:
-        - monday
-        - tuesday
-        - wed
-        - thur
-        - fri
-        - saturday
-      lunch_break_slot: null
-      lunch_slot_window:
-        - 3
-        - 4
-        - 5
-      shift_id: SHIFT_1
-      flexible_lunch: false
-    Biomedical Engineering:
-      day_pattern:
-        - monday
-        - tuesday
-        - wed
-        - thur
-        - fri
-        - saturday
-      lunch_break_slot: null
-      lunch_slot_window:
-        - 3
-        - 4
-        - 5
-      shift_id: SHIFT_2
-      flexible_lunch: false
-    Mechatronics Engineering:
-      day_pattern:
-        - monday
-        - tuesday
-        - wed
-        - thur
-        - fri
-        - saturday
-      lunch_break_slot: null
-      lunch_slot_window:
-        - 3
-        - 4
-        - 5
-      shift_id: SHIFT_1
-      flexible_lunch: false
+      Computer Science & Engineering:
+        day_pattern:
+          - tuesday
+          - wed
+          - thur
+          - fri
+          - saturday
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_1
+        flexible_lunch: false
+      Computer Science & Engineering (Cyber Security):
+        day_pattern:
+          - tuesday
+          - wed
+          - thur
+          - fri
+          - saturday
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_1
+        flexible_lunch: false
+      Electronics & Communication Engineering:
+        day_pattern:
+          - tuesday
+          - wed
+          - thur
+          - fri
+          - saturday
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_2
+        flexible_lunch: false
+      Information Technology:
+        day_pattern:
+          - monday
+          - tuesday
+          - wed
+          - thur
+          - fri
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_1
+        flexible_lunch: false
+      Mechanical Engineering:
+        day_pattern:
+          - tuesday
+          - wed
+          - thur
+          - fri
+          - saturday
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_1
+        flexible_lunch: false
+      Civil Engineering:
+        day_pattern:
+          - monday
+          - tuesday
+          - wed
+          - thur
+          - fri
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_2
+        flexible_lunch: false
+      Artificial Intelligence & Data Science:
+        day_pattern:
+          - monday
+          - tuesday
+          - wed
+          - thur
+          - fri
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_2
+        flexible_lunch: false
+      Artificial Intelligence & Machine Learning:
+        day_pattern:
+          - monday
+          - tuesday
+          - wed
+          - thur
+          - fri
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_2
+        flexible_lunch: false
+      Computer Science & Design:
+        day_pattern:
+          - tuesday
+          - wed
+          - thur
+          - fri
+          - saturday
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_1
+        flexible_lunch: false
+      Computer Science & Business Systems:
+        day_pattern:
+          - tuesday
+          - wed
+          - thur
+          - fri
+          - saturday
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_1
+        flexible_lunch: false
+      Electrical & Electronics Engineering:
+        day_pattern:
+          - monday
+          - tuesday
+          - wed
+          - thur
+          - fri
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_2
+        flexible_lunch: false
+      Robotics & Automation:
+        day_pattern:
+          - monday
+          - tuesday
+          - wed
+          - thur
+          - fri
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_2
+        flexible_lunch: false
+      Automobile Engineering:
+        day_pattern:
+          - tuesday
+          - wed
+          - thur
+          - fri
+          - saturday
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_1
+        flexible_lunch: false
+      Aeronautical Engineering:
+        day_pattern:
+          - tuesday
+          - wed
+          - thur
+          - fri
+          - saturday
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_2
+        flexible_lunch: false
+      Biotechnology:
+        day_pattern:
+          - monday
+          - tuesday
+          - wed
+          - thur
+          - fri
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_2
+        flexible_lunch: false
+      Food Technology:
+        day_pattern:
+          - tuesday
+          - wed
+          - thur
+          - fri
+          - saturday
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_2
+        flexible_lunch: false
+      Chemical Engineering:
+        day_pattern:
+          - tuesday
+          - wed
+          - thur
+          - fri
+          - saturday
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_1
+        flexible_lunch: false
+      Biomedical Engineering:
+        day_pattern:
+          - monday
+          - tuesday
+          - wed
+          - thur
+          - fri
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_2
+        flexible_lunch: false
+      Mechatronics Engineering:
+        day_pattern:
+          - monday
+          - tuesday
+          - wed
+          - thur
+          - fri
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_1
+        flexible_lunch: false
   shift_templates:
     SHIFT_1:
       theory_slots:
@@ -687,7 +669,7 @@ constraints:
     #       - SHIFT_2
   cross_system:
     dept_day_span:
-      enabled: true
+      enabled: false
       priority: 8
       weight: 1.0
       params:
@@ -741,6 +723,8 @@ constraints:
           - 4
           - 5
         minimum_free_slots: 1
+        soft_semesters:
+          - 2
         penalty_weight: 50
     five_pm_policy:
       enabled: true
@@ -805,12 +789,9 @@ constraints:
           - Robotics & Automation
         soft_departments:
         blocked_theory_slots:
-          - 7
-          - 8
           - 9
           - 10
         blocked_lab_sessions:
-          - L5
           - L6
         discouraged_theory_slots:
           - 9
@@ -820,7 +801,7 @@ constraints:
           - L6
         soft_penalty_weight: 10
     shift_pattern:
-      enabled: false
+      enabled: true
       priority: 8
       weight: 0.7
       params:
@@ -844,7 +825,7 @@ model:
   use_sparse_variables: true
 
 runtime:
-  time_limit_sec: 1000
+  time_limit_sec: 20000
   thread_count: 12
   enable_lns: true
   enable_trace: true
