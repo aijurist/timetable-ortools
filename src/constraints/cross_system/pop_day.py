@@ -155,20 +155,23 @@ class PopDayConstraint(Constraint):
         teacher_days: Dict[str, Set[int]] = {}
         for row in pop_data:
             # Get teacher ID and normalize it (handle float like "413.0" -> "413")
-            raw_tid = row.get("id_faculty", "").strip()
+            raw_tid = row.get("Teacher ID", "").strip()
             if not raw_tid:
                 continue
             teacher_id = self._normalize_teacher_id(raw_tid)
 
-            # Get preferred days
-            day1 = self._normalize_day(row.get("preffered_day_1", "").strip())
-            day2 = self._normalize_day(row.get("preffered_day_2", "").strip())
+            # Get preferred days (support up to 3 preferred days)
+            day1 = self._normalize_day(row.get("Preferred Day 1", "").strip())
+            day2 = self._normalize_day(row.get("Preferred Day 2", "").strip())
+            day3 = self._normalize_day(row.get("Preferred Day 3", "").strip())
 
             allowed_indices = set()
             if day1 and day1 != "-" and day1 in day_name_to_index:
                 allowed_indices.add(day_name_to_index[day1])
             if day2 and day2 != "-" and day2 in day_name_to_index:
                 allowed_indices.add(day_name_to_index[day2])
+            if day3 and day3 != "-" and day3 in day_name_to_index:
+                allowed_indices.add(day_name_to_index[day3])
 
             if allowed_indices:
                 if teacher_id in teacher_days:
