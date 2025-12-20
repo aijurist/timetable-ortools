@@ -1,8 +1,10 @@
-﻿id_faculty,name_faculty ,subject_code,preffered_day_1,preffered_day_2,dept
-413,Ms. Bhuvaneshwari Muthukumaran,AI23231,Saturday,-,Information Technology
-111,Mrs. N.Premalatha,CS23332,Tuesday,Wednesday,Information Technology, 10:00 - 1:00
-1781,"	Mr.Vasu Vadlamani",CS19741,Tuesday,Wednesday,Computer Science and Engineering
-30,Mr. Srinivasan Thaigarajan ,AD19p72,Tuesday,Wednesday,Artificial Intelligence and Data Science
-1798,Subramanian E.K,AD23531,Thursday,Friday,Artificial Intelligence and Data Science
-90,Mr. Srinivasan,AI23A37,Friday,Saturday,Artificial Intelligence and Machine Learning
-90,Mr. Srinivasan,AI23331,Friday,Saturday,Artificial Intelligence and Machine Learning
+﻿Faculty Name,Subject Code,Preferred Day 1,Preferred Day 2,Preferred Day 3,Department,Day 1 Timings,Day 2 Timings,Day 3 Timings,Teacher Course ID
+Dr. T. Srinivasan,AI23632,Thursday,Friday,,AIML,,,,478
+Mrs. Premalatha,CS23432,Tuesday,Wednesday,,IT,11:50 AM to 01:20 PM,12:00 AM to 12:45 PM,,179
+Dr. Nithiyaraj M,AE23622,Saturday,,,AERO,,,,1016
+Mr. T. Srinivasan Thiyagarajan,GE23627,Tuesday,Wednesday,,AIDS,,,,1384
+Mr. K. Subramanian,AD23631,Thursday,Friday,,AIDS,,,,1382
+Preejith P,CS23231,Monday,Tuesday,Wednesday,AIDS,,,,618
+Preejith P,AI23431,Monday,Tuesday,Wednesday,AIDS,,,,1372
+Mr.karthikeyan,CS23221,Monday,Tuesday,Wednesday,CSE,,,,WTF
+Mr.Natarajan (assisted by Dr.A.Paramasivam) ,NE23D13,Friday,Saturday,,MECH,08:00 AM to 11:00 PM,08:00 AM to 11:00 PM,,845

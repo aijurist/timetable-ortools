@@ -812,6 +812,12 @@ constraints:
           - [3, 2]
         penalty_weight: 30
         strict_ratios: true
+    pop_day:
+      enabled: true
+      priority: 9
+      weight: 1.0
+      params:
+        pop_csv_path: data/pop.csv
 
 model:
   big_m_value: 1000.0
