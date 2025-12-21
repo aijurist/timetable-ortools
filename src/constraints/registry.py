@@ -15,6 +15,7 @@ from .cross_system.teacher_overlap import build_teacher_overlap_constraint
 from .cross_system.teacher_daily_workload import build_teacher_daily_workload_constraint
 from .cross_system.dept_day_span import build_department_day_span_constraint
 from .cross_system.pop_day import build_pop_day_constraint
+from .cross_system.fixed_schedule_lock import build_fixed_schedule_lock_constraint
 from .lab.consecutive_batches import build_consecutive_batch_lab_constraint
 from .lab.core_lab import build_core_lab_mapping_constraint
 from .lab.requirements import build_lab_session_coverage_constraint
@@ -183,6 +184,12 @@ CROSS_SYSTEM_CONSTRAINT_DEFINITIONS = {
 		"description": "Restrict POP (part-time) staff to only teach on their specified preferred days from pop.csv.",
 		"factory": build_pop_day_constraint,
 		"tags": ("cross-system", "teachers", "days"),
+	},
+	"fixed_schedule_lock": {
+		"title": "Fixed Schedule Lock",
+		"description": "Freeze selected slot/room/teacher assignments from a prior run so they cannot be rescheduled.",
+		"factory": build_fixed_schedule_lock_constraint,
+		"tags": ("cross-system", "freeze", "rooms", "teachers"),
 	},
 }
 

@@ -7,7 +7,7 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data/sem2026/year_wise/3rd_year/all.csv
+  courses_csv: data/sem2026/year_wise/2nd_3rd.csv
   rooms_csv: data/block_wise/techlongue.csv
   day_order_csv: data/day_order_even.csv
   core_lab_mapping_csv: data/CoreMappingSimplified_StudentDept.csv
@@ -500,6 +500,12 @@ grouping:
   # - "<department_slug>_s<semester>" (matches DepartmentSemesterKey.slug())
   # Wildcards: "*|6" or "Information Technology|*".
   consolidation_dept_sem_allowlist: 
+    - Information Technology_S4
+    - Computer Science & Design_S4
+    - Computer Science & Business Systems_S4
+    - Artificial Intelligence & Machine Learning_S4
+    - Artificial Intelligence & Data Science_S4
+    - Computer Science & Engineering (Cyber Security)_S4
     - Computer Science & Engineering_S6
     - Information Technology_S6
     - Artificial Intelligence & Machine Learning_S6
@@ -509,9 +515,7 @@ grouping:
     - Computer Science & Engineering (Cyber Security)_S6
     - Electrical & Electronics Engineering_S6
     - Electronics & Communication Engineering_S6
-    - Biomedical Engineering_S6
     - Mechanical Engineering_S6
-    - Biotechnology_S6
 
 constraints:
   lab:
@@ -735,6 +739,16 @@ constraints:
       priority: 10
       weight: 1.0
       params: {}
+    fixed_schedule_lock:
+      enabled: true
+      priority: 10
+      weight: 1.0
+      params:
+        snapshot_path: output/final/2025-12-18_00-11-55/schedule.json
+        lock_assignments: true
+        block_rooms: true
+        block_teachers: true
+        block_teachers_across_domains: true
     teacher_daily_workload:
       enabled: true
       priority: 9
@@ -863,7 +877,7 @@ model:
   use_sparse_variables: true
 
 runtime:
-  time_limit_sec: 20000
+  time_limit_sec: 30000
   thread_count: 12
   enable_lns: true
   enable_trace: true

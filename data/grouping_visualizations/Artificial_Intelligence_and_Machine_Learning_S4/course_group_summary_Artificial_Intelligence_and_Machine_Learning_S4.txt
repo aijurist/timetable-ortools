@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Artificial Intelligence & Machine Learning
 Semester: 4
-Generated: 2025-12-21 14:21:15
+Generated: 2025-12-22 02:51:53
 ============================================================
 
 OVERVIEW
@@ -12,20 +12,20 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - AI23431 [Lab + Theory]: 1 groups, 4 teachers
-  └─ G4: 4 teacher assignments
+  └─ G2: 4 teacher assignments
 - CS23431 [Lab + Theory]: 1 groups, 3 teachers
-  └─ G2: 3 teacher assignments
+  └─ G1: 3 teacher assignments
 - CS23432 [Lab + Theory]: 1 groups, 4 teachers
-  └─ G1: 4 teacher assignments
+  └─ G4: 4 teacher assignments
 - MA23434 [Lab + Theory]: 1 groups, 4 teachers
   └─ G3: 4 teacher assignments
 
 GROUP COMPOSITION
-- G1: 1 courses, 4 teachers
-  └─ CS23432 [L+T]: 4 instances, 4 teachers
-- G2: 1 courses, 3 teachers
+- G1: 1 courses, 3 teachers
   └─ CS23431 [L+T]: 3 instances, 3 teachers
+- G2: 1 courses, 4 teachers
+  └─ AI23431 [L+T]: 4 instances, 4 teachers
 - G3: 1 courses, 4 teachers
   └─ MA23434 [L+T]: 4 instances, 4 teachers
 - G4: 1 courses, 4 teachers
-  └─ AI23431 [L+T]: 4 instances, 4 teachers
+  └─ CS23432 [L+T]: 4 instances, 4 teachers

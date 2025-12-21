@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Computer Science & Engineering (Cyber Security)
 Semester: 4
-Generated: 2025-12-21 14:21:18
+Generated: 2025-12-22 02:51:56
 ============================================================
 
 OVERVIEW
@@ -11,25 +11,21 @@ OVERVIEW
 - Courses with multiple options: 4 (100.0%)
 
 COURSE DISTRIBUTION BY GROUP
-- CR23431 [Lab + Theory]: 2 groups, 2 teachers
-  └─ G1: 1 teacher assignments
-  └─ G4: 1 teacher assignments
+- CR23431 [Lab + Theory]: 1 groups, 2 teachers
+  └─ G1: 2 teacher assignments
 - CS23331 [Lab + Theory]: 1 groups, 2 teachers
   └─ G3: 2 teacher assignments
 - CS23431 [Lab + Theory]: 1 groups, 2 teachers
+  └─ G4: 2 teacher assignments
+- MA23435 [Lab + Theory]: 1 groups, 2 teachers
   └─ G2: 2 teacher assignments
-- MA23435 [Lab + Theory]: 2 groups, 2 teachers
-  └─ G1: 1 teacher assignments
-  └─ G4: 1 teacher assignments
 
 GROUP COMPOSITION
-- G1: 2 courses, 2 teachers
-  └─ CR23431 [L+T]: 1 instances, 1 teachers
-  └─ MA23435 [L+T]: 1 instances, 1 teachers
+- G1: 1 courses, 2 teachers
+  └─ CR23431 [L+T]: 2 instances, 2 teachers
 - G2: 1 courses, 2 teachers
-  └─ CS23431 [L+T]: 2 instances, 2 teachers
+  └─ MA23435 [L+T]: 2 instances, 2 teachers
 - G3: 1 courses, 2 teachers
   └─ CS23331 [L+T]: 2 instances, 2 teachers
-- G4: 2 courses, 2 teachers
-  └─ CR23431 [L+T]: 1 instances, 1 teachers
-  └─ MA23435 [L+T]: 1 instances, 1 teachers
+- G4: 1 courses, 2 teachers
+  └─ CS23431 [L+T]: 2 instances, 2 teachers
