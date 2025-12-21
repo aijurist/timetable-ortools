@@ -20,6 +20,7 @@ remaining light-weight enough to plug into the existing orchestrator.
 from __future__ import annotations
 
 import logging
+import re
 from collections import defaultdict
 from pathlib import Path
 import shutil
@@ -80,6 +81,96 @@ def _safe_int(value: Any, *, default: Optional[int] = None) -> Optional[int]:
 		return int(round(float(value)))
 	except Exception:
 		return default
+
+
+def _cohort_key_matches_allowlist(
+	key: DepartmentSemesterKey,
+	allowlist: Sequence[str],
+	*,
+	default_semesters: Tuple[int, ...] = (5, 6),
+) -> bool:
+	"""Return True if *key* should receive the consolidation objective.
+
+	Semantics:
+	- If allowlist is empty: enable for semesters in *default_semesters*.
+	- If allowlist is non-empty: enable ONLY when *key* matches an entry.
+
+	Supported entry formats:
+	- "<Department Name>|<semester>" ("Information Technology|6")
+	- "<Department Name>_S<semester>" ("Information Technology_S6")
+	- "<department_slug>_s<semester>" (matches DepartmentSemesterKey.slug())
+	Wildcards: "*|6", "Information Technology|*".
+	"""
+	if not allowlist:
+		return key.semester in default_semesters
+
+	dept_raw = (key.department or "").strip()
+	dept_norm = dept_raw.lower()
+	key_slug = key.slug().lower()
+	key_sem = key.semester
+
+	def _dept_slug_only(name: str) -> str:
+		return "".join(ch if ch.isalnum() else "_" for ch in name.lower()).strip("_")
+
+	dept_slug_only = _dept_slug_only(dept_raw)
+
+	for raw_entry in allowlist:
+		entry = str(raw_entry).strip()
+		if not entry:
+			continue
+		entry_norm = entry.lower().strip()
+
+		# Direct slug match: "<dept_slug>_s<sem>"
+		if entry_norm == key_slug:
+			return True
+
+		dept_part: Optional[str] = None
+		sem_part: Optional[str] = None
+
+		# "Dept|6" or "Dept:6" or "Dept,6"
+		for sep in ("|", ":", ","):
+			if sep in entry:
+				left, right = entry.split(sep, 1)
+				dept_part = left.strip()
+				sem_part = right.strip()
+				break
+
+		# "Dept_S6" format
+		if dept_part is None:
+			match = re.match(r"^(?P<dept>.+?)_\s*[sS](?P<sem>\*|\d+)\s*$", entry)
+			if match:
+				dept_part = match.group("dept").strip()
+				sem_part = match.group("sem").strip()
+
+		# "Dept S6" format
+		if dept_part is None:
+			match = re.match(r"^(?P<dept>.+?)\s+[sS](?P<sem>\*|\d+)\s*$", entry)
+			if match:
+				dept_part = match.group("dept").strip()
+				sem_part = match.group("sem").strip()
+
+		if dept_part is None:
+			# Unknown format, ignore
+			continue
+
+		dept_part_norm = dept_part.lower().strip()
+		if dept_part_norm not in ("*", "all"):
+			if dept_part_norm != dept_norm and _dept_slug_only(dept_part) != dept_slug_only:
+				continue
+
+		# Department matched; evaluate semester match
+		if sem_part is None:
+			return True
+		sem_part_norm = sem_part.lower().strip()
+		if sem_part_norm in ("*", "all"):
+			return True
+		try:
+			if int(sem_part_norm) == key_sem:
+				return True
+		except ValueError:
+			continue
+
+	return False
 
 
 def _normalise_department(value: str) -> str:
@@ -308,12 +399,17 @@ class DepartmentCourseGrouper:
 		instances: Sequence[NormalizedCourseInstance],
 	) -> List[CourseGroup]:
 		optimizer_courses = [instance.to_optimizer_payload() for instance in instances]
+		enable_consolidation = _cohort_key_matches_allowlist(
+			key,
+			getattr(self._config.grouping, "consolidation_dept_sem_allowlist", ()),
+		)
 		optimizer = CourseGroupOptimizer(
 			courses=optimizer_courses,
 			dept=key.department,
 			semester=key.semester,
 			logger=self._logger,
 			pe_course_map_file=self._pe_course_map_path,
+			consolidation_objective_enabled=enable_consolidation,
 		)
 
 		success = optimizer.optimize_distribution()

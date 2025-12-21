@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Artificial Intelligence & Data Science
 Semester: 4
-Generated: 2025-12-12 20:19:33
+Generated: 2025-12-21 14:21:15
 ============================================================
 
 OVERVIEW
@@ -12,32 +12,34 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - AD23431 [Lab + Theory]: 2 groups, 4 teachers
-  └─ G4: 1 teacher assignments
-  └─ G5: 3 teacher assignments
-- AI23431 [Lab + Theory]: 2 groups, 5 teachers
-  └─ G4: 4 teacher assignments
-  └─ G5: 1 teacher assignments
-- CS23431 [Lab + Theory]: 2 groups, 4 teachers
   └─ G1: 3 teacher assignments
-  └─ G2: 1 teacher assignments
+  └─ G4: 1 teacher assignments
+- AI23431 [Lab + Theory]: 2 groups, 5 teachers
+  └─ G1: 1 teacher assignments
+  └─ G4: 4 teacher assignments
+- CS23431 [Lab + Theory]: 2 groups, 4 teachers
+  └─ G2: 3 teacher assignments
+  └─ G3: 1 teacher assignments
 - CS23432 [Lab + Theory]: 2 groups, 4 teachers
-  └─ G1: 2 teacher assignments
-  └─ G2: 2 teacher assignments
-- MA23434 [Lab + Theory]: 1 groups, 5 teachers
-  └─ G3: 5 teacher assignments
+  └─ G2: 1 teacher assignments
+  └─ G5: 3 teacher assignments
+- MA23434 [Lab + Theory]: 2 groups, 5 teachers
+  └─ G3: 3 teacher assignments
+  └─ G5: 2 teacher assignments
 
 GROUP COMPOSITION
-- G1: 2 courses, 5 teachers
+- G1: 2 courses, 4 teachers
+  └─ AD23431 [L+T]: 3 instances, 3 teachers
+  └─ AI23431 [L+T]: 1 instances, 1 teachers
+- G2: 2 courses, 4 teachers
   └─ CS23431 [L+T]: 3 instances, 3 teachers
-  └─ CS23432 [L+T]: 2 instances, 2 teachers
-- G2: 2 courses, 3 teachers
+  └─ CS23432 [L+T]: 1 instances, 1 teachers
+- G3: 2 courses, 4 teachers
   └─ CS23431 [L+T]: 1 instances, 1 teachers
-  └─ CS23432 [L+T]: 2 instances, 2 teachers
-- G3: 1 courses, 5 teachers
-  └─ MA23434 [L+T]: 5 instances, 5 teachers
+  └─ MA23434 [L+T]: 3 instances, 3 teachers
 - G4: 2 courses, 5 teachers
   └─ AD23431 [L+T]: 1 instances, 1 teachers
   └─ AI23431 [L+T]: 4 instances, 4 teachers
-- G5: 2 courses, 4 teachers
-  └─ AD23431 [L+T]: 3 instances, 3 teachers
-  └─ AI23431 [L+T]: 1 instances, 1 teachers
+- G5: 2 courses, 5 teachers
+  └─ CS23432 [L+T]: 3 instances, 3 teachers
+  └─ MA23434 [L+T]: 2 instances, 2 teachers

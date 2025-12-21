@@ -7,7 +7,7 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data/sem2026/year_wise/2nd_year/information_technology.csv
+  courses_csv: data/sem2026/year_wise/1st_year/all.csv
   rooms_csv: data/block_wise/techlongue.csv
   day_order_csv: data/day_order_even.csv
   core_lab_mapping_csv: data/CoreMappingSimplified_StudentDept.csv
@@ -489,6 +489,18 @@ grouping:
   hall_theorem_tolerance: 0.05
   consecutive_lab_pairs: true
   random_seed: 42
+  # Fine-grained control for the "maximize courses into one group" behaviour.
+  #
+  # - If empty / not provided: consolidation is enabled for semesters 5 & 6 for ALL departments.
+  # - If non-empty: consolidation is enabled ONLY for the cohorts listed here.
+  #
+  # Supported formats:
+  # - "<Department Name>|<semester>" (e.g., "Information Technology|6")
+  # - "<Department Name>_S<semester>" (e.g., "Information Technology_S6")
+  # - "<department_slug>_s<semester>" (matches DepartmentSemesterKey.slug())
+  # Wildcards: "*|6" or "Information Technology|*".
+  consolidation_dept_sem_allowlist: 
+    - Computer Science & Engineering_S6
 
 constraints:
   lab:
@@ -723,8 +735,9 @@ constraints:
           - 4
           - 5
         minimum_free_slots: 1
-        soft_semesters:
-          - 2
+        soft_departments:
+          - Computer Science & Engineering_S2
+          - Electronics & Communication Engineering_S2
         penalty_weight: 50
     five_pm_policy:
       enabled: true
@@ -813,7 +826,7 @@ constraints:
         penalty_weight: 30
         strict_ratios: true
     pop_day:
-      enabled: true
+      enabled: false
       priority: 9
       weight: 1.0
       params:

@@ -6,3 +6,5 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 4,A108,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
 5,A109,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
 6,A110,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
+
+131,B206,B Block,Microprocessor Lab-2,1,Core-Lab,20,35,1,0,Advanced,16,0,0,0

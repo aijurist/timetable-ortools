@@ -1,57 +1,55 @@
 Course-Group Distribution Summary
 Department: Electrical & Electronics Engineering
 Semester: 6
-Generated: 2025-12-13 22:47:01
+Generated: 2025-12-21 14:21:25
 ============================================================
 
 OVERVIEW
 - Courses: 7 (Lab 3, Theory 5)
 - Groups: 7
-- Total assignments: 14
+- Total assignments: 15
 - Courses with multiple options: 7 (100.0%)
 
 COURSE DISTRIBUTION BY GROUP
 - EE23611 [Theory]: 2 groups, 2 teachers
   └─ G4: 1 teacher assignments
-  └─ G7: 1 teacher assignments
+  └─ G6: 1 teacher assignments
 - EE23612 [Theory]: 2 groups, 2 teachers
   └─ G5: 1 teacher assignments
   └─ G6: 1 teacher assignments
 - EE23613 [Theory]: 2 groups, 2 teachers
-  └─ G6: 1 teacher assignments
-  └─ G7: 1 teacher assignments
+  └─ G4: 1 teacher assignments
+  └─ G5: 1 teacher assignments
 - EE23621 [Lab]: 2 groups, 2 teachers
-  └─ G1: 1 teacher assignments
-  └─ G2: 1 teacher assignments
-- EE23622 [Lab]: 2 groups, 2 teachers
   └─ G2: 1 teacher assignments
   └─ G3: 1 teacher assignments
+- EE23622 [Lab]: 2 groups, 2 teachers
+  └─ G1: 1 teacher assignments
+  └─ G2: 1 teacher assignments
 - EE23631 [Lab + Theory]: 2 groups, 2 teachers
   └─ G1: 1 teacher assignments
   └─ G3: 1 teacher assignments
-- EE23E13 [Theory]: 2 groups, 2 teachers
-  └─ G4: 1 teacher assignments
-  └─ G5: 1 teacher assignments
+- EE23PE01 [Theory]: 1 groups, 3 teachers
+  └─ G7: 3 teacher assignments
 
 GROUP COMPOSITION
 - G1: 2 courses, 2 teachers
-  └─ EE23621 [L]: 1 instances, 1 teachers
+  └─ EE23622 [L]: 1 instances, 1 teachers
   └─ EE23631 [L+T]: 1 instances, 1 teachers
 - G2: 2 courses, 2 teachers
   └─ EE23621 [L]: 1 instances, 1 teachers
   └─ EE23622 [L]: 1 instances, 1 teachers
 - G3: 2 courses, 2 teachers
-  └─ EE23622 [L]: 1 instances, 1 teachers
+  └─ EE23621 [L]: 1 instances, 1 teachers
   └─ EE23631 [L+T]: 1 instances, 1 teachers
 - G4: 2 courses, 2 teachers
   └─ EE23611 [T]: 1 instances, 1 teachers
-  └─ EE23E13 [T]: 1 instances, 1 teachers
+  └─ EE23613 [T]: 1 instances, 1 teachers
 - G5: 2 courses, 2 teachers
   └─ EE23612 [T]: 1 instances, 1 teachers
-  └─ EE23E13 [T]: 1 instances, 1 teachers
+  └─ EE23613 [T]: 1 instances, 1 teachers
 - G6: 2 courses, 2 teachers
-  └─ EE23612 [T]: 1 instances, 1 teachers
-  └─ EE23613 [T]: 1 instances, 1 teachers
-- G7: 2 courses, 2 teachers
   └─ EE23611 [T]: 1 instances, 1 teachers
-  └─ EE23613 [T]: 1 instances, 1 teachers
+  └─ EE23612 [T]: 1 instances, 1 teachers
+- G7: 1 courses, 3 teachers
+  └─ EE23PE01 [T]: 3 instances, 3 teachers

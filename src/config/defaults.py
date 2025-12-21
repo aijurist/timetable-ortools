@@ -366,6 +366,7 @@ def default_grouping_config() -> GroupingConfig:
         hall_theorem_tolerance=0.05,
         consecutive_lab_pairs=True,
         random_seed=42,
+        consolidation_dept_sem_allowlist=(),
     )
 
 

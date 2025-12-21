@@ -236,6 +236,23 @@ T5: 11:40-12:30   T11: 18:10-19:00
 T6: 12:35-13:20
 ```
 
+### Grouping Controls
+
+You can control where the "maximize each course into one group (if feasible)" behaviour applies.
+
+- If `grouping.consolidation_dept_sem_allowlist` is empty (default), consolidation is enabled for **all departments** in **S5 & S6**.
+- If it is non-empty, consolidation is enabled **only** for the cohorts you list.
+
+Example (in `config/scheduler.yaml`):
+
+```yaml
+grouping:
+    consolidation_dept_sem_allowlist:
+        - "Information Technology|6"
+        - "Mechanical Engineering|6"
+        - "Computer Science & Engineering_S5"
+```
+
 ### Constraint Configuration
 
 #### Department-Specific 5PM Constraints

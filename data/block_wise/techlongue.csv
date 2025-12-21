@@ -24,12 +24,12 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 164,JR2,J Block,Computer Lab (JR2),1,Laboratory,20,35,1,0,High-tech,20,0,0,0
 165,JR3,J Block,Computer Lab (JR3),1,Laboratory,20,35,1,0,Basic,13,0,0,0
 172,KSL03,K Block,Computer Lab (KSL03),1,Laboratory,110,140,1,0,Advanced,13,0,0,0
-220,KSL02,K Block,Classroom,0,Classroom,120,140,0,0,None,13,0,0,0
+220,KSL02,K Block,Computer Lab (KSL02),0,Laboratory,110,140,0,0,None,13,0,0,0
 173,TIFAC I01,A Block,Computer Lab (Arch),1,Laboratory,50,70,1,0,None,13,0,0,0
 158,DG02,D Block,Computer Lab (DG02),1,Laboratory,50,70,1,0,High-tech,13,0,0,0
+159,DG03,D Block,Computer Lab (DG03),1,Laboratory,50,70,1,0,Basic,13,0,0,0
 1,A102,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
 2,A103,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-3,A104/105,A Block,Classroom,0,Classroom,110,140,0,0,None,29,0,0,0
 4,A108,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
 5,A109,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
 6,A110,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
@@ -49,11 +49,8 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 20,A309,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
 21,A310,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
 22,A311,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-221,ANEW101,A Block,Classroom (ANEW101),0,Classroom,150,180,1,0,None,29,0,0,0
-222,ANEW102,A Block,Classroom (ANEW102),0,Classroom,150,180,1,0,None,29,0,0,0
 223,ANEW103,A Block,Classroom (ANEW103),0,Classroom,140,165,1,0,None,29,0,0,0
 224,ANEW104,A Block,Classroom (ANEW104),0,Classroom,140,165,1,0,None,29,0,0,0
-225,ANEW201,A Block,Classroom (ANEW201),0,Classroom,300,355,1,0,None,29,0,0,0
 23,B106,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
 24,B107,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
 25,B210,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
@@ -100,6 +97,39 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 66,C302,C Block,Classroom,0,Classroom,50,70,1,0,None,29,0,0,0
 67,C307,C Block,Classroom,0,Classroom,50,70,1,0,None,29,0,0,0
 68,C308,C Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
+69,D109,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+70,D110,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+71,D111,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+72,D202,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+73,D203,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+74,D204,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+75,D205,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+76,D209,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+77,D210,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+78,D211,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+79,D302,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+80,D305,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+81,D309,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+82,D310,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+83,D311,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+84,D402,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+85,D405,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+86,D409,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+87,D410,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+88,D411,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+89,D510,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+90,D511,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+91,D512,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+92,D610,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+93,D611,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+94,D612,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+95,D702,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+96,D703,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+97,D704,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+98,D705,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+99,D709,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+100,D710,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
+101,D711,D Block,Classroom,0,Classroom,50,70,0,0,,29,0,0,0
 102,TIFAC I01,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
 103,TIFAC I02,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
 104,TIFAC I03,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
@@ -127,7 +157,6 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 128,B203,B Block,VLSI Lab,1,Core-Lab,20,35,1,0,None,16,0,0,0
 129,B204,B Block,Networks Lab,1,Core-Lab,20,35,1,0,Advanced,16,0,0,0
 130,B205,B Block,Microprocessor Lab-1,1,Core-Lab,20,70,1,0,None,16,0,0,0
-131,B206,B Block,Microprocessor Lab-2,1,Core-Lab,20,70,1,0,Advanced,16,0,0,0
 132,B305,B Block,Industrial Automation Lab,1,Core-Lab,20,35,1,0,High-tech,23,0,0,0
 133,B310,B Block,MCT CAD Lab,1,Core-Lab,20,35,1,0,High-tech,23,0,0,0
 134,B311,B Block,Electronic Devices & Circuits Lab,1,Core-Lab,20,35,1,0,High-tech,15,0,0,0

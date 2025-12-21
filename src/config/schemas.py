@@ -198,6 +198,18 @@ class GroupingConfig:
     hall_theorem_tolerance: float = 0.05
     consecutive_lab_pairs: bool = True
     random_seed: Optional[int] = None
+    # Fine-grained control for the "consolidate multi-instance courses into 1 group when feasible" objective.
+    #
+    # Semantics:
+    # - If empty (default): consolidation is enabled for semesters 5 and 6 for all departments (legacy behaviour).
+    # - If non-empty: consolidation is enabled ONLY for cohorts listed here.
+    #
+    # Supported key formats:
+    # - "<Department Name>|<semester>" (e.g., "Information Technology|6")
+    # - "<Department Name>_S<semester>" (e.g., "Information Technology_S6")
+    # - "<department_slug>_s<semester>" (matches DepartmentSemesterKey.slug())
+    # Wildcards are supported for dept/semester: "*|6", "Information Technology|*".
+    consolidation_dept_sem_allowlist: Sequence[str] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
         if self.max_groups_per_dept_sem is not None and self.max_groups_per_dept_sem <= 0:
@@ -206,6 +218,8 @@ class GroupingConfig:
             raise ValueError("hall_theorem_tolerance cannot be negative")
         if self.random_seed is not None and self.random_seed < 0:
             raise ValueError("random_seed cannot be negative")
+
+        object.__setattr__(self, "consolidation_dept_sem_allowlist", tuple(self.consolidation_dept_sem_allowlist))
 
 
 @dataclass(frozen=True)

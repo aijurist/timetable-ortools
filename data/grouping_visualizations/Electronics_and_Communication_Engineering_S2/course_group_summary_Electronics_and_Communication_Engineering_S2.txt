@@ -1,69 +1,69 @@
 Course-Group Distribution Summary
 Department: Electronics & Communication Engineering
 Semester: 2
-Generated: 2025-12-19 08:32:58
+Generated: 2025-12-21 19:25:25
 ============================================================
 
 OVERVIEW
 - Courses: 9 (Lab 6, Theory 8)
 - Groups: 9
-- Total assignments: 72
+- Total assignments: 71
 - Courses with multiple options: 9 (100.0%)
 
 COURSE DISTRIBUTION BY GROUP
-- CS23231 [Lab + Theory]: 2 groups, 8 teachers
-  └─ G1: 4 teacher assignments
-  └─ G4: 4 teacher assignments
+- CS23231 [Lab + Theory]: 2 groups, 7 teachers
+  └─ G6: 4 teacher assignments
+  └─ G7: 3 teacher assignments
 - EE23132 [Lab + Theory]: 2 groups, 8 teachers
+  └─ G1: 4 teacher assignments
   └─ G2: 4 teacher assignments
-  └─ G3: 4 teacher assignments
 - GE23111 [Lab + Theory]: 2 groups, 8 teachers
-  └─ G2: 4 teacher assignments
+  └─ G1: 4 teacher assignments
   └─ G3: 4 teacher assignments
 - GE23117 [Theory]: 2 groups, 8 teachers
-  └─ G7: 3 teacher assignments
-  └─ G8: 5 teacher assignments
+  └─ G8: 4 teacher assignments
+  └─ G9: 4 teacher assignments
 - GE23121 [Lab]: 2 groups, 8 teachers
-  └─ G5: 4 teacher assignments
-  └─ G6: 4 teacher assignments
-- HS23221 [Lab + Theory]: 2 groups, 8 teachers
-  └─ G5: 4 teacher assignments
-  └─ G6: 4 teacher assignments
-- MA23212 [Theory]: 2 groups, 8 teachers
-  └─ G8: 3 teacher assignments
-  └─ G9: 5 teacher assignments
-- MC23112 [Theory]: 2 groups, 8 teachers
-  └─ G7: 5 teacher assignments
-  └─ G9: 3 teacher assignments
-- PH23232 [Lab + Theory]: 2 groups, 8 teachers
-  └─ G1: 4 teacher assignments
   └─ G4: 4 teacher assignments
+  └─ G5: 4 teacher assignments
+- HS23221 [Lab + Theory]: 2 groups, 8 teachers
+  └─ G4: 4 teacher assignments
+  └─ G5: 4 teacher assignments
+- MA23212 [Theory]: 2 groups, 8 teachers
+  └─ G6: 3 teacher assignments
+  └─ G7: 5 teacher assignments
+- MC23112 [Theory]: 2 groups, 8 teachers
+  └─ G8: 4 teacher assignments
+  └─ G9: 4 teacher assignments
+- PH23232 [Lab + Theory]: 2 groups, 8 teachers
+  └─ G2: 4 teacher assignments
+  └─ G3: 4 teacher assignments
 
 GROUP COMPOSITION
 - G1: 2 courses, 8 teachers
-  └─ CS23231 [L+T]: 4 instances, 4 teachers
-  └─ PH23232 [L+T]: 4 instances, 4 teachers
+  └─ EE23132 [L+T]: 4 instances, 4 teachers
+  └─ GE23111 [L+T]: 4 instances, 4 teachers
 - G2: 2 courses, 8 teachers
   └─ EE23132 [L+T]: 4 instances, 4 teachers
-  └─ GE23111 [L+T]: 4 instances, 4 teachers
-- G3: 2 courses, 8 teachers
-  └─ EE23132 [L+T]: 4 instances, 4 teachers
-  └─ GE23111 [L+T]: 4 instances, 4 teachers
-- G4: 2 courses, 8 teachers
-  └─ CS23231 [L+T]: 4 instances, 4 teachers
   └─ PH23232 [L+T]: 4 instances, 4 teachers
+- G3: 2 courses, 8 teachers
+  └─ GE23111 [L+T]: 4 instances, 4 teachers
+  └─ PH23232 [L+T]: 4 instances, 4 teachers
+- G4: 2 courses, 8 teachers
+  └─ GE23121 [L]: 4 instances, 4 teachers
+  └─ HS23221 [L+T]: 4 instances, 4 teachers
 - G5: 2 courses, 8 teachers
   └─ GE23121 [L]: 4 instances, 4 teachers
   └─ HS23221 [L+T]: 4 instances, 4 teachers
-- G6: 2 courses, 8 teachers
-  └─ GE23121 [L]: 4 instances, 4 teachers
-  └─ HS23221 [L+T]: 4 instances, 4 teachers
-- G7: 2 courses, 8 teachers
-  └─ GE23117 [T]: 3 instances, 3 teachers
-  └─ MC23112 [T]: 5 instances, 5 teachers
-- G8: 2 courses, 8 teachers
-  └─ GE23117 [T]: 5 instances, 5 teachers
+- G6: 2 courses, 7 teachers
+  └─ CS23231 [L+T]: 4 instances, 4 teachers
   └─ MA23212 [T]: 3 instances, 3 teachers
-- G9: 2 courses, 8 teachers
+- G7: 2 courses, 8 teachers
+  └─ CS23231 [L+T]: 3 instances, 3 teachers
   └─ MA23212 [T]: 5 instances, 5 teachers
-  └─ MC23112 [T]: 3 instances, 3 teachers
+- G8: 2 courses, 8 teachers
+  └─ GE23117 [T]: 4 instances, 4 teachers
+  └─ MC23112 [T]: 4 instances, 4 teachers
+- G9: 2 courses, 8 teachers
+  └─ GE23117 [T]: 4 instances, 4 teachers
+  └─ MC23112 [T]: 4 instances, 4 teachers

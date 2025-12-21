@@ -41,7 +41,16 @@ class CourseGroupOptimizer:
     Number of groups is always equal to the number of unique courses (after filtering).
     """
     
-    def __init__(self, courses, dept, semester, logger=None, pe_course_map_file=None, flexible_grouping_depts=None):
+    def __init__(
+        self,
+        courses,
+        dept,
+        semester,
+        logger=None,
+        pe_course_map_file=None,
+        flexible_grouping_depts=None,
+        consolidation_objective_enabled=None,
+    ):
         """
         Initialize the optimizer with course instances.
         
@@ -74,11 +83,23 @@ class CourseGroupOptimizer:
         else:
             self.flexible_grouping_depts = set(flexible_grouping_depts)
         
-        # Check if current department allows flexible grouping
-        self.allows_flexible_grouping = self.dept in self.flexible_grouping_depts
-
         # Special-case flags
         self.is_cse_s2 = (self.dept == "Computer Science & Engineering" and self.semester == 2)
+
+        # Semester-based heuristic is kept for backwards compatibility.
+        # If *consolidation_objective_enabled* is provided, it becomes the source of truth.
+        self.is_third_year = self.semester in (5, 6)
+        if consolidation_objective_enabled is None:
+            self.consolidation_objective_enabled = self.is_third_year
+        else:
+            self.consolidation_objective_enabled = bool(consolidation_objective_enabled)
+
+        # Flexible grouping is required to allow consolidation into a single group.
+        self.allows_flexible_grouping = self.consolidation_objective_enabled or (self.dept in self.flexible_grouping_depts)
+
+        # Internal: course -> list[BoolVar] (presence of that course in each group)
+        # populated in _apply_course_limit_constraints for objective construction.
+        self._course_group_presence_vars = {}
         
         # Load PE course mapping if provided
         self.pe_course_codes = set()
@@ -124,7 +145,12 @@ class CourseGroupOptimizer:
         self.logger.info(f"  Target groups: {self.num_groups}")
         self.logger.info(f"  Flexible grouping enabled: {self.allows_flexible_grouping}")
         if self.allows_flexible_grouping:
-            self.logger.info(f"  → Multi-instance courses can have minimum 1 group (if feasible)")
+            if self.consolidation_objective_enabled:
+                self.logger.info(
+                    "  → Consolidation policy enabled: minimize number of groups each multi-instance course spans"
+                )
+            else:
+                self.logger.info("  → Multi-instance courses can have minimum 1 group (if feasible)")
         else:
             self.logger.info(f"  → Multi-instance courses must have minimum 2 groups")
         if self.pe_courses:
@@ -638,12 +664,12 @@ class CourseGroupOptimizer:
         multi_instance_courses = 0
         flexible_courses = 0
 
-        # CSE Semester 2 is a special case: we enforce per-course spreading across 3 groups
+        # CSE Semester 2 is a special case: we enforce per-course spreading across 5 groups
         # (balanced) in _apply_special_department_constraints. Do NOT add the default
         # max-2-groups constraint here.
         if self.is_cse_s2:
             self.logger.info(
-                "Skipping default course limit constraints for CSE Semester 2 (handled by special constraints: 3-group split)"
+                "Skipping default course limit constraints for CSE Semester 2 (handled by special constraints: 5-group split)"
             )
             return
         
@@ -678,6 +704,9 @@ class CourseGroupOptimizer:
                     # If no instance of this course is in this group, group_var should be 0
                     # This constraint ensures group_var = 1 iff at least one instance is assigned to this group
                     model.Add(group_var <= sum(course_assignments_in_group))
+
+                # Store for objective building (multi-instance courses only)
+                self._course_group_presence_vars[course_code] = group_has_course
                 
                 # Apply minimum group constraint based on department flexibility
                 if self.allows_flexible_grouping:
@@ -758,13 +787,13 @@ class CourseGroupOptimizer:
             model: CP-SAT model
             assignment_vars: Assignment variables
         """
-        # CSE S2 special case requires each course to span 3 groups.
+        # CSE S2 special case requires each course to span 5 groups.
         # The current lab-priority rule is a hard partition (labs only in early groups,
         # theory only in late groups). With typical inputs (e.g., 6 lab courses => only
         # 2 remaining theory groups), that can make the model INFEASIBLE.
         if getattr(self, "is_cse_s2", False):
             self.logger.info(
-                "Skipping lab priority constraint for CSE S2 (conflicts with 3-group split requirement)"
+                "Skipping lab priority constraint for CSE S2 (conflicts with 5-group split requirement)"
             )
             return
 
@@ -834,7 +863,7 @@ class CourseGroupOptimizer:
 
         # Special constraint for Computer Science & Engineering 2nd semester
         if (self.dept == "Computer Science & Engineering" and self.semester == 2):
-            constraints_added += self._apply_cse_s2_three_group_split(model, assignment_vars)
+            constraints_added += self._apply_cse_s2_five_group_split(model, assignment_vars)
         
         if constraints_added > 0:
             self.logger.info(f"Applied {constraints_added} special department-specific constraints")
@@ -926,20 +955,22 @@ class CourseGroupOptimizer:
 
         return constraints_added
 
-    def _apply_cse_s2_three_group_split(self, model, assignment_vars):
-        """CSE Semester 2: force every course to span 3 groups (balanced) when possible.
+    def _apply_cse_s2_five_group_split(self, model, assignment_vars):
+        """CSE Semester 2: force every course to span 5 groups (balanced) when possible.
 
         Rules per course (based on number of input instances):
         - 1 instance  -> exactly 1 group
         - 2 instances -> exactly 2 groups (1+1)
-        - >=3         -> exactly 3 groups, balanced as evenly as possible
+        - 3 instances -> exactly 3 groups (1+1+1)
+        - 4 instances -> exactly 4 groups (1+1+1+1)
+        - >=5         -> exactly 5 groups, balanced as evenly as possible
         """
-        self.logger.info("Applying CSE S2 special constraint: each course split across 3 groups (balanced)")
+        self.logger.info("Applying CSE S2 special constraint: each course split across 5 groups (balanced)")
         constraints_added = 0
 
-        if self.num_groups < 3:
+        if self.num_groups < 5:
             self.logger.warning(
-                "CSE S2 3-group split requested, but only %s groups exist; using <=num_groups where needed",
+                "CSE S2 5-group split requested, but only %s groups exist; using <=num_groups where needed",
                 self.num_groups,
             )
 
@@ -952,8 +983,8 @@ class CourseGroupOptimizer:
             if num_instances == 0:
                 continue
 
-            if num_instances >= 3 and self.num_groups >= 3:
-                k = 3
+            if num_instances >= 5 and self.num_groups >= 5:
+                k = 5
             else:
                 k = min(num_instances, self.num_groups)
 
@@ -1282,6 +1313,22 @@ class CourseGroupOptimizer:
             assignment_vars: Assignment variables
         """
         self.logger.info("Setting optimization objectives...")
+
+        # Consolidation policy: prioritize consolidating each course into as few groups
+        # as possible (ideally 1) while satisfying all hard constraints.
+        if getattr(self, "consolidation_objective_enabled", False):
+            consolidation_terms = []
+            for course_code, group_vars in (self._course_group_presence_vars or {}).items():
+                if group_vars:
+                    consolidation_terms.append(sum(group_vars))
+
+            if consolidation_terms:
+                model.Minimize(sum(consolidation_terms))
+                self.logger.info("Primary Objective: Minimize number of groups each course spans")
+                return
+            else:
+                # No multi-instance courses detected; fall back to variance objective.
+                self.logger.info("No multi-instance courses found for consolidation objective; falling back")
         
         # Objective 1: Minimize workload variance within each group (primary objective)
         # This encourages forming groups with courses that have similar total hours,
@@ -1415,12 +1462,17 @@ class CourseGroupOptimizer:
         return True
     
     def _extract_solution(self, solver, assignment_vars):
-        """
-        Extract the solution from the solver and add PE courses as final group.
-        
-        Args:
-            solver: CP-SAT solver
-            assignment_vars: Assignment variables
+        """Extract the solution from the solver and append PE courses.
+
+        Regular (non-PE) courses are assigned by the CP-SAT solver into
+        `self.num_groups` groups.
+
+        PE courses are not part of the optimization cohort (they are separated
+        up-front). They are appended after the regular groups.
+
+        Note: PE courses are appended as *one group per PE general code*
+        (course_code), so that different PE general codes do not end up
+        in the same group.
         """
         # Initialize groups
         self.groups = [[] for _ in range(self.num_groups)]
@@ -1432,10 +1484,20 @@ class CourseGroupOptimizer:
                     self.groups[group_idx].append(instance)
                     break
         
-        # Add PE courses as a final group if any exist
+        # Add PE courses after the optimized groups.
+        # Keep each PE general code as its own group.
         if self.pe_courses:
-            self.groups.append(self.pe_courses)
-            self.logger.debug(f"Added PE courses as Group {len(self.groups)} (final group)")
+            pe_groups_by_code = defaultdict(list)
+            for inst in self.pe_courses:
+                pe_groups_by_code[inst.get('course_code')].append(inst)
+
+            for pe_code in sorted(k for k in pe_groups_by_code.keys() if k):
+                self.groups.append(pe_groups_by_code[pe_code])
+
+            self.logger.debug(
+                f"Added {len(pe_groups_by_code)} PE groups after optimization "
+                f"(one per PE course_code): {sorted(pe_groups_by_code.keys())}"
+            )
         
         # Log group distribution
         self.logger.info(f"Optimal group distribution for {self.dept} Semester {self.semester}:")
@@ -1484,9 +1546,9 @@ class CourseGroupOptimizer:
             group_names = [f"G{g}" for g in group_list]
 
             if getattr(self, "is_cse_s2", False):
-                # CSE S2 special case: exactly 3 groups when instances >= 3.
+                # CSE S2 special case: use up to 5 groups, bounded by available instances/groups.
                 num_instances = instance_counts.get(course_code, 0)
-                expected_groups = 3 if num_instances >= 3 else num_instances
+                expected_groups = 5 if (num_instances >= 5 and self.num_groups >= 5) else min(num_instances, self.num_groups)
                 status = "[OK]" if len(group_list) == expected_groups else "[ERROR]"
             else:
                 status = "[OK]" if len(group_list) <= 2 else "[ERROR]"
@@ -1500,8 +1562,12 @@ class CourseGroupOptimizer:
         
         # Log PE course information
         if self.pe_courses:
-            pe_course_codes = list(set(inst['course_code'] for inst in self.pe_courses))
-            self.logger.debug(f"PE Course information: {len(pe_course_codes)} courses ({len(self.pe_courses)} instances) in Group {len(self.groups)}")
+            pe_course_codes = sorted(set(inst['course_code'] for inst in self.pe_courses))
+            pe_group_count = len(self.groups) - self.num_groups
+            self.logger.debug(
+                f"PE Course information: {len(pe_course_codes)} courses ({len(self.pe_courses)} instances) "
+                f"across {pe_group_count} PE groups"
+            )
     
     def validate_solution(self):
         """
@@ -1615,12 +1681,14 @@ class CourseGroupOptimizer:
             group_count = len(groups_set)
             group_names = [f"G{g+1}" for g in sorted(groups_set)]
 
-            # CSE S2 special case: expected group count depends on available instances.
+            # CSE S2 special case: expected group count depends on available instances/groups.
             # - 1 instance  -> 1 group
             # - 2 instances -> 2 groups
-            # - >=3         -> 3 groups
+            # - 3 instances -> 3 groups
+            # - 4 instances -> 4 groups
+            # - >=5         -> 5 groups
             if self.is_cse_s2:
-                expected = 3 if instance_count >= 3 else instance_count
+                expected = 5 if (instance_count >= 5 and self.num_groups >= 5) else min(instance_count, self.num_groups)
                 if group_count != expected:
                     violations += 1
                     self.logger.error(

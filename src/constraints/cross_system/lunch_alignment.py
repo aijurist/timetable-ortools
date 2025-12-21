@@ -118,9 +118,13 @@ class LunchAlignmentConfig:
 	def is_soft(self, department: str, semester: Optional[int]) -> bool:
 		if department in self.hard_overrides:
 			return False
+		# If explicit soft targets are configured, treat them as authoritative.
+		# This avoids accidentally softening an entire semester cohort via `soft_semesters`.
+		if self.soft_tokens:
+			return _matches_department(self.soft_tokens, department, semester)
 		if semester is not None and semester in self.soft_semesters:
 			return True
-		return _matches_department(self.soft_tokens, department, semester)
+		return False
 
 
 def _build_group_lab_session_map(lab_block) -> Dict[str, Dict[int, Dict[str, Tuple[cp_model.IntVar, ...]]]]:

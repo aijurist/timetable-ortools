@@ -1,51 +1,51 @@
 Course-Group Distribution Summary
 Department: Food Technology
 Semester: 6
-Generated: 2025-12-12 20:19:31
+Generated: 2025-12-21 14:21:25
 ============================================================
 
 OVERVIEW
 - Courses: 9 (Lab 4, Theory 5)
 - Groups: 9
-- Total assignments: 9
-- Courses with multiple options: 0 (0.0%)
+- Total assignments: 11
+- Courses with multiple options: 2 (22.2%)
 
 COURSE DISTRIBUTION BY GROUP
 - FT23601 [Theory]: 1 groups, 1 teachers
-  └─ G9: 1 teacher assignments
-- FT23602 [Theory]: 1 groups, 1 teachers
   └─ G5: 1 teacher assignments
+- FT23602 [Theory]: 1 groups, 1 teachers
+  └─ G6: 1 teacher assignments
 - FT23603 [Theory]: 1 groups, 1 teachers
-  └─ G8: 1 teacher assignments
+  └─ G7: 1 teacher assignments
 - FT23611 [Lab]: 1 groups, 1 teachers
   └─ G1: 1 teacher assignments
 - FT23612 [Lab]: 1 groups, 1 teachers
-  └─ G4: 1 teacher assignments
-- FT23PE01 [Theory]: 1 groups, 1 teachers
-  └─ G7: 1 teacher assignments
-- FT23PE02 [Theory]: 1 groups, 1 teachers
-  └─ G6: 1 teacher assignments
+  └─ G2: 1 teacher assignments
+- FT23PE01 [Theory]: 1 groups, 2 teachers
+  └─ G8: 2 teacher assignments
+- FT23PE02 [Theory]: 1 groups, 2 teachers
+  └─ G9: 2 teacher assignments
 - GE23621 [Lab]: 1 groups, 1 teachers
   └─ G3: 1 teacher assignments
 - GE23627 [Lab]: 1 groups, 1 teachers
-  └─ G2: 1 teacher assignments
+  └─ G4: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
   └─ FT23611 [L]: 1 instances, 1 teachers
 - G2: 1 courses, 1 teachers
-  └─ GE23627 [L]: 1 instances, 1 teachers
+  └─ FT23612 [L]: 1 instances, 1 teachers
 - G3: 1 courses, 1 teachers
   └─ GE23621 [L]: 1 instances, 1 teachers
 - G4: 1 courses, 1 teachers
-  └─ FT23612 [L]: 1 instances, 1 teachers
+  └─ GE23627 [L]: 1 instances, 1 teachers
 - G5: 1 courses, 1 teachers
-  └─ FT23602 [T]: 1 instances, 1 teachers
-- G6: 1 courses, 1 teachers
-  └─ FT23PE02 [T]: 1 instances, 1 teachers
-- G7: 1 courses, 1 teachers
-  └─ FT23PE01 [T]: 1 instances, 1 teachers
-- G8: 1 courses, 1 teachers
-  └─ FT23603 [T]: 1 instances, 1 teachers
-- G9: 1 courses, 1 teachers
   └─ FT23601 [T]: 1 instances, 1 teachers
+- G6: 1 courses, 1 teachers
+  └─ FT23602 [T]: 1 instances, 1 teachers
+- G7: 1 courses, 1 teachers
+  └─ FT23603 [T]: 1 instances, 1 teachers
+- G8: 1 courses, 2 teachers
+  └─ FT23PE01 [T]: 2 instances, 2 teachers
+- G9: 1 courses, 2 teachers
+  └─ FT23PE02 [T]: 2 instances, 2 teachers
