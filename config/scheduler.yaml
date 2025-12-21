@@ -7,7 +7,7 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data/sem2026/year_wise/1st_year/all.csv
+  courses_csv: data/sem2026/year_wise/3rd_year/all.csv
   rooms_csv: data/block_wise/techlongue.csv
   day_order_csv: data/day_order_even.csv
   core_lab_mapping_csv: data/CoreMappingSimplified_StudentDept.csv
@@ -501,6 +501,17 @@ grouping:
   # Wildcards: "*|6" or "Information Technology|*".
   consolidation_dept_sem_allowlist: 
     - Computer Science & Engineering_S6
+    - Information Technology_S6
+    - Artificial Intelligence & Machine Learning_S6
+    - Artificial Intelligence & Data Science_S6
+    - Computer Science & Business Systems_S6
+    - Computer Science & Design_S6
+    - Computer Science & Engineering (Cyber Security)_S6
+    - Electrical & Electronics Engineering_S6
+    - Electronics & Communication Engineering_S6
+    - Biomedical Engineering_S6
+    - Mechanical Engineering_S6
+    - Biotechnology_S6
 
 constraints:
   lab:
@@ -593,8 +604,8 @@ constraints:
           - FT23611
           - FT23612
           - BT23621
-          # - BT23421
-          # - BT23422
+          - BT23421
+          - BT23422
           - BT23221
         preferred_pairs:
           - [L1, L2]
@@ -655,6 +666,8 @@ constraints:
         big_capacity_threshold: 140
         overflow_penalty: 5
         default_blocks:
+          - D Block
+          - ARC Block
           - A Block
           - B Block
           - C Block
@@ -664,6 +677,12 @@ constraints:
         second_year_blocks:
           - B Block
           - C Block
+        # Semester-specific block preference ordering.
+        # For 1st year Semester 2, prefer D Block first, then ARC Block.
+        semester_block_preferences:
+          "2":
+            - D Block
+            - ARC Block
         year_block_preferences:
           "2":
             - B Block

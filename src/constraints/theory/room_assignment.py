@@ -47,6 +47,9 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 		self._senior_blocks = self._normalise_block_list(settings.get("senior_blocks") or ("A Block", "B Block"))
 		self._second_year_blocks = self._normalise_block_list(settings.get("second_year_blocks") or ("B Block", "C Block"))
 		self._year_block_preferences = self._build_year_block_preferences(settings.get("year_block_preferences"))
+		self._semester_block_preferences = self._build_semester_block_preferences(
+			settings.get("semester_block_preferences")
+		)
 
 	def apply(self, context: ConstraintContext) -> ConstraintApplicationResult:
 		inventory = self._build_inventory(context)
@@ -454,6 +457,10 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 	def _resolve_primary_block(self, semester: Optional[int], allowed: Sequence[str]) -> Optional[str]:
 		year = self._semester_to_year(semester)
 		preference_order: list[Tuple[str, ...]] = []
+		if semester is not None:
+			semester_prefs = self._semester_block_preferences.get(int(semester))
+			if semester_prefs:
+				preference_order.append(semester_prefs)
 		if year is not None:
 			year_prefs = self._year_block_preferences.get(year)
 			if year_prefs:
@@ -468,6 +475,24 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 			if block:
 				return block
 		return None
+
+	def _build_semester_block_preferences(
+		self,
+		raw_preferences: Optional[Mapping[object, object]],
+	) -> Mapping[int, Tuple[str, ...]]:
+		if not raw_preferences:
+			return {}
+		result: Dict[int, Tuple[str, ...]] = {}
+		for sem_key, blocks in raw_preferences.items():
+			try:
+				sem = int(str(sem_key).strip())
+			except (TypeError, ValueError):
+				continue
+			if isinstance(blocks, (list, tuple)):
+				normalised = self._normalise_block_list(blocks)
+				if normalised:
+					result[sem] = normalised
+		return result
 
 	@staticmethod
 	def _first_available_block(candidates: Sequence[str], allowed: Sequence[str]) -> Optional[str]:

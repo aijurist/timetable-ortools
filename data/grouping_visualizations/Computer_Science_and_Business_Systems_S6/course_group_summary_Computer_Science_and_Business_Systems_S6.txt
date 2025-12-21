@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Computer Science & Business Systems
 Semester: 6
-Generated: 2025-12-21 14:21:23
+Generated: 2025-12-21 23:28:35
 ============================================================
 
 OVERVIEW
@@ -17,28 +17,24 @@ COURSE DISTRIBUTION BY GROUP
 - BA23612 [Theory]: 2 groups, 2 teachers
   └─ G5: 1 teacher assignments
   └─ G6: 1 teacher assignments
-- CB23631 [Lab + Theory]: 2 groups, 2 teachers
-  └─ G2: 1 teacher assignments
-  └─ G4: 1 teacher assignments
-- CB23632 [Lab + Theory]: 2 groups, 2 teachers
-  └─ G2: 1 teacher assignments
-  └─ G4: 1 teacher assignments
+- CB23631 [Lab + Theory]: 1 groups, 2 teachers
+  └─ G4: 2 teacher assignments
+- CB23632 [Lab + Theory]: 1 groups, 2 teachers
+  └─ G2: 2 teacher assignments
 - CB23633 [Lab + Theory]: 1 groups, 2 teachers
-  └─ G1: 2 teacher assignments
-- HS23621 [Lab]: 1 groups, 2 teachers
   └─ G3: 2 teacher assignments
+- HS23621 [Lab]: 1 groups, 2 teachers
+  └─ G1: 2 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 2 teachers
-  └─ CB23633 [L+T]: 2 instances, 2 teachers
-- G2: 2 courses, 2 teachers
-  └─ CB23631 [L+T]: 1 instances, 1 teachers
-  └─ CB23632 [L+T]: 1 instances, 1 teachers
-- G3: 1 courses, 2 teachers
   └─ HS23621 [L]: 2 instances, 2 teachers
-- G4: 2 courses, 2 teachers
-  └─ CB23631 [L+T]: 1 instances, 1 teachers
-  └─ CB23632 [L+T]: 1 instances, 1 teachers
+- G2: 1 courses, 2 teachers
+  └─ CB23632 [L+T]: 2 instances, 2 teachers
+- G3: 1 courses, 2 teachers
+  └─ CB23633 [L+T]: 2 instances, 2 teachers
+- G4: 1 courses, 2 teachers
+  └─ CB23631 [L+T]: 2 instances, 2 teachers
 - G5: 2 courses, 2 teachers
   └─ BA23611 [T]: 1 instances, 1 teachers
   └─ BA23612 [T]: 1 instances, 1 teachers

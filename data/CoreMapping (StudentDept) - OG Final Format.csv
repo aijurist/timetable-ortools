@@ -1,0 +1,83 @@
+course_code,Student Department,total_labs,lab_1,lab_2,lab_3,lab_4,lab_5,course_name
+AE23431,Aeronautical Engineering,1,Aerodynamics Lab,,,,,Incompressible Aerodynamics
+AE23432,Aeronautical Engineering,1,Aircraft Structures Lab,,,,,Aircraft Materials and Processes
+AE23433,Aeronautical Engineering,1,Aircraft Structures Lab,,,,,Aircraft Systems and Instruments
+AE23622,Aeronautical Engineering,1,Aerodynamics Lab,,,,,Jet Propulsion Laboratory
+AE23623,Aeronautical Engineering,1,Airframe Repair and Aero Engine Lab,,,,,Airframe Repair and Aero Engine Laboratory
+AE23631,Aeronautical Engineering,1,Aero CAD Lab,,,,,Flight Vehicle Design
+GE23122,Aeronautical Engineering,1,Engineering Practices Lab (Electrical),,,,,Engineering Practices - Electrical and Electronics
+AT19811,Automobile Engineering,1,Vehicle Maintenance Lab,,,,,Project - Phase II
+AT23431,Automobile Engineering,1,Automotive Components Lab,,,,,Automotive Drive Line and Chassis
+AT23432,Automobile Engineering,1,Fluid Mechanics Lab,,,,,Fluid Mechanics and Machinery for Automobile Engineers
+AT23433,Automobile Engineering,1,Dynamics Lab,,,,,Theory of Machines
+AT23631,Automobile Engineering,1,TANCAM,,,,,Automotive System Design
+AT23633,Automobile Engineering,1,Automotive Components Lab,,,,,Automotive Fuels and Lubricants
+EE23133,Automobile Engineering,1,Electrical Machines I Lab,,,,,Basic Electrical and Electronics Engineering
+GE23122,Automobile Engineering,1,Engineering Practices Lab (Electrical),,,,,Engineering Practices - Electrical and Electronics
+GE23122,Biomedical Engineering,1,Engineering Practices Lab (Electrical),,,,,Engineering Practices - Electrical and Electronics
+BT23421,Biotechnology,1,Downstream Processing Lab,,,,,Chemical Engineering Laboratory for Biotechnologists
+BT23422,Biotechnology,1,Immunology Lab,,,,,Molecular Biology and Genetic Engineering Laboratory
+BT23621,Biotechnology,1,Downstream Processing Lab,,,,,Bioprocess Laboratory II
+CH23431,Chemical Engineering,1,Particle Science and Technology Lab,,,,,Particle Science and Technology
+CH23621,Chemical Engineering,1,Mass Transfer Lab,,,,,Mass Transfer Lab
+EE23133,Chemical Engineering,1,Electrical Machines I Lab,,,,,Basic Electrical and Electronics Engineering
+GE23122,Chemical Engineering,1,Engineering Practices Lab (Electrical),,,,,Engineering Practices - Electrical and Electronics
+EE23133,Civil Engineering,1,Electrical Machines I Lab,,,,,Basic Electrical and Electronics Engineering
+GE23122,Civil Engineering,1,Engineering Practices Lab (Electrical),,,,,Engineering Practices - Electrical and Electronics
+EE23133,Electrical & Electronics Engineering,1,Electrical Machines I Lab,,,,,Basic Electrical and Electronics Engineering
+EE23221,Electrical & Electronics Engineering,1,Electronic Devices & Circuits Lab,,,,,Electric Circuits Laboratory
+EE23421,Electrical & Electronics Engineering,1,Electrical Machines I Lab,,,,,Electrical Machines Laboratory
+EE23431,Electrical & Electronics Engineering,1,Power Electronics Lab,,,,,Digital Logic Circuits
+EE23432,Electrical & Electronics Engineering,1,Electronic Devices & Circuits Lab,,,,,Linear Integrated Circuits and Applications
+EE23622,Electrical & Electronics Engineering,1,Power System Simulation Lab,,,,,Applications of AI and ML in Electrical Engineering
+EE23631,Electrical & Electronics Engineering,1,Power System Simulation Lab,,,,,Applications of IoT in Electrical Engineering
+GE23121,Electrical & Electronics Engineering,1,Machine Shop FF1 - EPL - 1,,,,,Engineering Practices - Civil and  Mechanical
+EC23431,Electronics & Communication Engineering,1,LIC Lab,,,,,Analog Circuits-II
+EC23631,Electronics & Communication Engineering,1,VLSI Lab,,,,,VLSI and Chip Design
+EC23632,Electronics & Communication Engineering,1,Networks Lab,,,,,Communication Networks
+EE23132,Electronics & Communication Engineering,1,Electrical Machines II Lab,,,,,Basic Electrical Engineering
+GE23121,Electronics & Communication Engineering,1,Machine Shop FF1 - EPL - 1,,,,,Engineering Practices Civil and Mechanical
+EE23133,Food Technology,1,Electrical Machines I Lab,,,,,Basic Electrical and Electronics Engineering
+FT19801,Food Technology,1,Livestock Lab,,,,,Project Work
+FT23211,Food Technology,1,Food Chemistry Laboratory,,,,,Food Chemistry Laboratory
+FT23411,Food Technology,1,Process Control Lab,,,,,Unit operations in Food industries Laboratory
+FT23412,Food Technology,1,Food Processing and Preservation Lab,,,,,Food Processing and Preservation Laboratory 1
+FT23611,Food Technology,1,Baking Lab,,,,,Food Packaging Technology Laboratory
+FT23612,Food Technology,1,Food Microbiology Lab,,,,,Food Product Technology Laboratory
+EE23132,Mechanical Engineering,1,Electrical Machines II Lab,,,,,Basic Electrical Engineering
+GE23122,Mechanical Engineering,1,Engineering Practices Lab (Electrical),,,,,Engineering Practices - Electrical and Electronics
+ME23421,Mechanical Engineering,1,Mech CAD Lab,,,,,Machine Drawing Laboratory
+ME23422,Mechanical Engineering,1,Manufacturing Technology II,,,,,Manufacturing Technology Laboratory II
+ME23431,Mechanical Engineering,1,Dynamics Lab,,,,,Dynamics of Machines
+ME23432,Mechanical Engineering,1,Fluid Mechanics Lab,,,,,Fluid Mechanics and Machinery
+ME23433,Mechanical Engineering,1,Thermal Lab 2,,,,,Thermal Engineering
+ME23622,Mechanical Engineering,1,TANCAM,,,,,Simulation and Analysis Laboratory
+ME23631,Mechanical Engineering,1,Mech CAD Lab,,,,,Robotics and CNC Programming
+ME23VAP2,Mechanical Engineering,1,Mech CAD Lab,,,,,Thors E Learning
+MT19811,Mechatronics Engineering,1,MCT CAD Lab,,,,,Project Work - Phase II
+MT23131,Mechatronics Engineering,1,MCT CAD Lab,,,,,Elements of Mechatronics
+MT23421,Mechatronics Engineering,1,Fluid Mechanics Lab,,,,,Fluid Mechanics and Heat Transfer laboratory
+MT23431,Mechatronics Engineering,1,Mechatronics Lab,,,,,Microcontrollers and Embedded Systems
+MT23432,Mechatronics Engineering,1,Industrial Automation Lab,,,,,Sensors and Instrumentation
+MT23433,Mechatronics Engineering,1,MCT CAD Lab,,,,,System Dynamics and Control
+MT23631,Mechatronics Engineering,1,MCT CAD Lab,,,,,Industrial Robotics
+MT23632,Mechatronics Engineering,1,Mechatronics Lab,,,,,Applied Hydraulics and Pneumatics
+RO23221,Robotics & Automation,1,TANCAM,,,,,Computer Aided Modeling Laboratory
+RO23421,Robotics & Automation,1,Isaac Asimov Laboratory,,,,,Mechanisms and Robotics Laboratory
+RO23422,Robotics & Automation,1,Industrial Automation Lab,,,,,Industrial Automation Laboratory-I
+RO23631,Robotics & Automation,1,Isaac Asimov Laboratory,,,,,Robot operating System
+RO23632,Robotics & Automation,1,Isaac Asimov Laboratory,,,,,Robot Vision and Intelligence
+RO23633,Robotics & Automation,1,Isaac Asimov Laboratory,,,,,Robot Dynamics and Motion Planning
+EC23331,Information Technology,1,Microprocessor Lab-1,,,,,Microprocessors and Microcontroller
+BM23631,Biomedical Engineering,1,Medical Image Processing Lab,,,,,Biosignal Processing
+BM23422,Biomedical Engineering,1,Medical Image Processing Lab,,,,,PCB Design Laboratory
+MT23411,Mechatronics Engineering,1,Fluid Mechanics Lab,,,,,Fluid Mechanics and Thermal Sciences
+CE23431,Civil Engineering,1,Soil Mechanics & Highway Lab,,,,,Soil Mechanics
+CE19811,Civil Engineering,1,Concrete & Survey Lab,,,,,Project
+BM23431,Biomedical Engineering,1,Microbiology Lab,,,,,Pathology and Microbiology
+BM19P80,Biomedical Engineering,1,Medical Image Processing Lab,,,,,Physiological Modeling
+EC23232,Computer Science & Engineering,1,Microprocessor Lab-2,,,,,Digital Logic and Microprocessor
+CE23421,Civil Engineering,1,Strength of Materials Lab,,,,,Strength of Materials and Hydraulic Engineering Laboratory
+EC23242,Computer Science & Business Systems,1,Engineering Practices Lab (Electronics),,,,,Principles of Electronics
+BM23632,Biomedical Engineering,1,Medical Image Processing Lab,,,,,Physiological Modeling Laboratory
+BM23421,Biomedical Engineering,1,Electronics and Instrumentation,,,,,Analog and Digital Integrated Circuits Laboratory
