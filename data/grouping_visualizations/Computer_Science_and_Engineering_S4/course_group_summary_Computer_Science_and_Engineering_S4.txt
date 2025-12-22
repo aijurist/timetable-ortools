@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Computer Science & Engineering
 Semester: 4
-Generated: 2025-12-22 02:51:56
+Generated: 2025-12-22 03:57:43
 ============================================================
 
 OVERVIEW
@@ -12,24 +12,24 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - CS23431 [Lab + Theory]: 1 groups, 8 teachers
-  └─ G1: 8 teacher assignments
+  └─ G4: 8 teacher assignments
 - CS23432 [Lab + Theory]: 2 groups, 9 teachers
-  └─ G3: 4 teacher assignments
-  └─ G4: 5 teacher assignments
-- GE23627 [Lab]: 2 groups, 8 teachers
+  └─ G2: 4 teacher assignments
   └─ G3: 5 teacher assignments
-  └─ G4: 3 teacher assignments
+- GE23627 [Lab]: 2 groups, 8 teachers
+  └─ G2: 5 teacher assignments
+  └─ G3: 3 teacher assignments
 - MA23435 [Lab + Theory]: 1 groups, 10 teachers
-  └─ G2: 10 teacher assignments
+  └─ G1: 10 teacher assignments
 
 GROUP COMPOSITION
-- G1: 1 courses, 8 teachers
-  └─ CS23431 [L+T]: 8 instances, 8 teachers
-- G2: 1 courses, 10 teachers
+- G1: 1 courses, 10 teachers
   └─ MA23435 [L+T]: 10 instances, 10 teachers
-- G3: 2 courses, 9 teachers
+- G2: 2 courses, 9 teachers
   └─ CS23432 [L+T]: 4 instances, 4 teachers
   └─ GE23627 [L]: 5 instances, 5 teachers
-- G4: 2 courses, 8 teachers
+- G3: 2 courses, 8 teachers
   └─ CS23432 [L+T]: 5 instances, 5 teachers
   └─ GE23627 [L]: 3 instances, 3 teachers
+- G4: 1 courses, 8 teachers
+  └─ CS23431 [L+T]: 8 instances, 8 teachers

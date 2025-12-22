@@ -37,10 +37,8 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 8,A203,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
 9,A204,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
 10,A205,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-11,A208,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-12,A209,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-13,A210,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
-14,A211,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
+11,A208/209,A Block,Computer Lab (A208/209),1,Laboratory,110,140,0,0,None,29,0,0,0
+13,A210/211,A Block,Computer Lab (A210/211),1,Laboratory,110,140,0,0,None,29,0,0,0
 15,A302,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
 16,A303,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
 17,A304,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0

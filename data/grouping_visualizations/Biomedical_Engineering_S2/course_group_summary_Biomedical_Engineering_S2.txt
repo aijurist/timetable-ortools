@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Biomedical Engineering
 Semester: 2
-Generated: 2025-12-21 19:25:18
+Generated: 2025-12-22 08:37:18
 ============================================================
 
 OVERVIEW
@@ -13,10 +13,10 @@ OVERVIEW
 COURSE DISTRIBUTION BY GROUP
 - BM23231 [Lab + Theory]: 2 groups, 2 teachers
   └─ G1: 1 teacher assignments
-  └─ G5: 1 teacher assignments
+  └─ G4: 1 teacher assignments
 - CS23232 [Lab + Theory]: 2 groups, 2 teachers
   └─ G1: 1 teacher assignments
-  └─ G4: 1 teacher assignments
+  └─ G5: 1 teacher assignments
 - GE23117 [Theory]: 2 groups, 2 teachers
   └─ G6: 1 teacher assignments
   └─ G7: 1 teacher assignments
@@ -50,10 +50,10 @@ GROUP COMPOSITION
   └─ GE23122 [L]: 1 instances, 1 teachers
   └─ HS23221 [L+T]: 1 instances, 1 teachers
 - G4: 2 courses, 2 teachers
-  └─ CS23232 [L+T]: 1 instances, 1 teachers
+  └─ BM23231 [L+T]: 1 instances, 1 teachers
   └─ PH23231 [L+T]: 1 instances, 1 teachers
 - G5: 2 courses, 2 teachers
-  └─ BM23231 [L+T]: 1 instances, 1 teachers
+  └─ CS23232 [L+T]: 1 instances, 1 teachers
   └─ PH23231 [L+T]: 1 instances, 1 teachers
 - G6: 2 courses, 2 teachers
   └─ GE23117 [T]: 1 instances, 1 teachers
