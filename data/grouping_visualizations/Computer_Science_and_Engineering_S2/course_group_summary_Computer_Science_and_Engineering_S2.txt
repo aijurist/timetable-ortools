@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Computer Science & Engineering
 Semester: 2
-Generated: 2025-12-22 08:37:25
+Generated: 2025-12-22 08:43:14
 ============================================================
 
 OVERVIEW
@@ -12,100 +12,100 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - CS23221 [Lab]: 5 groups, 13 teachers
-  └─ G1: 3 teacher assignments
-  └─ G2: 2 teacher assignments
+  └─ G1: 2 teacher assignments
+  └─ G2: 3 teacher assignments
   └─ G4: 3 teacher assignments
-  └─ G5: 3 teacher assignments
   └─ G6: 2 teacher assignments
+  └─ G7: 3 teacher assignments
 - EC23232 [Lab + Theory]: 5 groups, 13 teachers
   └─ G1: 3 teacher assignments
   └─ G3: 3 teacher assignments
   └─ G5: 2 teacher assignments
-  └─ G7: 3 teacher assignments
-  └─ G8: 2 teacher assignments
+  └─ G6: 2 teacher assignments
+  └─ G8: 3 teacher assignments
 - GE23111 [Lab + Theory]: 5 groups, 13 teachers
-  └─ G2: 2 teacher assignments
-  └─ G3: 3 teacher assignments
-  └─ G6: 3 teacher assignments
-  └─ G7: 2 teacher assignments
+  └─ G3: 2 teacher assignments
+  └─ G4: 2 teacher assignments
+  └─ G5: 3 teacher assignments
+  └─ G7: 3 teacher assignments
   └─ G8: 3 teacher assignments
 - GE23122 [Lab]: 5 groups, 13 teachers
   └─ G1: 2 teacher assignments
-  └─ G2: 2 teacher assignments
-  └─ G4: 3 teacher assignments
-  └─ G5: 3 teacher assignments
-  └─ G6: 3 teacher assignments
-- GE23217 [Theory]: 5 groups, 12 teachers
-  └─ G3: 2 teacher assignments
+  └─ G2: 3 teacher assignments
   └─ G4: 3 teacher assignments
   └─ G6: 3 teacher assignments
   └─ G7: 2 teacher assignments
-  └─ G8: 2 teacher assignments
-- HS23221 [Lab + Theory]: 5 groups, 13 teachers
-  └─ G1: 2 teacher assignments
+- GE23217 [Theory]: 5 groups, 12 teachers
   └─ G2: 3 teacher assignments
-  └─ G4: 3 teacher assignments
-  └─ G5: 3 teacher assignments
-  └─ G6: 2 teacher assignments
-- MA23213 [Theory]: 5 groups, 13 teachers
-  └─ G2: 2 teacher assignments
-  └─ G3: 3 teacher assignments
+  └─ G3: 2 teacher assignments
   └─ G5: 2 teacher assignments
   └─ G7: 3 teacher assignments
+  └─ G8: 2 teacher assignments
+- HS23221 [Lab + Theory]: 5 groups, 13 teachers
+  └─ G1: 3 teacher assignments
+  └─ G2: 3 teacher assignments
+  └─ G4: 3 teacher assignments
+  └─ G6: 2 teacher assignments
+  └─ G7: 2 teacher assignments
+- MA23213 [Theory]: 5 groups, 13 teachers
+  └─ G3: 3 teacher assignments
+  └─ G4: 2 teacher assignments
+  └─ G5: 3 teacher assignments
+  └─ G6: 2 teacher assignments
   └─ G8: 3 teacher assignments
 - MC23112 [Theory]: 5 groups, 13 teachers
   └─ G1: 3 teacher assignments
-  └─ G2: 2 teacher assignments
-  └─ G3: 2 teacher assignments
-  └─ G7: 3 teacher assignments
-  └─ G8: 3 teacher assignments
+  └─ G3: 3 teacher assignments
+  └─ G5: 3 teacher assignments
+  └─ G6: 2 teacher assignments
+  └─ G8: 2 teacher assignments
 
 GROUP COMPOSITION
 - G1: 5 courses, 13 teachers
-  └─ CS23221 [L]: 3 instances, 3 teachers
+  └─ CS23221 [L]: 2 instances, 2 teachers
   └─ EC23232 [L+T]: 3 instances, 3 teachers
   └─ GE23122 [L]: 2 instances, 2 teachers
-  └─ HS23221 [L+T]: 2 instances, 2 teachers
-  └─ MC23112 [T]: 3 instances, 3 teachers
-- G2: 6 courses, 13 teachers
-  └─ CS23221 [L]: 2 instances, 2 teachers
-  └─ GE23111 [L+T]: 2 instances, 2 teachers
-  └─ GE23122 [L]: 2 instances, 2 teachers
   └─ HS23221 [L+T]: 3 instances, 3 teachers
-  └─ MA23213 [T]: 2 instances, 2 teachers
-  └─ MC23112 [T]: 2 instances, 2 teachers
+  └─ MC23112 [T]: 3 instances, 3 teachers
+- G2: 4 courses, 12 teachers
+  └─ CS23221 [L]: 3 instances, 3 teachers
+  └─ GE23122 [L]: 3 instances, 3 teachers
+  └─ GE23217 [T]: 3 instances, 3 teachers
+  └─ HS23221 [L+T]: 3 instances, 3 teachers
 - G3: 5 courses, 13 teachers
   └─ EC23232 [L+T]: 3 instances, 3 teachers
-  └─ GE23111 [L+T]: 3 instances, 3 teachers
-  └─ GE23217 [T]: 2 instances, 2 teachers
-  └─ MA23213 [T]: 3 instances, 3 teachers
-  └─ MC23112 [T]: 2 instances, 2 teachers
-- G4: 4 courses, 12 teachers
-  └─ CS23221 [L]: 3 instances, 3 teachers
-  └─ GE23122 [L]: 3 instances, 3 teachers
-  └─ GE23217 [T]: 3 instances, 3 teachers
-  └─ HS23221 [L+T]: 3 instances, 3 teachers
-- G5: 5 courses, 13 teachers
-  └─ CS23221 [L]: 3 instances, 3 teachers
-  └─ EC23232 [L+T]: 2 instances, 2 teachers
-  └─ GE23122 [L]: 3 instances, 3 teachers
-  └─ HS23221 [L+T]: 3 instances, 3 teachers
-  └─ MA23213 [T]: 2 instances, 2 teachers
-- G6: 5 courses, 13 teachers
-  └─ CS23221 [L]: 2 instances, 2 teachers
-  └─ GE23111 [L+T]: 3 instances, 3 teachers
-  └─ GE23122 [L]: 3 instances, 3 teachers
-  └─ GE23217 [T]: 3 instances, 3 teachers
-  └─ HS23221 [L+T]: 2 instances, 2 teachers
-- G7: 5 courses, 13 teachers
-  └─ EC23232 [L+T]: 3 instances, 3 teachers
   └─ GE23111 [L+T]: 2 instances, 2 teachers
   └─ GE23217 [T]: 2 instances, 2 teachers
   └─ MA23213 [T]: 3 instances, 3 teachers
   └─ MC23112 [T]: 3 instances, 3 teachers
-- G8: 5 courses, 13 teachers
+- G4: 5 courses, 13 teachers
+  └─ CS23221 [L]: 3 instances, 3 teachers
+  └─ GE23111 [L+T]: 2 instances, 2 teachers
+  └─ GE23122 [L]: 3 instances, 3 teachers
+  └─ HS23221 [L+T]: 3 instances, 3 teachers
+  └─ MA23213 [T]: 2 instances, 2 teachers
+- G5: 5 courses, 13 teachers
   └─ EC23232 [L+T]: 2 instances, 2 teachers
   └─ GE23111 [L+T]: 3 instances, 3 teachers
   └─ GE23217 [T]: 2 instances, 2 teachers
   └─ MA23213 [T]: 3 instances, 3 teachers
   └─ MC23112 [T]: 3 instances, 3 teachers
+- G6: 6 courses, 13 teachers
+  └─ CS23221 [L]: 2 instances, 2 teachers
+  └─ EC23232 [L+T]: 2 instances, 2 teachers
+  └─ GE23122 [L]: 3 instances, 3 teachers
+  └─ HS23221 [L+T]: 2 instances, 2 teachers
+  └─ MA23213 [T]: 2 instances, 2 teachers
+  └─ MC23112 [T]: 2 instances, 2 teachers
+- G7: 5 courses, 13 teachers
+  └─ CS23221 [L]: 3 instances, 3 teachers
+  └─ GE23111 [L+T]: 3 instances, 3 teachers
+  └─ GE23122 [L]: 2 instances, 2 teachers
+  └─ GE23217 [T]: 3 instances, 3 teachers
+  └─ HS23221 [L+T]: 2 instances, 2 teachers
+- G8: 5 courses, 13 teachers
+  └─ EC23232 [L+T]: 3 instances, 3 teachers
+  └─ GE23111 [L+T]: 3 instances, 3 teachers
+  └─ GE23217 [T]: 2 instances, 2 teachers
+  └─ MA23213 [T]: 3 instances, 3 teachers
+  └─ MC23112 [T]: 2 instances, 2 teachers

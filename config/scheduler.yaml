@@ -860,7 +860,7 @@ constraints:
         penalty_weight: 30
         strict_ratios: true
     pop_day:
-      enabled: true
+      enabled: false
       priority: 9
       weight: 1.0
       params:
