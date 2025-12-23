@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Electronics & Communication Engineering
 Semester: 6
-Generated: 2025-12-23 19:57:59
+Generated: 2025-12-23 22:18:37
 ============================================================
 
 OVERVIEW
@@ -14,13 +14,13 @@ COURSE DISTRIBUTION BY GROUP
 - EC23611 [Theory]: 1 groups, 4 teachers
   └─ G1: 4 teacher assignments
 - EC23631 [Lab + Theory]: 1 groups, 4 teachers
-  └─ G3: 4 teacher assignments
+  └─ G5: 4 teacher assignments
 - EC23632 [Lab + Theory]: 1 groups, 4 teachers
   └─ G2: 4 teacher assignments
 - EC23633 [Lab + Theory]: 1 groups, 4 teachers
-  └─ G5: 4 teacher assignments
-- GE23627 [Lab]: 1 groups, 4 teachers
   └─ G4: 4 teacher assignments
+- GE23627 [Lab]: 1 groups, 4 teachers
+  └─ G3: 4 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 4 teachers
@@ -28,8 +28,8 @@ GROUP COMPOSITION
 - G2: 1 courses, 4 teachers
   └─ EC23632 [L+T]: 4 instances, 4 teachers
 - G3: 1 courses, 4 teachers
-  └─ EC23631 [L+T]: 4 instances, 4 teachers
-- G4: 1 courses, 4 teachers
   └─ GE23627 [L]: 4 instances, 4 teachers
-- G5: 1 courses, 4 teachers
+- G4: 1 courses, 4 teachers
   └─ EC23633 [L+T]: 4 instances, 4 teachers
+- G5: 1 courses, 4 teachers
+  └─ EC23631 [L+T]: 4 instances, 4 teachers

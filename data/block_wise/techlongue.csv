@@ -49,6 +49,9 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 22,A311,A Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
 223,ANEW103,A Block,Classroom (ANEW103),0,Classroom,140,165,1,0,None,29,0,0,0
 224,ANEW104,A Block,Classroom (ANEW104),0,Classroom,140,165,1,0,None,29,0,0,0
+3,A104/105,A Block,OS Classroom,1,Core-Lab,110,140,0,0,,29,0,0,0
+225,ANEW105,A Block,OS Classroom (ANEW105),1,Core-Lab,110,165,1,0,None,29,0,0,0
+226,ANEW106,A Block,OS Classroom (ANEW106),1,Core-Lab,110,165,1,0,None,29,0,0,0
 23,B106,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
 24,B107,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0
 25,B210,B Block,Classroom,0,Classroom,50,70,0,0,None,29,0,0,0

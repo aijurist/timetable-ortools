@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Biotechnology
 Semester: 4
-Generated: 2025-12-23 19:23:21
+Generated: 2025-12-23 22:18:27
 ============================================================
 
 OVERVIEW
@@ -12,16 +12,16 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - BT23411 [Theory]: 2 groups, 3 teachers
-  └─ G6: 1 teacher assignments
-  └─ G7: 2 teacher assignments
-- BT23412 [Theory]: 2 groups, 3 teachers
-  └─ G7: 1 teacher assignments
-  └─ G8: 2 teacher assignments
-- BT23413 [Theory]: 2 groups, 3 teachers
   └─ G5: 1 teacher assignments
+  └─ G8: 2 teacher assignments
+- BT23412 [Theory]: 2 groups, 3 teachers
   └─ G6: 2 teacher assignments
-- BT23414 [Theory]: 2 groups, 3 teachers
+  └─ G7: 1 teacher assignments
+- BT23413 [Theory]: 2 groups, 3 teachers
   └─ G5: 2 teacher assignments
+  └─ G6: 1 teacher assignments
+- BT23414 [Theory]: 2 groups, 3 teachers
+  └─ G7: 2 teacher assignments
   └─ G8: 1 teacher assignments
 - BT23421 [Lab]: 2 groups, 3 teachers
   └─ G2: 2 teacher assignments
@@ -50,14 +50,14 @@ GROUP COMPOSITION
   └─ BT23422 [L]: 1 instances, 1 teachers
   └─ CS23422 [L]: 2 instances, 2 teachers
 - G5: 2 courses, 3 teachers
-  └─ BT23413 [T]: 1 instances, 1 teachers
-  └─ BT23414 [T]: 2 instances, 2 teachers
-- G6: 2 courses, 3 teachers
   └─ BT23411 [T]: 1 instances, 1 teachers
   └─ BT23413 [T]: 2 instances, 2 teachers
-- G7: 2 courses, 3 teachers
-  └─ BT23411 [T]: 2 instances, 2 teachers
-  └─ BT23412 [T]: 1 instances, 1 teachers
-- G8: 2 courses, 3 teachers
+- G6: 2 courses, 3 teachers
   └─ BT23412 [T]: 2 instances, 2 teachers
+  └─ BT23413 [T]: 1 instances, 1 teachers
+- G7: 2 courses, 3 teachers
+  └─ BT23412 [T]: 1 instances, 1 teachers
+  └─ BT23414 [T]: 2 instances, 2 teachers
+- G8: 2 courses, 3 teachers
+  └─ BT23411 [T]: 2 instances, 2 teachers
   └─ BT23414 [T]: 1 instances, 1 teachers
