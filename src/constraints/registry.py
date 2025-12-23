@@ -13,6 +13,7 @@ from .cross_system.lunch_alignment import build_lunch_alignment_constraint
 from .cross_system.shift_pattern import build_shift_pattern_constraint
 from .cross_system.teacher_overlap import build_teacher_overlap_constraint
 from .cross_system.teacher_daily_workload import build_teacher_daily_workload_constraint
+from .cross_system.teacher_day_window import build_teacher_day_window_constraint
 from .cross_system.dept_day_span import build_department_day_span_constraint
 from .cross_system.pop_day import build_pop_day_constraint
 from .cross_system.fixed_schedule_lock import build_fixed_schedule_lock_constraint
@@ -26,6 +27,7 @@ from .lab.slot_caps import (
 	build_semester_lab_slot_cap_constraint,
 )
 from .lab.first_year_computer_lab import build_first_year_computer_lab_constraint
+from .lab.special_course_time_blocks import build_special_course_time_blocks_constraint
 from .lab.teacher_daily_presence_lab import build_teacher_daily_presence_lab_constraint
 from .lab.teacher_max_consecutive import build_teacher_max_consecutive_lab_constraint
 from .theory.adjacency import build_no_three_consecutive_slots_constraint
@@ -99,6 +101,12 @@ LAB_CONSTRAINT_DEFINITIONS = {
 		"factory": build_teacher_daily_presence_lab_constraint,
 		"tags": ("lab", "teachers", "schedule"),
 	},
+	"special_course_time_blocks": {
+		"title": "Special Course Time Blocks",
+		"description": "Block configured lab course codes from specific days and lab slot windows.",
+		"factory": build_special_course_time_blocks_constraint,
+		"tags": ("lab", "time", "courses"),
+	},
 }
 
 
@@ -154,6 +162,12 @@ CROSS_SYSTEM_CONSTRAINT_DEFINITIONS = {
 		"description": "Block teachers from holding multiple lab/theory activities at the same time (with co-scheduling exceptions).",
 		"factory": build_teacher_overlap_constraint,
 		"tags": ("cross-system", "teachers", "conflict"),
+	},
+	"teacher_day_window": {
+		"title": "Teacher 5-Day Window",
+		"description": "Force each teacher to use either a Mon–Fri or Tue–Sat continuous 5-day window.",
+		"factory": build_teacher_day_window_constraint,
+		"tags": ("cross-system", "teachers", "days"),
 	},
 	"teacher_daily_workload": {
 		"title": "Teacher Daily Workload",

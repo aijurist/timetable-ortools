@@ -9,7 +9,7 @@ from typing import Any, DefaultDict, List, Mapping, Optional, Sequence, Tuple
 from ..base import Constraint, ConstraintMetadata
 from ..context import ConstraintContext
 from ..schema import ConstraintApplicationResult, ConstraintStatus
-from ..utils import iter_lab_session_variables
+from ..utils import iter_lab_session_variables, register_objective_penalty
 from ...utils.time_utils import DayNormalizer
 
 
@@ -45,6 +45,9 @@ class LabRoomSingleAssignmentConstraint(Constraint):
     def apply(self, context: ConstraintContext) -> ConstraintApplicationResult:
         logger = context.child_logger("room_single_assignment")
         stats = RoomAssignmentStats()
+
+        underfill_penalty_weight = int(self.params.get("medium_underfill_penalty_weight", 25))
+        mixed_medium_penalty_weight = int(self.params.get("medium_mixing_penalty_weight", 10))
 
         lab_block = context.variables.lab
         if not lab_block.assignments:
@@ -102,34 +105,89 @@ class LabRoomSingleAssignmentConstraint(Constraint):
                     course_vars[course_code].append((course_id, var, req.student_count or 0))
                     course_codes.add(course_code)
             
-            # If multiple course codes are possible for this slot, ensure only one is active
-            if len(course_codes) > 1:
-                code_active_vars = []
-                for code in course_codes:
-                    is_active = context.model.NewBoolVar(f"active_{key}_{code}")
-                    code_active_vars.append(is_active)
-                    
-                    # Collect all vars for this course code
-                    all_vars_for_code = [v for _, v, _ in course_vars[code]]
-                    
-                    # Link activity: sum(vars) > 0 => is_active
-                    # sum(vars) <= Max * is_active
-                    context.model.Add(sum(all_vars_for_code) <= 2 * is_active)
-                    # Note: We don't strictly need is_active => sum > 0, 
-                    # but we need sum > 0 => is_active to enforce mutual exclusion
-                    # Actually, sum <= 2 * is_active is enough to say "if is_active is 0, sum is 0"
-                    # So if we force sum(is_active) <= 1, then at most one code can have non-zero sum.
-                
+            # Always create activity selectors per course code to (a) enforce mutual exclusion
+            # across codes, and (b) support utilization rules.
+            code_active_vars = []
+            for code in sorted(course_codes):
+                is_active = context.model.NewBoolVar(f"active_{key}_{code}")
+                code_active_vars.append(is_active)
+
+                all_vars_for_code = [v for _, v, _ in course_vars[code]]
+                context.model.Add(sum(all_vars_for_code) <= 2 * is_active)
+                context.model.Add(sum(all_vars_for_code) >= is_active)
+
+            if len(code_active_vars) > 1:
                 context.model.Add(sum(code_active_vars) <= 1)
-            
-            # Apply capacity limits per course code
+
+            # Apply capacity/utilization rules per course code.
+            # - Large batches (>=100) must be alone in the 140 room.
+            # - Medium batches (60-75) must be co-scheduled as a pair (exactly 2)
+            #   to avoid under-utilisation of 140-capacity rooms.
             for code, items in course_vars.items():
-                vars_for_code = [v for _, v, _ in items]
-                # Check if any instance is large (>= 100)
-                is_large = any(count >= 100 for _, _, count in items)
-                
-                limit = 1 if is_large else 2
-                context.model.Add(sum(vars_for_code) <= limit)
+                all_vars_for_code = [v for _, v, _ in items]
+                large_vars = [v for _, v, count in items if (count or 0) >= 100]
+                medium_vars = [v for _, v, count in items if 60 <= (count or 0) <= 75]
+                other_vars = [v for _, v, count in items if v not in set(large_vars) and v not in set(medium_vars)]
+
+                all_sum = sum(all_vars_for_code)
+                large_sum = sum(large_vars) if large_vars else 0
+                medium_sum = sum(medium_vars) if medium_vars else 0
+                other_sum = sum(other_vars) if other_vars else 0
+
+                if large_vars:
+                    has_large = context.model.NewBoolVar(f"has_large_{key}_{code}")
+                    context.model.Add(large_sum >= has_large)
+                    context.model.Add(large_sum <= len(large_vars) * has_large)
+                    # If a large batch is used, it must be the only one in the room slot.
+                    context.model.Add(all_sum <= 2 - has_large)
+                else:
+                    context.model.Add(all_sum <= 2)
+
+                if medium_vars:
+                    has_medium = context.model.NewBoolVar(f"has_medium_{key}_{code}")
+                    context.model.Add(medium_sum >= has_medium)
+                    context.model.Add(medium_sum <= len(medium_vars) * has_medium)
+
+                    # Soft preference: if medium is used in a 140 room, prefer co-scheduling as a pair.
+                    # We model a shortfall term: shortfall = (2 - medium_sum) when has_medium else 0.
+                    if underfill_penalty_weight > 0:
+                        medium_sum_var = context.model.NewIntVar(
+                            0,
+                            min(2, len(medium_vars)),
+                            f"medium_sum_{key}_{code}",
+                        )
+                        context.model.Add(medium_sum_var == medium_sum)
+
+                        medium_shortfall = context.model.NewIntVar(0, 2, f"medium_shortfall_{key}_{code}")
+                        context.model.Add(medium_shortfall <= 2 * has_medium)
+                        # Big-M linearisation around has_medium (M=2)
+                        context.model.Add(medium_shortfall >= 2 - medium_sum_var - 2 * (1 - has_medium))
+                        context.model.Add(medium_shortfall <= 2 - medium_sum_var + 2 * (1 - has_medium))
+
+                        register_objective_penalty(
+                            context,
+                            medium_shortfall,
+                            underfill_penalty_weight,
+                            tag=f"lab_room_utilization:medium_underfill:{code}",
+                        )
+
+                    # Soft preference: avoid mixing medium batches with other batch sizes for the same
+                    # course code in a 140 room slot.
+                    if mixed_medium_penalty_weight > 0 and other_vars:
+                        other_sum_var = context.model.NewIntVar(0, 2, f"other_sum_{key}_{code}")
+                        context.model.Add(other_sum_var == other_sum)
+
+                        medium_mix = context.model.NewIntVar(0, 2, f"medium_mix_{key}_{code}")
+                        context.model.Add(medium_mix <= 2 * has_medium)
+                        context.model.Add(medium_mix >= other_sum_var - 2 * (1 - has_medium))
+                        context.model.Add(medium_mix <= other_sum_var + 2 * (1 - has_medium))
+
+                        register_objective_penalty(
+                            context,
+                            medium_mix,
+                            mixed_medium_penalty_weight,
+                            tag=f"lab_room_utilization:medium_mixing:{code}",
+                        )
 
         for key, variables in course_slot_buckets.items():
             if len(variables) <= 1:

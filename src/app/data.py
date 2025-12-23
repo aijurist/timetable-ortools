@@ -47,6 +47,8 @@ class ScheduleRepository:
         self._grouping_cache: Dict[Path, Dict[str, Any]] = {}
         self._overlap_cache: Dict[Path, Dict[str, Any]] = {}
         self._validation_cache: Dict[Path, Dict[str, Any]] = {}
+        self._solver_metrics_cache: Dict[Path, Dict[str, Any]] = {}
+        self._warm_start_cache: Dict[Path, Dict[str, Any]] = {}
 
     def get_latest_snapshot(self) -> ScheduleSnapshot:
         snapshot = self._scan_latest_snapshot()
@@ -61,6 +63,8 @@ class ScheduleRepository:
             self._grouping_cache.clear()
             self._overlap_cache.clear()
             self._validation_cache.clear()
+            self._solver_metrics_cache.clear()
+            self._warm_start_cache.clear()
             self._cached_snapshot = snapshot
         return self._cached_snapshot  # type: ignore[return-value]
 
@@ -113,6 +117,18 @@ class ScheduleRepository:
         if snapshot.root not in self._validation_cache:
             self._validation_cache[snapshot.root] = self._load_validation_telemetry(snapshot)
         return self._validation_cache[snapshot.root]
+
+    def get_solver_metrics(self) -> Dict[str, Any]:
+        snapshot = self.get_latest_snapshot()
+        if snapshot.root not in self._solver_metrics_cache:
+            self._solver_metrics_cache[snapshot.root] = self._load_solver_metrics(snapshot)
+        return self._solver_metrics_cache[snapshot.root]
+
+    def get_warm_start_snapshot_summary(self) -> Dict[str, Any]:
+        snapshot = self.get_latest_snapshot()
+        if snapshot.root not in self._warm_start_cache:
+            self._warm_start_cache[snapshot.root] = self._load_warm_start_snapshot_summary(snapshot)
+        return self._warm_start_cache[snapshot.root]
 
     # ------------------------------------------------------------------
     # Snapshot discovery
@@ -401,6 +417,51 @@ class ScheduleRepository:
             }
         with telemetry_path.open("r", encoding="utf-8") as handle:
             return json.load(handle)
+
+    def _load_solver_metrics(self, snapshot: ScheduleSnapshot) -> Dict[str, Any]:
+        metrics_path = snapshot.root / "solver_metrics.json"
+        if not metrics_path.exists():
+            return {
+                "generated_at": None,
+                "run_label": snapshot.label,
+                "solver": {
+                    "status": None,
+                    "status_code": None,
+                    "wall_time": None,
+                    "objective_value": None,
+                    "best_bound": None,
+                    "gap": None,
+                    "solution_count": None,
+                },
+                "model": {},
+            }
+        with metrics_path.open("r", encoding="utf-8") as handle:
+            return json.load(handle)
+
+    def _load_warm_start_snapshot_summary(self, snapshot: ScheduleSnapshot) -> Dict[str, Any]:
+        snapshot_path = snapshot.root / "warm_start_snapshot.json"
+        if not snapshot_path.exists():
+            return {
+                "generated_at": None,
+                "available": False,
+                "metadata": {},
+                "counts": {"lab": 0, "theory": 0},
+            }
+
+        with snapshot_path.open("r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+
+        metadata = payload.get("metadata") or {}
+        lab_assignments = payload.get("lab_assignments") or []
+        theory_assignments = payload.get("theory_assignments") or []
+        created_at = metadata.get("created_at")
+
+        return {
+            "generated_at": created_at,
+            "available": True,
+            "metadata": metadata,
+            "counts": {"lab": len(lab_assignments), "theory": len(theory_assignments)},
+        }
 
     # ------------------------------------------------------------------
     # Helpers

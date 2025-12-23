@@ -16,6 +16,8 @@ const state = {
     unassigned: [],
     metrics: null,
     snapshot: null,
+    solverMetrics: null,
+    warmStart: null,
 };
 
 const charts = {};
@@ -40,25 +42,33 @@ async function bootstrapDashboard() {
 }
 
 async function loadPayloads() {
-    const [scheduleRes, metricsRes, roomsRes] = await Promise.all([
+    const [scheduleRes, metricsRes, roomsRes, solverRes, warmStartRes] = await Promise.all([
         fetch('/api/schedule'),
         fetch('/api/metrics'),
         fetch('/api/rooms'),
+        fetch('/api/solver-metrics', { cache: 'no-store' }),
+        fetch('/api/warm-start', { cache: 'no-store' }),
     ]);
 
     await handleResponseError(scheduleRes);
     await handleResponseError(metricsRes);
     await handleResponseError(roomsRes);
+    await handleResponseError(solverRes);
+    await handleResponseError(warmStartRes);
 
     const scheduleJson = await scheduleRes.json();
     const metricsJson = await metricsRes.json();
     const roomsJson = await roomsRes.json();
+    const solverJson = await solverRes.json();
+    const warmStartJson = await warmStartRes.json();
 
     state.snapshot = scheduleJson.snapshot;
     state.metrics = metricsJson;
     state.sessions = normalizeSessions(scheduleJson.data || {});
     state.rooms = roomsJson.rooms || [];
     state.unassigned = roomsJson.unassigned || [];
+    state.solverMetrics = solverJson.data || null;
+    state.warmStart = warmStartJson.data || null;
 
     updateSnapshotBanner();
     updateHighlights();
@@ -425,6 +435,29 @@ function updateSnapshotBanner() {
     $('#snapshotLabel').textContent = state.snapshot.folder;
     const generatedAt = state.snapshot.generated_at ? new Date(state.snapshot.generated_at) : null;
     $('#lastUpdated').textContent = generatedAt ? generatedAt.toLocaleString() : 'Unknown';
+
+    const solverEl = document.getElementById('solverStatus');
+    if (solverEl) {
+        const status = state.solverMetrics?.solver?.status;
+        const wallTime = state.solverMetrics?.solver?.wall_time;
+        const objective = state.solverMetrics?.solver?.objective_value;
+        const bits = [];
+        if (status) bits.push(`Solver: ${status}`);
+        if (typeof objective === 'number') bits.push(`obj ${objective}`);
+        if (typeof wallTime === 'number') bits.push(`${wallTime.toFixed(2)}s`);
+        solverEl.textContent = bits.join(' · ');
+    }
+
+    const warmEl = document.getElementById('warmStartStatus');
+    if (warmEl) {
+        if (!state.warmStart?.available) {
+            warmEl.textContent = '';
+        } else {
+            const lab = state.warmStart?.counts?.lab ?? 0;
+            const theory = state.warmStart?.counts?.theory ?? 0;
+            warmEl.textContent = `Warm-start: lab ${lab} · theory ${theory}`;
+        }
+    }
 }
 
 function updateHighlights() {

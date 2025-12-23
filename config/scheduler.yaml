@@ -7,7 +7,7 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data/sem2026/year_wise/2nd_year/os.csv
+  courses_csv: data/sem2026/year_wise/3rd_year/all.csv
   rooms_csv: data/block_wise/2nd_3rd.csv
   day_order_csv: data/day_order_even.csv
   core_lab_mapping_csv: data/CoreMappingSimplified_StudentDept.csv
@@ -550,7 +550,27 @@ constraints:
       enabled: true
       priority: 9
       weight: 1.0
-      params: {}
+      params:
+        # Soft preference: avoid using 140-cap rooms for a single 60-75 batch.
+        # Higher values push the solver to co-schedule pairs (when possible).
+        medium_underfill_penalty_weight: 25
+        # Soft preference: discourage mixing medium batches with other batch sizes
+        # for the same course code in a 140 room slot.
+        medium_mixing_penalty_weight: 10
+
+    special_course_time_blocks:
+      enabled: true
+      priority: 9
+      weight: 1.0
+      params:
+        course_codes:
+          - CS23431
+          - CB23431
+        blocked_days:
+          - saturday
+        blocked_lab_slot_labels:
+          - "11:50 - 12:40"
+          - "12:40 - 1:20"
     core_lab_mapping:
       enabled: true
       priority: 8
@@ -691,8 +711,10 @@ constraints:
         year_block_preferences:
           "2":
             - B Block
+            - C Block
           "3":
             - A Block
+            - C Block
           "4":
             - A Block
     # shift_alignment:
@@ -738,6 +760,12 @@ constraints:
     teacher_overlap:
       enabled: true
       priority: 10
+      weight: 1.0
+      params: {}
+
+    teacher_day_window:
+      enabled: true
+      priority: 9
       weight: 1.0
       params: {}
     fixed_schedule_lock:
@@ -878,12 +906,12 @@ model:
   use_sparse_variables: true
 
 runtime:
-  time_limit_sec: 30000
+  time_limit_sec: 1000
   thread_count: 12
   enable_lns: true
   enable_trace: true
   solution_limit: null
-  stop_after_first_solution: true
+  stop_after_first_solution: false
   probing_level: 2
   search_branching: PORTFOLIO_SEARCH
   restart_log_size: 18.0

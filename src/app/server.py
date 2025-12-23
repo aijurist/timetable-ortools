@@ -150,6 +150,18 @@ def create_app() -> FastAPI:
         data = repo.get_validation_telemetry()
         return {"snapshot": snapshot.as_dict(), "data": data}
 
+    @app.get("/api/solver-metrics")
+    async def solver_metrics() -> Dict[str, Any]:
+        snapshot = _snapshot_or_404()
+        data = repo.get_solver_metrics()
+        return {"snapshot": snapshot.as_dict(), "data": data}
+
+    @app.get("/api/warm-start")
+    async def warm_start() -> Dict[str, Any]:
+        snapshot = _snapshot_or_404()
+        data = repo.get_warm_start_snapshot_summary()
+        return {"snapshot": snapshot.as_dict(), "data": data}
+
     return app
 
 
