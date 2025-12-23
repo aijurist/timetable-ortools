@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Biomedical Engineering
 Semester: 4
-Generated: 2025-12-23 22:18:27
+Generated: 2025-12-24 00:03:51
 ============================================================
 
 OVERVIEW
@@ -18,34 +18,34 @@ COURSE DISTRIBUTION BY GROUP
   └─ G6: 1 teacher assignments
   └─ G7: 1 teacher assignments
 - BM23421 [Lab]: 2 groups, 2 teachers
-  └─ G1: 1 teacher assignments
+  └─ G3: 1 teacher assignments
   └─ G5: 1 teacher assignments
 - BM23422 [Lab]: 2 groups, 2 teachers
-  └─ G1: 1 teacher assignments
+  └─ G4: 1 teacher assignments
   └─ G5: 1 teacher assignments
 - BM23431 [Lab + Theory]: 2 groups, 2 teachers
-  └─ G3: 1 teacher assignments
-  └─ G4: 1 teacher assignments
+  └─ G1: 1 teacher assignments
+  └─ G2: 1 teacher assignments
 - CS23336 [Lab + Theory]: 2 groups, 2 teachers
-  └─ G2: 1 teacher assignments
   └─ G3: 1 teacher assignments
-- MA23436 [Lab + Theory]: 2 groups, 2 teachers
-  └─ G2: 1 teacher assignments
   └─ G4: 1 teacher assignments
+- MA23436 [Lab + Theory]: 2 groups, 2 teachers
+  └─ G1: 1 teacher assignments
+  └─ G2: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 2 courses, 2 teachers
-  └─ BM23421 [L]: 1 instances, 1 teachers
-  └─ BM23422 [L]: 1 instances, 1 teachers
+  └─ BM23431 [L+T]: 1 instances, 1 teachers
+  └─ MA23436 [L+T]: 1 instances, 1 teachers
 - G2: 2 courses, 2 teachers
-  └─ CS23336 [L+T]: 1 instances, 1 teachers
+  └─ BM23431 [L+T]: 1 instances, 1 teachers
   └─ MA23436 [L+T]: 1 instances, 1 teachers
 - G3: 2 courses, 2 teachers
-  └─ BM23431 [L+T]: 1 instances, 1 teachers
+  └─ BM23421 [L]: 1 instances, 1 teachers
   └─ CS23336 [L+T]: 1 instances, 1 teachers
 - G4: 2 courses, 2 teachers
-  └─ BM23431 [L+T]: 1 instances, 1 teachers
-  └─ MA23436 [L+T]: 1 instances, 1 teachers
+  └─ BM23422 [L]: 1 instances, 1 teachers
+  └─ CS23336 [L+T]: 1 instances, 1 teachers
 - G5: 2 courses, 2 teachers
   └─ BM23421 [L]: 1 instances, 1 teachers
   └─ BM23422 [L]: 1 instances, 1 teachers

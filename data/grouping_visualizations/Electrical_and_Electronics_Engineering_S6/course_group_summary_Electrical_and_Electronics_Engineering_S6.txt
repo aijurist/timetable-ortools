@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Electrical & Electronics Engineering
 Semester: 6
-Generated: 2025-12-23 22:18:36
+Generated: 2025-12-24 00:41:29
 ============================================================
 
 OVERVIEW
@@ -12,17 +12,17 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - EE23611 [Theory]: 1 groups, 2 teachers
-  └─ G6: 2 teacher assignments
-- EE23612 [Theory]: 1 groups, 2 teachers
   └─ G5: 2 teacher assignments
+- EE23612 [Theory]: 1 groups, 2 teachers
+  └─ G6: 2 teacher assignments
 - EE23613 [Theory]: 1 groups, 2 teachers
   └─ G4: 2 teacher assignments
 - EE23621 [Lab]: 1 groups, 2 teachers
   └─ G1: 2 teacher assignments
 - EE23622 [Lab]: 1 groups, 2 teachers
-  └─ G3: 2 teacher assignments
-- EE23631 [Lab + Theory]: 1 groups, 2 teachers
   └─ G2: 2 teacher assignments
+- EE23631 [Lab + Theory]: 1 groups, 2 teachers
+  └─ G3: 2 teacher assignments
 - EE23PE01 [Theory]: 1 groups, 3 teachers
   └─ G7: 3 teacher assignments
 
@@ -30,14 +30,14 @@ GROUP COMPOSITION
 - G1: 1 courses, 2 teachers
   └─ EE23621 [L]: 2 instances, 2 teachers
 - G2: 1 courses, 2 teachers
-  └─ EE23631 [L+T]: 2 instances, 2 teachers
-- G3: 1 courses, 2 teachers
   └─ EE23622 [L]: 2 instances, 2 teachers
+- G3: 1 courses, 2 teachers
+  └─ EE23631 [L+T]: 2 instances, 2 teachers
 - G4: 1 courses, 2 teachers
   └─ EE23613 [T]: 2 instances, 2 teachers
 - G5: 1 courses, 2 teachers
-  └─ EE23612 [T]: 2 instances, 2 teachers
-- G6: 1 courses, 2 teachers
   └─ EE23611 [T]: 2 instances, 2 teachers
+- G6: 1 courses, 2 teachers
+  └─ EE23612 [T]: 2 instances, 2 teachers
 - G7: 1 courses, 3 teachers
   └─ EE23PE01 [T]: 3 instances, 3 teachers

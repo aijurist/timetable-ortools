@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Robotics & Automation
 Semester: 6
-Generated: 2025-12-23 22:18:39
+Generated: 2025-12-24 00:41:31
 ============================================================
 
 OVERVIEW
@@ -14,30 +14,30 @@ COURSE DISTRIBUTION BY GROUP
 - GE23627 [Lab]: 1 groups, 1 teachers
   └─ G1: 1 teacher assignments
 - ME23611 [Theory]: 1 groups, 1 teachers
-  └─ G5: 1 teacher assignments
+  └─ G6: 1 teacher assignments
 - ME23612 [Theory]: 1 groups, 1 teachers
-  └─ G7: 1 teacher assignments
+  └─ G5: 1 teacher assignments
 - RO23631 [Lab + Theory]: 1 groups, 1 teachers
   └─ G3: 1 teacher assignments
 - RO23632 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G2: 1 teacher assignments
-- RO23633 [Lab + Theory]: 1 groups, 1 teachers
   └─ G4: 1 teacher assignments
+- RO23633 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G2: 1 teacher assignments
 - RO23D11 [Theory]: 1 groups, 1 teachers
-  └─ G6: 1 teacher assignments
+  └─ G7: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
   └─ GE23627 [L]: 1 instances, 1 teachers
 - G2: 1 courses, 1 teachers
-  └─ RO23632 [L+T]: 1 instances, 1 teachers
+  └─ RO23633 [L+T]: 1 instances, 1 teachers
 - G3: 1 courses, 1 teachers
   └─ RO23631 [L+T]: 1 instances, 1 teachers
 - G4: 1 courses, 1 teachers
-  └─ RO23633 [L+T]: 1 instances, 1 teachers
+  └─ RO23632 [L+T]: 1 instances, 1 teachers
 - G5: 1 courses, 1 teachers
-  └─ ME23611 [T]: 1 instances, 1 teachers
-- G6: 1 courses, 1 teachers
-  └─ RO23D11 [T]: 1 instances, 1 teachers
-- G7: 1 courses, 1 teachers
   └─ ME23612 [T]: 1 instances, 1 teachers
+- G6: 1 courses, 1 teachers
+  └─ ME23611 [T]: 1 instances, 1 teachers
+- G7: 1 courses, 1 teachers
+  └─ RO23D11 [T]: 1 instances, 1 teachers

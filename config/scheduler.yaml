@@ -7,7 +7,7 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data/sem2026/year_wise/2nd_3rd.csv
+  courses_csv: data/sem2026/year_wise/3rd_year/all.csv
   rooms_csv: data/block_wise/2nd_3rd.csv
   day_order_csv: data/day_order_even.csv
   core_lab_mapping_csv: data/CoreMappingSimplified_StudentDept.csv
@@ -563,14 +563,23 @@ constraints:
       priority: 9
       weight: 1.0
       params:
-        course_codes:
-          - CS23431
-          - CB23431
-        blocked_days:
-          - saturday
-        blocked_lab_slot_labels:
-          - "11:50 - 12:40"
-          - "12:40 - 1:20"
+        rules:
+          - course_codes:
+              - CS23431
+              - CB23431
+            blocked_days:
+              - saturday
+            blocked_lab_slot_labels:
+              - "11:50 - 12:40"
+              - "12:40 - 1:20"
+          - course_codes:
+              - AT23631
+              - ME23622
+              - RO23221
+            allowed_days:
+              - thur
+              - fri
+              - saturday
     core_lab_mapping:
       enabled: true
       priority: 8

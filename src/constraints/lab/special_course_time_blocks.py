@@ -7,7 +7,7 @@ should be enforced as hard constraints.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Mapping, Optional, Sequence, Set
+from typing import Any, Iterable, Mapping, Optional, Sequence, Set
 
 from ..base import Constraint, ConstraintMetadata
 from ..context import ConstraintContext
@@ -23,6 +23,7 @@ class SpecialCourseTimeBlockStats:
 	blocked_by_time: int = 0
 	missing_requirements: int = 0
 	unknown_sessions: int = 0
+	rules_applied: int = 0
 
 	def to_details(self) -> Mapping[str, object]:
 		return {
@@ -31,7 +32,24 @@ class SpecialCourseTimeBlockStats:
 			"blocked_by_time": self.blocked_by_time,
 			"missing_requirements": self.missing_requirements,
 			"unknown_sessions": self.unknown_sessions,
+			"rules_applied": self.rules_applied,
 		}
+
+
+@dataclass(frozen=True)
+class SpecialCourseTimeBlockRule:
+	course_codes: Set[str]
+	blocked_days: Set[str]
+	allowed_days: Optional[Set[str]]
+	blocked_slot_indices: Set[int]
+
+	def matches_course(self, course_code: str) -> bool:
+		return course_code in self.course_codes
+
+	def blocks_day(self, day_label: str) -> bool:
+		if self.allowed_days is not None and day_label not in self.allowed_days:
+			return True
+		return bool(self.blocked_days) and day_label in self.blocked_days
 
 
 class SpecialCourseTimeBlocksConstraint(Constraint):
@@ -42,18 +60,15 @@ class SpecialCourseTimeBlocksConstraint(Constraint):
 		stats = SpecialCourseTimeBlockStats()
 
 		params = self.params or {}
-		course_codes = {str(code).strip() for code in (params.get("course_codes") or []) if str(code).strip()}
-		if not course_codes:
-			logger.info("No course_codes configured; skipping special course time blocks")
+		rules = self._parse_rules(context, params)
+		if not rules:
+			logger.info("No rules configured; skipping special course time blocks")
 			return self._build_result(stats, ConstraintStatus.SKIPPED)
 
-		blocked_days = self._normalize_days(params.get("blocked_days") or [])
-		blocked_slot_indices = self._resolve_blocked_slot_indices(context, params)
+		stats.rules_applied = len(rules)
 		logger.info(
-			"Special course time blocks configured course_codes=%s blocked_days=%s blocked_slot_indices=%s",
-			sorted(course_codes),
-			sorted(blocked_days),
-			sorted(blocked_slot_indices),
+			"Special course time blocks configured rule_count=%d",
+			len(rules),
 		)
 
 		lab_block = context.variables.lab
@@ -68,16 +83,18 @@ class SpecialCourseTimeBlocksConstraint(Constraint):
 				stats.missing_requirements += 1
 				continue
 			course_code = (req.course_code or "").strip()
-			if course_code not in course_codes:
+			course_code = course_code.upper()
+			rule = next((r for r in rules if r.matches_course(course_code)), None)
+			if rule is None:
 				continue
 
 			day_label = self._resolve_day_label(context, lab_block.day_patterns, course_id, day_index)
-			if blocked_days and day_label in blocked_days:
+			if rule.blocks_day(day_label):
 				context.model.Add(variable == 0)
 				stats.blocked_by_day += 1
 				continue
 
-			if blocked_slot_indices:
+			if rule.blocked_slot_indices:
 				session_slots = lab_sessions.get(session_name)
 				if not session_slots:
 					stats.unknown_sessions += 1
@@ -87,7 +104,7 @@ class SpecialCourseTimeBlocksConstraint(Constraint):
 				except (TypeError, ValueError):
 					stats.unknown_sessions += 1
 					continue
-				if slot_indices.intersection(blocked_slot_indices):
+				if slot_indices.intersection(rule.blocked_slot_indices):
 					context.model.Add(variable == 0)
 					stats.blocked_by_time += 1
 
@@ -108,6 +125,48 @@ class SpecialCourseTimeBlocksConstraint(Constraint):
 			if label:
 				normalized.add(label)
 		return normalized
+
+	@classmethod
+	def _parse_rules(
+		cls,
+		context: ConstraintContext,
+		params: Mapping[str, object],
+	) -> list[SpecialCourseTimeBlockRule]:
+		def build_rule(raw: Mapping[str, Any]) -> Optional[SpecialCourseTimeBlockRule]:
+			course_codes = {
+				str(code).strip().upper()
+				for code in (raw.get("course_codes") or [])
+				if str(code).strip()
+			}
+			if not course_codes:
+				return None
+
+			blocked_days = cls._normalize_days(raw.get("blocked_days") or [])
+			allowed_days_raw = cls._normalize_days(raw.get("allowed_days") or [])
+			allowed_days: Optional[Set[str]] = allowed_days_raw if allowed_days_raw else None
+			blocked_slot_indices = cls._resolve_blocked_slot_indices(context, raw)
+			return SpecialCourseTimeBlockRule(
+				course_codes=course_codes,
+				blocked_days=blocked_days,
+				allowed_days=allowed_days,
+				blocked_slot_indices=blocked_slot_indices,
+			)
+
+		rules: list[SpecialCourseTimeBlockRule] = []
+		raw_rules = params.get("rules")
+		if isinstance(raw_rules, list):
+			for item in raw_rules:
+				if isinstance(item, Mapping):
+					rule = build_rule(item)
+					if rule is not None:
+						rules.append(rule)
+			return rules
+
+		# Backward-compatible single-rule config
+		single = build_rule(params) if isinstance(params, Mapping) else None
+		if single is not None:
+			rules.append(single)
+		return rules
 
 	@staticmethod
 	def _resolve_blocked_slot_indices(context: ConstraintContext, params: Mapping[str, object]) -> Set[int]:

@@ -864,11 +864,108 @@ class CourseGroupOptimizer:
         # Special constraint for Computer Science & Engineering 2nd semester
         if (self.dept == "Computer Science & Engineering" and self.semester == 2):
             constraints_added += self._apply_cse_s2_five_group_split(model, assignment_vars)
+
+        # Special constraint for Biotechnology 4th semester (fixed grouping)
+        if (self.dept == "Biotechnology" and self.semester == 4):
+            constraints_added += self._apply_biotech_s4_fixed_grouping(model, assignment_vars)
         
         if constraints_added > 0:
             self.logger.info(f"Applied {constraints_added} special department-specific constraints")
         else:
             self.logger.info("No special department-specific constraints applied")
+
+    def _apply_biotech_s4_fixed_grouping(self, model, assignment_vars):
+        """Force Biotechnology S4 to use a fixed course->group mapping.
+
+        This encodes the expected two-group placement per course from the
+        curated summary (G1..G8). Groups are 0-indexed internally.
+        """
+        if self.num_groups < 8:
+            self.logger.warning(
+                "Skipping Biotechnology S4 fixed grouping: expected >= 8 groups, got %s",
+                self.num_groups,
+            )
+            return 0
+
+        self.logger.info("Applying Biotechnology S4 fixed group mapping")
+
+        # Fixed mapping based on the curated summary.
+        # Groups are 0-indexed here (G1 -> 0 ... G8 -> 7).
+        # Values are the exact number of instances (teacher-assignments) per group.
+        fixed_group_counts = {
+            # G1/G2
+            "CS23422": {0: 1, 1: 2},
+            "MA23431": {0: 2, 1: 1},
+            # G3/G4
+            "BT23421": {2: 2, 3: 1},
+            "BT23422": {2: 1, 3: 2},
+            # G5/G6/G7/G8
+            "BT23413": {4: 2, 5: 1},
+            "BT23414": {4: 1, 7: 2},
+            "BT23411": {5: 2, 6: 1},
+            "BT23412": {6: 2, 7: 1},
+        }
+
+        constraints_added = 0
+
+        for course_code, group_targets in fixed_group_counts.items():
+            allowed_groups = set(group_targets.keys())
+            instance_indices = [
+                i for i, inst in enumerate(self.courses)
+                if inst.get("course_code") == course_code
+            ]
+
+            if not instance_indices:
+                self.logger.warning(
+                    "Biotechnology S4 fixed grouping: no instances found for %s",
+                    course_code,
+                )
+                continue
+
+            # 1) Forbid assignments outside the allowed groups.
+            for instance_idx in instance_indices:
+                for group_idx in range(self.num_groups):
+                    if group_idx in allowed_groups:
+                        continue
+                    model.Add(assignment_vars[(instance_idx, group_idx)] == 0)
+                    constraints_added += 1
+
+            # 2) Enforce exact per-group counts (the 2/1 split).
+            # If the input data no longer has the expected total instances, fall back to
+            # "present in each allowed group" to avoid infeasibility.
+            expected_total = sum(group_targets.values())
+            if len(instance_indices) != expected_total:
+                self.logger.warning(
+                    "Biotechnology S4 fixed grouping: %s has %s instances (expected %s). "
+                    "Falling back to presence-only constraints.",
+                    course_code,
+                    len(instance_indices),
+                    expected_total,
+                )
+
+                for group_idx in sorted(allowed_groups):
+                    group_count = model.NewIntVar(
+                        0,
+                        len(instance_indices),
+                        f"biotech_s4_{course_code}_count_g{group_idx}",
+                    )
+                    model.Add(group_count == sum(assignment_vars[(i, group_idx)] for i in instance_indices))
+                    constraints_added += 1
+                    model.Add(group_count >= 1)
+                    constraints_added += 1
+            else:
+                for group_idx, target in group_targets.items():
+                    group_count = model.NewIntVar(
+                        0,
+                        len(instance_indices),
+                        f"biotech_s4_{course_code}_count_g{group_idx}",
+                    )
+                    model.Add(group_count == sum(assignment_vars[(i, group_idx)] for i in instance_indices))
+                    constraints_added += 1
+                    model.Add(group_count == target)
+                    constraints_added += 1
+
+        return constraints_added
 
     def _apply_ece_s2_even_core_split(self, model, assignment_vars):
         """Ensure GE23121 and EE23132 split evenly across the two groups (as balanced as possible)."""

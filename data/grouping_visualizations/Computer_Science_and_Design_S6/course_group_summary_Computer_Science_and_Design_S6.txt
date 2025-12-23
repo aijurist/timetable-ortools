@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Computer Science & Design
 Semester: 6
-Generated: 2025-12-23 22:18:35
+Generated: 2025-12-24 00:41:28
 ============================================================
 
 OVERVIEW
@@ -12,24 +12,24 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - AI23331 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G2: 1 teacher assignments
+  └─ G3: 1 teacher assignments
 - CD23621 [Lab]: 1 groups, 1 teachers
   └─ G1: 1 teacher assignments
 - CD23631 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G5: 1 teacher assignments
-- CD23632 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G3: 1 teacher assignments
-- CD23C32 [Lab + Theory]: 1 groups, 1 teachers
   └─ G4: 1 teacher assignments
+- CD23632 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G2: 1 teacher assignments
+- CD23C32 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G5: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
   └─ CD23621 [L]: 1 instances, 1 teachers
 - G2: 1 courses, 1 teachers
-  └─ AI23331 [L+T]: 1 instances, 1 teachers
-- G3: 1 courses, 1 teachers
   └─ CD23632 [L+T]: 1 instances, 1 teachers
+- G3: 1 courses, 1 teachers
+  └─ AI23331 [L+T]: 1 instances, 1 teachers
 - G4: 1 courses, 1 teachers
-  └─ CD23C32 [L+T]: 1 instances, 1 teachers
-- G5: 1 courses, 1 teachers
   └─ CD23631 [L+T]: 1 instances, 1 teachers
+- G5: 1 courses, 1 teachers
+  └─ CD23C32 [L+T]: 1 instances, 1 teachers
