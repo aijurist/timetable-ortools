@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Computer Science & Engineering (Cyber Security)
 Semester: 6
-Generated: 2025-12-23 13:09:27
+Generated: 2025-12-23 15:16:53
 ============================================================
 
 OVERVIEW
@@ -12,28 +12,28 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - AI23331 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G1: 1 teacher assignments
+  └─ G6: 1 teacher assignments
 - CR23611 [Theory]: 1 groups, 1 teachers
   └─ G5: 1 teacher assignments
 - CR23631 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G6: 1 teacher assignments
-- CR23632 [Lab + Theory]: 1 groups, 1 teachers
   └─ G3: 1 teacher assignments
-- CS23621 [Lab]: 1 groups, 1 teachers
+- CR23632 [Lab + Theory]: 1 groups, 1 teachers
   └─ G4: 1 teacher assignments
-- GE23627 [Lab]: 1 groups, 1 teachers
+- CS23621 [Lab]: 1 groups, 1 teachers
   └─ G2: 1 teacher assignments
+- GE23627 [Lab]: 1 groups, 1 teachers
+  └─ G1: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
-  └─ AI23331 [L+T]: 1 instances, 1 teachers
-- G2: 1 courses, 1 teachers
   └─ GE23627 [L]: 1 instances, 1 teachers
-- G3: 1 courses, 1 teachers
-  └─ CR23632 [L+T]: 1 instances, 1 teachers
-- G4: 1 courses, 1 teachers
+- G2: 1 courses, 1 teachers
   └─ CS23621 [L]: 1 instances, 1 teachers
+- G3: 1 courses, 1 teachers
+  └─ CR23631 [L+T]: 1 instances, 1 teachers
+- G4: 1 courses, 1 teachers
+  └─ CR23632 [L+T]: 1 instances, 1 teachers
 - G5: 1 courses, 1 teachers
   └─ CR23611 [T]: 1 instances, 1 teachers
 - G6: 1 courses, 1 teachers
-  └─ CR23631 [L+T]: 1 instances, 1 teachers
+  └─ AI23331 [L+T]: 1 instances, 1 teachers

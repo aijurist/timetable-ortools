@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Chemical Engineering
 Semester: 4
-Generated: 2025-12-22 03:57:42
+Generated: 2025-12-23 15:16:45
 ============================================================
 
 OVERVIEW
@@ -12,9 +12,9 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - CH23411 [Theory]: 1 groups, 1 teachers
-  └─ G4: 1 teacher assignments
-- CH23412 [Theory]: 1 groups, 1 teachers
   └─ G5: 1 teacher assignments
+- CH23412 [Theory]: 1 groups, 1 teachers
+  └─ G4: 1 teacher assignments
 - CH23431 [Lab + Theory]: 1 groups, 1 teachers
   └─ G3: 1 teacher assignments
 - CS23422 [Lab]: 1 groups, 1 teachers
@@ -30,6 +30,6 @@ GROUP COMPOSITION
 - G3: 1 courses, 1 teachers
   └─ CH23431 [L+T]: 1 instances, 1 teachers
 - G4: 1 courses, 1 teachers
-  └─ CH23411 [T]: 1 instances, 1 teachers
-- G5: 1 courses, 1 teachers
   └─ CH23412 [T]: 1 instances, 1 teachers
+- G5: 1 courses, 1 teachers
+  └─ CH23411 [T]: 1 instances, 1 teachers

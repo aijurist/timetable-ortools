@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Chemical Engineering
 Semester: 6
-Generated: 2025-12-23 13:09:26
+Generated: 2025-12-23 15:16:52
 ============================================================
 
 OVERVIEW
@@ -12,7 +12,7 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - CH23611 [Theory]: 1 groups, 1 teachers
-  └─ G4: 1 teacher assignments
+  └─ G9: 1 teacher assignments
 - CH23612 [Theory]: 1 groups, 1 teachers
   └─ G5: 1 teacher assignments
 - CH23613 [Theory]: 1 groups, 1 teachers
@@ -20,25 +20,25 @@ COURSE DISTRIBUTION BY GROUP
 - CH23614 [Theory]: 1 groups, 1 teachers
   └─ G6: 1 teacher assignments
 - CH23621 [Lab]: 1 groups, 1 teachers
-  └─ G1: 1 teacher assignments
+  └─ G3: 1 teacher assignments
 - CH23B14 [Theory]: 1 groups, 1 teachers
-  └─ G9: 1 teacher assignments
+  └─ G4: 1 teacher assignments
 - CH23E15 [Theory]: 1 groups, 1 teachers
   └─ G8: 1 teacher assignments
 - GE23621 [Lab]: 1 groups, 1 teachers
   └─ G2: 1 teacher assignments
 - GE23627 [Lab]: 1 groups, 1 teachers
-  └─ G3: 1 teacher assignments
+  └─ G1: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
-  └─ CH23621 [L]: 1 instances, 1 teachers
+  └─ GE23627 [L]: 1 instances, 1 teachers
 - G2: 1 courses, 1 teachers
   └─ GE23621 [L]: 1 instances, 1 teachers
 - G3: 1 courses, 1 teachers
-  └─ GE23627 [L]: 1 instances, 1 teachers
+  └─ CH23621 [L]: 1 instances, 1 teachers
 - G4: 1 courses, 1 teachers
-  └─ CH23611 [T]: 1 instances, 1 teachers
+  └─ CH23B14 [T]: 1 instances, 1 teachers
 - G5: 1 courses, 1 teachers
   └─ CH23612 [T]: 1 instances, 1 teachers
 - G6: 1 courses, 1 teachers
@@ -48,4 +48,4 @@ GROUP COMPOSITION
 - G8: 1 courses, 1 teachers
   └─ CH23E15 [T]: 1 instances, 1 teachers
 - G9: 1 courses, 1 teachers
-  └─ CH23B14 [T]: 1 instances, 1 teachers
+  └─ CH23611 [T]: 1 instances, 1 teachers
