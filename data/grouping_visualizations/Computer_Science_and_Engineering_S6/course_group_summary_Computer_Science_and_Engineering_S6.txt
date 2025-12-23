@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Computer Science & Engineering
 Semester: 6
-Generated: 2025-12-22 03:57:50
+Generated: 2025-12-23 13:09:28
 ============================================================
 
 OVERVIEW
@@ -12,40 +12,40 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - AD23B31 [Lab + Theory]: 2 groups, 5 teachers
-  └─ G4: 3 teacher assignments
-  └─ G6: 2 teacher assignments
-- AI23331 [Lab + Theory]: 2 groups, 6 teachers
-  └─ G3: 4 teacher assignments
   └─ G5: 2 teacher assignments
+  └─ G6: 3 teacher assignments
+- AI23331 [Lab + Theory]: 2 groups, 6 teachers
+  └─ G2: 4 teacher assignments
+  └─ G6: 2 teacher assignments
 - CS23621 [Lab]: 2 groups, 4 teachers
-  └─ G1: 2 teacher assignments
-  └─ G2: 2 teacher assignments
+  └─ G1: 1 teacher assignments
+  └─ G4: 3 teacher assignments
 - CS23631 [Lab + Theory]: 2 groups, 6 teachers
-  └─ G3: 2 teacher assignments
-  └─ G6: 4 teacher assignments
-- CS23632 [Lab + Theory]: 2 groups, 4 teachers
-  └─ G1: 2 teacher assignments
   └─ G2: 2 teacher assignments
+  └─ G5: 4 teacher assignments
+- CS23632 [Lab + Theory]: 2 groups, 4 teachers
+  └─ G3: 3 teacher assignments
+  └─ G4: 1 teacher assignments
 - CS23633 [Lab + Theory]: 2 groups, 5 teachers
-  └─ G4: 2 teacher assignments
-  └─ G5: 3 teacher assignments
+  └─ G1: 4 teacher assignments
+  └─ G3: 1 teacher assignments
 
 GROUP COMPOSITION
-- G1: 2 courses, 4 teachers
-  └─ CS23621 [L]: 2 instances, 2 teachers
-  └─ CS23632 [L+T]: 2 instances, 2 teachers
-- G2: 2 courses, 4 teachers
-  └─ CS23621 [L]: 2 instances, 2 teachers
-  └─ CS23632 [L+T]: 2 instances, 2 teachers
-- G3: 2 courses, 6 teachers
+- G1: 2 courses, 5 teachers
+  └─ CS23621 [L]: 1 instances, 1 teachers
+  └─ CS23633 [L+T]: 4 instances, 4 teachers
+- G2: 2 courses, 6 teachers
   └─ AI23331 [L+T]: 4 instances, 4 teachers
   └─ CS23631 [L+T]: 2 instances, 2 teachers
-- G4: 2 courses, 5 teachers
-  └─ AD23B31 [L+T]: 3 instances, 3 teachers
-  └─ CS23633 [L+T]: 2 instances, 2 teachers
-- G5: 2 courses, 5 teachers
-  └─ AI23331 [L+T]: 2 instances, 2 teachers
-  └─ CS23633 [L+T]: 3 instances, 3 teachers
-- G6: 2 courses, 6 teachers
+- G3: 2 courses, 4 teachers
+  └─ CS23632 [L+T]: 3 instances, 3 teachers
+  └─ CS23633 [L+T]: 1 instances, 1 teachers
+- G4: 2 courses, 4 teachers
+  └─ CS23621 [L]: 3 instances, 3 teachers
+  └─ CS23632 [L+T]: 1 instances, 1 teachers
+- G5: 2 courses, 6 teachers
   └─ AD23B31 [L+T]: 2 instances, 2 teachers
   └─ CS23631 [L+T]: 4 instances, 4 teachers
+- G6: 2 courses, 5 teachers
+  └─ AD23B31 [L+T]: 3 instances, 3 teachers
+  └─ AI23331 [L+T]: 2 instances, 2 teachers

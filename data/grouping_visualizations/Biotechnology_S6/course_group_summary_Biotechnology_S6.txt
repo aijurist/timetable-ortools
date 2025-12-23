@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Biotechnology
 Semester: 6
-Generated: 2025-12-22 03:57:48
+Generated: 2025-12-23 13:09:25
 ============================================================
 
 OVERVIEW
@@ -18,11 +18,11 @@ COURSE DISTRIBUTION BY GROUP
   └─ G5: 2 teacher assignments
   └─ G6: 1 teacher assignments
 - BT23621 [Lab]: 2 groups, 3 teachers
+  └─ G1: 1 teacher assignments
+  └─ G2: 2 teacher assignments
+- BT23622 [Lab]: 2 groups, 3 teachers
   └─ G2: 1 teacher assignments
   └─ G3: 2 teacher assignments
-- BT23622 [Lab]: 2 groups, 3 teachers
-  └─ G1: 2 teacher assignments
-  └─ G3: 1 teacher assignments
 - BT23PE01 [Theory]: 1 groups, 3 teachers
   └─ G7: 3 teacher assignments
 - BT23PE02 [Theory]: 1 groups, 4 teachers
@@ -30,25 +30,25 @@ COURSE DISTRIBUTION BY GROUP
 - BT23PE03 [Theory]: 1 groups, 3 teachers
   └─ G9: 3 teacher assignments
 - GE23621 [Lab]: 2 groups, 3 teachers
-  └─ G1: 1 teacher assignments
-  └─ G4: 2 teacher assignments
-- GE23627 [Lab]: 2 groups, 3 teachers
-  └─ G2: 2 teacher assignments
+  └─ G1: 2 teacher assignments
   └─ G4: 1 teacher assignments
+- GE23627 [Lab]: 2 groups, 3 teachers
+  └─ G3: 1 teacher assignments
+  └─ G4: 2 teacher assignments
 
 GROUP COMPOSITION
 - G1: 2 courses, 3 teachers
-  └─ BT23622 [L]: 2 instances, 2 teachers
-  └─ GE23621 [L]: 1 instances, 1 teachers
-- G2: 2 courses, 3 teachers
   └─ BT23621 [L]: 1 instances, 1 teachers
-  └─ GE23627 [L]: 2 instances, 2 teachers
-- G3: 2 courses, 3 teachers
+  └─ GE23621 [L]: 2 instances, 2 teachers
+- G2: 2 courses, 3 teachers
   └─ BT23621 [L]: 2 instances, 2 teachers
   └─ BT23622 [L]: 1 instances, 1 teachers
-- G4: 2 courses, 3 teachers
-  └─ GE23621 [L]: 2 instances, 2 teachers
+- G3: 2 courses, 3 teachers
+  └─ BT23622 [L]: 2 instances, 2 teachers
   └─ GE23627 [L]: 1 instances, 1 teachers
+- G4: 2 courses, 3 teachers
+  └─ GE23621 [L]: 1 instances, 1 teachers
+  └─ GE23627 [L]: 2 instances, 2 teachers
 - G5: 2 courses, 3 teachers
   └─ BT23611 [T]: 1 instances, 1 teachers
   └─ BT23612 [T]: 2 instances, 2 teachers
