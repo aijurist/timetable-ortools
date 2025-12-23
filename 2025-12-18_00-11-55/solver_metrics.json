@@ -1,0 +1,24 @@
+{
+  "generated_at": "2025-12-17T18:41:55.912528+00:00",
+  "run_label": "2025-12-18_00-11-55",
+  "solver": {
+    "status": "OPTIMAL",
+    "status_code": 4,
+    "wall_time": 0.5684073000011267,
+    "solution_count": 1,
+    "num_conflicts": 0,
+    "num_branches": 0,
+    "user_time": 0.5374168,
+    "deterministic_time": 0.12093125599999908,
+    "best_bound": null,
+    "objective_value": null,
+    "gap": null
+  },
+  "model": {
+    "lab_course_count": 10,
+    "group_count": 34,
+    "constraint_count": 21,
+    "enabled_constraints": 16,
+    "applied_constraints": 14
+  }
+}

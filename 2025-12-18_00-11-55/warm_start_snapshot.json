@@ -1,0 +1,1038 @@
+{
+  "version": 1,
+  "metadata": {
+    "created_at": "2025-12-17T18:41:55+00:00",
+    "signature": "1b59caef094420cdf2be4be59bd5e0d76dcd41417d547fb34e30bde799f389c3",
+    "config_name": "combined_scheduler",
+    "config_version": "1.0.0",
+    "lab_count": 18,
+    "theory_count": 112,
+    "output_dir": "E:\\coding\\grind_project\\timetable_scheduler\\output\\2025-12-18_00-11-55"
+  },
+  "lab_assignments": [
+    {
+      "teacher_id": "19",
+      "course_instance_id": "1366",
+      "day_index": 5,
+      "session_name": "L2",
+      "room_id": "166"
+    },
+    {
+      "teacher_id": "19",
+      "course_instance_id": "1366",
+      "day_index": 5,
+      "session_name": "L3",
+      "room_id": "166"
+    },
+    {
+      "teacher_id": "41",
+      "course_instance_id": "1346",
+      "day_index": 4,
+      "session_name": "L2",
+      "room_id": "166"
+    },
+    {
+      "teacher_id": "41",
+      "course_instance_id": "1346",
+      "day_index": 4,
+      "session_name": "L3",
+      "room_id": "166"
+    },
+    {
+      "teacher_id": "46",
+      "course_instance_id": "486",
+      "day_index": 4,
+      "session_name": "L4",
+      "room_id": "166"
+    },
+    {
+      "teacher_id": "46",
+      "course_instance_id": "486",
+      "day_index": 5,
+      "session_name": "L4",
+      "room_id": "166"
+    },
+    {
+      "teacher_id": "105",
+      "course_instance_id": "23",
+      "day_index": 0,
+      "session_name": "L1",
+      "room_id": "174"
+    },
+    {
+      "teacher_id": "105",
+      "course_instance_id": "23",
+      "day_index": 0,
+      "session_name": "L2",
+      "room_id": "174"
+    },
+    {
+      "teacher_id": "192",
+      "course_instance_id": "519",
+      "day_index": 1,
+      "session_name": "L3",
+      "room_id": "166"
+    },
+    {
+      "teacher_id": "192",
+      "course_instance_id": "519",
+      "day_index": 2,
+      "session_name": "L1",
+      "room_id": "166"
+    },
+    {
+      "teacher_id": "191",
+      "course_instance_id": "1464",
+      "day_index": 2,
+      "session_name": "L2",
+      "room_id": "174"
+    },
+    {
+      "teacher_id": "191",
+      "course_instance_id": "1464",
+      "day_index": 3,
+      "session_name": "L1",
+      "room_id": "174"
+    },
+    {
+      "teacher_id": "200",
+      "course_instance_id": "490",
+      "day_index": 0,
+      "session_name": "L3",
+      "room_id": "166"
+    },
+    {
+      "teacher_id": "202",
+      "course_instance_id": "516",
+      "day_index": 2,
+      "session_name": "L3",
+      "room_id": "174"
+    },
+    {
+      "teacher_id": "278",
+      "course_instance_id": "1468",
+      "day_index": 5,
+      "session_name": "L1",
+      "room_id": "174"
+    },
+    {
+      "teacher_id": "278",
+      "course_instance_id": "1468",
+      "day_index": 5,
+      "session_name": "L4",
+      "room_id": "174"
+    },
+    {
+      "teacher_id": "205",
+      "course_instance_id": "976",
+      "day_index": 4,
+      "session_name": "L1",
+      "room_id": "166"
+    },
+    {
+      "teacher_id": "205",
+      "course_instance_id": "976",
+      "day_index": 5,
+      "session_name": "L1",
+      "room_id": "166"
+    }
+  ],
+  "theory_assignments": [
+    {
+      "teacher_id": "12",
+      "course_instance_id": "631",
+      "group_id": "aeronautical_engineering_s8_g01",
+      "day_index": 4,
+      "slot_index": 4,
+      "room_id": "6"
+    },
+    {
+      "teacher_id": "8",
+      "course_instance_id": "972",
+      "group_id": "aeronautical_engineering_s8_g01",
+      "day_index": 4,
+      "slot_index": 4,
+      "room_id": "1"
+    },
+    {
+      "teacher_id": "12",
+      "course_instance_id": "631",
+      "group_id": "aeronautical_engineering_s8_g01",
+      "day_index": 4,
+      "slot_index": 5,
+      "room_id": "2"
+    },
+    {
+      "teacher_id": "8",
+      "course_instance_id": "972",
+      "group_id": "aeronautical_engineering_s8_g01",
+      "day_index": 4,
+      "slot_index": 5,
+      "room_id": "4"
+    },
+    {
+      "teacher_id": "12",
+      "course_instance_id": "631",
+      "group_id": "aeronautical_engineering_s8_g01",
+      "day_index": 5,
+      "slot_index": 6,
+      "room_id": "4"
+    },
+    {
+      "teacher_id": "8",
+      "course_instance_id": "972",
+      "group_id": "aeronautical_engineering_s8_g01",
+      "day_index": 5,
+      "slot_index": 6,
+      "room_id": "5"
+    },
+    {
+      "teacher_id": "5",
+      "course_instance_id": "1022",
+      "group_id": "aeronautical_engineering_s8_g02",
+      "day_index": 4,
+      "slot_index": 0,
+      "room_id": "6"
+    },
+    {
+      "teacher_id": "13",
+      "course_instance_id": "1385",
+      "group_id": "aeronautical_engineering_s8_g02",
+      "day_index": 4,
+      "slot_index": 0,
+      "room_id": "5"
+    },
+    {
+      "teacher_id": "13",
+      "course_instance_id": "1385",
+      "group_id": "aeronautical_engineering_s8_g02",
+      "day_index": 4,
+      "slot_index": 6,
+      "room_id": "5"
+    },
+    {
+      "teacher_id": "5",
+      "course_instance_id": "1022",
+      "group_id": "aeronautical_engineering_s8_g02",
+      "day_index": 5,
+      "slot_index": 0,
+      "room_id": "6"
+    },
+    {
+      "teacher_id": "5",
+      "course_instance_id": "1022",
+      "group_id": "aeronautical_engineering_s8_g02",
+      "day_index": 5,
+      "slot_index": 4,
+      "room_id": "1"
+    },
+    {
+      "teacher_id": "13",
+      "course_instance_id": "1385",
+      "group_id": "aeronautical_engineering_s8_g02",
+      "day_index": 5,
+      "slot_index": 5,
+      "room_id": "6"
+    },
+    {
+      "teacher_id": "19",
+      "course_instance_id": "1366",
+      "group_id": "artificial_intelligence___data_science_s8_g01",
+      "day_index": 4,
+      "slot_index": 1,
+      "room_id": "6"
+    },
+    {
+      "teacher_id": "19",
+      "course_instance_id": "1366",
+      "group_id": "artificial_intelligence___data_science_s8_g01",
+      "day_index": 5,
+      "slot_index": 6,
+      "room_id": "6"
+    },
+    {
+      "teacher_id": "41",
+      "course_instance_id": "1346",
+      "group_id": "artificial_intelligence___data_science_s8_g02",
+      "day_index": 5,
+      "slot_index": 0,
+      "room_id": "1"
+    },
+    {
+      "teacher_id": "41",
+      "course_instance_id": "1346",
+      "group_id": "artificial_intelligence___data_science_s8_g02",
+      "day_index": 5,
+      "slot_index": 1,
+      "room_id": "6"
+    },
+    {
+      "teacher_id": "46",
+      "course_instance_id": "486",
+      "group_id": "artificial_intelligence___machine_learning_s8_g01",
+      "day_index": 5,
+      "slot_index": 0,
+      "room_id": "2"
+    },
+    {
+      "teacher_id": "46",
+      "course_instance_id": "486",
+      "group_id": "artificial_intelligence___machine_learning_s8_g01",
+      "day_index": 5,
+      "slot_index": 1,
+      "room_id": "4"
+    },
+    {
+      "teacher_id": "49",
+      "course_instance_id": "576",
+      "group_id": "artificial_intelligence___machine_learning_s8_g02",
+      "day_index": 4,
+      "slot_index": 1,
+      "room_id": "4"
+    },
+    {
+      "teacher_id": "49",
+      "course_instance_id": "576",
+      "group_id": "artificial_intelligence___machine_learning_s8_g02",
+      "day_index": 4,
+      "slot_index": 3,
+      "room_id": "1"
+    },
+    {
+      "teacher_id": "49",
+      "course_instance_id": "576",
+      "group_id": "artificial_intelligence___machine_learning_s8_g02",
+      "day_index": 5,
+      "slot_index": 4,
+      "room_id": "5"
+    },
+    {
+      "teacher_id": "78",
+      "course_instance_id": "313",
+      "group_id": "automobile_engineering_s8_g01",
+      "day_index": 4,
+      "slot_index": 1,
+      "room_id": "1"
+    },
+    {
+      "teacher_id": "78",
+      "course_instance_id": "313",
+      "group_id": "automobile_engineering_s8_g01",
+      "day_index": 5,
+      "slot_index": 3,
+      "room_id": "2"
+    },
+    {
+      "teacher_id": "78",
+      "course_instance_id": "313",
+      "group_id": "automobile_engineering_s8_g01",
+      "day_index": 5,
+      "slot_index": 4,
+      "room_id": "6"
+    },
+    {
+      "teacher_id": "79",
+      "course_instance_id": "316",
+      "group_id": "automobile_engineering_s8_g02",
+      "day_index": 4,
+      "slot_index": 0,
+      "room_id": "2"
+    },
+    {
+      "teacher_id": "79",
+      "course_instance_id": "316",
+      "group_id": "automobile_engineering_s8_g02",
+      "day_index": 4,
+      "slot_index": 2,
+      "room_id": "5"
+    },
+    {
+      "teacher_id": "79",
+      "course_instance_id": "316",
+      "group_id": "automobile_engineering_s8_g02",
+      "day_index": 5,
+      "slot_index": 2,
+      "room_id": "5"
+    },
+    {
+      "teacher_id": "105",
+      "course_instance_id": "23",
+      "group_id": "biomedical_engineering_s8_g01",
+      "day_index": 1,
+      "slot_index": 4,
+      "room_id": "2"
+    },
+    {
+      "teacher_id": "105",
+      "course_instance_id": "23",
+      "group_id": "biomedical_engineering_s8_g01",
+      "day_index": 1,
+      "slot_index": 6,
+      "room_id": "1"
+    },
+    {
+      "teacher_id": "104",
+      "course_instance_id": "10",
+      "group_id": "biomedical_engineering_s8_g02",
+      "day_index": 0,
+      "slot_index": 6,
+      "room_id": "4"
+    },
+    {
+      "teacher_id": "104",
+      "course_instance_id": "10",
+      "group_id": "biomedical_engineering_s8_g02",
+      "day_index": 1,
+      "slot_index": 1,
+      "room_id": "6"
+    },
+    {
+      "teacher_id": "104",
+      "course_instance_id": "10",
+      "group_id": "biomedical_engineering_s8_g02",
+      "day_index": 1,
+      "slot_index": 2,
+      "room_id": "5"
+    },
+    {
+      "teacher_id": "150",
+      "course_instance_id": "125",
+      "group_id": "chemical_engineering_s8_g01",
+      "day_index": 4,
+      "slot_index": 3,
+      "room_id": "5"
+    },
+    {
+      "teacher_id": "150",
+      "course_instance_id": "125",
+      "group_id": "chemical_engineering_s8_g01",
+      "day_index": 4,
+      "slot_index": 4,
+      "room_id": "2"
+    },
+    {
+      "teacher_id": "150",
+      "course_instance_id": "125",
+      "group_id": "chemical_engineering_s8_g01",
+      "day_index": 5,
+      "slot_index": 2,
+      "room_id": "1"
+    },
+    {
+      "teacher_id": "182",
+      "course_instance_id": "15",
+      "group_id": "civil_engineering_s8_g01",
+      "day_index": 0,
+      "slot_index": 2,
+      "room_id": "1"
+    },
+    {
+      "teacher_id": "182",
+      "course_instance_id": "15",
+      "group_id": "civil_engineering_s8_g01",
+      "day_index": 1,
+      "slot_index": 0,
+      "room_id": "1"
+    },
+    {
+      "teacher_id": "182",
+      "course_instance_id": "15",
+      "group_id": "civil_engineering_s8_g01",
+      "day_index": 1,
+      "slot_index": 3,
+      "room_id": "1"
+    },
+    {
+      "teacher_id": "176",
+      "course_instance_id": "19",
+      "group_id": "civil_engineering_s8_g02",
+      "day_index": 0,
+      "slot_index": 1,
+      "room_id": "6"
+    },
+    {
+      "teacher_id": "184",
+      "course_instance_id": "20",
+      "group_id": "civil_engineering_s8_g02",
+      "day_index": 0,
+      "slot_index": 1,
+      "room_id": "5"
+    },
+    {
+      "teacher_id": "176",
+      "course_instance_id": "19",
+      "group_id": "civil_engineering_s8_g02",
+      "day_index": 0,
+      "slot_index": 3,
+      "room_id": "5"
+    },
+    {
+      "teacher_id": "184",
+      "course_instance_id": "20",
+      "group_id": "civil_engineering_s8_g02",
+      "day_index": 0,
+      "slot_index": 3,
+      "room_id": "2"
+    },
+    {
+      "teacher_id": "176",
+      "course_instance_id": "19",
+      "group_id": "civil_engineering_s8_g02",
+      "day_index": 1,
+      "slot_index": 1,
+      "room_id": "5"
+    },
+    {
+      "teacher_id": "184",
+      "course_instance_id": "20",
+      "group_id": "civil_engineering_s8_g02",
+      "day_index": 1,
+      "slot_index": 1,
+      "room_id": "1"
+    },
+    {
+      "teacher_id": "185",
+      "course_instance_id": "21",
+      "group_id": "civil_engineering_s8_g03",
+      "day_index": 0,
+      "slot_index": 0,
+      "room_id": "6"
+    },
+    {
+      "teacher_id": "185",
+      "course_instance_id": "21",
+      "group_id": "civil_engineering_s8_g03",
+      "day_index": 0,
+      "slot_index": 6,
+      "room_id": "6"
+    },
+    {
+      "teacher_id": "185",
+      "course_instance_id": "21",
+      "group_id": "civil_engineering_s8_g03",
+      "day_index": 1,
+      "slot_index": 4,
+      "room_id": "5"
+    },
+    {
+      "teacher_id": "482",
+      "course_instance_id": "1304",
+      "group_id": "computer_science___business_systems_s8_g01",
+      "day_index": 0,
+      "slot_index": 6,
+      "room_id": "2"
+    },
+    {
+      "teacher_id": "191",
+      "course_instance_id": "1464",
+      "group_id": "computer_science___business_systems_s8_g01",
+      "day_index": 0,
+      "slot_index": 6,
+      "room_id": "4"
+    },
+    {
+      "teacher_id": "482",
+      "course_instance_id": "1304",
+      "group_id": "computer_science___business_systems_s8_g01",
+      "day_index": 1,
+      "slot_index": 0,
+      "room_id": "4"
+    },
+    {
+      "teacher_id": "191",
+      "course_instance_id": "1464",
+      "group_id": "computer_science___business_systems_s8_g01",
+      "day_index": 1,
+      "slot_index": 0,
+      "room_id": "2"
+    },
+    {
+      "teacher_id": "482",
+      "course_instance_id": "1304",
+      "group_id": "computer_science___business_systems_s8_g01",
+      "day_index": 2,
+      "slot_index": 2,
+      "room_id": "4"
+    },
+    {
+      "teacher_id": "191",
+      "course_instance_id": "1464",
+      "group_id": "computer_science___business_systems_s8_g01",
+      "day_index": 2,
+      "slot_index": 6,
+      "room_id": "2"
+    },
+    {
+      "teacher_id": "470",
+      "course_instance_id": "1306",
+      "group_id": "computer_science___business_systems_s8_g02",
+      "day_index": 0,
+      "slot_index": 0,
+      "room_id": "4"
+    },
+    {
+      "teacher_id": "480",
+      "course_instance_id": "1307",
+      "group_id": "computer_science___business_systems_s8_g02",
+      "day_index": 0,
+      "slot_index": 0,
+      "room_id": "6"
+    },
+    {
+      "teacher_id": "470",
+      "course_instance_id": "1306",
+      "group_id": "computer_science___business_systems_s8_g02",
+      "day_index": 4,
+      "slot_index": 3,
+      "room_id": "4"
+    },
+    {
+      "teacher_id": "480",
+      "course_instance_id": "1307",
+      "group_id": "computer_science___business_systems_s8_g02",
+      "day_index": 4,
+      "slot_index": 3,
+      "room_id": "6"
+    },
+    {
+      "teacher_id": "482",
+      "course_instance_id": "1305",
+      "group_id": "computer_science___business_systems_s8_g03",
+      "day_index": 1,
+      "slot_index": 2,
+      "room_id": "5"
+    },
+    {
+      "teacher_id": "192",
+      "course_instance_id": "519",
+      "group_id": "computer_science___business_systems_s8_g03",
+      "day_index": 1,
+      "slot_index": 2,
+      "room_id": "4"
+    },
+    {
+      "teacher_id": "482",
+      "course_instance_id": "1305",
+      "group_id": "computer_science___business_systems_s8_g03",
+      "day_index": 1,
+      "slot_index": 4,
+      "room_id": "5"
+    },
+    {
+      "teacher_id": "192",
+      "course_instance_id": "519",
+      "group_id": "computer_science___business_systems_s8_g03",
+      "day_index": 1,
+      "slot_index": 5,
+      "room_id": "5"
+    },
+    {
+      "teacher_id": "482",
+      "course_instance_id": "1305",
+      "group_id": "computer_science___business_systems_s8_g03",
+      "day_index": 2,
+      "slot_index": 0,
+      "room_id": "5"
+    },
+    {
+      "teacher_id": "192",
+      "course_instance_id": "519",
+      "group_id": "computer_science___business_systems_s8_g03",
+      "day_index": 4,
+      "slot_index": 2,
+      "room_id": "2"
+    },
+    {
+      "teacher_id": "200",
+      "course_instance_id": "490",
+      "group_id": "computer_science___business_systems_s8_g04",
+      "day_index": 0,
+      "slot_index": 2,
+      "room_id": "1"
+    },
+    {
+      "teacher_id": "200",
+      "course_instance_id": "490",
+      "group_id": "computer_science___business_systems_s8_g04",
+      "day_index": 3,
+      "slot_index": 5,
+      "room_id": "6"
+    },
+    {
+      "teacher_id": "200",
+      "course_instance_id": "490",
+      "group_id": "computer_science___business_systems_s8_g04",
+      "day_index": 4,
+      "slot_index": 1,
+      "room_id": "1"
+    },
+    {
+      "teacher_id": "202",
+      "course_instance_id": "516",
+      "group_id": "computer_science___business_systems_s8_g05",
+      "day_index": 1,
+      "slot_index": 1,
+      "room_id": "1"
+    },
+    {
+      "teacher_id": "202",
+      "course_instance_id": "516",
+      "group_id": "computer_science___business_systems_s8_g05",
+      "day_index": 3,
+      "slot_index": 3,
+      "room_id": "6"
+    },
+    {
+      "teacher_id": "202",
+      "course_instance_id": "516",
+      "group_id": "computer_science___business_systems_s8_g05",
+      "day_index": 4,
+      "slot_index": 5,
+      "room_id": "1"
+    },
+    {
+      "teacher_id": "205",
+      "course_instance_id": "976",
+      "group_id": "computer_science___design_s8_g01",
+      "day_index": 5,
+      "slot_index": 3,
+      "room_id": "5"
+    },
+    {
+      "teacher_id": "205",
+      "course_instance_id": "976",
+      "group_id": "computer_science___design_s8_g01",
+      "day_index": 5,
+      "slot_index": 6,
+      "room_id": "2"
+    },
+    {
+      "teacher_id": "582",
+      "course_instance_id": "1296",
+      "group_id": "computer_science___design_s8_g02",
+      "day_index": 4,
+      "slot_index": 2,
+      "room_id": "6"
+    },
+    {
+      "teacher_id": "582",
+      "course_instance_id": "1296",
+      "group_id": "computer_science___design_s8_g02",
+      "day_index": 4,
+      "slot_index": 6,
+      "room_id": "1"
+    },
+    {
+      "teacher_id": "582",
+      "course_instance_id": "1296",
+      "group_id": "computer_science___design_s8_g02",
+      "day_index": 5,
+      "slot_index": 5,
+      "room_id": "4"
+    },
+    {
+      "teacher_id": "576",
+      "course_instance_id": "1477",
+      "group_id": "computer_science___engineering_s8_g01",
+      "day_index": 4,
+      "slot_index": 2,
+      "room_id": "4"
+    },
+    {
+      "teacher_id": "576",
+      "course_instance_id": "1477",
+      "group_id": "computer_science___engineering_s8_g01",
+      "day_index": 4,
+      "slot_index": 4,
+      "room_id": "4"
+    },
+    {
+      "teacher_id": "576",
+      "course_instance_id": "1477",
+      "group_id": "computer_science___engineering_s8_g01",
+      "day_index": 5,
+      "slot_index": 2,
+      "room_id": "6"
+    },
+    {
+      "teacher_id": "278",
+      "course_instance_id": "1468",
+      "group_id": "computer_science___engineering_s8_g02",
+      "day_index": 4,
+      "slot_index": 5,
+      "room_id": "5"
+    },
+    {
+      "teacher_id": "278",
+      "course_instance_id": "1468",
+      "group_id": "computer_science___engineering_s8_g02",
+      "day_index": 4,
+      "slot_index": 6,
+      "room_id": "6"
+    },
+    {
+      "teacher_id": "324",
+      "course_instance_id": "1026",
+      "group_id": "electrical___electronics_engineering_s8_g01",
+      "day_index": 0,
+      "slot_index": 4,
+      "room_id": "5"
+    },
+    {
+      "teacher_id": "324",
+      "course_instance_id": "1026",
+      "group_id": "electrical___electronics_engineering_s8_g01",
+      "day_index": 1,
+      "slot_index": 4,
+      "room_id": "4"
+    },
+    {
+      "teacher_id": "324",
+      "course_instance_id": "1026",
+      "group_id": "electrical___electronics_engineering_s8_g01",
+      "day_index": 1,
+      "slot_index": 6,
+      "room_id": "6"
+    },
+    {
+      "teacher_id": "335",
+      "course_instance_id": "494",
+      "group_id": "electrical___electronics_engineering_s8_g02",
+      "day_index": 0,
+      "slot_index": 1,
+      "room_id": "2"
+    },
+    {
+      "teacher_id": "335",
+      "course_instance_id": "494",
+      "group_id": "electrical___electronics_engineering_s8_g02",
+      "day_index": 1,
+      "slot_index": 2,
+      "room_id": "6"
+    },
+    {
+      "teacher_id": "335",
+      "course_instance_id": "494",
+      "group_id": "electrical___electronics_engineering_s8_g02",
+      "day_index": 1,
+      "slot_index": 5,
+      "room_id": "4"
+    },
+    {
+      "teacher_id": "386",
+      "course_instance_id": "142",
+      "group_id": "electronics___communication_engineering_s8_g01",
+      "day_index": 4,
+      "slot_index": 3,
+      "room_id": "4"
+    },
+    {
+      "teacher_id": "386",
+      "course_instance_id": "142",
+      "group_id": "electronics___communication_engineering_s8_g01",
+      "day_index": 4,
+      "slot_index": 6,
+      "room_id": "2"
+    },
+    {
+      "teacher_id": "386",
+      "course_instance_id": "142",
+      "group_id": "electronics___communication_engineering_s8_g01",
+      "day_index": 5,
+      "slot_index": 5,
+      "room_id": "5"
+    },
+    {
+      "teacher_id": "373",
+      "course_instance_id": "143",
+      "group_id": "electronics___communication_engineering_s8_g02",
+      "day_index": 4,
+      "slot_index": 2,
+      "room_id": "1"
+    },
+    {
+      "teacher_id": "373",
+      "course_instance_id": "143",
+      "group_id": "electronics___communication_engineering_s8_g02",
+      "day_index": 5,
+      "slot_index": 1,
+      "room_id": "2"
+    },
+    {
+      "teacher_id": "373",
+      "course_instance_id": "143",
+      "group_id": "electronics___communication_engineering_s8_g02",
+      "day_index": 5,
+      "slot_index": 6,
+      "room_id": "1"
+    },
+    {
+      "teacher_id": "441",
+      "course_instance_id": "165",
+      "group_id": "information_technology_s8_g01",
+      "day_index": 4,
+      "slot_index": 0,
+      "room_id": "1"
+    },
+    {
+      "teacher_id": "441",
+      "course_instance_id": "165",
+      "group_id": "information_technology_s8_g01",
+      "day_index": 4,
+      "slot_index": 1,
+      "room_id": "2"
+    },
+    {
+      "teacher_id": "441",
+      "course_instance_id": "165",
+      "group_id": "information_technology_s8_g01",
+      "day_index": 5,
+      "slot_index": 0,
+      "room_id": "4"
+    },
+    {
+      "teacher_id": "457",
+      "course_instance_id": "1398",
+      "group_id": "information_technology_s8_g02",
+      "day_index": 4,
+      "slot_index": 2,
+      "room_id": "2"
+    },
+    {
+      "teacher_id": "457",
+      "course_instance_id": "1398",
+      "group_id": "information_technology_s8_g02",
+      "day_index": 4,
+      "slot_index": 4,
+      "room_id": "5"
+    },
+    {
+      "teacher_id": "457",
+      "course_instance_id": "1398",
+      "group_id": "information_technology_s8_g02",
+      "day_index": 5,
+      "slot_index": 4,
+      "room_id": "4"
+    },
+    {
+      "teacher_id": "569",
+      "course_instance_id": "453",
+      "group_id": "mechanical_engineering_s8_g01",
+      "day_index": 4,
+      "slot_index": 3,
+      "room_id": "2"
+    },
+    {
+      "teacher_id": "569",
+      "course_instance_id": "453",
+      "group_id": "mechanical_engineering_s8_g01",
+      "day_index": 4,
+      "slot_index": 5,
+      "room_id": "1"
+    },
+    {
+      "teacher_id": "569",
+      "course_instance_id": "453",
+      "group_id": "mechanical_engineering_s8_g01",
+      "day_index": 5,
+      "slot_index": 1,
+      "room_id": "5"
+    },
+    {
+      "teacher_id": "634",
+      "course_instance_id": "661",
+      "group_id": "mechatronics_engineering_s8_g01",
+      "day_index": 0,
+      "slot_index": 1,
+      "room_id": "4"
+    },
+    {
+      "teacher_id": "634",
+      "course_instance_id": "661",
+      "group_id": "mechatronics_engineering_s8_g01",
+      "day_index": 1,
+      "slot_index": 4,
+      "room_id": "6"
+    },
+    {
+      "teacher_id": "634",
+      "course_instance_id": "661",
+      "group_id": "mechatronics_engineering_s8_g01",
+      "day_index": 1,
+      "slot_index": 5,
+      "room_id": "5"
+    },
+    {
+      "teacher_id": "580",
+      "course_instance_id": "953",
+      "group_id": "mechatronics_engineering_s8_g02",
+      "day_index": 0,
+      "slot_index": 5,
+      "room_id": "1"
+    },
+    {
+      "teacher_id": "580",
+      "course_instance_id": "953",
+      "group_id": "mechatronics_engineering_s8_g02",
+      "day_index": 1,
+      "slot_index": 0,
+      "room_id": "2"
+    },
+    {
+      "teacher_id": "580",
+      "course_instance_id": "953",
+      "group_id": "mechatronics_engineering_s8_g02",
+      "day_index": 1,
+      "slot_index": 1,
+      "room_id": "2"
+    },
+    {
+      "teacher_id": "639",
+      "course_instance_id": "745",
+      "group_id": "robotics___automation_s8_g01",
+      "day_index": 4,
+      "slot_index": 0,
+      "room_id": "4"
+    },
+    {
+      "teacher_id": "639",
+      "course_instance_id": "745",
+      "group_id": "robotics___automation_s8_g01",
+      "day_index": 5,
+      "slot_index": 0,
+      "room_id": "5"
+    },
+    {
+      "teacher_id": "639",
+      "course_instance_id": "745",
+      "group_id": "robotics___automation_s8_g01",
+      "day_index": 5,
+      "slot_index": 2,
+      "room_id": "4"
+    },
+    {
+      "teacher_id": "625",
+      "course_instance_id": "350",
+      "group_id": "robotics___automation_s8_g02",
+      "day_index": 4,
+      "slot_index": 6,
+      "room_id": "4"
+    },
+    {
+      "teacher_id": "625",
+      "course_instance_id": "350",
+      "group_id": "robotics___automation_s8_g02",
+      "day_index": 5,
+      "slot_index": 4,
+      "room_id": "2"
+    },
+    {
+      "teacher_id": "625",
+      "course_instance_id": "350",
+      "group_id": "robotics___automation_s8_g02",
+      "day_index": 5,
+      "slot_index": 5,
+      "room_id": "2"
+    }
+  ]
+}

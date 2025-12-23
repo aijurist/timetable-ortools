@@ -1,0 +1,44 @@
+{
+  "generated_at": "2025-12-17T18:41:55.910013+00:00",
+  "group_summary": {
+    "dept_semesters": 16,
+    "conflict_windows": 0,
+    "departments_impacted": 0
+  },
+  "group_conflicts": [],
+  "teacher_summary": {
+    "teachers_with_conflicts": 0,
+    "conflict_windows": 0
+  },
+  "teacher_conflicts": [],
+  "constraints": {
+    "group_non_overlap": {
+      "name": "Department Group Non-Overlap",
+      "status": "applied",
+      "enabled": true,
+      "priority": 9,
+      "details": {
+        "dept_semesters": 14,
+        "guard_clauses": 913,
+        "activity_literals": 2057,
+        "protected_group_entries": 2057
+      }
+    },
+    "teacher_overlap": {
+      "name": "Teacher Overlap Guard",
+      "status": "applied",
+      "enabled": true,
+      "priority": 10,
+      "details": {
+        "teachers_considered": 39,
+        "clauses_added": 671,
+        "activity_literals": 1342
+      }
+    }
+  },
+  "metadata": {
+    "policy_note": "Theory and lab sessions of the same course/group are permitted to overlap when teachers remain unique. Overlap telemetry now highlights only genuine multi-group or teacher double-bookings.",
+    "group_windows_tracked": 16,
+    "teacher_windows_tracked": 39
+  }
+}
