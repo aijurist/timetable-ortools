@@ -11,7 +11,7 @@ paths:
   rooms_csv: data/block_wise/2nd_3rd.csv
   day_order_csv: data/day_order_even.csv
   core_lab_mapping_csv: data/CoreMappingSimplified_StudentDept.csv
-  preferences_csv: data/Data for Timetable Scheduler - POP.csv
+  preferences_csv: data/pop.csv
   output_root: output/combined_scheduler
 
 data:
