@@ -229,23 +229,16 @@ class LabCourseRequirementConstraint(Constraint):
 	) -> tuple[int, int]:
 		batched_multiplier = max(1, math.ceil(student_count / 35))
 		batched_sessions = base_sessions * batched_multiplier
-		batched_cap, unbatched_cap = self._session_caps(practical_hours)
-		batched_target = min(batched_sessions, batched_cap)
-		unbatched_target = min(base_sessions, unbatched_cap)
-		return batched_target, unbatched_target
+		# Coverage should always satisfy the required practical hours.
+		# `base_sessions` is derived upstream as ceil(practical_hours / 2).
+		# When batching is used, each batch needs the full `base_sessions`.
+		return batched_sessions, base_sessions
 
 	@staticmethod
 	def _unbatched_limit(base_sessions: int, practical_hours: int) -> int:
-		_, unbatched_cap = LabCourseRequirementConstraint._session_caps(practical_hours)
-		return min(base_sessions, unbatched_cap)
-
-	@staticmethod
-	def _session_caps(practical_hours: int) -> tuple[int, int]:
-		if practical_hours >= 6:
-			return 6, 3
-		if practical_hours >= 4:
-			return 4, 2
-		return 2, 1
+		# Do not cap below required sessions. Historically, caps assumed
+		# practical_hours in {2,4,6}, but newer inputs can be 8+.
+		return base_sessions
 
 	def _capacity_preference_weight(self, department: str, practical_hours: int) -> tuple[bool, int]:
 		dept_key = department.lower()

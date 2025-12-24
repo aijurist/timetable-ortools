@@ -23,11 +23,11 @@ CH23621,Chemical Engineering,1,Mass Transfer Lab,,,,,Mass Transfer Lab
 EE23133,Chemical Engineering,1,Electrical Machines I Lab,,,,,Basic Electrical and Electronics Engineering
 GE23122,Chemical Engineering,1,Engineering Practices Lab (Electrical),,,,,Engineering Practices - Electrical and Electronics
 GE23122,Chemical Engineering,1,Engineering Practices Lab (Electronics),,,,,Engineering Practices - Electrical and Electronics
-EE23133,Civil Engineering,1,Electrical Machines I Lab,Electrical Machines II Lab,,,,Basic Electrical and Electronics Engineering
+EE23133,Civil Engineering,1,Electrical Machines I Lab,,,,,Basic Electrical and Electronics Engineering
 GE23122,Civil Engineering,1,Engineering Practices Lab (Electrical),,,,,Engineering Practices - Electrical and Electronics
-EE23133,Electrical & Electronics Engineering,1,Electrical Machines I Lab,Electrical Machines II Lab,,,,Basic Electrical and Electronics Engineering
+EE23133,Electrical & Electronics Engineering,1,Electrical Machines I Lab,,,,,Basic Electrical and Electronics Engineering
 EE23221,Electrical & Electronics Engineering,1,Electronic Devices & Circuits Lab,,,,,Electric Circuits Laboratory
-EE23421,Electrical & Electronics Engineering,2,Electrical Machines I Lab,Electrical Machines II Lab,,,,Electrical Machines Laboratory
+EE23421,Electrical & Electronics Engineering,1,Electrical Machines I Lab,,,,,Electrical Machines Laboratory
 EE23431,Electrical & Electronics Engineering,1,Power Electronics Lab,,,,,Digital Logic Circuits
 EE23432,Electrical & Electronics Engineering,1,Electronic Devices & Circuits Lab,,,,,Linear Integrated Circuits and Applications
 EE23622,Electrical & Electronics Engineering,1,Power System Simulation Lab,,,,,Applications of AI and ML in Electrical Engineering
@@ -40,12 +40,12 @@ EE23132,Electronics & Communication Engineering,1,Electrical Machines I Lab,,,,,
 GE23121,Electronics & Communication Engineering,1,Machine Shop FF1 - EPL - 1,,,,,Engineering Practices Civil and Mechanical
 GE23121,Electronics & Communication Engineering,1,Machine Shop FF2 - EPL - 2,,,,,Engineering Practices Civil and Mechanical
 EE23133,Food Technology,1,Electrical Machines I Lab,,,,,Basic Electrical and Electronics Engineering
-EC23232,Computer Science & Engineering,1,Microprocessor Lab-1,Microprocessor Lab-2,,,,Digital Logic and Microprocessor
-EC23233,Computer Science & Engineering,1,Microprocessor Lab-1,Microprocessor Lab-2,,,,Digital Logic and Microprocessor
+EC23232,Computer Science & Engineering,1,Microprocessor Lab-1,,,,,Digital Logic and Microprocessor
+EC23233,Computer Science & Engineering,1,Microprocessor Lab-1,,,,,Digital Logic and Microprocessor
 FT19801,Food Technology,1,Livestock Lab,,,,,Project Work
 FT23211,Food Technology,1,Food Analysis Laboratory,,,,,Food Chemistry Laboratory
 FT23411,Food Technology,1,Process Control Lab,,,,,Unit operations in Food industries Laboratory
-FT23412,Food Technology,1,Food Microbiology Lab,,,,,Food Processing and Preservation Laboratory 1
+FT23412,Food Technology,1,Food Processing and Preservation Lab,,,,,Food Processing and Preservation Laboratory 1
 FT23611,Food Technology,1,Baking Lab,,,,,Food Packaging Technology Laboratory
 FT23612,Food Technology,1,Food Microbiology Lab,,,,,Food Product Technology Laboratory
 EE23132,Mechanical Engineering,1,Electrical Machines II Lab,,,,,Basic Electrical Engineering
@@ -74,7 +74,7 @@ RO23632,Robotics & Automation,1,Isaac Asimov Laboratory,,,,,Robot Vision and Int
 RO23633,Robotics & Automation,1,Isaac Asimov Laboratory,,,,,Robot Dynamics and Motion Planning
 GE23121,Electrical & Electronics Engineering,1,Machine Shop FF1 - EPL - 1,,,,,Engineering Practices - Civil and  Mechanical
 FT23211,Food Technology,1,Food Chemistry Laboratory,,,,,Food Chemistry Laboratory
-EC23331,Information Technology,1,Microprocessor Lab-1,Microprocessor Lab-2,,,,Microprocessors and Microcontroller
+EC23331,Information Technology,1,Microprocessor Lab-1,,,,,Microprocessors and Microcontroller
 BM23631,Biomedical Engineering,1,Medical Image Processing Lab,,,,,Biosignal Processing
 BM23422,Biomedical Engineering,1,Medical Image Processing Lab,,,,,PCB Design Laboratory
 MT23411,Mechatronics Engineering,1,Fluid Mechanics Lab,,,,,Fluid Mechanics and Thermal Sciences
@@ -82,17 +82,10 @@ CE23431,Civil Engineering,1,Soil Mechanics & Highway Lab,,,,,Soil Mechanics
 CE19811,Civil Engineering,1,Concrete & Survey Lab,,,,,Project
 BM23431,Biomedical Engineering,1,Microbiology Lab,,,,,Pathology and Microbiology
 BM19P80,Biomedical Engineering,1,Medical Image Processing Lab,,,,,Physiological Modeling
-EC23232,Computer Science & Engineering,1,Microprocessor Lab-1,Microprocessor Lab-2,,,,Digital Logic and Microprocessor
+EC23232,Computer Science & Engineering,1,Microprocessor Lab-1,,,,,Digital Logic and Microprocessor
 CE23421,Civil Engineering,1,Strength of Materials Lab,,,,,Strength of Materials and Hydraulic Engineering Laboratory
 EC23242,Computer Science & Business Systems,1,Engineering Practices Lab (Electronics),,,,,Principles of Electronics
 BM23632,Biomedical Engineering,1,Medical Image Processing Lab,,,,,Physiological Modeling Laboratory
 BM23421,Biomedical Engineering,1,Electronics and Instrumentation,,,,,Analog and Digital Integrated Circuits Laboratory
 CS23431,Computer Science & Engineering,3,OS Classroom,OS Classroom (ANEW105),OS Classroom (ANEW106),,,Operating Systems
 CB23431,Computer Science & Engineering,3,OS Classroom,OS Classroom (ANEW105),OS Classroom (ANEW106),,,Operating Systems
-EE23621,Electrical & Electronics Engineering,1,Power Electronics Lab,,,,,Power Electronics and Drives Laboratory
-MA23431,Biotechnology,1,Maths Lab,,,,,"Probability, Statistics and Reliability"
-MA23431,Chemical Engineering,1,Maths Lab,,,,,"Probability, Statistics and Reliability"
-MA23431,Food Technology,1,Maths Lab,,,,,"Probability, Statistics and Reliability"
-MA23432,Robotics & Automation,1,Maths Lab,,,,,Statistics and Numerical Methods
-MA23432,Mechatronics Engineering,1,Maths Lab,,,,,Statistics and Numerical Methods
-MA23432,Aeronautical Engineering,1,Maths Lab,,,,,Statistics and Numerical Methods

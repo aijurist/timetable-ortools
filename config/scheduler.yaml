@@ -7,7 +7,7 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data/sem2026/year_wise/3rd_year/all.csv
+  courses_csv: data/sem2026/year_wise/2nd_3rd.csv
   rooms_csv: data/block_wise/2nd_3rd.csv
   day_order_csv: data/day_order_even.csv
   core_lab_mapping_csv: data/CoreMappingSimplified_StudentDept.csv
@@ -501,7 +501,6 @@ grouping:
   # Wildcards: "*|6" or "Information Technology|*".
   consolidation_dept_sem_allowlist: 
     - Information Technology_S4
-    - Computer Science & Engineering_S4
     - Computer Science & Design_S4
     - Computer Science & Business Systems_S4
     - Artificial Intelligence & Machine Learning_S4
@@ -915,7 +914,7 @@ model:
   use_sparse_variables: true
 
 runtime:
-  time_limit_sec: 5000
+  time_limit_sec: 40000
   thread_count: 12
   enable_lns: true
   enable_trace: true

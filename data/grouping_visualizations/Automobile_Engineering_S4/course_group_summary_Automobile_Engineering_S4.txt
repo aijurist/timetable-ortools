@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Automobile Engineering
 Semester: 4
-Generated: 2025-12-24 00:03:51
+Generated: 2025-12-25 00:51:27
 ============================================================
 
 OVERVIEW
@@ -16,9 +16,9 @@ COURSE DISTRIBUTION BY GROUP
 - AT23412 [Theory]: 1 groups, 1 teachers
   └─ G5: 1 teacher assignments
 - AT23431 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G1: 1 teacher assignments
-- AT23432 [Lab + Theory]: 1 groups, 1 teachers
   └─ G4: 1 teacher assignments
+- AT23432 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G1: 1 teacher assignments
 - AT23433 [Lab + Theory]: 1 groups, 1 teachers
   └─ G3: 1 teacher assignments
 - CS23422 [Lab]: 1 groups, 1 teachers
@@ -26,13 +26,13 @@ COURSE DISTRIBUTION BY GROUP
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
-  └─ AT23431 [L+T]: 1 instances, 1 teachers
+  └─ AT23432 [L+T]: 1 instances, 1 teachers
 - G2: 1 courses, 1 teachers
   └─ CS23422 [L]: 1 instances, 1 teachers
 - G3: 1 courses, 1 teachers
   └─ AT23433 [L+T]: 1 instances, 1 teachers
 - G4: 1 courses, 1 teachers
-  └─ AT23432 [L+T]: 1 instances, 1 teachers
+  └─ AT23431 [L+T]: 1 instances, 1 teachers
 - G5: 1 courses, 1 teachers
   └─ AT23412 [T]: 1 instances, 1 teachers
 - G6: 1 courses, 1 teachers

@@ -865,6 +865,10 @@ class CourseGroupOptimizer:
         if (self.dept == "Computer Science & Engineering" and self.semester == 2):
             constraints_added += self._apply_cse_s2_five_group_split(model, assignment_vars)
 
+        # Special constraint for Computer Science & Engineering 4th semester (fixed grouping)
+        if (self.dept == "Computer Science & Engineering" and self.semester == 4):
+            constraints_added += self._apply_cse_s4_fixed_grouping(model, assignment_vars)
+
         # Special constraint for Biotechnology 4th semester (fixed grouping)
         if (self.dept == "Biotechnology" and self.semester == 4):
             constraints_added += self._apply_biotech_s4_fixed_grouping(model, assignment_vars)
@@ -873,6 +877,85 @@ class CourseGroupOptimizer:
             self.logger.info(f"Applied {constraints_added} special department-specific constraints")
         else:
             self.logger.info("No special department-specific constraints applied")
+
+    def _apply_cse_s4_fixed_grouping(self, model, assignment_vars):
+        """Force CSE S4 to use a fixed course->group mapping.
+
+        This encodes the exact distribution from the curated summary provided by the user.
+        Groups are 0-indexed internally (G1 -> 0, ...).
+
+        This mapping is enforced STRICTLY:
+        - The optimizer must see exactly these 5 courses (after preprocessing/filtering).
+        - Each course must have the expected number of instances (teacher-assignments).
+        """
+        if self.num_groups < 5:
+            self.logger.warning(
+                "Skipping CSE S4 fixed grouping: expected >= 5 groups, got %s",
+                self.num_groups,
+            )
+            return 0
+
+        self.logger.info("Applying CSE S4 fixed group mapping")
+
+        # Fixed mapping based on the curated summary.
+        # Values are the exact number of instances (teacher-assignments) per group.
+        fixed_group_counts = {
+            # G1..G5 => 0..4
+            "CS23431": {1: 4, 2: 4},
+            "CS23432": {2: 5, 3: 4},
+            "CS23PE01": {4: 9},
+            "GE23627": {0: 4, 1: 4},
+            "MA23435": {0: 5, 3: 5},
+        }
+
+        required_courses = set(fixed_group_counts.keys())
+        present_courses = set(self.unique_courses)
+        if present_courses != required_courses:
+            missing = sorted(required_courses - present_courses)
+            extra = sorted(present_courses - required_courses)
+            raise ValueError(
+                "CSE S4 fixed grouping requires exactly these courses after filtering: "
+                f"{sorted(required_courses)}. Missing={missing}, Extra={extra}."
+            )
+
+        constraints_added = 0
+
+        for course_code, group_targets in fixed_group_counts.items():
+            allowed_groups = set(group_targets.keys())
+            instance_indices = [
+                i
+                for i, inst in enumerate(self.courses)
+                if inst.get("course_code") == course_code
+            ]
+
+            expected_total = sum(group_targets.values())
+            if len(instance_indices) != expected_total:
+                raise ValueError(
+                    f"CSE S4 fixed grouping: {course_code} has {len(instance_indices)} instances "
+                    f"(expected {expected_total})."
+                )
+
+            # 1) Forbid assignments outside the allowed groups.
+            for instance_idx in instance_indices:
+                for group_idx in range(self.num_groups):
+                    if group_idx in allowed_groups:
+                        continue
+                    model.Add(assignment_vars[(instance_idx, group_idx)] == 0)
+                    constraints_added += 1
+
+            # 2) Enforce exact per-group counts.
+            for group_idx, target in group_targets.items():
+                group_count = model.NewIntVar(
+                    0,
+                    len(instance_indices),
+                    f"cse_s4_{course_code}_count_g{group_idx}",
+                )
+                model.Add(group_count == sum(assignment_vars[(i, group_idx)] for i in instance_indices))
+                constraints_added += 1
+                model.Add(group_count == target)
+                constraints_added += 1
+
+        return constraints_added
 
     def _apply_biotech_s4_fixed_grouping(self, model, assignment_vars):
         """Force Biotechnology S4 to use a fixed course->group mapping.

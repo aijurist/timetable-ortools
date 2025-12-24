@@ -1,45 +1,51 @@
 Course-Group Distribution Summary
 Department: Electrical & Electronics Engineering
 Semester: 4
-Generated: 2025-12-24 00:03:54
+Generated: 2025-12-25 00:24:29
 ============================================================
 
 OVERVIEW
-- Courses: 5 (Lab 3, Theory 3)
-- Groups: 5
-- Total assignments: 10
-- Courses with multiple options: 5 (100.0%)
+- Courses: 6 (Lab 4, Theory 4)
+- Groups: 6
+- Total assignments: 12
+- Courses with multiple options: 6 (100.0%)
 
 COURSE DISTRIBUTION BY GROUP
 - CS23422 [Lab]: 2 groups, 2 teachers
-  └─ G2: 1 teacher assignments
-  └─ G3: 1 teacher assignments
+  └─ G1: 1 teacher assignments
+  └─ G4: 1 teacher assignments
 - EE23411 [Theory]: 2 groups, 2 teachers
-  └─ G4: 1 teacher assignments
   └─ G5: 1 teacher assignments
+  └─ G6: 1 teacher assignments
 - EE23412 [Theory]: 2 groups, 2 teachers
-  └─ G4: 1 teacher assignments
   └─ G5: 1 teacher assignments
+  └─ G6: 1 teacher assignments
 - EE23421 [Lab]: 2 groups, 2 teachers
   └─ G1: 1 teacher assignments
-  └─ G2: 1 teacher assignments
+  └─ G4: 1 teacher assignments
 - EE23431 [Lab + Theory]: 2 groups, 2 teachers
-  └─ G1: 1 teacher assignments
+  └─ G2: 1 teacher assignments
+  └─ G3: 1 teacher assignments
+- EE23432 [Lab + Theory]: 2 groups, 2 teachers
+  └─ G2: 1 teacher assignments
   └─ G3: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 2 courses, 2 teachers
+  └─ CS23422 [L]: 1 instances, 1 teachers
   └─ EE23421 [L]: 1 instances, 1 teachers
-  └─ EE23431 [L+T]: 1 instances, 1 teachers
 - G2: 2 courses, 2 teachers
+  └─ EE23431 [L+T]: 1 instances, 1 teachers
+  └─ EE23432 [L+T]: 1 instances, 1 teachers
+- G3: 2 courses, 2 teachers
+  └─ EE23431 [L+T]: 1 instances, 1 teachers
+  └─ EE23432 [L+T]: 1 instances, 1 teachers
+- G4: 2 courses, 2 teachers
   └─ CS23422 [L]: 1 instances, 1 teachers
   └─ EE23421 [L]: 1 instances, 1 teachers
-- G3: 2 courses, 2 teachers
-  └─ CS23422 [L]: 1 instances, 1 teachers
-  └─ EE23431 [L+T]: 1 instances, 1 teachers
-- G4: 2 courses, 2 teachers
+- G5: 2 courses, 2 teachers
   └─ EE23411 [T]: 1 instances, 1 teachers
   └─ EE23412 [T]: 1 instances, 1 teachers
-- G5: 2 courses, 2 teachers
+- G6: 2 courses, 2 teachers
   └─ EE23411 [T]: 1 instances, 1 teachers
   └─ EE23412 [T]: 1 instances, 1 teachers
