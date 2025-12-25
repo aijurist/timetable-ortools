@@ -7,7 +7,7 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data/sem2026/year_wise/mock.csv
+  courses_csv: data/sem2026/year_wise/2nd_3rd.csv
   rooms_csv: data/block_wise/2nd_3rd.csv
   day_order_csv: data/day_order_even.csv
   core_lab_mapping_csv: data/CoreMappingSimplified_StudentDept.csv
@@ -670,6 +670,16 @@ constraints:
       weight: 1.0
       params:
         max_daily_slots: 2
+
+    course_consecutive_pairs:
+      enabled: true
+      priority: 9
+      weight: 1.0
+      params:
+        course_codes:
+          - GE23627
+        required_slots: 4
+        pair_length: 2
     # daily_slot_cap:
     #   enabled: false
     #   priority: 9
@@ -914,7 +924,7 @@ model:
   use_sparse_variables: true
 
 runtime:
-  time_limit_sec: 30000
+  time_limit_sec: 40000
   thread_count: 12
   enable_lns: true
   enable_trace: true

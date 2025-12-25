@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Computer Science & Business Systems
 Semester: 4
-Generated: 2025-12-25 12:10:53
+Generated: 2025-12-25 17:36:17
 ============================================================
 
 OVERVIEW
@@ -18,23 +18,23 @@ COURSE DISTRIBUTION BY GROUP
 - CB23431 [Lab + Theory]: 1 groups, 2 teachers
   └─ G5: 2 teacher assignments
 - CB23432 [Lab + Theory]: 1 groups, 2 teachers
-  └─ G4: 2 teacher assignments
-- CB23433 [Lab + Theory]: 1 groups, 2 teachers
-  └─ G2: 2 teacher assignments
-- HS23421 [Lab]: 1 groups, 2 teachers
   └─ G1: 2 teacher assignments
-- MA23437 [Lab + Theory]: 1 groups, 2 teachers
+- CB23433 [Lab + Theory]: 1 groups, 2 teachers
   └─ G3: 2 teacher assignments
+- HS23421 [Lab]: 1 groups, 2 teachers
+  └─ G2: 2 teacher assignments
+- MA23437 [Lab + Theory]: 1 groups, 2 teachers
+  └─ G4: 2 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 2 teachers
-  └─ HS23421 [L]: 2 instances, 2 teachers
-- G2: 1 courses, 2 teachers
-  └─ CB23433 [L+T]: 2 instances, 2 teachers
-- G3: 1 courses, 2 teachers
-  └─ MA23437 [L+T]: 2 instances, 2 teachers
-- G4: 1 courses, 2 teachers
   └─ CB23432 [L+T]: 2 instances, 2 teachers
+- G2: 1 courses, 2 teachers
+  └─ HS23421 [L]: 2 instances, 2 teachers
+- G3: 1 courses, 2 teachers
+  └─ CB23433 [L+T]: 2 instances, 2 teachers
+- G4: 1 courses, 2 teachers
+  └─ MA23437 [L+T]: 2 instances, 2 teachers
 - G5: 1 courses, 2 teachers
   └─ CB23431 [L+T]: 2 instances, 2 teachers
 - G6: 1 courses, 2 teachers

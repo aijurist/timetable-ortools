@@ -1,0 +1,35 @@
+Course-Group Distribution Summary
+Department: Civil Engineering
+Semester: 6
+Generated: 2025-12-25 12:17:14
+============================================================
+
+OVERVIEW
+- Courses: 5 (Lab 2, Theory 5)
+- Groups: 5
+- Total assignments: 5
+- Courses with multiple options: 0 (0.0%)
+
+COURSE DISTRIBUTION BY GROUP
+- CE23611 [Theory]: 1 groups, 1 teachers
+  └─ G3: 1 teacher assignments
+- CE23612 [Theory]: 1 groups, 1 teachers
+  └─ G4: 1 teacher assignments
+- CE23613 [Theory]: 1 groups, 1 teachers
+  └─ G5: 1 teacher assignments
+- CE23631 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G1: 1 teacher assignments
+- CE23632 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G2: 1 teacher assignments
+
+GROUP COMPOSITION
+- G1: 1 courses, 1 teachers
+  └─ CE23631 [L+T]: 1 instances, 1 teachers
+- G2: 1 courses, 1 teachers
+  └─ CE23632 [L+T]: 1 instances, 1 teachers
+- G3: 1 courses, 1 teachers
+  └─ CE23611 [T]: 1 instances, 1 teachers
+- G4: 1 courses, 1 teachers
+  └─ CE23612 [T]: 1 instances, 1 teachers
+- G5: 1 courses, 1 teachers
+  └─ CE23613 [T]: 1 instances, 1 teachers

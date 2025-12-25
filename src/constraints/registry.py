@@ -31,6 +31,7 @@ from .lab.special_course_time_blocks import build_special_course_time_blocks_con
 from .lab.teacher_daily_presence_lab import build_teacher_daily_presence_lab_constraint
 from .lab.teacher_max_consecutive import build_teacher_max_consecutive_lab_constraint
 from .theory.adjacency import build_no_three_consecutive_slots_constraint
+from .theory.course_consecutive_pairs import build_theory_course_consecutive_pairs_constraint
 from .theory.course_daily_limit import build_theory_course_daily_limit_constraint
 from .theory.requirements import (
 	build_theory_daily_slot_cap_constraint,
@@ -140,6 +141,12 @@ THEORY_CONSTRAINT_DEFINITIONS = {
 		"description": "Prevent a course instance from taking more than the configured number of theory slots per day.",
 		"factory": build_theory_course_daily_limit_constraint,
 		"tags": ("theory", "coverage", "daily"),
+	},
+	"course_consecutive_pairs": {
+		"title": "Theory Course Consecutive Pairs",
+		"description": "Force selected course codes to schedule theory slots as consecutive pairs (e.g., 4 hours as 2+2).",
+		"factory": build_theory_course_consecutive_pairs_constraint,
+		"tags": ("theory", "courses", "adjacency"),
 	},
 }
 

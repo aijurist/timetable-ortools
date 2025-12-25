@@ -23,7 +23,7 @@ def main():
     repo = ScheduleRepository(base_dir=base_dir)
     
     # Override to use specific snapshot
-    target_snapshot_name = "2025-12-24_06-20-38"
+    target_snapshot_name = "2025-12-25_14-21-17"
     target_path = base_dir / "output" / target_snapshot_name
     
     if not target_path.exists():
