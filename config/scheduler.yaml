@@ -914,7 +914,7 @@ model:
   use_sparse_variables: true
 
 runtime:
-  time_limit_sec: 40000
+  time_limit_sec: 30000
   thread_count: 12
   enable_lns: true
   enable_trace: true
@@ -926,7 +926,7 @@ runtime:
   linearization_level: 2
   cp_model_presolve: true
   symmetry_level: 2
-  max_number_of_conflicts: 1000000
+  max_number_of_conflicts: 100000000
   warm_start:
     enabled: true
     snapshot_dir: output/combined_scheduler/warm_start_cache

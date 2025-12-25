@@ -1,0 +1,39 @@
+Course-Group Distribution Summary
+Department: Artificial Intelligence & Data Science
+Semester: 4
+Generated: 2025-12-25 11:35:11
+============================================================
+
+OVERVIEW
+- Courses: 5 (Lab 5, Theory 5)
+- Groups: 5
+- Total assignments: 22
+- Courses with multiple options: 5 (100.0%)
+
+COURSE DISTRIBUTION BY GROUP
+- AD23431 [Lab + Theory]: 2 groups, 4 teachers
+  └─ G1: 1 teacher assignments
+  └─ G2: 3 teacher assignments
+- AI23431 [Lab + Theory]: 1 groups, 5 teachers
+  └─ G4: 5 teacher assignments
+- CS23431 [Lab + Theory]: 2 groups, 4 teachers
+  └─ G1: 3 teacher assignments
+  └─ G2: 1 teacher assignments
+- CS23432 [Lab + Theory]: 1 groups, 4 teachers
+  └─ G3: 4 teacher assignments
+- MA23434 [Lab + Theory]: 1 groups, 5 teachers
+  └─ G5: 5 teacher assignments
+
+GROUP COMPOSITION
+- G1: 2 courses, 4 teachers
+  └─ AD23431 [L+T]: 1 instances, 1 teachers
+  └─ CS23431 [L+T]: 3 instances, 3 teachers
+- G2: 2 courses, 4 teachers
+  └─ AD23431 [L+T]: 3 instances, 3 teachers
+  └─ CS23431 [L+T]: 1 instances, 1 teachers
+- G3: 1 courses, 4 teachers
+  └─ CS23432 [L+T]: 4 instances, 4 teachers
+- G4: 1 courses, 5 teachers
+  └─ AI23431 [L+T]: 5 instances, 5 teachers
+- G5: 1 courses, 5 teachers
+  └─ MA23434 [L+T]: 5 instances, 5 teachers

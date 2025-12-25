@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Mechatronics Engineering
 Semester: 4
-Generated: 2025-12-25 00:24:30
+Generated: 2025-12-25 11:49:00
 ============================================================
 
 OVERVIEW
@@ -18,11 +18,11 @@ COURSE DISTRIBUTION BY GROUP
 - MT23421 [Lab]: 1 groups, 1 teachers
   └─ G1: 1 teacher assignments
 - MT23431 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G4: 1 teacher assignments
-- MT23432 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G6: 1 teacher assignments
-- MT23433 [Lab + Theory]: 1 groups, 1 teachers
   └─ G3: 1 teacher assignments
+- MT23432 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G4: 1 teacher assignments
+- MT23433 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G6: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
@@ -30,10 +30,10 @@ GROUP COMPOSITION
 - G2: 1 courses, 1 teachers
   └─ MT23411 [T]: 1 instances, 1 teachers
 - G3: 1 courses, 1 teachers
-  └─ MT23433 [L+T]: 1 instances, 1 teachers
-- G4: 1 courses, 1 teachers
   └─ MT23431 [L+T]: 1 instances, 1 teachers
+- G4: 1 courses, 1 teachers
+  └─ MT23432 [L+T]: 1 instances, 1 teachers
 - G5: 1 courses, 1 teachers
   └─ MA23432 [L+T]: 1 instances, 1 teachers
 - G6: 1 courses, 1 teachers
-  └─ MT23432 [L+T]: 1 instances, 1 teachers
+  └─ MT23433 [L+T]: 1 instances, 1 teachers

@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Artificial Intelligence & Machine Learning
 Semester: 6
-Generated: 2025-12-25 00:36:01
+Generated: 2025-12-25 11:05:36
 ============================================================
 
 OVERVIEW
@@ -14,9 +14,9 @@ COURSE DISTRIBUTION BY GROUP
 - AI23611 [Theory]: 1 groups, 3 teachers
   └─ G4: 3 teacher assignments
 - AI23631 [Lab + Theory]: 1 groups, 2 teachers
-  └─ G2: 2 teacher assignments
-- AI23632 [Lab + Theory]: 1 groups, 2 teachers
   └─ G1: 2 teacher assignments
+- AI23632 [Lab + Theory]: 1 groups, 2 teachers
+  └─ G2: 2 teacher assignments
 - CS23634 [Lab + Theory]: 1 groups, 3 teachers
   └─ G5: 3 teacher assignments
 - GE23627 [Lab]: 1 groups, 3 teachers
@@ -24,9 +24,9 @@ COURSE DISTRIBUTION BY GROUP
 
 GROUP COMPOSITION
 - G1: 1 courses, 2 teachers
-  └─ AI23632 [L+T]: 2 instances, 2 teachers
-- G2: 1 courses, 2 teachers
   └─ AI23631 [L+T]: 2 instances, 2 teachers
+- G2: 1 courses, 2 teachers
+  └─ AI23632 [L+T]: 2 instances, 2 teachers
 - G3: 1 courses, 3 teachers
   └─ GE23627 [L]: 3 instances, 3 teachers
 - G4: 1 courses, 3 teachers

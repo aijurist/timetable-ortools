@@ -1,0 +1,63 @@
+Course-Group Distribution Summary
+Department: Biotechnology
+Semester: 4
+Generated: 2025-12-25 11:35:12
+============================================================
+
+OVERVIEW
+- Courses: 8 (Lab 4, Theory 5)
+- Groups: 8
+- Total assignments: 24
+- Courses with multiple options: 8 (100.0%)
+
+COURSE DISTRIBUTION BY GROUP
+- BT23411 [Theory]: 2 groups, 3 teachers
+  └─ G6: 2 teacher assignments
+  └─ G7: 1 teacher assignments
+- BT23412 [Theory]: 2 groups, 3 teachers
+  └─ G7: 2 teacher assignments
+  └─ G8: 1 teacher assignments
+- BT23413 [Theory]: 2 groups, 3 teachers
+  └─ G5: 2 teacher assignments
+  └─ G6: 1 teacher assignments
+- BT23414 [Theory]: 2 groups, 3 teachers
+  └─ G5: 1 teacher assignments
+  └─ G8: 2 teacher assignments
+- BT23421 [Lab]: 2 groups, 3 teachers
+  └─ G3: 2 teacher assignments
+  └─ G4: 1 teacher assignments
+- BT23422 [Lab]: 2 groups, 3 teachers
+  └─ G3: 1 teacher assignments
+  └─ G4: 2 teacher assignments
+- CS23422 [Lab]: 2 groups, 3 teachers
+  └─ G1: 1 teacher assignments
+  └─ G2: 2 teacher assignments
+- MA23431 [Lab + Theory]: 2 groups, 3 teachers
+  └─ G1: 2 teacher assignments
+  └─ G2: 1 teacher assignments
+
+GROUP COMPOSITION
+- G1: 2 courses, 3 teachers
+  └─ CS23422 [L]: 1 instances, 1 teachers
+  └─ MA23431 [L+T]: 2 instances, 2 teachers
+- G2: 2 courses, 3 teachers
+  └─ CS23422 [L]: 2 instances, 2 teachers
+  └─ MA23431 [L+T]: 1 instances, 1 teachers
+- G3: 2 courses, 3 teachers
+  └─ BT23421 [L]: 2 instances, 2 teachers
+  └─ BT23422 [L]: 1 instances, 1 teachers
+- G4: 2 courses, 3 teachers
+  └─ BT23421 [L]: 1 instances, 1 teachers
+  └─ BT23422 [L]: 2 instances, 2 teachers
+- G5: 2 courses, 3 teachers
+  └─ BT23413 [T]: 2 instances, 2 teachers
+  └─ BT23414 [T]: 1 instances, 1 teachers
+- G6: 2 courses, 3 teachers
+  └─ BT23411 [T]: 2 instances, 2 teachers
+  └─ BT23413 [T]: 1 instances, 1 teachers
+- G7: 2 courses, 3 teachers
+  └─ BT23411 [T]: 1 instances, 1 teachers
+  └─ BT23412 [T]: 2 instances, 2 teachers
+- G8: 2 courses, 3 teachers
+  └─ BT23412 [T]: 1 instances, 1 teachers
+  └─ BT23414 [T]: 2 instances, 2 teachers

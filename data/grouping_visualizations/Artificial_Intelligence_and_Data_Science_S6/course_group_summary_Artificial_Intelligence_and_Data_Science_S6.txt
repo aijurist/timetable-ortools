@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Artificial Intelligence & Data Science
 Semester: 6
-Generated: 2025-12-25 00:36:01
+Generated: 2025-12-25 11:05:35
 ============================================================
 
 OVERVIEW
@@ -12,23 +12,23 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - AD23631 [Lab + Theory]: 1 groups, 2 teachers
-  └─ G2: 2 teacher assignments
+  └─ G1: 2 teacher assignments
 - AD23632 [Lab + Theory]: 1 groups, 3 teachers
-  └─ G3: 3 teacher assignments
+  └─ G2: 3 teacher assignments
 - AD23PE01 [Lab + Theory]: 1 groups, 2 teachers
   └─ G5: 2 teacher assignments
 - CS23634 [Lab + Theory]: 1 groups, 3 teachers
   └─ G4: 3 teacher assignments
 - GE23627 [Lab]: 1 groups, 3 teachers
-  └─ G1: 3 teacher assignments
+  └─ G3: 3 teacher assignments
 
 GROUP COMPOSITION
-- G1: 1 courses, 3 teachers
-  └─ GE23627 [L]: 3 instances, 3 teachers
-- G2: 1 courses, 2 teachers
+- G1: 1 courses, 2 teachers
   └─ AD23631 [L+T]: 2 instances, 2 teachers
-- G3: 1 courses, 3 teachers
+- G2: 1 courses, 3 teachers
   └─ AD23632 [L+T]: 3 instances, 3 teachers
+- G3: 1 courses, 3 teachers
+  └─ GE23627 [L]: 3 instances, 3 teachers
 - G4: 1 courses, 3 teachers
   └─ CS23634 [L+T]: 3 instances, 3 teachers
 - G5: 1 courses, 2 teachers

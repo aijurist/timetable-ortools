@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Civil Engineering
 Semester: 4
-Generated: 2025-12-25 00:24:27
+Generated: 2025-12-25 11:48:57
 ============================================================
 
 OVERVIEW
@@ -12,13 +12,13 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - CE23411 [Theory]: 1 groups, 1 teachers
-  └─ G6: 1 teacher assignments
+  └─ G5: 1 teacher assignments
 - CE23412 [Theory]: 1 groups, 1 teachers
-  └─ G4: 1 teacher assignments
+  └─ G6: 1 teacher assignments
 - CE23413 [Theory]: 1 groups, 1 teachers
   └─ G3: 1 teacher assignments
 - CE23414 [Theory]: 1 groups, 1 teachers
-  └─ G5: 1 teacher assignments
+  └─ G4: 1 teacher assignments
 - CE23421 [Lab]: 1 groups, 1 teachers
   └─ G2: 1 teacher assignments
 - CE23431 [Lab + Theory]: 1 groups, 1 teachers
@@ -32,8 +32,8 @@ GROUP COMPOSITION
 - G3: 1 courses, 1 teachers
   └─ CE23413 [T]: 1 instances, 1 teachers
 - G4: 1 courses, 1 teachers
-  └─ CE23412 [T]: 1 instances, 1 teachers
-- G5: 1 courses, 1 teachers
   └─ CE23414 [T]: 1 instances, 1 teachers
-- G6: 1 courses, 1 teachers
+- G5: 1 courses, 1 teachers
   └─ CE23411 [T]: 1 instances, 1 teachers
+- G6: 1 courses, 1 teachers
+  └─ CE23412 [T]: 1 instances, 1 teachers

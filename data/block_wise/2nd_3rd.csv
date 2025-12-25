@@ -150,7 +150,7 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 208,WS MECH FF5,C Block,Engineering Practices Lab (Electrical),1,Core-Lab,50,70,0,0,Basic,15,0,0,0
 209,WS MECH FF6,C Block,Engineering Practices Lab (Electronics),1,Core-Lab,50,70,0,0,None,16,0,0,0
 210,WS MECH FM,C Block,Fluid Mechanics Lab,1,Core-Lab,20,35,0,0,None,23,0,0,0
-211,WS MECH GF1,C Block,Manufacturing Technology I,1,Core-Lab,20,35,0,0,Basic,23,0,0,0
+211,WS MECH GF1,C Block,Manufacturing Technology I,1,Core-Lab,20,70,0,0,Basic,23,0,0,0
 213,WS MECH SM,C Block,Strength of Materials Lab,1,Core-Lab,20,35,0,0,High-tech,23,0,0,0
 214,WS MECH TL,C Block,Thermal Lab 2,1,Core-Lab,20,35,0,0,Basic,23,0,0,0
 215,TANCAM,Arch Block,TANCAM,1,Core-Lab,0,35,0,1,High-tech,33,0,0,0
@@ -159,3 +159,4 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 218,D403,D block,Physics LAB - 2,1,Core-Lab,30,70,0,0,Advanced,31,0,0,0
 219,TIFAC V01/02,A Block,Soft Skills – II,1,Core-Lab,70,140,0,0,None,29,0,0,0
 158,DG02,D Block,Maths Lab,1,Core-Lab,50,70,1,0,High-tech,13,0,0,0
+
