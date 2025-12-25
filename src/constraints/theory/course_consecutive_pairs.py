@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import DefaultDict, Mapping, Optional, Sequence
+from typing import DefaultDict, Mapping, Optional
 
 from ortools.sat.python import cp_model
 
 from ..base import Constraint, ConstraintMetadata
 from ..context import ConstraintContext
 from ..schema import ConstraintApplicationResult, ConstraintStatus
-from ..utils import iter_course_timeslot_variables
+from ..utils import iter_course_timeslot_variables, iter_theory_room_variables
 
 
 class TheoryCourseConsecutivePairsConstraint(Constraint):
@@ -22,6 +22,7 @@ class TheoryCourseConsecutivePairsConstraint(Constraint):
 	- course_codes: list[str] course codes to target
 	- required_slots: int (default: 4) only apply to instances with exactly this many slots
 	- pair_length: int (default: 2) length of each consecutive block
+	- enforce_same_room: bool (default: false) enforce each consecutive block uses the same room
 	"""
 
 	def __init__(self, metadata: ConstraintMetadata, params: Optional[Mapping[str, object]] = None) -> None:
@@ -39,6 +40,8 @@ class TheoryCourseConsecutivePairsConstraint(Constraint):
 			self._pair_length = max(2, int(settings.get("pair_length", 2)))
 		except (TypeError, ValueError):
 			self._pair_length = 2
+		enforce_same_room = settings.get("enforce_same_room", False)
+		self._enforce_same_room = bool(enforce_same_room)
 
 	def apply(self, context: ConstraintContext) -> ConstraintApplicationResult:
 		model = context.model
@@ -101,6 +104,15 @@ class TheoryCourseConsecutivePairsConstraint(Constraint):
 			if not day_slot_vars:
 				continue
 
+			# day_idx -> slot_idx -> room_id -> var
+			day_slot_room_vars: DefaultDict[int, dict[int, dict[str, cp_model.IntVar]]] = defaultdict(lambda: defaultdict(dict))
+			if self._enforce_same_room:
+				for _tid, cid, day_idx, slot_idx, room_id, room_var in iter_theory_room_variables(
+					context,
+					course_instance_id=course_id,
+				):
+					day_slot_room_vars[day_idx][slot_idx][room_id] = room_var
+
 			# Create start literals for each consecutive pair.
 			pair_start_map: DefaultDict[int, dict[int, cp_model.IntVar]] = defaultdict(dict)
 			pair_starts: list[cp_model.IntVar] = []
@@ -121,6 +133,21 @@ class TheoryCourseConsecutivePairsConstraint(Constraint):
 					constraints_added += 1
 					pair_start_map[day_idx][start_slot] = pair_var
 					pair_starts.append(pair_var)
+
+					if self._enforce_same_room:
+						# If this consecutive block is chosen, all slots in the block must use the same room.
+						for offset in range(self._pair_length - 1):
+							slot_a = start_slot + offset
+							slot_b = start_slot + offset + 1
+							rooms_a = day_slot_room_vars.get(day_idx, {}).get(slot_a, {})
+							rooms_b = day_slot_room_vars.get(day_idx, {}).get(slot_b, {})
+							if not rooms_a or not rooms_b:
+								# If room variables are not available, skip room consistency enforcement.
+								continue
+							common_rooms = set(rooms_a.keys()) & set(rooms_b.keys())
+							for room_id in common_rooms:
+								model.Add(rooms_a[room_id] == rooms_b[room_id]).OnlyEnforceIf(pair_var)
+								constraints_added += 1
 
 			if not pair_starts:
 				continue
@@ -160,6 +187,7 @@ class TheoryCourseConsecutivePairsConstraint(Constraint):
 				"required_slots": self._required_slots,
 				"pair_length": self._pair_length,
 				"pair_count": pair_count,
+				"enforce_same_room": self._enforce_same_room,
 			},
 		)
 
