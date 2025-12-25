@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Aeronautical Engineering
 Semester: 4
-Generated: 2025-12-25 11:48:54
+Generated: 2025-12-25 12:10:50
 ============================================================
 
 OVERVIEW
@@ -12,28 +12,28 @@ OVERVIEW
 
 COURSE DISTRIBUTION BY GROUP
 - AE23411 [Theory]: 1 groups, 1 teachers
-  └─ G5: 1 teacher assignments
-- AE23412 [Theory]: 1 groups, 1 teachers
   └─ G6: 1 teacher assignments
+- AE23412 [Theory]: 1 groups, 1 teachers
+  └─ G5: 1 teacher assignments
 - AE23431 [Lab + Theory]: 1 groups, 1 teachers
   └─ G2: 1 teacher assignments
 - AE23432 [Lab + Theory]: 1 groups, 1 teachers
   └─ G3: 1 teacher assignments
 - AE23433 [Lab + Theory]: 1 groups, 1 teachers
-  └─ G1: 1 teacher assignments
-- MA23432 [Lab + Theory]: 1 groups, 1 teachers
   └─ G4: 1 teacher assignments
+- MA23432 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G1: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 1 courses, 1 teachers
-  └─ AE23433 [L+T]: 1 instances, 1 teachers
+  └─ MA23432 [L+T]: 1 instances, 1 teachers
 - G2: 1 courses, 1 teachers
   └─ AE23431 [L+T]: 1 instances, 1 teachers
 - G3: 1 courses, 1 teachers
   └─ AE23432 [L+T]: 1 instances, 1 teachers
 - G4: 1 courses, 1 teachers
-  └─ MA23432 [L+T]: 1 instances, 1 teachers
+  └─ AE23433 [L+T]: 1 instances, 1 teachers
 - G5: 1 courses, 1 teachers
-  └─ AE23411 [T]: 1 instances, 1 teachers
-- G6: 1 courses, 1 teachers
   └─ AE23412 [T]: 1 instances, 1 teachers
+- G6: 1 courses, 1 teachers
+  └─ AE23411 [T]: 1 instances, 1 teachers

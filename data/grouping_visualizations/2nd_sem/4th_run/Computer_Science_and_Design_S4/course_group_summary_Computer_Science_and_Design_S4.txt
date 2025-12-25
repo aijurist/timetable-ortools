@@ -1,0 +1,35 @@
+Course-Group Distribution Summary
+Department: Computer Science & Design
+Semester: 4
+Generated: 2025-12-25 11:53:18
+============================================================
+
+OVERVIEW
+- Courses: 5 (Lab 5, Theory 5)
+- Groups: 5
+- Total assignments: 5
+- Courses with multiple options: 0 (0.0%)
+
+COURSE DISTRIBUTION BY GROUP
+- AI23231 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G2: 1 teacher assignments
+- CS23333 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G3: 1 teacher assignments
+- CS23432 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G4: 1 teacher assignments
+- CS23532 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G5: 1 teacher assignments
+- MA23433 [Lab + Theory]: 1 groups, 1 teachers
+  └─ G1: 1 teacher assignments
+
+GROUP COMPOSITION
+- G1: 1 courses, 1 teachers
+  └─ MA23433 [L+T]: 1 instances, 1 teachers
+- G2: 1 courses, 1 teachers
+  └─ AI23231 [L+T]: 1 instances, 1 teachers
+- G3: 1 courses, 1 teachers
+  └─ CS23333 [L+T]: 1 instances, 1 teachers
+- G4: 1 courses, 1 teachers
+  └─ CS23432 [L+T]: 1 instances, 1 teachers
+- G5: 1 courses, 1 teachers
+  └─ CS23532 [L+T]: 1 instances, 1 teachers

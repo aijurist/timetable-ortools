@@ -1,7 +1,7 @@
 Course-Group Distribution Summary
 Department: Mechanical Engineering
 Semester: 4
-Generated: 2025-12-25 11:49:00
+Generated: 2025-12-25 12:10:56
 ============================================================
 
 OVERVIEW
@@ -18,43 +18,43 @@ COURSE DISTRIBUTION BY GROUP
   └─ G7: 1 teacher assignments
   └─ G8: 1 teacher assignments
 - ME23421 [Lab]: 2 groups, 2 teachers
-  └─ G5: 1 teacher assignments
+  └─ G3: 1 teacher assignments
   └─ G6: 1 teacher assignments
 - ME23422 [Lab]: 2 groups, 2 teachers
-  └─ G1: 1 teacher assignments
-  └─ G5: 1 teacher assignments
+  └─ G4: 1 teacher assignments
+  └─ G6: 1 teacher assignments
 - ME23431 [Lab + Theory]: 2 groups, 2 teachers
   └─ G2: 1 teacher assignments
-  └─ G3: 1 teacher assignments
+  └─ G5: 1 teacher assignments
 - ME23432 [Lab + Theory]: 2 groups, 2 teachers
+  └─ G1: 1 teacher assignments
   └─ G2: 1 teacher assignments
-  └─ G4: 1 teacher assignments
 - ME23433 [Lab + Theory]: 2 groups, 2 teachers
+  └─ G1: 1 teacher assignments
+  └─ G5: 1 teacher assignments
+- ME23VAP2 [Lab]: 2 groups, 2 teachers
   └─ G3: 1 teacher assignments
   └─ G4: 1 teacher assignments
-- ME23VAP2 [Lab]: 2 groups, 2 teachers
-  └─ G1: 1 teacher assignments
-  └─ G6: 1 teacher assignments
 
 GROUP COMPOSITION
 - G1: 2 courses, 2 teachers
-  └─ ME23422 [L]: 1 instances, 1 teachers
-  └─ ME23VAP2 [L]: 1 instances, 1 teachers
+  └─ ME23432 [L+T]: 1 instances, 1 teachers
+  └─ ME23433 [L+T]: 1 instances, 1 teachers
 - G2: 2 courses, 2 teachers
   └─ ME23431 [L+T]: 1 instances, 1 teachers
   └─ ME23432 [L+T]: 1 instances, 1 teachers
 - G3: 2 courses, 2 teachers
-  └─ ME23431 [L+T]: 1 instances, 1 teachers
-  └─ ME23433 [L+T]: 1 instances, 1 teachers
-- G4: 2 courses, 2 teachers
-  └─ ME23432 [L+T]: 1 instances, 1 teachers
-  └─ ME23433 [L+T]: 1 instances, 1 teachers
-- G5: 2 courses, 2 teachers
-  └─ ME23421 [L]: 1 instances, 1 teachers
-  └─ ME23422 [L]: 1 instances, 1 teachers
-- G6: 2 courses, 2 teachers
   └─ ME23421 [L]: 1 instances, 1 teachers
   └─ ME23VAP2 [L]: 1 instances, 1 teachers
+- G4: 2 courses, 2 teachers
+  └─ ME23422 [L]: 1 instances, 1 teachers
+  └─ ME23VAP2 [L]: 1 instances, 1 teachers
+- G5: 2 courses, 2 teachers
+  └─ ME23431 [L+T]: 1 instances, 1 teachers
+  └─ ME23433 [L+T]: 1 instances, 1 teachers
+- G6: 2 courses, 2 teachers
+  └─ ME23421 [L]: 1 instances, 1 teachers
+  └─ ME23422 [L]: 1 instances, 1 teachers
 - G7: 2 courses, 2 teachers
   └─ ME23411 [T]: 1 instances, 1 teachers
   └─ ME23412 [T]: 1 instances, 1 teachers

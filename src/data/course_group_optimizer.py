@@ -865,6 +865,26 @@ class CourseGroupOptimizer:
         if (self.dept == "Computer Science & Engineering" and self.semester == 2):
             constraints_added += self._apply_cse_s2_five_group_split(model, assignment_vars)
 
+        # Special constraint for Artificial Intelligence & Data Science 4th semester (fixed grouping)
+        if (self.dept == "Artificial Intelligence & Data Science" and self.semester == 4):
+            constraints_added += self._apply_aids_s4_fixed_grouping(model, assignment_vars)
+
+        # Special constraint for Biomedical Engineering 4th semester (fixed grouping)
+        if (self.dept == "Biomedical Engineering" and self.semester == 4):
+            constraints_added += self._apply_biomed_s4_fixed_grouping(model, assignment_vars)
+
+        # Special constraint for Electrical & Electronics Engineering 4th semester (fixed grouping)
+        if (self.dept == "Electrical & Electronics Engineering" and self.semester == 4):
+            constraints_added += self._apply_eee_s4_fixed_grouping(model, assignment_vars)
+
+        # Special constraint for Electronics & Communication Engineering 4th semester (fixed grouping)
+        if (self.dept == "Electronics & Communication Engineering" and self.semester == 4):
+            constraints_added += self._apply_ece_s4_fixed_grouping(model, assignment_vars)
+
+        # Special constraint for Mechanical Engineering 4th semester (fixed grouping)
+        if (self.dept == "Mechanical Engineering" and self.semester == 4):
+            constraints_added += self._apply_mech_s4_fixed_grouping(model, assignment_vars)
+
         # Special constraint for Computer Science & Engineering 4th semester (fixed grouping)
         if (self.dept == "Computer Science & Engineering" and self.semester == 4):
             constraints_added += self._apply_cse_s4_fixed_grouping(model, assignment_vars)
@@ -877,6 +897,344 @@ class CourseGroupOptimizer:
             self.logger.info(f"Applied {constraints_added} special department-specific constraints")
         else:
             self.logger.info("No special department-specific constraints applied")
+
+    def _apply_aids_s4_fixed_grouping(self, model, assignment_vars):
+        """Force AI&DS S4 to use a fixed course->group mapping (STRICT)."""
+        if self.num_groups < 5:
+            self.logger.warning(
+                "Skipping AI&DS S4 fixed grouping: expected >= 5 groups, got %s",
+                self.num_groups,
+            )
+            return 0
+
+        self.logger.info("Applying AI&DS S4 fixed group mapping")
+
+        fixed_group_counts = {
+            # G1..G5 => 0..4
+            "AD23431": {2: 2, 4: 2},
+            "AI23431": {0: 5},
+            "CS23431": {3: 4},
+            "CS23432": {2: 3, 4: 1},
+            "MA23434": {1: 5},
+        }
+
+        required_courses = set(fixed_group_counts.keys())
+        present_courses = set(self.unique_courses)
+        if present_courses != required_courses:
+            missing = sorted(required_courses - present_courses)
+            extra = sorted(present_courses - required_courses)
+            raise ValueError(
+                "AI&DS S4 fixed grouping requires exactly these courses after filtering: "
+                f"{sorted(required_courses)}. Missing={missing}, Extra={extra}."
+            )
+
+        constraints_added = 0
+        for course_code, group_targets in fixed_group_counts.items():
+            allowed_groups = set(group_targets.keys())
+            instance_indices = [
+                i
+                for i, inst in enumerate(self.courses)
+                if inst.get("course_code") == course_code
+            ]
+
+            expected_total = sum(group_targets.values())
+            if len(instance_indices) != expected_total:
+                raise ValueError(
+                    f"AI&DS S4 fixed grouping: {course_code} has {len(instance_indices)} instances "
+                    f"(expected {expected_total})."
+                )
+
+            for instance_idx in instance_indices:
+                for group_idx in range(self.num_groups):
+                    if group_idx in allowed_groups:
+                        continue
+                    model.Add(assignment_vars[(instance_idx, group_idx)] == 0)
+                    constraints_added += 1
+
+            for group_idx, target in group_targets.items():
+                group_count = model.NewIntVar(
+                    0,
+                    len(instance_indices),
+                    f"aids_s4_{course_code}_count_g{group_idx}",
+                )
+                model.Add(group_count == sum(assignment_vars[(i, group_idx)] for i in instance_indices))
+                constraints_added += 1
+                model.Add(group_count == target)
+                constraints_added += 1
+
+        return constraints_added
+
+    def _apply_biomed_s4_fixed_grouping(self, model, assignment_vars):
+        """Force Biomedical Engineering S4 to use a fixed course->group mapping (STRICT)."""
+        if self.num_groups < 8:
+            self.logger.warning(
+                "Skipping Biomedical S4 fixed grouping: expected >= 8 groups, got %s",
+                self.num_groups,
+            )
+            return 0
+
+        self.logger.info("Applying Biomedical Engineering S4 fixed group mapping")
+
+        fixed_group_counts = {
+            # G1..G8 => 0..7
+            "BM23411": {5: 1, 6: 1},
+            "BM23412": {5: 1, 7: 1},
+            "BM23421": {3: 1, 4: 1},
+            "BM23422": {2: 1, 4: 1},
+            "BM23431": {0: 1, 1: 1},
+            "CS23336": {2: 1, 3: 1},
+            "MA23436": {0: 1, 1: 1},
+            "MC23111": {6: 1, 7: 1},
+        }
+
+        required_courses = set(fixed_group_counts.keys())
+        present_courses = set(self.unique_courses)
+        if present_courses != required_courses:
+            missing = sorted(required_courses - present_courses)
+            extra = sorted(present_courses - required_courses)
+            raise ValueError(
+                "Biomedical S4 fixed grouping requires exactly these courses after filtering: "
+                f"{sorted(required_courses)}. Missing={missing}, Extra={extra}."
+            )
+
+        constraints_added = 0
+        for course_code, group_targets in fixed_group_counts.items():
+            allowed_groups = set(group_targets.keys())
+            instance_indices = [
+                i
+                for i, inst in enumerate(self.courses)
+                if inst.get("course_code") == course_code
+            ]
+
+            expected_total = sum(group_targets.values())
+            if len(instance_indices) != expected_total:
+                raise ValueError(
+                    f"Biomedical S4 fixed grouping: {course_code} has {len(instance_indices)} instances "
+                    f"(expected {expected_total})."
+                )
+
+            for instance_idx in instance_indices:
+                for group_idx in range(self.num_groups):
+                    if group_idx in allowed_groups:
+                        continue
+                    model.Add(assignment_vars[(instance_idx, group_idx)] == 0)
+                    constraints_added += 1
+
+            for group_idx, target in group_targets.items():
+                group_count = model.NewIntVar(
+                    0,
+                    len(instance_indices),
+                    f"biomed_s4_{course_code}_count_g{group_idx}",
+                )
+                model.Add(group_count == sum(assignment_vars[(i, group_idx)] for i in instance_indices))
+                constraints_added += 1
+                model.Add(group_count == target)
+                constraints_added += 1
+
+        return constraints_added
+
+    def _apply_eee_s4_fixed_grouping(self, model, assignment_vars):
+        """Force Electrical & Electronics Engineering S4 to use a fixed mapping (STRICT)."""
+        if self.num_groups < 6:
+            self.logger.warning(
+                "Skipping EEE S4 fixed grouping: expected >= 6 groups, got %s",
+                self.num_groups,
+            )
+            return 0
+
+        self.logger.info("Applying Electrical & Electronics Engineering S4 fixed group mapping")
+
+        fixed_group_counts = {
+            # G1..G6 => 0..5
+            "CS23422": {0: 1, 2: 1},
+            "EE23411": {4: 1, 5: 1},
+            "EE23412": {4: 1, 5: 1},
+            "EE23421": {0: 1, 2: 1},
+            "EE23431": {1: 1, 3: 1},
+            "EE23432": {1: 1, 3: 1},
+        }
+
+        required_courses = set(fixed_group_counts.keys())
+        present_courses = set(self.unique_courses)
+        if present_courses != required_courses:
+            missing = sorted(required_courses - present_courses)
+            extra = sorted(present_courses - required_courses)
+            raise ValueError(
+                "EEE S4 fixed grouping requires exactly these courses after filtering: "
+                f"{sorted(required_courses)}. Missing={missing}, Extra={extra}."
+            )
+
+        constraints_added = 0
+        for course_code, group_targets in fixed_group_counts.items():
+            allowed_groups = set(group_targets.keys())
+            instance_indices = [
+                i
+                for i, inst in enumerate(self.courses)
+                if inst.get("course_code") == course_code
+            ]
+
+            expected_total = sum(group_targets.values())
+            if len(instance_indices) != expected_total:
+                raise ValueError(
+                    f"EEE S4 fixed grouping: {course_code} has {len(instance_indices)} instances "
+                    f"(expected {expected_total})."
+                )
+
+            for instance_idx in instance_indices:
+                for group_idx in range(self.num_groups):
+                    if group_idx in allowed_groups:
+                        continue
+                    model.Add(assignment_vars[(instance_idx, group_idx)] == 0)
+                    constraints_added += 1
+
+            for group_idx, target in group_targets.items():
+                group_count = model.NewIntVar(
+                    0,
+                    len(instance_indices),
+                    f"eee_s4_{course_code}_count_g{group_idx}",
+                )
+                model.Add(group_count == sum(assignment_vars[(i, group_idx)] for i in instance_indices))
+                constraints_added += 1
+                model.Add(group_count == target)
+                constraints_added += 1
+
+        return constraints_added
+
+    def _apply_ece_s4_fixed_grouping(self, model, assignment_vars):
+        """Force ECE S4 to use a fixed course->group mapping (STRICT)."""
+        if self.num_groups < 6:
+            self.logger.warning(
+                "Skipping ECE S4 fixed grouping: expected >= 6 groups, got %s",
+                self.num_groups,
+            )
+            return 0
+
+        self.logger.info("Applying Electronics & Communication Engineering S4 fixed group mapping")
+
+        fixed_group_counts = {
+            # G1..G6 => 0..5
+            "CS23422": {0: 5, 2: 1},
+            "EC23411": {4: 2, 5: 4},
+            "EC23412": {3: 4, 5: 2},
+            "EC23413": {3: 2, 4: 4},
+            "EC23431": {0: 1, 1: 5},
+            "MA23436": {1: 1, 2: 5},
+        }
+
+        required_courses = set(fixed_group_counts.keys())
+        present_courses = set(self.unique_courses)
+        if present_courses != required_courses:
+            missing = sorted(required_courses - present_courses)
+            extra = sorted(present_courses - required_courses)
+            raise ValueError(
+                "ECE S4 fixed grouping requires exactly these courses after filtering: "
+                f"{sorted(required_courses)}. Missing={missing}, Extra={extra}."
+            )
+
+        constraints_added = 0
+        for course_code, group_targets in fixed_group_counts.items():
+            allowed_groups = set(group_targets.keys())
+            instance_indices = [
+                i
+                for i, inst in enumerate(self.courses)
+                if inst.get("course_code") == course_code
+            ]
+
+            expected_total = sum(group_targets.values())
+            if len(instance_indices) != expected_total:
+                raise ValueError(
+                    f"ECE S4 fixed grouping: {course_code} has {len(instance_indices)} instances "
+                    f"(expected {expected_total})."
+                )
+
+            for instance_idx in instance_indices:
+                for group_idx in range(self.num_groups):
+                    if group_idx in allowed_groups:
+                        continue
+                    model.Add(assignment_vars[(instance_idx, group_idx)] == 0)
+                    constraints_added += 1
+
+            for group_idx, target in group_targets.items():
+                group_count = model.NewIntVar(
+                    0,
+                    len(instance_indices),
+                    f"ece_s4_{course_code}_count_g{group_idx}",
+                )
+                model.Add(group_count == sum(assignment_vars[(i, group_idx)] for i in instance_indices))
+                constraints_added += 1
+                model.Add(group_count == target)
+                constraints_added += 1
+
+        return constraints_added
+
+    def _apply_mech_s4_fixed_grouping(self, model, assignment_vars):
+        """Force Mechanical Engineering S4 to use a fixed course->group mapping (STRICT)."""
+        if self.num_groups < 8:
+            self.logger.warning(
+                "Skipping Mechanical S4 fixed grouping: expected >= 8 groups, got %s",
+                self.num_groups,
+            )
+            return 0
+
+        self.logger.info("Applying Mechanical Engineering S4 fixed group mapping")
+
+        fixed_group_counts = {
+            # G1..G8 => 0..7
+            "ME23411": {6: 1, 7: 1},
+            "ME23412": {6: 1, 7: 1},
+            "ME23421": {2: 1, 5: 1},
+            "ME23422": {3: 1, 5: 1},
+            "ME23431": {1: 1, 4: 1},
+            "ME23432": {0: 1, 1: 1},
+            "ME23433": {0: 1, 4: 1},
+            "ME23VAP2": {2: 1, 3: 1},
+        }
+
+        required_courses = set(fixed_group_counts.keys())
+        present_courses = set(self.unique_courses)
+        if present_courses != required_courses:
+            missing = sorted(required_courses - present_courses)
+            extra = sorted(present_courses - required_courses)
+            raise ValueError(
+                "Mechanical S4 fixed grouping requires exactly these courses after filtering: "
+                f"{sorted(required_courses)}. Missing={missing}, Extra={extra}."
+            )
+
+        constraints_added = 0
+        for course_code, group_targets in fixed_group_counts.items():
+            allowed_groups = set(group_targets.keys())
+            instance_indices = [
+                i
+                for i, inst in enumerate(self.courses)
+                if inst.get("course_code") == course_code
+            ]
+
+            expected_total = sum(group_targets.values())
+            if len(instance_indices) != expected_total:
+                raise ValueError(
+                    f"Mechanical S4 fixed grouping: {course_code} has {len(instance_indices)} instances "
+                    f"(expected {expected_total})."
+                )
+
+            for instance_idx in instance_indices:
+                for group_idx in range(self.num_groups):
+                    if group_idx in allowed_groups:
+                        continue
+                    model.Add(assignment_vars[(instance_idx, group_idx)] == 0)
+                    constraints_added += 1
+
+            for group_idx, target in group_targets.items():
+                group_count = model.NewIntVar(
+                    0,
+                    len(instance_indices),
+                    f"mech_s4_{course_code}_count_g{group_idx}",
+                )
+                model.Add(group_count == sum(assignment_vars[(i, group_idx)] for i in instance_indices))
+                constraints_added += 1
+                model.Add(group_count == target)
+                constraints_added += 1
+
+        return constraints_added
 
     def _apply_cse_s4_fixed_grouping(self, model, assignment_vars):
         """Force CSE S4 to use a fixed course->group mapping.
