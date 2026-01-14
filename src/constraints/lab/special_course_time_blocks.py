@@ -42,6 +42,7 @@ class SpecialCourseTimeBlockRule:
 	blocked_days: Set[str]
 	allowed_days: Optional[Set[str]]
 	blocked_slot_indices: Set[int]
+	enforce_pairing_consistency: bool = False
 
 	def matches_course(self, course_code: str) -> bool:
 		return course_code in self.course_codes
@@ -76,17 +77,31 @@ class SpecialCourseTimeBlocksConstraint(Constraint):
 
 		lab_sessions = getattr(getattr(context.config, "time", None), "lab_sessions", {}) or {}
 
-		for _teacher_id, course_id, day_index, session_name, _room_id, variable in iter_lab_session_variables(context):
+		# Collect variables for consistency check
+		# Map: course_code -> teacher_id -> list of (session_key, room_id, variable)
+		consistency_data: Dict[str, Dict[str, list[tuple[str, str, Any]]]] = {}
+
+		for teacher_id, course_id, day_index, session_name, room_id, variable in iter_lab_session_variables(context):
 			stats.checked_variables += 1
 			req = requirements.get(course_id)
 			if req is None:
 				stats.missing_requirements += 1
 				continue
 			course_code = (req.course_code or "").strip()
-			course_code = course_code.upper()
-			rule = next((r for r in rules if r.matches_course(course_code)), None)
+			course_code_upper = course_code.upper()
+			
+			rule = next((r for r in rules if r.matches_course(course_code_upper)), None)
 			if rule is None:
 				continue
+
+			if rule.enforce_pairing_consistency:
+				if course_code_upper not in consistency_data:
+					consistency_data[course_code_upper] = {}
+				if teacher_id not in consistency_data[course_code_upper]:
+					consistency_data[course_code_upper][teacher_id] = []
+				# Create a unique key for the session slot (day + session_name)
+				session_key = f"{day_index}_{session_name}"
+				consistency_data[course_code_upper][teacher_id].append((session_key, room_id, variable))
 
 			day_label = self._resolve_day_label(context, lab_block.day_patterns, course_id, day_index)
 			if rule.blocks_day(day_label):
@@ -107,6 +122,47 @@ class SpecialCourseTimeBlocksConstraint(Constraint):
 				if slot_indices.intersection(rule.blocked_slot_indices):
 					context.model.Add(variable == 0)
 					stats.blocked_by_time += 1
+
+		# Apply pairing consistency
+		for c_code, teacher_map in consistency_data.items():
+			teachers = list(teacher_map.keys())
+			if len(teachers) < 2:
+				continue
+			
+			for i in range(len(teachers)):
+				for j in range(i + 1, len(teachers)):
+					t1 = teachers[i]
+					t2 = teachers[j]
+					
+					# Find all common (session_key, room_id) opportunities
+					t1_vars = { (s, r): v for s, r, v in teacher_map[t1] }
+					t2_vars = { (s, r): v for s, r, v in teacher_map[t2] }
+					
+					common_keys = set(t1_vars.keys()).intersection(t2_vars.keys())
+					if not common_keys:
+						continue
+
+					# Determine if t1 and t2 are "paired" (assigned to ANY common room in ANY session)
+					pair_indicators = []
+					for key in common_keys:
+						# Bool var: both t1 and t2 are in room r at session s
+						both_in = context.model.NewBoolVar(f"pair_{c_code}_{t1}_{t2}_{key[0]}_{key[1]}")
+						context.model.Add(t1_vars[key] + t2_vars[key] == 2).OnlyEnforceIf(both_in)
+						context.model.Add(t1_vars[key] + t2_vars[key] < 2).OnlyEnforceIf(both_in.Not())
+						pair_indicators.append(both_in)
+					
+					if not pair_indicators:
+						continue
+
+					# is_paired is true if they are paired in AT LEAST ONE session
+					is_paired = context.model.NewBoolVar(f"is_paired_{c_code}_{t1}_{t2}")
+					context.model.Add(sum(pair_indicators) >= 1).OnlyEnforceIf(is_paired)
+					context.model.Add(sum(pair_indicators) == 0).OnlyEnforceIf(is_paired.Not())
+
+					# Enforce: If paired, they must ALWAYS be paired (or both absent) for valid slots
+					# This means: is_paired -> (t1_var == t2_var) for all common slots
+					for key in common_keys:
+						context.model.Add(t1_vars[key] == t2_vars[key]).OnlyEnforceIf(is_paired)
 
 		status = ConstraintStatus.APPLIED if (stats.blocked_by_day or stats.blocked_by_time) else ConstraintStatus.SKIPPED
 		logger.info(
@@ -145,11 +201,14 @@ class SpecialCourseTimeBlocksConstraint(Constraint):
 			allowed_days_raw = cls._normalize_days(raw.get("allowed_days") or [])
 			allowed_days: Optional[Set[str]] = allowed_days_raw if allowed_days_raw else None
 			blocked_slot_indices = cls._resolve_blocked_slot_indices(context, raw)
+			enforce_pairing_consistency = bool(raw.get("enforce_pairing_consistency", False))
+			
 			return SpecialCourseTimeBlockRule(
 				course_codes=course_codes,
 				blocked_days=blocked_days,
 				allowed_days=allowed_days,
 				blocked_slot_indices=blocked_slot_indices,
+				enforce_pairing_consistency=enforce_pairing_consistency,
 			)
 
 		rules: list[SpecialCourseTimeBlockRule] = []

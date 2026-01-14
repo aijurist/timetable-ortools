@@ -22,7 +22,7 @@ wheels/
 *.egg 
 *.manifest 
 *.spec 
-
+data/grouping_visualizations
 # Log files
 pip-log.txt
 pip-delete-this-directory.txt

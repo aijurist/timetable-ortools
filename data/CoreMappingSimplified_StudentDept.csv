@@ -20,14 +20,14 @@ BT23422,Biotechnology,1,Immunology Lab,,,,,Molecular Biology and Genetic Enginee
 BT23621,Biotechnology,1,Downstream Processing Lab,,,,,Bioprocess Laboratory II
 CH23431,Chemical Engineering,1,Particle Science and Technology Lab,,,,,Particle Science and Technology
 CH23621,Chemical Engineering,1,Mass Transfer Lab,,,,,Mass Transfer Lab
-EE23133,Chemical Engineering,1,Electrical Machines I Lab,,,,,Basic Electrical and Electronics Engineering
+EE23133,Chemical Engineering,1,Electrical Machines II Lab,,,,,Basic Electrical and Electronics Engineering
 GE23122,Chemical Engineering,1,Engineering Practices Lab (Electrical),,,,,Engineering Practices - Electrical and Electronics
 GE23122,Chemical Engineering,1,Engineering Practices Lab (Electronics),,,,,Engineering Practices - Electrical and Electronics
 EE23133,Civil Engineering,1,Electrical Machines I Lab,Electrical Machines II Lab,,,,Basic Electrical and Electronics Engineering
 GE23122,Civil Engineering,1,Engineering Practices Lab (Electrical),,,,,Engineering Practices - Electrical and Electronics
 EE23133,Electrical & Electronics Engineering,1,Electrical Machines I Lab,Electrical Machines II Lab,,,,Basic Electrical and Electronics Engineering
 EE23221,Electrical & Electronics Engineering,1,Electronic Devices & Circuits Lab,,,,,Electric Circuits Laboratory
-EE23421,Electrical & Electronics Engineering,2,Electrical Machines I Lab,Electrical Machines II Lab,,,,Electrical Machines Laboratory
+EE23421,Electrical & Electronics Engineering,2,Electrical Machines I Lab,,,,,Electrical Machines Laboratory
 EE23431,Electrical & Electronics Engineering,1,Power Electronics Lab,,,,,Digital Logic Circuits
 EE23432,Electrical & Electronics Engineering,1,Electronic Devices & Circuits Lab,,,,,Linear Integrated Circuits and Applications
 EE23622,Electrical & Electronics Engineering,1,Power System Simulation Lab,,,,,Applications of AI and ML in Electrical Engineering
@@ -39,7 +39,7 @@ EE23132,Electronics & Communication Engineering,1,Electrical Machines II Lab,,,,
 EE23132,Electronics & Communication Engineering,1,Electrical Machines I Lab,,,,,Basic Electrical Engineering
 GE23121,Electronics & Communication Engineering,1,Machine Shop FF1 - EPL - 1,,,,,Engineering Practices Civil and Mechanical
 GE23121,Electronics & Communication Engineering,1,Machine Shop FF2 - EPL - 2,,,,,Engineering Practices Civil and Mechanical
-EE23133,Food Technology,1,Electrical Machines I Lab,,,,,Basic Electrical and Electronics Engineering
+EE23133,Food Technology,1,Electrical Machines II Lab,,,,,Basic Electrical and Electronics Engineering
 EC23232,Computer Science & Engineering,1,Microprocessor Lab-1,Microprocessor Lab-2,,,,Digital Logic and Microprocessor
 EC23233,Computer Science & Engineering,1,Microprocessor Lab-1,Microprocessor Lab-2,,,,Digital Logic and Microprocessor
 FT19801,Food Technology,1,Livestock Lab,,,,,Project Work
@@ -96,3 +96,4 @@ MA23431,Food Technology,1,Maths Lab,,,,,"Probability, Statistics and Reliability
 MA23432,Robotics & Automation,1,Maths Lab,,,,,Statistics and Numerical Methods
 MA23432,Mechatronics Engineering,1,Maths Lab,,,,,Statistics and Numerical Methods
 MA23432,Aeronautical Engineering,1,Maths Lab,,,,,Statistics and Numerical Methods
+CS23231,Computer Science & Engineering,1,DSA Classroom-1,DSA Classroom-2,,,,Data Structures and Algorithms

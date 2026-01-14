@@ -140,30 +140,37 @@ def normalize_entry(entry: Mapping[str, object], schedule_type: str) -> Dict[str
     return row
 
 
-def load_run_entries(run_dir: Path) -> List[Dict[str, object]]:
+def load_run_entries(run_dir: Path) -> tuple[List[Dict[str, object]], List[Mapping[str, object]], List[Mapping[str, object]]]:
+    """Load and process schedule entries from a run directory.
+    
+    Returns:
+        A tuple of (normalized_entries, raw_lab_entries, raw_theory_entries).
+        normalized_entries are for CSV export, raw entries preserve original keys for JSON export.
+    """
     entries: List[Dict[str, object]] = []
-    lab_paths = [
-        run_dir / "combined_lab_schedule.json",
-        run_dir / "combined_lab_schedule.csv",
-        run_dir / "csv" / "lab_schedule.csv",
-    ]
-    theory_paths = [
-        run_dir / "combined_theory_schedule.json",
-        run_dir / "combined_theory_schedule.csv",
-        run_dir / "csv" / "theory_schedule.csv",
-    ]
-
-    for path in lab_paths:
-        for raw in read_json_or_csv(path):
-            entries.append(normalize_entry(raw, "lab"))
-
-    for path in theory_paths:
-        for raw in read_json_or_csv(path):
-            entries.append(normalize_entry(raw, "theory"))
-
+    
+    schedule_json = run_dir / "schedule.json"
+    if not schedule_json.exists():
+        raise FileNotFoundError(f"schedule.json not found in {run_dir}")
+    
+    with schedule_json.open("r", encoding="utf-8") as f:
+        data = json.load(f)
+    
+    # Get raw entries (preserve original keys)
+    raw_lab_entries = data.get("lab_entries", [])
+    raw_theory_entries = data.get("theory_entries", [])
+    
+    # Read lab_entries (normalized for CSV)
+    for raw in raw_lab_entries:
+        entries.append(normalize_entry(raw, "lab"))
+    
+    # Read theory_entries (normalized for CSV)
+    for raw in raw_theory_entries:
+        entries.append(normalize_entry(raw, "theory"))
+    
     if not entries:
-        raise FileNotFoundError(f"No schedule files found under {run_dir}")
-    return entries
+        raise FileNotFoundError(f"No entries found in {schedule_json}")
+    return entries, raw_lab_entries, raw_theory_entries
 
 
 def write_csv(rows: Iterable[Mapping[str, object]], dest: Path) -> None:
@@ -186,19 +193,27 @@ def main() -> None:
     parser.add_argument("--root", type=Path, default=Path("output"), help="Root output folder containing run folders")
     parser.add_argument("--run-dir", type=Path, default=None, help="Specific run folder; defaults to newest under --root")
     parser.add_argument("--out", type=Path, default=None, help="Destination CSV; default is <run-dir>/merged_schedule.csv")
-    parser.add_argument("--json-out", type=Path, default=None, help="Optional JSON output; default is <run-dir>/merged_schedule.json")
+    parser.add_argument("--json-out", action="store_true", help="Output separate lab_schedule.json and theory_schedule.json files")
     args = parser.parse_args()
 
     run_dir = args.run_dir or find_latest_run(args.root)
     if not run_dir.exists():
         raise FileNotFoundError(f"Run directory not found: {run_dir}")
 
-    rows = load_run_entries(run_dir)
+    rows, raw_lab_entries, raw_theory_entries = load_run_entries(run_dir)
     out_path = args.out or (run_dir / "merged_schedule.csv")
-    json_path = args.json_out or (run_dir / "merged_schedule.json")
     write_csv(rows, out_path)
-    write_json(rows, json_path)
-    print(f"Wrote {len(rows)} rows to {out_path} and {json_path}")
+    print(f"Wrote {len(rows)} rows to {out_path}")
+
+    if args.json_out:
+        lab_json_path = run_dir / "lab_schedule.json"
+        theory_json_path = run_dir / "theory_schedule.json"
+        
+        # Use raw entries to preserve original keys (no normalization)
+        write_json(raw_lab_entries, lab_json_path)
+        write_json(raw_theory_entries, theory_json_path)
+        print(f"Wrote {len(raw_lab_entries)} lab rows to {lab_json_path}")
+        print(f"Wrote {len(raw_theory_entries)} theory rows to {theory_json_path}")
 
 
 if __name__ == "__main__":
