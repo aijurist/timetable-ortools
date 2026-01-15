@@ -7,8 +7,8 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data\sem2026\year_wise\2nd_year\all.csv
-  rooms_csv: data/block_wise/2nd_3rd.csv
+  courses_csv: data\sem2026\1st year\Aeronautical Engineering_courses.csv
+  rooms_csv: data/block_wise/1st_year.csv
   day_order_csv: data/day_order_even.csv
   core_lab_mapping_csv: data/CoreMappingSimplified_StudentDept.csv
   preferences_csv: data/pop.csv
@@ -794,7 +794,8 @@ constraints:
       priority: 10
       weight: 1.0
       params:
-        snapshot_path: output/final/2025-12-18_00-11-55/schedule.json
+        lab_csv_path: output/final/2025-12-26_04-47-12/csv/lab_schedule.csv
+        theory_csv_path: output/final/2025-12-26_04-47-12/csv/theory_schedule.csv
         lock_assignments: true
         block_rooms: true
         block_teachers: true

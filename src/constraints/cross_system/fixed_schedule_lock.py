@@ -17,6 +17,7 @@ variables to 1 for locked assignments and to 0 for conflicting assignments.
 
 from __future__ import annotations
 
+import csv
 import json
 import logging
 from dataclasses import dataclass
@@ -55,6 +56,8 @@ def _as_bool(value: object, default: bool = False) -> bool:
 @dataclass(frozen=True)
 class FixedScheduleLockSettings:
 	snapshot_path: Path
+	lab_csv_path: Optional[Path] = None
+	theory_csv_path: Optional[Path] = None
 	lock_assignments: bool = True
 	block_rooms: bool = True
 	block_teachers: bool = True
@@ -67,8 +70,12 @@ class FixedScheduleLockSettings:
 			or str(params.get("schedule_path") or "").strip()
 			or str(params.get("schedule_json_path") or "").strip()
 		)
+		raw_lab_csv = str(params.get("lab_csv_path") or "").strip()
+		raw_theory_csv = str(params.get("theory_csv_path") or "").strip()
 		return cls(
 			snapshot_path=Path(raw_path) if raw_path else Path(""),
+			lab_csv_path=Path(raw_lab_csv) if raw_lab_csv else None,
+			theory_csv_path=Path(raw_theory_csv) if raw_theory_csv else None,
 			lock_assignments=_as_bool(params.get("lock_assignments"), True),
 			block_rooms=_as_bool(params.get("block_rooms"), True),
 			block_teachers=_as_bool(params.get("block_teachers"), True),
@@ -88,46 +95,65 @@ class FixedScheduleLockConstraint(Constraint):
 
 	def apply(self, context: ConstraintContext) -> ConstraintApplicationResult:
 		settings = self._settings
-		if not str(settings.snapshot_path):
-			return self._result(ConstraintStatus.SKIPPED, {"reason": "snapshot_path_missing"})
+		
+		# Check if CSV paths are provided
+		if settings.lab_csv_path or settings.theory_csv_path:
+			lab_records, theory_records, source_format = self._load_from_csv(settings)
+			if not lab_records and not theory_records:
+				return self._result(
+					ConstraintStatus.SKIPPED,
+					{"reason": "csv_files_empty_or_missing"},
+				)
+			# Create a descriptive source info for CSV loading
+			csv_sources = []
+			if settings.lab_csv_path:
+				csv_sources.append(f"lab={settings.lab_csv_path}")
+			if settings.theory_csv_path:
+				csv_sources.append(f"theory={settings.theory_csv_path}")
+			source_info = ", ".join(csv_sources)
+		else:
+			# Fall back to JSON loading
+			if not str(settings.snapshot_path):
+				return self._result(ConstraintStatus.SKIPPED, {"reason": "snapshot_path_missing"})
 
-		snapshot_path = self._resolve_path(settings.snapshot_path)
-		if not snapshot_path.exists():
-			return self._result(
-				ConstraintStatus.SKIPPED,
-				{"reason": "snapshot_not_found", "snapshot_path": str(snapshot_path)},
-			)
+			snapshot_path = self._resolve_path(settings.snapshot_path)
+			if not snapshot_path.exists():
+				return self._result(
+					ConstraintStatus.SKIPPED,
+					{"reason": "snapshot_not_found", "snapshot_path": str(snapshot_path)},
+				)
 
-		try:
-			payload = json.loads(snapshot_path.read_text(encoding="utf-8"))
-		except json.JSONDecodeError:
-			return self._result(
-				ConstraintStatus.SKIPPED,
-				{"reason": "snapshot_invalid_json", "snapshot_path": str(snapshot_path)},
-			)
+			try:
+				payload = json.loads(snapshot_path.read_text(encoding="utf-8"))
+			except json.JSONDecodeError:
+				return self._result(
+					ConstraintStatus.SKIPPED,
+					{"reason": "snapshot_invalid_json", "snapshot_path": str(snapshot_path)},
+				)
 
-		lab_records, theory_records, source_format = self._normalize_payload(payload)
-		if not lab_records and not theory_records:
-			return self._result(
-				ConstraintStatus.SKIPPED,
-				{
-					"reason": "snapshot_empty_or_unrecognized",
-					"snapshot_path": str(snapshot_path),
-					"source_format": source_format,
-				},
-			)
+			lab_records, theory_records, source_format = self._normalize_payload(payload)
+			if not lab_records and not theory_records:
+				return self._result(
+					ConstraintStatus.SKIPPED,
+					{
+						"reason": "snapshot_empty_or_unrecognized",
+						"snapshot_path": str(snapshot_path),
+						"source_format": source_format,
+					},
+				)
+			source_info = str(snapshot_path)
 
 		self._logger.info(
 			"Fixed schedule lock loading %s from %s (lab=%d, theory=%d)",
 			source_format,
-			snapshot_path,
+			source_info,
 			len(lab_records),
 			len(theory_records),
 		)
 
 		model = context.model
 		stats = {
-			"snapshot_path": str(snapshot_path),
+			"source_info": source_info,
 			"source_format": source_format,
 			"source_lab_records": len(lab_records),
 			"source_theory_records": len(theory_records),
@@ -573,6 +599,54 @@ class FixedScheduleLockConstraint(Constraint):
 			return tuple(lab), tuple(theory), "schedule_json"
 
 		return tuple(), tuple(), "unknown"
+
+	def _load_from_csv(
+		self,
+		settings: FixedScheduleLockSettings,
+	) -> tuple[Tuple[Mapping[str, Any], ...], Tuple[Mapping[str, Any], ...], str]:
+		"""Load schedule data from CSV files."""
+		lab_records: list[Mapping[str, Any]] = []
+		theory_records: list[Mapping[str, Any]] = []
+		
+		# Load lab schedule if path provided
+		if settings.lab_csv_path:
+			lab_path = self._resolve_path(settings.lab_csv_path)
+			if lab_path.exists():
+				self._logger.info("Loading lab schedule from CSV: %s", lab_path)
+				try:
+					with open(lab_path, 'r', encoding='utf-8') as f:
+						reader = csv.DictReader(f)
+						for row in reader:
+							lab_records.append({
+								"teacher_id": row.get("teacher_id"),
+								"course_instance_id": row.get("course_instance_id"),
+								"day": row.get("day"),
+								"session_name": row.get("session_name"),
+								"room_id": row.get("room_id"),
+							})
+				except Exception as e:
+					self._logger.warning("Failed to read lab CSV %s: %s", lab_path, e)
+		
+		# Load theory schedule if path provided
+		if settings.theory_csv_path:
+			theory_path = self._resolve_path(settings.theory_csv_path)
+			if theory_path.exists():
+				self._logger.info("Loading theory schedule from CSV: %s", theory_path)
+				try:
+					with open(theory_path, 'r', encoding='utf-8') as f:
+						reader = csv.DictReader(f)
+						for row in reader:
+							theory_records.append({
+								"teacher_id": row.get("teacher_id"),
+								"course_instance_id": row.get("course_instance_id"),
+								"day": row.get("day"),
+								"slot_index": row.get("slot_index"),
+								"room_id": row.get("room_id"),
+							})
+				except Exception as e:
+					self._logger.warning("Failed to read theory CSV %s: %s", theory_path, e)
+		
+		return tuple(lab_records), tuple(theory_records), "csv_files"
 
 	@staticmethod
 	def _normalize_day_label(value: object) -> str:
