@@ -7,8 +7,8 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data\sem2026\1st year\Electronics & Communication Engineering_courses.csv
-  rooms_csv: data/block_wise/1st_year.csv
+  courses_csv: data/sem2026/1st year/Computer Science & Engineering_courses.csv
+  rooms_csv: data/block_wise/techlongue.csv
   day_order_csv: data/day_order_even.csv
   core_lab_mapping_csv: data/CoreMappingSimplified_StudentDept.csv
   preferences_csv: data/pop.csv
@@ -579,6 +579,14 @@ constraints:
             allowed_days:
               - thur
               - fri
+              - saturday
+          - course_codes:
+              - CS23231
+              - CB23231
+            blocked_lab_slot_labels:
+              - "11:50 - 12:40"
+              - "12:40 - 1:20"
+            blocked_days:
               - saturday
     core_lab_mapping:
       enabled: true

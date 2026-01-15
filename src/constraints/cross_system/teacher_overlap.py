@@ -81,11 +81,18 @@ class TeacherOverlapConstraint(Constraint):
 					)
 					if len(entries) <= 1:
 						continue
-					if _can_co_schedule(entries):
+
+					# DSA override: allow CS23231/CB23231 lab activities to overlap with anything.
+					# We do this by removing those activities from the uniqueness constraint,
+					# while still enforcing uniqueness among the remaining activities.
+					filtered = tuple(entry for entry in entries if not _is_dsa_override_activity(entry))
+					if len(filtered) <= 1:
 						continue
-					context.model.Add(sum(entry.literal for entry in entries) <= 1)
+					if _can_co_schedule(filtered):
+						continue
+					context.model.Add(sum(entry.literal for entry in filtered) <= 1)
 					clauses += 1
-					activity_literals += len(entries)
+					activity_literals += len(filtered)
 
 		status = ConstraintStatus.APPLIED if clauses else ConstraintStatus.SKIPPED
 		return ConstraintApplicationResult(
@@ -296,6 +303,13 @@ def _can_co_schedule(entries: Sequence[ActivityEntry]) -> bool:
 	if first.course_code != second.course_code:
 		return False
 	return first.practical_hours >= 4 and second.practical_hours >= 4
+
+
+def _is_dsa_override_activity(entry: ActivityEntry) -> bool:
+	if entry.kind != "lab":
+		return False
+	code = str(entry.course_code or "").strip().upper()
+	return code in {"CS23231", "CB23231"}
 
 
 def build_teacher_overlap_constraint(
