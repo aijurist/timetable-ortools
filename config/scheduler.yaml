@@ -738,6 +738,9 @@ constraints:
             - D Block
             - ARC Block
         year_block_preferences:
+          "1":
+            - D Block
+            - ARC Block
           "2":
             - B Block
             - C Block

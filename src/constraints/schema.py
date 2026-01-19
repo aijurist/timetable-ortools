@@ -51,6 +51,7 @@ ConstraintBuilder = Callable[["ConstraintContext"], "ConstraintApplicationResult
 class ConstraintRegistration:
 	"""Metadata describing how to apply a constraint module."""
 
+	id: str
 	name: str
 	domain: str
 	priority: int

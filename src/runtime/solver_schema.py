@@ -41,6 +41,8 @@ class SolverResult:
 	log_path: Optional[Path] = None
 	summary_path: Optional[Path] = None
 	diagnostics_path: Optional[Path] = None
+	unsat_core: Optional[List[str]] = None
+	unsat_core_path: Optional[Path] = None
 
 	def to_dict(self) -> Dict[str, object]:
 		return {
@@ -57,6 +59,8 @@ class SolverResult:
 			"log_path": str(self.log_path) if self.log_path else None,
 			"summary_path": str(self.summary_path) if self.summary_path else None,
 			"diagnostics_path": str(self.diagnostics_path) if self.diagnostics_path else None,
+			"unsat_core": list(self.unsat_core) if self.unsat_core else None,
+			"unsat_core_path": str(self.unsat_core_path) if self.unsat_core_path else None,
 		}
 
 	def write_summary(self, destination: Path) -> Path:

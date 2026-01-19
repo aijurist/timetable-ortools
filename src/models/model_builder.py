@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from dataclasses import dataclass
 from typing import Iterable, List, Mapping, MutableMapping, Optional, Sequence, Tuple
 
@@ -109,6 +110,23 @@ class ModelBuilder:
 		if not registration.enabled:
 			return self._make_result(registration, ConstraintStatus.SKIPPED, {"reason": "disabled"})
 
+		unsat_core_enabled = str(os.environ.get("SCHEDULER_UNSAT_CORE", "")).strip().lower() in {"1", "true", "yes"}
+		assumption_literal = None
+		assumption_index = None
+		proto = context.model.Proto()
+		constraints_before = len(proto.constraints)
+		if unsat_core_enabled:
+			# Create a per-constraint assumption literal and register it with CP-SAT.
+			# We will retroactively enforce any constraints added by this constraint block
+			# by appending this literal into each new proto constraint's enforcement list.
+			# This allows retrieving a sufficient subset of assumptions when INFEASIBLE.
+			assumption_literal = context.model.NewBoolVar(f"assump_{registration.id}")
+			context.model.AddAssumption(assumption_literal)
+			assumption_index = assumption_literal.Index()
+			bucket = context.extra.setdefault("assumptions", {})
+			if isinstance(bucket, dict):
+				bucket[registration.id] = assumption_index
+
 		self._logger.debug(
 			"Applying constraint '%s' (domain=%s, priority=%s)",
 			registration.name,
@@ -121,6 +139,18 @@ class ModelBuilder:
 		except Exception as exc:  # pragma: no cover - defensive logging
 			self._logger.exception("Constraint '%s' failed", registration.name)
 			return self._make_result(registration, ConstraintStatus.ERROR, {"error": str(exc)})
+
+		if unsat_core_enabled and assumption_index is not None:
+			proto = context.model.Proto()
+			constraints_after = len(proto.constraints)
+			# Guard every newly added proto constraint behind this assumption.
+			# Note: constraints can already be reified; adding another enforcement literal is safe
+			# (it just conjoins the enforcement conditions).
+			for i in range(constraints_before, constraints_after):
+				try:
+					proto.constraints[i].enforcement_literal.append(assumption_index)
+				except Exception:  # pragma: no cover - protobuf edge cases
+					continue
 
 		if isinstance(result, ConstraintApplicationResult):
 			return result

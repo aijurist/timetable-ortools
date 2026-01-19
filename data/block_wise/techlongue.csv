@@ -160,6 +160,7 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 128,B203,B Block,VLSI Lab,1,Core-Lab,20,35,1,0,None,16,0,0,0
 129,B204,B Block,Networks Lab,1,Core-Lab,20,35,1,0,Advanced,16,0,0,0
 130,B205,B Block,Microprocessor Lab-1,1,Core-Lab,20,70,1,0,None,16,0,0,0
+131,B206,B Block,Microprocessor Lab-2,1,Core-Lab,20,70,1,0,None,16,0,0,0
 132,B305,B Block,Industrial Automation Lab,1,Core-Lab,20,35,1,0,High-tech,23,0,0,0
 133,B310,B Block,MCT CAD Lab,1,Core-Lab,20,35,1,0,High-tech,23,0,0,0
 134,B311,B Block,Electronic Devices & Circuits Lab,1,Core-Lab,20,35,1,0,High-tech,15,0,0,0

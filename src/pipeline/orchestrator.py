@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import json
 from pathlib import Path
 from typing import Any, Dict, Mapping, Optional
 from datetime import datetime
@@ -126,9 +127,57 @@ class PipelineOrchestrator:
 		output_dir = self.config.paths.output_root / "latest"
 		output_dir.mkdir(parents=True, exist_ok=True)
 
-		extractor = ScheduleExtractor(self._extended_data, self._model)
 		timestamp_dir = self._base_dir / "output" / datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+		timestamp_dir.mkdir(parents=True, exist_ok=True)
 		self._latest_output_dir = timestamp_dir
+		self._write_config_snapshot(timestamp_dir)
+
+		# If the solver did not produce a feasible assignment, exporting an empty schedule is ok,
+		# but running validation will only generate misleading "coverage missing" errors.
+		if self._solver_result.solution_count == 0 and self._solver_result.status not in {"FEASIBLE", "OPTIMAL"}:
+			logger.error(
+				"No feasible solution found (status=%s, wall_time=%.2fs). Skipping extraction validation.",
+				self._solver_result.status,
+				self._solver_result.wall_time,
+			)
+			(timestamp_dir / "solve_failure.txt").write_text(
+				(
+					f"status={self._solver_result.status}\n"
+					f"status_code={self._solver_result.status_code}\n"
+					f"solution_count={self._solver_result.solution_count}\n"
+					f"wall_time={self._solver_result.wall_time:.6f}\n"
+				),
+				encoding="utf-8",
+			)
+			# Still write an empty schedule.json + csv bundle so downstream tooling has artifacts.
+			extractor = ScheduleExtractor(self._extended_data, self._model)
+			self._schedule = extractor.export(
+				self._solver_result,
+				output_dir=timestamp_dir,
+				write_json=True,
+				write_csv=True,
+			)
+			# Emit a minimal validation telemetry that explains the skip.
+			(timestamp_dir / "validation_telemetry.json").write_text(
+				json.dumps(
+					{
+						"generated_at": datetime.utcnow().isoformat() + "+00:00",
+						"executed_checks": [],
+						"severity_counts": {"error": 0, "warning": 0},
+						"skipped": True,
+						"reason": "solver produced no feasible solution; validation skipped",
+						"solver_status": self._solver_result.status,
+					},
+					indent=2,
+				),
+				encoding="utf-8",
+			)
+			self._validation_report = None
+			self._write_solver_metrics(timestamp_dir)
+			self._persist_warm_start_snapshot(timestamp_dir)
+			return self._schedule
+
+		extractor = ScheduleExtractor(self._extended_data, self._model)
 		self._schedule = extractor.export(
 			self._solver_result,
 			output_dir=timestamp_dir,
@@ -145,6 +194,16 @@ class PipelineOrchestrator:
 		self._write_solver_metrics(timestamp_dir)
 		self._persist_warm_start_snapshot(timestamp_dir)
 		return self._schedule
+
+	def _write_config_snapshot(self, output_dir: Path) -> None:
+		try:
+			payload = self.config_dict()
+			(output_dir / "config_snapshot.json").write_text(
+				json.dumps(payload, indent=2, sort_keys=True),
+				encoding="utf-8",
+			)
+		except Exception:  # pragma: no cover - best-effort diagnostics
+			logger.exception("Failed to write config snapshot")
 
 	def _apply_warm_start_hints(self) -> None:
 		if not self._model or not self.config.runtime.warm_start.enabled:

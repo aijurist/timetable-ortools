@@ -266,6 +266,7 @@ def _build_domain_registrations(
 		constraint = definition["factory"](metadata=metadata, params=setting.params)
 		entries.append(
 			ConstraintRegistration(
+				id=metadata.id,
 				name=metadata.name,
 				domain=metadata.category,
 				priority=metadata.priority,

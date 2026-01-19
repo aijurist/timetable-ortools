@@ -30,6 +30,8 @@ def main() -> None:
         print("\nPipeline completed successfully!")
         if orchestrator._solver_result:
             print(f"Status: {orchestrator._solver_result.status}")
+            if getattr(orchestrator._solver_result, "solution_count", None) == 0 and orchestrator._solver_result.status not in ("FEASIBLE", "OPTIMAL"):
+                print("Note: CP-SAT reported 0 feasible solutions; schedule export will be empty.")
             if orchestrator._solver_result.objective_value is not None:
                 print(f"Objective Value: {orchestrator._solver_result.objective_value}")
         
@@ -54,6 +56,12 @@ def main() -> None:
             print("\nValidation summary:")
             print(f"- Checks executed: {len(report.executed_checks)}")
             print(f"- Severity counts: {severity}")
+        else:
+            if orchestrator._solver_result and getattr(orchestrator._solver_result, "solution_count", None) == 0:
+                print("\nValidation summary:")
+                print("- Checks executed: 0")
+                print("- Severity counts: error=0, warning=0")
+                print("- Note: validation skipped because solver produced no feasible solution")
         
     except Exception as e:
         logging.error("Pipeline execution failed", exc_info=True)

@@ -35,6 +35,8 @@ class SolverMetricsTelemetryBuilder:
             "best_bound": self.solver_result.best_bound,
             "objective_value": self.solver_result.objective_value,
             "gap": self.solver_result.gap,
+            "unsat_core": list(self.solver_result.unsat_core) if self.solver_result.unsat_core else None,
+            "unsat_core_path": str(self.solver_result.unsat_core_path) if self.solver_result.unsat_core_path else None,
         }
         payload = {
             "generated_at": generated_at,

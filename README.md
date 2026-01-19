@@ -143,6 +143,37 @@ python -m src.app.server --print-metrics
 This prints the latest snapshot metadata plus the aggregate counters returned by `/api/metrics`.
 
 
+## 🧩 Debugging infeasibility / no-solution runs
+
+CP-SAT statuses you will commonly see:
+
+- **INFEASIBLE**: the model is proven impossible (given the enabled hard constraints and input data).
+- **UNKNOWN**: CP-SAT did not find a feasible solution within limits (or did not prove infeasible). This can mean
+    “feasible but too hard”, “infeasible but not proven yet”, or “search never really started because presolve took most of the time”.
+
+### Find which constraint is causing INFEASIBLE (unsat core)
+
+Enable unsat-core diagnostics by setting `SCHEDULER_UNSAT_CORE=1`.
+
+Example:
+
+```powershell
+$env:SCHEDULER_UNSAT_CORE=1
+$env:SCHEDULER_TIMEOUT_SECONDS=120
+E:/coding/grind_project/timetable_scheduler/env/Scripts/python.exe -m src.pipeline.cli --config config/scheduler.yaml --verbose
+```
+
+If the model is proven **INFEASIBLE**, the solver writes an unsat-core report under:
+
+- [output/combined_scheduler/solver_logs](output/combined_scheduler/solver_logs)
+
+Look for a file named `unsat_core_*.json` and also check the `unsat_core` field inside each run’s `solver_metrics.json`.
+
+Notes:
+- The unsat core identifies a *sufficient set* of constraint blocks that cannot all be satisfied together. It is not always the unique cause.
+- For **UNKNOWN** runs (0 feasible solutions), an unsat core is not available; use constraint toggling / reduced instances to find the hard blocker.
+
+
 ## �📋 Data Format
 
 ### Required Input Files

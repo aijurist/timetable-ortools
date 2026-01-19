@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import math
+import os
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -56,6 +57,20 @@ class SolverRunner:
 		self._apply_yaml_parameters(solver.parameters)
 		self._apply_runtime_parameters(solver.parameters)
 
+		log_directory = self._resolve_log_dir(log_dir)
+		log_directory.mkdir(parents=True, exist_ok=True)
+		timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+		cp_sat_log_path = log_directory / f"cp_sat_{timestamp}.log"
+		capture_cp_sat_logs = bool(self._config.runtime.enable_trace)
+		export_model = str(os.environ.get("SCHEDULER_EXPORT_MODEL", "")).strip().lower() in {"1", "true", "yes"}
+		model_export_path: Optional[Path] = None
+		if export_model:
+			model_export_path = log_directory / f"model_{timestamp}.pbtxt"
+			try:
+				model.ExportToFile(str(model_export_path))
+			except Exception:
+				self._logger.exception("Failed to export CP-SAT model to %s", model_export_path)
+
 		has_objective = self._model_has_objective(model)
 		callback = _BoundTracker(has_objective=has_objective)
 		self._logger.info(
@@ -64,7 +79,23 @@ class SolverRunner:
 			solver.parameters.num_search_workers or 1,
 		)
 		start_time = time.perf_counter()
-		status_code = solver.Solve(model, callback)
+		if capture_cp_sat_logs:
+			try:
+				with cp_sat_log_path.open("w", encoding="utf-8") as handle:
+					solver.log_callback = lambda message: handle.write(f"{message}\n")
+					handle.write(
+						"# CP-SAT log capture enabled\n"
+						f"# time_limit_sec={solver.parameters.max_time_in_seconds or 'default'}\n"
+						f"# num_search_workers={solver.parameters.num_search_workers or 1}\n"
+						f"# stop_after_first_solution={getattr(solver.parameters, 'stop_after_first_solution', None)}\n"
+						f"# model_export_path={model_export_path or ''}\n"
+					)
+					status_code = solver.Solve(model, callback)
+			except Exception:
+				self._logger.exception("CP-SAT solve failed while capturing logs")
+				raise
+		else:
+			status_code = solver.Solve(model, callback)
 		elapsed = time.perf_counter() - start_time
 
 		best_bound = self._normalise_bound(solver.BestObjectiveBound()) if has_objective else None
@@ -86,12 +117,18 @@ class SolverRunner:
 		if deterministic_time not in (None, 0):
 			solver_stats["deterministic_time"] = deterministic_time
 
-		log_directory = self._resolve_log_dir(log_dir)
-		timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
 		log_path = self._write_solver_log(log_directory, solver.ResponseStats(), timestamp)
 		diagnostics_path = None
+		unsat_core = None
+		unsat_core_path = None
 		if status_code == cp_model.INFEASIBLE:
 			diagnostics_path = self._export_infeasible_snapshot(model, log_directory, timestamp)
+			unsat_core, unsat_core_path = self._maybe_export_unsat_core(
+				solver,
+				constraint_model,
+				log_directory,
+				timestamp,
+			)
 
 		result = SolverResult(
 			status=status_label,
@@ -107,11 +144,66 @@ class SolverRunner:
 			response=response,
 			log_path=log_path,
 			diagnostics_path=diagnostics_path,
+			unsat_core=unsat_core,
+			unsat_core_path=unsat_core_path,
 		)
 
 		summary_path = log_directory / f"solver_{timestamp}.json"
 		result.write_summary(summary_path)
 		return result
+
+	def _maybe_export_unsat_core(
+		self,
+		solver: cp_model.CpSolver,
+		constraint_model: ConstraintModel,
+		log_directory: Path,
+		timestamp: str,
+	) -> tuple[Optional[List[str]], Optional[Path]]:
+		assumptions = constraint_model.extras.get("assumptions")
+		if not isinstance(assumptions, dict) or not assumptions:
+			return None, None
+		try:
+			core_literals = list(solver.SufficientAssumptionsForInfeasibility())
+		except Exception:
+			self._logger.exception("Failed to compute sufficient assumptions for infeasibility")
+			return None, None
+		if not core_literals:
+			return [], None
+
+		index_to_id = {}
+		for constraint_id, lit_index in assumptions.items():
+			try:
+				index_to_id[int(lit_index)] = str(constraint_id)
+			except Exception:
+				continue
+
+		core_ids: List[str] = []
+		unknown_literals: List[int] = []
+		for lit in core_literals:
+			# OR-Tools returns literals as ints (positive/negative). Our assumptions should be positive.
+			key = abs(int(lit))
+			constraint_id = index_to_id.get(key)
+			if constraint_id is None:
+				unknown_literals.append(int(lit))
+				continue
+			core_ids.append(constraint_id)
+
+		payload = {
+			"generated_at": datetime.utcnow().isoformat() + "+00:00",
+			"core_constraint_ids": core_ids,
+			"core_literals": [int(v) for v in core_literals],
+			"unknown_core_literals": unknown_literals,
+			"assumptions_count": len(index_to_id),
+		}
+		out_path = log_directory / f"unsat_core_{timestamp}.json"
+		try:
+			out_path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+		except Exception:
+			# Fallback to JSON if YAML serialization fails.
+			import json
+
+			out_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+		return core_ids, out_path
 
 	def _apply_runtime_parameters(self, parameters: sat_parameters_pb2.SatParameters) -> None:
 		runtime = self._config.runtime
