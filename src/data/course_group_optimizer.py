@@ -503,7 +503,7 @@ class CourseGroupOptimizer:
                                f"{teacher_count} teacher -> will be in 1 group")
             elif instance_count > 1:
                 multi_instance_courses += 1
-                if self.num_groups < 2:
+                if self.num_groups < 2 and not self.allows_flexible_grouping:
                     self.logger.error(f"INFEASIBLE: Course {course_code} has {instance_count} weighted instances "
                                     f"but only {self.num_groups} groups available (need at least 2 groups)")
                     return False

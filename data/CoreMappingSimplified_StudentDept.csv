@@ -51,7 +51,7 @@ FT23612,Food Technology,1,Food Microbiology Lab,,,,,Food Product Technology Labo
 EE23132,Mechanical Engineering,1,Electrical Machines II Lab,,,,,Basic Electrical Engineering
 GE23122,Mechanical Engineering,1,Engineering Practices Lab (Electrical),,,,,Engineering Practices - Electrical and Electronics
 ME23421,Mechanical Engineering,1,Mech CAD Lab,,,,,Machine Drawing Laboratory
-ME23422,Mechanical Engineering,1,Manufacturing Technology I,,,,Manufacturing Technology Laboratory II
+ME23422,Mechanical Engineering,1,Manufacturing Technology I,,,,Manufacturing Technology Laboratory II,
 ME23431,Mechanical Engineering,1,Dynamics Lab,,,,,Dynamics of Machines
 ME23432,Mechanical Engineering,1,Fluid Mechanics Lab,,,,,Fluid Mechanics and Machinery
 ME23433,Mechanical Engineering,1,Thermal Lab 2,,,,,Thermal Engineering
@@ -73,6 +73,7 @@ RO23631,Robotics & Automation,1,Isaac Asimov Laboratory,,,,,Robot operating Syst
 RO23632,Robotics & Automation,1,Isaac Asimov Laboratory,,,,,Robot Vision and Intelligence
 RO23633,Robotics & Automation,1,Isaac Asimov Laboratory,,,,,Robot Dynamics and Motion Planning
 GE23121,Electrical & Electronics Engineering,1,Machine Shop FF1 - EPL - 1,,,,,Engineering Practices - Civil and  Mechanical
+GE23121,Artificial Intelligence & Data Science,1,Machine Shop FF1 - EPL - 1,,,,,Engineering Practices Civil and Mechanical
 FT23211,Food Technology,1,Food Chemistry Laboratory,,,,,Food Chemistry Laboratory
 EC23331,Information Technology,1,Microprocessor Lab-1,Microprocessor Lab-2,,,,Microprocessors and Microcontroller
 BM23631,Biomedical Engineering,1,Medical Image Processing Lab,,,,,Biosignal Processing
@@ -96,5 +97,23 @@ MA23431,Food Technology,1,Maths Lab,,,,,"Probability, Statistics and Reliability
 MA23432,Robotics & Automation,1,Maths Lab,,,,,Statistics and Numerical Methods
 MA23432,Mechatronics Engineering,1,Maths Lab,,,,,Statistics and Numerical Methods
 MA23432,Aeronautical Engineering,1,Maths Lab,,,,,Statistics and Numerical Methods
-CS23231,Computer Science & Engineering,1,DSA Classroom-1,DSA Classroom-2,,,,Data Structures and Algorithms
-CB23231,Computer Science & Business Systems,1,DSA Classroom-1,DSA Classroom-2,,,,Data Structures and Algorithms
+CS23231,Computer Science & Engineering,2,DSA Classroom-1,DSA Classroom-2,,,,Data Structures and Algorithms
+CS23231,Artificial Intelligence & Data Science,2,DSA Classroom-1,DSA Classroom-2,,,,Data Structures and Algorithms
+CB23231,Computer Science & Business Systems,2,DSA Classroom-1,DSA Classroom-2,,,,Data Structures and Algorithms
+CY23233,Aeronautical Engineering,1,Chemistry Lab,,,,,Engineering Chemistry
+CY23233,Automobile Engineering,1,Chemistry Lab,,,,,Engineering Chemistry
+CY23233,Civil Engineering,1,Chemistry Lab,,,,,Engineering Chemistry
+CY23233,Mechanical Engineering,1,Chemistry Lab,,,,,Engineering Chemistry
+PH23231,Biomedical Engineering,2,Physics LAB - 1,Physics LAB - 2,,,,Physics for Bioscience
+PH23231,Biotechnology,2,Physics LAB - 1,Physics LAB - 2,,,,Physics for Bioscience
+PH23231,Food Technology,2,Physics LAB - 1,Physics LAB - 2,,,,Physics for Bioscience
+PH23233,Chemical Engineering,2,Physics LAB - 1,Physics LAB - 2,,,,Material Science
+PH23232,Electrical & Electronics Engineering,2,Physics LAB - 1,Physics LAB - 2,,,,Physics for Electronics Engineering
+PH23132,Information Technology,2,Physics LAB - 1,Physics LAB - 2,,,,Physics for Information Science
+PH23131,Mechatronics Engineering,2,Physics LAB - 1,Physics LAB - 2,,,,Physics of Materials
+PH23131,Robotics & Automation,2,Physics LAB - 1,Physics LAB - 2,,,,Physics of Materials
+CY23131,Robotics & Automation,1,Chemistry Lab,,,,,Chemistry for Electronics Engineering
+CY23131,Mechatronics Engineering,1,Chemistry Lab,,,,,Chemistry for Electronics Engineering
+IT23231,Information Technology,2,Digital Lab-1,Digital Lab-2,,,,Digital Principles and Computer Architecture
+IT23231,Artificial Intelligence & Data Science,2,Digital Lab-1,Digital Lab-2,,,,Digital Principles and Computer Architecture
+BM23231,Biomedical Engineering,4,Machine Shop FF1 - EPL - 1,Electrical Machines II Lab,Machine Shop FF2 - EPL - 2,Machine Shop FF3 - EPL - 3,,Electric Circuits and Machines

@@ -1,59 +1,47 @@
 id,room_number,block,maintained_by_id,is_lab,room_type,room_min_cap,room_max_cap,has_projector,has_ac,tech_level,description,smart_board,green_board,isLcsAvailable
-1,A102,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-2,A103,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-225,A104/105,A Block,2,0,Class-Room,140,165,0,0,None,Classroom,0,0,0
-6,A108,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-7,A109,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-8,A110,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-9,A202,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-10,A203,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-11,A204,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-12,A205,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-13,A208/209,A Block,2,1,Computer-Lab,50,130,0,0,None,Classroom,0,0,0
-14,A208/209-A,A Block,2,1,Computer-Lab,50,70,0,0,None,Sub block of A208/209,0,0,0
-229,A208/209-B,A Block,2,1,Computer-Lab,50,70,0,0,None,Sub block of A208/209,0,0,0
-15,A210/211,A Block,2,1,Computer-Lab,50,150,0,0,None,Classroom,0,0,0
-16,A210/211-A,A Block,2,1,Computer-Lab,50,75,0,0,None,Sub block of A210/211,0,0,0
-230,A210/211-B,A Block,2,1,Computer-Lab,50,75,0,0,None,Sub block of A210/211,0,0,0
-17,A302,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-18,A303,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-19,A304,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-20,A305,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-21,A308,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-22,A309,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-23,A310,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-24,A311,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-231,ANEW101,A Block,2,1,Core-Lab,140,165,0,0,High-tech,New Room in A Block,0,0,0
-223,ANEW101 (DEPRECATED),A Block,2,0,Class-Room,160,179,1,0,High-tech,DO NOT USE,1,0,0
-235,ANEW101-A,A Block,2,1,Core-Lab,50,70,0,0,None,,0,0,0
-236,ANEW101-B,A Block,2,1,Core-Lab,50,70,0,0,None,,0,0,0
-232,ANEW102,A Block,2,1,Core-Lab,140,165,0,0,High-tech,New Room in A Block,0,0,0
-224,ANEW102 (DEPRECATED),A Block,2,0,Class-Room,160,180,0,0,None,DO NOT USE,0,0,0
-233,ANEW102-A,A Block,2,1,Core-Lab,50,70,0,0,None,,0,0,0
-234,ANEW102-B,A Block,2,1,Core-Lab,50,70,0,0,None,,0,0,0
-3,ANEW103,A Block,2,0,Class-Room,110,140,0,0,None,Classroom,0,0,0
-4,ANEW103-A,A Block,2,0,Class-Room,110,140,0,0,None,Sub-block of A104/105,1,0,0
-5,ANEW103-B,A Block,2,0,Class-Room,110,140,0,0,Advanced,Subblock of A104/105,1,0,0
-226,ANEW104,A Block,2,0,Class-Room,140,165,0,0,None,New Room in A Block,0,0,0
-227,ANEW201,A Block,2,0,Class-Room,340,355,0,0,None,DSA Classroom-1,0,0,0
-228,ANEW202,A Block,2,0,Class-Room,340,355,0,0,None,DSA Classroom-2,0,0,0
-26,TIFAC I02,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-27,TIFAC I03,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-28,TIFAC I04,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-29,TIFAC I11,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-30,TIFAC I12,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-31,TIFAC I13,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-32,TIFAC IV02,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-33,TIFAC IV04,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-34,TIFAC V03,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-35,TIFAC V04,A Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-36,TANCAM,Arch Block,2,1,Core-Lab,0,35,0,1,High-tech,,1,0,0
+1,A102,A Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+2,A103,A Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+225,A104/105,A Block,2,0,Classroom,140,165,0,0,None,Classroom,0,0,0
+6,A108,A Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+7,A109,A Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+8,A110,A Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+9,A202,A Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+10,A203,A Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+11,A204,A Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+12,A205,A Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+13,A208/209,A Block,2,1,Laboratory,110,140,0,0,High-tech,Computer Lab (A208/209),0,0,0
+15,A210/211,A Block,2,1,Laboratory,110,140,0,0,High-tech,Computer Lab (A210/211),0,0,0
+17,A302,A Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+18,A303,A Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+19,A304,A Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+20,A305,A Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+21,A308,A Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+22,A309,A Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+23,A310,A Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+24,A311,A Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+231,ANEW101,A Block,2,1,Core-Lab,140,165,0,0,High-tech,OS Classroom,0,0,0
+232,ANEW102,A Block,2,1,Core-Lab,140,165,0,0,High-tech,OS Classroom,0,0,0
+3,ANEW103,A Block,2,0,Classroom,110,140,0,0,None,OS Classroom,0,0,0
+226,ANEW104,A Block,2,0,Classroom,140,165,0,0,None,New Room in A Block,0,0,0
+227,ANEW201,A Block,2,1,Core-Lab,340,355,0,0,None,DSA Classroom-1,0,0,0
+228,ANEW202,A Block,2,1,Core-Lab,340,355,0,0,None,DSA Classroom-2,0,0,0
+26,TIFAC I02,ARC Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+27,TIFAC I03,ARC Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+28,TIFAC I04,ARC Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+29,TIFAC I11,ARC Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+30,TIFAC I12,ARC Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+31,TIFAC I13,ARC Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+32,TIFAC IV02,ARC Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+33,TIFAC IV04,ARC Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+34,TIFAC V03,ARC Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+35,TIFAC V04,ARC Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+36,TANCAM,Arch Block,2,1,Core-Lab,0,35,0,1,High-tech,TANCAM,1,0,0
 37,B First Floor,B Block,8,1,Core-Lab,20,70,1,0,Advanced,Immunology Lab,0,0,0
 38,B Ground Floor,B Block,9,1,Core-Lab,20,35,1,0,High-tech,Technical Analysis Lab,0,0,0
 39,B Second Floor,B Block,8,1,Core-Lab,20,70,1,0,None,Downstream Processing Lab,0,0,0
 222,B103,B Block,2,0,Core-Lab,0,35,0,0,None,Genetic Engineering Lab,0,0,0
-40,B106,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-41,B107,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
+40,B106,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+41,B107,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
 42,B116,B Block,17,1,Core-Lab,20,35,1,0,None,Communication Systems Lab,0,0,0
 43,B117,B Block,17,1,Core-Lab,20,35,1,0,None,Embedded System Laboratory (ECE),0,0,0
 44,B118,B Block,17,1,Core-Lab,20,35,1,0,High-tech,Basic Electronics Lab-1,0,0,0
@@ -64,69 +52,69 @@ id,room_number,block,maintained_by_id,is_lab,room_type,room_min_cap,room_max_cap
 47,B202,B Block,17,1,Core-Lab,20,35,1,0,None,DSP Lab,0,0,0
 48,B203,B Block,17,1,Core-Lab,20,35,1,0,None,VLSI Lab,0,0,0
 49,B204,B Block,17,1,Core-Lab,20,35,1,0,Advanced,Networks Lab,0,0,0
-50,B205,B Block,17,1,Core-Lab,55,70,1,0,None,Microprocessor Lab-1,0,0,0
+50,B205,B Block,17,1,Core-Lab,20,35,1,0,None,Microprocessor Lab-1,0,0,0
 51,B206,B Block,17,1,Core-Lab,20,35,1,0,Advanced,Microprocessor Lab-2,0,0,0
-52,B210,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-53,B211,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-54,B212,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-55,B213,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-56,B218,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-57,B219,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-58,B220,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-59,B221,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-60,B222,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-61,B302,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
+52,B210,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+53,B211,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+54,B212,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+55,B213,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+56,B218,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+57,B219,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+58,B220,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+59,B221,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+60,B222,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+61,B302,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
 62,B304,B Block,2,1,Core-Lab,20,35,1,0,Advanced,Computer Application in Chemical Engg Lab,0,0,0
 63,B305,B Block,23,1,Core-Lab,20,35,1,0,High-tech,Industrial Automation Lab,0,0,0
 64,B310,B Block,23,1,Core-Lab,50,70,1,0,High-tech,MCT CAD Lab,0,0,0
 65,B311,B Block,16,1,Core-Lab,20,35,1,0,High-tech,Electronic Devices & Circuits Lab,0,0,0
 66,B318,B Block,16,1,Core-Lab,20,35,1,0,High-tech,Power System Simulation Lab,0,0,0
-67,B320,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-68,B321,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-69,B322,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-70,B325,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
+67,B320,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+68,B321,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+69,B322,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+70,B325,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
 71,B327,B Block,17,1,Core-Lab,20,35,1,0,Basic,Digital Lab-2,0,0,0
 72,B328,B Block,17,1,Core-Lab,20,35,1,0,Basic,Digital Lab-1,0,0,0
 73,B329,B Block,17,1,Core-Lab,20,35,1,0,Basic,LIC Lab,0,0,0
-74,B401,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-75,B402,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-76,B403,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-77,B404,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-78,B405,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-79,B408,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-80,B409,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-81,B410,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-82,B411,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-83,B412,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-84,B415,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-85,B416,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-86,B417,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-87,B418,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-88,B419,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-89,B422,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-90,B423,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-91,B424,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-92,B425,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-93,B426,B Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
+74,B401,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+75,B402,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+76,B403,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+77,B404,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+78,B405,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+79,B408,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+80,B409,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+81,B410,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+82,B411,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+83,B412,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+84,B415,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+85,B416,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+86,B417,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+87,B418,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+88,B419,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+89,B422,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+90,B423,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+91,B424,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+92,B425,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+93,B426,B Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
 94,BG009,B Block,16,1,Core-Lab,20,35,1,0,Basic,Power Electronics Lab,0,0,0
 95,BG010,B Block,16,1,Core-Lab,0,10,1,0,High-tech,Embedded System Laboratory(EEE),0,0,0
 96,BG014,B Block,16,1,Core-Lab,20,35,1,0,None,Electrical Machines I Lab,0,0,0
 97,WBL11,B Block,16,1,Core-Lab,20,35,0,0,High-tech,Electrical Machines II Lab,0,0,0
-98,C101,C Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-99,C102,C Block,2,0,Class-Room,50,70,1,0,None,Classroom,0,0,0
-100,C103,C Block,2,0,Class-Room,50,70,1,0,None,Classroom,0,0,0
+98,C101,C Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+99,C102,C Block,2,0,Classroom,50,70,1,0,None,Classroom,0,0,0
+100,C103,C Block,2,0,Classroom,50,70,1,0,None,Classroom,0,0,0
 101,C106,C Block,24,1,Core-Lab,20,35,1,0,None,Microprocessor and Microcontrollers Lab,0,0,0
 102,C107,C Block,23,1,Core-Lab,20,35,1,0,None,Mechatronics Lab,0,0,0
-103,C108,C Block,2,0,Class-Room,15,70,1,0,None,Classroom,0,0,0
-104,C201,C Block,2,0,Class-Room,50,70,1,0,None,Classroom,0,0,0
-105,C202,C Block,2,0,Class-Room,50,70,1,0,None,Classroom,0,0,0
-106,C301,C Block,2,0,Class-Room,50,70,1,0,None,Classroom,0,0,0
-107,C302,C Block,2,0,Class-Room,50,70,1,0,None,Classroom,0,0,0
-108,C307,C Block,2,0,Class-Room,50,70,1,0,None,Classroom,0,0,0
-109,C308,C Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
+103,C108,C Block,2,0,Classroom,15,35,1,0,None,Classroom,0,0,0
+104,C201,C Block,2,0,Classroom,50,70,1,0,None,Classroom,0,0,0
+105,C202,C Block,2,0,Classroom,50,70,1,0,None,Classroom,0,0,0
+106,C301,C Block,2,0,Classroom,50,70,1,0,None,Classroom,0,0,0
+107,C302,C Block,2,0,Classroom,50,70,1,0,None,Classroom,0,0,0
+108,C307,C Block,2,0,Classroom,50,70,1,0,None,Classroom,0,0,0
+109,C308,C Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
 110,C401,C Block,23,1,Core-Lab,50,70,1,0,Advanced,Mech CAD Lab,0,0,0
-111,C407,C Block,23,1,Core-Lab,20,70,1,0,None,Dynamics Lab,0,0,0
-112,C408,C Block,23,1,Core-Lab,20,70,1,0,None,Metrology & Measurement Lab,0,0,0
+111,C407,C Block,23,1,Core-Lab,20,35,1,0,None,Dynamics Lab,0,0,0
+112,C408,C Block,23,1,Core-Lab,20,35,1,0,None,Metrology & Measurement Lab,0,0,0
 113,CG001,C Block,19,1,Core-Lab,20,35,1,0,Advanced,Food Microbiology Lab,0,0,0
 114,CG002,C Block,19,1,Core-Lab,20,35,1,0,None,Baking Lab,0,0,0
 115,CG003,C Block,19,1,Core-Lab,20,35,1,0,Advanced,Food Processing and Preservation Lab,0,0,0
@@ -146,85 +134,80 @@ id,room_number,block,maintained_by_id,is_lab,room_type,room_min_cap,room_max_cap
 129,WS MECH SM,C Block,23,1,Core-Lab,20,35,0,0,High-tech,Strength of Materials Lab,0,0,0
 130,WS MECH TL,C Block,23,1,Core-Lab,20,35,0,0,Basic,Thermal Lab 2,0,0,0
 131,D102,D Block,6,1,Core-Lab,20,35,1,0,None,Auto CAD Lab,0,0,0
-132,D109,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-133,D110,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-134,D111,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-135,D202,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-136,D203,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-137,D204,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-138,D205,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-139,D209,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-140,D210,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-141,D211,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-142,D302,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-143,D305,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-144,D309,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-145,D310,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-146,D311,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-147,D402,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-148,D405,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-149,D409,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-150,D410,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-151,D411,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
+132,D109,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+133,D110,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+134,D111,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+135,D202,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+136,D203,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+137,D204,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+138,D205,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+139,D209,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+140,D210,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+141,D211,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+142,D302,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+143,D305,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+144,D309,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+145,D310,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+146,D311,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+147,D402,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+148,D405,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+149,D409,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+150,D410,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+151,D411,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
 152,D503,D Block,2,1,Core-Lab,0,70,0,0,None,Chemistry Lab,0,0,0
-153,D510,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-154,D511,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-155,D512,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-156,D610,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-157,D611,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-158,D612,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-159,D702,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-160,D703,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-161,D704,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-162,D705,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-163,D709,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-164,D710,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-165,D711,D Block,2,0,Class-Room,50,70,0,0,None,Classroom,0,0,0
-166,DG,D Block,7,1,Core-Lab,20,70,1,0,Advanced,Medical Image Processing Lab,0,0,0
-167,DG009,D Block,2,1,Core-Lab,20,70,1,0,High-tech,Food Chemistry Lab,0,0,0
+153,D510,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+154,D511,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+155,D512,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+156,D610,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+157,D611,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+158,D612,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+159,D702,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+160,D703,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+161,D704,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+162,D705,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+163,D709,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+164,D710,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+165,D711,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
+166,DG,D Block,7,1,Core-Lab,20,35,1,0,Advanced,Medical Image Processing Lab,0,0,0
+167,DG009,D Block,2,1,Core-Lab,20,35,1,0,High-tech,Food Chemistry Lab,0,0,0
 168,DG010,D Block,2,1,Core-Lab,30,70,1,1,Advanced,Food Analysis Laboratory,1,1,1
 169,DG012,D Block,7,1,Core-Lab,20,35,1,0,None,Electronics and Instrumentation,0,0,0
-170,DG013,D Block,7,1,Core-Lab,20,70,1,0,Basic,Diagnostic and Therapeutic Equipment Lab,0,0,0
-171,DG02,D Block,14,1,Computer-Lab,50,70,1,0,High-tech,Computer Lab (DG02),0,0,0
-172,DG03,D Block,14,1,Computer-Lab,50,70,1,0,Basic,Computer Lab (DG03),0,0,0
-173,DG0IAL,D Block,2,1,Core-Lab,20,70,1,0,Basic,Isaac Asimov Laboratory,0,0,0
+170,DG013,D Block,7,1,Core-Lab,20,35,1,0,Basic,Diagnostic and Therapeutic Equipment Lab,0,0,0
+171,DG02,D Block,14,1,Laboratory,50,70,1,0,High-tech,Computer Lab (DG02),0,0,0
+172,DG03,D Block,14,1,Laboratory,50,70,1,0,Basic,Computer Lab (DG03),0,0,0
+173,DG0IAL,D Block,2,1,Core-Lab,20,35,1,0,Basic,Isaac Asimov Laboratory,0,0,0
 174,D403,D block,2,1,Core-Lab,30,70,0,0,Advanced,Physics LAB - 2,0,0,0
-175,D603,D block,2,1,Core-Lab,30,60,0,0,Advanced,Physics LAB - 1,0,0,0
-176,JL1,J Block,14,1,Computer-Lab,20,35,1,0,None,Computer Lab (JL1),0,0,0
-177,JL2,J Block,13,1,Computer-Lab,20,35,1,0,High-tech,Computer Lab (JL2),0,0,0
-178,JL3,J Block,12,1,Computer-Lab,20,35,1,0,High-tech,Computer Lab (JL3),0,0,0
-179,JR1,J Block,20,1,Computer-Lab,20,35,1,0,None,Computer Lab (JR1),0,0,0
-180,JR2,J Block,20,1,Computer-Lab,20,35,1,0,High-tech,Computer Lab (JR2),0,0,0
-181,JR3,J Block,14,1,Computer-Lab,20,70,1,0,Basic,Computer Lab (JR3),0,0,0
+175,D603,D block,2,1,Core-Lab,30,70,0,0,Advanced,Physics LAB - 1,0,0,0
+176,JL1,J Block,14,1,Laboratory,20,35,1,0,None,Computer Lab (JL1),0,0,0
+177,JL2,J Block,13,1,Laboratory,20,35,1,0,High-tech,Computer Lab (JL2),0,0,0
+178,JL3,J Block,12,1,Laboratory,20,35,1,0,High-tech,Computer Lab (JL3),0,0,0
+179,JR1,J Block,20,1,Laboratory,20,35,1,0,None,Computer Lab (JR1),0,0,0
+180,JR2,J Block,20,1,Laboratory,20,35,1,0,High-tech,Computer Lab (JR2),0,0,0
+181,JR3,J Block,14,1,Laboratory,20,35,1,0,Basic,Computer Lab (JR3),0,0,0
 182,MEMS Lab,J Block,2,1,Core-Lab,50,70,0,1,High-tech,,0,0,0
-183,KFL01,K Block,13,1,Computer-Lab,20,35,1,0,Advanced,Computer Lab (KFL01),0,0,0
-184,KFL02,K Block,5,1,Computer-Lab,20,35,1,0,Advanced,Computer Lab (KFL02),0,0,0
-185,KFR01,K Block,5,1,Computer-Lab,20,35,1,0,Advanced,Computer Lab (KFR01),0,0,0
-186,KFR02,K Block,4,1,Computer-Lab,20,35,1,0,High-tech,Computer Lab (KFR02),0,0,0
-187,KFR03,K Block,14,1,Computer-Lab,20,35,1,0,Advanced,Computer Lab (KFR03),0,0,0
-188,KFR04,K Block,2,1,Computer-Lab,20,35,1,0,High-tech,Computer Lab (KFL03),0,0,0
-189,KSL02,K Block,2,0,Class-Room,110,140,1,1,None,,1,0,0
-190,KSL03,K Block,14,1,Computer-Lab,110,140,1,0,Advanced,Computer Lab (KSL03),0,0,0
-191,KSL03-A,K Block,2,1,Computer-Lab,50,70,1,1,High-tech,Sub Block of KSL03,1,0,0
-192,KSL03-B,K Block,2,1,Computer-Lab,50,70,1,1,High-tech,Sub Block of KSL03,1,0,0
-25,TIFAC I01,TIFAC,14,1,Computer-Lab,50,70,1,0,Basic,Computer Lab (Arch),0,0,0
-193,TLFL1,Techlounge,4,1,Computer-Lab,20,35,1,0,High-tech,Computer Lab (TLFL1),0,0,0
-194,TLFL2,Techlounge,12,1,Computer-Lab,20,35,1,0,Basic,Computer Lab (TLFL2),0,0,0
-195,TLFL3,Techlounge,14,1,Computer-Lab,20,35,1,0,Basic,Computer Lab (TLFL3),0,0,0
-196,TLFL4,Techlounge,5,1,Computer-Lab,20,35,1,0,None,Computer Lab (TLFL4),0,0,0
-197,TLFL5,Techlounge,14,1,Computer-Lab,20,35,1,0,Basic,Computer Lab (TLFL5),0,0,0
-198,TLFR1,Techlounge,14,1,Computer-Lab,20,35,1,0,None,Computer Lab (TLFR1),0,0,0
-199,TLFR2,Techlounge,20,1,Computer-Lab,20,35,1,0,High-tech,Computer Lab (TLFR2),0,0,0
-200,TLFR3,Techlounge,5,1,Computer-Lab,20,35,1,0,Basic,Computer Lab (TLFR3),0,0,0
-201,TLFR4,Techlounge,4,1,Computer-Lab,20,35,1,0,None,Computer Lab (TLFR4),0,0,0
-202,TLFR5,Techlounge,20,1,Computer-Lab,20,35,1,0,Advanced,Computer Lab (TLFR5),0,0,0
-203,TLGL1,Techlounge,20,1,Computer-Lab,50,70,1,0,Advanced,Computer Lab (TLGL1),0,0,0
-204,TLGL2,Techlounge,14,1,Computer-Lab,50,70,1,0,Advanced,Computer Lab (TLGL2),0,0,0
-205,TLGL3,Techlounge,14,1,Computer-Lab,20,35,1,0,None,Computer Lab (TLGL3),0,0,0
-206,TLGL4,Techlounge,5,1,Computer-Lab,20,35,1,0,Basic,Computer Lab (TLGL4),0,0,0
-207,TLSL1,Techlounge,26,1,Computer-Lab,50,70,1,0,Basic,Computer Lab (TLSL1),0,0,0
-208,TLSL2,Techlounge,26,1,Computer-Lab,50,70,1,0,None,Computer Lab (TLSL2),0,0,0
-209,TLSR1,Techlounge,26,1,Computer-Lab,50,70,1,0,Advanced,Computer Lab (TLSR1),0,0,0
+183,KFL01,K Block,13,1,Laboratory,20,35,1,0,Advanced,Computer Lab (KFL01),0,0,0
+184,KFL02,K Block,5,1,Laboratory,20,35,1,0,Advanced,Computer Lab (KFL02),0,0,0
+185,KFR01,K Block,5,1,Laboratory,20,35,1,0,Advanced,Computer Lab (KFR01),0,0,0
+186,KFR02,K Block,4,1,Laboratory,20,35,1,0,High-tech,Computer Lab (KFR02),0,0,0
+187,KFR03,K Block,14,1,Laboratory,20,35,1,0,Advanced,Computer Lab (KFR03),0,0,0
+188,KFR04,K Block,2,1,Laboratory,20,35,1,0,High-tech,Computer Lab (KFL03),0,0,0
+189,KSL02,K Block,2,1,Laboratory  ,110,140,1,1,None,Computer Lab (KSL02)   ,1,0,0
+190,KSL03,K Block,14,1,Laboratory,110,140,1,0,Advanced,Computer Lab (KSL03),0,0,0
+25,TIFAC I01,TIFAC,14,1,Laboratory,50,70,1,0,Basic,Computer Lab (Arch) ,0,0,0
+193,TLFL1,Techlounge,4,1,Laboratory,20,35,1,0,High-tech,Computer Lab (TLFL1),0,0,0
+194,TLFL2,Techlounge,12,1,Laboratory,20,35,1,0,Basic,Computer Lab (TLFL2),0,0,0
+195,TLFL3,Techlounge,14,1,Laboratory,20,35,1,0,Basic,Computer Lab (TLFL3),0,0,0
+196,TLFL4,Techlounge,5,1,Laboratory,20,35,1,0,None,Computer Lab (TLFL4),0,0,0
+197,TLFL5,Techlounge,14,1,Laboratory,20,35,1,0,Basic,Computer Lab (TLFL5),0,0,0
+198,TLFR1,Techlounge,14,1,Laboratory,20,35,1,0,None,Computer Lab (TLFR1),0,0,0
+199,TLFR2,Techlounge,20,1,Laboratory,20,35,1,0,High-tech,Computer Lab (TLFR2),0,0,0
+200,TLFR3,Techlounge,5,1,Laboratory,20,35,1,0,Basic,Computer Lab (TLFR3),0,0,0
+201,TLFR4,Techlounge,4,1,Laboratory,20,35,1,0,None,Computer Lab (TLFR4),0,0,0
+202,TLFR5,Techlounge,20,1,Laboratory,20,35,1,0,Advanced,Computer Lab (TLFR5),0,0,0
+203,TLGL1,Techlounge,20,1,Laboratory,50,70,1,0,Advanced,Computer Lab (TLGL1),0,0,0
+204,TLGL2,Techlounge,14,1,Laboratory,50,70,1,0,Advanced,Computer Lab (TLGL2),0,0,0
+205,TLGL3,Techlounge,14,1,Laboratory,20,35,1,0,None,Computer Lab (TLGL3),0,0,0
+206,TLGL4,Techlounge,5,1,Laboratory,20,35,1,0,Basic,Computer Lab (TLGL4),0,0,0
 210,WS AUTO FF1,Workshop,9,1,Core-Lab,20,35,0,0,High-tech,Mass Transfer Lab,0,0,0
 211,WS AUTO FF2,Workshop,9,1,Core-Lab,20,35,0,0,Basic,Heat Transfer Lab,0,0,0
 212,WS AUTO FF3,Workshop,9,1,Core-Lab,20,35,0,0,High-tech,Process Control Lab,0,0,0

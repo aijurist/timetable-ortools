@@ -7,7 +7,7 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data/sem2026/1st year/all.csv
+  courses_csv: data\sem2026\1st year\all.csv
   rooms_csv: data/block_wise/techlongue.csv
   day_order_csv: data/day_order_even.csv
   core_lab_mapping_csv: data/CoreMappingSimplified_StudentDept.csv
@@ -116,6 +116,34 @@ departments:
     flexible_lunch: false
   overrides:
       Computer Science & Engineering:
+        day_pattern:
+          - tuesday
+          - wed
+          - thur
+          - fri
+          - saturday
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_1
+        flexible_lunch: false
+      Computer Science & Engineering-1:
+        day_pattern:
+          - tuesday
+          - wed
+          - thur
+          - fri
+          - saturday
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_1
+        flexible_lunch: false
+      Computer Science & Engineering-2:
         day_pattern:
           - tuesday
           - wed
@@ -465,6 +493,8 @@ departments:
     soft:
       departments:
         - Computer Science & Engineering_S3
+        - Computer Science & Engineering-1_S2
+        - Computer Science & Engineering-2_S2
         - Electronics & Communication Engineering_S3
         - Electronics & Communication Engineering_S5
         - Electrical & Electronics Engineering_S5
@@ -571,12 +601,12 @@ constraints:
             blocked_lab_slot_labels:
               - "11:50 - 12:40"
               - "12:40 - 1:20"
-            enforce_pairing_consistency: true
           - course_codes:
               - AT23631
               - ME23622
               - RO23221
             allowed_days:
+              - wed
               - thur
               - fri
               - saturday
@@ -589,7 +619,7 @@ constraints:
             blocked_days:
               - saturday
     core_lab_mapping:
-      enabled: true
+      enabled: false
       priority: 8
       weight: 0.8
       params: {}
@@ -686,9 +716,9 @@ constraints:
       weight: 1.0
       params:
         course_codes:
-          - GE23627
-          - CE23632
-        required_slots: 4
+          - GE23111
+          - HS23221
+        required_slots: 2
         pair_length: 2
         enforce_same_room: true
     # daily_slot_cap:
@@ -799,7 +829,9 @@ constraints:
       enabled: true
       priority: 9
       weight: 1.0
-      params: {}
+      params:
+        window_lab_csv_path: output/final/2025-12-26_04-47-12/csv/lab_schedule.csv
+        window_theory_csv_path: output/final/2025-12-26_04-47-12/csv/theory_schedule.csv
     fixed_schedule_lock:
       enabled: true
       priority: 10
@@ -831,9 +863,12 @@ constraints:
           - 5
         minimum_free_slots: 1
         soft_departments:
-          - Computer Science & Engineering_S2
-          - Electronics & Communication Engineering_S2
           - Information Technology_S2
+          - Computer Science & Engineering-1_S2
+          - Computer Science & Engineering-2_S2
+          - Artificial Intelligence & Data Science_S2
+          - Artificial Intelligence & Machine Learning_S2
+          - Electronics & Communication Engineering_S2
         penalty_weight: 50
     five_pm_policy:
       enabled: true
@@ -870,7 +905,8 @@ constraints:
           - Computer Science & Design_S6
           - Computer Science & Design_S8
           - Computer Science & Engineering (Cyber Security)
-          - Computer Science & Engineering_S2
+          - Computer Science & Engineering-1_S2
+          - Computer Science & Engineering-2_S2
           - Computer Science & Engineering_S4
           - Computer Science & Engineering_S6
           - Computer Science & Engineering_S8
@@ -940,7 +976,7 @@ model:
   use_sparse_variables: true
 
 runtime:
-  time_limit_sec: 40000
+  time_limit_sec: 10000
   thread_count: 12
   enable_lns: true
   enable_trace: true

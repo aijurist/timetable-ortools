@@ -133,3 +133,15 @@ cross_system:
 					- [3, 2]
 					- [2, 3]
 				penalty_weight: 12
+	fixed_schedule_lock:
+		enabled: true
+		priority: 10
+		weight: 1.0
+		description: Freeze selected schedule assignments from a previous run.
+		params:
+			theory_csv_path: output/final/2025-12-26_04-47-12/csv/theory_schedule.csv
+			lab_csv_path: output/final/2025-12-26_04-47-12/csv/lab_schedule.csv
+			lock_assignments: true
+			block_rooms: true
+			block_teachers: true
+			block_teachers_across_domains: true

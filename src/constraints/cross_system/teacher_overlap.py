@@ -82,17 +82,16 @@ class TeacherOverlapConstraint(Constraint):
 					if len(entries) <= 1:
 						continue
 
-					# DSA override: allow CS23231/CB23231 lab activities to overlap with anything.
-					# We do this by removing those activities from the uniqueness constraint,
-					# while still enforcing uniqueness among the remaining activities.
-					filtered = tuple(entry for entry in entries if not _is_dsa_override_activity(entry))
-					if len(filtered) <= 1:
+					# DSA override: allow CS23231/CB23231 lab activities to overlap ONLY with each other.
+					# If ALL entries are DSA lab activities, skip the constraint (team teaching scenario).
+					# Otherwise, enforce the at-most-one constraint on all entries including DSA labs.
+					if _all_dsa_override_activities(entries):
 						continue
-					if _can_co_schedule(filtered):
+					if _can_co_schedule(entries):
 						continue
-					context.model.Add(sum(entry.literal for entry in filtered) <= 1)
+					context.model.AddAtMostOne(entry.literal for entry in entries)
 					clauses += 1
-					activity_literals += len(filtered)
+					activity_literals += len(entries)
 
 		status = ConstraintStatus.APPLIED if clauses else ConstraintStatus.SKIPPED
 		return ConstraintApplicationResult(
@@ -302,6 +301,11 @@ def _can_co_schedule(entries: Sequence[ActivityEntry]) -> bool:
 		return False
 	if first.course_code != second.course_code:
 		return False
+	# CRITICAL: Must be the SAME course instance (not just same code)
+	# Otherwise different instances of the same course (e.g., for different batches)
+	# would be incorrectly allowed to overlap
+	if first.course_id != second.course_id:
+		return False
 	return first.practical_hours >= 4 and second.practical_hours >= 4
 
 
@@ -310,6 +314,13 @@ def _is_dsa_override_activity(entry: ActivityEntry) -> bool:
 		return False
 	code = str(entry.course_code or "").strip().upper()
 	return code in {"CS23231", "CB23231"}
+
+
+def _all_dsa_override_activities(entries: Sequence[ActivityEntry]) -> bool:
+	"""Return True if ALL entries are DSA lab activities (team teaching scenario)."""
+	if not entries:
+		return False
+	return all(_is_dsa_override_activity(entry) for entry in entries)
 
 
 def build_teacher_overlap_constraint(

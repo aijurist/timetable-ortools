@@ -174,7 +174,7 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 
 			if limit == 1:
 				vars_only = [v for _, v in usage_list]
-				model.Add(sum(vars_only) <= 1)
+				model.AddAtMostOne(vars_only)
 				stats["room_conflict_constraints"] += 1
 			else:
 				by_code: DefaultDict[str, list[cp_model.IntVar]] = defaultdict(list)
@@ -207,7 +207,7 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 									tag="room_utilization:fill_reward"
 								)
 					
-					model.Add(sum(active_indicators) <= 1)
+					model.AddAtMostOne(active_indicators)
 				else:
 					vars_only = [v for _, v in usage_list]
 					model.Add(sum(vars_only) <= limit)

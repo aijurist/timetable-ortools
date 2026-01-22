@@ -98,7 +98,7 @@ class LabRoomSingleAssignmentConstraint(Constraint):
             
             # Unknown / small rooms: strict single assignment
             if not capacity or capacity < 140:
-                context.model.Add(sum(variables) <= 1)
+                context.model.AddAtMostOne(variables)
                 stats.room_slot_constraints += 1
                 stats.conflicting_room_slots += 1
                 if len(stats.room_conflict_examples) < self.MAX_EXAMPLE_SLOTS:
@@ -125,7 +125,7 @@ class LabRoomSingleAssignmentConstraint(Constraint):
 
                 # If we cannot resolve codes, fall back to strict behaviour.
                 if not course_codes:
-                    context.model.Add(sum(variables) <= 1)
+                    context.model.AddAtMostOne(variables)
                     stats.room_slot_constraints += 1
                     stats.conflicting_room_slots += 1
                     if len(stats.room_conflict_examples) < self.MAX_EXAMPLE_SLOTS:
@@ -148,7 +148,7 @@ class LabRoomSingleAssignmentConstraint(Constraint):
                     if allow_dsa_mix_here and course_codes.issubset(dsa_mix_codes):
                         context.model.Add(sum(code_active_vars) <= 2)
                     else:
-                        context.model.Add(sum(code_active_vars) <= 1)
+                        context.model.AddAtMostOne(code_active_vars)
 
                 # Global count + capacity guards across all concurrent instances in the slot.
                 all_vars: List[Any] = []
@@ -195,7 +195,7 @@ class LabRoomSingleAssignmentConstraint(Constraint):
                 context.model.Add(sum(all_vars_for_code) >= is_active)
 
             if len(code_active_vars) > 1:
-                context.model.Add(sum(code_active_vars) <= 1)
+                context.model.AddAtMostOne(code_active_vars)
 
             # Apply capacity/utilization rules per course code.
             # - Large batches (>=100) must be alone in the 140 room.
@@ -213,18 +213,28 @@ class LabRoomSingleAssignmentConstraint(Constraint):
                 other_sum = sum(other_vars) if other_vars else 0
 
                 if large_vars:
-                    has_large = context.model.NewBoolVar(f"has_large_{key}_{code}")
-                    context.model.Add(large_sum >= has_large)
-                    context.model.Add(large_sum <= len(large_vars) * has_large)
+                    # Optimization: skip helper bool when only one large var
+                    if len(large_vars) == 1:
+                        has_large = large_vars[0]
+                    else:
+                        has_large = context.model.NewBoolVar(f"has_large_{key}_{code}")
+                        context.model.Add(large_sum >= has_large)
+                        context.model.Add(large_sum <= len(large_vars) * has_large)
                     # If a large batch is used, it must be the only one in the room slot.
                     context.model.Add(all_sum <= 2 - has_large)
+
                 else:
                     context.model.Add(all_sum <= 2)
 
                 if medium_vars:
-                    has_medium = context.model.NewBoolVar(f"has_medium_{key}_{code}")
-                    context.model.Add(medium_sum >= has_medium)
-                    context.model.Add(medium_sum <= len(medium_vars) * has_medium)
+                    # Optimization: skip helper bool when only one medium var
+                    if len(medium_vars) == 1:
+                        has_medium = medium_vars[0]
+                    else:
+                        has_medium = context.model.NewBoolVar(f"has_medium_{key}_{code}")
+                        context.model.Add(medium_sum >= has_medium)
+                        context.model.Add(medium_sum <= len(medium_vars) * has_medium)
+
 
                     # Soft preference: if medium is used in a 140 room, prefer co-scheduling as a pair.
                     # We model a shortfall term: shortfall = (2 - medium_sum) when has_medium else 0.
@@ -270,7 +280,7 @@ class LabRoomSingleAssignmentConstraint(Constraint):
         for key, variables in course_slot_buckets.items():
             if len(variables) <= 1:
                 continue
-            context.model.Add(sum(variables) <= 1)
+            context.model.AddAtMostOne(variables)
             stats.course_slot_constraints += 1
             stats.conflicting_course_slots += 1
             if len(stats.course_conflict_examples) < self.MAX_EXAMPLE_SLOTS:

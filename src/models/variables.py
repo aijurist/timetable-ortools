@@ -15,6 +15,7 @@ from ..data.schemas import (
 	GroupRequirement,
 	NormalizedCourseInstance,
 )
+from ..data.room_eligibility import RoomEligibilityIndex, build_room_eligibility_index
 
 from .schema import (
 	LabCourseRequirement,
@@ -52,6 +53,44 @@ class VariableCreator:
 		self._theory_slot_labels = tuple(str(label) for label in data.raw.time.theory_slots)
 		self._lab_session_names = tuple(data.raw.time.lab_sessions.keys())
 
+		# Optimization: Index rooms by type for pruning
+		self._lab_rooms_by_type = defaultdict(list)
+		if "room_type" in data.raw.rooms.lab_rooms.columns:
+			for _, row in data.raw.rooms.lab_rooms.iterrows():
+				r_type = str(row.get("room_type", "")).strip()
+				r_id = str(row.get("id", ""))
+				if r_type and r_id:
+					self._lab_rooms_by_type[r_type].append(r_id)
+		
+		self._theory_rooms_by_type = defaultdict(list)
+		if "room_type" in data.raw.rooms.theory_rooms.columns:
+			for _, row in data.raw.rooms.theory_rooms.iterrows():
+				r_type = str(row.get("room_type", "")).strip()
+				r_id = str(row.get("id", ""))
+				if r_type and r_id:
+					self._theory_rooms_by_type[r_type].append(r_id)
+
+		# Build room eligibility index for pre-filtering (major optimization)
+		core_lab_df = getattr(data.raw, "core_lab_mapping_df", None)
+		rooms_df = getattr(data.raw, "rooms_df", None)
+		laboratory_room_ids = getattr(data.raw.rooms, "laboratory_room_ids", None)
+		
+		# DEBUG: Log what we're passing
+		self._logger.info(
+			"Room eligibility init: core_lab_df=%s rows, rooms_df=%s rows, laboratory_room_ids=%s",
+			len(core_lab_df) if core_lab_df is not None else "None",
+			len(rooms_df) if rooms_df is not None else "None",
+			len(laboratory_room_ids) if laboratory_room_ids else "None",
+		)
+		
+		self._room_eligibility = build_room_eligibility_index(
+			core_lab_df=core_lab_df,
+			rooms_df=rooms_df,
+			lab_room_ids=self._lab_room_ids,
+			theory_room_ids=self._theory_room_ids,
+			laboratory_room_ids=tuple(str(rid) for rid in laboratory_room_ids) if laboratory_room_ids else None,
+		)
+
 	def create(self, model: cp_model.CpModel) -> VariableCreationResult:
 		"""Create all decision variables and return a structured handle bundle."""
 
@@ -74,10 +113,16 @@ class VariableCreator:
 			metadata["theory_teachers"],
 			metadata["groups"],
 		)
+		self._logger.info(
+			"Created %d lab variables and %d theory variables",
+			self._lab_var_count,
+			self._theory_var_count,
+		)
 
 		return VariableCreationResult(lab=lab_block, theory=theory_block, metadata=metadata)
 
 	def _create_lab_variables(self, model: cp_model.CpModel) -> LabVariableBlock:
+		self._lab_var_count = 0
 		requirements = self._build_lab_course_requirements()
 		assignments: LabAssignmentDict = {}
 		teacher_courses: Dict[str, Tuple[str, ...]] = {}
@@ -98,11 +143,16 @@ class VariableCreator:
 					for session_name in self._lab_session_names:
 						room_map: Dict[str, cp_model.IntVar] = {}
 						session_map[session_name] = room_map
-						for room_id in self._lab_room_ids:
+						# Use room eligibility index to pre-filter rooms (major optimization)
+						eligible_rooms = self._room_eligibility.get_eligible_lab_rooms(requirement.course_code)
+
+						for room_id in eligible_rooms:
 							var_name = (
 								f"lab_{teacher_id}_{requirement.course_instance_id}_d{day_index}_{session_name}_{room_id}"
 							)
 							room_map[room_id] = model.NewBoolVar(var_name)
+							self._lab_var_count += 1
+
 
 		return LabVariableBlock(
 			assignments=assignments,
@@ -115,6 +165,7 @@ class VariableCreator:
 		)
 
 	def _create_theory_variables(self, model: cp_model.CpModel) -> TheoryVariableBlock:
+		self._theory_var_count = 0
 		group_requirements = self._build_group_timeslot_requirements()
 		course_requirements = self._build_theory_course_requirements()
 		assignments: TheoryAssignmentDict = {}
@@ -152,12 +203,20 @@ class VariableCreator:
 						literal = model.NewBoolVar(var_name)
 						slot_map[slot_index] = literal
 						room_bucket: Dict[str, cp_model.IntVar] = {}
-						if self._theory_room_ids:
-							for room_id in self._theory_room_ids:
+						
+						# Use filtered rooms based on capacity/tier policy (optimization)
+						eligible_rooms = self._room_eligibility.get_eligible_theory_rooms(
+							student_count=getattr(requirement, "student_count", 0),
+							semester=getattr(requirement, "semester", None),
+						)
+						
+						if eligible_rooms:
+							for room_id in eligible_rooms:
 								room_var = model.NewBoolVar(
 									f"theory_{teacher_id}_{course_id}_d{day_index}_s{slot_index}_r{room_id}"
 								)
 								room_bucket[room_id] = room_var
+								self._theory_var_count += 1
 							model.Add(sum(room_bucket.values()) == literal)
 						else:
 							model.Add(literal == 0)

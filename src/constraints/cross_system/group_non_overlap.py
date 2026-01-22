@@ -87,7 +87,7 @@ class GroupNonOverlapConstraint(Constraint):
 							activity_literals += 1
 
 					if len(group_literals) > 1:
-						context.model.Add(sum(group_literals) <= 1)
+						context.model.AddAtMostOne(group_literals)
 						guard_clauses += 1
 						protected_pairs += len(group_literals)
 
@@ -187,6 +187,10 @@ def _build_activity_literal(
 
 	if not activity_vars:
 		return None
+
+	# Optimization: skip helper bool when only one variable
+	if len(activity_vars) == 1:
+		return activity_vars[0]
 
 	literal = model.NewBoolVar(f"group_non_overlap_{group_id}_d{day_idx}_s{slot_idx}")
 	activity_sum = sum(activity_vars)

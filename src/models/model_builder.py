@@ -146,11 +146,31 @@ class ModelBuilder:
 			# Guard every newly added proto constraint behind this assumption.
 			# Note: constraints can already be reified; adding another enforcement literal is safe
 			# (it just conjoins the enforcement conditions).
+			# Some CP-SAT constraint proto types reject enforcement literals (notably lin_max/lin_min).
+			# Skipping those keeps the model valid; they simply won't participate in the unsat core.
+			unsupported_enforcement_types = {"lin_max", "lin_min"}
+			skipped_by_type: dict[str, int] = {}
 			for i in range(constraints_before, constraints_after):
+				ct = proto.constraints[i]
+				kind = None
 				try:
-					proto.constraints[i].enforcement_literal.append(assumption_index)
+					kind = ct.WhichOneof("constraint")
+				except Exception:  # pragma: no cover - protobuf edge cases
+					kind = None
+
+				if kind in unsupported_enforcement_types:
+					skipped_by_type[kind] = skipped_by_type.get(kind, 0) + 1
+					continue
+
+				try:
+					ct.enforcement_literal.append(assumption_index)
 				except Exception:  # pragma: no cover - protobuf edge cases
 					continue
+
+			if skipped_by_type:
+				bucket = context.extra.setdefault("unsat_core_skipped", {})
+				if isinstance(bucket, dict):
+					bucket[registration.id] = skipped_by_type
 
 		if isinstance(result, ConstraintApplicationResult):
 			return result

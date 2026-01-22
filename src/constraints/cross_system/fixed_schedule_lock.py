@@ -20,6 +20,7 @@ from __future__ import annotations
 import csv
 import json
 import logging
+from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Optional, Sequence, Set, Tuple
@@ -27,6 +28,8 @@ from typing import Any, Iterable, Mapping, Optional, Sequence, Set, Tuple
 from ortools.sat.python import cp_model
 
 from ..base import Constraint, ConstraintMetadata
+
+logger = logging.getLogger(__name__)
 from ..context import ConstraintContext
 from ..schema import ConstraintApplicationResult, ConstraintStatus
 from ..utils import (
@@ -252,9 +255,15 @@ class FixedScheduleLockConstraint(Constraint):
 					course_id=cid,
 					day_index=day_idx,
 				)
-				if (var_day, session_name, room_id) not in occupied_lab_rooms:
+				# Cast to string for consistent lookup
+				s_session = str(session_name).strip()
+				s_room = str(room_id).strip()
+				s_tid = str(tid).strip()
+				s_cid = str(cid).strip()
+
+				if (var_day, s_session, s_room) not in occupied_lab_rooms:
 					continue
-				if (tid, cid, var_day, session_name, room_id) in allowed_lab_keys:
+				if (s_tid, s_cid, var_day, s_session, s_room) in allowed_lab_keys:
 					continue
 				model.Add(var == 0)
 				blocked += 1
@@ -270,9 +279,14 @@ class FixedScheduleLockConstraint(Constraint):
 					course_id=cid,
 					day_index=day_idx,
 				)
-				if (var_day, slot_idx, room_id) not in occupied_theory_rooms:
+				# Cast to string for consistent lookup
+				s_room = str(room_id).strip()
+				s_tid = str(tid).strip()
+				s_cid = str(cid).strip()
+
+				if (var_day, slot_idx, s_room) not in occupied_theory_rooms:
 					continue
-				if (tid, cid, var_day, slot_idx, room_id) in allowed_theory_room_keys:
+				if (s_tid, s_cid, var_day, slot_idx, s_room) in allowed_theory_room_keys:
 					continue
 				model.Add(var == 0)
 				blocked += 1
@@ -288,12 +302,18 @@ class FixedScheduleLockConstraint(Constraint):
 					course_id=cid,
 					day_index=day_idx,
 				)
-				if (tid, var_day, session_name) not in occupied_lab_teachers:
-					continue
-				if (tid, cid, var_day, session_name, room_id) in allowed_lab_keys:
-					continue
-				model.Add(var == 0)
-				blocked += 1
+				s_session = str(session_name).strip()
+				s_tid = str(tid).strip()
+				if s_tid.endswith(".0"):
+					s_tid = s_tid[:-2]
+
+				if (s_tid, var_day, s_session) in occupied_lab_teachers:
+					# Check if this strictly matches an allowed assignment
+					if (s_tid, str(cid), var_day, s_session, str(room_id)) in allowed_lab_keys:
+						continue
+					
+					model.Add(var == 0)
+					blocked += 1
 			stats["blocked_lab_teacher_vars"] = blocked
 
 		if settings.block_teachers and occupied_theory_teachers:
@@ -306,12 +326,17 @@ class FixedScheduleLockConstraint(Constraint):
 					course_id=cid,
 					day_index=day_idx,
 				)
-				if (tid, var_day, slot_idx) not in occupied_theory_teachers:
-					continue
-				if (tid, cid, var_day, slot_idx) in allowed_theory_slot_keys:
-					continue
-				model.Add(var == 0)
-				blocked += 1
+				s_tid = str(tid).strip()
+				if s_tid.endswith(".0"):
+					s_tid = s_tid[:-2]
+
+				# The set stores (teacher_id, day, slot_idx)
+				if (s_tid, var_day, slot_idx) in occupied_theory_teachers:
+					if (s_tid, str(cid), var_day, slot_idx) in allowed_theory_slot_keys:
+						continue
+
+					model.Add(var == 0)
+					blocked += 1
 			stats["blocked_theory_teacher_vars"] = blocked
 
 		# 4) Optionally block teacher overlaps across lab<->theory using the time mapping.
@@ -319,8 +344,8 @@ class FixedScheduleLockConstraint(Constraint):
 			blocked_cross = self._block_teachers_across_domains(
 				context,
 				model,
-				lab_records=lab_records,
-				theory_records=theory_records,
+				occupied_lab_teachers=occupied_lab_teachers,
+				occupied_theory_teachers=occupied_theory_teachers,
 				allowed_lab_keys=allowed_lab_keys,
 				allowed_theory_slot_keys=allowed_theory_slot_keys,
 			)
@@ -373,7 +398,12 @@ class FixedScheduleLockConstraint(Constraint):
 			day_label = self._normalize_day_label(record.get("day"))
 			if not teacher_id or not course_id or not room_id or not session_name:
 				continue
-			teacher_map = lab_map.get(teacher_id) or {}
+			
+			# Try lookup with clean ID first, then fallback to appended .0
+			teacher_map = lab_map.get(teacher_id)
+			if teacher_map is None:
+				teacher_map = lab_map.get(f"{teacher_id}.0") or {}
+			
 			course_map = teacher_map.get(course_id) or {}
 			if day_index is None:
 				if not day_label:
@@ -429,7 +459,11 @@ class FixedScheduleLockConstraint(Constraint):
 			if not teacher_id or not course_id or not room_id or slot_index is None:
 				continue
 
-			teacher_bucket = assignment_map.get(teacher_id) or {}
+			# Try lookup with clean ID first, then fallback to appended .0
+			teacher_bucket = assignment_map.get(teacher_id)
+			if teacher_bucket is None:
+				teacher_bucket = assignment_map.get(f"{teacher_id}.0") or {}
+
 			course_bucket = teacher_bucket.get(course_id) or {}
 			if day_index is None:
 				if not day_label:
@@ -448,7 +482,11 @@ class FixedScheduleLockConstraint(Constraint):
 			day_bucket = course_bucket.get(day_index) or {}
 			slot_var = day_bucket.get(slot_index)
 
-			room_teacher_bucket = room_map.get(teacher_id) or {}
+			# Try lookup with clean ID first, then fallback to appended .0
+			room_teacher_bucket = room_map.get(teacher_id)
+			if room_teacher_bucket is None:
+				room_teacher_bucket = room_map.get(f"{teacher_id}.0") or {}
+
 			room_course_bucket = room_teacher_bucket.get(course_id) or {}
 			room_day_bucket = room_course_bucket.get(day_index) or {}
 			room_slot_bucket = room_day_bucket.get(slot_index) or {}
@@ -474,8 +512,8 @@ class FixedScheduleLockConstraint(Constraint):
 		context: ConstraintContext,
 		model: cp_model.CpModel,
 		*,
-		lab_records: Sequence[Mapping[str, Any]],
-		theory_records: Sequence[Mapping[str, Any]],
+		occupied_lab_teachers: Set[Tuple[str, str, str]],
+		occupied_theory_teachers: Set[Tuple[str, str, int]],
 		allowed_lab_keys: Set[Tuple[str, str, str, str, str]],
 		allowed_theory_slot_keys: Set[Tuple[str, str, str, int]],
 	) -> int:
@@ -486,35 +524,39 @@ class FixedScheduleLockConstraint(Constraint):
 		if not mapping:
 			return 0
 
-		# Build inverse map: theory_slot -> lab_sessions
-		inv: dict[int, Tuple[str, ...]] = {}
-		collector: dict[int, set[str]] = {}
+		# Build inverse map: theory_slot -> list of lab_sessions
+		# mapping: session_name -> [slot_index, ...]
+		inv: dict[int, set[str]] = defaultdict(set)
 		for session_name, slots in mapping.items():
+			s_session = str(session_name).strip()
 			for slot in slots or ():
 				idx = _safe_int(slot)
-				if idx is None:
-					continue
-				collector.setdefault(idx, set()).add(str(session_name))
-		for idx, names in collector.items():
-			inv[idx] = tuple(sorted(names))
+				if idx is not None:
+					inv[idx].add(s_session)
+
+		blocked_theory_slots: Set[Tuple[str, str, int]] = set()
+		for tid, day_label, session_name in occupied_lab_teachers:
+			slots = mapping.get(session_name)
+			if not slots:
+				continue
+			for s in slots:
+				idx = _safe_int(s)
+				if idx is not None:
+					blocked_theory_slots.add((tid, day_label, idx))
+
+		blocked_lab_sessions: Set[Tuple[str, str, str]] = set()
+		for tid, day_label, slot_idx in occupied_theory_teachers:
+			sessions = inv.get(slot_idx)
+			if not sessions:
+				continue
+			for s_session in sessions:
+				blocked_lab_sessions.add((tid, day_label, s_session))
 
 		blocked = 0
 
-		# If a teacher is locked into a lab session, block their theory vars on mapped slots.
-		locked_theory = set(allowed_theory_slot_keys)
-		for record in lab_records:
-			teacher_id = str(record.get("teacher_id") or "").strip()
-			course_id = str(record.get("course_instance_id") or "").strip()
-			session_name = str(record.get("session_name") or "").strip()
-			day_label = self._normalize_day_label(record.get("day"))
-			room_id = str(record.get("room_id") or "").strip()
-			if not teacher_id or not session_name or not day_label:
-				continue
-			slots = mapping.get(session_name) or ()
-			slot_indices = [idx for idx in (_safe_int(s) for s in slots) if idx is not None]
-			if not slot_indices:
-				continue
-			for tid, cid, day_idx, slot_idx, var in iter_course_timeslot_variables(context, teacher_id=teacher_id):
+		# 1) Block theory vars if teacher is busy in lab
+		if blocked_theory_slots:
+			for tid, cid, day_idx, slot_idx, var in iter_course_timeslot_variables(context):
 				theory_patterns = getattr(context.variables.theory, "course_day_patterns", {}) or {}
 				var_day = self._resolve_var_day_label(
 					context,
@@ -522,35 +564,44 @@ class FixedScheduleLockConstraint(Constraint):
 					course_id=cid,
 					day_index=day_idx,
 				)
-				if var_day != day_label or slot_idx not in slot_indices:
+				s_tid = str(tid).strip()
+				if s_tid.endswith(".0"):
+					s_tid = s_tid[:-2]
+				s_cid = str(cid).strip()
+
+				if (s_tid, var_day, slot_idx) not in blocked_theory_slots:
 					continue
-				if (tid, cid, var_day, slot_idx) in locked_theory:
+				
+				# If this specific assignment is allowed (part of the fixed schedule), skip blocking
+				if (s_tid, s_cid, var_day, slot_idx) in allowed_theory_slot_keys:
 					continue
+				
 				model.Add(var == 0)
 				blocked += 1
 
-		# If a teacher is locked into a theory slot, block their lab vars for overlapping lab sessions.
-		for record in theory_records:
-			teacher_id = str(record.get("teacher_id") or "").strip()
-			course_id = str(record.get("course_instance_id") or "").strip()
-			day_label = self._normalize_day_label(record.get("day"))
-			slot_index = _safe_int(record.get("slot_index"))
-			if not teacher_id or not day_label or slot_index is None:
-				continue
-			sessions = inv.get(slot_index) or ()
-			if not sessions:
-				continue
-			for tid, cid, day_idx, session_name, room_id, var in iter_lab_session_variables(context, teacher_id=teacher_id):
+		# 2) Block lab vars if teacher is busy in theory
+		if blocked_lab_sessions:
+			for tid, cid, day_idx, session_name, room_id, var in iter_lab_session_variables(context):
 				var_day = self._resolve_var_day_label(
 					context,
 					day_patterns=context.variables.lab.day_patterns,
 					course_id=cid,
 					day_index=day_idx,
 				)
-				if var_day != day_label or session_name not in sessions:
+				s_tid = str(tid).strip()
+				if s_tid.endswith(".0"):
+					s_tid = s_tid[:-2]
+				s_cid = str(cid).strip()
+				s_session = str(session_name).strip()
+				s_room = str(room_id).strip()
+
+				if (s_tid, var_day, s_session) not in blocked_lab_sessions:
 					continue
-				if (tid, cid, var_day, session_name, room_id) in allowed_lab_keys:
+
+				# If this specific assignment is allowed, skip blocking
+				if (s_tid, s_cid, var_day, s_session, s_room) in allowed_lab_keys:
 					continue
+
 				model.Add(var == 0)
 				blocked += 1
 
