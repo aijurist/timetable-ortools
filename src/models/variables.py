@@ -16,6 +16,8 @@ from ..data.schemas import (
 	NormalizedCourseInstance,
 )
 from ..data.room_eligibility import RoomEligibilityIndex, build_room_eligibility_index
+from ..data.schedule_blocking import ScheduleBlockingMask
+from ..utils.time_utils import DayNormalizer
 
 from .schema import (
 	LabCourseRequirement,
@@ -91,6 +93,16 @@ class VariableCreator:
 			laboratory_room_ids=tuple(str(rid) for rid in laboratory_room_ids) if laboratory_room_ids else None,
 		)
 
+		self._blocking_mask: Optional[ScheduleBlockingMask] = getattr(data.raw, "blocking_mask", None)
+		if self._blocking_mask:
+			self._logger.info(
+				"Blocking mask loaded: lab_rooms=%d, lab_teachers=%d, theory_rooms=%d, theory_teachers=%d",
+				len(self._blocking_mask.blocked_lab_rooms),
+				len(self._blocking_mask.blocked_lab_teacher_sessions),
+				len(self._blocking_mask.blocked_theory_rooms),
+				len(self._blocking_mask.blocked_theory_teacher_slots),
+			)
+
 	def create(self, model: cp_model.CpModel) -> VariableCreationResult:
 		"""Create all decision variables and return a structured handle bundle."""
 
@@ -123,6 +135,7 @@ class VariableCreator:
 
 	def _create_lab_variables(self, model: cp_model.CpModel) -> LabVariableBlock:
 		self._lab_var_count = 0
+		self._lab_pruned_count = 0
 		requirements = self._build_lab_course_requirements()
 		assignments: LabAssignmentDict = {}
 		teacher_courses: Dict[str, Tuple[str, ...]] = {}
@@ -137,22 +150,34 @@ class VariableCreator:
 				assignments[teacher_id][requirement.course_instance_id] = course_vars
 				pattern = self._resolve_day_pattern(requirement.department)
 				day_patterns[requirement.course_instance_id] = pattern
-				for day_index, _ in enumerate(pattern):
+				for day_index, day_label in enumerate(pattern):
+					normalized_day = self._normalize_day_for_blocking(day_label)
 					session_map: Dict[str, Dict[str, cp_model.IntVar]] = {}
 					course_vars[day_index] = session_map
 					for session_name in self._lab_session_names:
 						room_map: Dict[str, cp_model.IntVar] = {}
 						session_map[session_name] = room_map
-						# Use room eligibility index to pre-filter rooms (major optimization)
 						eligible_rooms = self._room_eligibility.get_eligible_lab_rooms(requirement.course_code)
 
 						for room_id in eligible_rooms:
+							if self._blocking_mask and self._blocking_mask.is_lab_variable_blocked(
+								teacher_id=teacher_id,
+								course_id=requirement.course_instance_id,
+								day_label=normalized_day,
+								session_name=session_name,
+								room_id=room_id,
+							):
+								self._lab_pruned_count += 1
+								continue
+
 							var_name = (
 								f"lab_{teacher_id}_{requirement.course_instance_id}_d{day_index}_{session_name}_{room_id}"
 							)
 							room_map[room_id] = model.NewBoolVar(var_name)
 							self._lab_var_count += 1
 
+		if self._lab_pruned_count > 0:
+			self._logger.info("Pruned %d lab variables via blocking mask", self._lab_pruned_count)
 
 		return LabVariableBlock(
 			assignments=assignments,
@@ -166,6 +191,8 @@ class VariableCreator:
 
 	def _create_theory_variables(self, model: cp_model.CpModel) -> TheoryVariableBlock:
 		self._theory_var_count = 0
+		self._theory_pruned_count = 0
+		self._theory_slot_pruned_count = 0
 		group_requirements = self._build_group_timeslot_requirements()
 		course_requirements = self._build_theory_course_requirements()
 		assignments: TheoryAssignmentDict = {}
@@ -191,38 +218,74 @@ class VariableCreator:
 				pattern = self._resolve_day_pattern(requirement.department)
 				course_day_patterns[course_id] = pattern
 				group_course_buffer[requirement.group_id].add(course_id)
-				for day_index, _ in enumerate(pattern):
+				for day_index, day_label in enumerate(pattern):
+					normalized_day = self._normalize_day_for_blocking(day_label)
 					slot_map: Dict[int, cp_model.IntVar] = {}
 					room_day_map: Dict[int, Dict[str, cp_model.IntVar]] = {}
 					course_vars[day_index] = slot_map
 					room_course_vars[day_index] = {}
 					for slot_index, _ in enumerate(self._theory_slot_labels):
+						slot_blocked = (
+							self._blocking_mask
+							and self._blocking_mask.is_theory_slot_blocked(
+								teacher_id=teacher_id,
+								course_id=course_id,
+								day_label=normalized_day,
+								slot_index=slot_index,
+							)
+						)
+
+						if slot_blocked:
+							self._theory_slot_pruned_count += 1
+							room_day_map = room_course_vars[day_index]
+							room_day_map[slot_index] = {}
+							continue
+
 						var_name = (
 							f"theory_{teacher_id}_{course_id}_d{day_index}_s{slot_index}"
 						)
 						literal = model.NewBoolVar(var_name)
 						slot_map[slot_index] = literal
 						room_bucket: Dict[str, cp_model.IntVar] = {}
-						
-						# Use filtered rooms based on capacity/tier policy (optimization)
+
 						eligible_rooms = self._room_eligibility.get_eligible_theory_rooms(
 							student_count=getattr(requirement, "student_count", 0),
 							semester=getattr(requirement, "semester", None),
 						)
-						
+
 						if eligible_rooms:
 							for room_id in eligible_rooms:
+								if self._blocking_mask and self._blocking_mask.is_theory_variable_blocked(
+									teacher_id=teacher_id,
+									course_id=course_id,
+									day_label=normalized_day,
+									slot_index=slot_index,
+									room_id=room_id,
+								):
+									self._theory_pruned_count += 1
+									continue
+
 								room_var = model.NewBoolVar(
 									f"theory_{teacher_id}_{course_id}_d{day_index}_s{slot_index}_r{room_id}"
 								)
 								room_bucket[room_id] = room_var
 								self._theory_var_count += 1
-							model.Add(sum(room_bucket.values()) == literal)
+							if room_bucket:
+								model.Add(sum(room_bucket.values()) == literal)
+							else:
+								model.Add(literal == 0)
 						else:
 							model.Add(literal == 0)
 						room_day_map = room_course_vars[day_index]
 						room_day_map[slot_index] = room_bucket
 						group_slot_sources[requirement.group_id][day_index][slot_index].append(literal)
+
+		if self._theory_pruned_count > 0 or self._theory_slot_pruned_count > 0:
+			self._logger.info(
+				"Pruned %d theory room vars and %d theory slot vars via blocking mask",
+				self._theory_pruned_count,
+				self._theory_slot_pruned_count,
+			)
 
 		group_timeslots: GroupTimeslotDict = {}
 		day_patterns: Dict[str, Tuple[str, ...]] = {}
@@ -402,6 +465,13 @@ class VariableCreator:
 	def _default_day_pattern(self) -> Tuple[str, ...]:
 		patterns = self._data.raw.departments.day_patterns
 		return patterns.get("__default__", tuple(self._data.raw.time.working_days))
+
+	def _normalize_day_for_blocking(self, day_label: str) -> str:
+		"""Normalize day label for blocking mask lookup."""
+		normalized = DayNormalizer.normalize_day_name(day_label)
+		if normalized:
+			return normalized
+		return str(day_label).strip().lower()
 
 
 __all__ = [

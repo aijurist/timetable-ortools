@@ -17,6 +17,7 @@ from .cross_system.teacher_day_window import build_teacher_day_window_constraint
 from .cross_system.dept_day_span import build_department_day_span_constraint
 from .cross_system.pop_day import build_pop_day_constraint
 from .cross_system.fixed_schedule_lock import build_fixed_schedule_lock_constraint
+from .cross_system.dept_slot_blocking import build_dept_slot_blocking_constraint
 from .lab.consecutive_batches import build_consecutive_batch_lab_constraint
 from .lab.core_lab import build_core_lab_mapping_constraint
 from .lab.requirements import build_lab_session_coverage_constraint
@@ -211,6 +212,12 @@ CROSS_SYSTEM_CONSTRAINT_DEFINITIONS = {
 		"description": "Freeze selected slot/room/teacher assignments from a prior run so they cannot be rescheduled.",
 		"factory": build_fixed_schedule_lock_constraint,
 		"tags": ("cross-system", "freeze", "rooms", "teachers"),
+	},
+	"dept_slot_blocking": {
+		"title": "Department Slot Blocking",
+		"description": "Load partial schedule to block department slots (e.g. for DSA) based on CSV.",
+		"factory": build_dept_slot_blocking_constraint,
+		"tags": ("cross-system", "partial", "blocking"),
 	},
 }
 

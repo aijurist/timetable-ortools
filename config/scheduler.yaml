@@ -7,11 +7,13 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data\sem2026\1st year\all.csv
+  courses_csv: data\sem2026\1st year\all_without_dsa.csv
   rooms_csv: data/block_wise/techlongue.csv
   day_order_csv: data/day_order_even.csv
   core_lab_mapping_csv: data/CoreMappingSimplified_StudentDept.csv
   preferences_csv: data/pop.csv
+  fixed_lab_schedule_csv: output/final/2025-12-26_04-47-12/csv/lab_schedule.csv
+  fixed_theory_schedule_csv: output/final/2025-12-26_04-47-12/csv/theory_schedule.csv
   output_root: output/combined_scheduler
 
 data:
@@ -116,20 +118,6 @@ departments:
     flexible_lunch: false
   overrides:
       Computer Science & Engineering:
-        day_pattern:
-          - tuesday
-          - wed
-          - thur
-          - fri
-          - saturday
-        lunch_break_slot: null
-        lunch_slot_window:
-          - 3
-          - 4
-          - 5
-        shift_id: SHIFT_1
-        flexible_lunch: false
-      Computer Science & Engineering-1:
         day_pattern:
           - tuesday
           - wed
@@ -493,7 +481,7 @@ departments:
     soft:
       departments:
         - Computer Science & Engineering_S3
-        - Computer Science & Engineering-1_S2
+        - Computer Science & Engineering_S2
         - Computer Science & Engineering-2_S2
         - Electronics & Communication Engineering_S3
         - Electronics & Communication Engineering_S5
@@ -833,7 +821,7 @@ constraints:
         window_lab_csv_path: output/final/2025-12-26_04-47-12/csv/lab_schedule.csv
         window_theory_csv_path: output/final/2025-12-26_04-47-12/csv/theory_schedule.csv
     fixed_schedule_lock:
-      enabled: true
+      enabled: false
       priority: 10
       weight: 1.0
       params:
@@ -848,10 +836,12 @@ constraints:
       priority: 9
       weight: 1.0
       params:
-        max_daily_hours: 5
+        max_daily_hours: 6
         mode: hard
         soft_cap_hours: 6
         soft_penalty_weight: 5
+        excluded_departments:
+          - Electronics & Communication Engineering_S2
     lunch_alignment:
       enabled: true
       priority: 9
@@ -864,7 +854,7 @@ constraints:
         minimum_free_slots: 1
         soft_departments:
           - Information Technology_S2
-          - Computer Science & Engineering-1_S2
+          - Computer Science & Engineering_S2
           - Computer Science & Engineering-2_S2
           - Artificial Intelligence & Data Science_S2
           - Artificial Intelligence & Machine Learning_S2
@@ -905,7 +895,7 @@ constraints:
           - Computer Science & Design_S6
           - Computer Science & Design_S8
           - Computer Science & Engineering (Cyber Security)
-          - Computer Science & Engineering-1_S2
+          - Computer Science & Engineering_S2
           - Computer Science & Engineering-2_S2
           - Computer Science & Engineering_S4
           - Computer Science & Engineering_S6
@@ -963,6 +953,21 @@ constraints:
       weight: 1.0
       params:
         pop_csv_path: data/pop.csv
+
+    dept_slot_blocking:
+      enabled: true
+      priority: 10
+      weight: 1.0
+      params:
+        lab_csv_path: data/sem2026/1st year/lab.csv
+        lock_assignments: true
+        block_rooms: true
+        block_teachers: true
+        block_teachers_across_domains: true
+        block_dept_slots: true
+        block_dept_slots_course_codes:
+          - CS23231
+          - CB23231
 
 model:
   big_m_value: 1000.0

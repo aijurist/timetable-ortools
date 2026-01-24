@@ -34,6 +34,7 @@ from .schemas import (
     RoomCollections,
     DataLoadResult,
 )
+from .schedule_blocking import build_schedule_blocking_mask
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +78,14 @@ class DataLoader:
         teachers = self._extract_sorted_unique(courses_df, ["teacher", "teacher_name", "faculty"], fallback="teacher_id")
         departments = self._extract_sorted_unique(courses_df, ["department", "dept", "course_dept"])
 
+        blocking_mask = build_schedule_blocking_mask(
+            lab_csv_path=self._paths.fixed_lab_schedule_csv,
+            theory_csv_path=self._paths.fixed_theory_schedule_csv,
+            lab_session_to_theory_mapping=time_artifacts.lab_session_to_theory,
+            day_patterns=department_artifacts.day_patterns,
+            working_days=time_artifacts.working_days,
+        )
+
         result = DataLoadResult(
             config=self._config,
             courses_df=courses_df,
@@ -91,6 +100,7 @@ class DataLoader:
             departments_list=departments,
             room_registry=room_registry,
             load_timestamp=datetime.utcnow(),
+            blocking_mask=blocking_mask,
         )
 
         logger.info(

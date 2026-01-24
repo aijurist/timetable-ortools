@@ -1,0 +1,60 @@
+{
+  "generated_at": "2025-12-25T23:17:20.097162+00:00",
+  "limits": {
+    "core_group_slot_cap": {
+      "slot_limit": 8,
+      "penalty_weight": 200
+    },
+    "computing_group_slot_cap": {
+      "slot_limit": 6
+    },
+    "semester_slot_cap": {
+      "slot_limit": 15
+    }
+  },
+  "summary": {
+    "groups_monitored": 0,
+    "groups_over_limit": 0,
+    "semesters_over_limit": 0,
+    "core_over_limit": 0,
+    "computing_over_limit": 0
+  },
+  "core_groups": [],
+  "computing_groups": [],
+  "semesters": [],
+  "constraints": {
+    "core_group_slot_cap": {
+      "name": "Core Group Slot Cap",
+      "status": "skipped",
+      "enabled": false,
+      "priority": 7,
+      "details": {
+        "reason": "disabled"
+      }
+    },
+    "computing_group_slot_cap": {
+      "name": "Computing Group Slot Cap",
+      "status": "skipped",
+      "enabled": false,
+      "priority": 8,
+      "details": {
+        "reason": "disabled"
+      }
+    },
+    "semester_slot_cap": {
+      "name": "Semester Lab Slot Cap",
+      "status": "skipped",
+      "enabled": false,
+      "priority": 8,
+      "details": {
+        "reason": "disabled"
+      }
+    }
+  },
+  "metadata": {
+    "policy_note": "Theory and lab windows of the same course/group may now overlap provided the teacher overlap guard keeps instructors from being double-booked. Slot-cap metrics continue to track lab slots only.",
+    "core_groups_tracked": 0,
+    "computing_groups_tracked": 0,
+    "semester_tokens_tracked": 0
+  }
+}

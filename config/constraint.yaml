@@ -145,3 +145,19 @@ cross_system:
 			block_rooms: true
 			block_teachers: true
 			block_teachers_across_domains: true
+
+	dept_slot_blocking:
+		enabled: true
+		priority: 10
+		weight: 1.0
+		description: Load partial schedule to block department slots (CSV) into the solver.
+		params:
+			lab_csv_path: "data/sem2026/1st year/lab.csv"
+			lock_assignments: true
+			block_rooms: true
+			block_teachers: true
+			block_teachers_across_domains: true
+			block_dept_slots: true
+			block_dept_slots_course_codes:
+				- "CS23231"
+				- "CB23231"

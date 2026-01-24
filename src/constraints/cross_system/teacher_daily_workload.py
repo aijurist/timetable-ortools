@@ -24,6 +24,7 @@ class TeacherDailyWorkloadConfig:
 	mode: str
 	soft_cap_hours: Optional[int]
 	penalty_weight: int
+	excluded_departments: Tuple[str, ...]
 
 	@staticmethod
 	def from_params(params: Optional[Mapping[str, object]]) -> "TeacherDailyWorkloadConfig":
@@ -40,11 +41,13 @@ class TeacherDailyWorkloadConfig:
 			except (TypeError, ValueError):  # pragma: no cover - defensive
 				soft_cap = max_hours
 		penalty_weight = int(params.get("soft_penalty_weight", 5))
+		excluded_departments = tuple(str(d).strip() for d in params.get("excluded_departments", ()) if d)
 		return TeacherDailyWorkloadConfig(
 			max_daily_hours=max_hours,
 			mode=mode,
 			soft_cap_hours=soft_cap,
 			penalty_weight=max(0, penalty_weight),
+			excluded_departments=excluded_departments,
 		)
 
 
@@ -53,12 +56,14 @@ class _ConstraintStats:
 	teachers_considered: int = 0
 	hard_constraints: int = 0
 	soft_penalties: int = 0
+	fixed_hours_applied: int = 0  # Count teachers with non-zero fixed hours
 
 	def as_details(self) -> Mapping[str, int]:
 		return {
 			"teachers_considered": self.teachers_considered,
 			"hard_constraints": self.hard_constraints,
 			"soft_penalties": self.soft_penalties,
+			"fixed_hours_applied": self.fixed_hours_applied,
 		}
 
 
@@ -76,6 +81,28 @@ class TeacherDailyWorkloadConstraint(Constraint):
 		working_days = tuple(getattr(context.data.raw.time, "working_days", tuple())) or ("monday",)
 		stats = _ConstraintStats()
 
+		blocking_mask = getattr(context.data.raw, "blocking_mask", None)
+		fixed_hours_map = getattr(blocking_mask, "teacher_daily_fixed_hours", {}) if blocking_mask else {}
+
+		excluded_teachers = set()
+		if config.excluded_departments:
+			preprocessing = getattr(context.data, "preprocessing", None)
+			if preprocessing and preprocessing.normalized_instances:
+				for key, instances in preprocessing.normalized_instances.items():
+					dept_name = key.department
+					cohort_token = f"{dept_name}_S{key.semester}"
+					
+					if (dept_name in config.excluded_departments or 
+						cohort_token in config.excluded_departments):
+						for inst in instances:
+							excluded_teachers.add(inst.teacher_id)
+			
+			if excluded_teachers:
+				context.logger.info(
+					"Workload constraint disabled for %d teachers in excluded departments: %s",
+					len(excluded_teachers), config.excluded_departments
+				)
+
 		for teacher_id in teacher_ids:
 			day_names = set(theory_literals.get(teacher_id, {}).keys()) | set(
 				lab_literals.get(teacher_id, {}).keys()
@@ -91,26 +118,63 @@ class TeacherDailyWorkloadConstraint(Constraint):
 					terms.append((literal, hours))
 				if not terms:
 					continue
+
+				fixed_hours = fixed_hours_map.get((teacher_id, day_name), 0)
+				if teacher_id in excluded_teachers:
+					fixed_hours = 0
+				if fixed_hours > 0:
+					stats.fixed_hours_applied += 1
+				remaining_capacity = config.max_daily_hours - fixed_hours
 				total_hours = sum(weight * literal for literal, weight in terms)
-				stats.hard_constraints += 1
-				if config.mode == "soft" and config.soft_cap_hours:
-					cap = config.soft_cap_hours
-					context.model.Add(total_hours <= cap)
-					if cap > config.max_daily_hours:
-						max_overage = cap - config.max_daily_hours
-						overage = context.model.NewIntVar(0, max_overage, f"teacher_daily_overage_{teacher_id}_{day_name}")
-						context.model.Add(total_hours - config.max_daily_hours <= overage)
-						register_objective_penalty(
-							context,
-							overage,
-							weight=config.penalty_weight,
-							tag=f"teacher_spread:daily_workload:{teacher_id}:{day_name}",
-						)
-						stats.soft_penalties += 1
-					else:
-						context.model.Add(total_hours <= config.max_daily_hours)
+				
+				# context.logger.info(
+				# 	"Workload check: Teacher=%s Day=%s Fixed=%d Limit=%d Terms=%d",
+				# 	teacher_id, day_name, fixed_hours, config.max_daily_hours, len(terms)
+				# )
+
+				if fixed_hours > 0:
+					effective_limit = max(0, remaining_capacity)
+					max_overage = 24
+					overage = context.model.NewIntVar(0, max_overage, f"teacher_daily_overage_fix_{teacher_id}_{day_name}")
+					context.model.Add(total_hours <= effective_limit + overage)
+
+					weight = config.penalty_weight * 2 if config.penalty_weight > 0 else 10
+					register_objective_penalty(
+						context,
+						overage,
+						weight=weight,
+						tag=f"teacher_spread:daily_workload_fix:{teacher_id}:{day_name}",
+					)
+					stats.soft_penalties += 1
+					
+					# context.logger.info(
+					# 	"  -> Soft constraint applied: limit=%d + slack (fixed=%d)",
+					# 	effective_limit, fixed_hours
+					# )
 				else:
-					context.model.Add(total_hours <= config.max_daily_hours)
+					stats.hard_constraints += 1
+					if config.mode == "soft" and config.soft_cap_hours:
+						cap = max(0, config.soft_cap_hours - fixed_hours)
+						context.model.Add(total_hours <= cap)
+						if cap > remaining_capacity:
+							max_overage = cap - remaining_capacity
+							overage = context.model.NewIntVar(0, max_overage, f"teacher_daily_overage_{teacher_id}_{day_name}")
+							context.model.Add(total_hours - remaining_capacity <= overage)
+							register_objective_penalty(
+								context,
+								overage,
+								weight=config.penalty_weight,
+								tag=f"teacher_spread:daily_workload:{teacher_id}:{day_name}",
+							)
+							stats.soft_penalties += 1
+							# context.logger.info("  -> Configured Soft mode applied: cap=%d, buffer_limit=%d", cap, remaining_capacity)
+						else:
+							context.model.Add(total_hours <= remaining_capacity)
+							# context.logger.info("  -> Configured Soft mode (hard equivalent) applied: limit=%d", remaining_capacity)
+					else:
+						context.model.Add(total_hours <= remaining_capacity)
+						# context.logger.info("  -> Hard constraint applied: limit=%d", remaining_capacity)
+
 
 		status = ConstraintStatus.APPLIED if stats.hard_constraints else ConstraintStatus.SKIPPED
 		details = dict(stats.as_details())

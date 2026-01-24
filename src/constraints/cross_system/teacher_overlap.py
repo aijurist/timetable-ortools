@@ -82,16 +82,31 @@ class TeacherOverlapConstraint(Constraint):
 					if len(entries) <= 1:
 						continue
 
-					# DSA override: allow CS23231/CB23231 lab activities to overlap ONLY with each other.
-					# If ALL entries are DSA lab activities, skip the constraint (team teaching scenario).
-					# Otherwise, enforce the at-most-one constraint on all entries including DSA labs.
-					if _all_dsa_override_activities(entries):
+					dsa_labs = [e for e in entries if _is_dsa_override_activity(e)]
+					others = [e for e in entries if not _is_dsa_override_activity(e)]
+
+					if not others:
 						continue
-					if _can_co_schedule(entries):
+
+					if not dsa_labs:
+						if _can_co_schedule(others):
+							continue
+						context.model.AddAtMostOne(e.literal for e in others)
+						clauses += 1
+						activity_literals += len(others)
 						continue
-					context.model.AddAtMostOne(entry.literal for entry in entries)
-					clauses += 1
-					activity_literals += len(entries)
+
+					if len(others) > 1:
+						if not _can_co_schedule(others):
+							context.model.AddAtMostOne(e.literal for e in others)
+							clauses += 1
+							activity_literals += len(others)
+
+					for dsa in dsa_labs:
+						for other in others:
+							context.model.AddImplication(dsa.literal, other.literal.Not())
+							clauses += 1
+							activity_literals += 2
 
 		status = ConstraintStatus.APPLIED if clauses else ConstraintStatus.SKIPPED
 		return ConstraintApplicationResult(
@@ -314,14 +329,6 @@ def _is_dsa_override_activity(entry: ActivityEntry) -> bool:
 		return False
 	code = str(entry.course_code or "").strip().upper()
 	return code in {"CS23231", "CB23231"}
-
-
-def _all_dsa_override_activities(entries: Sequence[ActivityEntry]) -> bool:
-	"""Return True if ALL entries are DSA lab activities (team teaching scenario)."""
-	if not entries:
-		return False
-	return all(_is_dsa_override_activity(entry) for entry in entries)
-
 
 def build_teacher_overlap_constraint(
 	metadata: ConstraintMetadata,

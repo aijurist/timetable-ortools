@@ -2,12 +2,15 @@ import pandas as pd
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Iterable, Mapping, Optional, Sequence, Tuple
 
 from ..config.schemas import (
     DepartmentSettings,
     SchedulerConfig,
 )
+
+if TYPE_CHECKING:
+    from .schedule_blocking import ScheduleBlockingMask
 
 
 def dataclass_to_dict(instance: Any) -> Dict[str, Any]:
@@ -130,6 +133,7 @@ class DataLoadResult:
     departments_list: Tuple[str, ...]
     room_registry: Dict[str, Dict[str, Any]]
     load_timestamp: datetime
+    blocking_mask: Optional["ScheduleBlockingMask"] = None
 
     def to_legacy_dict(self) -> Dict[str, Any]:
         """Provide a dict closely matching the combined scheduler runtime state."""
