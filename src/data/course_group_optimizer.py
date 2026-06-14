@@ -17,8 +17,25 @@ from pathlib import Path
 from typing import Dict, List, Optional, Set
 from collections import defaultdict, Counter
 from ortools.sat.python import cp_model
+
+logging.getLogger("matplotlib").setLevel(logging.WARNING)
+logging.getLogger("matplotlib.font_manager").setLevel(logging.WARNING)
+
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+
+MECH_S5_FORCED_SPLIT_COURSES = ("ME23521", "ME23532")
+
+BIOTECH_S5_FIXED_GROUP_INSTANCE_IDS = (
+    ("252", "253", "354"),
+    ("314", "353", "355"),
+    ("251", "315", "316"),
+    ("213", "214", "317"),
+    ("215", "216", "217"),
+    ("211", "212", "218"),
+    ("210", "318", "319"),
+)
 
 
 class CourseGroupOptimizer:
@@ -62,9 +79,8 @@ class CourseGroupOptimizer:
             logger: Logger instance (optional)
             pe_course_map_file: Path to PE course mapping CSV file (optional)
             flexible_grouping_depts: List of departments that can have minimum 1 group for multi-instance courses (optional)
-            cse_s2_five_group_split_enabled: Enable/disable the CSE S2 special constraint that
-                forces courses to be distributed across up to 5 groups (balanced). If None,
-                defaults to enabled for CSE S2 and disabled otherwise.
+            cse_s2_five_group_split_enabled: Legacy CSE S2 special split flag. Department-specific
+                special constraints are disabled by default, so generic grouping is used.
         """
         self.courses = courses
         self.dept = dept
@@ -88,6 +104,7 @@ class CourseGroupOptimizer:
             self.flexible_grouping_depts = set(flexible_grouping_depts)
         
         # Special-case flags
+        self.special_department_constraints_enabled = False
         self.is_cse_s2 = (self.dept == "Computer Science & Engineering" and self.semester == 2)
 
         if cse_s2_five_group_split_enabled is None:
@@ -207,9 +224,9 @@ class CourseGroupOptimizer:
                     "CHEM": "Chemical Engineering",
                     "FT": "Food Technology",
                     "CIVIL": "Civil Engineering",
-                    "CSBS": "Computer Science and Business Systems",
-                    "CSD": "Computer Science and Design",
-                    "CSECS": "Computer Science and Engineering - Cyber Security",
+                    "CSBS": "Computer Science & Business Systems",
+                    "CSD": "Computer Science & Design",
+                    "CSECS": "Computer Science & Engineering (Cyber Security)",
                 }
                 
                 # Find matching department abbreviation
@@ -530,6 +547,9 @@ class CourseGroupOptimizer:
         if self.num_groups == 0:
             self.logger.warning("No groups to create")
             return False
+
+        if self.dept == "Biotechnology" and self.semester == 5:
+            return self._build_biotech_s5_fixed_groups()
         
         # Check feasibility before optimization
         if not self._check_feasibility():
@@ -549,15 +569,125 @@ class CourseGroupOptimizer:
         self._apply_course_limit_constraints(model, assignment_vars)
         self._apply_group_size_constraints(model, assignment_vars)
         self._apply_lab_priority_constraints(model, assignment_vars)
+
+        if self.dept == "Electronics & Communication Engineering" and self.semester == 5:
+            self._apply_ece_s5_even_lab_distribution(model, assignment_vars)
+
+        if self.dept == "Mechanical Engineering" and self.semester == 5:
+            self._apply_mech_s5_forced_course_split(model, assignment_vars)
         
-        # Apply special constraints for specific departments/semesters
-        self._apply_special_department_constraints(model, assignment_vars)
+        # Legacy special constraints for specific departments/semesters are disabled.
+        # self._apply_special_department_constraints(model, assignment_vars)
         
         # Set objectives
         self._set_optimization_objectives(model, assignment_vars)
         
         # Solve the model
         return self._solve_model(model, assignment_vars)
+
+    def _build_biotech_s5_fixed_groups(self):
+        """Build the curated Biotechnology S5 grouping directly, bypassing CP-SAT."""
+        self.logger.info(
+            "Using hardcoded Biotechnology S5 group distribution; bypassing OR-Tools optimizer"
+        )
+
+        fixed_group_instance_ids = BIOTECH_S5_FIXED_GROUP_INSTANCE_IDS
+        required_courses = {
+            "BT23511",
+            "BT23512",
+            "BT23513",
+            "BT23514",
+            "BT23521",
+            "BT23522",
+            "BT23523",
+        }
+        present_courses = set(self.unique_courses)
+
+        if self.num_groups != 7:
+            raise ValueError(
+                "Biotechnology S5 fixed grouping requires exactly 7 regular groups; "
+                f"got {self.num_groups}."
+            )
+
+        if present_courses != required_courses:
+            missing = sorted(required_courses - present_courses)
+            extra = sorted(present_courses - required_courses)
+            raise ValueError(
+                "Biotechnology S5 fixed grouping requires exactly these courses after filtering: "
+                f"{sorted(required_courses)}. Missing={missing}, Extra={extra}."
+            )
+
+        expected_instance_ids = {
+            instance_id
+            for group_instance_ids in fixed_group_instance_ids
+            for instance_id in group_instance_ids
+        }
+        instances_by_id = {str(inst.get("id")): inst for inst in self.courses}
+        present_instance_ids = set(instances_by_id.keys())
+
+        if present_instance_ids != expected_instance_ids:
+            missing = sorted(expected_instance_ids - present_instance_ids)
+            extra = sorted(present_instance_ids - expected_instance_ids)
+            raise ValueError(
+                "Biotechnology S5 fixed grouping requires the exact course instance IDs "
+                f"from the curated schedule. Missing={missing}, Extra={extra}."
+            )
+
+        self.groups = [[] for _ in range(self.num_groups)]
+        assigned_instance_ids = set()
+
+        for group_idx, group_instance_ids in enumerate(fixed_group_instance_ids):
+            for instance_id in group_instance_ids:
+                instance = instances_by_id[instance_id]
+                self.groups[group_idx].append(instance)
+                assigned_instance_ids.add(instance_id)
+
+        if len(assigned_instance_ids) != len(self.courses):
+            raise ValueError(
+                "Biotechnology S5 fixed grouping did not assign every regular instance: "
+                f"assigned {len(assigned_instance_ids)} of {len(self.courses)}."
+            )
+
+        self.target_group_size = sum(inst.get("weight", 1) for inst in self.groups[0])
+        self.solution_found = True
+        self.objective_value = 0
+
+        if self.pe_courses:
+            pe_groups_by_code = defaultdict(list)
+            for inst in self.pe_courses:
+                pe_groups_by_code[inst.get("course_code")].append(inst)
+
+            for pe_code in sorted(k for k in pe_groups_by_code.keys() if k):
+                self.groups.append(pe_groups_by_code[pe_code])
+
+            self.logger.debug(
+                "Added %s PE groups after Biotechnology S5 fixed grouping: %s",
+                len(pe_groups_by_code),
+                sorted(pe_groups_by_code.keys()),
+            )
+
+        self.logger.info("Biotechnology S5 fixed group distribution:")
+        for group_idx, group in enumerate(self.groups):
+            if not group:
+                continue
+
+            course_counts = Counter(inst["course_code"] for inst in group)
+            teachers = sorted(str(inst["teacher_id"]) for inst in group)
+            course_summary = ", ".join(
+                f"{course_code}:{count}"
+                for course_code, count in sorted(course_counts.items())
+            )
+            group_type = " (PE Group)" if group_idx >= self.num_groups else ""
+            self.logger.info(
+                "  G%s%s: %s instances, teachers [%s], courses [%s]",
+                group_idx + 1,
+                group_type,
+                len(group),
+                ", ".join(teachers),
+                course_summary,
+            )
+
+        return True
     
     def _create_assignment_variables(self, model):
         """
@@ -682,10 +812,13 @@ class CourseGroupOptimizer:
         multi_instance_courses = 0
         flexible_courses = 0
 
-        # CSE Semester 2 is a special case: we enforce per-course spreading across 5 groups
-        # (balanced) in _apply_special_department_constraints. Do NOT add the default
-        # max-2-groups constraint here.
-        if self.is_cse_s2 and self.cse_s2_five_group_split_enabled:
+        # Legacy CSE S2 special spreading is disabled by default. Keep this guard tied to
+        # special_department_constraints_enabled so generic course limits remain active.
+        if (
+            self.special_department_constraints_enabled
+            and self.is_cse_s2
+            and self.cse_s2_five_group_split_enabled
+        ):
             self.logger.info(
                 "Skipping default course limit constraints for CSE Semester 2 (handled by special constraints: 5-group split)"
             )
@@ -805,11 +938,13 @@ class CourseGroupOptimizer:
             model: CP-SAT model
             assignment_vars: Assignment variables
         """
-        # CSE S2 special case requires each course to span 5 groups.
-        # The current lab-priority rule is a hard partition (labs only in early groups,
-        # theory only in late groups). With typical inputs (e.g., 6 lab courses => only
-        # 2 remaining theory groups), that can make the model INFEASIBLE.
-        if getattr(self, "is_cse_s2", False) and getattr(self, "cse_s2_five_group_split_enabled", False):
+        # Legacy CSE S2 special spreading is disabled by default. Keep this guard tied to
+        # special_department_constraints_enabled so generic lab priority remains active.
+        if (
+            getattr(self, "special_department_constraints_enabled", False)
+            and getattr(self, "is_cse_s2", False)
+            and getattr(self, "cse_s2_five_group_split_enabled", False)
+        ):
             self.logger.info(
                 "Skipping lab priority constraint for CSE S2 (conflicts with 5-group split requirement)"
             )
@@ -873,6 +1008,14 @@ class CourseGroupOptimizer:
             model: CP-SAT model
             assignment_vars: Assignment variables
         """
+        if not self.special_department_constraints_enabled:
+            self.logger.info(
+                "Special department-specific grouping constraints disabled; using generic optimizer constraints"
+            )
+            return 0
+
+        # Legacy hardcoded rules below are intentionally unreachable while
+        # special_department_constraints_enabled remains False.
         constraints_added = 0
         
         # Special constraint for Electronics & Communication Engineering 2nd semester
@@ -1790,8 +1933,8 @@ class CourseGroupOptimizer:
         """
         Special constraint for ECE 5th semester: ensure even distribution of lab course instances.
         
-        For courses with practical hours > 0 and multiple instances, ensure that instances
-        are distributed evenly across the groups they appear in.
+        For courses with practical hours > 0 and multiple instances, force exactly two
+        groups to carry the course and split the instances as evenly as possible.
         
         Args:
             model: CP-SAT model
@@ -1822,6 +1965,13 @@ class CourseGroupOptimizer:
         if not lab_courses_multi_instance:
             self.logger.info("No multi-instance lab courses found for ECE S5 even distribution constraint")
             return 0
+
+        if self.num_groups < 2:
+            self.logger.warning(
+                "Skipping ECE S5 even lab distribution: expected at least 2 groups, got %s",
+                self.num_groups,
+            )
+            return 0
         
         self.logger.info(f"Applying even distribution to {len(lab_courses_multi_instance)} lab courses:")
         for course_code, instances in lab_courses_multi_instance.items():
@@ -1834,9 +1984,6 @@ class CourseGroupOptimizer:
                 i for i, inst in enumerate(self.courses) 
                 if inst['course_code'] == course_code and inst.get('practical_hours', 0) > 0
             ]
-            
-            # Since course limit constraint forces multi-instance courses into exactly 2 groups,
-            # we need to ensure even distribution across those 2 groups
             
             # Create auxiliary variables to track which groups have this course
             group_has_course = []
@@ -1861,69 +2008,134 @@ class CourseGroupOptimizer:
                 model.Add(group_var <= sum(course_assignments_in_group))
                 
                 constraints_added += 3
-            
-            # Constraint: Course must be in exactly 2 groups (enforced by course limit constraint)
-            # Additional constraint: Even distribution across those 2 groups
-            
-            # If course has even number of instances, each group should have exactly half
-            if num_instances % 2 == 0:
-                target_per_group = num_instances // 2
-                
-                # For each pair of groups that could contain this course, if both contain it,
-                # they must have equal instances
-                for g1 in range(self.num_groups):
-                    for g2 in range(g1 + 1, self.num_groups):
-                        # If both groups have this course, they must have equal counts
-                        both_have_course = model.NewBoolVar(f"ece_s5_{course_code}_in_both_g{g1}_g{g2}")
-                        
-                        # both_have_course is true iff both groups have the course
-                        model.Add(both_have_course <= group_has_course[g1])
-                        model.Add(both_have_course <= group_has_course[g2])
-                        model.Add(both_have_course >= group_has_course[g1] + group_has_course[g2] - 1)
-                        
-                        # If both have the course, they must have equal instances (target_per_group each)
-                        model.Add(group_instance_counts[g1] == target_per_group).OnlyEnforceIf(both_have_course)
-                        model.Add(group_instance_counts[g2] == target_per_group).OnlyEnforceIf(both_have_course)
-                        
-                        constraints_added += 5
-                
-                self.logger.info(f"  {course_code}: enforcing {target_per_group} instances per group (even split)")
-                
+
+            model.Add(sum(group_has_course) == 2)
+            constraints_added += 1
+
+            target_low = num_instances // 2
+            target_high = (num_instances + 1) // 2
+
+            for group_idx in range(self.num_groups):
+                model.Add(group_instance_counts[group_idx] >= target_low).OnlyEnforceIf(group_has_course[group_idx])
+                model.Add(group_instance_counts[group_idx] <= target_high).OnlyEnforceIf(group_has_course[group_idx])
+                model.Add(group_instance_counts[group_idx] == 0).OnlyEnforceIf(group_has_course[group_idx].Not())
+                constraints_added += 3
+
+            if target_low == target_high:
+                self.logger.info(f"  {course_code}: enforcing {target_low} instances per selected group")
             else:
-                # Odd number of instances: as even as possible (difference of at most 1)
-                target_low = num_instances // 2
-                target_high = target_low + 1
-                
-                for g1 in range(self.num_groups):
-                    for g2 in range(g1 + 1, self.num_groups):
-                        # If both groups have this course, difference should be at most 1
-                        both_have_course = model.NewBoolVar(f"ece_s5_{course_code}_in_both_g{g1}_g{g2}")
-                        
-                        model.Add(both_have_course <= group_has_course[g1])
-                        model.Add(both_have_course <= group_has_course[g2])
-                        model.Add(both_have_course >= group_has_course[g1] + group_has_course[g2] - 1)
-                        
-                        # If both have the course, each must have target_low or target_high instances
-                        g1_valid = model.NewBoolVar(f"ece_s5_{course_code}_g{g1}_valid")
-                        g2_valid = model.NewBoolVar(f"ece_s5_{course_code}_g{g2}_valid")
-                        
-                        # g1 is valid if it has target_low or target_high instances
-                        model.Add(group_instance_counts[g1] >= target_low).OnlyEnforceIf([both_have_course, g1_valid])
-                        model.Add(group_instance_counts[g1] <= target_high).OnlyEnforceIf([both_have_course, g1_valid])
-                        
-                        # g2 is valid if it has target_low or target_high instances  
-                        model.Add(group_instance_counts[g2] >= target_low).OnlyEnforceIf([both_have_course, g2_valid])
-                        model.Add(group_instance_counts[g2] <= target_high).OnlyEnforceIf([both_have_course, g2_valid])
-                        
-                        # If both groups have the course, both must be valid
-                        model.Add(g1_valid == 1).OnlyEnforceIf(both_have_course)
-                        model.Add(g2_valid == 1).OnlyEnforceIf(both_have_course)
-                        
-                        constraints_added += 9
-                
-                self.logger.info(f"  {course_code}: enforcing {target_low}-{target_high} instances per group (balanced split)")
+                self.logger.info(f"  {course_code}: enforcing {target_low}-{target_high} instances per selected group")
         
         self.logger.info(f"Applied {constraints_added} ECE S5 even lab distribution constraints")
+        return constraints_added
+
+    def _apply_mech_s5_forced_course_split(self, model, assignment_vars):
+        """Force selected Mechanical S5 courses to split evenly across exactly two groups."""
+        self.logger.info(
+            "Applying Mechanical S5 special constraint: forced split for %s",
+            ", ".join(MECH_S5_FORCED_SPLIT_COURSES),
+        )
+        return self._apply_forced_even_course_split(
+            model=model,
+            assignment_vars=assignment_vars,
+            target_course_codes=MECH_S5_FORCED_SPLIT_COURSES,
+            rule_label="Mechanical S5 forced course split",
+            var_prefix="mech_s5",
+        )
+
+    def _apply_forced_even_course_split(
+        self,
+        model,
+        assignment_vars,
+        target_course_codes,
+        rule_label,
+        var_prefix,
+    ):
+        """Force target multi-instance courses to appear in exactly two balanced groups."""
+        constraints_added = 0
+        target_course_codes = tuple(target_course_codes)
+
+        if self.num_groups < 2:
+            self.logger.warning(
+                "Skipping %s: expected at least 2 groups, got %s",
+                rule_label,
+                self.num_groups,
+            )
+            return 0
+
+        for course_code in target_course_codes:
+            instance_indices = [
+                i for i, inst in enumerate(self.courses)
+                if inst.get("course_code") == course_code
+            ]
+            num_instances = len(instance_indices)
+
+            if num_instances == 0:
+                self.logger.warning("Skipping %s for %s: course not present", rule_label, course_code)
+                continue
+
+            if num_instances <= 1:
+                self.logger.warning(
+                    "Skipping %s for %s: need multiple instances to split, got %s",
+                    rule_label,
+                    course_code,
+                    num_instances,
+                )
+                continue
+
+            group_has_course = []
+            group_instance_counts = []
+
+            for group_idx in range(self.num_groups):
+                group_var = model.NewBoolVar(f"{var_prefix}_{course_code}_in_group_{group_idx}")
+                group_has_course.append(group_var)
+
+                group_count = model.NewIntVar(
+                    0,
+                    num_instances,
+                    f"{var_prefix}_{course_code}_count_group_{group_idx}",
+                )
+                group_instance_counts.append(group_count)
+
+                course_assignments_in_group = [
+                    assignment_vars[(instance_idx, group_idx)]
+                    for instance_idx in instance_indices
+                ]
+                model.Add(group_count == sum(course_assignments_in_group))
+
+                for instance_idx in instance_indices:
+                    model.Add(group_var >= assignment_vars[(instance_idx, group_idx)])
+                model.Add(group_var <= sum(course_assignments_in_group))
+
+                constraints_added += 3
+
+            model.Add(sum(group_has_course) == 2)
+            constraints_added += 1
+
+            target_low = num_instances // 2
+            target_high = (num_instances + 1) // 2
+
+            for group_idx in range(self.num_groups):
+                model.Add(group_instance_counts[group_idx] >= target_low).OnlyEnforceIf(group_has_course[group_idx])
+                model.Add(group_instance_counts[group_idx] <= target_high).OnlyEnforceIf(group_has_course[group_idx])
+                model.Add(group_instance_counts[group_idx] == 0).OnlyEnforceIf(group_has_course[group_idx].Not())
+                constraints_added += 3
+
+            if target_low == target_high:
+                self.logger.info(
+                    "  %s: forcing split across exactly 2 groups with %s instance(s) per group",
+                    course_code,
+                    target_low,
+                )
+            else:
+                self.logger.info(
+                    "  %s: forcing split across exactly 2 groups with %s-%s instances per selected group",
+                    course_code,
+                    target_low,
+                    target_high,
+                )
+
+        self.logger.info("Applied %s %s constraints", constraints_added, rule_label)
         return constraints_added
     
     def _set_optimization_objectives(self, model, assignment_vars):
@@ -2169,7 +2381,10 @@ class CourseGroupOptimizer:
                 courses_with_choice += 1
             group_names = [f"G{g}" for g in group_list]
 
-            if getattr(self, "is_cse_s2", False):
+            if (
+                getattr(self, "special_department_constraints_enabled", False)
+                and getattr(self, "is_cse_s2", False)
+            ):
                 num_instances = instance_counts.get(course_code, 0)
                 if getattr(self, "cse_s2_five_group_split_enabled", False):
                     expected_groups = 5 if (num_instances >= 5 and self.num_groups >= 5) else min(num_instances, self.num_groups)
@@ -2214,6 +2429,13 @@ class CourseGroupOptimizer:
         
         # Validate course limits
         if not self._validate_course_limits():
+            validation_passed = False
+
+        # Validate ECE S5 lab distribution when the dedicated rule is active
+        if not self._validate_ece_s5_even_lab_distribution():
+            validation_passed = False
+
+        if not self._validate_mech_s5_forced_course_split():
             validation_passed = False
         
         # Validate assignment completeness
@@ -2309,11 +2531,12 @@ class CourseGroupOptimizer:
             group_count = len(groups_set)
             group_names = [f"G{g+1}" for g in sorted(groups_set)]
 
-            # CSE S2 special cases:
-            # - If 5-group split enabled: enforce the 5-group rule.
-            # - If disabled: enforce that multi-instance courses split across exactly 2 groups,
-            #   with a near-even split (difference <= 1).
-            if self.is_cse_s2 and not self.cse_s2_five_group_split_enabled:
+            # Legacy CSE S2 validation exceptions stay dormant unless special rules are enabled.
+            if (
+                self.special_department_constraints_enabled
+                and self.is_cse_s2
+                and not self.cse_s2_five_group_split_enabled
+            ):
                 expected = 1 if instance_count <= 1 else 2
                 if group_count != expected:
                     violations += 1
@@ -2331,13 +2554,12 @@ class CourseGroupOptimizer:
                         )
                 continue
 
-            # CSE S2 special case: expected group count depends on available instances/groups.
-            # - 1 instance  -> 1 group
-            # - 2 instances -> 2 groups
-            # - 3 instances -> 3 groups
-            # - 4 instances -> 4 groups
-            # - >=5         -> 5 groups
-            if self.is_cse_s2 and self.cse_s2_five_group_split_enabled:
+            # Legacy CSE S2 five-group validation stays dormant unless special rules are enabled.
+            if (
+                self.special_department_constraints_enabled
+                and self.is_cse_s2
+                and self.cse_s2_five_group_split_enabled
+            ):
                 expected = 5 if (instance_count >= 5 and self.num_groups >= 5) else min(instance_count, self.num_groups)
                 if group_count != expected:
                     violations += 1
@@ -2387,6 +2609,151 @@ class CourseGroupOptimizer:
         else:
             self.logger.error(f"[ERROR] {violations} course limit violations")
             return False
+
+    def _validate_ece_s5_even_lab_distribution(self):
+        """Validate that ECE S5 multi-instance lab courses split evenly across two groups."""
+        if not (self.dept == "Electronics & Communication Engineering" and self.semester == 5):
+            return True
+
+        lab_course_group_counts = defaultdict(lambda: defaultdict(int))
+        lab_course_instance_counts = defaultdict(int)
+
+        for instance in self.courses:
+            if instance.get('practical_hours', 0) > 0:
+                lab_course_instance_counts[instance['course_code']] += 1
+
+        for group_idx, group in enumerate(self.groups[:self.num_groups]):
+            for instance in group:
+                if instance.get('practical_hours', 0) > 0:
+                    lab_course_group_counts[instance['course_code']][group_idx] += 1
+
+        violations = 0
+        checked_courses = 0
+
+        for course_code, instance_count in sorted(lab_course_instance_counts.items()):
+            if instance_count <= 1:
+                continue
+
+            checked_courses += 1
+            per_group = [
+                count
+                for count in lab_course_group_counts.get(course_code, {}).values()
+                if count > 0
+            ]
+            group_count = len(per_group)
+            target_low = instance_count // 2
+            target_high = (instance_count + 1) // 2
+
+            if group_count != 2:
+                violations += 1
+                self.logger.error(
+                    "ECE S5 lab course %s appears in %s groups; expected exactly 2 groups",
+                    course_code,
+                    group_count,
+                )
+                continue
+
+            if min(per_group) < target_low or max(per_group) > target_high:
+                violations += 1
+                self.logger.error(
+                    "ECE S5 lab course %s split is %s; expected each selected group to have %s-%s instances",
+                    course_code,
+                    sorted(per_group),
+                    target_low,
+                    target_high,
+                )
+
+        if violations == 0:
+            self.logger.info(
+                "[OK] ECE S5 even lab distribution satisfied for %s multi-instance lab courses",
+                checked_courses,
+            )
+            return True
+
+        self.logger.error("[ERROR] %s ECE S5 even lab distribution violations", violations)
+        return False
+
+    def _validate_mech_s5_forced_course_split(self):
+        """Validate that selected Mechanical S5 courses split evenly across two groups."""
+        if not (self.dept == "Mechanical Engineering" and self.semester == 5):
+            return True
+
+        return self._validate_forced_even_course_split(
+            target_course_codes=MECH_S5_FORCED_SPLIT_COURSES,
+            rule_label="Mechanical S5 forced course split",
+        )
+
+    def _validate_forced_even_course_split(self, target_course_codes, rule_label):
+        """Validate target multi-instance courses are present in exactly two balanced groups."""
+        course_group_counts = defaultdict(lambda: defaultdict(int))
+        course_instance_counts = Counter(
+            instance["course_code"]
+            for instance in self.courses
+            if instance.get("course_code") in target_course_codes
+        )
+
+        for group_idx, group in enumerate(self.groups[:self.num_groups]):
+            for instance in group:
+                course_code = instance.get("course_code")
+                if course_code in target_course_codes:
+                    course_group_counts[course_code][group_idx] += 1
+
+        violations = 0
+        checked_courses = 0
+
+        for course_code in target_course_codes:
+            instance_count = course_instance_counts.get(course_code, 0)
+
+            if instance_count == 0:
+                self.logger.warning("[SKIP] %s for %s: course not present", rule_label, course_code)
+                continue
+
+            if instance_count <= 1:
+                self.logger.warning(
+                    "[SKIP] %s for %s: need multiple instances to split, got %s",
+                    rule_label,
+                    course_code,
+                    instance_count,
+                )
+                continue
+
+            checked_courses += 1
+            per_group = [
+                count
+                for count in course_group_counts.get(course_code, {}).values()
+                if count > 0
+            ]
+            group_count = len(per_group)
+            target_low = instance_count // 2
+            target_high = (instance_count + 1) // 2
+
+            if group_count != 2:
+                violations += 1
+                self.logger.error(
+                    "%s: %s appears in %s groups; expected exactly 2 groups",
+                    rule_label,
+                    course_code,
+                    group_count,
+                )
+                continue
+
+            if min(per_group) < target_low or max(per_group) > target_high:
+                violations += 1
+                self.logger.error(
+                    "%s: %s split is %s; expected each selected group to have %s-%s instances",
+                    rule_label,
+                    course_code,
+                    sorted(per_group),
+                    target_low,
+                    target_high,
+                )
+
+        if violations == 0:
+            self.logger.info("[OK] %s satisfied for %s course(s)", rule_label, checked_courses)
+            return True
+
+        self.logger.error("[ERROR] %s %s violation(s)", violations, rule_label)
+        return False
     
     def _validate_assignment_completeness(self):
         """Validate that all instances are assigned exactly once."""
@@ -2455,7 +2822,11 @@ class CourseGroupOptimizer:
     
     def _validate_lab_priority(self):
         """Validate lab priority constraint."""
-        if getattr(self, "is_cse_s2", False) and getattr(self, "cse_s2_five_group_split_enabled", False):
+        if (
+            getattr(self, "special_department_constraints_enabled", False)
+            and getattr(self, "is_cse_s2", False)
+            and getattr(self, "cse_s2_five_group_split_enabled", False)
+        ):
             self.logger.info("[SKIP] Lab priority constraint validation for CSE S2 (constraint skipped)")
             return True
 
@@ -3187,4 +3558,4 @@ def optimize_course_groups(
 
 
 if __name__ == "__main__":
-    main() 
+    main()

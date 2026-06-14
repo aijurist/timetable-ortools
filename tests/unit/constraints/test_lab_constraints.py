@@ -12,6 +12,10 @@ from ortools.sat.python import cp_model
 
 from src.constraints.base import ConstraintMetadata
 from src.constraints.context import ConstraintContext
+from src.constraints.lab.computer_lab_mapping import (
+	ComputerLabMappingStats,
+	build_computer_lab_mapping_constraint,
+)
 from src.constraints.lab.core_lab import build_core_lab_mapping_constraint
 from src.constraints.lab.requirements import build_lab_session_coverage_constraint
 from src.constraints.lab.room_single_assignment import build_lab_room_single_assignment_constraint
@@ -487,6 +491,198 @@ def test_core_lab_mapping_falls_back_to_variable_rooms() -> None:
 	result = constraint.apply(context)
 	assert result.details["general_courses"] == 1
 	assert result.details["skipped_courses"] == ()
+
+
+def test_computer_lab_mapping_resolves_alias_and_block_only_rows() -> None:
+	constraint = build_computer_lab_mapping_constraint(metadata=_metadata("computer_lab_mapping", priority=8))
+	rooms_df = pd.DataFrame(
+		[
+			{
+				"id": "R_K",
+				"room_number": "KFL01",
+				"room_name": "K Lab",
+				"description": "Computer Lab",
+				"block": "K Block",
+				"room_type": "Computer-Lab",
+			},
+			{
+				"id": "R_J",
+				"room_number": "JL1",
+				"room_name": "J Lab",
+				"description": "Computer Lab",
+				"block": "J Block",
+				"room_type": "Computer-Lab",
+			},
+			{
+				"id": "R_A",
+				"room_number": "A101",
+				"room_name": "A Classroom",
+				"description": "Classroom",
+				"block": "A Block",
+				"room_type": "Class-Room",
+			},
+		]
+	)
+	mapping_df = pd.DataFrame(
+		[
+			{
+				"department": "aids",
+				"course_code": "AD23531",
+				"preferred_lab_room": "",
+				"preferred_lab_block": "J Block;K Block",
+			}
+		]
+	)
+	stats = ComputerLabMappingStats()
+	room_lookup = build_core_lab_mapping_constraint(
+		metadata=_metadata("core_lab_mapping", priority=8)
+	)._build_room_lookup(rooms_df)
+	block_lookup = constraint._build_computer_lab_block_lookup(rooms_df)
+
+	room_map = constraint._build_room_map(
+		mapping_df,
+		room_lookup,
+		block_lookup,
+		logging.getLogger("tests.constraints.lab.computer_lab_mapping"),
+		stats,
+	)
+
+	preference = room_map[("artificial intelligence and data science", "AD23531")]
+	assert preference.room_ids == {"R_J", "R_K"}
+	assert "R_A" not in preference.room_ids
+	assert preference.mode == "soft"
+	assert preference.penalty_weight == 500
+	assert stats.mapping_rows == 1
+	assert stats.soft_mapping_rows == 1
+
+
+def _build_computer_lab_mapping_context(mapping_df: pd.DataFrame) -> tuple[ConstraintContext, cp_model.IntVar, cp_model.IntVar]:
+	model = cp_model.CpModel()
+	preferred_room = model.NewBoolVar("preferred_room")
+	other_room = model.NewBoolVar("other_room")
+
+	requirement = LabCourseRequirement(
+		course_instance_id="C_GEN",
+		course_code="GEN101",
+		teacher_id="T1",
+		group_id="G1",
+		department="Information Technology",
+		semester=5,
+		practical_hours=2,
+		required_sessions=1,
+		student_count=30,
+		preferred_room_type=None,
+		required_room_type=None,
+		tags=("lab",),
+	)
+	lab_block = LabVariableBlock(
+		assignments={
+			"T1": {
+				"C_GEN": {
+					0: {
+						"L1": {
+							"R_PREF": preferred_room,
+							"R_OTHER": other_room,
+						}
+					}
+				}
+			}
+		},
+		requirements={"C_GEN": requirement},
+		teacher_courses={"T1": ("C_GEN",)},
+		day_patterns={"C_GEN": ("monday",)},
+		lab_session_names=("L1",),
+		room_ids=("R_PREF", "R_OTHER"),
+		instance_group_lookup={"C_GEN": "G1"},
+	)
+	rooms_df = pd.DataFrame(
+		[
+			{
+				"id": "R_PREF",
+				"room_number": "L11",
+				"room_name": "Preferred Lab",
+				"description": "Computer Lab",
+				"block": "A Block",
+				"room_type": "Computer-Lab",
+			},
+			{
+				"id": "R_OTHER",
+				"room_number": "L12",
+				"room_name": "Other Lab",
+				"description": "Computer Lab",
+				"block": "B Block",
+				"room_type": "Computer-Lab",
+			},
+		]
+	)
+	raw = SimpleNamespace(
+		computer_lab_mapping_df=mapping_df,
+		rooms_df=rooms_df,
+	)
+	data = ExtendedDataContainer(raw=raw, preprocessing=SimpleNamespace())
+	variables = VariableCreationResult(lab=lab_block, theory=TheoryVariableBlock(), metadata={})
+	return (
+		ConstraintContext(
+			model=model,
+			config=SimpleNamespace(),
+			data=data,
+			variables=variables,
+			logger=logging.getLogger("tests.constraints.lab.computer_lab_mapping"),
+		),
+		preferred_room,
+		other_room,
+	)
+
+
+def test_computer_lab_mapping_specific_room_rows_are_hard() -> None:
+	context, _preferred_room, other_room = _build_computer_lab_mapping_context(
+		pd.DataFrame(
+			[
+				{
+					"department": "it",
+					"course_code": "GEN101",
+					"preferred_lab_room": "L11",
+					"preferred_lab_block": "A Block",
+				}
+			]
+		)
+	)
+	constraint = build_computer_lab_mapping_constraint(metadata=_metadata("computer_lab_mapping", priority=8))
+
+	result = constraint.apply(context)
+
+	assert result.status == ConstraintStatus.APPLIED
+	assert result.details["hard_blocks"] == 1
+	assert result.details["soft_penalties"] == 0
+	assert result.details["hard_mapping_rows"] == 1
+	context.model.Add(other_room == 1)
+	solver = cp_model.CpSolver()
+	assert solver.Solve(context.model) == cp_model.INFEASIBLE
+
+
+def test_computer_lab_mapping_block_only_rows_are_soft_with_500_weight() -> None:
+	context, _preferred_room, other_room = _build_computer_lab_mapping_context(
+		pd.DataFrame(
+			[
+				{
+					"department": "it",
+					"course_code": "GEN101",
+					"preferred_lab_room": "",
+					"preferred_lab_block": "A Block",
+				}
+			]
+		)
+	)
+	constraint = build_computer_lab_mapping_constraint(metadata=_metadata("computer_lab_mapping", priority=8))
+
+	result = constraint.apply(context)
+
+	assert result.status == ConstraintStatus.APPLIED
+	assert result.details["hard_blocks"] == 0
+	assert result.details["soft_penalties"] == 1
+	assert result.details["soft_mapping_rows"] == 1
+	penalties = context.extra["objective"]["penalties"]
+	assert penalties == [(500, other_room, "computer_lab_mapping:information technology:GEN101")]
 
 
 def test_room_single_assignment_detects_conflicts(lab_constraint_context: ConstraintContext) -> None:

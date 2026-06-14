@@ -15,6 +15,13 @@ from ..data.schemas import (
 	GroupRequirement,
 	NormalizedCourseInstance,
 )
+from ..data.pop_availability import (
+	DEFAULT_POP_END_TIME,
+	DEFAULT_POP_START_TIME,
+	PopTeacherAvailability,
+	build_pop_availability_from_dataframe,
+	normalize_teacher_id,
+)
 from ..data.room_eligibility import RoomEligibilityIndex, build_room_eligibility_index
 from ..data.schedule_blocking import ScheduleBlockingMask
 from ..utils.time_utils import DayNormalizer
@@ -103,6 +110,13 @@ class VariableCreator:
 				len(self._blocking_mask.blocked_theory_teacher_slots),
 			)
 
+		self._pop_availability = self._build_pop_availability_index()
+		if self._pop_availability:
+			self._logger.info(
+				"Loaded POP theory availability for %d teachers during variable creation",
+				len(self._pop_availability),
+			)
+
 	def create(self, model: cp_model.CpModel) -> VariableCreationResult:
 		"""Create all decision variables and return a structured handle bundle."""
 
@@ -140,6 +154,7 @@ class VariableCreator:
 		assignments: LabAssignmentDict = {}
 		teacher_courses: Dict[str, Tuple[str, ...]] = {}
 		day_patterns: Dict[str, Tuple[str, ...]] = {}
+		lab_eligibility_cache: Dict[str, Tuple[str, ...]] = {}
 
 		for teacher_id, course_requirements in self._group_requirements_by_teacher(requirements).items():
 			assignments[teacher_id] = {}
@@ -150,6 +165,11 @@ class VariableCreator:
 				assignments[teacher_id][requirement.course_instance_id] = course_vars
 				pattern = self._resolve_day_pattern(requirement.department)
 				day_patterns[requirement.course_instance_id] = pattern
+				lab_cache_key = str(requirement.course_code or "").strip().upper()
+				eligible_rooms = lab_eligibility_cache.get(lab_cache_key)
+				if eligible_rooms is None:
+					eligible_rooms = self._room_eligibility.get_eligible_lab_rooms(requirement.course_code)
+					lab_eligibility_cache[lab_cache_key] = eligible_rooms
 				for day_index, day_label in enumerate(pattern):
 					normalized_day = self._normalize_day_for_blocking(day_label)
 					session_map: Dict[str, Dict[str, cp_model.IntVar]] = {}
@@ -157,7 +177,6 @@ class VariableCreator:
 					for session_name in self._lab_session_names:
 						room_map: Dict[str, cp_model.IntVar] = {}
 						session_map[session_name] = room_map
-						eligible_rooms = self._room_eligibility.get_eligible_lab_rooms(requirement.course_code)
 
 						for room_id in eligible_rooms:
 							if self._blocking_mask and self._blocking_mask.is_lab_variable_blocked(
@@ -193,12 +212,14 @@ class VariableCreator:
 		self._theory_var_count = 0
 		self._theory_pruned_count = 0
 		self._theory_slot_pruned_count = 0
+		self._theory_pop_pruned_count = 0
 		group_requirements = self._build_group_timeslot_requirements()
 		course_requirements = self._build_theory_course_requirements()
 		assignments: TheoryAssignmentDict = {}
 		room_assignments: Dict[str, Dict[str, Dict[int, Dict[int, Dict[str, cp_model.IntVar]]]]] = {}
 		teacher_courses: Dict[str, Tuple[str, ...]] = {}
 		course_day_patterns: Dict[str, Tuple[str, ...]] = {}
+		theory_eligibility_cache: Dict[Tuple[int, Optional[int]], Tuple[str, ...]] = {}
 		group_course_buffer: MutableMapping[str, set[str]] = defaultdict(set)
 		group_slot_sources: MutableMapping[
 			str,
@@ -218,6 +239,16 @@ class VariableCreator:
 				pattern = self._resolve_day_pattern(requirement.department)
 				course_day_patterns[course_id] = pattern
 				group_course_buffer[requirement.group_id].add(course_id)
+				student_count = int(getattr(requirement, "student_count", 0) or 0)
+				semester = getattr(requirement, "semester", None)
+				theory_cache_key = (student_count, int(semester) if semester is not None else None)
+				eligible_rooms = theory_eligibility_cache.get(theory_cache_key)
+				if eligible_rooms is None:
+					eligible_rooms = self._room_eligibility.get_eligible_theory_rooms(
+						student_count=student_count,
+						semester=theory_cache_key[1],
+					)
+					theory_eligibility_cache[theory_cache_key] = eligible_rooms
 				for day_index, day_label in enumerate(pattern):
 					normalized_day = self._normalize_day_for_blocking(day_label)
 					slot_map: Dict[int, cp_model.IntVar] = {}
@@ -225,6 +256,16 @@ class VariableCreator:
 					course_vars[day_index] = slot_map
 					room_course_vars[day_index] = {}
 					for slot_index, _ in enumerate(self._theory_slot_labels):
+						if self._is_pop_theory_slot_blocked(
+							teacher_id,
+							normalized_day,
+							self._theory_slot_labels[slot_index],
+						):
+							self._theory_pop_pruned_count += 1
+							room_day_map = room_course_vars[day_index]
+							room_day_map[slot_index] = {}
+							continue
+
 						slot_blocked = (
 							self._blocking_mask
 							and self._blocking_mask.is_theory_slot_blocked(
@@ -247,11 +288,6 @@ class VariableCreator:
 						literal = model.NewBoolVar(var_name)
 						slot_map[slot_index] = literal
 						room_bucket: Dict[str, cp_model.IntVar] = {}
-
-						eligible_rooms = self._room_eligibility.get_eligible_theory_rooms(
-							student_count=getattr(requirement, "student_count", 0),
-							semester=getattr(requirement, "semester", None),
-						)
 
 						if eligible_rooms:
 							for room_id in eligible_rooms:
@@ -280,11 +316,12 @@ class VariableCreator:
 						room_day_map[slot_index] = room_bucket
 						group_slot_sources[requirement.group_id][day_index][slot_index].append(literal)
 
-		if self._theory_pruned_count > 0 or self._theory_slot_pruned_count > 0:
+		if self._theory_pruned_count > 0 or self._theory_slot_pruned_count > 0 or self._theory_pop_pruned_count > 0:
 			self._logger.info(
-				"Pruned %d theory room vars and %d theory slot vars via blocking mask",
+				"Pruned %d theory room vars, %d theory slot vars via blocking mask, and %d POP theory slot vars",
 				self._theory_pruned_count,
 				self._theory_slot_pruned_count,
+				self._theory_pop_pruned_count,
 			)
 
 		group_timeslots: GroupTimeslotDict = {}
@@ -473,6 +510,35 @@ class VariableCreator:
 			return normalized
 		return str(day_label).strip().lower()
 
+	def _build_pop_availability_index(self) -> Dict[str, PopTeacherAvailability]:
+		setting = self._pop_constraint_setting()
+		if setting is None or not getattr(setting, "enabled", False):
+			return {}
+		params = getattr(setting, "params", {}) or {}
+		preferences_df = getattr(self._data.raw, "teacher_preferences_df", None)
+		return build_pop_availability_from_dataframe(
+			preferences_df,
+			default_start_time=params.get("default_start_time", DEFAULT_POP_START_TIME),
+			default_end_time=params.get("default_end_time", DEFAULT_POP_END_TIME),
+		)
+
+	def _pop_constraint_setting(self) -> Optional[Any]:
+		config = getattr(self._data.raw, "config", None)
+		constraints = getattr(config, "constraints", None)
+		cross_system = getattr(constraints, "cross_system", {}) or {}
+		getter = getattr(cross_system, "get", None)
+		if not callable(getter):
+			return None
+		return getter("pop_day")
+
+	def _is_pop_theory_slot_blocked(self, teacher_id: object, day_label: object, slot_label: object) -> bool:
+		if not self._pop_availability:
+			return False
+		availability = self._pop_availability.get(normalize_teacher_id(teacher_id))
+		if availability is None:
+			return False
+		return not availability.allows_theory(day_label, slot_label)
+
 
 __all__ = [
 	"LabVariableBlock",
@@ -505,4 +571,3 @@ if __name__ == "__main__":
     variable_creator = VariableCreator(data=output)
     model_res = variable_creator.create(model=model)
 
-	

@@ -62,6 +62,10 @@ class SolverRunner:
 		timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
 		cp_sat_log_path = log_directory / f"cp_sat_{timestamp}.log"
 		capture_cp_sat_logs = bool(self._config.runtime.enable_trace)
+		stream_cp_sat_logs = self._logger.isEnabledFor(logging.DEBUG)
+		if stream_cp_sat_logs:
+			solver.parameters.log_search_progress = True
+			solver.parameters.log_to_stdout = False
 		export_model = str(os.environ.get("SCHEDULER_EXPORT_MODEL", "")).strip().lower() in {"1", "true", "yes"}
 		model_export_path: Optional[Path] = None
 		if export_model:
@@ -78,11 +82,18 @@ class SolverRunner:
 			solver.parameters.max_time_in_seconds or "default",
 			solver.parameters.num_search_workers or 1,
 		)
+		if stream_cp_sat_logs:
+			self._logger.debug("Streaming CP-SAT search progress because solver logger is in DEBUG mode")
 		start_time = time.perf_counter()
 		if capture_cp_sat_logs:
 			try:
 				with cp_sat_log_path.open("w", encoding="utf-8") as handle:
-					solver.log_callback = lambda message: handle.write(f"{message}\n")
+					def cp_sat_log_callback(message: str) -> None:
+						handle.write(f"{message}\n")
+						if stream_cp_sat_logs:
+							self._emit_cp_sat_log(message)
+
+					solver.log_callback = cp_sat_log_callback
 					handle.write(
 						"# CP-SAT log capture enabled\n"
 						f"# time_limit_sec={solver.parameters.max_time_in_seconds or 'default'}\n"
@@ -95,6 +106,8 @@ class SolverRunner:
 				self._logger.exception("CP-SAT solve failed while capturing logs")
 				raise
 		else:
+			if stream_cp_sat_logs:
+				solver.log_callback = self._emit_cp_sat_log
 			status_code = solver.Solve(model, callback)
 		elapsed = time.perf_counter() - start_time
 
@@ -364,6 +377,13 @@ class SolverRunner:
 		path = directory / f"solver_{timestamp}.stats.txt"
 		path.write_text(stats, encoding="utf-8")
 		return path
+
+	def _emit_cp_sat_log(self, message: str) -> None:
+		text = str(message).rstrip()
+		if not text:
+			return
+		for line in text.splitlines():
+			self._logger.debug("CP-SAT: %s", line)
 
 	def _export_infeasible_snapshot(
 		self,

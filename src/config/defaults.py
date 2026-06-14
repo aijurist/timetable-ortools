@@ -29,16 +29,16 @@ from .schemas import (
 
 DEFAULT_THEORY_SLOTS: Tuple[str, ...] = (
     "8:00 - 8:50", "9:00 - 9:50", "10:00 - 10:50", "11:00 - 11:50",
-    "12:00 - 12:50", "1:00 - 1:50", "2:00 - 2:50", "3:00 - 3:50", 
-    "4:00 - 4:50", "5:00 - 5:50", "6:00 - 6:50"
+    "12:00 - 12:50", "1:20 - 2:10", "2:10 - 3:00", "3:00 - 3:50",
+    "4:00 - 4:50"
 )
 
-DEFAULT_LUNCH_SLOT_WINDOW: Tuple[int, ...] = (3, 4, 5, 6)
+DEFAULT_LUNCH_SLOT_WINDOW: Tuple[int, ...] = (3, 4, 5)
 
 DEFAULT_LAB_SLOTS: Tuple[str, ...] = (
-    "8:00 - 8:50", "8:50 - 9:40", "9:50 - 10:40", "10:40 - 11:30",
-    "11:50 - 12:40", "12:40 - 1:30", "1:50 - 2:40", "2:40 - 3:30", 
-    "3:50 - 4:40", "4:40 - 5:30", "5:30 - 6:20", "6:20 - 7:10"
+    "8:00 - 8:50", "8:50 - 9:40", "10:00 - 10:50", "10:50 - 11:40",
+    "11:50 - 12:40", "12:40 - 1:20", "1:20 - 2:10", "2:10 - 3:00",
+    "3:00 - 3:50", "3:50 - 4:40"
 )
 
 DEFAULT_LAB_SESSIONS: Mapping[str, Tuple[int, int]] = {
@@ -47,7 +47,6 @@ DEFAULT_LAB_SESSIONS: Mapping[str, Tuple[int, int]] = {
     "L3": (4, 5),
     "L4": (6, 7),
     "L5": (8, 9),
-    "L6": (10, 11),
 }
 
 DEFAULT_WORKING_DAYS: Tuple[str, ...] = (
@@ -266,13 +265,13 @@ SOFT_5PM_DEPARTMENTS: Tuple[str, ...] = (
 FIVE_PM_CONSTRAINTS: Mapping[str, Mapping[str, Sequence[str] | Sequence[int]]] = {
     "hard": {
         "departments": HARD_5PM_DEPARTMENTS,
-        "blocked_theory_slots": (9, 10),
-        "blocked_lab_sessions": ("L6",),
+        "blocked_theory_slots": (),
+        "blocked_lab_sessions": (),
     },
     "soft": {
         "departments": SOFT_5PM_DEPARTMENTS,
-        "discouraged_theory_slots": (9, 10),
-        "discouraged_lab_sessions": ("L5", "L6"),
+        "discouraged_theory_slots": (),
+        "discouraged_lab_sessions": (),
     },
 }
 
@@ -285,8 +284,9 @@ def default_path_config() -> PathConfig:
     return PathConfig(
         courses_csv=Path("data/final.csv"),
         rooms_csv=Path("data/block_wise/techlongue.csv"),
-        day_order_csv=Path("data/day_order.csv"),
+        day_order_csv=Path("data/day_order_odd.csv"),
         core_lab_mapping_csv=Path("data/og-final.csv"),
+        computer_lab_mapping_csv=Path("data/computer_lab_mapping.csv"),
         preferences_csv=Path("data/pop.csv"),
         output_root=Path("output"),
     )
@@ -376,6 +376,12 @@ def default_constraint_config() -> ConstraintConfig:
         "room_capacity": ConstraintSetting(priority=9, weight=1.0, enabled=True),
         "room_single_assignment": ConstraintSetting(priority=9, weight=1.0, enabled=True),
         "core_lab_mapping": ConstraintSetting(priority=8, weight=0.8, enabled=True),
+        "computer_lab_mapping": ConstraintSetting(
+            priority=8,
+            weight=1.0,
+            enabled=True,
+            params={"mode": "soft", "penalty_weight": 150},
+        ),
         "shift_alignment": ConstraintSetting(priority=9, weight=0.9, enabled=True),
     }
     theory_constraints = {
@@ -388,6 +394,17 @@ def default_constraint_config() -> ConstraintConfig:
     cross_constraints = {
         "group_non_overlap": ConstraintSetting(priority=9, weight=1.0, enabled=True),
         "teacher_overlap": ConstraintSetting(priority=10, weight=1.0, enabled=True),
+        "dept_day_coverage": ConstraintSetting(
+            priority=9,
+            weight=1.0,
+            enabled=True,
+            params={
+                "mode": "hard",
+                "target_days": 5,
+                "min_total_activities": 5,
+                "soft_penalty_weight": 500,
+            },
+        ),
         "lunch_alignment": ConstraintSetting(priority=6, weight=0.4, enabled=True),
         "five_pm_policy": ConstraintSetting(priority=7, weight=0.5, enabled=True),
         "shift_pattern": ConstraintSetting(
@@ -399,6 +416,29 @@ def default_constraint_config() -> ConstraintConfig:
                 "allowed_patterns": ((3, 2), (2, 3)),
                 "penalty_weight": 12,
             },
+        ),
+        "course_day_spread": ConstraintSetting(
+            priority=9,
+            weight=1.0,
+            enabled=True,
+            params={
+                "mode": "hard",
+                "min_distinct_days": 2,
+                "min_total_activities": 2,
+                "include_single_domain_courses": False,
+                "soft_penalty_weight": 300,
+            },
+        ),
+        "morning_theory_lab": ConstraintSetting(priority=5, weight=1.0, enabled=True),
+        "engineering_graphics_preference": ConstraintSetting(
+            priority=8,
+            weight=1.0,
+            enabled=True,
+            params={
+                "preferred_rooms": ["C401", "B310"],
+                "course_codes": ["GE23111"],
+                "penalty_weight": 50.0
+            }
         ),
     }
     return ConstraintConfig(
@@ -432,7 +472,7 @@ def default_runtime_config() -> RuntimeConfig:
         enable_lns=True,
         enable_trace=False,
         solution_limit=None,
-        stop_after_first_solution=False,
+        stop_after_first_solution=True,
         probing_level=None,
         search_branching=None,
         restart_log_size=None,

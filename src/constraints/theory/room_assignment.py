@@ -161,9 +161,7 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 			# Determine co-scheduling limit based on capacity; disallow co-scheduling for large courses
 			limit = 1
 			if capacity is not None:
-				if capacity >= 300:
-					limit = 5
-				elif capacity >= 170:
+				if capacity >= 170:
 					limit = 3
 				elif capacity >= 130:
 					limit = 2

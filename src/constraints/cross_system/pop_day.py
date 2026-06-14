@@ -1,8 +1,8 @@
-"""Restrict POP (Part-time/On-call/Particular) staff to their preferred days.
+"""Apply POP staff availability rules for theory and lab assignments.
 
-This constraint reads a CSV file containing staff members who can only teach on
-specific days of the week. It blocks any assignment on days not in their
-preferred day list. This is a hard constraint with no soft violations.
+Theory assignments are hard-limited to the configured POP day/time windows.
+Lab assignments remain schedulable, with penalties that prefer the POP window,
+then preferred days, then ``alternative_lab_days`` from the CSV.
 """
 
 from __future__ import annotations
@@ -10,9 +10,7 @@ from __future__ import annotations
 import csv
 import logging
 from pathlib import Path
-from typing import Dict, Mapping, Optional, Set
-
-from ortools.sat.python import cp_model
+from typing import Mapping, Optional
 
 from ..base import Constraint, ConstraintMetadata
 from ..context import ConstraintContext
@@ -21,11 +19,19 @@ from ..utils import (
     ensure_extra_bucket,
     iter_lab_session_variables,
     iter_course_timeslot_variables,
+    register_objective_penalty,
+)
+from ...data.pop_availability import (
+    DEFAULT_POP_END_TIME,
+    DEFAULT_POP_START_TIME,
+    build_pop_availability,
+    normalize_day_label,
+    normalize_teacher_id,
 )
 
 
 class PopDayConstraint(Constraint):
-    """Block POP staff from teaching on days outside their preferred list."""
+    """Hard-limit POP theory slots and softly prefer POP lab availability."""
 
     def __init__(
         self,
@@ -35,6 +41,11 @@ class PopDayConstraint(Constraint):
         super().__init__(metadata, params=params)
         params = params or {}
         self._pop_csv_path = str(params.get("pop_csv_path", "data/pop.csv"))
+        self._default_start_time = params.get("default_start_time", DEFAULT_POP_START_TIME)
+        self._default_end_time = params.get("default_end_time", DEFAULT_POP_END_TIME)
+        self._lab_preferred_day_penalty = max(0, int(params.get("lab_preferred_day_penalty", 3)))
+        self._lab_alternative_day_penalty = max(0, int(params.get("lab_alternative_day_penalty", 5)))
+        self._lab_other_day_penalty = max(0, int(params.get("lab_other_day_penalty", 20)))
         self._logger = logging.getLogger(__name__)
 
     def apply(self, context: ConstraintContext) -> ConstraintApplicationResult:
@@ -52,16 +63,19 @@ class PopDayConstraint(Constraint):
 
         model = context.model
 
-        # Build mapping: teacher_id -> allowed day NAMES (normalized)
-        teacher_allowed_day_names = self._build_teacher_day_name_mapping(pop_data)
-        if not teacher_allowed_day_names:
+        teacher_availability = build_pop_availability(
+            pop_data,
+            default_start_time=self._default_start_time,
+            default_end_time=self._default_end_time,
+        )
+        if not teacher_availability:
             return ConstraintApplicationResult(
                 name=self.metadata.name,
                 domain=self.metadata.category,
                 priority=self.metadata.priority,
                 enabled=True,
                 status=ConstraintStatus.SKIPPED,
-                details={"constraints": 0, "reason": "No valid teacher day mappings found"},
+                details={"constraints": 0, "reason": "No valid teacher availability mappings found"},
             )
 
         # Course variables can use different day patterns (e.g., Tue-Sat). Comparing by raw
@@ -72,53 +86,83 @@ class PopDayConstraint(Constraint):
             getattr(context.data.raw.time, "working_days", tuple())
         ) or ("monday", "tuesday", "wed", "thur", "fri", "saturday")
 
-        constraints_added = 0
-        teachers_constrained = set()
+        hard_constraints_added = 0
+        lab_penalty_terms = 0
+        theory_teachers_constrained = set()
+        lab_teachers_penalized = set()
+        lab_sessions = getattr(context.data.raw.time, "lab_sessions", {}) or {}
 
-        # Process lab variables
-        for teacher_id, course_id, day_idx, session, room, var in iter_lab_session_variables(context):
-            normalized_tid = self._normalize_teacher_id(teacher_id)
-            if normalized_tid not in teacher_allowed_day_names:
-                continue
-            allowed_day_names = teacher_allowed_day_names[normalized_tid]
-
-            course_day_pattern = lab_day_patterns.get(course_id) or default_working_days
-            if day_idx < 0 or day_idx >= len(course_day_pattern):
-                continue
-            actual_day_name = self._normalize_day(course_day_pattern[day_idx])
-
-            if actual_day_name not in allowed_day_names:
-                model.Add(var == 0)
-                constraints_added += 1
-                teachers_constrained.add(normalized_tid)
-
-        # Process theory variables
+        # Process theory variables. Variable creation already prunes these when
+        # pop_day is enabled; this guard keeps the constraint correct for older
+        # snapshots/tests that may still contain invalid variables.
         for teacher_id, course_id, day_idx, slot_idx, var in iter_course_timeslot_variables(context):
-            normalized_tid = self._normalize_teacher_id(teacher_id)
-            if normalized_tid not in teacher_allowed_day_names:
+            normalized_tid = normalize_teacher_id(teacher_id)
+            availability = teacher_availability.get(normalized_tid)
+            if availability is None:
                 continue
-            allowed_day_names = teacher_allowed_day_names[normalized_tid]
 
             course_day_pattern = theory_day_patterns.get(course_id) or default_working_days
             if day_idx < 0 or day_idx >= len(course_day_pattern):
                 continue
-            actual_day_name = self._normalize_day(course_day_pattern[day_idx])
+            actual_day_name = normalize_day_label(course_day_pattern[day_idx])
+            theory_slots = getattr(context.variables.theory, "theory_slot_labels", tuple()) or ()
+            slot_label = theory_slots[slot_idx] if slot_idx < len(theory_slots) else ""
 
-            if actual_day_name not in allowed_day_names:
+            if not availability.allows_theory(actual_day_name, slot_label):
                 model.Add(var == 0)
-                constraints_added += 1
-                teachers_constrained.add(normalized_tid)
+                hard_constraints_added += 1
+                theory_teachers_constrained.add(normalized_tid)
+
+        # Process lab variables as soft preferences only. Labs remain schedulable
+        # outside the POP theory window, with alternative_lab_days as the first
+        # fallback after preferred days.
+        for teacher_id, course_id, day_idx, session, room, var in iter_lab_session_variables(context):
+            normalized_tid = normalize_teacher_id(teacher_id)
+            availability = teacher_availability.get(normalized_tid)
+            if availability is None:
+                continue
+
+            course_day_pattern = lab_day_patterns.get(course_id) or default_working_days
+            if day_idx < 0 or day_idx >= len(course_day_pattern):
+                continue
+            actual_day_name = normalize_day_label(course_day_pattern[day_idx])
+            session_detail = lab_sessions.get(session)
+            time_range = getattr(session_detail, "time_range", "")
+            tier = availability.lab_preference_tier(actual_day_name, time_range)
+            penalty_weight = self._lab_penalty_weight(tier)
+            if penalty_weight <= 0:
+                continue
+
+            register_objective_penalty(
+                context,
+                var,
+                weight=penalty_weight,
+                tag=f"pop_lab:{tier}",
+            )
+            lab_penalty_terms += 1
+            lab_teachers_penalized.add(normalized_tid)
 
         # Record for debugging
-        if constraints_added:
+        if hard_constraints_added or lab_penalty_terms:
             extra = ensure_extra_bucket(context, "pop_day")
-            extra["constraints_added"] = constraints_added
-            extra["teachers_constrained"] = list(teachers_constrained)
-            extra["teacher_allowed_day_names"] = {
-                tid: sorted(days) for tid, days in teacher_allowed_day_names.items()
+            extra["hard_theory_constraints_added"] = hard_constraints_added
+            extra["lab_penalty_terms"] = lab_penalty_terms
+            extra["theory_teachers_constrained"] = sorted(theory_teachers_constrained)
+            extra["lab_teachers_penalized"] = sorted(lab_teachers_penalized)
+            extra["teacher_availability"] = {
+                tid: {
+                    "preferred_days": sorted(availability.preferred_days),
+                    "alternative_lab_days": sorted(availability.alternative_lab_days),
+                    "time_windows": list(availability.time_windows),
+                    "day_time_windows": {
+                        day: list(windows)
+                        for day, windows in availability.day_time_windows
+                    },
+                }
+                for tid, availability in teacher_availability.items()
             }
 
-        status = ConstraintStatus.APPLIED if constraints_added else ConstraintStatus.SKIPPED
+        status = ConstraintStatus.APPLIED if (hard_constraints_added or lab_penalty_terms) else ConstraintStatus.SKIPPED
         return ConstraintApplicationResult(
             name=self.metadata.name,
             domain=self.metadata.category,
@@ -126,9 +170,11 @@ class PopDayConstraint(Constraint):
             enabled=True,
             status=status,
             details={
-                "constraints": constraints_added,
-                "teachers_constrained": len(teachers_constrained),
-                "pop_teachers_loaded": len(teacher_allowed_day_names),
+                "hard_theory_constraints": hard_constraints_added,
+                "lab_penalty_terms": lab_penalty_terms,
+                "theory_teachers_constrained": len(theory_teachers_constrained),
+                "lab_teachers_penalized": len(lab_teachers_penalized),
+                "pop_teachers_loaded": len(teacher_availability),
             },
         )
 
@@ -157,128 +203,14 @@ class PopDayConstraint(Constraint):
             self._logger.error("Failed to load POP CSV: %s", exc)
             return []
 
-    def _build_teacher_day_mapping(
-        self,
-        pop_data: list[dict[str, str]],
-        working_days: tuple[str, ...],
-    ) -> Dict[str, Set[int]]:
-        """Build mapping from teacher ID to allowed day indices."""
-        day_name_to_index = {
-            self._normalize_day(day): idx
-            for idx, day in enumerate(working_days)
-        }
-
-        teacher_days: Dict[str, Set[int]] = {}
-        for row in pop_data:
-            # Get teacher ID and normalize it (handle float like "413.0" -> "413")
-            raw_tid = row.get("Teacher ID", "").strip()
-            if not raw_tid:
-                continue
-            teacher_id = self._normalize_teacher_id(raw_tid)
-
-            # Get preferred days (support up to 3 preferred days)
-            day1 = self._normalize_day(row.get("Preferred Day 1", "").strip())
-            day2 = self._normalize_day(row.get("Preferred Day 2", "").strip())
-            day3 = self._normalize_day(row.get("Preferred Day 3", "").strip())
-
-            allowed_indices = set()
-            if day1 and day1 != "-" and day1 in day_name_to_index:
-                allowed_indices.add(day_name_to_index[day1])
-            if day2 and day2 != "-" and day2 in day_name_to_index:
-                allowed_indices.add(day_name_to_index[day2])
-            if day3 and day3 != "-" and day3 in day_name_to_index:
-                allowed_indices.add(day_name_to_index[day3])
-
-            if allowed_indices:
-                if teacher_id in teacher_days:
-                    # Merge if teacher appears multiple times (multiple courses)
-                    teacher_days[teacher_id].update(allowed_indices)
-                else:
-                    teacher_days[teacher_id] = allowed_indices
-
-        self._logger.info(
-            "Loaded %d POP teacher day restrictions from CSV",
-            len(teacher_days),
-        )
-        return teacher_days
-
-    def _build_teacher_day_name_mapping(
-        self,
-        pop_data: list[dict[str, str]],
-    ) -> Dict[str, Set[str]]:
-        """Build mapping from teacher ID to allowed day NAMES (normalized).
-
-        This avoids day-index mismatches when different departments/courses use
-        different day patterns (e.g., Mon-Sat vs Tue-Sat).
-        """
-
-        teacher_day_names: Dict[str, Set[str]] = {}
-        for row in pop_data:
-            raw_tid = row.get("Teacher ID", "").strip()
-            if not raw_tid:
-                continue
-            teacher_id = self._normalize_teacher_id(raw_tid)
-
-            day1 = self._normalize_day(row.get("Preferred Day 1", "").strip())
-            day2 = self._normalize_day(row.get("Preferred Day 2", "").strip())
-            day3 = self._normalize_day(row.get("Preferred Day 3", "").strip())
-
-            allowed_days = {day for day in (day1, day2, day3) if day and day != "-"}
-            if not allowed_days:
-                continue
-
-            if teacher_id in teacher_day_names:
-                teacher_day_names[teacher_id].update(allowed_days)
-            else:
-                teacher_day_names[teacher_id] = set(allowed_days)
-
-        self._logger.info(
-            "Loaded %d POP teacher day name restrictions from CSV",
-            len(teacher_day_names),
-        )
-        return teacher_day_names
-
-    @staticmethod
-    def _normalize_teacher_id(tid: str) -> str:
-        """Normalize teacher ID to handle float representations like '413.0' -> '413'."""
-        if not tid:
-            return tid
-        tid_str = str(tid).strip()
-        # Handle float representation (e.g., "413.0" -> "413")
-        try:
-            float_val = float(tid_str)
-            if float_val.is_integer():
-                return str(int(float_val))
-        except ValueError:
-            pass
-        return tid_str
-
-    @staticmethod
-    def _normalize_day(day: str) -> str:
-        """Normalize day name for case-insensitive matching."""
-        if not day:
-            return ""
-        normalized = day.strip().lower()
-        # Handle common abbreviations
-        day_aliases = {
-            "monday": "monday",
-            "mon": "monday",
-            "tuesday": "tuesday",
-            "tue": "tuesday",
-            "tues": "tuesday",
-            "wednesday": "wed",
-            "wed": "wed",
-            "thursday": "thur",
-            "thur": "thur",
-            "thu": "thur",
-            "friday": "fri",
-            "fri": "fri",
-            "saturday": "saturday",
-            "sat": "saturday",
-            "sunday": "sunday",
-            "sun": "sunday",
-        }
-        return day_aliases.get(normalized, normalized)
+    def _lab_penalty_weight(self, tier: str) -> int:
+        if tier == "preferred_window":
+            return 0
+        if tier == "preferred_day":
+            return self._lab_preferred_day_penalty
+        if tier == "alternative_day":
+            return self._lab_alternative_day_penalty
+        return self._lab_other_day_penalty
 
 
 def build_pop_day_constraint(

@@ -49,6 +49,11 @@ DEFAULT_PATTERNS: Tuple[NaturalLunchPattern, ...] = (
 	NaturalLunchPattern(lab_session="L4", required_theory_slots=(4,), description="slot 4 + L4"),
 )
 
+DEFAULT_SOFT_SPLIT_LAB_SESSION_PAIRS: Tuple[Tuple[str, str], ...] = (
+	("L2", "L3"),
+	("L3", "L4"),
+)
+
 
 @dataclass(frozen=True)
 class LunchAlignmentConfig:
@@ -62,6 +67,7 @@ class LunchAlignmentConfig:
 	soft_semesters: Tuple[int, ...]
 	hard_overrides: Tuple[str, ...]
 	penalty_weight: int
+	soft_split_lab_session_pairs: Tuple[Tuple[str, str], ...]
 
 	@staticmethod
 	def from_context(context: ConstraintContext, params: Optional[Mapping[str, object]]) -> "LunchAlignmentConfig":
@@ -99,6 +105,18 @@ class LunchAlignmentConfig:
 		soft_semesters = tuple(int(s) for s in params.get("soft_semesters", ()))
 		hard_overrides = tuple(str(d) for d in params.get("hard_overrides", ()))
 		penalty_weight = int(params.get("penalty_weight", 10))
+		split_pair_payload = params.get(
+			"soft_split_lab_session_pairs",
+			params.get("split_lab_session_pairs", DEFAULT_SOFT_SPLIT_LAB_SESSION_PAIRS),
+		)
+		split_pairs = []
+		for pair in split_pair_payload or ():
+			if isinstance(pair, str):
+				parts = [part.strip() for part in pair.replace("->", ",").split(",") if part.strip()]
+			else:
+				parts = [str(part).strip() for part in pair if str(part).strip()]
+			if len(parts) >= 2:
+				split_pairs.append((parts[0], parts[1]))
 		return LunchAlignmentConfig(
 			fallback_window=default_window,
 			minimum_free_slots=minimum_free,
@@ -110,6 +128,7 @@ class LunchAlignmentConfig:
 			soft_semesters=soft_semesters,
 			hard_overrides=hard_overrides,
 			penalty_weight=penalty_weight,
+			soft_split_lab_session_pairs=tuple(split_pairs) or DEFAULT_SOFT_SPLIT_LAB_SESSION_PAIRS,
 		)
 
 	def is_flexible(self, department: str, semester: Optional[int]) -> bool:
@@ -150,6 +169,47 @@ def _build_group_lab_session_map(lab_block) -> Dict[str, Dict[int, Dict[str, Tup
 	return result
 
 
+def _build_group_course_lab_session_map(
+	lab_block,
+) -> Dict[str, Dict[str, Dict[int, Dict[str, Dict[str, Tuple[cp_model.IntVar, ...]]]]]]:
+	mapping: MutableMapping[
+		str,
+		MutableMapping[
+			str,
+			MutableMapping[int, MutableMapping[str, MutableMapping[str, list[cp_model.IntVar]]]],
+		],
+	] = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list)))))
+	assignments = getattr(lab_block, "assignments", {}) or {}
+	group_lookup = getattr(lab_block, "instance_group_lookup", {}) or {}
+	requirements = getattr(lab_block, "requirements", {}) or {}
+	for teacher_map in assignments.values():
+		for course_id, day_map in teacher_map.items():
+			requirement = requirements.get(course_id)
+			group_id = group_lookup.get(course_id) or getattr(requirement, "group_id", None)
+			course_code = getattr(requirement, "course_code", None) or str(course_id)
+			if not group_id or not course_code:
+				continue
+			for day_idx, session_map in day_map.items():
+				for session_name, room_map in session_map.items():
+					mapping[group_id][course_code][day_idx][session_name][str(course_id)].extend(room_map.values())
+	result: Dict[str, Dict[str, Dict[int, Dict[str, Dict[str, Tuple[cp_model.IntVar, ...]]]]]] = {}
+	for group_id, course_map in mapping.items():
+		result[group_id] = {
+			course_code: {
+				day_idx: {
+					session: {
+						instance_id: tuple(vars_list)
+						for instance_id, vars_list in instance_map.items()
+					}
+					for session, instance_map in session_map.items()
+				}
+				for day_idx, session_map in day_map.items()
+			}
+			for course_code, day_map in course_map.items()
+		}
+	return result
+
+
 class LunchAlignmentConstraint(Constraint):
 	"""Coordinate lunch windows across lab and theory for every department."""
 
@@ -173,6 +233,7 @@ class LunchAlignmentConstraint(Constraint):
 			)
 
 		lab_sessions_by_group = _build_group_lab_session_map(lab_block)
+		course_lab_sessions_by_group = _build_group_course_lab_session_map(lab_block)
 		lab_overlap_cache: Dict[int, Tuple[str, ...]] = {}
 
 		standard_groups = 0
@@ -226,6 +287,7 @@ class LunchAlignmentConstraint(Constraint):
 					cohort_group_ids,
 					group_slot_map,
 					lab_sessions_by_group,
+					course_lab_sessions_by_group,
 					lab_overlap_cache,
 					context.data.raw.time.lab_session_to_theory,
 					working_days,
@@ -353,6 +415,7 @@ class LunchAlignmentConstraint(Constraint):
 		group_ids: Sequence[str],
 		group_slot_map: Mapping[str, Mapping[int, Mapping[int, cp_model.IntVar]]],
 		lab_sessions: Mapping[str, Mapping[int, Mapping[str, Tuple[cp_model.IntVar, ...]]]],
+		course_lab_sessions: Mapping[str, Mapping[str, Mapping[int, Mapping[str, Mapping[str, Tuple[cp_model.IntVar, ...]]]]]],
 		lab_overlap_cache: Dict[int, Tuple[str, ...]],
 		lab_session_to_theory: Mapping[str, Sequence[int]],
 		working_days: Sequence[str],
@@ -361,17 +424,20 @@ class LunchAlignmentConstraint(Constraint):
 		model = context.model
 		cohort_label = self._cohort_label(*cohort_key)
 		penalties = 0
-		day_indices: set[int] = set()
+		session_literal_cache: Dict[Tuple[str, int, str], cp_model.IntVar] = {}
+
 		for group_id in group_ids:
+			day_indices: set[int] = set()
 			day_indices.update(group_slot_map.get(group_id, {}).keys())
 			day_indices.update(lab_sessions.get(group_id, {}).keys())
-		if not day_indices:
-			day_indices = set(range(len(working_days))) if working_days else {0}
+			if not day_indices:
+				day_indices = set(range(len(working_days))) if working_days else {0}
 
-		for day_idx in sorted(day_indices):
-			slot_busy_terms: list[cp_model.IntVar] = []
-			for slot in window:
-				for group_id in group_ids:
+			for day_idx in sorted(day_indices):
+				free_literals: list[cp_model.IntVar] = []
+				free_constants = 0
+				for slot in window:
+					slot_busy_terms: list[cp_model.IntVar] = []
 					day_map = group_slot_map.get(group_id, {})
 					slot_map = day_map.get(day_idx, {}) if isinstance(day_map, Mapping) else {}
 					slot_var = slot_map.get(slot) if isinstance(slot_map, Mapping) else None
@@ -382,29 +448,166 @@ class LunchAlignmentConstraint(Constraint):
 						vars_tuple = group_day_sessions.get(session_name)
 						if not vars_tuple:
 							continue
-						literal = build_presence_literal(
+						cache_key = (group_id, day_idx, session_name)
+						literal = session_literal_cache.get(cache_key)
+						if literal is None:
+							literal = build_presence_literal(
+								model,
+								vars_tuple,
+								f"soft_lunch_lab_{group_id}_d{day_idx}_{session_name}",
+							)
+							if literal is None:
+								continue
+							session_literal_cache[cache_key] = literal
+						slot_busy_terms.append(literal)
+					if slot_busy_terms:
+						busy_literal = build_presence_literal(
 							model,
-							vars_tuple,
-							f"soft_lunch_lab_{group_id}_d{day_idx}_{session_name}",
+							slot_busy_terms,
+							f"soft_lunch_busy_{group_id}_d{day_idx}_s{slot}",
 						)
-						if literal is not None:
-							slot_busy_terms.append(literal)
-			if slot_busy_terms:
-				busy_literal = build_presence_literal(
+						if busy_literal is None:
+							free_constants += 1
+							continue
+						free_literal = model.NewBoolVar(f"soft_lunch_free_{group_id}_d{day_idx}_s{slot}")
+						model.Add(free_literal + busy_literal == 1)
+						free_literals.append(free_literal)
+					else:
+						free_constants += 1
+
+				required_free = min(config.minimum_free_slots, len(window))
+				if required_free <= 0 or free_constants >= required_free:
+					continue
+
+				needed_free_literals = required_free - free_constants
+				common_lunch_literal = model.NewBoolVar(f"soft_lunch_common_{group_id}_d{day_idx}")
+				model.Add(sum(free_literals) >= needed_free_literals).OnlyEnforceIf(common_lunch_literal)
+				model.Add(sum(free_literals) <= needed_free_literals - 1).OnlyEnforceIf(common_lunch_literal.Not())
+
+				satisfaction_literals = [common_lunch_literal]
+				split_literal = self._build_soft_split_lab_lunch_literal(
 					model,
-					slot_busy_terms,
-					f"soft_lunch_busy_{cohort_label}_d{day_idx}",
+					config,
+					group_id,
+					day_idx,
+					course_lab_sessions.get(group_id, {}),
 				)
-				if busy_literal is not None:
-					register_objective_penalty(
-						context,
-						busy_literal,
-						weight=config.penalty_weight,
-						tag="lunch:soft",
-					)
-					penalties += 1
+				if split_literal is not None:
+					satisfaction_literals.append(split_literal)
+
+				satisfied_literal = build_presence_literal(
+					model,
+					tuple(satisfaction_literals),
+					f"soft_lunch_satisfied_{group_id}_d{day_idx}",
+				)
+				if satisfied_literal is None:
+					continue
+
+				violation_literal = model.NewBoolVar(f"soft_lunch_violation_{group_id}_d{day_idx}")
+				model.Add(violation_literal + satisfied_literal == 1)
+				register_objective_penalty(
+					context,
+					violation_literal,
+					weight=config.penalty_weight,
+					tag="lunch:soft",
+				)
+				penalties += 1
 
 		return penalties
+
+	def _build_soft_split_lab_lunch_literal(
+		self,
+		model: cp_model.CpModel,
+		config: LunchAlignmentConfig,
+		group_id: str,
+		day_idx: int,
+		course_lab_sessions: Mapping[str, Mapping[int, Mapping[str, Mapping[str, Tuple[cp_model.IntVar, ...]]]]],
+	) -> Optional[cp_model.IntVar]:
+		pair_literals: list[cp_model.IntVar] = []
+		instance_session_cache: Dict[Tuple[str, str, str], cp_model.IntVar] = {}
+
+		for course_code, day_map in course_lab_sessions.items():
+			session_map = day_map.get(day_idx, {}) if isinstance(day_map, Mapping) else {}
+			if not session_map:
+				continue
+			for first_session, second_session in config.soft_split_lab_session_pairs:
+				first_instances = session_map.get(first_session, {})
+				second_instances = session_map.get(second_session, {})
+				if not first_instances or not second_instances:
+					continue
+				for first_instance, first_vars in first_instances.items():
+					first_literal = self._course_instance_session_literal(
+						model,
+						instance_session_cache,
+						group_id,
+						day_idx,
+						course_code,
+						first_instance,
+						first_session,
+						first_vars,
+					)
+					if first_literal is None:
+						continue
+					for second_instance, second_vars in second_instances.items():
+						if first_instance == second_instance:
+							continue
+						second_literal = self._course_instance_session_literal(
+							model,
+							instance_session_cache,
+							group_id,
+							day_idx,
+							course_code,
+							second_instance,
+							second_session,
+							second_vars,
+						)
+						if second_literal is None:
+							continue
+						pair_literal = model.NewBoolVar(
+							"soft_lunch_split_"
+							f"{self._safe_name(group_id)}_d{day_idx}_"
+							f"{self._safe_name(course_code)}_"
+							f"{self._safe_name(first_instance)}_{self._safe_name(first_session)}_"
+							f"{self._safe_name(second_instance)}_{self._safe_name(second_session)}"
+						)
+						model.AddBoolAnd([first_literal, second_literal]).OnlyEnforceIf(pair_literal)
+						model.AddBoolOr([first_literal.Not(), second_literal.Not()]).OnlyEnforceIf(
+							pair_literal.Not()
+						)
+						pair_literals.append(pair_literal)
+
+		return build_presence_literal(
+			model,
+			tuple(pair_literals),
+			f"soft_lunch_split_satisfied_{self._safe_name(group_id)}_d{day_idx}",
+		)
+
+	def _course_instance_session_literal(
+		self,
+		model: cp_model.CpModel,
+		cache: MutableMapping[Tuple[str, str, str], cp_model.IntVar],
+		group_id: str,
+		day_idx: int,
+		course_code: str,
+		instance_id: str,
+		session_name: str,
+		vars_tuple: Tuple[cp_model.IntVar, ...],
+	) -> Optional[cp_model.IntVar]:
+		cache_key = (course_code, instance_id, session_name)
+		literal = cache.get(cache_key)
+		if literal is not None:
+			return literal
+		literal = build_presence_literal(
+			model,
+			vars_tuple,
+			"soft_lunch_split_inst_"
+			f"{self._safe_name(group_id)}_d{day_idx}_"
+			f"{self._safe_name(course_code)}_"
+			f"{self._safe_name(instance_id)}_{self._safe_name(session_name)}",
+		)
+		if literal is not None:
+			cache[cache_key] = literal
+		return literal
 
 	def _apply_flexible_lunch(
 		self,
@@ -499,6 +702,12 @@ class LunchAlignmentConstraint(Constraint):
 		if semester is None:
 			return label
 		return f"{label}_S{semester}"
+
+	@staticmethod
+	def _safe_name(value: object) -> str:
+		text = str(value or "unknown")
+		cleaned = "".join(ch if ch.isalnum() else "_" for ch in text)
+		return cleaned.strip("_") or "unknown"
 
 
 def build_lunch_alignment_constraint(

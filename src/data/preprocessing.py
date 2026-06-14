@@ -20,6 +20,7 @@ remaining light-weight enough to plug into the existing orchestrator.
 from __future__ import annotations
 
 import logging
+import json
 import re
 from collections import defaultdict
 from pathlib import Path
@@ -364,6 +365,34 @@ class DepartmentCourseGrouper:
 		self._logger = logger or logging.getLogger(__name__)
 		self._warnings: List[str] = []
 		self._pe_course_map_path = self._discover_pe_course_map()
+		self._telemetry_groups = self._load_telemetry_groups()
+
+	def _load_telemetry_groups(self) -> Dict[DepartmentSemesterKey, List[Dict[str, Any]]]:
+		"""Load fixed groups from grouping_telemetry.json if it exists."""
+		telemetry_path = self._base_dir / "grouping_telemetry.json"
+		if not telemetry_path.exists():
+			return {}
+
+		try:
+			with open(telemetry_path, "r", encoding="utf-8") as f:
+				data = json.load(f)
+			
+			grouped_telemetry = {}
+			for dept_data in data.get("departments", []):
+				dept = dept_data.get("department")
+				sem = dept_data.get("semester")
+				groups = dept_data.get("groups", [])
+				if dept and sem and groups:
+					key = DepartmentSemesterKey(dept, sem)
+					grouped_telemetry[key] = groups
+			
+			if grouped_telemetry:
+				self._logger.info("Loaded fixed grouping telemetry for %d cohorts", len(grouped_telemetry))
+			return grouped_telemetry
+
+		except Exception as e:
+			self._logger.error("Failed to load grouping_telemetry.json: %s", e)
+			return {}
 
 	@property
 	def warnings(self) -> Tuple[str, ...]:
@@ -389,10 +418,188 @@ class DepartmentCourseGrouper:
 		for key, instances in normalized_instances.items():
 			if not instances:
 				continue
-			groups = self._group_single_cohort(key, instances)
+			
+			# Check if we have fixed groups for this cohort
+			if key in self._telemetry_groups:
+				self._logger.info("Using fixed groups from telemetry for %s", key.label())
+				groups = self._group_from_telemetry(key, instances, self._telemetry_groups[key])
+			else:
+				groups = self._group_single_cohort(key, instances)
+			
 			grouped[key] = tuple(groups)
 		return grouped
 
+	def _group_from_telemetry(
+		self, 
+		key: DepartmentSemesterKey, 
+		instances: Sequence[NormalizedCourseInstance],
+		group_defs: List[Dict[str, Any]]
+	) -> List[CourseGroup]:
+		"""Reconstruct groups based on telemetry definitions."""
+		instance_map = {inst.instance_id: inst for inst in instances}
+		converted: List[CourseGroup] = []
+
+		for group_def in group_defs:
+			group_id = group_def.get("group_id")
+			target_instance_ids = set(group_def.get("course_instances", []))
+			
+			# Find matching instances
+			matched_instances = []
+			for iid in target_instance_ids:
+				if iid in instance_map:
+					matched_instances.append(instance_map[iid])
+				else:
+					# Try mapped ID (in case string/float conversion diffs)
+					# Or if instance ID format changed slightly. 
+					# For now, strict match or try .0 suffix check if relevant
+					pass
+			
+			# Also catch implicit instances. Alternatively, rely solely on IDs.
+			# But better to strictly follow the ID list.
+			
+			if not matched_instances:
+				self._warnings.append(f"Telemetry group {group_id} has no matching instances in current data")
+				continue
+
+			# Re-calculate aggregates from the ACTUAL current instances
+			# (Do not trust telemetry summary fields as current data might differ slightly)
+			course_instance_ids = tuple(inst.instance_id for inst in matched_instances)
+			teacher_ids = tuple(sorted({inst.teacher_id for inst in matched_instances}))
+			course_codes = tuple(sorted({inst.course_code for inst in matched_instances}))
+
+			lab_instances = sum(1 for inst in matched_instances if inst.has_lab)
+			theory_instances = sum(1 for inst in matched_instances if inst.has_theory)
+			lab_hours = sum(inst.practical_hours for inst in matched_instances)
+			theory_hours = sum(inst.total_hours() - inst.practical_hours for inst in matched_instances)
+			total_students = sum(inst.student_count for inst in matched_instances)
+
+			summary = GroupSummary(
+				num_instances=len(matched_instances),
+				num_courses=len(course_codes),
+				num_teachers=len(teacher_ids),
+				lab_instances=lab_instances,
+				theory_instances=theory_instances,
+				total_student_count=total_students,
+				lab_hours=lab_hours,
+				theory_hours=theory_hours,
+			)
+
+			# Infer ordinal from group_id (e.g. "..._g01") or loop index
+			try:
+				ordinal = int(group_id.split("_g")[-1])
+			except (ValueError, IndexError):
+				ordinal = len(converted) + 1
+
+			# Re-derive tags
+			tags = set()
+			if lab_instances:
+				tags.add("lab")
+			# PE tag logic? Telemetry doesn't explicitly flag PE groups vs normal easily, 
+			# but we can infer or if telemetry has it. 
+			# Current telemetry schema doesn't seem to have is_professional_elective flag in group root at a glance,
+			# checking... JSON sample showed just basic stats.
+			# We can re-infer "Professional Elective" if ordinal is high? 
+			# Or check if instances have PE flag.
+			
+			is_pe = any(inst.pe_flag for inst in matched_instances)
+			if is_pe:
+				tags.add("professional_elective")
+
+			converted.append(
+				CourseGroup(
+					key=key,
+					group_id=group_id,
+					ordinal=ordinal,
+					is_professional_elective=is_pe,
+					course_instance_ids=course_instance_ids,
+					teacher_ids=teacher_ids,
+					course_codes=course_codes,
+					summary=summary,
+					tags=tuple(sorted(tags)),
+				)
+			)
+		
+		# Validation: Did we assign all instances?
+		assigned_ids = set()
+		for g in converted:
+			assigned_ids.update(g.course_instance_ids)
+		
+		unassigned = [inst for inst in instances if inst.instance_id not in assigned_ids]
+		if unassigned:
+			# These instances were NOT in the telemetry groups.
+			# We must create fallback groups for them or they disappear!
+			self._warnings.append(
+				f"{len(unassigned)} instances in {key.label()} were not covered by telemetry groups. Creating fallback groups."
+			)
+			fallback = self._fallback_groups(unassigned)
+			# Convert fallback dict-based groups to CourseGroup
+			# Re-use _convert_groups logic? _convert_groups expects specific dict structure.
+			# Or just manually append.
+			# Let's reuse _convert_groups but it needs list of list of dicts.
+			# NormalizedCourseInstance.to_optimizer_payload() gives dict.
+			
+			# Group unassigned by course code (fallback logic)
+			fallback_raw = []
+			u_grouped = defaultdict(list)
+			for inst in unassigned:
+				u_grouped[inst.course_code].append(inst.to_optimizer_payload())
+			fallback_raw = list(u_grouped.values())
+			
+			start_ordinal = max((g.ordinal for g in converted), default=0) + 1
+			# Note: _convert_groups starts ordinal at 1. We need to shift it or manually create.
+			# Let's just create manually for safety.
+			
+			for i, group_instances in enumerate(fallback_raw, start=start_ordinal):
+				# Quick conversion similar to above loop
+				# Re-find instances objects
+				# ... simpler to map back.
+				current_ids = [d['id'] for d in group_instances]
+				grp_instances_objs = [instance_map[cid] for cid in current_ids]
+				
+				# ... same summary logic ...
+				# Actually, let's just accept that _group_from_telemetry primarily handles what's IN the file.
+				# If data drift causes unassigned, we just append them.
+				
+				# Simplified fallback construction:
+				fb_course_instance_ids = tuple(inst.instance_id for inst in grp_instances_objs)
+				fb_teacher_ids = tuple(sorted({inst.teacher_id for inst in grp_instances_objs}))
+				fb_course_codes = tuple(sorted({inst.course_code for inst in grp_instances_objs}))
+				
+				fb_tags = set()
+				if any(inst.has_lab for inst in grp_instances_objs): fb_tags.add("lab")
+				if any(inst.pe_flag for inst in grp_instances_objs): fb_tags.add("professional_elective")
+
+				# Calculate summary
+				l_inst = sum(1 for inst in grp_instances_objs if inst.has_lab)
+				t_inst = sum(1 for inst in grp_instances_objs if inst.has_theory)
+				l_hours = sum(inst.practical_hours for inst in grp_instances_objs)
+				t_hours = sum(inst.total_hours() - inst.practical_hours for inst in grp_instances_objs)
+				st_count = sum(inst.student_count for inst in grp_instances_objs)
+				
+				fb_summary = GroupSummary(
+					num_instances=len(grp_instances_objs),
+					num_courses=len(fb_course_codes),
+					num_teachers=len(fb_teacher_ids),
+					lab_instances=l_inst,
+					theory_instances=t_inst,
+					total_student_count=st_count,
+					lab_hours=l_hours,
+					theory_hours=t_hours,
+				)
+
+				converted.append(CourseGroup(
+					key=key,
+					group_id=f"{key.slug()}_fallback_g{i:02d}",
+					ordinal=i,
+					is_professional_elective="professional_elective" in fb_tags,
+					course_instance_ids=fb_course_instance_ids,
+					teacher_ids=fb_teacher_ids,
+					course_codes=fb_course_codes,
+					summary=fb_summary,
+					tags=tuple(sorted(fb_tags))
+				))
+
+		return converted
 	def _group_single_cohort(
 		self,
 		key: DepartmentSemesterKey,

@@ -294,37 +294,106 @@ class ScheduleExtractor:
 				)
 				for batch_number, idx in enumerate(sorted_group, start=1):
 					entry = annotated[idx]
-					label = entry.batch_label or entry.batch_info or f"Batch {batch_number}"
+					existing_number = self._parse_batch_number(entry.batch_label or entry.batch_info)
+					existing_label = entry.batch_label or entry.batch_info
+					label = existing_label if existing_number == batch_number and existing_label else f"Batch {batch_number}"
 					annotated[idx] = replace(
 						entry,
 						batch_number=batch_number,
 						batch_label=label,
-						batch_info=entry.batch_info or label,
+						batch_info=label,
 						num_batches=final_batches,
 						is_batched=True,
 					)
 			# Next, handle sequential batches (same course scheduled in different slots)
 			ordered_keys = sorted(session_groups.keys(), key=lambda key: (key[1], key[0]))
 			session_rank = {key: rank for rank, key in enumerate(ordered_keys)}
+
+			def _remaining_sort_key(idx: int) -> Tuple[int, int, int, str, Tuple[int, ...]]:
+				entry = annotated[idx]
+				partner_session = session_pair_lookup.get(entry.session_name)
+				has_partner = bool(
+					partner_session
+					and session_groups.get((entry.day_index, partner_session))
+				)
+				return (
+					0 if has_partner else 1,
+					session_rank[(entry.day_index, entry.session_name)],
+					entry.day_index,
+					entry.session_name,
+					entry.session_slots,
+				)
+
 			remaining = sorted(
 				(idx for idx in indices if not annotated[idx].batch_number),
-				key=lambda idx: (
-					session_rank[(annotated[idx].day_index, annotated[idx].session_name)],
-					annotated[idx].day_index,
-					annotated[idx].session_name,
-					annotated[idx].session_slots,
-				),
+				key=_remaining_sort_key,
 			)
-			batch_counter = 0
+			target_sessions_per_batch = max(1, base_sessions, math.ceil(total_sessions / final_batches))
+			batch_loads: Dict[int, int] = {batch_number: 0 for batch_number in range(1, final_batches + 1)}
+			batch_day_loads: Dict[int, Dict[int, int]] = {
+				batch_number: defaultdict(int) for batch_number in range(1, final_batches + 1)
+			}
+			for idx in indices:
+				existing_number = annotated[idx].batch_number
+				if existing_number and 1 <= existing_number <= final_batches:
+					batch_loads[existing_number] += 1
+					batch_day_loads[existing_number][annotated[idx].day_index] += 1
 			assigned_indices: Set[int] = set()
 
-			def _next_batch_number() -> int:
-				nonlocal batch_counter
-				if final_batches <= 0:
-					return 1
-				number = (batch_counter % final_batches) + 1
-				batch_counter += 1
-				return number
+			def _label_for_batch(batch_number: int, *candidates: Optional[str]) -> str:
+				for candidate in candidates:
+					if self._parse_batch_number(candidate) == batch_number:
+						return str(candidate)
+				return f"Batch {batch_number}"
+
+			def _choose_batch_number(entry_count: int, day_index: int, *hints: Optional[int]) -> int:
+				for hint in hints:
+					if (
+						hint
+						and 1 <= hint <= final_batches
+						and batch_loads[hint] + entry_count <= target_sessions_per_batch
+						and batch_day_loads[hint].get(day_index, 0) == 0
+					):
+						return hint
+				candidates = [
+					batch_number
+					for batch_number, load in batch_loads.items()
+					if load + entry_count <= target_sessions_per_batch
+					and batch_day_loads[batch_number].get(day_index, 0) == 0
+				]
+				if not candidates:
+					candidates = [
+						batch_number
+						for batch_number in batch_loads
+						if batch_day_loads[batch_number].get(day_index, 0) == 0
+					]
+				if not candidates:
+					candidates = [
+						batch_number
+						for batch_number, load in batch_loads.items()
+						if load + entry_count <= target_sessions_per_batch
+					]
+				if not candidates:
+					candidates = list(batch_loads)
+				return min(
+					candidates,
+					key=lambda batch_number: (
+						batch_day_loads[batch_number].get(day_index, 0),
+						batch_loads[batch_number],
+						batch_number,
+					),
+				)
+
+			def _assign_batch(target_idx: int, batch_number: int, label: str) -> None:
+				current = annotated[target_idx]
+				annotated[target_idx] = replace(
+					current,
+					batch_number=batch_number,
+					batch_label=label,
+					batch_info=label,
+					num_batches=final_batches,
+					is_batched=True,
+				)
 
 			for idx in remaining:
 				if idx in assigned_indices or annotated[idx].batch_number:
@@ -343,37 +412,26 @@ class ScheduleExtractor:
 					primary_hint = self._parse_batch_number(entry.batch_label or entry.batch_info)
 					partner_entry = annotated[partner_idx]
 					partner_hint = self._parse_batch_number(partner_entry.batch_label or partner_entry.batch_info)
-					batch_number = primary_hint or partner_hint or _next_batch_number()
-					label = (
+					batch_number = _choose_batch_number(2, entry.day_index, primary_hint, partner_hint)
+					label = _label_for_batch(
+						batch_number,
 						entry.batch_label
-						or entry.batch_info
-						or partner_entry.batch_label
-						or partner_entry.batch_info
-						or f"Batch {batch_number}"
+						or entry.batch_info,
+						partner_entry.batch_label
+						or partner_entry.batch_info,
 					)
 					for target_idx in (idx, partner_idx):
-						current = annotated[target_idx]
-						annotated[target_idx] = replace(
-							current,
-							batch_number=batch_number,
-							batch_label=label,
-							batch_info=current.batch_info or label,
-							num_batches=final_batches,
-							is_batched=True,
-						)
+						_assign_batch(target_idx, batch_number, label)
+					batch_loads[batch_number] += 2
+					batch_day_loads[batch_number][entry.day_index] += 2
 					assigned_indices.update({idx, partner_idx})
 					continue
 				number_hint = self._parse_batch_number(entry.batch_label or entry.batch_info)
-				batch_number = number_hint or _next_batch_number()
-				label = entry.batch_label or entry.batch_info or f"Batch {batch_number}"
-				annotated[idx] = replace(
-					entry,
-					batch_number=batch_number,
-					batch_label=label,
-					batch_info=entry.batch_info or label,
-					num_batches=final_batches,
-					is_batched=True,
-				)
+				batch_number = _choose_batch_number(1, entry.day_index, number_hint)
+				label = _label_for_batch(batch_number, entry.batch_label or entry.batch_info)
+				_assign_batch(idx, batch_number, label)
+				batch_loads[batch_number] += 1
+				batch_day_loads[batch_number][entry.day_index] += 1
 				assigned_indices.add(idx)
 		return annotated
 

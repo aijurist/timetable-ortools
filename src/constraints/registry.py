@@ -15,10 +15,15 @@ from .cross_system.teacher_overlap import build_teacher_overlap_constraint
 from .cross_system.teacher_daily_workload import build_teacher_daily_workload_constraint
 from .cross_system.teacher_day_window import build_teacher_day_window_constraint
 from .cross_system.dept_day_span import build_department_day_span_constraint
+from .cross_system.dept_day_coverage import build_department_day_coverage_constraint
 from .cross_system.pop_day import build_pop_day_constraint
 from .cross_system.fixed_schedule_lock import build_fixed_schedule_lock_constraint
 from .cross_system.dept_slot_blocking import build_dept_slot_blocking_constraint
+from .cross_system.course_day_spread import build_course_day_spread_constraint
 from .lab.consecutive_batches import build_consecutive_batch_lab_constraint
+from .cross_system.morning_theory_lab import build_morning_theory_lab_constraint
+from .cross_system.engineering_graphics_preference import build_engineering_graphics_preference_constraint
+from .lab.computer_lab_mapping import build_computer_lab_mapping_constraint
 from .lab.core_lab import build_core_lab_mapping_constraint
 from .lab.requirements import build_lab_session_coverage_constraint
 from .lab.room_single_assignment import build_lab_room_single_assignment_constraint
@@ -66,6 +71,12 @@ LAB_CONSTRAINT_DEFINITIONS = {
 		"description": "Restrict mapped core labs to their designated laboratory rooms while keeping others flexible.",
 		"factory": build_core_lab_mapping_constraint,
 		"tags": ("lab", "rooms", "core"),
+	},
+	"computer_lab_mapping": {
+		"title": "Computer Lab Room Mapping",
+		"description": "Prefer configured computer labs for matching department/course pairs while keeping rooms available to others.",
+		"factory": build_computer_lab_mapping_constraint,
+		"tags": ("lab", "rooms", "computer", "soft"),
 	},
 	"core_group_slot_cap": {
 		"title": "Core Group Slot Cap",
@@ -159,6 +170,12 @@ CROSS_SYSTEM_CONSTRAINT_DEFINITIONS = {
 		"factory": build_department_day_span_constraint,
 		"tags": ("cross-system", "days", "distribution"),
 	},
+	"dept_day_coverage": {
+		"title": "Department Day Coverage",
+		"description": "Require each department-semester timetable to use all configured teaching days when enough activity exists.",
+		"factory": build_department_day_coverage_constraint,
+		"tags": ("cross-system", "days", "distribution"),
+	},
 	"group_non_overlap": {
 		"title": "Department Group Non-Overlap",
 		"description": "Prevent different groups within the same department-semester from occupying the same lab/theory time.",
@@ -202,10 +219,10 @@ CROSS_SYSTEM_CONSTRAINT_DEFINITIONS = {
 		"tags": ("cross-system", "shifts", "distribution"),
 	},
 	"pop_day": {
-		"title": "POP Staff Day Restriction",
-		"description": "Restrict POP (part-time) staff to only teach on their specified preferred days from pop.csv.",
+		"title": "POP Staff Availability",
+		"description": "Hard-limit POP theory by day/time and softly prefer POP lab days from pop.csv.",
 		"factory": build_pop_day_constraint,
-		"tags": ("cross-system", "teachers", "days"),
+		"tags": ("cross-system", "teachers", "days", "time"),
 	},
 	"fixed_schedule_lock": {
 		"title": "Fixed Schedule Lock",
@@ -215,9 +232,27 @@ CROSS_SYSTEM_CONSTRAINT_DEFINITIONS = {
 	},
 	"dept_slot_blocking": {
 		"title": "Department Slot Blocking",
-		"description": "Load partial schedule to block department slots (e.g. for DSA) based on CSV.",
+		"description": "Load partial schedules to block configured department slots based on CSV.",
 		"factory": build_dept_slot_blocking_constraint,
 		"tags": ("cross-system", "partial", "blocking"),
+	},
+	"course_day_spread": {
+		"title": "Course Day Spread",
+		"description": "Prevent a lab+theory course for the same group from being completed on a single day.",
+		"factory": build_course_day_spread_constraint,
+		"tags": ("cross-system", "courses", "days", "distribution"),
+	},
+	"morning_theory_lab": {
+		"title": "Morning Theory Afternoon Lab",
+		"description": "Softly penalize theory classes in late slots (>= 3PM) and lab classes in early sessions (L1).",
+		"factory": build_morning_theory_lab_constraint,
+		"tags": ("cross-system", "preference", "time"),
+	},
+	"engineering_graphics_preference": {
+		"title": "Engineering Graphics Room Preference",
+		"description": "Prioritize Engineering Graphics (GE23111) in preferred rooms (C401, B310).",
+		"factory": build_engineering_graphics_preference_constraint,
+		"tags": ("cross-system", "rooms", "soft"),
 	},
 }
 

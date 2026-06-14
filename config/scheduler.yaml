@@ -7,13 +7,14 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data\sem2026\1st year\cse-split.csv
-  rooms_csv: data/block_wise/techlongue.csv
-  day_order_csv: data/day_order_even.csv
-  core_lab_mapping_csv: data/CoreMappingSimplified_StudentDept.csv
-  preferences_csv: data/pop.csv
-  fixed_lab_schedule_csv: output/final/2025-12-26_04-47-12/csv/lab_schedule.csv
-  fixed_theory_schedule_csv: output/final/2025-12-26_04-47-12/csv/theory_schedule.csv
+  courses_csv: data\3rd_4th_year.csv
+  rooms_csv: data\block_wise\rooms_new.csv
+  day_order_csv: data/day_order_odd.csv
+  core_lab_mapping_csv: data\core_lab_mapping.csv
+  computer_lab_mapping_csv: data\computer_lab_mapping.csv
+  preferences_csv: data\pop.csv
+  # fixed_lab_schedule_csv: data/final/2025-12-26_04-47-12/csv/lab_schedule.csv
+  # fixed_theory_schedule_csv: data/final/2025-12-26_04-47-12/csv/theory_schedule.csv
   output_root: output/combined_scheduler
 
 data:
@@ -54,25 +55,21 @@ time:
     - "10:00 - 10:50"
     - "11:00 - 11:50"
     - "12:00 - 12:50"
-    - "1:20 - 2:10"
-    - "2:10 - 3:00"
-    - "3:00 - 3:50"
-    - "4:00 - 4:50"
-    - "5:00 - 5:50"
-    - "6:00 - 6:50"
+    - "1:00 - 1:50"
+    - "2:00 - 2:50"
+    - "3:10 - 4:00"
+    - "4:10 - 5:00"
   lab_slots:
     - "8:00 - 8:50"
     - "8:50 - 9:40"
     - "10:00 - 10:50"
     - "10:50 - 11:40"
-    - "11:50 - 12:40"
-    - "12:40 - 1:20"
+    - "11:40 - 12:30"
+    - "12:30 - 1:20"
     - "1:20 - 2:10"
     - "2:10 - 3:00"
-    - "3:00 - 3:50"
-    - "3:50 - 4:40"
-    - "5:20 - 6:10"
-    - "5:10 - 7:00"
+    - "3:10 - 4:00"
+    - "4:00 - 4:50"
   lab_sessions:
     L1:
       - 0
@@ -89,9 +86,6 @@ time:
     L5:
       - 8
       - 9
-    L6:
-      - 10
-      - 11
   working_days:
     - monday
     - tuesday
@@ -119,11 +113,11 @@ departments:
   overrides:
       Computer Science & Engineering:
         day_pattern:
+          - monday
           - tuesday
           - wed
           - thur
           - fri
-          - saturday
         lunch_break_slot: null
         lunch_slot_window:
           - 3
@@ -133,11 +127,11 @@ departments:
         flexible_lunch: false
       Computer Science & Engineering-2:
         day_pattern:
+          - monday
           - tuesday
           - wed
           - thur
           - fri
-          - saturday
         lunch_break_slot: null
         lunch_slot_window:
           - 3
@@ -161,11 +155,11 @@ departments:
         flexible_lunch: false
       Electronics & Communication Engineering:
         day_pattern:
+          - monday
           - tuesday
           - wed
           - thur
           - fri
-          - saturday
         lunch_break_slot: null
         lunch_slot_window:
           - 3
@@ -175,11 +169,11 @@ departments:
         flexible_lunch: false
       Information Technology:
         day_pattern:
-          - monday
           - tuesday
           - wed
           - thur
           - fri
+          - saturday
         lunch_break_slot: null
         lunch_slot_window:
           - 3
@@ -189,25 +183,25 @@ departments:
         flexible_lunch: false
       Mechanical Engineering:
         day_pattern:
+          - monday
           - tuesday
           - wed
           - thur
           - fri
-          - saturday
         lunch_break_slot: null
         lunch_slot_window:
           - 3
           - 4
           - 5
         shift_id: SHIFT_1
-        flexible_lunch: false
+        flexible_lunch: true
       Civil Engineering:
         day_pattern:
-          - monday
           - tuesday
           - wed
           - thur
           - fri
+          - saturday
         lunch_break_slot: null
         lunch_slot_window:
           - 3
@@ -217,11 +211,11 @@ departments:
         flexible_lunch: false
       Artificial Intelligence & Data Science:
         day_pattern:
-          - monday
           - tuesday
           - wed
           - thur
           - fri
+          - saturday
         lunch_break_slot: null
         lunch_slot_window:
           - 3
@@ -231,11 +225,11 @@ departments:
         flexible_lunch: false
       Artificial Intelligence & Machine Learning:
         day_pattern:
-          - monday
           - tuesday
           - wed
           - thur
           - fri
+          - saturday
         lunch_break_slot: null
         lunch_slot_window:
           - 3
@@ -245,11 +239,11 @@ departments:
         flexible_lunch: false
       Computer Science & Design:
         day_pattern:
+          - monday
           - tuesday
           - wed
           - thur
           - fri
-          - saturday
         lunch_break_slot: null
         lunch_slot_window:
           - 3
@@ -259,11 +253,11 @@ departments:
         flexible_lunch: false
       Computer Science & Business Systems:
         day_pattern:
+          - monday
           - tuesday
           - wed
           - thur
           - fri
-          - saturday
         lunch_break_slot: null
         lunch_slot_window:
           - 3
@@ -273,11 +267,11 @@ departments:
         flexible_lunch: false
       Electrical & Electronics Engineering:
         day_pattern:
-          - monday
           - tuesday
           - wed
           - thur
           - fri
+          - saturday
         lunch_break_slot: null
         lunch_slot_window:
           - 3
@@ -287,11 +281,11 @@ departments:
         flexible_lunch: false
       Robotics & Automation:
         day_pattern:
-          - monday
           - tuesday
           - wed
           - thur
           - fri
+          - saturday
         lunch_break_slot: null
         lunch_slot_window:
           - 3
@@ -301,11 +295,11 @@ departments:
         flexible_lunch: false
       Automobile Engineering:
         day_pattern:
+          - monday
           - tuesday
           - wed
           - thur
           - fri
-          - saturday
         lunch_break_slot: null
         lunch_slot_window:
           - 3
@@ -329,11 +323,11 @@ departments:
         flexible_lunch: false
       Biotechnology:
         day_pattern:
-          - monday
           - tuesday
           - wed
           - thur
           - fri
+          - saturday
         lunch_break_slot: null
         lunch_slot_window:
           - 3
@@ -343,11 +337,11 @@ departments:
         flexible_lunch: false
       Food Technology:
         day_pattern:
+          - monday
           - tuesday
           - wed
           - thur
           - fri
-          - saturday
         lunch_break_slot: null
         lunch_slot_window:
           - 3
@@ -357,6 +351,20 @@ departments:
         flexible_lunch: false
       Chemical Engineering:
         day_pattern:
+          - monday
+          - tuesday
+          - wed
+          - thur
+          - fri
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_1
+        flexible_lunch: false
+      Biomedical Engineering:
+        day_pattern:
           - tuesday
           - wed
           - thur
@@ -367,29 +375,15 @@ departments:
           - 3
           - 4
           - 5
-        shift_id: SHIFT_1
-        flexible_lunch: false
-      Biomedical Engineering:
-        day_pattern:
-          - monday
-          - tuesday
-          - wed
-          - thur
-          - fri
-        lunch_break_slot: null
-        lunch_slot_window:
-          - 3
-          - 4
-          - 5
         shift_id: SHIFT_2
         flexible_lunch: false
       Mechatronics Engineering:
         day_pattern:
-          - monday
           - tuesday
           - wed
           - thur
           - fri
+          - saturday
         lunch_break_slot: null
         lunch_slot_window:
           - 3
@@ -427,7 +421,7 @@ departments:
         - L3
         - L4
         - L5
-      label: "Shift 2 (10:00-17:10)"
+      label: "Shift 2 (10:00-17:00)"
   flexible_lunch_departments:
     - Master of Business Administration
   five_pm_constraints:
@@ -438,7 +432,7 @@ departments:
         - Artificial Intelligence & Machine Learning_S5
         - Artificial Intelligence & Machine Learning_S7
         - Automobile Engineering
-        - Aeronautical Engineering_S2
+        - Aeronautical Engineering_S1
         - Aeronautical Engineering_S3
         - Aeronautical Engineering_S5
         - Aeronautical Engineering_S7
@@ -466,32 +460,25 @@ departments:
         - Food Technology_S5
         - Food Technology_S7
         - Information Technology
-        - Mechanical Engineering_S4
-        - Mechanical Engineering_S6
-        - Mechanical Engineering_S8
-        - Mechatronics Engineering_S4
-        - Mechatronics Engineering_S6
-        - Mechatronics Engineering_S8
+        - Mechanical Engineering_S3
+        - Mechanical Engineering_S5
+        - Mechanical Engineering_S7
+        - Mechatronics Engineering_S3
+        - Mechatronics Engineering_S5
+        - Mechatronics Engineering_S7
         - Robotics & Automation
-      blocked_theory_slots:
-        - 9
-        - 10
-      blocked_lab_sessions:
-        - L6
+      blocked_theory_slots: []
+      blocked_lab_sessions: []
     soft:
       departments:
         - Computer Science & Engineering_S3
-        - Computer Science & Engineering_S2
-        - Computer Science & Engineering-2_S2
+        - Computer Science & Engineering_S1
+        - Computer Science & Engineering-2_S1
         - Electronics & Communication Engineering_S3
         - Electronics & Communication Engineering_S5
         - Electrical & Electronics Engineering_S5
-      discouraged_theory_slots:
-        - 9
-        - 10
-      discouraged_lab_sessions:
-        - L5
-        - L6
+      discouraged_theory_slots: []
+      discouraged_lab_sessions: []
 
 preprocessing:
   enable_visualizations: false
@@ -509,31 +496,31 @@ grouping:
   random_seed: 42
   # Fine-grained control for the "maximize courses into one group" behaviour.
   #
-  # - If empty / not provided: consolidation is enabled for semesters 5 & 6 for ALL departments.
+  # - If empty / not provided: consolidation is enabled for semesters 5 & 7 for ALL departments.
   # - If non-empty: consolidation is enabled ONLY for the cohorts listed here.
   #
   # Supported formats:
-  # - "<Department Name>|<semester>" (e.g., "Information Technology|6")
-  # - "<Department Name>_S<semester>" (e.g., "Information Technology_S6")
+  # - "<Department Name>|<semester>" (e.g., "Information Technology|5")
+  # - "<Department Name>_S<semester>" (e.g., "Information Technology_S5")
   # - "<department_slug>_s<semester>" (matches DepartmentSemesterKey.slug())
-  # Wildcards: "*|6" or "Information Technology|*".
+  # Wildcards: "*|5" or "Information Technology|*".
   consolidation_dept_sem_allowlist: 
-    - Information Technology_S4
-    - Computer Science & Design_S4
-    - Computer Science & Business Systems_S4
-    - Artificial Intelligence & Machine Learning_S4
-    - Artificial Intelligence & Data Science_S4
-    - Computer Science & Engineering (Cyber Security)_S4
-    - Computer Science & Engineering_S6
-    - Information Technology_S6
-    - Artificial Intelligence & Machine Learning_S6
-    - Artificial Intelligence & Data Science_S6
-    - Computer Science & Business Systems_S6
-    - Computer Science & Design_S6
-    - Computer Science & Engineering (Cyber Security)_S6
-    - Electrical & Electronics Engineering_S6
-    - Electronics & Communication Engineering_S6
-    - Mechanical Engineering_S6
+    - Information Technology_S3
+    - Computer Science & Design_S3
+    - Computer Science & Business Systems_S3
+    - Artificial Intelligence & Machine Learning_S3
+    - Artificial Intelligence & Data Science_S3
+    - Computer Science & Engineering (Cyber Security)_S3
+    - Computer Science & Engineering_S5
+    - Information Technology_S5
+    - Artificial Intelligence & Machine Learning_S5
+    - Artificial Intelligence & Data Science_S5
+    - Computer Science & Business Systems_S5
+    - Computer Science & Design_S5
+    - Computer Science & Engineering (Cyber Security)_S5
+    - Electrical & Electronics Engineering_S5
+    - Electronics & Communication Engineering_S5
+    - Mechanical Engineering_S5
 
 constraints:
   lab:
@@ -555,7 +542,6 @@ constraints:
           - KSL02
         target_semesters:
           - 1
-          - 2
         room_keywords:
           - computer
     room_capacity:
@@ -611,6 +597,13 @@ constraints:
       priority: 8
       weight: 0.8
       params: {}
+    computer_lab_mapping:
+      enabled: true
+      priority: 8
+      weight: 1.0
+      params:
+        mode: soft
+        penalty_weight: 150
     core_group_slot_cap:
       enabled: false
       priority: 7
@@ -653,24 +646,22 @@ constraints:
       weight: 1.0
       params:
         course_codes:
-          - BT23523
-          - EE23421
-          - CH23621
-          - GE23627
-          - BM23421
-          - FT23211
-          - FT23411
-          - FT23412
-          - FT23611
-          - FT23612
-          - BT23621
-          - BT23421
-          - BT23422
-          - BT23221
+          - BM23521
+          - CS23422
+          - BM23721
+          - BM23321
+          - BM23322
+          - FT23511
+          - FT23512
+          - BT23721
+          - BT23521
+          - CH23521
+          - CH23721
+          - CH23722
         preferred_pairs:
           - [L1, L2]
           - [L3, L4]
-          - [L5, L6]
+          - [L4, L5]
         min_practical_hours: 4
         min_student_count: 36
     teacher_daily_presence_lab:
@@ -706,6 +697,7 @@ constraints:
         course_codes:
           - GE23111
           - HS23221
+          - GE23627
         required_slots: 2
         pair_length: 2
         enforce_same_room: true
@@ -733,10 +725,10 @@ constraints:
     room_assignment:
       enabled: true
       priority: 8
-      weight: 0.7
+      weight: 5.0
       params:
         big_capacity_threshold: 140
-        overflow_penalty: 5
+        overflow_penalty: 500
         default_blocks:
           - D Block
           - ARC Block
@@ -750,9 +742,9 @@ constraints:
           - B Block
           - C Block
         # Semester-specific block preference ordering.
-        # For 1st year Semester 2, prefer D Block first, then ARC Block.
+        # For 1st year Semester 1, prefer D Block first, then ARC Block.
         semester_block_preferences:
-          "2":
+          "1":
             - D Block
             - ARC Block
         year_block_preferences:
@@ -799,7 +791,7 @@ constraints:
           - fri
           - saturday
         target_semesters:
-          - 8
+          - 7
         excluded_departments:
           - Computer Science & Business Systems
     group_non_overlap:
@@ -807,6 +799,15 @@ constraints:
       priority: 9
       weight: 1.0
       params: {}
+    dept_day_coverage:
+      enabled: true
+      priority: 9
+      weight: 1.0
+      params:
+        mode: hard
+        target_days: 5
+        min_total_activities: 5
+        soft_penalty_weight: 500
     teacher_overlap:
       enabled: true
       priority: 10
@@ -814,12 +815,12 @@ constraints:
       params: {}
 
     teacher_day_window:
-      enabled: true
+      enabled: false
       priority: 9
       weight: 1.0
       params:
-        window_lab_csv_path: output/final/2025-12-26_04-47-12/csv/lab_schedule.csv
-        window_theory_csv_path: output/final/2025-12-26_04-47-12/csv/theory_schedule.csv
+        window_lab_csv_path: data/final/2025-12-26_04-47-12/csv/lab_schedule.csv
+        window_theory_csv_path: data/final/2025-12-26_04-47-12/csv/theory_schedule.csv
     fixed_schedule_lock:
       enabled: false
       priority: 10
@@ -841,7 +842,7 @@ constraints:
         soft_cap_hours: 6
         soft_penalty_weight: 5
         excluded_departments:
-          - Electronics & Communication Engineering_S2
+          - Electronics & Communication Engineering_S1
     lunch_alignment:
       enabled: true
       priority: 9
@@ -853,13 +854,12 @@ constraints:
           - 5
         minimum_free_slots: 1
         soft_departments:
-          - Information Technology_S2
-          - Computer Science & Engineering_S2
-          - Computer Science & Engineering-2_S2
-          - Artificial Intelligence & Data Science_S2
-          - Artificial Intelligence & Machine Learning_S2
-          - Electronics & Communication Engineering_S2
-        penalty_weight: 50
+          - Information Technology_S1
+          - Computer Science & Engineering_S1
+          - Computer Science & Engineering-2_S1
+          - Electronics & Communication Engineering_S1
+          - Biomedical Engineering_S5
+        penalty_weight: 200
     five_pm_policy:
       enabled: true
       priority: 7
@@ -869,71 +869,64 @@ constraints:
           - Artificial Intelligence & Data Science
           - Artificial Intelligence & Machine Learning
           - Automobile Engineering
-          - Aeronautical Engineering_S2
-          - Aeronautical Engineering_S4
-          - Aeronautical Engineering_S6
-          - Aeronautical Engineering_S8
-          - Biomedical Engineering_S2
-          - Biomedical Engineering_S4
-          - Biomedical Engineering_S6
-          - Biomedical Engineering_S8
-          - Biotechnology_S2
-          - Biotechnology_S4
-          - Biotechnology_S6
-          - Biotechnology_S8
-          - Chemical Engineering_S2
-          - Chemical Engineering_S4
-          - Chemical Engineering_S6
-          - Chemical Engineering_S8
+          - Aeronautical Engineering_S1
+          - Aeronautical Engineering_S3
+          - Aeronautical Engineering_S5
+          - Aeronautical Engineering_S7
+          - Biomedical Engineering_S1
+          - Biomedical Engineering_S3
+          - Biomedical Engineering_S5
+          - Biomedical Engineering_S7
+          - Biotechnology_S1
+          - Biotechnology_S3
+          - Biotechnology_S5
+          - Biotechnology_S7
+          - Chemical Engineering_S1
+          - Chemical Engineering_S3
+          - Chemical Engineering_S5
+          - Chemical Engineering_S7
           - Civil Engineering
-          - Computer Science & Business Systems_S2
-          - Computer Science & Business Systems_S4
-          - Computer Science & Business Systems_S6
-          - Computer Science & Business Systems_S8
-          - Computer Science & Design_S2
-          - Computer Science & Design_S4
-          - Computer Science & Design_S6
-          - Computer Science & Design_S8
+          - Computer Science & Business Systems_S1
+          - Computer Science & Business Systems_S3
+          - Computer Science & Business Systems_S5
+          - Computer Science & Business Systems_S7
+          - Computer Science & Design_S1
+          - Computer Science & Design_S3
+          - Computer Science & Design_S5
+          - Computer Science & Design_S7
           - Computer Science & Engineering (Cyber Security)
-          - Computer Science & Engineering_S2
-          - Computer Science & Engineering-2_S2
-          - Computer Science & Engineering_S4
-          - Computer Science & Engineering_S6
-          - Computer Science & Engineering_S8
-          - Electrical & Electronics Engineering_S2
-          - Electrical & Electronics Engineering_S4
-          - Electrical & Electronics Engineering_S6
-          - Electrical & Electronics Engineering_S8
-          - Electronics & Communication Engineering_S2
-          - Electronics & Communication Engineering_S4
-          - Electronics & Communication Engineering_S6
-          - Electronics & Communication Engineering_S8
-          - Food Technology_S2
-          - Food Technology_S4
-          - Food Technology_S6
-          - Food Technology_S8
+          - Computer Science & Engineering_S1
+          - Computer Science & Engineering-2_S1
+          - Computer Science & Engineering_S3
+          - Computer Science & Engineering_S5
+          - Computer Science & Engineering_S7
+          - Electrical & Electronics Engineering_S1
+          - Electrical & Electronics Engineering_S3
+          - Electrical & Electronics Engineering_S5
+          - Electrical & Electronics Engineering_S7
+          - Electronics & Communication Engineering_S1
+          - Electronics & Communication Engineering_S3
+          - Electronics & Communication Engineering_S5
+          - Electronics & Communication Engineering_S7
+          - Food Technology_S1
+          - Food Technology_S3
+          - Food Technology_S5
+          - Food Technology_S7
           - Information Technology
-          - Mechanical Engineering_S2
-          - Mechanical Engineering_S4
-          - Mechanical Engineering_S6
-          - Mechanical Engineering_S8
-          - Mechatronics Engineering_S2
-          - Mechatronics Engineering_S4
-          - Mechatronics Engineering_S6
-          - Mechatronics Engineering_S8
+          - Mechanical Engineering_S1
+          - Mechanical Engineering_S3
+          - Mechanical Engineering_S5
+          - Mechanical Engineering_S7
+          - Mechatronics Engineering_S1
+          - Mechatronics Engineering_S3
+          - Mechatronics Engineering_S5
+          - Mechatronics Engineering_S7
           - Robotics & Automation
         soft_departments:
-        blocked_theory_slots:
-          - 9
-          - 10
-        blocked_lab_sessions:
-          - L6
-        discouraged_theory_slots:
-          - 9
-          - 10
-        discouraged_lab_sessions:
-          - L5
-          - L6
+        blocked_theory_slots: []
+        blocked_lab_sessions: []
+        discouraged_theory_slots: []
+        discouraged_lab_sessions: []
         soft_penalty_weight: 10
     shift_pattern:
       enabled: true
@@ -955,7 +948,7 @@ constraints:
         pop_csv_path: data/pop.csv
 
     dept_slot_blocking:
-      enabled: true
+      enabled: false
       priority: 10
       weight: 1.0
       params:
@@ -968,6 +961,34 @@ constraints:
         block_dept_slots_course_codes:
           - CS23231
           - CB23231
+    course_day_spread:
+      enabled: true
+      priority: 9
+      weight: 1.0
+      params:
+        mode: hard
+        min_distinct_days: 2
+        min_total_activities: 2
+        include_single_domain_courses: false
+        soft_penalty_weight: 300
+    morning_theory_lab:
+      enabled: true
+      priority: 5
+      weight: 1.0
+      params:
+        penalty_weight: 1
+
+    engineering_graphics_preference:
+      enabled: false
+      priority: 8
+      weight: 1.0
+      params:
+        preferred_rooms:
+          - C401
+          - B310
+        course_codes:
+          - GE23111
+        penalty_weight: 100.0
 
 model:
   big_m_value: 1000.0
@@ -981,25 +1002,26 @@ model:
   use_sparse_variables: true
 
 runtime:
-  time_limit_sec: 10000
-  thread_count: 12
-  enable_lns: true
-  enable_trace: true
+  time_limit_sec: 30000
+  thread_count: 8
+  enable_lns: false
+  enable_trace: false
   solution_limit: null
   stop_after_first_solution: true
   probing_level: 2
   search_branching: PORTFOLIO_SEARCH
-  restart_log_size: 18.0
+  restart_log_size: 20.0
   linearization_level: 2
   cp_model_presolve: true
-  symmetry_level: 2
+  symmetry_level: 1
   max_number_of_conflicts: 100000000
   warm_start:
     enabled: true
     snapshot_dir: output/combined_scheduler/warm_start_cache
-    max_hint_literals: 50000
+    max_hint_literals: 100000
     max_snapshot_age_hours: 168
     require_signature_match: false
+
 
 logging:
   level: INFO

@@ -1,0 +1,45 @@
+department,course_code,preferred_lab_room,preferred_lab_block
+aids,AD23531,,J Block;K Block
+aids,AD23532,,J Block;K Block
+aids,AD23632,,J Block;K Block
+aids,AD23731,,J Block;K Block
+aiml,AI23231,,J Block;K Block
+aiml,AI23521,,J Block;K Block
+aiml,AI23531,,J Block;K Block
+aiml,AI23A35,,J Block;K Block
+aiml,AI23B34,,K Block;J Block
+ae,AT23321,KFR04,K Block
+ae,AT23522,KFL02,K Block
+ae,AT23532,KFL02,K Block
+ae,AT23721,KFR01,K Block
+biot,BT23522,TLGL3,Techlounge
+biot,BT23722,A210/211;TLFL1;TLFL2,A Block;Techlounge
+csbs,CB23131,KSL02;KSL03,K Block
+csbs,CB23331,TLFL1;TLFL2,Techlounge
+csbs,CB23332,JL2;JL3,J Block
+csbs,CB23333,JL2;JL1,J Block
+csbs,CB23531,TLFL1;TLFL2,Techlounge
+csbs,CB23532,JL1;JL2,J Block
+csbs,CB23731,JL1;JL2,J Block
+csbs,CB23732,JR1;JR2,J Block
+csbs,CB23E32,TLGL3;TLGL4,Techlounge
+csbs,CB23E36,TLGL3;TLGL4,Techlounge
+csd,CD23321,TLFL3,Techlounge
+csd,CD23331,KFL01,K Block
+csd,CD23332,KFL01,K Block
+csd,CD23531,KFL01,K Block
+csd,CD23721,KFL01,K Block
+csd,CD23731,KFL01,K Block
+ce2,CE23531,TIFAC I01,A Block
+ce2,CE23721,TIFAC I01,A Block
+ce2,CE23722,TIFAC I01,A Block
+cse,CS23331,,K Block;J Block
+cse,CS23332,,K Block;J Block
+cse,CS23333,,K Block;J Block
+be,CS23422,TLGL1;TLGL2,Techlounge
+cse,CS23532,,K Block;J Block
+ece,EC23531,A208/209;A210/211,A Block
+me,GE23111,,K Block;A Block;D Block
+it,IT23531,,A Block;K Block
+it,IT23721,,A Block;K Block;J Block
+it,IT23731,,A Block;K Block;J Block

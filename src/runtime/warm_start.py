@@ -11,6 +11,7 @@ from typing import Any, Dict, Mapping, Optional, Sequence
 
 from ..config.schemas import SchedulerConfig, WarmStartConfig
 from ..models.model_builder import ConstraintModel
+from ..telemetry.grouping import GroupTelemetryBuilder
 from .extractor_schema import ScheduleExtractionResult
 
 LOGGER = logging.getLogger(__name__)
@@ -199,13 +200,22 @@ class WarmStartManager:
             "signature": signature,
             "config_name": self._config.meta.name,
             "config_version": self._config.meta.version,
-            "lab_count": len(lab_records),
             "theory_count": len(theory_records),
             "output_dir": str(output_dir) if output_dir else None,
         }
+
+        # Enrich with grouping telemetry
+        grouping_info = {}
+        try:
+            builder = GroupTelemetryBuilder(constraint_results=constraint_model.constraint_results)
+            grouping_info = builder.build(schedule)
+        except Exception:
+            self._logger.warning("Failed to build grouping telemetry for snapshot enrichment", exc_info=True)
+
         return {
             "version": self.SNAPSHOT_VERSION,
             "metadata": metadata,
+            "grouping_info": grouping_info,
             "lab_assignments": lab_records,
             "theory_assignments": theory_records,
         }

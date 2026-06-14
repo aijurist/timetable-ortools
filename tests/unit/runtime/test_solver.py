@@ -89,6 +89,23 @@ def test_solver_runner_exports_infeasible_snapshot(tmp_path: Path) -> None:
 	assert result.diagnostics_path and result.diagnostics_path.exists()
 
 
+def test_solver_runner_streams_cp_sat_logs_at_debug(tmp_path: Path, caplog) -> None:
+	config = _config_with_output(tmp_path)
+	logger = logging.getLogger("tests.solver.verbose")
+	caplog.set_level(logging.DEBUG, logger=logger.name)
+	runner = SolverRunner(config, logger_=logger)
+
+	model = cp_model.CpModel()
+	x = model.NewBoolVar("x")
+	model.Add(x == 1)
+
+	result = runner.solve(_build_constraint_model(model))
+
+	assert result.status == "OPTIMAL"
+	assert any("Streaming CP-SAT search progress" in record.message for record in caplog.records)
+	assert any(record.message.startswith("CP-SAT:") for record in caplog.records)
+
+
 def test_solver_runner_applies_yaml_parameters(tmp_path: Path, monkeypatch) -> None:
 	params_path = tmp_path / "solver_params.yaml"
 	params_path.write_text(

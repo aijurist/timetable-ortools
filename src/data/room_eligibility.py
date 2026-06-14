@@ -23,7 +23,7 @@ class RoomEligibilityIndex:
     # Core lab courses: course_code -> specific allowed room IDs
     core_lab_mapping: Dict[str, Set[str]] = field(default_factory=dict)
     
-    # Fallback rooms for non-mapped courses
+    # Fallback rooms for non-mapped lab courses, normally Computer-Lab rooms.
     general_lab_rooms: Set[str] = field(default_factory=set)
     
     # All lab room IDs (for courses without core mapping)
@@ -53,7 +53,7 @@ class RoomEligibilityIndex:
             if rooms:
                 return tuple(rooms)
         
-        # Fall back to general lab rooms (laboratory_room_ids)
+        # Fall back to general computer lab rooms for unmapped lab courses.
         if self.general_lab_rooms:
             return tuple(self.general_lab_rooms)
         
@@ -211,7 +211,7 @@ def build_room_eligibility_index(
         index.theory_inventory = _build_theory_inventory(rooms_df, theory_room_ids)
         logger.info("Built theory room inventory with %d rooms", len(index.theory_inventory.capacity_lookup))
     
-    # Set general lab rooms (fallback for non-mapped courses)
+    # Set general lab rooms (Computer-Lab fallback for non-mapped courses)
     if laboratory_room_ids:
         index.general_lab_rooms = set(str(rid) for rid in laboratory_room_ids)
     else:

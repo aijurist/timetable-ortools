@@ -1,19 +1,29 @@
-﻿Faculty Name,Subject Code,Preferred Day 1,Preferred Day 2,Preferred Day 3,Teacher ID
-Dr. T. Srinivasan,AI23632,Thursday,Friday,,74
-Mrs. Premalatha Anand,CS23432,Tuesday,Wednesday,,467
-Mr. T. Srinivasan Thiyagarajan,GE23627,Tuesday,Wednesday,,43
-Mr. K. Subramanian,AD23631,Thursday,Friday,,18
-Preejith P,CS23231,,Tuesday,Wednesday,42
-Preejith P,AI23431,,Tuesday,Wednesday,42
-Mr.karthikeyan,CS23221,,Tuesday,Wednesday,249
-Mr.Natarajan,ME23PE01,Friday,Saturday,,676
-Sorna,CS23634, Tuesday,Wednesday,Thursday,31
-Sorna,GE23627, Tuesday,Wednesday,Thursday,31
-Vijayakumar R,CS23333,Tuesday,Wednesday,Thursday,211
-Vijayakumar R,CD23621,Tuesday,Wednesday,Thursday,211
-Vijay K,GE23627,Tuesday,Wednesday,Thursday,57
-Revathy,CD23C32,Wednesday,Thursday,Friday,213
-Bhuvaneswaran,CS23PE01,Tuesday,Wednesday,Thursday,250
-Bhuvaneswaran,CS23621,Tuesday,Wednesday,Thursday,250
-Priya,CS23632,Tuesday,Wednesday,Thursday,459
-Rajalakshmy D,MA23431,Wednesday,Thursday,Friday,529
+Teacher ID,Preferred Day 1,Preferred Day 2,Preferred Day 3,day_time_windows,alternative_lab_days
+1028,Mon,Tue,Wed,"Mon 08:00-17:00, Tue 08:00-17:00, Wed 08:00-17:00, Thu 08:00-17:00, Fri 08:00-17:00",
+1015,Fri,Sat,,"Fri 09:00-12:00, Sat 09:00-12:00",
+468,,,,,
+1041,Mon,Tue,Wed,"Mon 08:00-17:00, Tue 08:00-17:00, Wed 08:00-17:00, Thu 08:00-17:00, Fri 08:00-17:00",
+492,,,,,
+288,,,,,
+17,Sat,,,Sat 08:00-17:00,
+73,,,,,
+1019,Tue,Wed,Thu,"Tue 08:00-17:00, Wed 08:00-17:00, Thu 08:00-17:00, Fri 08:00-17:00, Sat 08:00-17:00",
+1037,Tue,Wed,Thu,"Tue 08:00-17:00, Wed 08:00-17:00, Thu 08:00-17:00, Fri 08:00-17:00, Sat 08:00-17:00",
+1001,Tue,Wed,Thu,"Tue 08:00-17:00, Wed 08:00-17:00, Thu 08:00-17:00, Fri 08:00-17:00, Sat 08:00-17:00",
+1039,Tue,Wed,Thu,"Tue 08:00-17:00, Wed 08:00-17:00, Thu 08:00-17:00, Fri 08:00-17:00, Sat 08:00-17:00",
+1026,Tue,Wed,Thu,"Tue 08:00-17:00, Wed 08:00-17:00, Thu 08:00-17:00, Fri 08:00-17:00, Sat 08:00-17:00",
+9,Wed,Thu,Fri,"Wed 08:00-17:00, Thu 08:00-17:00, Fri 08:00-17:00",
+42,,,,,
+467,Tue,Wed,Thu,"Tue 11:50-15:00, Wed 11:50-13:20, Thu 10:00-13:20",
+459,Mon,Tue,Wed,"Mon 08:00-17:00, Tue 08:00-17:00, Wed 08:00-17:00, Thu 08:00-17:00, Fri 08:00-17:00",
+287,,,,,
+491,,,,,
+286,,,,,
+43,,,,,
+490,,,,,
+74,,,,,
+489,,,,,
+211,Mon,Sat,,"Mon 08:00-17:00, Sat 08:00-17:00",
+1034,Tue,Wed,Thu,"Tue 08:00-17:00, Wed 08:00-17:00, Thu 08:00-17:00, Fri 08:00-17:00, Sat 08:00-17:00",
+289,Mon,Tue,Wed,"Mon 10:00-17:00, Tue 10:00-17:00, Wed 10:00-17:00, Thu 10:00-17:00, Fri 10:00-17:00",
+322,Wed,Thu,Fri,"Wed 10:00-17:00, Thu 10:00-17:00, Fri 10:00-17:00, Sat 10:00-17:00",

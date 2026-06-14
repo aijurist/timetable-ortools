@@ -26,6 +26,7 @@ class PathConfig:
     rooms_csv: Path
     day_order_csv: Optional[Path] = None
     core_lab_mapping_csv: Optional[Path] = None
+    computer_lab_mapping_csv: Optional[Path] = None
     preferences_csv: Optional[Path] = None
     fixed_lab_schedule_csv: Optional[Path] = None
     fixed_theory_schedule_csv: Optional[Path] = None
@@ -36,6 +37,7 @@ class PathConfig:
         object.__setattr__(self, "rooms_csv", _to_path(self.rooms_csv))
         object.__setattr__(self, "day_order_csv", _to_path(self.day_order_csv))
         object.__setattr__(self, "core_lab_mapping_csv", _to_path(self.core_lab_mapping_csv))
+        object.__setattr__(self, "computer_lab_mapping_csv", _to_path(self.computer_lab_mapping_csv))
         object.__setattr__(self, "preferences_csv", _to_path(self.preferences_csv))
         object.__setattr__(self, "fixed_lab_schedule_csv", _to_path(self.fixed_lab_schedule_csv))
         object.__setattr__(self, "fixed_theory_schedule_csv", _to_path(self.fixed_theory_schedule_csv))
@@ -55,6 +57,7 @@ class PathConfig:
             rooms_csv=_resolve(self.rooms_csv),
             day_order_csv=_resolve(self.day_order_csv),
             core_lab_mapping_csv=_resolve(self.core_lab_mapping_csv),
+            computer_lab_mapping_csv=_resolve(self.computer_lab_mapping_csv),
             preferences_csv=_resolve(self.preferences_csv),
             fixed_lab_schedule_csv=_resolve(self.fixed_lab_schedule_csv),
             fixed_theory_schedule_csv=_resolve(self.fixed_theory_schedule_csv),

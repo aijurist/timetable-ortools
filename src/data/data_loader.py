@@ -62,6 +62,10 @@ class DataLoader:
             self._paths.core_lab_mapping_csv,
             friendly_name="core lab mapping",
         )
+        computer_lab_mapping_df = self._read_csv(
+            self._paths.computer_lab_mapping_csv,
+            friendly_name="computer lab mapping",
+        )
         teacher_preferences_df = self._read_csv(
             self._paths.preferences_csv,
             friendly_name="teacher preferences",
@@ -92,6 +96,7 @@ class DataLoader:
             rooms_df=rooms_df,
             day_order_df=day_order_df,
             core_lab_mapping_df=core_lab_mapping_df,
+            computer_lab_mapping_df=computer_lab_mapping_df,
             teacher_preferences_df=teacher_preferences_df,
             time=time_artifacts,
             departments=department_artifacts,
@@ -311,19 +316,24 @@ class DataLoader:
         return snapshots
 
     def _build_room_collections(self, rooms_df: pd.DataFrame) -> RoomCollections:
+        room_type_normalized = self._normalise_room_type_series(rooms_df)
+
         if "is_lab" in rooms_df.columns:
             lab_mask = rooms_df["is_lab"].fillna(0).astype(int) == 1
         elif "room_type" in rooms_df.columns:
-            lab_mask = rooms_df["room_type"].astype(str).str.contains("lab", case=False, na=False)
+            lab_mask = room_type_normalized.str.contains("lab", na=False)
         else:
             lab_mask = pd.Series(False, index=rooms_df.index)
 
         lab_rooms = rooms_df.loc[lab_mask].copy()
         theory_rooms = rooms_df.loc[~lab_mask].copy()
 
+        # The active room schema uses "Core-Lab" and "Computer-Lab".
+        # Unmapped lab courses should fall back to computer labs only, while
+        # core labs remain available through explicit core_lab_mapping.csv rows.
         laboratory_mask = pd.Series(False, index=rooms_df.index)
         if "room_type" in rooms_df.columns:
-            laboratory_mask = rooms_df["room_type"].astype(str).str.contains("laboratory", case=False, na=False)
+            laboratory_mask = lab_mask & room_type_normalized.str.contains("computer", na=False)
 
         lab_room_ids = tuple(lab_rooms["id"].astype(str))
         theory_room_ids = tuple(theory_rooms["id"].astype(str))
@@ -335,6 +345,18 @@ class DataLoader:
             lab_room_ids=lab_room_ids,
             theory_room_ids=theory_room_ids,
             laboratory_room_ids=laboratory_room_ids,
+        )
+
+    @staticmethod
+    def _normalise_room_type_series(rooms_df: pd.DataFrame) -> pd.Series:
+        if "room_type" not in rooms_df.columns:
+            return pd.Series("", index=rooms_df.index)
+        return (
+            rooms_df["room_type"]
+            .fillna("")
+            .astype(str)
+            .str.lower()
+            .str.replace(r"[^a-z0-9]+", "", regex=True)
         )
 
     # ------------------------------------------------------------------

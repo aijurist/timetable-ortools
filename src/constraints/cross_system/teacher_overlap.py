@@ -82,31 +82,11 @@ class TeacherOverlapConstraint(Constraint):
 					if len(entries) <= 1:
 						continue
 
-					dsa_labs = [e for e in entries if _is_dsa_override_activity(e)]
-					others = [e for e in entries if not _is_dsa_override_activity(e)]
-
-					if not others:
+					if _can_co_schedule(entries):
 						continue
-
-					if not dsa_labs:
-						if _can_co_schedule(others):
-							continue
-						context.model.AddAtMostOne(e.literal for e in others)
-						clauses += 1
-						activity_literals += len(others)
-						continue
-
-					if len(others) > 1:
-						if not _can_co_schedule(others):
-							context.model.AddAtMostOne(e.literal for e in others)
-							clauses += 1
-							activity_literals += len(others)
-
-					for dsa in dsa_labs:
-						for other in others:
-							context.model.AddImplication(dsa.literal, other.literal.Not())
-							clauses += 1
-							activity_literals += 2
+					context.model.AddAtMostOne(e.literal for e in entries)
+					clauses += 1
+					activity_literals += len(entries)
 
 		status = ConstraintStatus.APPLIED if clauses else ConstraintStatus.SKIPPED
 		return ConstraintApplicationResult(
@@ -322,13 +302,6 @@ def _can_co_schedule(entries: Sequence[ActivityEntry]) -> bool:
 	if first.course_id != second.course_id:
 		return False
 	return first.practical_hours >= 4 and second.practical_hours >= 4
-
-
-def _is_dsa_override_activity(entry: ActivityEntry) -> bool:
-	if entry.kind != "lab":
-		return False
-	code = str(entry.course_code or "").strip().upper()
-	return code in {"CS23231", "CB23231"}
 
 def build_teacher_overlap_constraint(
 	metadata: ConstraintMetadata,

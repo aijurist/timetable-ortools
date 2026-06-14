@@ -1,7 +1,7 @@
 """Load blocking masks from a partial schedule (CSV) and block department slots.
 
 This constraint loads an existing CSV schedule (e.g. a partial one) and:
-1. Identifies department slots occupied by specific high-priority courses (e.g. DSA).
+1. Identifies department slots occupied by configured high-priority courses.
 2. Blocks those slots for the entire department to prevent conflicts.
 3. Optionally locks other assignments found in the CSV.
 """

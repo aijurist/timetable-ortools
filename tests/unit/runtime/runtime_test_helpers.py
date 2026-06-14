@@ -87,6 +87,7 @@ def build_extended_container() -> ExtendedDataContainer:
         rooms_df=pd.DataFrame(),
         day_order_df=None,
         core_lab_mapping_df=None,
+        computer_lab_mapping_df=None,
         teacher_preferences_df=None,
         time=time_artifacts,
         departments=department_artifacts,

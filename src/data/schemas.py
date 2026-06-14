@@ -125,6 +125,7 @@ class DataLoadResult:
     rooms_df: pd.DataFrame
     day_order_df: Optional[pd.DataFrame]
     core_lab_mapping_df: Optional[pd.DataFrame]
+    computer_lab_mapping_df: Optional[pd.DataFrame]
     teacher_preferences_df: Optional[pd.DataFrame]
     time: TimeSystemArtifacts
     departments: DepartmentArtifacts
@@ -196,6 +197,7 @@ class DataLoadResult:
             "departments": self.departments_list,
             "room_registry": self.room_registry,
             "core_lab_mapping_df": self.core_lab_mapping_df,
+            "computer_lab_mapping_df": self.computer_lab_mapping_df,
             "teacher_preferences_df": self.teacher_preferences_df,
             "working_days": time.working_days,
             "num_days": len(time.working_days),
