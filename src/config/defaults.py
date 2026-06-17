@@ -458,6 +458,9 @@ def default_model_config() -> ModelConfig:
         },
         slack_penalty=1.0,
         use_sparse_variables=True,
+        theory_room_candidate_limit=12,
+        theory_room_min_candidates=4,
+        theory_room_anchor_candidates=4,
     )
 
 

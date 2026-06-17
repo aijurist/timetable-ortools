@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from collections import defaultdict
-from typing import Dict, Mapping, Optional, Set, Tuple
+from typing import Dict, Iterable, Mapping, Optional, Sequence, Set, Tuple
 
 import pandas as pd
 
@@ -63,13 +63,17 @@ class RoomEligibilityIndex:
     def get_eligible_theory_rooms(
         self, 
         student_count: int = 0, 
-        semester: Optional[int] = None
+        semester: Optional[int] = None,
+        course_id: Optional[str] = None,
+        group_id: Optional[str] = None,
     ) -> Tuple[str, ...]:
-        """Return eligible room IDs for a theory course based on capacity and tier policies.
+        """Return eligible room IDs for a theory course based on capacity and block ranking.
         
         Args:
             student_count: Number of students (determines capacity needs and tiers)
             semester: Semester number (determines block preferences)
+            course_id: Optional stable salt for room candidate rotation
+            group_id: Optional stable salt for room candidate rotation
             
         Returns:
             Tuple of room IDs eligible for this course
@@ -77,7 +81,12 @@ class RoomEligibilityIndex:
         if not self.theory_inventory:
             return self.all_theory_room_ids
             
-        return self.theory_inventory.get_eligible_rooms(student_count, semester)
+        return self.theory_inventory.get_eligible_rooms(
+            student_count,
+            semester,
+            course_id=course_id,
+            group_id=group_id,
+        )
 
 
 @dataclass
@@ -89,97 +98,202 @@ class TheoryRoomInventory:
     
     # Configuration
     big_threshold: int = 140
-    default_blocks: Tuple[str, ...] = ("A Block", "B Block", "C Block")
+    default_blocks: Tuple[str, ...] = ("D Block", "Arc Block", "A Block", "B Block", "C Block")
+    first_year_blocks: Tuple[str, ...] = ("D Block", "Arc Block")
     senior_blocks: Tuple[str, ...] = ("A Block", "B Block")
     second_year_blocks: Tuple[str, ...] = ("B Block", "C Block")
+    candidate_limit: Optional[int] = 12
+    minimum_candidates: int = 4
+    anchor_candidates: int = 4
     
-    def get_eligible_rooms(self, student_count: int, semester: Optional[int]) -> Tuple[str, ...]:
-        """Apply the same filtering logic as TheoryClassroomAssignmentConstraint."""
-        # Resolve allowed blocks
-        allowed_blocks = self._resolve_allowed_blocks(semester)
-        if not allowed_blocks:
-            allowed_blocks = self.default_blocks
-            
-        # Determine tier
-        min_cap_needed = 0
-        specific_tier_rooms: Optional[Set[str]] = None
-        is_big = student_count >= self.big_threshold
-        
-        if student_count > 210:
-            min_cap_needed = student_count
-            specific_tier_rooms = {"225"} # ANEW201
-        elif student_count > 165:
-            min_cap_needed = student_count
-            specific_tier_rooms = {"221", "222"} # ANEW101, ANEW102
-        elif student_count > 130:
-            min_cap_needed = student_count
-            specific_tier_rooms = {"223", "224", "220", "3"} # ANEW103, ANEW104, KSL02, A104/105
-        elif student_count >= 100:
-            min_cap_needed = 140 # Force large room for 100+ student case
-            specific_tier_rooms = {"223", "224", "220", "3"}
-            
-        # Collect candidate rooms from allowed blocks
-        candidate_rooms = []
-        for block in allowed_blocks:
-            if block in self.rooms_by_block:
-                candidate_rooms.extend(self.rooms_by_block[block])
-                
-        if not candidate_rooms:
-            candidate_rooms = list(self.capacity_lookup.keys())
-            
-        filtered_rooms = []
-        
+    def __post_init__(self) -> None:
+        if self.candidate_limit is not None:
+            self.candidate_limit = max(1, int(self.candidate_limit))
+        self.minimum_candidates = max(1, int(self.minimum_candidates))
+        self.anchor_candidates = max(0, int(self.anchor_candidates))
+
+    def get_eligible_rooms(
+        self,
+        student_count: int,
+        semester: Optional[int],
+        *,
+        course_id: Optional[str] = None,
+        group_id: Optional[str] = None,
+    ) -> Tuple[str, ...]:
+        """Return ranked and capped theory room candidates.
+
+        Capacity is the only hard room-size filter. Block preference and capacity
+        fit rank the remaining candidates; a small stable rotation keeps similar
+        courses from all competing for the exact same tail rooms.
+        """
+        count = max(0, int(student_count or 0))
+        preferred_blocks = self._resolve_allowed_blocks(semester)
+        if not preferred_blocks:
+            preferred_blocks = self.default_blocks
+        salt = f"{group_id or ''}:{course_id or ''}:{count}:{semester or ''}"
+
+        min_cap_needed = self._capacity_policy(count)
+        capacity_floor = max(count, min_cap_needed, 1)
+        all_capacity_valid = [
+            room_id
+            for room_id in self._all_room_ids()
+            if self.capacity_lookup.get(room_id, 0) >= capacity_floor
+        ]
+        if not all_capacity_valid:
+            return tuple()
+
         if min_cap_needed > 0:
-            # Strict filtering: ignore block restrictions to find capacity
-            all_rooms = list(self.capacity_lookup.keys())
-            sized = [
-                rid for rid in all_rooms
-                if self.capacity_lookup.get(rid, 0) >= min_cap_needed
-            ]
-            
-            if specific_tier_rooms:
-                tier_matches = [r for r in sized if r in specific_tier_rooms]
-                if tier_matches:
-                    filtered_rooms = tier_matches
-                else:
-                    filtered_rooms = sized
-            else:
-                filtered_rooms = sized
-                
-        elif is_big:
-            # Legacy big threshold check (restrict to allowed blocks)
-            filtered_rooms = [
-                rid for rid in candidate_rooms
-                if self.capacity_lookup.get(rid, 0) >= self.big_threshold
-            ]
-            
-        else:
-            # Small courses: prefer small rooms (< big_threshold)
-            small_candidates = [
-                rid for rid in candidate_rooms
-                if self.capacity_lookup.get(rid, 0) < self.big_threshold
-            ]
-            
-            if small_candidates:
-                filtered_rooms = small_candidates
-            else:
-                # Fallback to any room that fits
-                fallback = [
-                    rid for rid in self.capacity_lookup.keys()
-                    if self.capacity_lookup.get(rid, 0) >= max(student_count, 50)
-                ]
-                filtered_rooms = fallback
-                
-        return tuple(filtered_rooms)
+            ranked = self._rank_rooms(all_capacity_valid, count, preferred_blocks)
+            return self._limit_candidates(ranked, salt)
+
+        preferred_capacity_valid = [
+            room_id
+            for room_id in self._rooms_in_blocks(preferred_blocks)
+            if self.capacity_lookup.get(room_id, 0) >= capacity_floor
+        ]
+        preferred_right_sized = [
+            room_id
+            for room_id in preferred_capacity_valid
+            if self.capacity_lookup.get(room_id, 0) < self.big_threshold
+        ]
+        all_right_sized = [
+            room_id
+            for room_id in all_capacity_valid
+            if self.capacity_lookup.get(room_id, 0) < self.big_threshold
+        ]
+
+        layers = (
+            preferred_right_sized,
+            preferred_capacity_valid,
+            all_right_sized,
+            all_capacity_valid,
+        )
+        pool: list[str] = []
+        seen: set[str] = set()
+        target = self._target_candidate_count(len(all_capacity_valid))
+        for layer in layers:
+            ranked_layer = self._rank_rooms(layer, count, preferred_blocks)
+            for room_id in ranked_layer:
+                if room_id in seen:
+                    continue
+                seen.add(room_id)
+                pool.append(room_id)
+            if self.candidate_limit is not None and len(pool) >= target:
+                break
+
+        return self._limit_candidates(tuple(pool or all_capacity_valid), salt)
         
     def _resolve_allowed_blocks(self, semester: Optional[int]) -> Tuple[str, ...]:
         if semester is None:
             return self.default_blocks
+        if semester in (1, 2):
+            return self.first_year_blocks or self.default_blocks
         if semester >= 5:
             return self.senior_blocks or self.default_blocks
         elif semester in (3, 4):
             return self.second_year_blocks or self.default_blocks
         return self.default_blocks
+
+    @staticmethod
+    def _capacity_policy(student_count: int) -> int:
+        if student_count > 210:
+            return student_count
+        if student_count > 165:
+            return student_count
+        if student_count > 130:
+            return student_count
+        if student_count >= 100:
+            return 140
+        return 0
+
+    def _target_candidate_count(self, available_count: int) -> int:
+        if self.candidate_limit is None:
+            return available_count
+        minimum = min(self.minimum_candidates, available_count)
+        return max(minimum, min(self.candidate_limit, available_count))
+
+    def _rank_rooms(
+        self,
+        room_ids: Iterable[str],
+        student_count: int,
+        preferred_blocks: Sequence[str],
+    ) -> Tuple[str, ...]:
+        seen: set[str] = set()
+        unique_room_ids = []
+        for room_id in room_ids:
+            if room_id in seen:
+                continue
+            if room_id not in self.capacity_lookup:
+                continue
+            seen.add(room_id)
+            unique_room_ids.append(room_id)
+
+        block_order = list(preferred_blocks)
+        for block in sorted(self.rooms_by_block):
+            if block not in block_order:
+                block_order.append(block)
+        block_rank = {block: index for index, block in enumerate(block_order)}
+
+        def _score(room_id: str) -> Tuple[int, int, int, int, int]:
+            capacity = self.capacity_lookup.get(room_id, 0)
+            block = self._room_block(room_id)
+            big_room_penalty = 1 if student_count < 100 and capacity >= self.big_threshold else 0
+            waste = max(0, capacity - student_count)
+            return (
+                big_room_penalty,
+                block_rank.get(block, len(block_rank)),
+                waste,
+                capacity,
+                self.room_indices.get(room_id, len(self.room_indices)),
+            )
+
+        return tuple(sorted(unique_room_ids, key=_score))
+
+    def _limit_candidates(self, room_ids: Sequence[str], salt: str) -> Tuple[str, ...]:
+        ordered = tuple(room_ids)
+        if self.candidate_limit is None or len(ordered) <= self.candidate_limit:
+            return ordered
+
+        limit = self._target_candidate_count(len(ordered))
+        anchor_count = min(self.anchor_candidates, limit, len(ordered))
+        anchored = list(ordered[:anchor_count])
+        remainder = list(ordered[anchor_count:])
+        needed = limit - len(anchored)
+        if needed <= 0 or not remainder:
+            return tuple(anchored[:limit])
+
+        offset = self._stable_offset(salt, len(remainder))
+        rotated = remainder[offset:] + remainder[:offset]
+        return tuple(anchored + rotated[:needed])
+
+    def _rooms_in_blocks(self, blocks: Sequence[str]) -> Tuple[str, ...]:
+        room_ids = []
+        for block in blocks:
+            room_ids.extend(self.rooms_by_block.get(block, tuple()))
+        return tuple(room_ids)
+
+    def _all_room_ids(self) -> Tuple[str, ...]:
+        return tuple(
+            sorted(
+                self.capacity_lookup,
+                key=lambda room_id: self.room_indices.get(room_id, len(self.room_indices)),
+            )
+        )
+
+    def _room_block(self, room_id: str) -> str:
+        for block, room_ids in self.rooms_by_block.items():
+            if room_id in room_ids:
+                return block
+        return "Unknown Block"
+
+    @staticmethod
+    def _stable_offset(salt: str, modulo: int) -> int:
+        if modulo <= 0:
+            return 0
+        value = 0
+        for char in salt:
+            value = (value * 131 + ord(char)) % modulo
+        return value
 
 
 def build_room_eligibility_index(
@@ -188,6 +302,9 @@ def build_room_eligibility_index(
     lab_room_ids: Tuple[str, ...],
     theory_room_ids: Tuple[str, ...],
     laboratory_room_ids: Optional[Tuple[str, ...]] = None,
+    theory_room_candidate_limit: Optional[int] = 12,
+    theory_room_min_candidates: int = 4,
+    theory_room_anchor_candidates: int = 4,
 ) -> RoomEligibilityIndex:
     """Build room eligibility index from data sources.
     
@@ -208,7 +325,13 @@ def build_room_eligibility_index(
     
     # Build Theory Inventory
     if rooms_df is not None and not rooms_df.empty:
-        index.theory_inventory = _build_theory_inventory(rooms_df, theory_room_ids)
+        index.theory_inventory = _build_theory_inventory(
+            rooms_df,
+            theory_room_ids,
+            candidate_limit=theory_room_candidate_limit,
+            minimum_candidates=theory_room_min_candidates,
+            anchor_candidates=theory_room_anchor_candidates,
+        )
         logger.info("Built theory room inventory with %d rooms", len(index.theory_inventory.capacity_lookup))
     
     # Set general lab rooms (Computer-Lab fallback for non-mapped courses)
@@ -237,7 +360,14 @@ def build_room_eligibility_index(
     return index
 
 
-def _build_theory_inventory(rooms_df: pd.DataFrame, theory_room_ids: Tuple[str, ...]) -> TheoryRoomInventory:
+def _build_theory_inventory(
+    rooms_df: pd.DataFrame,
+    theory_room_ids: Tuple[str, ...],
+    *,
+    candidate_limit: Optional[int],
+    minimum_candidates: int,
+    anchor_candidates: int,
+) -> TheoryRoomInventory:
     """Build the helper inventory for theory room filtering."""
     rooms_by_block = defaultdict(list)
     capacity_lookup = {}
@@ -278,7 +408,10 @@ def _build_theory_inventory(rooms_df: pd.DataFrame, theory_room_ids: Tuple[str, 
     return TheoryRoomInventory(
         rooms_by_block=dict(rooms_by_block),
         capacity_lookup=capacity_lookup,
-        room_indices=room_indices
+        room_indices=room_indices,
+        candidate_limit=candidate_limit,
+        minimum_candidates=minimum_candidates,
+        anchor_candidates=anchor_candidates,
     )
 
 

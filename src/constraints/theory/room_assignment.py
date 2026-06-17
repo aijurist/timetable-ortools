@@ -1,4 +1,4 @@
-"""Theory classroom assignment constraint covering block policies and room tiering."""
+"""Theory classroom assignment constraint covering block policies and room capacity."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ class CoursePolicy:
 
 
 class TheoryClassroomAssignmentConstraint(Constraint):
-	"""Assign theory sessions to block buckets while honoring 140-capacity prioritisation."""
+	"""Assign theory sessions to block buckets while honoring room capacity."""
 
 	def __init__(self, metadata: ConstraintMetadata, params: Optional[Mapping[str, object]] = None) -> None:
 		super().__init__(metadata, params=params)
@@ -247,23 +247,18 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 			if not allowed:
 				continue
 			
-			# Determine tier
+			# Keep capacity as the hard filter, without a hardcoded special-room tier.
 			is_big = student_count >= self._big_threshold
 			min_cap_needed = 0
-			specific_tier_rooms = None
 
 			if student_count > 210:
 				min_cap_needed = student_count
-				specific_tier_rooms = {"225"} # ANEW201
 			elif student_count > 165:
 				min_cap_needed = student_count
-				specific_tier_rooms = {"221", "222"} # ANEW101, ANEW102
 			elif student_count > 130:
 				min_cap_needed = student_count
-				specific_tier_rooms = {"223", "224", "220", "3"} # ANEW103, ANEW104, KSL02, A104/105
 			elif student_count >= 100:
 				min_cap_needed = 140 # Force large room for 120-student case
-				specific_tier_rooms = {"223", "224", "220", "3"} # Same set as > 130
 			
 			primary = self._resolve_primary_block(semester, allowed)
 			candidate_rooms: list[str] = []
@@ -277,26 +272,14 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 			
 			filtered_rooms: Tuple[str, ...]
 			if min_cap_needed > 0:
-				# Strict filtering for large courses
-				# For large courses, we ignore block restrictions if needed to find a room
-				# Search ALL rooms in inventory, not just candidate_rooms (which are block-restricted)
+				# Search all theory rooms for large courses, not just block-restricted candidates.
 				all_rooms = list(inventory.room_index.keys())
-				sized = [
+				filtered_rooms = tuple(
 					room_id
 					for room_id in all_rooms
 					if self._safe_int(inventory.room_index.get(room_id, {}).get("capacity"))
 					and self._safe_int(inventory.room_index.get(room_id, {}).get("capacity")) >= min_cap_needed
-				]
-				
-				if specific_tier_rooms:
-					tier_matches = [r for r in sized if r in specific_tier_rooms]
-					if tier_matches:
-						filtered_rooms = tuple(tier_matches)
-					else:
-						# Fallback if specific rooms don't fit capacity or are missing
-						filtered_rooms = tuple(sized)
-				else:
-					filtered_rooms = tuple(sized)
+				)
 			elif is_big:
 				# Legacy big threshold check (>= 140 default)
 				sized = tuple(

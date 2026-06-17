@@ -12,7 +12,7 @@ AT23331,Automobile Engineering,1,Thermal Lab 1,,,,,Automotive Engines
 AT23332,Automobile Engineering,1,Thermal Lab 2,,,,,Applied Thermodynamics
 AT23333,Automobile Engineering,1,Strength of Materials Lab,,,,,Strength of Materials for Automobile Engineers
 AT23334,Automobile Engineering,1,Manufacturing Technology I,,,,,Production Technology - II
-AT23521,Automobile Engineering,1,Automotive Components Lab,,,,,Two and Three Wheelers Laboratory
+AT23521,Automobile Engineering,1,Vehicle Maintenance Lab,,,,,Two and Three Wheelers Laboratory
 AT23531,Automobile Engineering,1,Electrical Machines I Lab,,,,,Automotive Electrical and Electronics
 AT23722,Automobile Engineering,1,Vehicle Maintenance Lab,,,,,Vehicle Maintenance Laboratory
 AT23723,Automobile Engineering,1,TANCAM,,,,,Computer Aided Analysis Laboratory
@@ -55,6 +55,7 @@ EE23531,Electrical and Electronics Engineering,1,Electronic Devices & Circuits L
 EE23721,Electrical and Electronics Engineering,1,Power System Simulation Lab,,,,,Power System Simulation Laboratory
 EE23731,Electrical and Electronics Engineering,1,Power System Simulation Lab,,,,,Renewable Energy Systems
 EE23B21,Electrical and Electronics Engineering,1,TANCAM,,,,,Wiring Harness Design Engineering
+EE23PE31,Electrical and Electronics Engineering,1,TANCAM,,,,,Wiring Harness Design Engineering
 GE23121,Mechanical Engineering,1,Machine Shop FF1 - EPL - 1,,,,,Engineering Practices – Civil and Mechanical
 GE23122,Electrical and Electronics Engineering,1,Engineering Practices Lab (Electrical),,,,,Engineering PracticesElectrical and Electronics
 ME19402,Mechanical Engineering,1,Strength of Materials Lab,,,,,Strength of Materials

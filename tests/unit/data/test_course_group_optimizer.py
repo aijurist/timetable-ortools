@@ -61,3 +61,47 @@ def test_mechanical_s5_forces_target_courses_to_split_across_two_groups() -> Non
 
     assert len(groups_by_course["ME23521"]) == 2
     assert len(groups_by_course["ME23532"]) == 2
+
+
+def test_eee_s5_pairs_pe_with_ee23521_in_two_subject_groups(tmp_path) -> None:
+    pe_map = tmp_path / "pe_course_map.csv"
+    pe_map.write_text(
+        "GENERAL CODE,PE1,PE2,PE3,PE4,PE5,DEPT,SEM\n"
+        "EE23PE31,EE23B21,,,,,EEE,5\n",
+        encoding="utf-8",
+    )
+    courses = [
+        _course("1136", "EE23PE31", "319", practical_hours=6),
+        _course("1137", "EE23PE31", "320", practical_hours=6),
+        _course("1130", "EE23521", "313", practical_hours=2),
+        _course("1131", "EE23521", "317", practical_hours=2),
+        _course("557", "EE23531", "308", practical_hours=2, lecture_hours=3),
+        _course("558", "EE23531", "305", practical_hours=2, lecture_hours=3),
+        _course("551", "EE23511", "301", lecture_hours=3),
+        _course("552", "EE23511", "302", lecture_hours=3),
+        _course("553", "EE23512", "303", lecture_hours=3),
+        _course("554", "EE23512", "304", lecture_hours=3),
+        _course("555", "EE23513", "306", lecture_hours=3),
+        _course("556", "EE23513", "307", lecture_hours=3),
+        _course("1134", "GE23627", "321", lecture_hours=4),
+        _course("1135", "GE23627", "322", lecture_hours=4),
+    ]
+    optimizer = CourseGroupOptimizer(
+        courses,
+        dept="Electrical & Electronics Engineering",
+        semester=5,
+        logger=logging.getLogger("test-eee-s5-fixed"),
+        pe_course_map_file=str(pe_map),
+        consolidation_objective_enabled=True,
+    )
+
+    assert optimizer.optimize_distribution()
+    assert optimizer.validate_solution()
+
+    assert optimizer.num_groups == 7
+    assert len(optimizer.groups) == 7
+    assert [set(inst["course_code"] for inst in group) for group in optimizer.groups[:2]] == [
+        {"EE23PE31", "EE23521"},
+        {"EE23PE31", "EE23521"},
+    ]
+    assert all(len({inst["course_code"] for inst in group}) <= 2 for group in optimizer.groups)

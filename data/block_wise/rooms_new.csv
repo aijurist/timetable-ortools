@@ -124,8 +124,6 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 186,KFR02,K Block,Computer Lab (KFR02),1,Computer-Lab,35,35,1,0,High-tech,,0,0,0
 187,KFR03,K Block,Computer Lab (KFR03),1,Computer-Lab,35,35,1,0,Advanced,,0,0,0
 188,KFR04,K Block,Computer Lab (KFR04),1,Computer-Lab,35,35,1,0,High-tech,,0,0,0
-189,KSL02,K Block,Computer Lab (KSL02),1,Computer-Lab,140,140,0,0,None,,0,0,0
-190,KSL03,K Block,Computer Lab (KSL03),1,Computer-Lab,140,140,1,0,Advanced,,0,0,0
 193,TLFL1,Techlounge,Computer Lab (TLFL1),1,Computer-Lab,35,35,1,0,High-tech,,0,0,0
 194,TLFL2,Techlounge,Computer Lab (TLFL2),1,Computer-Lab,35,35,1,0,Basic,,0,0,0
 195,TLFL3,Techlounge,Computer Lab (TLFL3),1,Computer-Lab,35,35,1,0,Basic,,0,0,0

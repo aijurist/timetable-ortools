@@ -493,7 +493,7 @@ CD23421,Industry Internship (2/4 weeks),Computer Science and Design,2,4.0,2023.0
 CDPE1,Professional Elective – I,Computer Science and Design,3,5.0,2023.0,Professional Elective,3,0,0,3
 CD23531,Animation and Graphics,Computer Science and Design,3,5.0,2023.0,LOT,2,0,6,5
 CS23431,Operating Systems,Computer Science and Design,3,5.0,2023.0,LOT,3,0,4,5
-CS23531,Web Programming,Computer Science and Design,3,5.0,2023.0,LOT,1,0,4,3
+CS23531,Web Programming,Computer Science and Design,3,5.0,2023.0,LOT,3,0,4,3
 CD23532,Design Thinking for Innovation in Product Development,Computer Science and Design,3,5.0,2023.0,Laboratory,1,0,2,2
 GE23521,Soft Skills – II,Computer Science and Design,3,5.0,2023.0,Laboratory,0,0,2,1
 OE - 2,Open Elective - II,Computer Science and Design,3,6.0,2023.0,Open Elective,3,0,0,3
@@ -544,7 +544,7 @@ GE23421,Soft Skills – I,Computer Science and Engineering,2,4.0,2023.0,Laborato
 CS23511,Theory of Computation,Computer Science and Engineering,3,5.0,2023.0,Theory,3,1,0,4
 CS23512,Fundamentals of Mobile Computing,Computer Science and Engineering,3,5.0,2023.0,Theory,3,0,0,3
 CSPE1,Professional Elective – I,Computer Science and Engineering,3,5.0,2023.0,Professional Elective,3,0,0,3
-CS23531,Web Programming,Computer Science and Engineering,3,5.0,2023.0,LOT,1,0,6,4
+CS23531,Web Programming,Computer Science and Engineering,3,5.0,2023.0,LOT,3,0,4,4
 CS23532,Computer Networks,Computer Science and Engineering,3,5.0,2023.0,LOT,3,0,4,5
 AI23231,Principles of Artificial Intelligence,Computer Science and Engineering,3,5.0,2023.0,LOT,3,0,2,4
 GE23521,Soft Skills – II,Computer Science and Engineering,3,5.0,2023.0,Laboratory,0,0,2,1
@@ -590,7 +590,7 @@ CS23331,Design and Analysis of Algorithms,Computer Science and Engineering (Cybe
 CR23432,Design Thinking for Innovation in Computer Science,Computer Science and Engineering (Cyber Security),2,4.0,2023.0,LOT,1,0,2,2
 GE23421,Soft Skills – I,Computer Science and Engineering (Cyber Security),2,4.0,2023.0,Laboratory,0,0,2,1
 CRPE1,Professional Elective – I,Computer Science and Engineering (Cyber Security),3,5.0,2023.0,Professional Elective,3,0,0,3
-CS23531,Web Programming,Computer Science and Engineering (Cyber Security),3,5.0,2023.0,LOT,1,0,6,4
+CS23531,Web Programming,Computer Science and Engineering (Cyber Security),3,5.0,2023.0,LOT,3,0,4,4
 AI23231,Principles of Artificial Intelligence,Computer Science and Engineering (Cyber Security),3,5.0,2023.0,LOT,3,0,2,4
 CR23531,Ethical Hacking,Computer Science and Engineering (Cyber Security),3,5.0,2023.0,LOT,3,0,2,4
 CR23532,Cyber and Digital Forensics,Computer Science and Engineering (Cyber Security),3,5.0,2023.0,LOT,3,0,2,4
@@ -885,7 +885,7 @@ GE23421,Soft Skills – I,Information Technology,2,4.0,2023.0,Laboratory,0,0,2,1
 ITPE1,Professional Elective – I,Information Technology,3,5.0,2023.0,Professional Elective,3,0,0,3
 IT23511,Automata Theory & Compiler Design,Information Technology,3,5.0,2023.0,Theory,3,0,0,3
 IT23531,Computer Vision,Information Technology,3,5.0,2023.0,LOT,3,0,2,4
-CS23531,Web Programming,Information Technology,3,5.0,2023.0,LOT,1,0,6,4
+CS23531,Web Programming,Information Technology,3,5.0,2023.0,LOT,3,0,4,4
 AI23231,Principles of Artificial Intelligence,Information Technology,3,5.0,2023.0,LOT,3,0,2,4
 CS23532,Computer Networks,Information Technology,3,5.0,2023.0,LOT,3,0,4,5
 GE23521,Soft Skills – II,Information Technology,3,5.0,2023.0,Laboratory,0,0,2,1

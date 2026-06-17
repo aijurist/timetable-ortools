@@ -83,6 +83,11 @@ class VariableCreator:
 		core_lab_df = getattr(data.raw, "core_lab_mapping_df", None)
 		rooms_df = getattr(data.raw, "rooms_df", None)
 		laboratory_room_ids = getattr(data.raw.rooms, "laboratory_room_ids", None)
+		model_config = getattr(getattr(data.raw, "config", None), "model", None)
+		use_sparse_theory_rooms = bool(getattr(model_config, "use_sparse_variables", True))
+		theory_room_candidate_limit = getattr(model_config, "theory_room_candidate_limit", 12)
+		if not use_sparse_theory_rooms:
+			theory_room_candidate_limit = None
 		
 		# DEBUG: Log what we're passing
 		self._logger.info(
@@ -98,6 +103,9 @@ class VariableCreator:
 			lab_room_ids=self._lab_room_ids,
 			theory_room_ids=self._theory_room_ids,
 			laboratory_room_ids=tuple(str(rid) for rid in laboratory_room_ids) if laboratory_room_ids else None,
+			theory_room_candidate_limit=theory_room_candidate_limit,
+			theory_room_min_candidates=getattr(model_config, "theory_room_min_candidates", 4),
+			theory_room_anchor_candidates=getattr(model_config, "theory_room_anchor_candidates", 4),
 		)
 
 		self._blocking_mask: Optional[ScheduleBlockingMask] = getattr(data.raw, "blocking_mask", None)
@@ -219,7 +227,7 @@ class VariableCreator:
 		room_assignments: Dict[str, Dict[str, Dict[int, Dict[int, Dict[str, cp_model.IntVar]]]]] = {}
 		teacher_courses: Dict[str, Tuple[str, ...]] = {}
 		course_day_patterns: Dict[str, Tuple[str, ...]] = {}
-		theory_eligibility_cache: Dict[Tuple[int, Optional[int]], Tuple[str, ...]] = {}
+		theory_eligibility_cache: Dict[Tuple[int, Optional[int], str, str], Tuple[str, ...]] = {}
 		group_course_buffer: MutableMapping[str, set[str]] = defaultdict(set)
 		group_slot_sources: MutableMapping[
 			str,
@@ -241,12 +249,19 @@ class VariableCreator:
 				group_course_buffer[requirement.group_id].add(course_id)
 				student_count = int(getattr(requirement, "student_count", 0) or 0)
 				semester = getattr(requirement, "semester", None)
-				theory_cache_key = (student_count, int(semester) if semester is not None else None)
+				theory_cache_key = (
+					student_count,
+					int(semester) if semester is not None else None,
+					str(course_id),
+					str(requirement.group_id),
+				)
 				eligible_rooms = theory_eligibility_cache.get(theory_cache_key)
 				if eligible_rooms is None:
 					eligible_rooms = self._room_eligibility.get_eligible_theory_rooms(
 						student_count=student_count,
 						semester=theory_cache_key[1],
+						course_id=course_id,
+						group_id=requirement.group_id,
 					)
 					theory_eligibility_cache[theory_cache_key] = eligible_rooms
 				for day_index, day_label in enumerate(pattern):

@@ -65,7 +65,7 @@ id,student_count,academic_year,semester,requires_special_scheduling,is_assistant
 65,67,4,7,0,0,178,CS307,Assistant Professor SG,,Dr.,Gunasekar S,gunasekar.s@rajalakshmi.edu.in,Computer Science & Design,1809,CD19P15,Foundations of Machine Learning Concepts,LoT,2,2,0,3.0,Computer Science & Design
 80,64,3,5,0,0,178,CS307,Assistant Professor SG,,Dr.,Gunasekar S,gunasekar.s@rajalakshmi.edu.in,Computer Science & Design,1852,CS23431,Operating Systems,LoT,3,4,0,5.0,Computer Science & Design
 89,64,2,3,0,0,171,CS296,Assistant Professor,,Mrs.,Kalpana D,kalpana.d@rajalakshmi.edu.in,Computer Science & Design,1863,CS23332,Database Management Systems,LoT,3,4,0,5.0,Computer Science & Design
-681,64,3,5,0,0,171,CS296,Assistant Professor,,Mrs.,Kalpana D,kalpana.d@rajalakshmi.edu.in,Computer Science & Design,2052,GE23627,Design Thinking and Innovation,L,0,4,0,2.0,Computer Science & Design
+681,64,3,5,0,0,171,CS296,Assistant Professor,,Mrs.,Kalpana D,kalpana.d@rajalakshmi.edu.in,Computer Science & Design,2052,GE23627,Design Thinking and Innovation,T,4,0,0,2.0,Computer Science & Design
 79,64,2,3,0,0,179,CS11,Professor,,Mrs.,Revathy Padmanabhan,revathy.p@rajalakshmi.edu.in,Computer Science & Design,1850,CS23331,Design and Analysis of Algorithms,LoT,3,2,0,4.0,Computer Science & Design
 77,70,1,1,0,0,179,CS11,Professor,,Mrs.,Revathy Padmanabhan,revathy.p@rajalakshmi.edu.in,Computer Science & Design,1849,GE23131,Programming using C,LoT,1,6,0,4.0,Computer Science & Design
 93,70,1,1,0,0,182,CS331,Assistant Professor,,Mr.,S Pradeep Kumar,pradeepkumar.s@rajalakshmi.edu.in,Computer Science & Design,166,CD23111,Design Drawing and Sketching,T,2,0,1,3.0,Computer Science & Design
@@ -74,7 +74,7 @@ id,student_count,academic_year,semester,requires_special_scheduling,is_assistant
 76,64,3,5,0,0,189,CS289,AOP And HOD,,Mr.,S Umamaheswararao,umamaheswararao.s@rajalakshmi.edu.in,Computer Science & Design,1846,CD23531,3D Modelling and Texturing,LoT,2,2,0,3.0,Computer Science & Design
 64,67,4,7,0,0,189,CS289,AOP And HOD,,Mr.,S Umamaheswararao,umamaheswararao.s@rajalakshmi.edu.in,Computer Science & Design,1820,CD19721,Introduction to 3D Animation,T,1,0,0,1.0,Computer Science & Design
 66,67,4,7,0,0,185,CS306,Assistant Professor,,Mr.,Thirumalairajan G,thirumalairajan.g@rajalakshmi.edu.in,Computer Science & Design,1803,CD19P11,Digital Media Entrepreneurship,LoT,2,2,0,3.0,Computer Science & Design
-91,64,3,5,0,0,185,CS306,Assistant Professor,,Mr.,Thirumalairajan G,thirumalairajan.g@rajalakshmi.edu.in,Computer Science & Design,1866,CS23531,Web Programming,LoT,1,4,0,3.0,Computer Science & Design
+91,64,3,5,0,0,185,CS306,Assistant Professor,,Mr.,Thirumalairajan G,thirumalairajan.g@rajalakshmi.edu.in,Computer Science & Design,1866,CS23531,Web Programming,LoT,3,4,0,3.0,Computer Science & Design
 88,64,3,5,0,0,184,CS176,Assistant Professor SS,Programming,Mr.,Vijayakumar R,vijayakumar.r@rajalakshmi.edu.in,Computer Science & Design,1862,IT23E31,Graphics and Multimedia,LoT,2,2,0,3.0,Computer Science & Design
 87,64,2,3,0,0,184,CS176,Assistant Professor SS,Programming,Mr.,Vijayakumar R,vijayakumar.r@rajalakshmi.edu.in,Computer Science & Design,1457,CD23321,Python Programming for Design,L,0,6,0,3.0,Computer Science & Design
 273,70,2,3,0,0,203,CS178,Assistant Professor SS,,Mrs.,Akiladevi R,akiladevi.r@rajalakshmi.edu.in,Computer Science & Engineering,1545,CS23333,Object Oriented Programming Using JAVA,LoT,1,6,0,4.0,Computer Science & Engineering
@@ -98,7 +98,7 @@ id,student_count,academic_year,semester,requires_special_scheduling,is_assistant
 208,70,2,3,0,0,191,CS218,Professor and Dean (Academics),,Mr.,Dr V.Murali Bhaskaran,muralibhaskaran.v@rajalakshmi.edu.in,Computer Science & Engineering,1542,CS23311,Computer Architecture,T,3,0,0,3.0,Computer Science & Engineering
 95,70,3,5,0,0,187,IT03,Director And HOD,,Mr.,Dr. Kumar P,kumar@rajalakshmi.edu.in,Computer Science & Engineering,1868,CS23533,Foundations of Artificial Intelligence,LoT,3,2,0,4.0,Computer Science & Engineering
 109,70,3,5,0,0,187,IT03,Director And HOD,,Mr.,Dr. Kumar P,kumar@rajalakshmi.edu.in,Computer Science & Engineering,1868,CS23533,Foundations of Artificial Intelligence,LoT,3,2,0,4.0,Computer Science & Engineering
-261,70,3,5,0,0,202,CS208,Associate Professor,,Mr.,Dr. N. Duraimurugan,duraimurugan.n@rajalakshmi.edu.in,Computer Science & Engineering,1555,CS23531,Web Programming,LoT,1,4,0,3.0,Computer Science & Engineering
+261,70,3,5,0,0,202,CS208,Associate Professor,,Mr.,Dr. N. Duraimurugan,duraimurugan.n@rajalakshmi.edu.in,Computer Science & Engineering,1555,CS23531,Web Programming,LoT,3,4,0,3.0,Computer Science & Engineering
 251,70,3,5,0,0,211,CS253,Professor,,Mr.,Dr.K.Anand,anand.k@rajalakshmi.edu.in,Computer Science & Engineering,1556,CS23532,Computer Networks,LoT,3,2,0,5.0,Computer Science & Engineering
 252,70,2,3,0,0,211,CS253,Professor,,Mr.,Dr.K.Anand,anand.k@rajalakshmi.edu.in,Computer Science & Engineering,1546,CS23334,Fundamentals of Data Science,LoT,3,2,0,4.0,Computer Science & Engineering
 253,70,3,5,0,0,222,CS255,Professor,,Mr.,Dr.K.Ananthajothi,ananthajothi.k@rajalakshmi.edu.in,Computer Science & Engineering,1553,CS23511,Theory of Computation,T,3,0,1,4.0,Computer Science & Engineering
@@ -116,10 +116,10 @@ id,student_count,academic_year,semester,requires_special_scheduling,is_assistant
 274,70,3,5,0,0,195,CS203,Assistant Professor SS,,Ms.,Jaeyalakshmi M,jaeyalakshmi.m@rajalakshmi.edu.in,Computer Science & Engineering,1868,CS23533,Foundations of Artificial Intelligence,LoT,3,2,0,4.0,Computer Science & Engineering
 275,70,3,5,0,0,195,CS203,Assistant Professor SS,,Ms.,Jaeyalakshmi M,jaeyalakshmi.m@rajalakshmi.edu.in,Computer Science & Engineering,1868,CS23533,Foundations of Artificial Intelligence,LoT,3,2,0,4.0,Computer Science & Engineering
 220,70,2,3,0,0,192,CS182,Assistant Professor SG,,Mrs.,Jananee V,jananee.v@rajalakshmi.edu.in,Computer Science & Engineering,1544,CS23332,Database Management Systems,LoT,3,4,0,5.0,Computer Science & Engineering
-270,70,3,5,0,0,192,CS182,Assistant Professor SG,,Mrs.,Jananee V,jananee.v@rajalakshmi.edu.in,Computer Science & Engineering,1555,CS23531,Web Programming,LoT,1,4,0,3.0,Computer Science & Engineering
-295,70,3,5,0,0,268,CS334,Assistant Professor POP,,Mr.,Kirubhakar T T,kirubhakar.tt@rajalakshmi.edu.in,Computer Science & Engineering,1555,CS23531,Web Programming,LoT,1,4,0,3.0,Computer Science & Engineering
-296,70,3,5,0,0,268,CS334,Assistant Professor POP,,Mr.,Kirubhakar T T,kirubhakar.tt@rajalakshmi.edu.in,Computer Science & Engineering,1555,CS23531,Web Programming,LoT,1,4,0,3.0,Computer Science & Engineering
-267,70,3,5,0,0,244,CS320,Associate Professor,,Dr.,Madhusudhanan S,madhusudhan.s@rajalakshmi.edu.in,Computer Science & Engineering,1555,CS23531,Web Programming,LoT,1,4,0,3.0,Computer Science & Engineering
+270,70,3,5,0,0,192,CS182,Assistant Professor SG,,Mrs.,Jananee V,jananee.v@rajalakshmi.edu.in,Computer Science & Engineering,1555,CS23531,Web Programming,LoT,3,4,0,3.0,Computer Science & Engineering
+295,70,3,5,0,0,268,CS334,Assistant Professor POP,,Mr.,Kirubhakar T T,kirubhakar.tt@rajalakshmi.edu.in,Computer Science & Engineering,1555,CS23531,Web Programming,LoT,3,4,0,3.0,Computer Science & Engineering
+296,70,3,5,0,0,268,CS334,Assistant Professor POP,,Mr.,Kirubhakar T T,kirubhakar.tt@rajalakshmi.edu.in,Computer Science & Engineering,1555,CS23531,Web Programming,LoT,3,4,0,3.0,Computer Science & Engineering
+267,70,3,5,0,0,244,CS320,Associate Professor,,Dr.,Madhusudhanan S,madhusudhan.s@rajalakshmi.edu.in,Computer Science & Engineering,1555,CS23531,Web Programming,LoT,3,4,0,3.0,Computer Science & Engineering
 219,70,2,3,0,0,224,CS291,Assistant Professor,,Mrs.,Mahesmeena,mahesmeena@rajalakshmi.edu.in,Computer Science & Engineering,1544,CS23332,Database Management Systems,LoT,3,4,0,5.0,Computer Science & Engineering
 246,70,2,3,0,0,212,CS284,Professor,,Ms.,Muneeshwari R,muneeshwari.p@rajalakshmi.edu.in,Computer Science & Engineering,1546,CS23334,Fundamentals of Data Science,LoT,3,2,0,4.0,Computer Science & Engineering
 247,70,2,3,0,0,212,CS284,Professor,,Ms.,Muneeshwari R,muneeshwari.p@rajalakshmi.edu.in,Computer Science & Engineering,1546,CS23334,Fundamentals of Data Science,LoT,3,2,0,4.0,Computer Science & Engineering
@@ -128,7 +128,7 @@ id,student_count,academic_year,semester,requires_special_scheduling,is_assistant
 277,70,3,5,0,0,223,CS272,Assistant Professor,,Mrs.,S.Vinothini,vinothini.s@rajalakshmi.edu.in,Computer Science & Engineering,1553,CS23511,Theory of Computation,T,3,0,1,4.0,Computer Science & Engineering
 278,70,3,5,0,0,223,CS272,Assistant Professor,,Mrs.,S.Vinothini,vinothini.s@rajalakshmi.edu.in,Computer Science & Engineering,1553,CS23511,Theory of Computation,T,3,0,1,4.0,Computer Science & Engineering
 260,70,2,3,0,0,205,CS226,Assistant Professor,,Mrs.,Santhiya M,santhiya.m@rajalakshmi.edu.in,Computer Science & Engineering,1543,CS23331,Design and Analysis of Algorithms,LoT,3,2,0,4.0,Computer Science & Engineering
-289,70,3,5,0,0,229,CS238,Assistant Professor,,Mrs.,Sathiyavathi S,sathiyavathi.s@rajalakshmi.edu.in,Computer Science & Engineering,1555,CS23531,Web Programming,LoT,1,4,0,3.0,Computer Science & Engineering
+289,70,3,5,0,0,229,CS238,Assistant Professor,,Mrs.,Sathiyavathi S,sathiyavathi.s@rajalakshmi.edu.in,Computer Science & Engineering,1555,CS23531,Web Programming,LoT,3,4,0,3.0,Computer Science & Engineering
 110,70,2,3,0,0,239,CS301,Assistant Professor POP,,Mr.,Srinivas Vadlamani,srinivas.vadlamani@rajalakshmi.edu.in,Computer Science & Engineering,1546,CS23334,Fundamentals of Data Science,LoT,3,2,0,4.0,Computer Science & Engineering
 360,70,1,1,0,0,207,CS239,Professor,,Mr.,Srinivasan N,srinivasan.n@rajalakshmi.edu.in,Computer Science & Engineering,378,GE23131,Programming using C,LoT,1,6,0,4.0,Computer Science & Engineering
 294,70,2,3,0,0,248,CS333,Assistant Professor,,Mrs.,Suba Malai Rajasekar,subamalai.r@rajalakshmi.edu.in,Computer Science & Engineering,1546,CS23334,Fundamentals of Data Science,LoT,3,2,0,4.0,Computer Science & Engineering

@@ -271,12 +271,21 @@ class ModelConfig:
     objective_weights: Mapping[str, float] = field(default_factory=dict)
     slack_penalty: float = 1.0
     use_sparse_variables: bool = True
+    theory_room_candidate_limit: Optional[int] = 12
+    theory_room_min_candidates: int = 4
+    theory_room_anchor_candidates: int = 4
 
     def __post_init__(self) -> None:
         if self.big_m_value <= 0:
             raise ValueError("big_m_value must be positive")
         if self.slack_penalty < 0:
             raise ValueError("slack_penalty cannot be negative")
+        if self.theory_room_candidate_limit is not None and self.theory_room_candidate_limit <= 0:
+            raise ValueError("theory_room_candidate_limit must be positive when provided")
+        if self.theory_room_min_candidates <= 0:
+            raise ValueError("theory_room_min_candidates must be positive")
+        if self.theory_room_anchor_candidates < 0:
+            raise ValueError("theory_room_anchor_candidates cannot be negative")
         for name, weight in self.objective_weights.items():
             if weight < 0:
                 raise ValueError(f"objective weight '{name}' cannot be negative")

@@ -5,7 +5,7 @@ id,student_count,academic_year,semester,requires_special_scheduling,is_assistant
 207,70,2,3,0,0,191,CS218,Mr.,Dr V.Murali Bhaskaran,muralibhaskaran.v@rajalakshmi.edu.in,1542,CS23311,Computer Architecture,T,3,0,0,3.0,Computer Science & Engineering
 208,70,2,3,0,0,191,CS218,Mr.,Dr V.Murali Bhaskaran,muralibhaskaran.v@rajalakshmi.edu.in,1542,CS23311,Computer Architecture,T,3,0,0,3.0,Computer Science & Engineering
 220,70,2,3,0,0,192,CS182,Mrs.,Jananee V,jananee.v@rajalakshmi.edu.in,1544,CS23332,Database Management Systems,LoT,3,4,0,5.0,Computer Science & Engineering
-270,70,3,5,0,0,192,CS182,Mrs.,Jananee V,jananee.v@rajalakshmi.edu.in,1555,CS23531,Web Programming,LoT,1,4,0,3.0,Computer Science & Engineering
+270,70,3,5,0,0,192,CS182,Mrs.,Jananee V,jananee.v@rajalakshmi.edu.in,1555,CS23531,Web Programming,LoT,3,4,0,3.0,Computer Science & Engineering
 293,70,3,5,0,1,195,CS203,Ms.,Jaeyalakshmi M,jaeyalakshmi.m@rajalakshmi.edu.in,1544,CS23332,Database Management Systems,LoT,3,4,0,5.0,Computer Science & Engineering
 274,70,3,5,0,0,195,CS203,Ms.,Jaeyalakshmi M,jaeyalakshmi.m@rajalakshmi.edu.in,1868,CS23533,Foundations of Artificial Intelligence,LoT,3,2,0,4.0,Computer Science & Engineering
 214,70,2,3,0,0,196,CS251,Mr.,Dr.P.Shanmugam,shanmugam.p@rajalakshmi.edu.in,1543,CS23331,Design and Analysis of Algorithms,LoT,3,2,0,4.0,Computer Science & Engineering
@@ -16,7 +16,7 @@ id,student_count,academic_year,semester,requires_special_scheduling,is_assistant
 272,70,2,3,0,0,199,CS221,Mrs.,J.Jinu Sophia,jinusophia.j@rajalakshmi.edu.in,1545,CS23333,Object Oriented Programming Using JAVA,LoT,1,4,0,4.0,Computer Science & Engineering
 209,70,2,3,0,0,201,IT191,Mrs.,Dharani Devi G,dharanidevi.g@rajalakshmi.edu.in,1542,CS23311,Computer Architecture,T,3,0,0,3.0,Computer Science & Engineering
 218,70,2,3,0,0,201,IT191,Mrs.,Dharani Devi G,dharanidevi.g@rajalakshmi.edu.in,1544,CS23332,Database Management Systems,LoT,3,4,0,5.0,Computer Science & Engineering
-261,70,3,5,0,0,202,CS208,Mr.,Dr. N. Duraimurugan,duraimurugan.n@rajalakshmi.edu.in,1555,CS23531,Web Programming,LoT,1,4,0,3.0,Computer Science & Engineering
+261,70,3,5,0,0,202,CS208,Mr.,Dr. N. Duraimurugan,duraimurugan.n@rajalakshmi.edu.in,1555,CS23531,Web Programming,LoT,3,4,0,3.0,Computer Science & Engineering
 273,70,2,3,0,0,203,CS178,Mrs.,Akiladevi R,akiladevi.r@rajalakshmi.edu.in,1545,CS23333,Object Oriented Programming Using JAVA,LoT,1,4,0,4.0,Computer Science & Engineering
 260,70,2,3,0,0,205,CS226,Mrs.,Santhiya M,santhiya.m@rajalakshmi.edu.in,1543,CS23331,Design and Analysis of Algorithms,LoT,3,2,0,4.0,Computer Science & Engineering
 360,70,1,1,0,0,207,CS239,Mr.,Srinivasan N,srinivasan.n@rajalakshmi.edu.in,378,GE23131,Programming using C,LoT,1,4,0,4.0,Computer Science & Engineering
@@ -36,7 +36,7 @@ id,student_count,academic_year,semester,requires_special_scheduling,is_assistant
 277,70,3,5,0,0,223,CS272,Mrs.,S.Vinothini,vinothini.s@rajalakshmi.edu.in,1553,CS23511,Theory of Computation,T,3,0,1,4.0,Computer Science & Engineering
 278,70,3,5,0,0,223,CS272,Mrs.,S.Vinothini,vinothini.s@rajalakshmi.edu.in,1553,CS23511,Theory of Computation,T,3,0,1,4.0,Computer Science & Engineering
 219,70,2,3,0,0,224,CS291,Mrs.,Mahesmeena,mahesmeena@rajalakshmi.edu.in,1544,CS23332,Database Management Systems,LoT,3,4,0,5.0,Computer Science & Engineering
-289,70,3,5,0,0,229,CS238,Mrs.,Sathiyavathi S,sathiyavathi.s@rajalakshmi.edu.in,1555,CS23531,Web Programming,LoT,1,4,0,3.0,Computer Science & Engineering
+289,70,3,5,0,0,229,CS238,Mrs.,Sathiyavathi S,sathiyavathi.s@rajalakshmi.edu.in,1555,CS23531,Web Programming,LoT,3,4,0,3.0,Computer Science & Engineering
 283,70,3,5,0,0,231,CS298,Ms.,Divya M,divya.m@rajalakshmi.edu.in,1868,CS23533,Foundations of Artificial Intelligence,LoT,3,2,0,4.0,Computer Science & Engineering
 284,70,2,3,0,0,231,CS298,Ms.,Divya M,divya.m@rajalakshmi.edu.in,1545,CS23333,Object Oriented Programming Using JAVA,LoT,1,4,0,4.0,Computer Science & Engineering
 281,70,3,5,0,0,234,IT210,Mrs.,J.A.Adlin Layola,adlinlayola.ja@rajalakshmi.edu.in,1553,CS23511,Theory of Computation,T,3,0,1,4.0,Computer Science & Engineering
@@ -48,12 +48,12 @@ id,student_count,academic_year,semester,requires_special_scheduling,is_assistant
 249,70,3,5,0,0,240,CS305,Mr.,Dr Parthasarathy C,parthasarathy.c@rajalakshmi.edu.in,1554,CS23512,Fundamentals of Mobile Computing,T,3,0,0,3.0,Computer Science & Engineering
 286,70,3,5,0,0,243,CS322,Ms.,Dharshini B S,dharshini.bs@rajalakshmi.edu.in,1554,CS23512,Fundamentals of Mobile Computing,T,3,0,0,3.0,Computer Science & Engineering
 287,70,2,3,0,0,243,CS322,Ms.,Dharshini B S,dharshini.bs@rajalakshmi.edu.in,1545,CS23333,Object Oriented Programming Using JAVA,LoT,1,4,0,4.0,Computer Science & Engineering
-267,70,3,5,0,0,244,CS320,Dr.,Madhusudhanan S,madhusudhan.s@rajalakshmi.edu.in,1555,CS23531,Web Programming,LoT,1,4,0,3.0,Computer Science & Engineering
+267,70,3,5,0,0,244,CS320,Dr.,Madhusudhanan S,madhusudhan.s@rajalakshmi.edu.in,1555,CS23531,Web Programming,LoT,3,4,0,3.0,Computer Science & Engineering
 255,70,3,5,0,0,245,CS319,Dr.,Chettiyar Vani Vivekanand,chettiyarvanivivekanand@rajalakshmi.edu.in,1556,CS23532,Computer Networks,LoT,3,2,0,5.0,Computer Science & Engineering
 256,70,3,5,0,0,245,CS319,Dr.,Chettiyar Vani Vivekanand,chettiyarvanivivekanand@rajalakshmi.edu.in,1554,CS23512,Fundamentals of Mobile Computing,T,3,0,0,3.0,Computer Science & Engineering
 294,70,2,3,0,0,248,CS333,Mrs.,Suba Malai Rajasekar,subamalai.r@rajalakshmi.edu.in,1546,CS23334,Fundamentals of Data Science,LoT,3,2,0,4.0,Computer Science & Engineering
 263,70,2,3,0,0,250,CS313,Mr.,Ayyadurai M,ayyadurai.m@rajalakshmi.edu.in,1542,CS23311,Computer Architecture,T,3,0,0,3.0,Computer Science & Engineering
 266,70,2,3,0,0,250,CS313,Mr.,Ayyadurai M,ayyadurai.m@rajalakshmi.edu.in,1546,CS23334,Fundamentals of Data Science,LoT,3,2,0,4.0,Computer Science & Engineering
 212,70,1,1,0,0,253,CS326,Dr.,Duraipandian N,duraipandian.n@rajalakshmi.edu.in /dean.cs@rajalakshmi.edu.in,378,GE23131,Programming using C,LoT,1,4,0,4.0,Computer Science & Engineering
-295,70,3,5,0,0,268,CS334,Mr.,Kirubhakar T T,kirubhakar.tt@rajalakshmi.edu.in,1555,CS23531,Web Programming,LoT,1,4,0,3.0,Computer Science & Engineering
-296,70,3,5,0,0,268,CS334,Mr.,Kirubhakar T T,kirubhakar.tt@rajalakshmi.edu.in,1555,CS23531,Web Programming,LoT,1,4,0,3.0,Computer Science & Engineering
+295,70,3,5,0,0,268,CS334,Mr.,Kirubhakar T T,kirubhakar.tt@rajalakshmi.edu.in,1555,CS23531,Web Programming,LoT,3,4,0,3.0,Computer Science & Engineering
+296,70,3,5,0,0,268,CS334,Mr.,Kirubhakar T T,kirubhakar.tt@rajalakshmi.edu.in,1555,CS23531,Web Programming,LoT,3,4,0,3.0,Computer Science & Engineering

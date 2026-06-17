@@ -1,0 +1,438 @@
+course_code,course_name,first_name,last_name,teacher_email,course_type,lecture_hours,practical_hours,tutorial_hours,credits,specific_room_type,room_number,block,room_description,lab_assignment_status
+GE23311,Fundamentals of Management for Engineers,Prem Anand T,P,premanand.tp@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+AE23722,Artificial Intelligence and Machine Learning for Aeronautical Engineering,M,Nithiyaraj,nithiyaraj.m@rajalakshmi.edu.in,L,0,4,0,2,standard,CG006,C Block,Aero CAD Lab,Core-Lab
+AE23722,Artificial Intelligence and Machine Learning for Aeronautical Engineering,Prem Anand T,P,premanand.tp@rajalakshmi.edu.in,L,0,4,0,2,standard,CG006,C Block,Aero CAD Lab,Core-Lab
+AE23711,Composite Materials and Structures,Balaji,R,balaji.rajendran@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+AE23731,Avionics,Nithiyanantham K,K,nithiyanantham.kk@rajalakshmi.edu.in,LoT,3,2,0,4,standard,CG005,C Block,Avionics Lab,Core-Lab
+AE23PE41,Helicopter Theory,Surendra,Bogadi,surendrabogadi@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CS23633,Cloud Computing,V Dhivya,Bhavani,dhivyabhavani.v@rajalakshmi.edu.in,LoT,2,2,0,3,standard,,,,Lab-Required-No-Assignment
+CS23633,Cloud Computing,Dayalin Leena,G,dayalinleena.g@rajalakshmi.edu.in,LoT,2,2,0,3,standard,,,,Lab-Required-No-Assignment
+CS23633,Cloud Computing,Surendar,A,surendar.a@rajalakshmi.edu.in,LoT,2,2,0,3,standard,,,,Lab-Required-No-Assignment
+AD23731,Foundations of Agentic AI,Beulah,A,beulah.a@rajalakshmi.edu.in,LoT,1,4,0,3,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AD23731,Foundations of Agentic AI,Madhubala,B,madhubala.b@rajalakshmi.edu.in,LoT,1,4,0,3,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AD23731,Foundations of Agentic AI,Priyadharsini,R,priyadharsini.r@rajalakshmi.edu.in,LoT,1,4,0,3,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AD23PE41,Manufactoring Analytics,Gnanasekar J,M,gnanasekar.jm@rajalakshmi.edu.in,LoT,1,4,0,3,standard,,,,
+AD23PE41,Manufactoring Analytics,Selvarani,K,selvarani.k@rajalakshmi.edu.in,LoT,1,4,0,3,standard,,,,
+AD23PE41,Manufactoring Analytics,Savithri,R,savithri.r@rajalakshmi.edu.in,LoT,1,4,0,3,standard,,,,
+AD23731,Foundations of Agentic AI,Soundarya,M,soundarya.m@rajalakshmi.edu.in,LoT,1,4,0,3,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AD23731,Foundations of Agentic AI,N M,Balamurugan,balamurugan.mn@rajalakshmi.edu.in,LoT,1,4,0,3,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AD23731,Foundations of Agentic AI,N M,Balamurugan,balamurugan.mn@rajalakshmi.edu.in,LoT,1,4,0,3,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AI23711,Social and Ethical Issues in AI,Sekar,K,sekar.k@rajalakshmi.edu.in,T,1,0,0,1,standard,,,,
+AI23711,Social and Ethical Issues in AI,Sekar,K,sekar.k@rajalakshmi.edu.in,T,1,0,0,1,standard,,,,
+AI23711,Social and Ethical Issues in AI,Divya,S,divya.s@rajalakshmi.edu.in,T,1,0,0,1,standard,,,,
+AI23PE41,Software Project Management,Poonkuzhali,S,poonkuzhali.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+IT23731,Cloud and Big Data Architecture,Arunvinodh,C,arunvinodh.c@rajalakshmi.edu.in,LoT,3,2,0,4,standard,A210/211,A Block,Computer Lab (A210/211),Computer-Lab
+IT23731,Cloud and Big Data Architecture,Pavithra,P,pavithra.p@rajalakshmi.edu.in,LoT,3,2,0,4,standard,A210/211,A Block,Computer Lab (A210/211),Computer-Lab
+IT23731,Cloud and Big Data Architecture,U,Kumaran,kumaran.u@rajalakshmi.edu.in,LoT,3,2,0,4,standard,A210/211,A Block,Computer Lab (A210/211),Computer-Lab
+AT23711,Automotive Pollution and Control,Mohanraj,K,mohanraj.k@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+AT23712,Intelligent Vehicle System,Mullai Sudaroli,B,mullaisudaroli.b@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+AT23722,Vehicle Maintenance Laboratory,Anbalagan,R,anbalagan.r@rajalakshmi.edu.in,L,0,2,0,1,standard,WS AUTO GF1,A Block,Vehicle Maintenance Lab,Core-Lab
+AT23713,Automotive Safety,Zahir Hussain,M,zahirhussain.m@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+AT23PE41,Vehicle Maintenance,Anbalagan,R,anbalagan.r@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+AT23723,Computer Aided Analysis Laboratory,Edwin Joseph,R,edwinjoseph.r@rajalakshmi.edu.in,L,0,2,0,1,standard,TANCAM,Arch Block,TANCAM,Core-Lab
+AT23721,AI and ML for Automobile Engineers,Edwin Joseph,R,edwinjoseph.r@rajalakshmi.edu.in,L,0,4,0,2,Advanced,KFR01,K Block,Computer Lab (KFR01),Computer-Lab
+BM23PE41,HOSPITAL ENGINEERING  AND  MANAGEMENT,M C Jobin,Christ,jobinchrist.mc@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+BM23PE41,HOSPITAL ENGINEERING  AND  MANAGEMENT,Rubeshkumar,Thulasingam,rubeshkumar.t@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+BM23711,Comprehension In Biomedical Engineering,Senthilkumar,P,senthilkumar.p@rajalakshmi.edu.in,T,1,0,0,1,standard,,,,No-Lab-Required
+BM23711,Comprehension In Biomedical Engineering,Subathra,Y,subathra.y@rajalakshmi.edu.in,T,1,0,0,1,standard,,,,No-Lab-Required
+BM23PE42,"Medical Safety, Quality Assurance and Regulatory Affairs",Krishna Chaitanya,Sunka,KrishnaChaitanyaSunka@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+BM23721,Artificial Intelligence and Machine learning for Biomedical Engineering,Glory Precious,J,gloryprecious.j@rajalakshmi.edu.in,L,0,4,0,2,standard,DG012,D Block,Electronics and Instrumentation,Core-Lab
+BM23721,Artificial Intelligence and Machine learning for Biomedical Engineering,Muralidharan,C,muralidharan.c@rajalakshmi.edu.in,L,0,4,0,2,standard,DG012,D Block,Electronics and Instrumentation,Core-Lab
+BM23731,Medical Image Processing,Rajkumar,S,rajkumar.s@rajalakshmi.edu.in,LoT,2,2,1,4,standard,DG,D Block,Medical Image Processing Lab,Core-Lab
+BM23731,Medical Image Processing,Padmasini,N,padmasini.n@rajalakshmi.edu.in,LoT,2,2,1,4,standard,DG,D Block,Medical Image Processing Lab,Core-Lab
+BT23722,Artificial Intelligence and Machine Learning for Biotechnologist,Rekha,Ravindran,rekha.ravendran@rajalakshmi.edu.in,L,0,4,0,2,standard,A210/211,A Block,Computer Lab (A210/211),Computer-Lab
+BT23722,Artificial Intelligence and Machine Learning for Biotechnologist,A,Arun,arun.a@rajalakshmi.edu.in,L,0,4,0,2,standard,A210/211,A Block,Computer Lab (A210/211),Computer-Lab
+BT23722,Artificial Intelligence and Machine Learning for Biotechnologist,Dhivya,Bharathi,dhivyabharathi.v@rajalakshmi.edu.in,L,0,4,0,2,standard,A210/211,A Block,Computer Lab (A210/211),Computer-Lab
+BT23PE41,Biopharmaceutical Technology,S Divya,Lakshmi,divyalakshmi.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+BT23PE41,Biopharmaceutical Technology,New,faculty,newfaculty@gmail.com,T,3,0,0,3,standard,,,,No-Lab-Required
+BT23713,Comprehension in Biotechnology,M,Shanthi,shanthi.m@rajalakshmi.edu.in,T,2,0,1,2,standard,,,,
+BT23713,Comprehension in Biotechnology,B,Preethi,preethi.b@rajalakshmi.edu.in,T,2,0,1,2,standard,,,,
+BT23713,Comprehension in Biotechnology,Dhivya,Bharathi,dhivyabharathi.v@rajalakshmi.edu.in,T,2,0,1,2,standard,,,,
+BT23712,Protein Engineering,A,Arun,arun.a@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+BT23712,Protein Engineering,Rekha,Ravindran,rekha.ravendran@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+BT23712,Protein Engineering,D,Haripriya,haripriya.d@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+BT23721,Downstream Processing Laboratory,S Sangeetha,Gandhi,sangeethagandhi.s@rajalakshmi.edu.in,L,0,4,0,2,standard,B Second Floor,B Block,Downstream Processing Lab,Core-Lab
+BT23721,Downstream Processing Laboratory,K,Sathya,sathya.k@rajalakshmi.edu.in,L,0,4,0,2,standard,B Second Floor,B Block,Downstream Processing Lab,Core-Lab
+BT23721,Downstream Processing Laboratory,N,Premalatha,premalatha.n@rajalakshmi.edu.in,L,0,4,0,2,standard,B Second Floor,B Block,Downstream Processing Lab,Core-Lab
+BT23711,Downstream Processing,K,Sathya,sathya.k@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+BT23711,Downstream Processing,S R,Saranya,saranya.sr@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+BT23711,Downstream Processing,S Sangeetha,Gandhi,sangeethagandhi.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+BT23PE41,Techniques in Animal Disease Management and Transgenic Technology,Dr. Veilumuthu,P,veilumuthu2020@gmail.com,T,3,0,0,3,standard,,,,No-Lab-Required
+BT23PE41,Techniques in Animal Disease Management and Transgenic Technology,Millicent Mabel,M,millicentmable.m@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+BT23PE42,Total Quality Management,Preethy K,R,preethy.kr@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+BT23PE42,Total Quality Management,Sasitharan,R,sasitharan.r@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+BT23PE42,Biofertilizer Production and Mushroom Cultivation,Sinduja M,E,sinduja.me@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CH23PE41,Petrochemical Technology,Kalaiarasi,N,kalaiarasi.n@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CH23713,Process Engineering Economics,Mangaleswari,.,mangaleswari.s@rajalakshmi.edu.in,T,3,0,0,3,Basic,,,,No-Lab-Required
+CH23712,Comprehension in Chemical Engineering,Seelam Narasimha,Reddy,narasimhareddy.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CH23711,Transport Phenomena,Sivamani,S,sivamani.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CH23PE41,Air Pollution and Control,Ambigadevi,J,ambigadevi.j@rajalakshmi.edu.in,LoT,2,2,0,3,standard,,,,Lab-Required-No-Assignment
+CH23E12,Optimization of Chemical Processes,Rameschandra,Panda,rameschandrapanda@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CH23721,Chemical Reaction Engineering lab,Mary Rosana N,T,maryrosana.nt@rajalakshmi.edu.in,L,0,4,0,2,standard,B Ground Floor,B Block,Technical Analysis Lab,Core-Lab
+CH23722,Process Control Lab,Sivamani,S,sivamani.s@rajalakshmi.edu.in,L,0,4,0,2,standard,WS AUTO FF3,A Block,Process Control Lab,Core-Lab
+CH23723 ,Artificial Intelligence and Machine Learning for Chemical Engineers,Rameschandra,Panda,rameschandrapanda@rajalakshmi.edu.in,L,0,4,0,2,standard,B304,B Block,Computer Application in Chemical Engg Lab,Core-Lab
+CE23712,Hydrology,Goutham Priya,M,gouthampriya.m@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CE23711,"Estimation, Costing and Valuation Engineering",Madhava Perumal,R,madhavaperumal.r@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CE23PE41,"Maintenance, Repair and Rehabilitation of Structures",M,Umamaguesvari,umamaguesvari.m@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CE23721,Building Information Modelling,Madhava Perumal,R,madhavaperumal.r@rajalakshmi.edu.in,L,0,4,0,2,standard,TIFAC I01,A Block,Computer Lab (Arch),Computer-Lab
+CE23PE41,Intelligent Transport System,Yugasini,S,yugasini.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CB23731,Data Visualization Techniques,Bakiyalakshmi,S,bakiyalakshmi.s@rajalakshmi.edu.in,LoT,2,2,0,3,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+CB23731,Data Visualization Techniques,Thangamani,M,thangamani.m@rajalakshmi.edu.in,LoT,2,2,0,3,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+CB23PE41,Cryptology,P,Tamilselvi,tamilselvi.p@rajalakshmi.edu.in,LoT,2,2,1,4,standard,TLGL3,Techlounge,Computer Lab (TLGL3),Computer-Lab
+CB23PE41,Cryptology,Poornimathi,K,poornimathi.k@rajalakshmi.edu.in,LoT,2,2,1,4,standard,TLGL3,Techlounge,Computer Lab (TLGL3),Computer-Lab
+CB23732,IT Project Management,Rajammal,K,rajammal.k@rajalakshmi.edu.in,LoT,2,2,0,3,standard,JR1,J Block,Computer Lab (JR1),Computer-Lab
+CB23732,IT Project Management,U,Janani,janani.u@rajalakshmi.edu.in,LoT,2,2,0,3,standard,JR1,J Block,Computer Lab (JR1),Computer-Lab
+CB23PE41,Generative Artificial Intelligence,P,Tamilselvi,tamilselvi.p@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+CD23731,Film Making and Radio podcasting,Gunasekar,S,gunasekar.s@rajalakshmi.edu.in,LoT,2,2,0,3,Advanced,KFL01,K Block,Computer Lab (KFL01),Computer-Lab
+CD23721,Visual Effects,Pradeep Kumar,S,pradeepkumar.s@rajalakshmi.edu.in,L,0,6,0,3,Advanced,KFL01,K Block,Computer Lab (KFL01),Computer-Lab
+CD23PE41,Cryptography and Network Security,Vijayakumar,R,vijayakumar.r@rajalakshmi.edu.in,LoT,2,2,0,3,standard,,,,Lab-Required-No-Assignment
+CS23PE43,DevOps,Sudhakar,,sudhakar.m@rajalakshmi.edu.in,LoT,2,2,0,3,standard,,,,Lab-Required-No-Assignment
+CS23PE43,DevOps,Sudhakar,,sudhakar.m@rajalakshmi.edu.in,LoT,2,2,0,3,standard,,,,Lab-Required-No-Assignment
+CS23PE43,DevOps,Adhithyan,S,adhithyan.s@rajalakshmi.edu.in,LoT,2,2,0,3,standard,,,,Lab-Required-No-Assignment
+CS23PE43,DevOps,Sivakumar,K,sivakumar.kaliyappan@rajalakshmi.edu.in,LoT,2,2,0,3,standard,,,,Lab-Required-No-Assignment
+CS23PE42,Software Project Management,Prakash,V,prakash.v@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CS23PE42,Software Project Management,Prakash,V,prakash.v@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CS23PE42,Software Project Management,Ramraj,S,ramraj.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CS23PE42,Software Project Management,Ramraj,S,ramraj.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CS23PE42,Software Project Management,J,Manoranjini,manoranjini.j@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CS23PE42,Software Project Management,J,Manoranjini,manoranjini.j@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CS23PE41,Fundamentals of Generative AI and Prompt  Engineering,Suba Malai,R,subamalai.r@rajalakshmi.edu.in,LoT,2,2,0,3,standard,,,,
+CS23PE41,Fundamentals of Generative AI and Prompt  Engineering,Suba Malai,R,subamalai.r@rajalakshmi.edu.in,LoT,2,2,0,3,standard,,,,
+CS23PE41,Fundamentals of Generative AI and Prompt  Engineering,V,Karthick,karthick.v@rajalakshmi.edu.in,LoT,2,2,0,3,standard,,,,
+CS23PE41,Fundamentals of Generative AI and Prompt  Engineering,V,Karthick,karthick.v@rajalakshmi.edu.in,LoT,2,2,0,3,standard,,,,
+CS23PE41,Fundamentals of Generative AI and Prompt  Engineering,Jaeyalakshmi,M,jaeyalakshmi.m@rajalakshmi.edu.in,LoT,2,2,0,3,standard,,,,
+CS23PE41,Fundamentals of Generative AI and Prompt  Engineering,Jaeyalakshmi,M,jaeyalakshmi.m@rajalakshmi.edu.in,LoT,2,2,0,3,standard,,,,
+CS23PE43,Business Analytics,Karthikeyan,Ramanathan,karthikeyan.ramanathan@rajalakshmi.edu.in,LoT,2,2,0,3,standard,,,,Lab-Required-No-Assignment
+CR23731,Blockchain Development in Hyperledger Fabric,Arun Gandhi,D,arungandhi.d@rajalakshmi.edu.in,LoT,2,2,0,3,standard,,,,Lab-Required-No-Assignment
+EE23711,Smart Grid,Siva Kumar,P,sivakumar.p@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+EE23711,Smart Grid,Devi,Maheswaran,devimaheswaran.v@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+EE23712,Power System Operation and Control,Kalaivani,R,kalaivani.r@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+EE23712,Power System Operation and Control,Jayashree,K,jayasree.k@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+EE23731,Renewable Energy Systems,Essaki Raj,R,essakiraj.r@rajalakshmi.edu.in,LoT,3,2,0,4,standard,B318,B Block,Power System Simulation Lab,Core-Lab
+EE23731,Renewable Energy Systems,Padmavathi,R,padmavathi.r@rajalakshmi.edu.in,LoT,3,2,0,4,standard,B318,B Block,Power System Simulation Lab,Core-Lab
+EE23721,Power System Simulation Laboratory,Siva Kumar,P,sivakumar.p@rajalakshmi.edu.in,L,0,4,0,2,standard,B318,B Block,Power System Simulation Lab,Core-Lab
+EE23721,Power System Simulation Laboratory,Jayashree,K,jayasree.k@rajalakshmi.edu.in,L,0,4,0,2,standard,B318,B Block,Power System Simulation Lab,Core-Lab
+EC23732,RF and Microwave Engineering,Srividhya,R,srividhya.r@rajalakshmi.edu.in,LoT,2,2,0,3,standard,B120,B Block,Optical and Microwave Lab,Core-Lab
+EC23732,RF and Microwave Engineering,Sasirekha,D,sasirekha.d@rajalakshmi.edu.in,LoT,2,2,0,3,standard,B120,B Block,Optical and Microwave Lab,Core-Lab
+EC23732,RF and Microwave Engineering,M,Sathish,sathish.m@rajalakshmi.edu.in,LoT,2,2,0,3,standard,B120,B Block,Optical and Microwave Lab,Core-Lab
+EC23732,RF and Microwave Engineering,Shaik Thasleem,Bhanu,shaikthasleembanu@rajalakshmi.edu.in,LoT,2,2,0,3,standard,B120,B Block,Optical and Microwave Lab,Core-Lab
+EC23PE41,Drone Technology in Engineering,Jothi,,jothi.k@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+EC23733,Embedded and Real Time Systems,Saranya,J,saranya.j@rajalakshmi.edu.in,LoT,3,2,0,4,standard,B116,B Block,Communication Systems Lab,Core-Lab
+EC23733,Embedded and Real Time Systems,Nirmala,R,nirmala.r@rajalakshmi.edu.in,LoT,3,2,0,4,standard,B116,B Block,Communication Systems Lab,Core-Lab
+EC23733,Embedded and Real Time Systems,Senthilraja,B,senthilraja.b@rajalakshmi.edu.in,LoT,3,2,0,4,standard,B116,B Block,Communication Systems Lab,Core-Lab
+EC23733,Embedded and Real Time Systems,Sasirekha,D,sasirekha.d@rajalakshmi.edu.in,LoT,3,2,0,4,standard,B116,B Block,Communication Systems Lab,Core-Lab
+EC23721,Artificial Intelligence and Machine Learning for Electronic Engineering,Gururaj,D,gururaj.d@rajalakshmi.edu.in,L,0,4,0,2,standard,,,,
+EC23721,Artificial Intelligence and Machine Learning for Electronic Engineering,Senthilraja,B,senthilraja.b@rajalakshmi.edu.in,L,0,4,0,2,standard,,,,
+EC23721,Artificial Intelligence and Machine Learning for Electronic Engineering,Sudharsan,S,sudharsan.s@rajalakshmi.edu.in,L,0,4,0,2,standard,,,,
+EC23721,Artificial Intelligence and Machine Learning for Electronic Engineering,Loganathan,G,loganathan.g@rajalakshmi.edu.in,L,0,4,0,2,standard,,,,
+EC23731,Optical Communication and Networks,Smitha P,B,smitha.pb@rajalakshmi.edu.in,LoT,2,2,0,3,standard,B120,B Block,Optical and Microwave Lab,Core-Lab
+EC23731,Optical Communication and Networks,Aaron Kevin Cameron,Theoderaj,aaronkevincamerontheoderaj@rajalakshmi.edu.in,LoT,2,2,0,3,standard,B120,B Block,Optical and Microwave Lab,Core-Lab
+EC23731,Optical Communication and Networks,Kumaran,N,kumaran.n@rajalakshmi.edu.in,LoT,2,2,0,3,standard,B120,B Block,Optical and Microwave Lab,Core-Lab
+EC23731,Optical Communication and Networks,Sivapriya,,sivapriya.m@rajalakshmi.edu.in,LoT,2,2,0,3,standard,B120,B Block,Optical and Microwave Lab,Core-Lab
+EC23PE41,Multimedia Compression and Networking,Benazir Begam,R,benazirbegam.r@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+EC23PE41,Multimedia Compression and Networking,G,Indhumathi,indhumathi.g@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+EC23PE41,Multimedia Compression and Networking,D.,Gowdhami,gowdhami.d@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+FT23PE41,Sugar and Gum Based Confectionery Technology,New,Faculty,newfaculty@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+FT23702,Comprehension in Food Technologists,V,Sudhakar,sudhakar.v@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+FT23701,"Food Quality, Safety Standards and Certification",Aruthra Devi,G,aruthradevi.g@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+FT23703,Functional Foods and Nutraceuticals,Niveadhitha,S,niveadhitha.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+FT23PE41,Frozen and Fermented Dairy Products,Manonmani,K,manonmani.k@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+FT23PE42,Cocoa and Chocolate Based Confectionery Technology,Midhuna L,V,midhuna.lv@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+FT23PE42,Traditional Dairy Products,J S,Divyashree,divyashree.js@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+FT23711,Problem Solving using AIML for Food Technologists,Niveadhitha,S,niveadhitha.s@rajalakshmi.edu.in,L,0,2,0,2,standard,,,,Lab-Required-No-Assignment
+FT23711,Problem Solving using AIML for Food Technologists,Kulastic Jassy,A,kulasticjassy.a@rajalakshmi.edu.in,L,0,2,0,2,standard,,,,Lab-Required-No-Assignment
+FT23712,Internship,K,Ramalakshmi,ramalakshmi.k@rajalakshmi.edu.in,L,0,2,0,2,standard,,,,Lab-Required-No-Assignment
+IT23C15,Software Quality Assurance,V Prasanna,Kumari,prasannakumari.v@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+IT23C15,Software Quality Assurance,K,Indumathi,indumathi.k@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+IT23C15,Software Quality Assurance,Valarmathie,Dinakaran,valarmathie.dinakaran@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+IT23C15,Software Quality Assurance,Valarmathie,Dinakaran,valarmathie.dinakaran@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+IT23731,Cloud and Big Data Architecture,Nalini,S,nalini.s@rajalakshmi.edu.in,LoT,3,2,0,4,standard,A210/211,A Block,Computer Lab (A210/211),Computer-Lab
+IT23731,Cloud and Big Data Architecture,Chandramohan,S,chandramohan.s@rajalakshmi.edu.in,LoT,3,2,0,4,standard,A210/211,A Block,Computer Lab (A210/211),Computer-Lab
+IT23731,Cloud and Big Data Architecture,Pragadeesh,M,pragadeesh.m@rajalakshmi.edu.in,LoT,3,2,0,4,standard,A210/211,A Block,Computer Lab (A210/211),Computer-Lab
+IT23731,Cloud and Big Data Architecture,P Vimala,Imogen,vimalaimogen.p@rajalakshmi.edi.in,LoT,3,2,0,4,standard,A210/211,A Block,Computer Lab (A210/211),Computer-Lab
+IT23721 ,Data Science using R,Priyanka,D,priyanka.d@rajalakshmi.edu.in,L,0,4,0,2,standard,A208/209,A Block,Computer Lab (A208/209),Computer-Lab
+IT23721 ,Data Science using R,Priyanka,D,priyanka.d@rajalakshmi.edu.in,L,0,4,0,2,standard,A208/209,A Block,Computer Lab (A208/209),Computer-Lab
+IT23721 ,Data Science using R,M,Vimalan,vimalan.m@rajalakshmi.edu.in,L,0,4,0,2,standard,A208/209,A Block,Computer Lab (A208/209),Computer-Lab
+IT23721 ,Data Science using R,Subashree,R,subashree.r@rajalakshmi.edu.in,L,0,4,0,2,standard,A208/209,A Block,Computer Lab (A208/209),Computer-Lab
+IT23PE41,Deep Learning Concepts,Sureshkumar,R,sureshkumar.r@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+IT23PE41,Deep Learning Concepts,M,Vimalan,vimalan.m@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+IT23PE41,Deep Learning Concepts,Mrs. K.,Vijayalakshmi,kuppanvijayalakshmi28@gmail.com,T,3,0,0,3,standard,,,,
+IT23PE41,Deep Learning Concepts,Mrs. K.,Vijayalakshmi,kuppanvijayalakshmi28@gmail.com,T,3,0,0,3,standard,,,,
+ME23PE41,Welding Technology,Aruna,R,aruna.r@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+ME23732,Mechatronics,Aruna,R,aruna.r@rajalakshmi.edu.in,LoT,3,1,0,4,standard,C107,C Block,Mechatronics Lab,Core-Lab
+ME23732,Mechatronics,A,Paramasivam,paramasivam.a@rajalakshmi.edu.in,LoT,3,1,0,4,standard,C107,C Block,Mechatronics Lab,Core-Lab
+ME23PE41,Introduction to Power Plant Engineering,Vidhushini,P,vidhushini.p@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+ME23PE42,Total Quality Management,Vidhushini,P,vidhushini.p@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+ME23PE42,Total Quality Management,Raj Kumar,A,rajkumar.a@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+ME23711,Process Planning and Cost Estimation,Dhandapani,S,dhandapani.s@rajalakshmi.edu.in,T,3,0,1,3,standard,,,,No-Lab-Required
+ME23711,Process Planning and Cost Estimation,Vinoth Babu,N,vinothbabu.n@rajalakshmi.edu.in,T,3,0,1,3,standard,,,,No-Lab-Required
+ME23722,Comprehension,Pannerselvan,S,panneerselvan.s@rajalakshmi.edu.in,L,0,2,0,1,standard,,,,Lab-Required-No-Assignment
+ME23722,Comprehension,Devanathan,C,devanathan.c@rajalakshmi.edu.in,L,0,2,0,1,standard,,,,Lab-Required-No-Assignment
+ME23731,Artificial Intelligence for Mechanical Engineering,A,Paramasivam,paramasivam.a@rajalakshmi.edu.in,LoT,1,4,0,3,standard,C401,C Block,Mech CAD Lab,Core-Lab
+ME23731,Artificial Intelligence for Mechanical Engineering,Chandrasekar,P,chandrasekar.p@rajalakshmi.edu.in,LoT,1,4,0,3,standard,C401,C Block,Mech CAD Lab,Core-Lab
+MT23PE41,Mechatronics System Design,Balakarthikeyan,M,balakarthikeyan.m@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+MT23711 ,Industrial Automation,Roobini,K,roobini.k@rajalakshmi.edu.in,T,2,0,1,3,standard,,,,
+MT23712,Machine Vision,A,Vimalesh,vimalesh.a@rajalakshmi.edu.in,T,3,0,1,4,standard,,,,
+MT23721 ,Computer Aided Engineering Laboratory,P,Chandramohan,chandramohan.p@rajalakshmi.edu.in,L,0,4,0,1,standard,B310,B Block,MCT CAD Lab,Core-Lab
+MT23722,Industrial Automation Laboratory,Roobini,K,roobini.k@rajalakshmi.edu.in,L,0,4,0,1,standard,B305,B Block,Industrial Automation Lab,Core-Lab
+RO23711,Aerial Robotics,Venugopal,K,venugopal.k@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+RO23712,Humanoid Robotics,Giri,R,giri.r@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+RO23721,"Robotics and Automation Problem Solving using AI, ML and DL",P,Vimalanathan,vimalanathan.p@rajalakshmi.edu.in,L,0,4,0,2,standard,DG0IAL,D Block,Isaac Asimov Laboratory,Core-Lab
+RO23713,Resource Management Techniques,R,Saravanan,saravanan.r@rajalakshmi.edu.in,T,3,0,1,4,standard,,,,No-Lab-Required
+RO23PE41,Advanced Manufacturing Systems,Eswaran,A,eswaran.a@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CRS23PE42,Application and Infrastructure Vulnerability Management,Benedict Jayaprakash,Nicholas,benedict.jn@rajalakshmi.edu.in,LoT,3,2,0,3,standard,,,,Lab-Required-No-Assignment
+CRS23PE42,"Risk, Control and Compliance",Seethalakshmi,T,seethalakshmi.t@rajalakshmi.edu.in,LoT,3,2,0,3,standard,,,,Lab-Required-No-Assignment
+CRS23PE41,IDENTITY ACCESS MANAGEMENT,Balasubramanian,V,balasubramanian.v@rajalakshmi.edu.in,LoT,3,2,0,3,standard,,,,Lab-Required-No-Assignment
+AE23PE31,Fundamentals of UAV Systems and Design,Nithiyanantham K,K,nithiyanantham.kk@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+AE23513,Flight Dynamics,Kathiravan,B,kathiravan.b@rajalakshmi.edu.in,T,3,0,1,4,standard,,,,
+AE23531,Aircraft Structures - II,Balaji,R,balaji.rajendran@rajalakshmi.edu.in,LoT,2,2,1,4,standard,,,,
+AE23521 ,Computational Simulation Laboratory,Vasthadu Vasu Kannah D,L,vasthaduvasukannah.dl@rajalakshmi.edu.in,L,0,4,0,2,standard,CG006,C Block,Aero CAD Lab,Core-Lab
+AE23511,Aircraft Propulsion,Suresh Chandra,Khandai,sureshchandrakhandai@rajalakshmi.edu.in,T,2,0,1,3,standard,,,,No-Lab-Required
+AE23512,Compressible Aerodynamics,Surendra,Bogadi,surendrabogadi@rajalakshmi.edu.in,T,2,0,1,3,standard,,,,No-Lab-Required
+AE23PE31,Applied Aerodynamics,Pradesh,S,pradesh.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+AD23531,Big Data Architecture,Kapilamithran,S,kapilamithran.s@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JR1,J Block,Computer Lab (JR1),Computer-Lab
+AD23531,Big Data Architecture,john,clinton,johnclinton@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JR1,J Block,Computer Lab (JR1),Computer-Lab
+AD23531,Big Data Architecture,Suresh Kumar,S,sureshkumar.s@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JR1,J Block,Computer Lab (JR1),Computer-Lab
+AD23531,Big Data Architecture,Suresh Kumar,S,sureshkumar.s@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JR1,J Block,Computer Lab (JR1),Computer-Lab
+AD23531,Big Data Architecture,Dayalin Leena,G,dayalinleena.g@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JR1,J Block,Computer Lab (JR1),Computer-Lab
+AD23532,Principles of Data Science,Jayasri Archana Devi,P,jayasriarchanadevi.p@rajalakshmi.edu.in,LoT,2,4,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AD23532,Principles of Data Science,Nirmala Anandhi,Y,nirmalaanandhi.y@rajalakshmi.edu.in,LoT,2,4,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AD23532,Principles of Data Science,Beulah,A,beulah.a@rajalakshmi.edu.in,LoT,2,4,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AD23532,Principles of Data Science,Surendar,A,surendar.a@rajalakshmi.edu.in,LoT,2,4,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AD23532,Principles of Data Science,Ek,Subramanian,subramanian.ek@rajalakshmi.edu.in,LoT,2,4,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AI23531,Deep Learning,Savithri,R,savithri.r@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AI23531,Deep Learning,Jayasri Archana Devi,P,jayasriarchanadevi.p@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AI23531,Deep Learning,Kapilamithran,S,kapilamithran.s@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AI23531,Deep Learning,Priyadharsini,R,priyadharsini.r@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AI23531,Deep Learning,Priyadharsini,R,priyadharsini.r@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+CS23532,Computer Networks,V Dhivya,Bhavani,dhivyabhavani.v@rajalakshmi.edu.in,LoT,3,4,0,5,Advanced,KFR01,K Block,Computer Lab (KFR01),Computer-Lab
+CS23532,Computer Networks,Meenakshi,D,meenakshi.d@rajalakshmi.edu.in,LoT,3,4,0,5,Advanced,KFR01,K Block,Computer Lab (KFR01),Computer-Lab
+CS23532,Computer Networks,Madhubala,B,madhubala.b@rajalakshmi.edu.in,LoT,3,4,0,5,Advanced,KFR01,K Block,Computer Lab (KFR01),Computer-Lab
+CS23532,Computer Networks,S Renuka,Devi,renukadevi.s@rajalakshmi.edu.in,LoT,3,4,0,5,Advanced,KFR01,K Block,Computer Lab (KFR01),Computer-Lab
+CS23532,Computer Networks,Selvarani,K,selvarani.k@rajalakshmi.edu.in,LoT,3,4,0,5,Advanced,KFR01,K Block,Computer Lab (KFR01),Computer-Lab
+AD23PE31,Internet of Things,Sampath Kumar,Vajravel,sampathkumar.v@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+AD23PE31,Internet of Things,Sampath Kumar,Vajravel,sampathkumar.v@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+AD23PE31,Internet of Things,Selvarani,K,selvarani.k@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+AD23PE31,Internet of Things,Ek,Subramanian,subramanian.ek@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+AD23PE31,Internet of Things,john,clinton,johnclinton@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+AI23PE31,Recommendation Systems,K,Raju,raju.k@rajalakshmi.edu.in,LoT,2,2,0,3,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AI23PE31,Recommendation Systems,Dr Rajasekaran,A,rajasekaran.a@rajalakshmi.edu.in,LoT,2,2,0,3,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AI23531,Deep Learning,Soundarya,M,soundarya.m@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AI23531,Deep Learning,V,Akshaya,akshaya.v@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AI23531,Deep Learning,Sangeetha,K,sangeetha.k@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AI23531,Deep Learning,R,Anitha,anitha.r@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AI23PE31,Human Computer Interaction,J Jasmine,Gabriel,jasminegabriel.j@rajalakshmi.edu.in,LoT,2,2,0,3,Advanced,KFL01,K Block,Computer Lab (KFL01),Computer-Lab
+AI23PE31,Human Computer Interaction,Priya,M,priya.m@rajalakshmi.edu.in,LoT,2,2,0,3,Advanced,KFL01,K Block,Computer Lab (KFL01),Computer-Lab
+AI23521,Build and Deploy Machine Learning Applications,U,Kumaran,kumaran.u@rajalakshmi.edu.in,L,0,2,0,2,standard,JR1,J Block,Computer Lab (JR1),Computer-Lab
+AI23521,Build and Deploy Machine Learning Applications,Pramela,J,premela.j@rajalakshmi.edu.in,L,0,2,0,2,standard,JR1,J Block,Computer Lab (JR1),Computer-Lab
+AI23521,Build and Deploy Machine Learning Applications,Dr Rajasekaran,A,rajasekaran.a@rajalakshmi.edu.in,L,0,2,0,2,standard,JR1,J Block,Computer Lab (JR1),Computer-Lab
+AI23521,Build and Deploy Machine Learning Applications,NF1,,gabrieljasmine@gmail.com,L,0,2,0,2,standard,JR1,J Block,Computer Lab (JR1),Computer-Lab
+AI23512,DataEngineering,Arunvinodh,C,arunvinodh.c@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+AI23512,DataEngineering,Sangeetha,K,sangeetha.k@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+AI23512,DataEngineering,Pramela,J,premela.j@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+AI23512,DataEngineering,Sangeetha Archana,J,sangeethaarchana.j@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+AD23632,Framework for data and visual Analytics,V,Akshaya,akshaya.v@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AD23632,Framework for data and visual Analytics,J Jasmine,Gabriel,jasminegabriel.j@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AD23632,Framework for data and visual Analytics,R,Anitha,anitha.r@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AD23632,Framework for data and visual Analytics,Priya,M,priya.m@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+CS23532,Computer Networks,Vijay,K,vijay.k@rajalakshmi.edu.in,LoT,3,4,0,5,Advanced,KFR01,K Block,Computer Lab (KFR01),Computer-Lab
+CS23532,Computer Networks,Vijay,K,vijay.k@rajalakshmi.edu.in,LoT,3,4,0,5,Advanced,KFR01,K Block,Computer Lab (KFR01),Computer-Lab
+CS23532,Computer Networks,Pavithra,P,pavithra.p@rajalakshmi.edu.in,LoT,3,4,0,5,Advanced,KFR01,K Block,Computer Lab (KFR01),Computer-Lab
+CS23532,Computer Networks,M P,Magesh,magesh.mp@rajalakshmi.edu.in,LoT,3,4,0,5,Advanced,KFR01,K Block,Computer Lab (KFR01),Computer-Lab
+AT23531,Automotive Electrical and Electronics,Zahir Hussain,M,zahirhussain.m@rajalakshmi.edu.in,LoT,3,2,0,4,standard,BG014,B Block,Electrical Machines I Lab,Core-Lab
+AT23532,Electric and Hybrid Vehicles - II,Pavan,P,pavan.p@rajalakshmi.edu.in,LoT,3,2,0,4,Advanced,KFL02,K Block,Computer Lab (KFL02),Computer-Lab
+AT23PE31,Two and Three Wheelers,Mohanraj,K,mohanraj.k@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+AT23511,Design of Machine Elements,Edwin Joseph,R,edwinjoseph.r@rajalakshmi.edu.in,T,2,0,1,3,standard,,,,No-Lab-Required
+AT23522,Computer Aided Vehicle Design Data Characteristics Laboratory,Zahir Hussain,M,zahirhussain.m@rajalakshmi.edu.in,L,0,2,0,1,Advanced,KFL02,K Block,Computer Lab (KFL02),Computer-Lab
+AT23521,Two and Three Wheelers Laboratory,Mohanraj,K,mohanraj.k@rajalakshmi.edu.in,L,0,2,0,1,standard,WS AUTO GF2,A Block,Automotive Components Lab,Core-Lab
+GE23311,Fundamentals of Management for Engineers,Karthikeyan,R,karthikeyan.r2@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+BM23532,Microcontroller and Embedded System Design,Ramachandran,R,ramachandran.r@rajalakshmi.edu.in,LoT,3,2,1,4,standard,B206,B Block,Microprocessor Lab-2,Core-Lab
+BM23532,Microcontroller and Embedded System Design,Glory Precious,J,gloryprecious.j@rajalakshmi.edu.in,LoT,3,2,1,4,standard,B206,B Block,Microprocessor Lab-2,Core-Lab
+BM23PE31,Biomaterials and Applications,Krishnakumar,S,krishnakumar.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+BM23PE31,Biomaterials and Applications,Senthilkumar,P,senthilkumar.p@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+BM23511,Biocontrol systems,R,Premkumar,premkumar.r@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+BM23511,Biocontrol systems,Jemina Asnoth Sylvia,J,jeminaasnothsylvia@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+BM23512,Diagnostic and Therapeutic Equipment,Senthilkumar,P,senthilkumar.p@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+BM23512,Diagnostic and Therapeutic Equipment,Jemina Asnoth Sylvia,J,jeminaasnothsylvia@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+BM23531,Signals and Systems Analysis,Rubeshkumar,Thulasingam,rubeshkumar.t@rajalakshmi.edu.in,LoT,1,2,1,3,standard,DG,D Block,Medical Image Processing Lab,Core-Lab
+BM23531,Signals and Systems Analysis,R,Kalpana,kalpana.r@rajalakshmi.edu.in,LoT,1,2,1,3,standard,DG,D Block,Medical Image Processing Lab,Core-Lab
+BM23521,Diagnostic and Therapeutic Equipment Laboratory,Jemina Asnoth Sylvia,J,jeminaasnothsylvia@rajalakshmi.edu.in,L,0,4,0,2,standard,DG013,D Block,Diagnostic and Therapeutic Equipment Lab,Core-Lab
+BM23521,Diagnostic and Therapeutic Equipment Laboratory,Senthilkumar,P,senthilkumar.p@rajalakshmi.edu.in,L,0,4,0,2,standard,DG013,D Block,Diagnostic and Therapeutic Equipment Lab,Core-Lab
+CS23422,Python Programming for Machine learning,Ramachandran,R,ramachandran.r@rajalakshmi.edu.in,L,0,4,0,2,Advanced,TLGL1,Techlounge,Computer Lab (TLGL1),Computer-Lab
+CS23422,Python Programming for Machine learning,Sankar,K,sankar.k@rajalakshmi.edu.in,L,0,4,0,2,Advanced,TLGL1,Techlounge,Computer Lab (TLGL1),Computer-Lab
+BT23512,Bioinformatics,M,Shanthi,shanthi.m@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+BT23512,Bioinformatics,Sujata,Roy,sujataroy@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+BT23512,Bioinformatics,Carlin Geor Malar,G,carlingeormalar.g@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+BT23513,Separation Process Principles,S Sangeetha,Gandhi,sangeethagandhi.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+BT23513,Separation Process Principles,N,Premalatha,premalatha.n@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+BT23513,Separation Process Principles,N,Premalatha,premalatha.n@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+BT23514,Immunology,Sankar,M,sankar.m@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+BT23514,Immunology,P,Saravanan,saravanan.p@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+BT23514,Immunology,S,Thiruvengadam,thiruvengadam.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+BT23523,Immunology Laboratory,P,Saravanan,saravanan.p@rajalakshmi.edu.in,L,0,4,0,2,standard,B First Floor,B Block,Immunology Lab,Core-Lab
+BT23523,Immunology Laboratory,Sinduja M,E,sinduja.me@rajalakshmi.edu.in,L,0,4,0,2,standard,B First Floor,B Block,Immunology Lab,Core-Lab
+BT23523,Immunology Laboratory,S,Thiruvengadam,thiruvengadam.s@rajalakshmi.edu.in,L,0,4,0,2,standard,B First Floor,B Block,Immunology Lab,Core-Lab
+BT23521,Bioprocess Laboratory- I,Sasitharan,R,sasitharan.r@rajalakshmi.edu.in,L,0,4,0,2,standard,,,,Lab-Required-No-Assignment
+BT23521,Bioprocess Laboratory- I,B,Preethi,preethi.b@rajalakshmi.edu.in,L,0,4,0,2,standard,,,,Lab-Required-No-Assignment
+BT23521,Bioprocess Laboratory- I,Millicent Mabel,M,millicentmable.m@rajalakshmi.edu.in,L,0,4,0,2,standard,,,,Lab-Required-No-Assignment
+BT23511,Bioprocess Principles,Ebine Joel S,C,ebinejoel.sc@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+BT23511,Bioprocess Principles,T,Anitha,anitha.t@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+BT23511,Bioprocess Principles,R,Anila,anila.r@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+BT23522,Bioinformatics Laboratory,Carlin Geor Malar,G,carlingeormalar.g@rajalakshmi.edu.in,L,0,4,0,2,standard,TLGL3,Techlounge,Computer Lab (TLGL3),Computer-Lab
+BT23522,Bioinformatics Laboratory,M,Shanthi,shanthi.m@rajalakshmi.edu.in,L,0,4,0,2,standard,TLGL3,Techlounge,Computer Lab (TLGL3),Computer-Lab
+BT23522,Bioinformatics Laboratory,Preethy K,R,preethy.kr@rajalakshmi.edu.in,L,0,4,0,2,standard,TLGL3,Techlounge,Computer Lab (TLGL3),Computer-Lab
+CH23513,Mass Transfer I,Kalaiarasi,N,kalaiarasi.n@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CH23PE31,Petroleum Chemistry and Refining Fundamentals,Sivamani,S,sivamani.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CH23514,Chemical Reaction Engineering I,Mary Rosana N,T,maryrosana.nt@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CH23F16,Drugs and Pharmaceutical Technology,Mary Rosana N,T,maryrosana.nt@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CH23511,Process Plant Utilities,G,Vijayaraghavan,vijayaraghavan.g@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CH23PE31,Waste Water Treatment,Vincent Joseph K,L,vincentjoseph.kl@rajalakshmi.edu.in,L,0,6,0,3,standard,,,,Lab-Required-No-Assignment
+CH23521,Heat Transfer Lab,G,Vijayaraghavan,vijayaraghavan.g@rajalakshmi.edu.in,L,0,4,0,2,standard,WS AUTO FF2,A Block,Heat Transfer Lab,Core-Lab
+CH23521,Heat Transfer Lab,Seelam Narasimha,Reddy,narasimhareddy.s@rajalakshmi.edu.in,L,0,4,0,2,standard,WS AUTO FF2,A Block,Heat Transfer Lab,Core-Lab
+CH23512,Chemical Engineering Thermodynamics,T R,Sundararaman,sundararaman.tr@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CH23B16,Hydrogen and fuel cell technology,Vincent Joseph K,L,vincentjoseph.kl@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CE23511,Design of Reinforced Concrete Elements,S,Geetha,geetha.s@rajalakshmi.edu.in,T,3,0,1,4,standard,,,,No-Lab-Required
+CE23512,Foundation Engineering,Muthu Lakshmi,S,muthulakshmi.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CE23513,Waste Water Engineering,Eswary Devi,T,eswarydevi.t@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CE23531,Structural Analysis,Mahamood Ul Hasan,N,mahamoodulhasan.n@rajalakshmi.edu.in,LoT,3,2,0,4,standard,TIFAC I01,A Block,Computer Lab (Arch),Computer-Lab
+CE23PE31,Air and Noise Pollution Control Engineering,M,Selvakumar,selvakumar.m@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CE23PE31,Advanced Construction Techniques,Jeya Arthi A,J,jeyaarthi.aj@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CE23521,Water and Waste Water Analysis Laboratory,Eswary Devi,T,eswarydevi.t@rajalakshmi.edu.in,L,0,4,0,2,standard,D503,D Block,Chemistry Lab,Core-Lab
+GE23627,Design Thinking and Innovation,Vishnu Kumar,A,vishnukumar.a@rajalakshmi.edu.in,T,4,0,0,2,standard,,,,No-Lab-Required
+GE23627,Design Thinking and Innovation,Padmasheela,Keshvan,padmasheela.keshvan@rajalakshmi.edu.in,T,4,0,0,2,standard,,,,No-Lab-Required
+CB23PE31,Fundamentals of IoT,Nandha Kumar,P,nandhakumar.p@rajalakshmi.edu.in,LoT,2,2,1,4,standard,TLGL3,Techlounge,Computer Lab (TLGL3),Computer-Lab
+CB23PE31,Fundamentals of IoT,Jayanthi,M,jayanthi.m@rajalakshmi.edu.in,LoT,2,2,1,4,standard,TLGL3,Techlounge,Computer Lab (TLGL3),Computer-Lab
+CB23531,Computer Network Technology,Jayanthi,M,jayanthi.m@rajalakshmi.edu.in,LoT,3,2,0,4,High-tech,TLFL1,Techlounge,Computer Lab (TLFL1),Computer-Lab
+CB23531,Computer Network Technology,Bakiyalakshmi,S,bakiyalakshmi.s@rajalakshmi.edu.in,LoT,3,2,0,4,High-tech,TLFL1,Techlounge,Computer Lab (TLFL1),Computer-Lab
+CB23532,Artificial Intelligence,Padmasheela,Keshvan,padmasheela.keshvan@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+CB23532,Artificial Intelligence,Stanlin,Prija,stanlinprija.v@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+BA23511,Principles of Financial Management,Sudhan S,K,sudhan.sk@rajalakshmi.edu.in,T,2,0,0,2,standard,,,,No-Lab-Required
+BA23511,Principles of Financial Management,Sindhu,Al,sindhu.al@rajalakshmi.edu.in,T,2,0,0,2,standard,,,,No-Lab-Required
+CD23531,3D Modelling and Texturing,S,Umamaheswararao,umamaheswararao.s@rajalakshmi.edu.in,LoT,2,2,0,3,Advanced,KFL01,K Block,Computer Lab (KFL01),Computer-Lab
+IT23E31,Graphics and Multimedia,Kalpana,D,kalpana.d@rajalakshmi.edu.in,LoT,2,2,0,3,standard,,,,Lab-Required-No-Assignment
+CS23431,Operating Systems,Gunasekar,S,gunasekar.s@rajalakshmi.edu.in,LoT,3,4,0,5,standard,,,,Lab-Required-No-Assignment
+GE23627,Design Thinking and Innovation,P,Revathy,revathy.p@rajalakshmi.edu.in,T,4,0,0,2,standard,,,,No-Lab-Required
+CS23531,Web Programming,Manju Priya,A,manjupriya.a@rajalakshmi.edu.in,LoT,3,4,0,4,standard,,,,
+CS23531,Web Programming,Prithipa,A,prithipa.a@rajalakshmi.edu.in,LoT,3,4,0,4,standard,,,,
+CS23531,Web Programming,Swathi Lakshmi,S,swathilakshmi.s@rajalakshmi.edu.in,LoT,3,4,0,4,standard,,,,
+CS23533,Foundations of Artificial Intelligence,Divya,R,divya.r@rajalakshmi.edu.in,LoT,3,2,0,4,standard,,,,
+CS23533,Foundations of Artificial Intelligence,Dr. Bhuvana,S.,bhuvana.s@rajalakshmi.edu.in,LoT,3,2,0,4,standard,,,,
+CS23432,Software Construction,Fowzia,Sihana,fowzia.basheer@rajalakshmi.edu.in,T,3,0,0,4,standard,,,,No-Lab-Required
+CS23432,Software Construction,R,Rupmala,rupmala.r@rajalakshmi.edu.in,T,3,0,0,4,standard,,,,No-Lab-Required
+CR23531,Ethical Hacking,new faculty cse,cs,ns.csecs@rajalakshmi.edu.in,LoT,3,2,0,4,standard,,,,Lab-Required-No-Assignment
+CR23531,Ethical Hacking,Swathi Lakshmi,S,swathilakshmi.s@rajalakshmi.edu.in,LoT,3,2,0,4,standard,,,,Lab-Required-No-Assignment
+CR23532,Cyber and Digital Forensics,Dr. Sivakumar,D,sivakumar.d@rajalakshmi.edu.in,LoT,3,2,0,4,standard,,,,Lab-Required-No-Assignment
+CR23532,Cyber and Digital Forensics,Dr. Sivakumar,D,sivakumar.d@rajalakshmi.edu.in,LoT,3,2,0,4,standard,,,,Lab-Required-No-Assignment
+EE23511,Power System Analysis,Jayashree,K,jayasree.k@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+EE23511,Power System Analysis,Brindhu Kumari,A,brindhukumari.a@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+EE23512,Power Electronics,S Rama,Reddy,ramareddy.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+EE23512,Power Electronics,Nazar Ali,A,nazarali.a@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+EE23513,Control Systems,Kavitha,J,kavitha.j@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+EE23513,Control Systems,Essaki Raj,R,essakiraj.r@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+EE23531,"Microprocessors, Microcontrollers and Applications",Amutha,C,amutha.c@rajalakshmi.edu.in,LoT,3,2,0,4,standard,B311,B Block,Electronic Devices & Circuits Lab,Core-Lab
+EE23531,"Microprocessors, Microcontrollers and Applications",Anto Sheeba,J,antosheeba.j@rajalakshmi.edu.in,LoT,3,2,0,4,standard,B311,B Block,Electronic Devices & Circuits Lab,Core-Lab
+EE23521,Control and Instrumentation Laboratory,Ron Carter S,B,roncarter.sb@rajalakshmi.edu.in,L,0,2,0,1,standard,B318,B Block,Power System Simulation Lab,Core-Lab
+EE23521,Control and Instrumentation Laboratory,Devi,Maheswaran,devimaheswaran.v@rajalakshmi.edu.in,L,0,2,0,1,standard,B318,B Block,Power System Simulation Lab,Core-Lab
+GE23627,Design Thinking and Innovation,Padmavathi,R,padmavathi.r@rajalakshmi.edu.in,T,4,0,0,2,standard,,,,No-Lab-Required
+GE23627,Design Thinking and Innovation,Anto Sheeba,J,antosheeba.j@rajalakshmi.edu.in,T,4,0,0,2,standard,,,,No-Lab-Required
+EE23PE31,Wiring Harness Design Engineering,Thirusenthilkumaran,P,thirusenthilkumaran.p@rajalakshmi.edu.in,L,0,6,0,3,standard,TANCAM,Arch Block,TANCAM,Core-Lab
+EE23PE31,Wiring Harness Design Engineering,Sivaraman P,R,sivaraman.pr@rajalakshmi.edu.in,L,0,6,0,3,standard,TANCAM,Arch Block,TANCAM,Core-Lab
+EC23PE32,Computer System Architecture,Divya,M,divya.manne@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+EC23512,Modern Digital Communication,Chitra,S,chitra.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+EC23512,Modern Digital Communication,Ganesamoorthy,R,ganesamoorthy.r@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+EC23512,Modern Digital Communication,Srividhya,R,srividhya.r@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+EC23512,Modern Digital Communication,Anitha Mary,M,anithamary.m@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+EC23512,Modern Digital Communication,Sudharsan,S,sudharsan.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+EC23512,Modern Digital Communication,Murugan,C,murugan.c@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+EC23PE31,Introduction to MEMS,S,Suganthi,suganthi.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+EC23PE31,Introduction to MEMS,Saranya,J,saranya.j@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+EC23PE31,Introduction to MEMS,Suma,Nair,sumanair@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+EC23PE31,Introduction to MEMS,Saranya,G,saranya.g@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+EC23PE31,Introduction to MEMS,Pradeep Narayanan,S,pradeepnarayanan.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+EC23PE31,Introduction to MEMS,Nirmala,D,nirmala.d@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+EC23PE32,Information Theory and Coding,Manikandan,T,manikandan.t@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+EC23PE32,Information Theory and Coding,A,Asha,asha.a@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+EC23PE32,Information Theory and Coding,S Priyanka,Devi,priyankadevi.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+EC23511,Control System Engineering,Shaik Thasleem,Bhanu,shaikthasleembanu@rajalakshmi.edu.in,T,2,0,1,3,standard,,,,
+EC23511,Control System Engineering,S R,Balaji,balaji.sr@rajalakshmi.edu.in,T,2,0,1,3,standard,,,,
+EC23511,Control System Engineering,Priya,B,priya.b@rajalakshmi.edu.in,T,2,0,1,3,standard,,,,
+EC23511,Control System Engineering,Thilakavathi,B,thilakavathi.b@rajalakshmi.edu.in,T,2,0,1,3,standard,,,,
+EC23511,Control System Engineering,Radhamani,V,radhamani.v@rajalakshmi.edu.in,T,2,0,1,3,standard,,,,
+EC23511,Control System Engineering,Mariammal,T,mariammal.t@rajalakshmi.edu.in,T,2,0,1,3,standard,,,,
+EC23PE32,Digital Image Processing,Sudharsan,S,sudharsan.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+EC23PE32,Medical Electronics,Murugan,C,murugan.c@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+EC23PE32,Computational VLSI and IoT for AI,Pradeep Narayanan,S,pradeepnarayanan.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+EC23521,Communication Systems Laboratory,Benazir Begam,R,benazirbegam.r@rajalakshmi.edu.in,L,0,4,0,2,standard,B116,B Block,Communication Systems Lab,Core-Lab
+EC23521,Communication Systems Laboratory,Ganesamoorthy,R,ganesamoorthy.r@rajalakshmi.edu.in,L,0,4,0,2,standard,B116,B Block,Communication Systems Lab,Core-Lab
+EC23521,Communication Systems Laboratory,Srividhya,R,srividhya.r@rajalakshmi.edu.in,L,0,4,0,2,standard,B116,B Block,Communication Systems Lab,Core-Lab
+EC23521,Communication Systems Laboratory,Anitha Mary,M,anithamary.m@rajalakshmi.edu.in,L,0,4,0,2,standard,B116,B Block,Communication Systems Lab,Core-Lab
+EC23521,Communication Systems Laboratory,Sudharsan,S,sudharsan.s@rajalakshmi.edu.in,L,0,4,0,2,standard,B116,B Block,Communication Systems Lab,Core-Lab
+EC23521,Communication Systems Laboratory,Murugan,C,murugan.c@rajalakshmi.edu.in,L,0,4,0,2,standard,B116,B Block,Communication Systems Lab,Core-Lab
+EC23531,Digital Signal Processing,Thaiyalnayaki,K,thaiyalnayaki.k@rajalakshmi.edu.in,LoT,3,2,1,4,standard,A208/209,A Block,Computer Lab (A208/209),Computer-Lab
+EC23531,Digital Signal Processing,Gururaj,D,gururaj.d@rajalakshmi.edu.in,LoT,3,2,1,4,standard,A208/209,A Block,Computer Lab (A208/209),Computer-Lab
+EC23531,Digital Signal Processing,Asokan,V,asokan.v@rajalakshmi.edu.in,LoT,3,2,1,4,standard,A208/209,A Block,Computer Lab (A208/209),Computer-Lab
+EC23531,Digital Signal Processing,M,Latha,latha.m@rajalakshmi.edu.in,LoT,3,2,1,4,standard,A208/209,A Block,Computer Lab (A208/209),Computer-Lab
+EC23531,Digital Signal Processing,Radhamani,V,radhamani.v@rajalakshmi.edu.in,LoT,3,2,1,4,standard,A208/209,A Block,Computer Lab (A208/209),Computer-Lab
+EC23531,Digital Signal Processing,Helan Vidhya,T,helanvidhya.t@rajalakshmi.edu.in,LoT,3,2,1,4,standard,A208/209,A Block,Computer Lab (A208/209),Computer-Lab
+GE23311,Fundamentals of Management for Engineers,Prem Kumar,S,premkumar.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+FT23501,Food Analysis,J S,Divyashree,divyashree.js@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+FT23502,Food Process Engineering,Nithya Bala Sundari,S,nithyabalasundari.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+FT23503,Heat and Mass Transfer in Food Processing,P,Bharathi,bharathi.p@rajalakshmi.edu.in,LoT,3,4,0,3,standard,,,,Lab-Required-No-Assignment
+FT23511,Food Analysis Laboratory,P,Bharathi,bharathi.p@rajalakshmi.edu.in,L,0,2,0,2,standard,,,,Lab-Required-No-Assignment
+FT23511,Food Analysis Laboratory,Midhuna L,V,midhuna.lv@rajalakshmi.edu.in,L,0,2,0,2,standard,,,,Lab-Required-No-Assignment
+FT23512,Food Processing and Preservation Laboratory-II,V,Sudhakar,sudhakar.v@rajalakshmi.edu.in,L,0,2,0,2,standard,,,,Lab-Required-No-Assignment
+FT23512,Food Processing and Preservation Laboratory-II,Nithya Bala Sundari,S,nithyabalasundari.s@rajalakshmi.edu.in,L,0,2,0,2,standard,,,,Lab-Required-No-Assignment
+FT23PE31,Meat and Poultry Processing,Aruthra Devi,G,aruthradevi.g@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+FT23PE31,Value Added Fruit and Vegetable Products,Niveadhitha,S,niveadhitha.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+IT23531,Computer Vision,M,Babu,babu.m@rajalakshmi.edu.in,LoT,3,2,0,4,standard,A208/209,A Block,Computer Lab (A208/209),Computer-Lab
+IT23531,Computer Vision,Muthu Kumar,B,muthukumar.b@rajalakshmi.edu.in,LoT,3,2,0,4,standard,A208/209,A Block,Computer Lab (A208/209),Computer-Lab
+IT23531,Computer Vision,A,Kalaivani,kalaivani.a@rajalakshmi.edu.in,LoT,3,2,0,4,standard,A208/209,A Block,Computer Lab (A208/209),Computer-Lab
+IT23531,Computer Vision,L Leena,Jenifer,leenajenifer.l@rajalakshmi.edu.in,LoT,3,2,0,4,standard,A208/209,A Block,Computer Lab (A208/209),Computer-Lab
+IT23531,Computer Vision,Bennet,Prabhu,bennetprabhu2k@yahoo.com,LoT,3,2,0,4,standard,A208/209,A Block,Computer Lab (A208/209),Computer-Lab
+IT23511,Automata Theory & Compiler Design,Suresh Kumar,K,sureshkumar.k@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+IT23511,Automata Theory & Compiler Design,P,Neelaveni,neelaveni.p@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+IT23511,Automata Theory & Compiler Design,P,Neelaveni,neelaveni.p@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+IT23511,Automata Theory & Compiler Design,Priya,Vijay,priya.vijay@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+IT23511,Automata Theory & Compiler Design,Priya,Vijay,priya.vijay@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+CS23531,Web Programming,Narayana K,E,narayana.ke@rajalakshmi.edu.in,LoT,3,4,0,4,standard,,,,
+CS23531,Web Programming,Pragadeesh,M,pragadeesh.m@rajalakshmi.edu.in,LoT,3,4,0,4,standard,,,,
+CS23531,Web Programming,Padmini,S,padmini.s@rajalakshmi.edu.in,LoT,3,4,0,4,standard,,,,
+CS23531,Web Programming,Ms Janani,M,janani.m@rajalakshmi.edu.in,LoT,3,4,0,4,standard,,,,
+CS23531,Web Programming,Satheesh Kumar,N,satheeshkumar.n@rajalakshmi.edu.in,LoT,3,4,0,4,standard,,,,
+AI23231,Principles of Artificial Intelligence,A P Aruna,Jameela,arunajameela.ap@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AI23231,Principles of Artificial Intelligence,Subashree,R,subashree.r@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AI23231,Principles of Artificial Intelligence,Priyanka,D,priyanka.d@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AI23231,Principles of Artificial Intelligence,Suresh Kumar,K,sureshkumar.k@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+AI23231,Principles of Artificial Intelligence,Premalatha,Anand,premalatha.pn@rajalakshmi.edu.in,LoT,3,2,0,4,standard,JL1,J Block,Computer Lab (JL1),Computer-Lab
+CS23532,Computer Networks,Nalini,S,nalini.s@rajalakshmi.edu.in,LoT,3,4,0,5,Advanced,KFR01,K Block,Computer Lab (KFR01),Computer-Lab
+CS23532,Computer Networks,Vinothkumar,R,vinothkumar.r@rajalakshmi.edu.in,LoT,3,4,0,5,Advanced,KFR01,K Block,Computer Lab (KFR01),Computer-Lab
+CS23532,Computer Networks,S,Subbiah,subbiah.s@rajalakshmi.edu.in,LoT,3,4,0,5,Advanced,KFR01,K Block,Computer Lab (KFR01),Computer-Lab
+CS23532,Computer Networks,M,Sathish,sathish.m1@rajalakshmi.edu.in,LoT,3,4,0,5,Advanced,KFR01,K Block,Computer Lab (KFR01),Computer-Lab
+CS23532,Computer Networks,Sureshkumar,R,sureshkumar.r@rajalakshmi.edu.in,LoT,3,4,0,5,Advanced,KFR01,K Block,Computer Lab (KFR01),Computer-Lab
+ME23PE31,Automobile Engineering,Santhanakrishnan,M,santhanakrishnan.m@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+ME23PE31,Automobile Engineering,S,Ramkumar,ramkumar.s.mech@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+ME23PE31,Computer Aided Design,Ragavendiran,R,ragavendiran.r@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+GE23511,Economics for Engineers,Rajesh Kumar,B,rajeshkumar.b@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,Lab-Required-No-Assignment
+GE23511,Economics for Engineers,S Venkat,Prasat,venkatprasat.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,Lab-Required-No-Assignment
+ME23521,Component Modeling Laboratory,Abraham Antony,D,abrahamantony@rajalakshmi.edu.in,L,0,4,0,2,standard,C401,C Block,Mech CAD Lab,Core-Lab
+ME23521,Component Modeling Laboratory,Arulmurugan,S,arulmurugan.s@rajalakshmi.edu.in,L,0,4,0,2,standard,C401,C Block,Mech CAD Lab,Core-Lab
+ME23511,Machine Design,N,Venkateshwaran,venkateshwaran.n@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+ME23511,Machine Design,Shankar,E,shankar.e@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+ME23531,Heat and Mass Transfer,Parthiban,N,parthiban.n@rajalakshmi.edu.in,LoT,3,2,0,4,standard,WS MECH TL,C Block,Thermal Lab 2,Core-Lab
+ME23531,Heat and Mass Transfer,Muthiah C,T,muthiah.ct@rajalakshmi.edu.in,LoT,3,2,0,4,standard,WS MECH TL,C Block,Thermal Lab 2,Core-Lab
+ME23532,Metrology and Measurements,Devanathan,C,devanathan.c@rajalakshmi.edu.in,LoT,3,4,0,4,standard,C408,C Block,Metrology & Measurement Lab,Core-Lab
+ME23532,Metrology and Measurements,Pannerselvan,S,panneerselvan.s@rajalakshmi.edu.in,LoT,3,4,0,4,standard,C408,C Block,Metrology & Measurement Lab,Core-Lab
+MT23511 ,Semiconductor Manufacturing,Naresh Babu,G,nareshbabu.g@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+MT23512,Industrial Electronics,Uma Maheswari,M,umamaheswari.m@rajalakshmi.edu.in,T,3,0,0,3,standard,BG009,B Block,Power Electronics Lab,No-Lab-Required
+MT23513,Basic Engineering Research Methods,Ramesh,S,ramesh.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+MT23522,Industrial Electronics Laboratory,Uma Maheswari,M,umamaheswari.m@rajalakshmi.edu.in,L,0,4,0,1,standard,BG009,B Block,Power Electronics Lab,Core-Lab
+MT23PE31,Advanced Automotive Materials,Shantharaj,M,shantharaj.m@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+MT23PE31,CAD and CAE,P,Chandramohan,chandramohan.p@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+CS23422,Python Programming for Machine learning,V,Santhanam,santhanam.v@rajalakshmi.edu.in,L,0,4,0,2,Advanced,TLGL1,Techlounge,Computer Lab (TLGL1),Computer-Lab
+GE23311 ,Fundamentals of Management for Engineers,Roobini,K,roobini.k@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,
+RO23511,AI for Robotics,Ravindra Kumar,B,ravindrakumar.b@rajalakshmi.edu.in,T,3,0,1,3,standard,,,,
+RO23512,Theory of Mechanisms and Machines-II,Nagarajan,Tt,nagarajan.tt@rajalakshmi.edu.in,T,3,0,1,4,standard,,,,
+ME23511,Machine Design,S,Senthilrajan,senthilrajan.s@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+RO23PE31,Principles of Management,P,Vimalanathan,vimalanathan.p@rajalakshmi.edu.in,T,3,0,0,3,standard,,,,No-Lab-Required
+RO23521,Mobile Robotics laboratory,Nagarajan,Tt,nagarajan.tt@rajalakshmi.edu.in,L,0,4,0,2,standard,DG0IAL,D Block,Isaac Asimov Laboratory,Core-Lab
+RO23522,Industrial Automation Laboratory-II,Venugopal,K,venugopal.k@rajalakshmi.edu.in,L,0,4,0,2,standard,B305,B Block,Industrial Automation Lab,Core-Lab

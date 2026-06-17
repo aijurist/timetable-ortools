@@ -7,7 +7,7 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data\3rd_4th_year.csv
+  courses_csv: data\final_run.csv
   rooms_csv: data\block_wise\rooms_new.csv
   day_order_csv: data/day_order_odd.csv
   core_lab_mapping_csv: data\core_lab_mapping.csv
@@ -539,7 +539,6 @@ constraints:
           - DG03
           - TIFAC I01
           - C401
-          - KSL02
         target_semesters:
           - 1
         room_keywords:
@@ -843,6 +842,7 @@ constraints:
         soft_penalty_weight: 5
         excluded_departments:
           - Electronics & Communication Engineering_S1
+          - Computer Science & Engineering_S5
     lunch_alignment:
       enabled: true
       priority: 9
@@ -855,10 +855,9 @@ constraints:
         minimum_free_slots: 1
         soft_departments:
           - Information Technology_S1
-          - Computer Science & Engineering_S1
-          - Computer Science & Engineering-2_S1
           - Electronics & Communication Engineering_S1
           - Biomedical Engineering_S5
+          - Electrical & Electronics Engineering_S5
         penalty_weight: 200
     five_pm_policy:
       enabled: true
@@ -1000,9 +999,12 @@ model:
     room_spread: 1.7
   slack_penalty: 1.0
   use_sparse_variables: true
+  theory_room_candidate_limit: 20
+  theory_room_min_candidates: 10
+  theory_room_anchor_candidates: 4
 
 runtime:
-  time_limit_sec: 30000
+  time_limit_sec: 3600
   thread_count: 8
   enable_lns: false
   enable_trace: false

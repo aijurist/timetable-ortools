@@ -47,9 +47,9 @@ id,student_count,academic_year,semester,requires_special_scheduling,is_assistant
 110,70,2,3,False,True,239,CS301,Srinivas,Vadlamani,,CS23334,CS23334,Fundamentals of Data Science,LoT,3,2,0,4,Computer Science & Engineering
 581,65,3,5,False,False,217,CS256,R.Sabitha,,,CS23532,CS23532,Computer Networks,LoT,3,2,0,5,Computer Science & Engineering
 347,70,3,5,False,False,274,CS274,Teacher_274,Unknown,teacher_274@university.edu,CS23512,CS23512,Fundamentals of Mobile Computing,T,3,0,0,3,Computer Science & Engineering
-296,70,3,5,False,True,268,CS334,Kirubhakar T,T,,CS23531,CS23531,Web Programming,LoT,1,6,0,4,Computer Science & Engineering
-295,70,3,5,False,True,268,CS334,Kirubhakar T,T,,CS23531,CS23531,Web Programming,LoT,1,6,0,4,Computer Science & Engineering
-289,70,3,5,False,True,229,CS238,Sathiyavathi,S,,CS23531,CS23531,Web Programming,LoT,1,6,0,4,Computer Science & Engineering
+296,70,3,5,False,True,268,CS334,Kirubhakar T,T,,CS23531,CS23531,Web Programming,LoT,3,4,0,4,Computer Science & Engineering
+295,70,3,5,False,True,268,CS334,Kirubhakar T,T,,CS23531,CS23531,Web Programming,LoT,3,4,0,4,Computer Science & Engineering
+289,70,3,5,False,True,229,CS238,Sathiyavathi,S,,CS23531,CS23531,Web Programming,LoT,3,4,0,4,Computer Science & Engineering
 286,70,3,5,False,True,243,CS322,Dharshini B,S,,CS23512,CS23512,Fundamentals of Mobile Computing,T,3,0,0,3,Computer Science & Engineering
 283,70,3,5,False,True,231,CS298,Divya,M,,CS23533,CS23533,Foundations of Artificial Intelligence,LoT,3,2,0,4,Computer Science & Engineering
 282,70,3,5,False,True,234,IT210,J.A.Adlin,Layola,,CS23511,CS23511,Theory of Computation,T,3,0,1,4,Computer Science & Engineering
@@ -60,10 +60,10 @@ id,student_count,academic_year,semester,requires_special_scheduling,is_assistant
 276,70,3,5,False,True,198,IT194,Farjana,U,,CS23532,CS23532,Computer Networks,LoT,3,2,0,5,Computer Science & Engineering
 275,70,3,5,False,True,195,CS203,Jaeyalakshmi,M,,CS23533,CS23533,Foundations of Artificial Intelligence,LoT,3,2,0,4,Computer Science & Engineering
 274,70,3,5,False,True,195,CS203,Jaeyalakshmi,M,,CS23533,CS23533,Foundations of Artificial Intelligence,LoT,3,2,0,4,Computer Science & Engineering
-270,70,3,5,False,True,192,CS182,Jananee,V,,CS23531,CS23531,Web Programming,LoT,1,6,0,4,Computer Science & Engineering
+270,70,3,5,False,True,192,CS182,Jananee,V,,CS23531,CS23531,Web Programming,LoT,3,4,0,4,Computer Science & Engineering
 269,70,3,5,False,True,197,CS171,S.Ponmani,,,CS23512,CS23512,Fundamentals of Mobile Computing,T,3,0,0,3,Computer Science & Engineering
-267,70,3,5,False,False,244,CS320,Madhusudhanan,S,,CS23531,CS23531,Web Programming,LoT,1,6,0,4,Computer Science & Engineering
-261,70,3,5,False,False,202,CS208,N.,Duraimurugan,,CS23531,CS23531,Web Programming,LoT,1,6,0,4,Computer Science & Engineering
+267,70,3,5,False,False,244,CS320,Madhusudhanan,S,,CS23531,CS23531,Web Programming,LoT,3,4,0,4,Computer Science & Engineering
+261,70,3,5,False,False,202,CS208,N.,Duraimurugan,,CS23531,CS23531,Web Programming,LoT,3,4,0,4,Computer Science & Engineering
 259,70,3,5,False,False,196,CS251,P.Shanmugam,,,CS23512,CS23512,Fundamentals of Mobile Computing,T,3,0,0,3,Computer Science & Engineering
 256,70,3,5,False,False,245,CS319,Chettiyar Vani,Vivekanand,,CS23512,CS23512,Fundamentals of Mobile Computing,T,3,0,0,3,Computer Science & Engineering
 255,70,3,5,False,False,245,CS319,Chettiyar Vani,Vivekanand,,CS23532,CS23532,Computer Networks,LoT,3,2,0,5,Computer Science & Engineering

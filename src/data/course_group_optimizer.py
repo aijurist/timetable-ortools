@@ -26,6 +26,16 @@ import seaborn as sns
 
 
 MECH_S5_FORCED_SPLIT_COURSES = ("ME23521", "ME23532")
+EEE_S5_PE_COURSE = "EE23PE31"
+EEE_S5_PE_PARTNER_COURSE = "EE23521"
+EEE_S5_FIXED_REGULAR_COURSES = (
+    "EE23521",
+    "EE23531",
+    "EE23511",
+    "EE23512",
+    "EE23513",
+    "GE23627",
+)
 
 BIOTECH_S5_FIXED_GROUP_INSTANCE_IDS = (
     ("252", "253", "354"),
@@ -550,6 +560,9 @@ class CourseGroupOptimizer:
 
         if self.dept == "Biotechnology" and self.semester == 5:
             return self._build_biotech_s5_fixed_groups()
+
+        if self.dept == "Electrical & Electronics Engineering" and self.semester == 5:
+            return self._build_eee_s5_fixed_groups()
         
         # Check feasibility before optimization
         if not self._check_feasibility():
@@ -688,6 +701,116 @@ class CourseGroupOptimizer:
             )
 
         return True
+
+    def _build_eee_s5_fixed_groups(self):
+        """Build the curated EEE S5 grouping directly, pairing PE with EE23521."""
+        self.logger.info(
+            "Using hardcoded EEE S5 group distribution; pairing %s with %s",
+            EEE_S5_PE_COURSE,
+            EEE_S5_PE_PARTNER_COURSE,
+        )
+
+        regular_by_code = self._group_instances_by_course_code(self.courses)
+        pe_by_code = self._group_instances_by_course_code(self.pe_courses)
+
+        missing_regular = [
+            course_code
+            for course_code in EEE_S5_FIXED_REGULAR_COURSES
+            if course_code not in regular_by_code
+        ]
+        if missing_regular:
+            self.logger.error(
+                "EEE S5 fixed grouping requires regular courses %s; missing %s",
+                EEE_S5_FIXED_REGULAR_COURSES,
+                missing_regular,
+            )
+            return False
+
+        pe_instances = pe_by_code.get(EEE_S5_PE_COURSE, [])
+        partner_instances = regular_by_code.get(EEE_S5_PE_PARTNER_COURSE, [])
+        if len(pe_instances) != 2 or len(partner_instances) != 2:
+            self.logger.error(
+                "EEE S5 fixed grouping requires exactly two %s instances and two %s instances; got %s and %s",
+                EEE_S5_PE_COURSE,
+                EEE_S5_PE_PARTNER_COURSE,
+                len(pe_instances),
+                len(partner_instances),
+            )
+            return False
+
+        fixed_groups = [
+            [pe_instances[0], partner_instances[0]],
+            [pe_instances[1], partner_instances[1]],
+            list(regular_by_code["EE23531"]),
+            list(regular_by_code["EE23511"]),
+            list(regular_by_code["EE23512"]),
+            list(regular_by_code["EE23513"]),
+            list(regular_by_code["GE23627"]),
+        ]
+
+        assigned_ids = {
+            str(instance.get("id"))
+            for group in fixed_groups
+            for instance in group
+        }
+        expected_ids = {
+            str(instance.get("id"))
+            for course_code in EEE_S5_FIXED_REGULAR_COURSES
+            for instance in regular_by_code[course_code]
+        } | {str(instance.get("id")) for instance in pe_instances}
+
+        if assigned_ids != expected_ids:
+            missing = sorted(expected_ids - assigned_ids)
+            extra = sorted(assigned_ids - expected_ids)
+            self.logger.error(
+                "EEE S5 fixed grouping did not assign the expected instances. Missing=%s Extra=%s",
+                missing,
+                extra,
+            )
+            return False
+
+        self.groups = fixed_groups
+        self.num_groups = len(self.groups)
+        self.target_group_size = sum(inst.get("weight", 1) for inst in self.groups[0])
+        self.solution_found = True
+        self.objective_value = 0
+
+        self.logger.info("EEE S5 fixed group distribution:")
+        for group_idx, group in enumerate(self.groups, start=1):
+            course_summary = ", ".join(
+                f"{course_code}:{count}"
+                for course_code, count in sorted(Counter(inst["course_code"] for inst in group).items())
+            )
+            teachers = sorted(str(inst["teacher_id"]) for inst in group)
+            workload = sum(
+                inst.get("practical_hours", 0)
+                + inst.get("lecture_hours", 0)
+                + inst.get("tutorial_hours", 0)
+                for inst in group
+            )
+            self.logger.info(
+                "  G%s: %s | teachers=%s | workload=%s",
+                group_idx,
+                course_summary,
+                teachers,
+                workload,
+            )
+
+        return True
+
+    @staticmethod
+    def _group_instances_by_course_code(instances):
+        grouped = defaultdict(list)
+        for instance in instances:
+            grouped[instance.get("course_code")].append(instance)
+        for course_code in grouped:
+            grouped[course_code].sort(
+                key=lambda item: (
+                    int(str(item.get("id"))) if str(item.get("id", "")).isdigit() else str(item.get("id", "")),
+                    str(item.get("teacher_id", "")),
+                )
+            )
+        return grouped
     
     def _create_assignment_variables(self, model):
         """
@@ -2828,6 +2951,10 @@ class CourseGroupOptimizer:
             and getattr(self, "cse_s2_five_group_split_enabled", False)
         ):
             self.logger.info("[SKIP] Lab priority constraint validation for CSE S2 (constraint skipped)")
+            return True
+
+        if self.dept == "Electrical & Electronics Engineering" and self.semester == 5:
+            self.logger.info("[SKIP] Lab priority constraint validation for EEE S5 fixed grouping")
             return True
 
         # Identify lab and theory-only courses

@@ -144,7 +144,7 @@ THEORY_CONSTRAINT_DEFINITIONS = {
 	},
 	"room_assignment": {
 		"title": "Theory Classroom Assignment",
-		"description": "Reserve 140-capacity rooms for large courses and enforce block preferences (A/B/C).",
+		"description": "Assign theory rooms using capacity checks and block preferences (A/B/C).",
 		"factory": build_theory_room_assignment_constraint,
 		"tags": ("theory", "rooms"),
 	},
