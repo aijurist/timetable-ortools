@@ -1,0 +1,103 @@
+department,course_code,course_name,ltp,student_count_used,source_row_count,theory_tutorial_periods,base_practical_periods,lab_capacity_used,lab_batches,lab_periods_per_batch,adjusted_lab_periods,total_contact_periods,subject_min_days_at_7_per_day,lab_resolution,lab_resolution_note
+Aeronautical Engineering,AE23711,Composite Materials and Structures,3-0-0,60,1,3,0,,,,0,3,1,,
+Aeronautical Engineering,AE23722,Artificial Intelligence and Machine Learning for Aeronautical Engineering,0-0-4,60,2,0,4,35,2,4,8,8,2,assigned_room,CG006
+Aeronautical Engineering,AE23731,Avionics,3-0-2,60,1,3,2,35,2,2,4,7,1,assigned_room,CG005
+Aeronautical Engineering,AE23PE41,Helicopter Theory,3-0-0,60,1,3,0,,,,0,3,1,,
+Aeronautical Engineering,GE23311,Fundamentals of Management for Engineers,3-0-0,60,1,3,0,,,,0,3,1,,
+Artificial Intelligence & Data Science,AD23731,Foundations of Agentic AI,1-0-4,66,3,1,4,35,2,4,8,9,2,assigned_room,JL1
+Artificial Intelligence & Data Science,AD23PE41,Manufactoring Analytics,1-0-4,66,3,1,4,35,2,4,8,9,2,fallback_batched_35_not_in_core_or_computer_mapping,not_in_core_or_computer_mapping
+Artificial Intelligence & Data Science,CS23633,Cloud Computing,2-0-2,66,3,2,2,35,2,2,4,6,1,fallback_batched_35_not_in_core_or_computer_mapping,not_in_core_or_computer_mapping
+Artificial Intelligence & Machine Learning,AD23731,Foundations of Agentic AI,1-0-4,67,3,1,4,35,2,4,8,9,2,assigned_room,JL1
+Artificial Intelligence & Machine Learning,AI23711,Social and Ethical Issues in AI,1-0-0,67,3,1,0,,,,0,1,1,,
+Artificial Intelligence & Machine Learning,AI23PE41,Software Project Management,3-0-0,140,1,3,0,,,,0,3,1,,
+Artificial Intelligence & Machine Learning,IT23731,Cloud and Big Data Architecture,3-0-2,67,3,3,2,140,1,2,2,5,1,assigned_room,A210/211
+Automobile Engineering,AT23711,Automotive Pollution and Control,3-0-0,32,1,3,0,,,,0,3,1,,
+Automobile Engineering,AT23712,Intelligent Vehicle System,3-0-0,32,1,3,0,,,,0,3,1,,
+Automobile Engineering,AT23713,Automotive Safety,3-0-0,32,1,3,0,,,,0,3,1,,
+Automobile Engineering,AT23721,AI and ML for Automobile Engineers,0-0-4,32,1,0,4,35,1,4,4,4,1,assigned_room,KFR01
+Automobile Engineering,AT23722,Vehicle Maintenance Laboratory,0-0-2,32,1,0,2,35,1,2,2,2,1,assigned_room,WS AUTO GF1
+Automobile Engineering,AT23723,Computer Aided Analysis Laboratory,0-0-2,32,1,0,2,35,1,2,2,2,1,assigned_room,TANCAM
+Automobile Engineering,AT23PE41,Vehicle Maintenance,3-0-0,32,1,3,0,,,,0,3,1,,
+Biomedical Engineering,BM23711,Comprehension In Biomedical Engineering,1-0-0,57,2,1,0,,,,0,1,1,,
+Biomedical Engineering,BM23721,Artificial Intelligence and Machine learning for Biomedical Engineering,0-0-4,57,2,0,4,35,2,4,8,8,2,assigned_room,DG012
+Biomedical Engineering,BM23731,Medical Image Processing,2-1-2,57,2,3,2,35,2,2,4,7,1,assigned_room,DG
+Biomedical Engineering,BM23PE41,HOSPITAL ENGINEERING  AND  MANAGEMENT,3-0-0,70,2,3,0,,,,0,3,1,,
+Biomedical Engineering,BM23PE42,"Medical Safety, Quality Assurance and Regulatory Affairs",3-0-0,70,1,3,0,,,,0,3,1,,
+Biotechnology,BT23711,Downstream Processing,3-0-0,62,3,3,0,,,,0,3,1,,
+Biotechnology,BT23712,Protein Engineering,3-0-0,62,3,3,0,,,,0,3,1,,
+Biotechnology,BT23713,Comprehension in Biotechnology,2-1-0,62,3,3,0,,,,0,3,1,,
+Biotechnology,BT23721,Downstream Processing Laboratory,0-0-4,62,3,0,4,70,1,4,4,4,1,assigned_room,B Second Floor
+Biotechnology,BT23722,Artificial Intelligence and Machine Learning for Biotechnologist,0-0-4,62,3,0,4,140,1,4,4,4,1,assigned_room,A210/211
+Biotechnology,BT23PE41,Biopharmaceutical Technology,3-0-0,70,2,3,0,,,,0,3,1,,
+Biotechnology,BT23PE41,Techniques in Animal Disease Management and Transgenic Technology,3-0-0,70,2,3,0,,,,0,3,1,,
+Biotechnology,BT23PE42,Biofertilizer Production and Mushroom Cultivation,3-0-0,70,1,3,0,,,,0,3,1,,
+Biotechnology,BT23PE42,Total Quality Management,3-0-0,70,2,3,0,,,,0,3,1,,
+Chemical Engineering,CH23711,Transport Phenomena,3-0-0,64,1,3,0,,,,0,3,1,,
+Chemical Engineering,CH23712,Comprehension in Chemical Engineering,3-0-0,64,1,3,0,,,,0,3,1,,
+Chemical Engineering,CH23713,Process Engineering Economics,3-0-0,64,1,3,0,,,,0,3,1,,
+Chemical Engineering,CH23721,Chemical Reaction Engineering lab,0-0-4,70,1,0,4,35,2,4,8,8,2,assigned_room,B Ground Floor
+Chemical Engineering,CH23722,Process Control Lab,0-0-4,70,1,0,4,35,2,4,8,8,2,assigned_room,WS AUTO FF3
+Chemical Engineering,CH23723,Artificial Intelligence and Machine Learning for Chemical Engineers,0-0-4,70,1,0,4,35,2,4,8,8,2,assigned_room,B304
+Chemical Engineering,CH23E12,Optimization of Chemical Processes,3-0-0,64,1,3,0,,,,0,3,1,,
+Chemical Engineering,CH23PE41,Air Pollution and Control,2-0-2,64,1,2,2,35,2,2,4,6,1,fallback_batched_35_not_in_core_or_computer_mapping,not_in_core_or_computer_mapping
+Chemical Engineering,CH23PE41,Petrochemical Technology,3-0-0,64,1,3,0,,,,0,3,1,,
+Civil Engineering,CE23711,"Estimation, Costing and Valuation Engineering",3-0-0,65,1,3,0,,,,0,3,1,,
+Civil Engineering,CE23712,Hydrology,3-0-0,65,1,3,0,,,,0,3,1,,
+Civil Engineering,CE23721,Building Information Modelling,0-0-4,65,1,0,4,70,1,4,4,4,1,assigned_room,TIFAC I01
+Civil Engineering,CE23PE41,Intelligent Transport System,3-0-0,65,1,3,0,,,,0,3,1,,
+Civil Engineering,CE23PE41,"Maintenance, Repair and Rehabilitation of Structures",3-0-0,65,1,3,0,,,,0,3,1,,
+Computer Science & Business Systems,CB23731,Data Visualization Techniques,2-0-2,63,2,2,2,35,2,2,4,6,1,assigned_room,JL1
+Computer Science & Business Systems,CB23732,IT Project Management,2-0-2,63,2,2,2,35,2,2,4,6,1,assigned_room,JR1
+Computer Science & Business Systems,CB23PE41,Cryptology,2-1-2,70,2,3,2,35,2,2,4,7,1,fallback_batched_35_not_in_core_or_computer_mapping,not_in_core_or_computer_mapping
+Computer Science & Business Systems,CB23PE41,Generative Artificial Intelligence,3-0-0,70,1,3,0,,,,0,3,1,,
+Computer Science & Design,CD23721,Visual Effects,0-0-6,64,1,0,6,35,2,6,12,12,2,assigned_room,KFL01
+Computer Science & Design,CD23731,Film Making and Radio podcasting,2-0-2,64,1,2,2,35,2,2,4,6,1,assigned_room,KFL01
+Computer Science & Design,CD23PE41,Cryptography and Network Security,2-0-2,64,1,2,2,35,2,2,4,6,1,fallback_batched_35_not_in_core_or_computer_mapping,not_in_core_or_computer_mapping
+Computer Science & Engineering,CS23PE41,Fundamentals of Generative AI and Prompt  Engineering,2-0-2,69,6,2,2,35,2,2,4,6,1,fallback_batched_35_not_in_core_or_computer_mapping,not_in_core_or_computer_mapping
+Computer Science & Engineering,CS23PE42,Software Project Management,3-0-0,69,6,3,0,,,,0,3,1,,
+Computer Science & Engineering,CS23PE43,Business Analytics,2-0-2,70,1,2,2,35,2,2,4,6,1,fallback_batched_35_not_in_core_or_computer_mapping,not_in_core_or_computer_mapping
+Computer Science & Engineering,CS23PE43,DevOps,2-0-2,140,4,2,2,35,4,2,8,10,2,fallback_batched_35_not_in_core_or_computer_mapping,not_in_core_or_computer_mapping
+Computer Science & Engineering (Cyber Security),CR23731,Blockchain Development in Hyperledger Fabric,2-0-2,66,1,2,2,35,2,2,4,6,1,fallback_batched_35_not_in_core_or_computer_mapping,not_in_core_or_computer_mapping
+Computer Science & Engineering (Cyber Security),CRS23PE41,IDENTITY ACCESS MANAGEMENT,3-0-2,70,1,3,2,35,2,2,4,7,1,fallback_batched_35_not_in_core_or_computer_mapping,not_in_core_or_computer_mapping
+Computer Science & Engineering (Cyber Security),CRS23PE42,Application and Infrastructure Vulnerability Management,3-0-2,70,1,3,2,35,2,2,4,7,1,fallback_batched_35_not_in_core_or_computer_mapping,not_in_core_or_computer_mapping
+Computer Science & Engineering (Cyber Security),CRS23PE42,"Risk, Control and Compliance",3-0-2,70,1,3,2,35,2,2,4,7,1,fallback_batched_35_not_in_core_or_computer_mapping,not_in_core_or_computer_mapping
+Electrical & Electronics Engineering,EE23711,Smart Grid,3-0-0,68,2,3,0,,,,0,3,1,,
+Electrical & Electronics Engineering,EE23712,Power System Operation and Control,3-0-0,68,2,3,0,,,,0,3,1,,
+Electrical & Electronics Engineering,EE23721,Power System Simulation Laboratory,0-0-4,68,2,0,4,35,2,4,8,8,2,assigned_room,B318
+Electrical & Electronics Engineering,EE23731,Renewable Energy Systems,3-0-2,68,2,3,2,35,2,2,4,7,1,assigned_room,B318
+Electronics & Communication Engineering,EC23721,Artificial Intelligence and Machine Learning for Electronic Engineering,0-0-4,68,4,0,4,35,2,4,8,8,2,fallback_batched_35_mapping_unresolved,core_lab_mapping_unresolved
+Electronics & Communication Engineering,EC23731,Optical Communication and Networks,2-0-2,68,4,2,2,70,1,2,2,4,1,assigned_room,B120
+Electronics & Communication Engineering,EC23732,RF and Microwave Engineering,2-0-2,68,4,2,2,70,1,2,2,4,1,assigned_room,B120
+Electronics & Communication Engineering,EC23733,Embedded and Real Time Systems,3-0-2,68,4,3,2,70,1,2,2,5,1,assigned_room,B116
+Electronics & Communication Engineering,EC23PE41,Drone Technology in Engineering,3-0-0,70,1,3,0,,,,0,3,1,,
+Electronics & Communication Engineering,EC23PE41,Multimedia Compression and Networking,3-0-0,70,3,3,0,,,,0,3,1,,
+Food Technology,FT23701,"Food Quality, Safety Standards and Certification",3-0-0,61,1,3,0,,,,0,3,1,,
+Food Technology,FT23702,Comprehension in Food Technologists,3-0-0,61,1,3,0,,,,0,3,1,,
+Food Technology,FT23703,Functional Foods and Nutraceuticals,3-0-0,61,1,3,0,,,,0,3,1,,
+Food Technology,FT23711,Problem Solving using AIML for Food Technologists,0-0-2,70,2,0,2,35,2,2,4,4,1,fallback_batched_35_not_in_core_or_computer_mapping,not_in_core_or_computer_mapping
+Food Technology,FT23712,Internship,0-0-2,61,1,0,2,35,2,2,4,4,1,fallback_batched_35_not_in_core_or_computer_mapping,not_in_core_or_computer_mapping
+Food Technology,FT23PE41,Frozen and Fermented Dairy Products,3-0-0,70,1,3,0,,,,0,3,1,,
+Food Technology,FT23PE41,Sugar and Gum Based Confectionery Technology,3-0-0,70,1,3,0,,,,0,3,1,,
+Food Technology,FT23PE42,Cocoa and Chocolate Based Confectionery Technology,3-0-0,70,1,3,0,,,,0,3,1,,
+Food Technology,FT23PE42,Traditional Dairy Products,3-0-0,70,1,3,0,,,,0,3,1,,
+Information Technology,IT23721,Data Science using R,0-0-4,66,4,0,4,140,1,4,4,4,1,assigned_room,A208/209
+Information Technology,IT23731,Cloud and Big Data Architecture,3-0-2,66,4,3,2,140,1,2,2,5,1,assigned_room,A210/211
+Information Technology,IT23C15,Software Quality Assurance,3-0-0,66,4,3,0,,,,0,3,1,,
+Information Technology,IT23PE41,Deep Learning Concepts,3-0-0,66,4,3,0,,,,0,3,1,,
+Mechanical Engineering,ME23711,Process Planning and Cost Estimation,3-1-0,66,2,4,0,,,,0,4,1,,
+Mechanical Engineering,ME23722,Comprehension,0-0-2,66,2,0,2,35,2,2,4,4,1,fallback_batched_35_not_in_core_or_computer_mapping,not_in_core_or_computer_mapping
+Mechanical Engineering,ME23731,Artificial Intelligence for Mechanical Engineering,1-0-4,66,2,1,4,70,1,4,4,5,1,assigned_room,C401
+Mechanical Engineering,ME23732,Mechatronics,3-0-1,66,2,3,1,35,2,2,4,7,1,assigned_room,C107
+Mechanical Engineering,ME23PE41,Introduction to Power Plant Engineering,3-0-0,70,1,3,0,,,,0,3,1,,
+Mechanical Engineering,ME23PE41,Welding Technology,3-0-0,70,1,3,0,,,,0,3,1,,
+Mechanical Engineering,ME23PE42,Total Quality Management,3-0-0,66,2,3,0,,,,0,3,1,,
+Mechatronics Engineering,MT23711,Industrial Automation,2-1-0,67,1,3,0,,,,0,3,1,,
+Mechatronics Engineering,MT23712,Machine Vision,3-1-0,67,1,4,0,,,,0,4,1,,
+Mechatronics Engineering,MT23721,Computer Aided Engineering Laboratory,0-0-4,67,1,0,4,35,2,4,8,8,2,assigned_room,B310
+Mechatronics Engineering,MT23722,Industrial Automation Laboratory,0-0-4,67,1,0,4,35,2,4,8,8,2,assigned_room,B305
+Mechatronics Engineering,MT23PE41,Mechatronics System Design,3-0-0,67,1,3,0,,,,0,3,1,,
+Robotics & Automation,RO23711,Aerial Robotics,3-0-0,67,1,3,0,,,,0,3,1,,
+Robotics & Automation,RO23712,Humanoid Robotics,3-0-0,67,1,3,0,,,,0,3,1,,
+Robotics & Automation,RO23713,Resource Management Techniques,3-1-0,67,1,4,0,,,,0,4,1,,
+Robotics & Automation,RO23721,"Robotics and Automation Problem Solving using AI, ML and DL",0-0-4,67,1,0,4,35,2,4,8,8,2,assigned_room,DG0IAL
+Robotics & Automation,RO23PE41,Advanced Manufacturing Systems,3-0-0,67,1,3,0,,,,0,3,1,,

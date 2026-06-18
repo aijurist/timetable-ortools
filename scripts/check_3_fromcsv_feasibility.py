@@ -1,4 +1,4 @@
-"""Run per-department feasibility checks for data/dept_wise_course/3_fromcsv."""
+"""Run per-department feasibility checks for a folder of course CSV files."""
 
 from __future__ import annotations
 
@@ -87,7 +87,10 @@ def _run_worker(args: argparse.Namespace) -> None:
 	logging.basicConfig(level=logging.WARNING)
 	course_csv = Path(args.worker).resolve()
 	config_path = Path(args.config).resolve()
-	output_root = PROJECT_ROOT / "output" / "3_fromcsv_runs" / course_csv.stem
+	worker_output_root = Path(args.worker_output_root)
+	if not worker_output_root.is_absolute():
+		worker_output_root = PROJECT_ROOT / worker_output_root
+	output_root = worker_output_root / course_csv.stem
 
 	overrides = {
 		"paths": {
@@ -107,6 +110,17 @@ def _run_worker(args: argparse.Namespace) -> None:
 			"level": "WARNING",
 		},
 	}
+	for arg_name, path_key in (
+		("rooms_csv", "rooms_csv"),
+		("core_lab_mapping_csv", "core_lab_mapping_csv"),
+		("computer_lab_mapping_csv", "computer_lab_mapping_csv"),
+	):
+		value = getattr(args, arg_name)
+		if value:
+			path = Path(value)
+			if not path.is_absolute():
+				path = PROJECT_ROOT / path
+			overrides["paths"][path_key] = str(path)
 
 	start = time.perf_counter()
 	try:
@@ -165,6 +179,14 @@ def main() -> None:
 		default="output/3_fromcsv_runs/results.jsonl",
 		help="JSONL detail path.",
 	)
+	parser.add_argument(
+		"--worker-output-root",
+		default="output/3_fromcsv_runs",
+		help="Folder where each worker writes solver logs/artifacts.",
+	)
+	parser.add_argument("--rooms-csv", help="Override scheduler paths.rooms_csv for each worker.")
+	parser.add_argument("--core-lab-mapping-csv", help="Override scheduler paths.core_lab_mapping_csv for each worker.")
+	parser.add_argument("--computer-lab-mapping-csv", help="Override scheduler paths.computer_lab_mapping_csv for each worker.")
 	parser.add_argument("--worker", help=argparse.SUPPRESS)
 	args = parser.parse_args()
 
@@ -195,7 +217,16 @@ def main() -> None:
 			str(config_path),
 			"--time-limit",
 			str(args.time_limit),
+			"--worker-output-root",
+			str(args.worker_output_root),
 		]
+		for option, value in (
+			("--rooms-csv", args.rooms_csv),
+			("--core-lab-mapping-csv", args.core_lab_mapping_csv),
+			("--computer-lab-mapping-csv", args.computer_lab_mapping_csv),
+		):
+			if value:
+				cmd.extend([option, str(value)])
 		try:
 			completed = subprocess.run(
 				cmd,

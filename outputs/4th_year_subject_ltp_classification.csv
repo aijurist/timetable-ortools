@@ -1,0 +1,101 @@
+category,course_code,course_name,ltp,lecture_hours,tutorial_hours,practical_hours
+Only Theory,AE23711,Composite Materials and Structures,3-0-0,3,0,0
+Only Theory,AE23PE41,Helicopter Theory,3-0-0,3,0,0
+Only Theory,AI23711,Social and Ethical Issues in AI,1-0-0,1,0,0
+Only Theory,AI23PE41,Software Project Management,3-0-0,3,0,0
+Only Theory,AT23711,Automotive Pollution and Control,3-0-0,3,0,0
+Only Theory,AT23712,Intelligent Vehicle System,3-0-0,3,0,0
+Only Theory,AT23713,Automotive Safety,3-0-0,3,0,0
+Only Theory,AT23PE41,Vehicle Maintenance,3-0-0,3,0,0
+Only Theory,BM23711,Comprehension In Biomedical Engineering,1-0-0,1,0,0
+Only Theory,BM23PE41,HOSPITAL ENGINEERING  AND  MANAGEMENT,3-0-0,3,0,0
+Only Theory,BM23PE42,"Medical Safety, Quality Assurance and Regulatory Affairs",3-0-0,3,0,0
+Only Theory,BT23711,Downstream Processing,3-0-0,3,0,0
+Only Theory,BT23712,Protein Engineering,3-0-0,3,0,0
+Only Theory,BT23713,Comprehension in Biotechnology,2-1-0,2,1,0
+Only Theory,BT23PE41,Biopharmaceutical Technology,3-0-0,3,0,0
+Only Theory,BT23PE41,Techniques in Animal Disease Management and Transgenic Technology,3-0-0,3,0,0
+Only Theory,BT23PE42,Biofertilizer Production and Mushroom Cultivation,3-0-0,3,0,0
+Only Theory,BT23PE42,Total Quality Management,3-0-0,3,0,0
+Only Theory,CB23PE41,Generative Artificial Intelligence,3-0-0,3,0,0
+Only Theory,CE23711,"Estimation, Costing and Valuation Engineering",3-0-0,3,0,0
+Only Theory,CE23712,Hydrology,3-0-0,3,0,0
+Only Theory,CE23PE41,Intelligent Transport System,3-0-0,3,0,0
+Only Theory,CE23PE41,"Maintenance, Repair and Rehabilitation of Structures",3-0-0,3,0,0
+Only Theory,CH23711,Transport Phenomena,3-0-0,3,0,0
+Only Theory,CH23712,Comprehension in Chemical Engineering,3-0-0,3,0,0
+Only Theory,CH23713,Process Engineering Economics,3-0-0,3,0,0
+Only Theory,CH23E12,Optimization of Chemical Processes,3-0-0,3,0,0
+Only Theory,CH23PE41,Petrochemical Technology,3-0-0,3,0,0
+Only Theory,CS23PE42,Software Project Management,3-0-0,3,0,0
+Only Theory,EC23PE41,Drone Technology in Engineering,3-0-0,3,0,0
+Only Theory,EC23PE41,Multimedia Compression and Networking,3-0-0,3,0,0
+Only Theory,EE23711,Smart Grid,3-0-0,3,0,0
+Only Theory,EE23712,Power System Operation and Control,3-0-0,3,0,0
+Only Theory,FT23701,"Food Quality, Safety Standards and Certification",3-0-0,3,0,0
+Only Theory,FT23702,Comprehension in Food Technologists,3-0-0,3,0,0
+Only Theory,FT23703,Functional Foods and Nutraceuticals,3-0-0,3,0,0
+Only Theory,FT23PE41,Frozen and Fermented Dairy Products,3-0-0,3,0,0
+Only Theory,FT23PE41,Sugar and Gum Based Confectionery Technology,3-0-0,3,0,0
+Only Theory,FT23PE42,Cocoa and Chocolate Based Confectionery Technology,3-0-0,3,0,0
+Only Theory,FT23PE42,Traditional Dairy Products,3-0-0,3,0,0
+Only Theory,GE23311,Fundamentals of Management for Engineers,3-0-0,3,0,0
+Only Theory,IT23C15,Software Quality Assurance,3-0-0,3,0,0
+Only Theory,IT23PE41,Deep Learning Concepts,3-0-0,3,0,0
+Only Theory,ME23711,Process Planning and Cost Estimation,3-1-0,3,1,0
+Only Theory,ME23PE41,Introduction to Power Plant Engineering,3-0-0,3,0,0
+Only Theory,ME23PE41,Welding Technology,3-0-0,3,0,0
+Only Theory,ME23PE42,Total Quality Management,3-0-0,3,0,0
+Only Theory,MT23711,Industrial Automation,2-1-0,2,1,0
+Only Theory,MT23712,Machine Vision,3-1-0,3,1,0
+Only Theory,MT23PE41,Mechatronics System Design,3-0-0,3,0,0
+Only Theory,RO23711,Aerial Robotics,3-0-0,3,0,0
+Only Theory,RO23712,Humanoid Robotics,3-0-0,3,0,0
+Only Theory,RO23713,Resource Management Techniques,3-1-0,3,1,0
+Only Theory,RO23PE41,Advanced Manufacturing Systems,3-0-0,3,0,0
+Only Lab,AE23722,Artificial Intelligence and Machine Learning for Aeronautical Engineering,0-0-4,0,0,4
+Only Lab,AT23721,AI and ML for Automobile Engineers,0-0-4,0,0,4
+Only Lab,AT23722,Vehicle Maintenance Laboratory,0-0-2,0,0,2
+Only Lab,AT23723,Computer Aided Analysis Laboratory,0-0-2,0,0,2
+Only Lab,BM23721,Artificial Intelligence and Machine learning for Biomedical Engineering,0-0-4,0,0,4
+Only Lab,BT23721,Downstream Processing Laboratory,0-0-4,0,0,4
+Only Lab,BT23722,Artificial Intelligence and Machine Learning for Biotechnologist,0-0-4,0,0,4
+Only Lab,CD23721,Visual Effects,0-0-6,0,0,6
+Only Lab,CE23721,Building Information Modelling,0-0-4,0,0,4
+Only Lab,CH23721,Chemical Reaction Engineering lab,0-0-4,0,0,4
+Only Lab,CH23722,Process Control Lab,0-0-4,0,0,4
+Only Lab,CH23723,Artificial Intelligence and Machine Learning for Chemical Engineers,0-0-4,0,0,4
+Only Lab,EC23721,Artificial Intelligence and Machine Learning for Electronic Engineering,0-0-4,0,0,4
+Only Lab,EE23721,Power System Simulation Laboratory,0-0-4,0,0,4
+Only Lab,FT23711,Problem Solving using AIML for Food Technologists,0-0-2,0,0,2
+Only Lab,FT23712,Internship,0-0-2,0,0,2
+Only Lab,IT23721,Data Science using R,0-0-4,0,0,4
+Only Lab,ME23722,Comprehension,0-0-2,0,0,2
+Only Lab,MT23721,Computer Aided Engineering Laboratory,0-0-4,0,0,4
+Only Lab,MT23722,Industrial Automation Laboratory,0-0-4,0,0,4
+Only Lab,RO23721,"Robotics and Automation Problem Solving using AI, ML and DL",0-0-4,0,0,4
+Theory + Lab,AD23731,Foundations of Agentic AI,1-0-4,1,0,4
+Theory + Lab,AD23PE41,Manufactoring Analytics,1-0-4,1,0,4
+Theory + Lab,AE23731,Avionics,3-0-2,3,0,2
+Theory + Lab,BM23731,Medical Image Processing,2-1-2,2,1,2
+Theory + Lab,CB23731,Data Visualization Techniques,2-0-2,2,0,2
+Theory + Lab,CB23732,IT Project Management,2-0-2,2,0,2
+Theory + Lab,CB23PE41,Cryptology,2-1-2,2,1,2
+Theory + Lab,CD23731,Film Making and Radio podcasting,2-0-2,2,0,2
+Theory + Lab,CD23PE41,Cryptography and Network Security,2-0-2,2,0,2
+Theory + Lab,CH23PE41,Air Pollution and Control,2-0-2,2,0,2
+Theory + Lab,CR23731,Blockchain Development in Hyperledger Fabric,2-0-2,2,0,2
+Theory + Lab,CRS23PE41,IDENTITY ACCESS MANAGEMENT,3-0-2,3,0,2
+Theory + Lab,CRS23PE42,Application and Infrastructure Vulnerability Management,3-0-2,3,0,2
+Theory + Lab,CRS23PE42,"Risk, Control and Compliance",3-0-2,3,0,2
+Theory + Lab,CS23633,Cloud Computing,2-0-2,2,0,2
+Theory + Lab,CS23PE41,Fundamentals of Generative AI and Prompt  Engineering,2-0-2,2,0,2
+Theory + Lab,CS23PE43,Business Analytics,2-0-2,2,0,2
+Theory + Lab,CS23PE43,DevOps,2-0-2,2,0,2
+Theory + Lab,EC23731,Optical Communication and Networks,2-0-2,2,0,2
+Theory + Lab,EC23732,RF and Microwave Engineering,2-0-2,2,0,2
+Theory + Lab,EC23733,Embedded and Real Time Systems,3-0-2,3,0,2
+Theory + Lab,EE23731,Renewable Energy Systems,3-0-2,3,0,2
+Theory + Lab,IT23731,Cloud and Big Data Architecture,3-0-2,3,0,2
+Theory + Lab,ME23731,Artificial Intelligence for Mechanical Engineering,1-0-4,1,0,4
+Theory + Lab,ME23732,Mechatronics,3-0-1,3,0,1

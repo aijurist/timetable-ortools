@@ -1,0 +1,20 @@
+department,unique_subjects,lecture_periods,tutorial_periods,theory_tutorial_periods,base_practical_periods_before_batching,adjusted_lab_periods_after_batching,total_contact_periods,minimum_days_at_7_periods_per_day,batched_lab_subjects,fallback_batched_subjects
+Aeronautical Engineering,5,12,0,12,6,12,24,4,2,0
+Artificial Intelligence & Data Science,3,4,0,4,10,20,24,4,3,2
+Artificial Intelligence & Machine Learning,4,8,0,8,6,10,18,3,1,0
+Automobile Engineering,7,12,0,12,8,8,20,3,0,0
+Biomedical Engineering,5,9,1,10,6,12,22,4,2,0
+Biotechnology,9,20,1,21,8,8,29,5,0,0
+Chemical Engineering,9,17,0,17,14,28,45,7,4,1
+Civil Engineering,5,12,0,12,4,4,16,3,0,0
+Computer Science & Business Systems,4,9,1,10,6,12,22,4,3,1
+Computer Science & Design,3,4,0,4,10,20,24,4,3,1
+Computer Science & Engineering,4,9,0,9,6,16,25,4,3,3
+Computer Science & Engineering (Cyber Security),4,11,0,11,8,16,27,4,4,4
+Electrical & Electronics Engineering,4,9,0,9,6,12,21,3,2,0
+Electronics & Communication Engineering,6,13,0,13,10,14,27,4,1,1
+Food Technology,9,21,0,21,4,8,29,5,2,2
+Information Technology,4,9,0,9,6,6,15,3,0,0
+Mechanical Engineering,7,16,1,17,7,12,29,5,2,1
+Mechatronics Engineering,5,8,2,10,8,16,26,4,2,0
+Robotics & Automation,5,12,1,13,4,8,21,3,1,0
