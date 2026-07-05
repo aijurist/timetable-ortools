@@ -1,0 +1,26 @@
+student_dept,semester,course_code,source_rows,source_ids,course_names,lecture_hours,tutorial_hours,practical_hours,student_count,teacher_id_representative
+Aeronautical Engineering,7,AE23PE41,1,1031,Helicopter Theory,3,0,0,60,12
+Artificial Intelligence & Data Science,7,AD23PE41,3,1220;1221;1222,Manufactoring Analytics,2,0,8,66,36
+Artificial Intelligence & Machine Learning,7,AI23PE41,1,1109,Software Project Management,6,0,0,140,66
+Automobile Engineering,7,AT23PE41,1,250,Vehicle Maintenance,3,0,0,32,77
+Biomedical Engineering,7,BM23PE41,2,196;197,HOSPITAL ENGINEERING  AND  MANAGEMENT,3,0,0,70,104
+Biomedical Engineering,7,BM23PE42,1,324,"Medical Safety, Quality Assurance and Regulatory Affairs",3,0,0,70,1032
+Biotechnology,7,BT23PE41,4,490;491;613;614,Biopharmaceutical Technology / Techniques in Animal Disease Management and Transgenic Technology,3,0,0,70,113
+Biotechnology,7,BT23PE42,3,615;616;626,Total Quality Management / Biofertilizer Production and Mushroom Cultivation,3,0,0,70,129
+Chemical Engineering,7,CH23PE41,2,15;695,Petrochemical Technology / Air Pollution and Control,3,0,2,64,147
+Civil Engineering,7,CE23PE41,2,1224;1226,"Maintenance, Repair and Rehabilitation of Structures / Intelligent Transport System",6,0,0,65,187
+Computer Science & Business Systems,7,CB23PE41,3,807;808;846,Cryptology / Generative Artificial Intelligence,3,1,2,70,200
+Computer Science & Design,7,CD23PE41,1,984,Cryptography and Network Security,2,0,2,64,211
+Computer Science & Engineering,7,CS23PE41,6,1116;1117;1118;1119;1120;1121,Fundamentals of Generative AI and Prompt  Engineering,4,0,4,69,238
+Computer Science & Engineering,7,CS23PE42,6,1110;1111;1112;1113;1114;1115,Software Project Management,6,0,0,69,655
+Computer Science & Engineering,7,CS23PE43,5,140;142;143;144;1127,DevOps / Business Analytics,4,0,4,140,1036
+Computer Science & Engineering (Cyber Security),7,CRS23PE41,1,836,IDENTITY ACCESS MANAGEMENT,6,0,4,70,293
+Computer Science & Engineering (Cyber Security),7,CRS23PE42,2,825;832,"Application and Infrastructure Vulnerability Management / Risk, Control and Compliance",6,0,4,70,292
+Electronics & Communication Engineering,7,EC23PE41,4,372;515;516;517,Drone Technology in Engineering / Multimedia Compression and Networking,3,0,0,70,1041
+Food Technology,7,FT23PE41,2,90;572,Sugar and Gum Based Confectionery Technology / Frozen and Fermented Dairy Products,3,0,0,70,1010
+Food Technology,7,FT23PE42,2,573;574,Cocoa and Chocolate Based Confectionery Technology / Traditional Dairy Products,3,0,0,70,427
+Information Technology,7,IT23PE41,4,645;646;647;648,Deep Learning Concepts,3,0,0,66,1141
+Mechanical Engineering,7,ME23PE41,2,40;194,Welding Technology / Introduction to Power Plant Engineering,3,0,0,70,554
+Mechanical Engineering,7,ME23PE42,2,438;439,Total Quality Management,3,0,0,66,539
+Mechatronics Engineering,7,MT23PE41,1,368,Mechatronics System Design,3,0,0,67,589
+Robotics & Automation,7,RO23PE41,1,1223,Advanced Manufacturing Systems,3,0,0,67,630

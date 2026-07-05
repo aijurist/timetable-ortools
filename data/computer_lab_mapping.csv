@@ -13,6 +13,7 @@ aiml,AI23PE31,,J Block
 aiml,CS23532,,K Block
 aiml,AI23A35,,J Block;K Block
 aiml,AI23B34,,K Block;J Block
+aiml,IT23731,A210/211,A Block
 ae,AT23321,KFR04,K Block
 ae,AT23522,KFL02,K Block
 ae,AT23532,KFL02,K Block
@@ -45,7 +46,7 @@ be,CS23422,TLGL1;TLGL2,Techlounge
 cse,CS23532,,Techlounge
 ece,EC23531,A208/209;A210/211,A Block
 me,GE23111,,K Block;A Block;D Block
-it,IT23531,,A Block;K Block
+it,IT23531,A208/209,A Block
 it,CS23532,,Techlounge
-it,IT23721,,A Block;K Block;J Block
-it,IT23731,,A Block;K Block;J Block
+it,IT23721,A208/209,A Block
+it,IT23731,A210/211,A Block

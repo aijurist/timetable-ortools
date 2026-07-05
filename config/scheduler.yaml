@@ -7,7 +7,7 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data\final_run.csv
+  courses_csv: data\dept_wise_course\4\Computer Science and Engineering_course_data.csv
   rooms_csv: data\block_wise\rooms_new.csv
   day_order_csv: data/day_order_odd.csv
   core_lab_mapping_csv: data\core_lab_mapping.csv
@@ -112,6 +112,34 @@ departments:
     flexible_lunch: false
   overrides:
       Computer Science & Engineering:
+        day_pattern:
+          - monday
+          - tuesday
+          - wed
+          - thur
+          - fri
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_1
+        flexible_lunch: false
+      Computer Science & Engineering-A:
+        day_pattern:
+          - monday
+          - tuesday
+          - wed
+          - thur
+          - fri
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_1
+        flexible_lunch: false
+      Computer Science & Engineering-B:
         day_pattern:
           - monday
           - tuesday
@@ -821,12 +849,12 @@ constraints:
         window_lab_csv_path: data/final/2025-12-26_04-47-12/csv/lab_schedule.csv
         window_theory_csv_path: data/final/2025-12-26_04-47-12/csv/theory_schedule.csv
     fixed_schedule_lock:
-      enabled: false
+      enabled: true
       priority: 10
       weight: 1.0
       params:
-        lab_csv_path: output/final/2025-12-26_04-47-12/csv/lab_schedule.csv
-        theory_csv_path: output/final/2025-12-26_04-47-12/csv/theory_schedule.csv
+        lab_csv_path: output/final_4th/lab_schedule.csv
+        theory_csv_path: output/final_4th/theory_schedule.csv
         lock_assignments: true
         block_rooms: true
         block_teachers: true

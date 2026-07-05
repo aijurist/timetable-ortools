@@ -1,0 +1,112 @@
+OR-TOOLS ROOM REDISTRIBUTION REPORT
+==================================================
+
+Generated: 2026-06-25 07:25:24
+
+DEPARTMENT BLOCK DISTRIBUTION:
+------------------------------
+
+Aeronautical Engineering (Preferred: C Block):
+  Total sessions: 20
+  In preferred block: 0 (0.0%)
+    A Block: 20
+
+Artificial Intelligence & Data Science (Preferred: B Block):
+  Total sessions: 24
+  In preferred block: 6 (25.0%)
+    A Block: 18
+    B Block: 6
+
+Artificial Intelligence & Machine Learning (Preferred: B Block):
+  Total sessions: 36
+  In preferred block: 12 (33.3%)
+    A Block: 24
+    B Block: 12
+
+Automobile Engineering (Preferred: C Block):
+  Total sessions: 20
+  In preferred block: 0 (0.0%)
+    A Block: 20
+
+Biomedical Engineering (Preferred: C Block):
+  Total sessions: 15
+  In preferred block: 0 (0.0%)
+    A Block: 15
+
+Biotechnology (Preferred: B Block):
+  Total sessions: 74
+  In preferred block: 16 (21.6%)
+    A Block: 58
+    B Block: 16
+
+Chemical Engineering (Preferred: B Block):
+  Total sessions: 17
+  In preferred block: 1 (5.9%)
+    A Block: 16
+    B Block: 1
+
+Civil Engineering (Preferred: B Block):
+  Total sessions: 24
+  In preferred block: 0 (0.0%)
+    A Block: 24
+
+Computer Science & Business Systems (Preferred: A Block):
+  Total sessions: 30
+  In preferred block: 30 (100.0%)
+    A Block: 30
+
+Computer Science & Design (Preferred: A Block):
+  Total sessions: 8
+  In preferred block: 8 (100.0%)
+    A Block: 8
+
+Computer Science & Engineering (Preferred: A Block):
+  Total sessions: 84
+  In preferred block: 84 (100.0%)
+    A Block: 84
+
+Computer Science & Engineering (Cyber Security) (Preferred: A Block):
+  Total sessions: 22
+  In preferred block: 22 (100.0%)
+    A Block: 22
+
+Electrical & Electronics Engineering (Preferred: B Block):
+  Total sessions: 30
+  In preferred block: 6 (20.0%)
+    A Block: 24
+    B Block: 6
+
+Electronics & Communication Engineering (Preferred: B Block):
+  Total sessions: 60
+  In preferred block: 22 (36.7%)
+    A Block: 38
+    B Block: 22
+
+Food Technology (Preferred: C Block):
+  Total sessions: 35
+  In preferred block: 0 (0.0%)
+    A Block: 35
+
+Information Technology (Preferred: A Block):
+  Total sessions: 56
+  In preferred block: 56 (100.0%)
+    A Block: 56
+
+Mechanical Engineering (Preferred: C Block):
+  Total sessions: 38
+  In preferred block: 0 (0.0%)
+    A Block: 37
+    B Block: 1
+
+Mechatronics Engineering (Preferred: B Block):
+  Total sessions: 16
+  In preferred block: 16 (100.0%)
+    B Block: 16
+
+Robotics & Automation (Preferred: B Block):
+  Total sessions: 24
+  In preferred block: 24 (100.0%)
+    B Block: 24
+
+==================================================
+END OF REPORT

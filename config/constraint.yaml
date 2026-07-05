@@ -139,8 +139,8 @@ cross_system:
 		weight: 1.0
 		description: Freeze selected schedule assignments from a previous run.
 		params:
-			theory_csv_path: output/final/2025-12-26_04-47-12/csv/theory_schedule.csv
-			lab_csv_path: output/final/2025-12-26_04-47-12/csv/lab_schedule.csv
+			theory_csv_path: output/final_4th/theory_schedule.csv
+			lab_csv_path: output/final_4th/lab_schedule.csv
 			lock_assignments: true
 			block_rooms: true
 			block_teachers: true

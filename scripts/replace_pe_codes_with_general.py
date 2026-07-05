@@ -42,6 +42,8 @@ DEPT_ABBREVIATIONS = {
     "Computer Science & Business Systems": "CSBS",
     "Computer Science & Design": "CSD",
     "Computer Science & Engineering": "CSE",
+    "Computer Science & Engineering-A": "CSEA",
+    "Computer Science & Engineering-B": "CSEB",
     "Computer Science & Engineering (Cyber Security)": "CSECS",
     "Electrical & Electronics Engineering": "EEE",
     "Electronics & Communication Engineering": "ECE",
@@ -56,6 +58,8 @@ DEPT_NAME_ALIASES = {
     "Computer Science and Business Systems": "Computer Science & Business Systems",
     "Computer Science and Design": "Computer Science & Design",
     "Computer Science and Engineering": "Computer Science & Engineering",
+    "Computer Science and Engineering-A": "Computer Science & Engineering-A",
+    "Computer Science and Engineering-B": "Computer Science & Engineering-B",
     "Computer Science and Engineering - Cyber Security": "Computer Science & Engineering (Cyber Security)",
     "Computer Science and Engineering Cyber Security": "Computer Science & Engineering (Cyber Security)",
 }
