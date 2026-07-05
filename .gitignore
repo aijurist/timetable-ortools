@@ -108,6 +108,15 @@ GitHub.sublime-settings
 .history
 
 output
+outputs/
+backups/
+old/
 
+# Local Codex / Playwright tool state
+.codex-temp/
+.codex-tmp/
+codex-tmp/
+.playwright-mcp/
+playwright-mcp/
 
 .DS_Store
