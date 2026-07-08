@@ -1,8 +1,10 @@
 """Apply POP staff availability rules for theory and lab assignments.
 
 Theory assignments are hard-limited to the configured POP day/time windows.
-Lab assignments remain schedulable, with penalties that prefer the POP window,
-then preferred days, then ``alternative_lab_days`` from the CSV.
+Lab assignments remain schedulable by default, with penalties that prefer the
+POP window, then preferred days, then ``alternative_lab_days`` from the CSV.
+Rows with ``hard_lab_limit`` set also hard-limit lab assignments to the POP
+window.
 """
 
 from __future__ import annotations
@@ -31,7 +33,7 @@ from ...data.pop_availability import (
 
 
 class PopDayConstraint(Constraint):
-    """Hard-limit POP theory slots and softly prefer POP lab availability."""
+    """Hard-limit POP theory slots and optionally hard-limit POP lab availability."""
 
     def __init__(
         self,
@@ -87,8 +89,10 @@ class PopDayConstraint(Constraint):
         ) or ("monday", "tuesday", "wed", "thur", "fri", "saturday")
 
         hard_constraints_added = 0
+        hard_lab_constraints_added = 0
         lab_penalty_terms = 0
         theory_teachers_constrained = set()
+        lab_teachers_hard_constrained = set()
         lab_teachers_penalized = set()
         lab_sessions = getattr(context.data.raw.time, "lab_sessions", {}) or {}
 
@@ -129,6 +133,12 @@ class PopDayConstraint(Constraint):
             session_detail = lab_sessions.get(session)
             time_range = getattr(session_detail, "time_range", "")
             tier = availability.lab_preference_tier(actual_day_name, time_range)
+            if availability.hard_lab_limit and tier != "preferred_window":
+                model.Add(var == 0)
+                hard_lab_constraints_added += 1
+                lab_teachers_hard_constrained.add(normalized_tid)
+                continue
+
             penalty_weight = self._lab_penalty_weight(tier)
             if penalty_weight <= 0:
                 continue
@@ -143,26 +153,35 @@ class PopDayConstraint(Constraint):
             lab_teachers_penalized.add(normalized_tid)
 
         # Record for debugging
-        if hard_constraints_added or lab_penalty_terms:
+        if hard_constraints_added or hard_lab_constraints_added or lab_penalty_terms:
             extra = ensure_extra_bucket(context, "pop_day")
             extra["hard_theory_constraints_added"] = hard_constraints_added
+            extra["hard_lab_constraints_added"] = hard_lab_constraints_added
             extra["lab_penalty_terms"] = lab_penalty_terms
             extra["theory_teachers_constrained"] = sorted(theory_teachers_constrained)
+            extra["lab_teachers_hard_constrained"] = sorted(lab_teachers_hard_constrained)
             extra["lab_teachers_penalized"] = sorted(lab_teachers_penalized)
             extra["teacher_availability"] = {
                 tid: {
                     "preferred_days": sorted(availability.preferred_days),
                     "alternative_lab_days": sorted(availability.alternative_lab_days),
+                    "hard_lab_limit": availability.hard_lab_limit,
                     "time_windows": list(availability.time_windows),
                     "day_time_windows": {
                         day: list(windows)
                         for day, windows in availability.day_time_windows
                     },
+                    "lab_day_time_windows": {
+                        day: list(windows)
+                        for day, windows in availability.lab_day_time_windows
+                    },
                 }
                 for tid, availability in teacher_availability.items()
             }
 
-        status = ConstraintStatus.APPLIED if (hard_constraints_added or lab_penalty_terms) else ConstraintStatus.SKIPPED
+        status = ConstraintStatus.APPLIED if (
+            hard_constraints_added or hard_lab_constraints_added or lab_penalty_terms
+        ) else ConstraintStatus.SKIPPED
         return ConstraintApplicationResult(
             name=self.metadata.name,
             domain=self.metadata.category,
@@ -171,8 +190,10 @@ class PopDayConstraint(Constraint):
             status=status,
             details={
                 "hard_theory_constraints": hard_constraints_added,
+                "hard_lab_constraints": hard_lab_constraints_added,
                 "lab_penalty_terms": lab_penalty_terms,
                 "theory_teachers_constrained": len(theory_teachers_constrained),
+                "lab_teachers_hard_constrained": len(lab_teachers_hard_constrained),
                 "lab_teachers_penalized": len(lab_teachers_penalized),
                 "pop_teachers_loaded": len(teacher_availability),
             },

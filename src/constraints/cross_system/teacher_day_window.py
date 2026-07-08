@@ -17,8 +17,10 @@ from typing import Mapping, MutableMapping, Optional, Sequence
 
 from ..base import Constraint, ConstraintMetadata
 from ..context import ConstraintContext
+from ..fixed_schedule_context import get_fixed_schedule_occupancy
 from ..schema import ConstraintApplicationResult, ConstraintStatus
 from ..utils import iter_course_timeslot_variables, iter_lab_session_variables, iter_theory_room_variables
+from ...utils.normalization import normalize_teacher_id
 from ...utils.time_utils import DayNormalizer
 
 
@@ -52,7 +54,10 @@ class TeacherDayWindowConstraint(Constraint):
 	def apply(self, context: ConstraintContext) -> ConstraintApplicationResult:
 		logger = context.child_logger("teacher_day_window")
 		stats = TeacherDayWindowStats()
-		forced_windows = self._load_forced_windows(context, stats)
+		forced_windows = dict(self._load_forced_windows(context, stats))
+		fixed_occupancy = get_fixed_schedule_occupancy(context)
+		for teacher_id, days in fixed_occupancy.teacher_days.items():
+			forced_windows.setdefault(teacher_id, self._window_from_days(days))
 
 		lab_teachers = tuple(context.variables.lab.assignments.keys())
 		theory_teachers = tuple(getattr(context.variables.theory, "assignments", {}).keys())
@@ -86,7 +91,7 @@ class TeacherDayWindowConstraint(Constraint):
 			context.model.Add(use_mf + use_ts == 1)
 			stats.teachers_constrained += 1
 
-			forced = forced_windows.get(teacher_id)
+			forced = forced_windows.get(normalize_teacher_id(teacher_id))
 			if forced == "mon_fri":
 				context.model.Add(use_mf == 1)
 				stats.teachers_forced_mon_fri += 1
@@ -214,6 +219,17 @@ class TeacherDayWindowConstraint(Constraint):
 				forced[teacher_id] = "ambiguous"
 		return forced
 
+	@staticmethod
+	def _window_from_days(days: Sequence[str]) -> str:
+		day_set = {DayNormalizer.normalize_day_name(day) or str(day).strip().lower() for day in days}
+		has_mon = "monday" in day_set
+		has_sat = "saturday" in day_set
+		if has_mon and not has_sat:
+			return "mon_fri"
+		if has_sat and not has_mon:
+			return "tue_sat"
+		return "ambiguous"
+
 	def _load_from_csv(
 		self,
 		context: ConstraintContext,
@@ -234,7 +250,7 @@ class TeacherDayWindowConstraint(Constraint):
 					day_label = self._normalize_day_label(row.get("day"))
 					if not teacher_id or not day_label:
 						continue
-					teacher_days.setdefault(teacher_id, set()).add(day_label)
+					teacher_days.setdefault(normalize_teacher_id(teacher_id), set()).add(day_label)
 
 	def _load_from_json(
 		self,
@@ -286,7 +302,7 @@ class TeacherDayWindowConstraint(Constraint):
 				day_label = self._resolve_course_day_label(context, patterns, course_id, day_index)
 		if not day_label:
 			return
-		teacher_days.setdefault(teacher_id, set()).add(day_label)
+		teacher_days.setdefault(normalize_teacher_id(teacher_id), set()).add(day_label)
 
 	@staticmethod
 	def _resolve_path(candidate: Path) -> Path:

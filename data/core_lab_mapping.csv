@@ -1,10 +1,11 @@
 course_code,department,total_labs,lab_1,lab_2,lab_3,lab_4,lab_5,course_name
 AE19741,Aeronautical Engineering,1,Avionics Lab,,,,,Avionics
-AE23321,Aeronautical Engineering,1,Aero CAD Lab,,,,,Computer Aided Modelling Laboratory
+AE23321,Aeronautical Engineering,1,TANCAM,,,,,Computer Aided Modelling Laboratory
 AE23331,Aeronautical Engineering,2,Aircraft Structures Lab,Strength of Materials Lab,,,,Solid Mechanics
 AE23332,Aeronautical Engineering,1,Fluid Mechanics Lab,,,,,Fluid Mechanics and Fluid Machinery
 AE23333,Aeronautical Engineering,1,Thermal Lab 1,,,,,Aero Engineering Thermodynamics
 AE23521,Aeronautical Engineering,1,Aero CAD Lab,,,,,Computational Simulation Laboratory
+AE23531,Aeronautical Engineering,1,Aircraft Structures Lab,,,,,Aircraft Structures - II
 AE23722,Aeronautical Engineering,1,Aero CAD Lab,,,,,Artificial Intelligence and Machine Learning for Aeronautical Engineering
 AE23731,Aeronautical Engineering,1,Avionics Lab,,,,,Avionics
 AT19541,Automobile Engineering,1,Technical Analysis Lab,,,,,Automotive Electrical and Electronics
@@ -12,7 +13,7 @@ AT23331,Automobile Engineering,1,Thermal Lab 1,,,,,Automotive Engines
 AT23332,Automobile Engineering,1,Thermal Lab 2,,,,,Applied Thermodynamics
 AT23333,Automobile Engineering,1,Strength of Materials Lab,,,,,Strength of Materials for Automobile Engineers
 AT23334,Automobile Engineering,1,Manufacturing Technology I,,,,,Production Technology - II
-AT23521,Automobile Engineering,1,Vehicle Maintenance Lab,,,,,Two and Three Wheelers Laboratory
+AT23521,Automobile Engineering,1,Automotive Components Lab,,,,,Two and Three Wheelers Laboratory
 AT23531,Automobile Engineering,1,Electrical Machines I Lab,,,,,Automotive Electrical and Electronics
 AT23722,Automobile Engineering,1,Vehicle Maintenance Lab,,,,,Vehicle Maintenance Laboratory
 AT23723,Automobile Engineering,1,TANCAM,,,,,Computer Aided Analysis Laboratory
@@ -25,11 +26,13 @@ BM23532,Biomedical Engineering,2,Microprocessor Lab-2,Microprocessor Lab-1,,,,Mi
 BM23721,Biomedical Engineering,1,Electronics and Instrumentation,,,,,Artificial Intelligence and Machine learning for Biomedical Engineering
 BM23731,Biomedical Engineering,1,Medical Image Processing Lab,,,,,Medical Image Processing
 BT19401,Biotechnology,1,Technical Analysis Lab,,,,,Analytical Techniques in Biotechnology
+BT23321,Biotechnology,1,Bio Chemistry Lab,,,,,Basic Food and Enzyme Technology Laboratory
+BT23331,Biotechnology,1,Bio Chemistry Lab,,,,,Analytical Techniques in Biotechnology
+BT23521,Biotechnology,1,Downstream Processing Lab,,,,,Bioprocess Laboratory- I
 BT23523,Biotechnology,1,Immunology Lab,,,,,Immunology Laboratory
 BT23721,Biotechnology,1,Downstream Processing Lab,,,,,Downstream Processing Laboratory
 BY23P12,Biotechnology,1,Technical Analysis Lab,,,,,Analytical Techniques in Biotechnology
 CE19403,Civil Engineering,1,Soil Mechanics & Highway Lab,,,,,Surveying
-CE23321,Civil Engineering,1,Concrete & Survey Lab,,,,,Construction Materials Laboratory
 CE23331,Civil Engineering,1,Soil Mechanics & Highway Lab,,,,,Surveying
 CE23521,Civil Engineering,1,Chemistry Lab,,,,,Water and Waste Water Analysis Laboratory
 CH23331,Chemical Engineering,1,Fluid Mechanics Lab,,,,,Fluid Mechanics for Chemical Engineers
@@ -38,9 +41,10 @@ CH23721,Chemical Engineering,1,Technical Analysis Lab,,,,,Chemical Reaction Engi
 CH23722,Chemical Engineering,1,Process Control Lab,,,,,Process Control Lab
 CH23723,Chemical Engineering,1,Computer Application in Chemical Engg Lab,,,,,Artificial Intelligence and Machine Learning for Chemical Engineers
 CY23334,Chemistry,1,Chemistry Lab,,,,,Physical and Organic Chemistry
-EC23321,Electronics and Communication Engineering,2,Basic Electronics Lab-1,Basic Electronics Lab-2,,,,Analog and Digital Circuits Laboratory
-EC23332,Electronics and Communication Engineering,2,Microprocessor Lab-1,Microprocessor Lab-2,,,,Principles of Microprocessor and Microcontrollers
+EC23321,Electronics and Communication Engineering,2,Digital Lab-2,Digital Lab-1,,,,Analog and Digital Circuits Laboratory
+EC23332,Electronics and Communication Engineering,1,Communication Systems Lab,,,,,Principles of Microprocessor and Microcontrollers
 EC23521,Electronics and Communication Engineering,1,Communication Systems Lab,,,,,Communication Systems Laboratory
+EC23531,Electronics and Communication Engineering,1,DSP Lab,,,,,Digital Signal Processing
 EC23721,Electronics and Communication Engineering,2,DSA Classroom-2,DSA Classroom-1,,,,Artificial Intelligence and Machine Learning for Electronic Engineering
 EC23731,Electronics and Communication Engineering,1,Optical and Microwave Lab,,,,,Optical Communication and Networks
 EC23732,Electronics and Communication Engineering,1,Optical and Microwave Lab,,,,,RF and Microwave Engineering
@@ -50,12 +54,15 @@ EE19741,Electrical and Electronics Engineering,1,Power System Simulation Lab,,,,
 EE23132,Electrical and Electronics Engineering,1,Electrical Machines II Lab,,,,,Basic Electrical Engineering
 EE23133,Electrical and Electronics Engineering,1,Electrical Machines I Lab,,,,,Basic Electrical and Electronics Engineering
 EE23321,Electrical and Electronics Engineering,1,Electronic Devices & Circuits Lab,,,,,Electronic Devices and Circuits Laboratory
-EE23521,Electrical and Electronics Engineering,1,Power System Simulation Lab,,,,,Control and Instrumentation Laboratory
-EE23531,Electrical and Electronics Engineering,1,Electronic Devices & Circuits Lab,,,,,"Microprocessors, Microcontrollers and Applications"
+EE23521,Electrical and Electronics Engineering,1,Power Electronics Lab,,,,,Control and Instrumentation Laboratory
+EE23531,Electrical and Electronics Engineering,1,Power Electronics Lab,,,,,"Microprocessors, Microcontrollers and Applications"
 EE23721,Electrical and Electronics Engineering,1,Power System Simulation Lab,,,,,Power System Simulation Laboratory
 EE23731,Electrical and Electronics Engineering,1,Power System Simulation Lab,,,,,Renewable Energy Systems
 EE23B21,Electrical and Electronics Engineering,1,TANCAM,,,,,Wiring Harness Design Engineering
-EE23PE31,Electrical and Electronics Engineering,1,TANCAM,,,,,Wiring Harness Design Engineering
+FT23311,Food Technology,1,Food Microbiology Lab,,,,,Food Microbiology Laboratory
+FT23312,Food Technology,1,Food Chemistry Lab,,,,,Biochemistry and Nutrition Laboratory
+FT23511,Food Technology,1,Food Chemistry Lab,,,,,Food Analysis Laboratory
+FT23512,Food Technology,1,Food Processing and Preservation Lab,,,,,Food Processing and Preservation Laboratory-II
 GE23121,Mechanical Engineering,1,Machine Shop FF1 - EPL - 1,,,,,Engineering Practices – Civil and Mechanical
 GE23122,Electrical and Electronics Engineering,1,Engineering Practices Lab (Electrical),,,,,Engineering PracticesElectrical and Electronics
 ME19402,Mechanical Engineering,1,Strength of Materials Lab,,,,,Strength of Materials

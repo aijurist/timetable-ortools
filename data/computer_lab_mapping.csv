@@ -18,8 +18,14 @@ ae,AT23321,KFR04,K Block
 ae,AT23522,KFL02,K Block
 ae,AT23532,KFL02,K Block
 ae,AT23721,KFR01,K Block
+ae,OCS23XXX1,TLGL1;TLGL2,Techlounge
+ae,AE23PE32,TLGL1;TLGL2,Techlounge
 biot,BT23522,TLGL3,Techlounge
 biot,BT23722,A210/211;TLFL1;TLFL2,A Block;Techlounge
+be,OCS23XXX1,TLGL1;TLGL2,Techlounge
+be,BM23PE32,TLGL1;TLGL2,Techlounge
+chemical engineering,OCS23XXX1,TLGL1;TLGL2,Techlounge
+chemical engineering,CH23PE32,TLGL1;TLGL2,Techlounge
 csbs,CB23131,,K Block
 csbs,CB23331,TLFL1;TLFL2,Techlounge
 csbs,CB23332,JL2;JL3,J Block
@@ -39,14 +45,21 @@ csd,CD23731,KFL01,K Block
 ce2,CE23531,TIFAC I01,A Block
 ce2,CE23721,TIFAC I01,A Block
 ce2,CE23722,TIFAC I01,A Block
+ce2,OCS23XXX1,TLGL1;TLGL2,Techlounge
+ce2,CE23PE32,TLGL1;TLGL2,Techlounge
 cse,CS23331,,K Block;J Block
 cse,CS23332,,K Block;J Block
 cse,CS23333,,K Block;J Block
 be,CS23422,TLGL1;TLGL2,Techlounge
 cse,CS23532,,Techlounge
-ece,EC23531,A208/209;A210/211,A Block
+ece,EC23531,B202,B Block
 me,GE23111,,K Block;A Block;D Block
 it,IT23531,A208/209,A Block
 it,CS23532,,Techlounge
 it,IT23721,A208/209,A Block
 it,IT23731,A210/211,A Block
+mech,ME23521,C401,C Block
+me,OCS23XXX1,TLGL1;TLGL2,Techlounge
+me,ME23PE32,TLGL1;TLGL2,Techlounge
+mechatronics engineering,OCS23XXX1,TLGL1;TLGL2,Techlounge
+mechatronics engineering,MT23PE32,TLGL1;TLGL2,Techlounge

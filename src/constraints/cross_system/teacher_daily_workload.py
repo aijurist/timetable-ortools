@@ -10,8 +10,10 @@ from ortools.sat.python import cp_model
 
 from ..base import Constraint, ConstraintMetadata
 from ..context import ConstraintContext
+from ..fixed_schedule_context import get_fixed_schedule_occupancy, normalize_day_label
 from ..schema import ConstraintApplicationResult, ConstraintStatus
 from ..utils import build_presence_literal, register_objective_penalty
+from ...utils.normalization import normalize_teacher_id
 
 HourLiteral = Tuple[cp_model.IntVar, int]
 
@@ -82,7 +84,9 @@ class TeacherDailyWorkloadConstraint(Constraint):
 		stats = _ConstraintStats()
 
 		blocking_mask = getattr(context.data.raw, "blocking_mask", None)
-		fixed_hours_map = getattr(blocking_mask, "teacher_daily_fixed_hours", {}) if blocking_mask else {}
+		fixed_hours_map = dict(getattr(blocking_mask, "teacher_daily_fixed_hours", {}) if blocking_mask else {})
+		fixed_occupancy = get_fixed_schedule_occupancy(context)
+		fixed_hours_map.update(fixed_occupancy.teacher_daily_hours)
 
 		excluded_teachers = set()
 		if config.excluded_departments:
@@ -95,7 +99,7 @@ class TeacherDailyWorkloadConstraint(Constraint):
 					if (dept_name in config.excluded_departments or 
 						cohort_token in config.excluded_departments):
 						for inst in instances:
-							excluded_teachers.add(inst.teacher_id)
+							excluded_teachers.add(normalize_teacher_id(inst.teacher_id))
 			
 			if excluded_teachers:
 				context.logger.info(
@@ -119,61 +123,35 @@ class TeacherDailyWorkloadConstraint(Constraint):
 				if not terms:
 					continue
 
-				fixed_hours = fixed_hours_map.get((teacher_id, day_name), 0)
-				if teacher_id in excluded_teachers:
+				teacher_key = normalize_teacher_id(teacher_id)
+				day_key = normalize_day_label(day_name)
+				fixed_hours = fixed_hours_map.get((teacher_key, day_key), 0)
+				if teacher_key in excluded_teachers:
 					fixed_hours = 0
 				if fixed_hours > 0:
 					stats.fixed_hours_applied += 1
 				remaining_capacity = config.max_daily_hours - fixed_hours
 				total_hours = sum(weight * literal for literal, weight in terms)
-				
-				# context.logger.info(
-				# 	"Workload check: Teacher=%s Day=%s Fixed=%d Limit=%d Terms=%d",
-				# 	teacher_id, day_name, fixed_hours, config.max_daily_hours, len(terms)
-				# )
 
-				if fixed_hours > 0:
-					effective_limit = max(0, remaining_capacity)
-					max_overage = 24
-					overage = context.model.NewIntVar(0, max_overage, f"teacher_daily_overage_fix_{teacher_id}_{day_name}")
-					context.model.Add(total_hours <= effective_limit + overage)
-
-					weight = config.penalty_weight * 2 if config.penalty_weight > 0 else 10
-					register_objective_penalty(
-						context,
-						overage,
-						weight=weight,
-						tag=f"teacher_spread:daily_workload_fix:{teacher_id}:{day_name}",
-					)
-					stats.soft_penalties += 1
-					
-					# context.logger.info(
-					# 	"  -> Soft constraint applied: limit=%d + slack (fixed=%d)",
-					# 	effective_limit, fixed_hours
-					# )
-				else:
-					stats.hard_constraints += 1
-					if config.mode == "soft" and config.soft_cap_hours:
-						cap = max(0, config.soft_cap_hours - fixed_hours)
-						context.model.Add(total_hours <= cap)
-						if cap > remaining_capacity:
-							max_overage = cap - remaining_capacity
-							overage = context.model.NewIntVar(0, max_overage, f"teacher_daily_overage_{teacher_id}_{day_name}")
-							context.model.Add(total_hours - remaining_capacity <= overage)
-							register_objective_penalty(
-								context,
-								overage,
-								weight=config.penalty_weight,
-								tag=f"teacher_spread:daily_workload:{teacher_id}:{day_name}",
-							)
-							stats.soft_penalties += 1
-							# context.logger.info("  -> Configured Soft mode applied: cap=%d, buffer_limit=%d", cap, remaining_capacity)
-						else:
-							context.model.Add(total_hours <= remaining_capacity)
-							# context.logger.info("  -> Configured Soft mode (hard equivalent) applied: limit=%d", remaining_capacity)
+				stats.hard_constraints += 1
+				if config.mode == "soft" and config.soft_cap_hours:
+					cap = max(0, config.soft_cap_hours - fixed_hours)
+					context.model.Add(total_hours <= cap)
+					if cap > remaining_capacity:
+						max_overage = cap - remaining_capacity
+						overage = context.model.NewIntVar(0, max_overage, f"teacher_daily_overage_{teacher_key}_{day_key}")
+						context.model.Add(total_hours - remaining_capacity <= overage)
+						register_objective_penalty(
+							context,
+							overage,
+							weight=config.penalty_weight,
+							tag=f"teacher_spread:daily_workload:{teacher_key}:{day_key}",
+						)
+						stats.soft_penalties += 1
 					else:
 						context.model.Add(total_hours <= remaining_capacity)
-						# context.logger.info("  -> Hard constraint applied: limit=%d", remaining_capacity)
+				else:
+					context.model.Add(total_hours <= max(0, remaining_capacity))
 
 
 		status = ConstraintStatus.APPLIED if stats.hard_constraints else ConstraintStatus.SKIPPED
@@ -203,13 +181,14 @@ def _collect_theory_daily_literals(
 	collector: MutableMapping[str, MutableMapping[str, list[cp_model.IntVar]]] = defaultdict(lambda: defaultdict(list))
 
 	for teacher_id, course_map in assignments.items():
+		teacher_key = normalize_teacher_id(teacher_id)
 		for course_id, day_map in course_map.items():
 			pattern = day_patterns.get(course_id, tuple())
 			for day_idx, slot_map in day_map.items():
 				if not slot_map:
 					continue
 				day_name = _safe_day_name(pattern, day_idx)
-				collector[teacher_id][day_name].extend(slot_map.values())
+				collector[teacher_key][normalize_day_label(day_name)].extend(slot_map.values())
 
 	return {
 		teacher_id: {
@@ -241,6 +220,7 @@ def _collect_lab_daily_literals(
 	model = context.model
 
 	for teacher_id, course_map in assignments.items():
+		teacher_key = normalize_teacher_id(teacher_id)
 		for course_id, day_map in course_map.items():
 			pattern = day_patterns.get(course_id, tuple())
 			for day_idx, session_map in day_map.items():
@@ -255,7 +235,7 @@ def _collect_lab_daily_literals(
 					)
 					if literal is None:
 						continue
-					collector[teacher_id][day_name].append((literal, hours_map.get(session_name, default_hours)))
+					collector[teacher_key][normalize_day_label(day_name)].append((literal, hours_map.get(session_name, default_hours)))
 
 	return {
 		teacher_id: {

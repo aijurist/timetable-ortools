@@ -9,11 +9,13 @@ from ortools.sat.python import cp_model  # type: ignore[import]
 
 from ..base import Constraint, ConstraintMetadata
 from ..context import ConstraintContext
+from ..fixed_schedule_context import get_fixed_schedule_occupancy, resolve_day_label
 from ..schema import ConstraintApplicationResult, ConstraintStatus
 from ..utils import build_presence_literal, iter_lab_session_variables
+from ...utils.normalization import normalize_teacher_id
 
 
-TeacherDaySessionLiterals = Mapping[str, Mapping[int, Mapping[str, cp_model.IntVar]]]
+TeacherDaySessionLiterals = Mapping[str, Mapping[str, Mapping[str, cp_model.IntVar]]]
 
 
 @dataclass
@@ -67,7 +69,7 @@ class TeacherDailyPresenceLabConstraint(Constraint):
 		model = context.model
 
 		for teacher_id, day_map in session_literals.items():
-			for day_index, session_map in day_map.items():
+			for day_label, session_map in day_map.items():
 				if not session_map:
 					continue
 
@@ -83,19 +85,19 @@ class TeacherDailyPresenceLabConstraint(Constraint):
 					model,
 					session_map,
 					early_sessions,
-					f"teacher_{teacher_id}_d{day_index}_early_lab",
+					f"teacher_{teacher_id}_{self._safe_name(day_label)}_early_lab",
 				)
 				late_literal = self._build_group_literal(
 					model,
 					session_map,
 					late_sessions,
-					f"teacher_{teacher_id}_d{day_index}_late_lab",
+					f"teacher_{teacher_id}_{self._safe_name(day_label)}_late_lab",
 				)
 				buffer_literal = self._build_group_literal(
 					model,
 					session_map,
 					buffer_sessions,
-					f"teacher_{teacher_id}_d{day_index}_buffer_lab",
+					f"teacher_{teacher_id}_{self._safe_name(day_label)}_buffer_lab",
 				)
 
 				if early_literal is not None and late_literal is not None:
@@ -132,23 +134,42 @@ class TeacherDailyPresenceLabConstraint(Constraint):
 		if cached is not None:
 			return cached  # type: ignore[return-value]
 
-		terms: Dict[Tuple[str, int, str], list[cp_model.IntVar]] = {}
-		for teacher_id, _, day_index, session_name, _, variable in iter_lab_session_variables(context):
-			key = (teacher_id, day_index, session_name)
+		terms: Dict[Tuple[str, str, str], list[cp_model.IntVar]] = {}
+		for teacher_id, course_id, day_index, session_name, _, variable in iter_lab_session_variables(context):
+			day_label = resolve_day_label(
+				context,
+				day_index_value=day_index,
+				course_id=course_id,
+				is_lab=True,
+			)
+			key = (normalize_teacher_id(teacher_id), day_label, session_name)
 			terms.setdefault(key, []).append(variable)
 
-		result: Dict[str, Dict[int, Dict[str, cp_model.IntVar]]] = {}
 		model = context.model
-		for (teacher_id, day_index, session_name), variables in terms.items():
+		fixed_occupancy = get_fixed_schedule_occupancy(context)
+		current_teachers = {teacher_id for teacher_id, _day_label, _session_name in terms}
+		for teacher_id, day_map in fixed_occupancy.lab_teacher_sessions.items():
+			if teacher_id not in current_teachers:
+				continue
+			for day_label, sessions in day_map.items():
+				for session_name in sessions:
+					fixed_literal = model.NewBoolVar(
+						f"fixed_teacher_lab_presence_{teacher_id}_{self._safe_name(day_label)}_{self._safe_name(session_name)}"
+					)
+					model.Add(fixed_literal == 1)
+					terms.setdefault((teacher_id, day_label, session_name), []).append(fixed_literal)
+
+		result: Dict[str, Dict[str, Dict[str, cp_model.IntVar]]] = {}
+		for (teacher_id, day_label, session_name), variables in terms.items():
 			literal = build_presence_literal(
 				model,
 				tuple(variables),
-				f"teacher_{teacher_id}_d{day_index}_{session_name}_presence",
+				f"teacher_{teacher_id}_{self._safe_name(day_label)}_{self._safe_name(session_name)}_presence",
 			)
 			if literal is None:
 				continue
 			day_bucket = result.setdefault(teacher_id, {})
-			day_bucket.setdefault(day_index, {})[session_name] = literal
+			day_bucket.setdefault(day_label, {})[session_name] = literal
 
 		cache["teacher_day_literals"] = result
 		return result
@@ -175,6 +196,10 @@ class TeacherDailyPresenceLabConstraint(Constraint):
 		if not value:
 			return tuple(fallback)
 		return tuple(str(label).strip() for label in value if str(label).strip()) or tuple(fallback)
+
+	@staticmethod
+	def _safe_name(value: object) -> str:
+		return "".join(ch if ch.isalnum() else "_" for ch in str(value or "value")).strip("_") or "value"
 
 	def _result(self, status: str, details: Mapping[str, object]) -> ConstraintApplicationResult:
 		return ConstraintApplicationResult(

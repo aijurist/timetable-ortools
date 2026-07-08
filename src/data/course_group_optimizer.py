@@ -37,15 +37,19 @@ EEE_S5_FIXED_REGULAR_COURSES = (
     "GE23627",
 )
 
-BIOTECH_S5_FIXED_GROUP_INSTANCE_IDS = (
-    ("252", "253", "354"),
-    ("314", "353", "355"),
-    ("251", "315", "316"),
-    ("213", "214", "317"),
-    ("215", "216", "217"),
-    ("211", "212", "218"),
-    ("210", "318", "319"),
-)
+# Historical Biotechnology S5 fixed grouping is disabled for the updated data.
+# Keep the old curated table out of the active code path so S5 uses CP-SAT.
+BIOTECH_S5_FIXED_GROUP_INSTANCE_IDS = ()
+# Previous curated groups:
+# (
+#     ("243", "244", "344"),
+#     ("414", "343", "345"),
+#     ("242", "412", "413"),
+#     ("202", "203", "311"),
+#     ("204", "205", "206"),
+#     ("200", "201", "207"),
+#     ("199", "312", "313"),
+# )
 
 
 class CourseGroupOptimizer:
@@ -558,8 +562,10 @@ class CourseGroupOptimizer:
             self.logger.warning("No groups to create")
             return False
 
-        if self.dept == "Biotechnology" and self.semester == 5:
-            return self._build_biotech_s5_fixed_groups()
+        # Biotechnology S5 previously bypassed CP-SAT through a curated fixed
+        # grouping. Keep it disabled so updated datasets use the generic solver.
+        # if self.dept == "Biotechnology" and self.semester == 5:
+        #     return self._build_biotech_s5_fixed_groups()
 
         if self.dept == "Electrical & Electronics Engineering" and self.semester == 5:
             return self._build_eee_s5_fixed_groups()

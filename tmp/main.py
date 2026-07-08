@@ -110,8 +110,8 @@ def extract_course_data_by_dept(conn, dept_id, dept_name):
         rooms_room r ON cmrp.room_id_id = r.id
     WHERE
         c.for_dept_id_id = ?
-        AND tc.academic_year >= 2
-        AND tc.semester >= 2
+        AND tc.academic_year >= 3
+        AND tc.semester >= 6
         AND cm.degree_type IN ('BE', 'BTECH')
     """
 

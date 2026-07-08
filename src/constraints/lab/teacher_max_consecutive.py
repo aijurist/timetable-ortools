@@ -9,8 +9,10 @@ from ortools.sat.python import cp_model  # type: ignore[import]
 
 from ..base import Constraint, ConstraintMetadata
 from ..context import ConstraintContext
+from ..fixed_schedule_context import get_fixed_schedule_occupancy, resolve_day_label
 from ..schema import ConstraintApplicationResult, ConstraintStatus
 from ..utils import build_presence_literal, ensure_extra_bucket, register_objective_penalty
+from ...utils.normalization import normalize_teacher_id
 
 
 SessionMap = Mapping[str, cp_model.IntVar]
@@ -159,8 +161,8 @@ class TeacherMaxConsecutiveLabConstraint(Constraint):
 		context: ConstraintContext,
 		cache_key: str = "presence_literals",
 	) -> Tuple[
-		Mapping[str, Mapping[str, Mapping[int, SessionMap]]],
-		Mapping[str, Mapping[int, SessionMap]],
+		Mapping[str, Mapping[str, Mapping[str, SessionMap]]],
+		Mapping[str, Mapping[str, SessionMap]],
 	]:
 		cache = ensure_extra_bucket(context, self.CACHE_KEY)
 		if cache_key in cache:
@@ -169,36 +171,56 @@ class TeacherMaxConsecutiveLabConstraint(Constraint):
 		model = context.model
 		assignments = context.variables.lab.assignments
 		course_literals: Dict[str, MutableMapping[str, MutableMapping[int, MutableMapping[str, cp_model.IntVar]]]] = {}
-		teacher_terms: Dict[Tuple[str, int, str], list[cp_model.IntVar]] = {}
+		teacher_terms: Dict[Tuple[str, str, str], list[cp_model.IntVar]] = {}
 
 		for teacher_id, course_map in assignments.items():
-			teacher_bucket = course_literals.setdefault(teacher_id, {})
+			teacher_key = normalize_teacher_id(teacher_id)
+			teacher_bucket = course_literals.setdefault(teacher_key, {})
 			for course_id, day_map in course_map.items():
 				day_bucket = teacher_bucket.setdefault(course_id, {})
 				for day_idx, session_map in day_map.items():
-					session_bucket = day_bucket.setdefault(day_idx, {})
+					day_label = resolve_day_label(
+						context,
+						day_index_value=day_idx,
+						course_id=course_id,
+						is_lab=True,
+					)
+					session_bucket = day_bucket.setdefault(day_label, {})
 					for session_name, room_map in session_map.items():
 						literal = build_presence_literal(
 							model,
 							tuple(room_map.values()),
-							f"lab_presence_{teacher_id}_{course_id}_d{day_idx}_{session_name}",
+							f"lab_presence_{teacher_key}_{course_id}_{self._safe_name(day_label)}_{self._safe_name(session_name)}",
 						)
 						if literal is None:
 							continue
 						session_bucket[session_name] = literal
-						teacher_terms.setdefault((teacher_id, day_idx, session_name), []).append(literal)
+						teacher_terms.setdefault((teacher_key, day_label, session_name), []).append(literal)
 
-		teacher_literals: Dict[str, MutableMapping[int, MutableMapping[str, cp_model.IntVar]]] = {}
-		for (teacher_id, day_idx, session_name), literals in teacher_terms.items():
+		fixed_occupancy = get_fixed_schedule_occupancy(context)
+		current_teachers = {teacher_id for teacher_id, _day_label, _session_name in teacher_terms}
+		for teacher_id, day_map in fixed_occupancy.lab_teacher_sessions.items():
+			if teacher_id not in current_teachers:
+				continue
+			for day_label, sessions in day_map.items():
+				for session_name in sessions:
+					fixed_literal = model.NewBoolVar(
+						f"fixed_teacher_any_course_{teacher_id}_{self._safe_name(day_label)}_{self._safe_name(session_name)}"
+					)
+					model.Add(fixed_literal == 1)
+					teacher_terms.setdefault((teacher_id, day_label, session_name), []).append(fixed_literal)
+
+		teacher_literals: Dict[str, MutableMapping[str, MutableMapping[str, cp_model.IntVar]]] = {}
+		for (teacher_id, day_label, session_name), literals in teacher_terms.items():
 			literal = build_presence_literal(
 				model,
 				tuple(literals),
-				f"teacher_any_course_{teacher_id}_d{day_idx}_{session_name}",
+				f"teacher_any_course_{teacher_id}_{self._safe_name(day_label)}_{self._safe_name(session_name)}",
 			)
 			if literal is None:
 				continue
 			day_bucket = teacher_literals.setdefault(teacher_id, {})
-			day_bucket.setdefault(day_idx, {})[session_name] = literal
+			day_bucket.setdefault(day_label, {})[session_name] = literal
 
 		cache[cache_key] = (course_literals, teacher_literals)
 		return course_literals, teacher_literals
@@ -210,6 +232,7 @@ class TeacherMaxConsecutiveLabConstraint(Constraint):
 	) -> Mapping[str, set[str]]:
 		mapping: Dict[str, set[str]] = {}
 		for teacher_id, courses in teacher_courses.items():
+			teacher_key = normalize_teacher_id(teacher_id)
 			bucket: set[str] = set()
 			for course_id in courses:
 				requirement = requirements.get(course_id)
@@ -219,7 +242,7 @@ class TeacherMaxConsecutiveLabConstraint(Constraint):
 				if dept:
 					bucket.add(str(dept).strip().lower())
 			if bucket:
-				mapping[teacher_id] = bucket
+				mapping[teacher_key] = bucket
 		return mapping
 
 	def _apply_sequences(
@@ -232,7 +255,7 @@ class TeacherMaxConsecutiveLabConstraint(Constraint):
 		teacher_id: str,
 		entity_id: str,
 		scope: str,
-		day_index: int,
+		day_index: object,
 		is_soft: bool,
 		penalty_weight: int,
 	) -> None:
@@ -283,6 +306,10 @@ class TeacherMaxConsecutiveLabConstraint(Constraint):
 			status=status,
 			details=dict(details),
 		)
+
+	@staticmethod
+	def _safe_name(value: object) -> str:
+		return "".join(ch if ch.isalnum() else "_" for ch in str(value or "value")).strip("_") or "value"
 
 
 def build_teacher_max_consecutive_lab_constraint(

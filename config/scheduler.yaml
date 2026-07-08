@@ -7,7 +7,7 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data\dept_wise_course\4\Computer Science and Engineering_course_data.csv
+  courses_csv: data\dept_wise_course\3\Biomedical Engineering_course_data.csv
   rooms_csv: data\block_wise\rooms_new.csv
   day_order_csv: data/day_order_odd.csv
   core_lab_mapping_csv: data\core_lab_mapping.csv
@@ -687,7 +687,6 @@ constraints:
           - CH23722
         preferred_pairs:
           - [L1, L2]
-          - [L3, L4]
           - [L4, L5]
         min_practical_hours: 4
         min_student_count: 36
@@ -853,8 +852,8 @@ constraints:
       priority: 10
       weight: 1.0
       params:
-        lab_csv_path: output/final_4th/lab_schedule.csv
-        theory_csv_path: output/final_4th/theory_schedule.csv
+        lab_csv_path: 'D:\timetable-scheduler\prod\final\lab_schedule (7).csv'
+        theory_csv_path: 'D:\timetable-scheduler\prod\final\theory_schedule (10).csv'
         lock_assignments: true
         block_rooms: true
         block_teachers: true
@@ -876,6 +875,8 @@ constraints:
       priority: 9
       weight: 0.8
       params:
+        flexible_departments:
+          - Mechanical Engineering_S5
         lunch_slot_window:
           - 3
           - 4
@@ -883,8 +884,8 @@ constraints:
         minimum_free_slots: 1
         soft_departments:
           - Information Technology_S1
-          - Electronics & Communication Engineering_S1
-          - Biomedical Engineering_S5
+          # - Biomedical Engineering_S5
+          - Biotechnology_S5
           - Electrical & Electronics Engineering_S5
         penalty_weight: 200
     five_pm_policy:
@@ -1032,7 +1033,7 @@ model:
   theory_room_anchor_candidates: 4
 
 runtime:
-  time_limit_sec: 3600
+  time_limit_sec: 600
   thread_count: 8
   enable_lns: false
   enable_trace: false

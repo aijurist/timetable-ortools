@@ -21,7 +21,9 @@ class PopTeacherAvailability:
 	preferred_days: frozenset[str]
 	alternative_lab_days: frozenset[str]
 	time_windows: Tuple[Tuple[int, int], ...]
+	hard_lab_limit: bool = False
 	day_time_windows: Tuple[Tuple[str, Tuple[Tuple[int, int], ...]], ...] = ()
+	lab_day_time_windows: Tuple[Tuple[str, Tuple[Tuple[int, int], ...]], ...] = ()
 
 	def allows_theory(self, day_label: object, slot_label: object) -> bool:
 		day = normalize_day_label(day_label)
@@ -39,6 +41,14 @@ class PopTeacherAvailability:
 		day = normalize_day_label(day_label)
 		if not day:
 			return "other_day"
+		lab_windows = self._lab_time_windows_for_day(day)
+		if lab_windows is not None:
+			if not lab_windows:
+				return "other_day"
+			session_range = parse_time_range_minutes(session_time_range)
+			if session_range and any(_range_contains(window, session_range) for window in lab_windows):
+				return "preferred_window"
+			return "preferred_day"
 		if day in self.preferred_days:
 			time_windows = self._time_windows_for_day(day)
 			if not time_windows:
@@ -56,6 +66,14 @@ class PopTeacherAvailability:
 			if window_day == day:
 				return windows
 		return self.time_windows
+
+	def _lab_time_windows_for_day(self, day: str) -> Optional[Tuple[Tuple[int, int], ...]]:
+		if not self.lab_day_time_windows:
+			return None
+		for window_day, windows in self.lab_day_time_windows:
+			if window_day == day:
+				return windows
+		return tuple()
 
 
 def build_pop_availability_from_dataframe(
@@ -93,6 +111,7 @@ def build_pop_availability(
 
 		preferred_days = _extract_preferred_days(row)
 		explicit_day_time_windows = _extract_day_time_windows(row)
+		explicit_lab_day_time_windows = _extract_lab_day_time_windows(row)
 		preferred_days.update(explicit_day_time_windows.keys())
 		if not preferred_days:
 			continue
@@ -113,15 +132,21 @@ def build_pop_availability(
 				"alternative_lab_days": set(),
 				"time_windows": set(),
 				"day_time_windows": {},
+				"lab_day_time_windows": {},
+				"hard_lab_limit": False,
 			},
 		)
 		entry["preferred_days"].update(preferred_days)  # type: ignore[union-attr]
 		entry["alternative_lab_days"].update(_extract_alternative_lab_days(row))  # type: ignore[union-attr]
+		entry["hard_lab_limit"] = bool(entry["hard_lab_limit"]) or _extract_hard_lab_limit(row)
 		if window is not None:
 			entry["time_windows"].add(window)  # type: ignore[union-attr]
 		entry_day_time_windows = entry["day_time_windows"]  # type: ignore[assignment]
 		for day, windows in row_day_time_windows.items():
 			entry_day_time_windows.setdefault(day, set()).update(windows)
+		entry_lab_day_time_windows = entry["lab_day_time_windows"]  # type: ignore[assignment]
+		for day, windows in explicit_lab_day_time_windows.items():
+			entry_lab_day_time_windows.setdefault(day, set()).update(windows)
 
 	availability: dict[str, PopTeacherAvailability] = {}
 	for teacher_id, entry in mutable.items():
@@ -129,12 +154,18 @@ def build_pop_availability(
 			(day, tuple(sorted(windows)))
 			for day, windows in sorted(entry["day_time_windows"].items())  # type: ignore[union-attr]
 		)
+		lab_day_time_windows = tuple(
+			(day, tuple(sorted(windows)))
+			for day, windows in sorted(entry["lab_day_time_windows"].items())  # type: ignore[union-attr]
+		)
 		availability[teacher_id] = PopTeacherAvailability(
 			teacher_id=teacher_id,
 			preferred_days=frozenset(entry["preferred_days"]),  # type: ignore[arg-type]
 			alternative_lab_days=frozenset(entry["alternative_lab_days"]),  # type: ignore[arg-type]
 			time_windows=tuple(sorted(entry["time_windows"])),  # type: ignore[arg-type]
+			hard_lab_limit=bool(entry["hard_lab_limit"]),
 			day_time_windows=day_time_windows,
+			lab_day_time_windows=lab_day_time_windows,
 		)
 	return availability
 
@@ -208,6 +239,13 @@ def _extract_alternative_lab_days(row: Mapping[str, object]) -> set[str]:
 	return days
 
 
+def _extract_hard_lab_limit(row: Mapping[str, object]) -> bool:
+	return any(
+		_truthy(_first_value(row, (column,)))
+		for column in _HARD_LAB_LIMIT_COLUMNS
+	)
+
+
 def _extract_day_time_windows(row: Mapping[str, object]) -> dict[str, Tuple[Tuple[int, int], ...]]:
 	day_time_windows: dict[str, set[Tuple[int, int]]] = {}
 
@@ -234,6 +272,19 @@ def _extract_day_time_windows(row: Mapping[str, object]) -> dict[str, Tuple[Tupl
 		for day in days:
 			day_time_windows.setdefault(day, set()).add(window)
 
+	return {
+		day: tuple(sorted(windows))
+		for day, windows in day_time_windows.items()
+	}
+
+
+def _extract_lab_day_time_windows(row: Mapping[str, object]) -> dict[str, Tuple[Tuple[int, int], ...]]:
+	day_time_windows: dict[str, set[Tuple[int, int]]] = {}
+	for column in _LAB_DAY_TIME_WINDOW_COLUMNS:
+		_add_day_time_windows(
+			day_time_windows,
+			_parse_day_time_window_tokens(_first_value(row, (column,))),
+		)
 	return {
 		day: tuple(sorted(windows))
 		for day, windows in day_time_windows.items()
@@ -351,6 +402,11 @@ def _clean_cell(value: object) -> str:
 	return text
 
 
+def _truthy(value: object) -> bool:
+	text = _clean_cell(value).strip().lower()
+	return text in {"1", "true", "yes", "y", "hard", "strict", "enforce", "enforced"}
+
+
 def _infer_daytime_minutes(minutes: int) -> int:
 	hour = minutes // 60
 	minute = minutes % 60
@@ -386,6 +442,15 @@ _ALTERNATIVE_LAB_DAY_COLUMNS = (
 	"alternative_lab_day",
 	"Alternative Lab Day",
 	"lab_alternative_days",
+)
+
+_HARD_LAB_LIMIT_COLUMNS = (
+	"hard_lab_limit",
+	"Hard Lab Limit",
+	"hard_lab_days",
+	"Hard Lab Days",
+	"enforce_lab_days",
+	"Enforce Lab Days",
 )
 
 _START_TIME_COLUMNS = (
@@ -425,6 +490,19 @@ _DAY_TIME_WINDOW_COLUMNS = (
 	"timings",
 	"Timing",
 	"timing",
+)
+
+_LAB_DAY_TIME_WINDOW_COLUMNS = (
+	"lab_day_time_windows",
+	"Lab Day Time Windows",
+	"lab_availability_windows",
+	"lab_availability_by_day",
+	"lab_time_windows_by_day",
+	"lab_day_wise_time_windows",
+	"lab_daywise_time_windows",
+	"lab_timings",
+	"Lab Timing",
+	"lab_timing",
 )
 
 _TIME_TOKEN_RE = r"\d{1,2}(?::\d{2})?\s*(?:[AP]\.?M\.?)?"
