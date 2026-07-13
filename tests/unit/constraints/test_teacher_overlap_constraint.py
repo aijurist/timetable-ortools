@@ -22,6 +22,7 @@ from src.models.schema import (
 	GroupTimeslotRequirement,
 	LabCourseRequirement,
 	LabVariableBlock,
+	TheoryCourseRequirement,
 	TheoryVariableBlock,
 	VariableCreationResult,
 )
@@ -66,12 +67,34 @@ def _build_context(
 	group_timeslots = {}
 	theory_requirements = {}
 	theory_patterns = {}
+	theory_assignments: Dict[str, Dict[str, Dict[int, Dict[int, cp_model.IntVar]]]] = {}
+	theory_course_requirements: Dict[str, TheoryCourseRequirement] = {}
+	theory_teacher_courses: Dict[str, list[str]] = {}
+	theory_course_patterns = {}
 	theory_vars: Dict[str, cp_model.IntVar] = {}
 
-	for group_id in theory_groups:
+	for group_id, teacher_id in theory_groups.items():
 		var = model.NewBoolVar(f"{group_id}_d0_s0")
+		course_id = f"{group_id}_C"
 		theory_vars[group_id] = var
 		group_timeslots[group_id] = {0: {0: var}}
+		theory_assignments.setdefault(teacher_id, {})[course_id] = {0: {0: var}}
+		theory_teacher_courses.setdefault(teacher_id, []).append(course_id)
+		theory_course_patterns[course_id] = DAY_PATTERN
+		theory_course_requirements[course_id] = TheoryCourseRequirement(
+			course_instance_id=course_id,
+			course_code="GEN101",
+			group_id=group_id,
+			teacher_id=teacher_id,
+			department=DEPARTMENT,
+			semester=SEMESTER,
+			required_slots=4,
+			lecture_hours=2,
+			tutorial_hours=0,
+			student_count=60,
+			preferred_room_type=None,
+			required_room_type=None,
+		)
 		theory_requirements[group_id] = GroupTimeslotRequirement(
 			group_id=group_id,
 			department=DEPARTMENT,
@@ -86,6 +109,13 @@ def _build_context(
 		theory_patterns[group_id] = DAY_PATTERN
 
 	theory_block = TheoryVariableBlock(
+		assignments=theory_assignments,
+		course_requirements=theory_course_requirements,
+		teacher_courses={
+			teacher_id: tuple(sorted(course_ids))
+			for teacher_id, course_ids in theory_teacher_courses.items()
+		},
+		course_day_patterns=theory_course_patterns,
 		group_timeslots=group_timeslots,
 		requirements=theory_requirements,
 		day_patterns=theory_patterns,
@@ -229,7 +259,7 @@ def test_prevents_lab_theory_overlap_for_teacher() -> None:
 	assert status == cp_model.INFEASIBLE
 
 
-def test_allows_co_scheduled_duplicate_lab_course() -> None:
+def test_prevents_same_teacher_across_duplicate_lab_instances() -> None:
 	lab_courses = {
 		"LAB_A": {
 			"teacher_id": "T1",
@@ -251,11 +281,11 @@ def test_allows_co_scheduled_duplicate_lab_course() -> None:
 	context, _, lab_vars = _build_context(lab_courses=lab_courses, lab_session_map={"L1": (0,)})
 	constraint = build_teacher_overlap_constraint(metadata=_metadata("co_schedule"))
 	result = constraint.apply(context)
-	assert result.status == ConstraintStatus.SKIPPED
+	assert result.status == ConstraintStatus.APPLIED
 
 	context.model.Add(lab_vars["LAB_A"] == 1)
 	context.model.Add(lab_vars["LAB_B"] == 1)
 
 	solver = cp_model.CpSolver()
 	status = solver.Solve(context.model)
-	assert status in {cp_model.FEASIBLE, cp_model.OPTIMAL}
+	assert status == cp_model.INFEASIBLE

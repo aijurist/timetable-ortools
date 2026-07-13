@@ -50,10 +50,18 @@ class TeacherDailyPresenceLabConstraint(Constraint):
 
 	def apply(self, context: ConstraintContext) -> ConstraintApplicationResult:
 		logger = context.child_logger("teacher_daily_presence_lab")
-		session_literals = self._collect_teacher_day_literals(context)
+		excluded_departments = frozenset(
+			self._normalise_department(value)
+			for value in (self.params.get("excluded_departments", ()) or ())
+			if self._normalise_department(value)
+		)
+		session_literals = self._collect_teacher_day_literals(context, excluded_departments)
 		if not session_literals:
 			logger.info("No lab assignments available; skipping teacher daily presence constraint")
-			return self._result(ConstraintStatus.SKIPPED, {})
+			return self._result(
+				ConstraintStatus.SKIPPED,
+				{"excluded_departments": tuple(sorted(excluded_departments))},
+			)
 
 		max_daily_labs = max(1, int(self.params.get("max_daily_sessions", self.DEFAULT_MAX_DAILY_LABS)))
 		early_sessions = self._normalise_label_sequence(
@@ -125,11 +133,16 @@ class TeacherDailyPresenceLabConstraint(Constraint):
 				"early_sessions": tuple(early_sessions),
 				"buffer_sessions": tuple(buffer_sessions),
 				"late_sessions": tuple(late_sessions),
+				"excluded_departments": tuple(sorted(excluded_departments)),
 			}
 		)
 		return self._result(status, details)
 
-	def _collect_teacher_day_literals(self, context: ConstraintContext) -> TeacherDaySessionLiterals:
+	def _collect_teacher_day_literals(
+		self,
+		context: ConstraintContext,
+		excluded_departments: frozenset[str],
+	) -> TeacherDaySessionLiterals:
 		cache = context.extra.setdefault(self.CACHE_KEY, {})  # type: ignore[assignment]
 		cached = cache.get("teacher_day_literals")
 		if cached is not None:
@@ -137,7 +150,10 @@ class TeacherDailyPresenceLabConstraint(Constraint):
 
 		terms: Dict[Tuple[str, str, str], list[cp_model.IntVar]] = {}
 		for teacher_id, course_id, day_index, session_name, _, variable in iter_lab_session_variables(context):
-			if ignores_teacher_constraints(context.variables.lab.requirements.get(course_id)):
+			requirement = context.variables.lab.requirements.get(course_id)
+			if ignores_teacher_constraints(requirement):
+				continue
+			if self._normalise_department(getattr(requirement, "department", "")) in excluded_departments:
 				continue
 			day_label = resolve_day_label(
 				context,
@@ -203,6 +219,10 @@ class TeacherDailyPresenceLabConstraint(Constraint):
 	@staticmethod
 	def _safe_name(value: object) -> str:
 		return "".join(ch if ch.isalnum() else "_" for ch in str(value or "value")).strip("_") or "value"
+
+	@staticmethod
+	def _normalise_department(value: object) -> str:
+		return " ".join(str(value or "").strip().casefold().split())
 
 	def _result(self, status: str, details: Mapping[str, object]) -> ConstraintApplicationResult:
 		return ConstraintApplicationResult(

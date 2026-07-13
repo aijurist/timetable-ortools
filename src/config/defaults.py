@@ -370,6 +370,7 @@ def default_grouping_config() -> GroupingConfig:
         kutty_enabled=True,
         kutty_semesters=(3, 4),
         kutty_unmatched_policy="full_slot",
+        kutty_fixed_course_pairs={},
     )
 
 
@@ -388,7 +389,12 @@ def default_constraint_config() -> ConstraintConfig:
         "shift_alignment": ConstraintSetting(priority=9, weight=0.9, enabled=True),
     }
     theory_constraints = {
-        "course_daily_limit": ConstraintSetting(priority=9, weight=1.0, enabled=True, params={"max_daily_slots": 2}),
+        "course_daily_limit": ConstraintSetting(
+            priority=9,
+            weight=1.0,
+            enabled=True,
+            params={"max_daily_slots": 2, "exempt_pop_bundles": True},
+        ),
         "teacher_daily_limit": ConstraintSetting(priority=9, weight=1.0, enabled=True),
         "student_conflict": ConstraintSetting(priority=10, weight=1.0, enabled=True),
         "room_assignment": ConstraintSetting(priority=8, weight=0.7, enabled=True),

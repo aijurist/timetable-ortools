@@ -238,7 +238,13 @@ class ScheduleValidator:
 			bucket[(entry.room_id, day_key, entry.session_name)].append(entry)
 		issues: List[ValidationIssue] = []
 		for (room_id, day_key, session_name), entries in bucket.items():
-			if len(entries) <= 1:
+			occupancies = {
+				entry.co_schedule_id
+				if entry.is_co_scheduled and entry.co_schedule_id
+				else f"row:{index}"
+				for index, entry in enumerate(entries)
+			}
+			if len(occupancies) <= 1:
 				continue
 			day_index = entries[0].day_index if entries else None
 			day_label = entries[0].day if entries else None

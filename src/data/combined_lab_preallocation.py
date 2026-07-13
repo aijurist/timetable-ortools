@@ -74,10 +74,13 @@ class CombinedLabPreallocator:
 			return tuple(), {"enabled": True, "allocations": 0, "instances": 0}
 
 		blocks = max(1, int(cfg.get("blocks", 4) or 4))
-		max_unique_slots_per_course = max(
+		configured_max_blocks_per_day = cfg.get("max_blocks_per_day_per_pair")
+		configured_max_unique_slots_per_course = max(
 			blocks,
 			int(cfg.get("max_unique_slots_per_course", 6) or 6),
 		)
+		auto_expand_unique_slot_cap = bool(cfg.get("auto_expand_unique_slot_cap", False))
+		unique_slot_cap_slack = max(0, int(cfg.get("unique_slot_cap_slack", 0) or 0))
 		configured_rooms = tuple(
 			str(room).strip() for room in cfg.get("room_numbers", ()) if str(room).strip()
 		)
@@ -91,6 +94,38 @@ class CombinedLabPreallocator:
 			raise ValueError("Combined-lab preallocation has no configured rooms")
 
 		units = self._build_pair_units(instances, data)
+		units_by_course: MutableMapping[Tuple[str, int], list[_PairUnit]] = defaultdict(list)
+		for unit in units:
+			units_by_course[(unit.course_code, unit.semester)].append(unit)
+		# Do not count an undersized room as parallel capacity for a paired unit.
+		# The old denominator used every configured room, so adding ordinary
+		# 70-seat second-year rooms made the calculated cap *smaller* even though
+		# a 128-136 student combined unit could not use any of them.
+		eligible_room_counts = {
+			key: max(
+				1,
+				sum(
+					1
+					for room_id in room_ids
+					if room_capacities.get(room_id) is None
+					or room_capacities[room_id] >= max(unit.student_count for unit in course_units)
+				),
+			)
+			for key, course_units in units_by_course.items()
+		}
+		capacity_slot_lower_bounds = {
+			key: math.ceil((len(course_units) * blocks) / eligible_room_counts[key])
+			for key, course_units in units_by_course.items()
+		}
+		effective_slot_caps = {
+			key: max(
+				configured_max_unique_slots_per_course,
+				capacity_slot_lower_bounds[key] + unique_slot_cap_slack,
+			)
+			if auto_expand_unique_slot_cap
+			else configured_max_unique_slots_per_course
+			for key in units_by_course
+		}
 		model = cp_model.CpModel()
 		variables: Dict[Tuple[str, str, str, str], cp_model.IntVar] = {}
 		unit_variables: MutableMapping[str, list[cp_model.IntVar]] = defaultdict(list)
@@ -106,12 +141,19 @@ class CombinedLabPreallocator:
 
 		blocked_mask = getattr(data, "blocking_mask", None)
 		session_names = tuple(str(name) for name in data.time.lab_sessions.keys())
+		excluded_session_names = {
+			str(name).strip().upper()
+			for name in (cfg.get("excluded_session_names", ()) or ())
+			if str(name).strip()
+		}
 		if not session_names:
 			raise ValueError("Combined-lab preallocation requires configured lab sessions")
 
 		for unit in units:
 			for day in unit.days:
 				for session_name in session_names:
+					if session_name.strip().upper() in excluded_session_names:
+						continue
 					if self._violates_hard_lunch(unit, session_name, data):
 						continue
 					for room_id in room_ids:
@@ -151,7 +193,10 @@ class CombinedLabPreallocator:
 					f"for {blocks} required blocks"
 				)
 			model.Add(sum(bucket) == blocks)
-			max_per_day = 1 if len(unit.days) >= blocks else max(1, math.ceil(blocks / len(unit.days)))
+			if configured_max_blocks_per_day is None:
+				max_per_day = 1 if len(unit.days) >= blocks else max(1, math.ceil(blocks / len(unit.days)))
+			else:
+				max_per_day = min(blocks, max(1, int(configured_max_blocks_per_day)))
 			for day in unit.days:
 				day_bucket = unit_day_variables.get((unit.allocation_id, day), ())
 				if day_bucket:
@@ -178,14 +223,15 @@ class CombinedLabPreallocator:
 			model.Add(sum(bucket) <= len(bucket) * active)
 			course_slot_active[key] = active
 			course_active_by_code[(course_code, semester)].append(active)
-		for bucket in course_active_by_code.values():
-			model.Add(sum(bucket) <= max_unique_slots_per_course)
+		for key, bucket in course_active_by_code.items():
+			model.Add(sum(bucket) <= effective_slot_caps[key])
 
 		# A cohort may run multiple parallel pairs of the same course, but DBMS
 		# and OOPS cannot occupy the cohort at the same time.
 		cohort_time_active: MutableMapping[
 			Tuple[str, int, str, str], list[cp_model.IntVar]
 		] = defaultdict(list)
+		department_slot_active = []
 		for (department, semester, course_code, day, session_name), bucket in sorted(
 			cohort_course_time_variables.items()
 		):
@@ -194,6 +240,7 @@ class CombinedLabPreallocator:
 			)
 			model.Add(sum(bucket) >= active)
 			model.Add(sum(bucket) <= len(bucket) * active)
+			department_slot_active.append(active)
 			cohort_time_active[(department, semester, day, session_name)].append(active)
 		for bucket in cohort_time_active.values():
 			if len(bucket) > 1:
@@ -207,7 +254,14 @@ class CombinedLabPreallocator:
 				cp_model.SELECT_MAX_VALUE,
 			)
 		if course_slot_active:
-			model.Minimize(sum(course_slot_active.values()))
+			# First compact each department's DBMS/OOPS footprint so ordinary
+			# courses retain as much of the cohort grid as possible. Then compact
+			# the shared external-course grid as a secondary objective.
+			global_weight = len(course_slot_active) + 1
+			model.Minimize(
+				global_weight * sum(department_slot_active)
+				+ sum(course_slot_active.values())
+			)
 
 		solver = cp_model.CpSolver()
 		solver.parameters.max_time_in_seconds = max(
@@ -251,9 +305,18 @@ class CombinedLabPreallocator:
 		paired = sum(1 for allocation in allocations if len(allocation.instance_ids) == 2)
 		singletons = len(allocations) - paired
 		unique_slots_by_course: MutableMapping[str, set[Tuple[str, str]]] = defaultdict(set)
+		unique_slots_by_department: MutableMapping[str, set[Tuple[str, str]]] = defaultdict(set)
 		for allocation in allocations:
 			for cell in allocation.cells:
 				unique_slots_by_course[allocation.course_code].add((cell.day, cell.session_name))
+				for department in allocation.departments:
+					unique_slots_by_department[department].add((cell.day, cell.session_name))
+		same_department_pairs = sum(
+			1 for allocation in allocations if len(allocation.instance_ids) == 2 and len(allocation.departments) == 1
+		)
+		cross_department_pairs = sum(
+			1 for allocation in allocations if len(allocation.instance_ids) == 2 and len(allocation.departments) > 1
+		)
 		stats: Mapping[str, object] = {
 			"enabled": True,
 			"instances": len(instances),
@@ -261,10 +324,35 @@ class CombinedLabPreallocator:
 			"paired_allocations": paired,
 			"singletons": singletons,
 			"blocks_per_allocation": blocks,
-			"max_unique_slots_per_course": max_unique_slots_per_course,
+			"excluded_session_names": sorted(excluded_session_names),
+			"max_blocks_per_day_per_pair": (
+				int(configured_max_blocks_per_day)
+				if configured_max_blocks_per_day is not None
+				else 1
+			),
+			"same_department_pairs": same_department_pairs,
+			"cross_department_pairs": cross_department_pairs,
+			"configured_max_unique_slots_per_course": configured_max_unique_slots_per_course,
+			"unique_slot_cap_slack": unique_slot_cap_slack,
+			"eligible_room_count_by_course": {
+				course_code: eligible_room_counts[(course_code, semester)]
+				for course_code, semester in sorted(eligible_room_counts)
+			},
+			"capacity_slot_lower_bound_by_course": {
+				course_code: capacity_slot_lower_bounds[(course_code, semester)]
+				for course_code, semester in sorted(capacity_slot_lower_bounds)
+			},
+			"effective_max_unique_slots_by_course": {
+				course_code: effective_slot_caps[(course_code, semester)]
+				for course_code, semester in sorted(effective_slot_caps)
+			},
 			"unique_slots_by_course": {
 				course_code: len(slots)
 				for course_code, slots in sorted(unique_slots_by_course.items())
+			},
+			"unique_slots_by_department": {
+				department: len(slots)
+				for department, slots in sorted(unique_slots_by_department.items())
 			},
 			"candidate_variables": len(variables),
 			"solver_status": solver.StatusName(status),
@@ -359,42 +447,68 @@ class CombinedLabPreallocator:
 			)
 
 		units = []
+		combined_cfg = getattr(getattr(self._config, "model", None), "combined_lab_courses", {}) or {}
+		allow_repeated_teacher_ids = bool(combined_cfg.get("ignore_teacher_constraints", False))
 		for (course_code, semester), course_instances in sorted(by_course_semester.items()):
-			remaining = sorted(
+			by_department: MutableMapping[str, list[NormalizedCourseInstance]] = defaultdict(list)
+			for instance in sorted(
 				course_instances,
 				key=lambda item: (item.student_dept.lower(), str(item.teacher_id), item.instance_id),
-			)
-			ordinal = 1
-			while remaining:
-				department_counts: MutableMapping[str, int] = defaultdict(int)
-				for instance in remaining:
-					department_counts[instance.student_dept] += 1
-				first_department = min(
-					department_counts,
-					key=lambda department: (-department_counts[department], department.lower()),
-				)
-				first_index = next(
-					index for index, instance in enumerate(remaining) if instance.student_dept == first_department
-				)
-				first = remaining.pop(first_index)
+			):
+				by_department[instance.student_dept].append(instance)
+
+			pairs: list[Tuple[NormalizedCourseInstance, ...]] = []
+			leftovers: list[NormalizedCourseInstance] = []
+			# Pair locally first. This keeps each cohort's activity graph compact
+			# and avoids the infeasible web created by greedily preferring a new
+			# department for every pair.
+			for department in sorted(by_department, key=str.lower):
+				remaining = list(by_department[department])
+				while len(remaining) >= 2:
+					first = remaining.pop(0)
+					second_index = next(
+						(
+							index
+							for index, candidate in enumerate(remaining)
+							if allow_repeated_teacher_ids
+							or str(candidate.teacher_id) != str(first.teacher_id)
+						),
+						None,
+					)
+					if second_index is None:
+						leftovers.append(first)
+						continue
+					pairs.append((first, remaining.pop(second_index)))
+				leftovers.extend(remaining)
+
+			# Pair the odd department leftovers across cohorts. Identical five-day
+			# patterns are preferred so the stable pair retains all five choices.
+			while leftovers:
+				first = leftovers.pop(0)
+				first_days = self._common_days((first,), data)
 				candidate_indexes = [
 					index
-					for index, candidate in enumerate(remaining)
-					if str(candidate.teacher_id) != str(first.teacher_id)
-				]
-				second = None
-				if candidate_indexes:
-					second_index = min(
-						candidate_indexes,
-						key=lambda index: (
-							remaining[index].student_dept == first.student_dept,
-							-department_counts.get(remaining[index].student_dept, 0),
-							remaining[index].student_dept.lower(),
-							str(remaining[index].teacher_id),
-						),
+					for index, candidate in enumerate(leftovers)
+					if (
+						allow_repeated_teacher_ids
+						or str(candidate.teacher_id) != str(first.teacher_id)
 					)
-					second = remaining.pop(second_index)
-				pair = (first,) if second is None else (first, second)
+					and self._common_days((candidate,), data) == first_days
+				]
+				if not candidate_indexes:
+					pairs.append((first,))
+					continue
+				second_index = min(
+					candidate_indexes,
+					key=lambda index: (
+						leftovers[index].student_dept.lower(),
+						str(leftovers[index].teacher_id),
+					),
+				)
+				pairs.append((first, leftovers.pop(second_index)))
+
+			ordinal = 1
+			for pair in pairs:
 				days = self._common_days(pair, data)
 				if not days:
 					raise ValueError(

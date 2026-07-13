@@ -842,6 +842,23 @@ def test_teacher_daily_presence_limits_total_sessions() -> None:
 	assert result.details["daily_cap_days"] >= 1
 
 
+def test_teacher_daily_presence_excludes_configured_department() -> None:
+	courses = (("COURSE_CSD", "Computer Science & Design", ((0, "L1"), (0, "L2"), (0, "L3"))),)
+	context = _build_teacher_consecutive_context(
+		course_definitions=courses,
+		session_labels=("L1", "L2", "L3"),
+	)
+	constraint = build_teacher_daily_presence_lab_constraint(
+		metadata=_metadata("teacher_daily_presence_csd_exclusion", priority=8),
+		params={"excluded_departments": ("Computer Science & Design",)},
+	)
+
+	result = constraint.apply(context)
+
+	assert result.status == ConstraintStatus.SKIPPED
+	assert result.details["excluded_departments"] == ("computer science & design",)
+
+
 def test_teacher_daily_presence_blocks_l1_l5_l6_triple() -> None:
 	courses = (
 		("COURSE_EARLY", "Computer Science & Engineering", ((0, "L1"),)),

@@ -50,12 +50,13 @@ def _instance(instance_id: str, course_code: str, department: str, teacher_id: s
     )
 
 
-def test_preallocator_pairs_across_departments_and_caps_each_course_to_four_slots() -> None:
+def test_preallocator_pairs_locally_then_pairs_leftovers_and_caps_each_course_to_four_slots() -> None:
     base = default_scheduler_config()
+    configured_rooms = ROOMS + ("B416",)
     cross_system = dict(base.constraints.cross_system)
     cross_system["lunch_alignment"] = replace(
         cross_system["lunch_alignment"],
-        enabled=True,
+        enabled=False,
         params={
             "lunch_slot_window": (1, 2, 3),
             "minimum_free_slots": 1,
@@ -69,9 +70,11 @@ def test_preallocator_pairs_across_departments_and_caps_each_course_to_four_slot
             base.model,
             combined_lab_courses={
                 "course_codes": ("CS23332", "CS23333"),
-                "room_numbers": ROOMS,
+                "room_numbers": configured_rooms,
                 "blocks": 4,
+                "excluded_session_names": ("L3",),
                 "preallocate_slots": True,
+                "ignore_teacher_constraints": True,
                 "max_unique_slots_per_course": 4,
                 "preallocation_time_limit_sec": 10,
                 "preallocation_workers": 1,
@@ -105,6 +108,7 @@ def test_preallocator_pairs_across_departments_and_caps_each_course_to_four_slot
         {"id": f"R{index}", "room_number": room, "block": "ANEW", "capacity": 200}
         for index, room in enumerate(ROOMS, start=1)
     ]
+    room_rows.append({"id": "R7", "room_number": "B416", "block": "B Block", "capacity": 70})
     rooms_df = pd.DataFrame(room_rows)
     room_ids = tuple(row["id"] for row in room_rows)
     rooms = RoomCollections(
@@ -134,7 +138,7 @@ def test_preallocator_pairs_across_departments_and_caps_each_course_to_four_slot
                         f"{course_code}_{department[-1]}_{ordinal}",
                         course_code,
                         department,
-                        f"T_{course_code}_{department[-1]}_{ordinal}",
+                        f"T_{course_code}_{department[-1]}",
                     )
                 )
         normalized[DepartmentSemesterKey(department, 3)] = tuple(instances)
@@ -143,8 +147,13 @@ def test_preallocator_pairs_across_departments_and_caps_each_course_to_four_slot
 
     assert len(allocations) == 6
     assert all(len(allocation.instance_ids) == 2 for allocation in allocations)
-    assert all(allocation.departments == ("Dept A", "Dept B") for allocation in allocations)
+    assert stats["same_department_pairs"] == 4
+    assert stats["cross_department_pairs"] == 2
     assert all(len(allocation.cells) == 4 for allocation in allocations)
+    assert stats["configured_max_unique_slots_per_course"] == 4
+    assert stats["eligible_room_count_by_course"] == {"CS23332": 6, "CS23333": 6}
+    assert stats["capacity_slot_lower_bound_by_course"] == {"CS23332": 2, "CS23333": 2}
+    assert stats["effective_max_unique_slots_by_course"] == {"CS23332": 4, "CS23333": 4}
     assert stats["unique_slots_by_course"] == {"CS23332": 4, "CS23333": 4}
     assert all(count <= 4 for count in stats["unique_slots_by_course"].values())
     assert all(cell.session_name != "L3" for allocation in allocations for cell in allocation.cells)

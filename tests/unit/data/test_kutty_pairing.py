@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 
 import pandas as pd
+import pytest
 from ortools.sat.python import cp_model
 
 from src.config.defaults import default_scheduler_config
@@ -285,6 +286,55 @@ def test_feasible_staff_pair_is_not_dropped_for_a_large_quality_penalty() -> Non
     assert stats["paired_bundles"] == 1
     assert stats["singletons"] == 0
     assert bundles[KEY][0].instance_ids == ("A1", "B1")
+
+
+def test_fixed_course_pair_is_applied_before_automatic_matching() -> None:
+    instances = (
+        _instance("A1", "A", "T1"),
+        _instance("B1", "B", "T2"),
+        _instance("C1", "C", "T3"),
+        _instance("D1", "D", "T4"),
+    )
+    groups = tuple(_group(index, instance) for index, instance in enumerate(instances, start=1))
+    raw = _raw_data()
+    config = replace(
+        raw.config.grouping,
+        kutty_fixed_course_pairs={"Engineering_S3": (("A", "C"),)},
+    )
+
+    bundles, stats = KuttyBundlePlanner(config).plan({KEY: instances}, {KEY: groups}, raw)
+
+    course_pairs = {
+        frozenset(
+            next(instance.course_code for instance in instances if instance.instance_id == instance_id)
+            for instance_id in bundle.instance_ids
+        )
+        for bundle in bundles[KEY]
+        if bundle.is_paired
+    }
+    assert course_pairs == {frozenset(("A", "C")), frozenset(("B", "D"))}
+    fixed_bundle = next(
+        bundle
+        for bundle in bundles[KEY]
+        if frozenset(bundle.instance_ids) == frozenset(("A1", "C1"))
+    )
+    assert "fixed_course_pair" in fixed_bundle.tags
+    assert stats["singletons"] == 0
+
+
+def test_fixed_course_pair_fails_fast_when_staff_matching_is_impossible() -> None:
+    first = _instance("A1", "A", "T1")
+    second = _instance("B1", "B", "T1")
+    instances = (first, second)
+    groups = tuple(_group(index, instance) for index, instance in enumerate(instances, start=1))
+    raw = _raw_data()
+    config = replace(
+        raw.config.grouping,
+        kutty_fixed_course_pairs={"Engineering|3": (("A", "B"),)},
+    )
+
+    with pytest.raises(ValueError, match="no feasible staff-offering matching"):
+        KuttyBundlePlanner(config).plan({KEY: instances}, {KEY: groups}, raw)
 
 
 def test_second_year_grouper_forces_one_course_code_per_group(tmp_path) -> None:

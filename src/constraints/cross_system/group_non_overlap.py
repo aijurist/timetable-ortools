@@ -116,13 +116,14 @@ class GroupNonOverlapConstraint(Constraint):
 		)
 
 	def _apply_kutty(self, context: ConstraintContext) -> ConstraintApplicationResult:
-		"""Allow overlap between Kutty-linked selection groups.
+		"""Use teacher-guarded overlap for cohorts containing Kutty bundles.
 
-		Once two groups are paired into permanent bundles, a lab in one group does
-		not represent every student option in that group.  Different staff bundles
-		may therefore run in the paired group at the same time.  Teacher overlap
-		still prevents the same staff member from being double-booked, while this
-		constraint continues to protect every unrelated group pair.
+		Once a cohort selects permanent staff bundles, a group-level busy flag is
+		too coarse: one staff offering may run while other offerings from another
+		group remain available.  All groups in that Kutty cohort may therefore
+		overlap, while the teacher-overlap constraint continues to prevent a real
+		staff collision.  Cohorts without a paired Kutty bundle retain the legacy
+		group non-overlap protection.
 		"""
 
 		theory_block = context.variables.theory
@@ -130,25 +131,25 @@ class GroupNonOverlapConstraint(Constraint):
 		theory_activity = _collect_group_theory_activity(context)
 		lab_activity = _collect_group_lab_sessions(context)
 		overlap_index = _build_theory_lab_overlap_index(context)
-		partner_bundles: MutableMapping[frozenset[str], list[str]] = defaultdict(list)
-		for bundle_id, bundle in theory_block.bundle_specs.items():
-			if not bundle.is_paired or not bundle.second_group_id:
-				continue
-			partner_bundles[frozenset((bundle.first_group_id, bundle.second_group_id))].append(bundle_id)
+		kutty_cohorts = {
+			(bundle.key.department, int(bundle.key.semester))
+			for bundle in theory_block.bundle_specs.values()
+			if bundle.is_paired
+		}
 
 		clauses = 0
 		allowed_bundle_pairs = 0
-		for (department, _semester), group_ids in group_index.items():
+		teacher_guarded_cohorts = 0
+		for (department, semester), group_ids in group_index.items():
 			if len(group_ids) <= 1:
+				continue
+			if (department, semester) in kutty_cohorts:
+				teacher_guarded_cohorts += 1
+				allowed_bundle_pairs += len(group_ids) * (len(group_ids) - 1) // 2
 				continue
 			day_count = _resolve_day_count(context, theory_block, group_ids, department)
 			for first_index, first_group in enumerate(group_ids):
 				for second_group in group_ids[first_index + 1 :]:
-					pair_key = frozenset((first_group, second_group))
-					shared_bundle_ids = tuple(partner_bundles.get(pair_key, ()))
-					if shared_bundle_ids:
-						allowed_bundle_pairs += 1
-						continue
 					for day_idx in range(day_count):
 						for slot_idx in range(len(theory_block.theory_slot_labels)):
 							first_vars = _raw_group_activity(
@@ -185,7 +186,8 @@ class GroupNonOverlapConstraint(Constraint):
 				"mode": "kutty_bundle_aware",
 				"guard_clauses": clauses,
 				"allowed_bundle_group_pairs": allowed_bundle_pairs,
-				"paired_group_policy": "allow_overlap_teacher_guarded",
+				"teacher_guarded_cohorts": teacher_guarded_cohorts,
+				"paired_group_policy": "allow_cohort_overlap_teacher_guarded",
 			},
 		)
 

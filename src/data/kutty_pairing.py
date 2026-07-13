@@ -155,7 +155,21 @@ class KuttyBundlePlanner:
                 if plan.pairs:
                     candidate_plans[(first_code, second_code)] = plan
 
-        selected_edges, unmatched_codes = self._match_course_codes(codes, by_code, candidate_plans)
+        fixed_edges = self._fixed_course_pairs(key, codes, candidate_plans)
+        fixed_codes = {code for edge in fixed_edges for code in edge}
+        remaining_codes = tuple(code for code in codes if code not in fixed_codes)
+        remaining_candidates = {
+            edge: plan
+            for edge, plan in candidate_plans.items()
+            if edge[0] in remaining_codes and edge[1] in remaining_codes
+        }
+        automatic_edges, unmatched_codes = self._match_course_codes(
+            remaining_codes,
+            by_code,
+            remaining_candidates,
+        )
+        selected_edges = tuple(sorted((*fixed_edges, *automatic_edges)))
+        fixed_edge_set = set(fixed_edges)
         bundles: list[KuttyBundle] = []
         singleton_instances: list[NormalizedCourseInstance] = []
 
@@ -190,6 +204,7 @@ class KuttyBundlePlanner:
                             "kutty",
                             "paired",
                             "fixed_staff_pair",
+                            *(("fixed_course_pair",) if (first_code, second_code) in fixed_edge_set else ()),
                             *(('hybrid_load',) if pairing.first_remainder_blocks or pairing.second_remainder_blocks else ()),
                         ),
                     )
@@ -245,6 +260,53 @@ class KuttyBundlePlanner:
             sum(1 for item in bundles if not item.is_paired),
         )
         return tuple(sorted(bundles, key=lambda item: item.bundle_id))
+
+    def _fixed_course_pairs(
+        self,
+        key: DepartmentSemesterKey,
+        codes: Sequence[str],
+        candidates: Mapping[Tuple[str, str], _StaffMatchPlan],
+    ) -> Tuple[Tuple[str, str], ...]:
+        configured = getattr(self._config, "kutty_fixed_course_pairs", {}) or {}
+        requested: list[Tuple[str, str]] = []
+        for cohort_token, pairs in configured.items():
+            if self._cohort_token_matches(str(cohort_token), key):
+                requested.extend(tuple(sorted((str(pair[0]).upper(), str(pair[1]).upper()))) for pair in pairs)
+        if not requested:
+            return tuple()
+
+        available = {str(code).strip().upper() for code in codes}
+        selected: list[Tuple[str, str]] = []
+        used_codes: set[str] = set()
+        for edge in requested:
+            missing = set(edge) - available
+            if missing:
+                raise ValueError(
+                    f"Fixed Kutty pair {edge} for {key.label()} references absent course code(s) {sorted(missing)}"
+                )
+            repeated = used_codes.intersection(edge)
+            if repeated:
+                raise ValueError(
+                    f"Fixed Kutty pairs for {key.label()} reuse course code(s) {sorted(repeated)}"
+                )
+            if edge not in candidates or not candidates[edge].pairs:
+                raise ValueError(
+                    f"Fixed Kutty pair {edge} for {key.label()} has no feasible staff-offering matching"
+                )
+            used_codes.update(edge)
+            selected.append(edge)
+        return tuple(sorted(selected))
+
+    @staticmethod
+    def _cohort_token_matches(token: str, key: DepartmentSemesterKey) -> bool:
+        normalized = " ".join(str(token).strip().lower().split())
+        department = " ".join(key.department.strip().lower().split())
+        candidates = {
+            f"{department}|{key.semester}",
+            f"{department}_s{key.semester}",
+            key.slug().lower(),
+        }
+        return normalized in candidates
 
     def _verify_cohort(
         self,

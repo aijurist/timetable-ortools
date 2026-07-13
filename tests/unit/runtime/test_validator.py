@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 from src.runtime.extractor import ScheduleExtractor
 from src.runtime.extractor_schema import (
     LabScheduleEntry,
@@ -129,3 +131,38 @@ def test_validator_accepts_extractor_schedule() -> None:
 
     assert report.has_errors is False
     assert all(issue.severity != ValidationSeverity.ERROR for issue in report.issues)
+
+
+def test_validator_accepts_one_co_scheduled_lab_allocation_per_room() -> None:
+    data = build_extended_container()
+    constraint_model = build_constraint_model()
+    validator = ScheduleValidator(data, constraint_model)
+    base = _build_conflicting_schedule().lab_entries[0]
+    pair_id = "combined_cs23332_s3_01_c1__c2"
+    first = replace(
+        base,
+        is_co_scheduled=True,
+        co_schedule_id=pair_id,
+        co_schedule_group_size=2,
+    )
+    second = replace(
+        base,
+        teacher_id="t2",
+        teacher_name="Teacher Two",
+        course_instance_id="C2",
+        is_co_scheduled=True,
+        co_schedule_id=pair_id,
+        co_schedule_group_size=2,
+    )
+
+    allowed = ScheduleExtractionResult(
+        lab_entries=(first, second),
+        theory_entries=tuple(),
+        combined_entries=tuple(),
+        instance_index={},
+    )
+    assert validator._check_lab_room_conflicts(allowed) == []
+
+    unrelated = replace(second, course_instance_id="C3", co_schedule_id="another-allocation")
+    conflict = replace(allowed, lab_entries=(first, second, unrelated))
+    assert len(validator._check_lab_room_conflicts(conflict)) == 1

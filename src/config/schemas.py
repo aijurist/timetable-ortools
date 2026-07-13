@@ -224,6 +224,10 @@ class GroupingConfig:
     kutty_enabled: bool = True
     kutty_semesters: Sequence[int] = field(default_factory=lambda: (3, 4))
     kutty_unmatched_policy: str = "full_slot"
+    # Hard course-code pairings for selected Kutty cohorts. Keys accept the
+    # same "Department|semester", "Department_S3", or cohort-slug forms used
+    # by the consolidation allowlist.
+    kutty_fixed_course_pairs: Mapping[str, Sequence[Sequence[str]]] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.max_groups_per_dept_sem is not None and self.max_groups_per_dept_sem <= 0:
@@ -242,6 +246,32 @@ class GroupingConfig:
             raise ValueError("kutty_unmatched_policy must be 'full_slot' or 'error'")
         object.__setattr__(self, "kutty_semesters", semesters)
         object.__setattr__(self, "kutty_unmatched_policy", policy)
+        fixed_pairs: Dict[str, Tuple[Tuple[str, str], ...]] = {}
+        for raw_cohort, raw_pairs in (self.kutty_fixed_course_pairs or {}).items():
+            cohort = str(raw_cohort).strip()
+            if not cohort:
+                raise ValueError("kutty_fixed_course_pairs contains an empty cohort key")
+            pairs: list[Tuple[str, str]] = []
+            used_codes: set[str] = set()
+            for raw_pair in raw_pairs or ():
+                if isinstance(raw_pair, (str, bytes)) or len(raw_pair) != 2:
+                    raise ValueError(
+                        f"kutty_fixed_course_pairs[{cohort!r}] entries must contain exactly two course codes"
+                    )
+                first, second = (str(value).strip().upper() for value in raw_pair)
+                if not first or not second or first == second:
+                    raise ValueError(
+                        f"kutty_fixed_course_pairs[{cohort!r}] contains an invalid pair {raw_pair!r}"
+                    )
+                repeated = used_codes.intersection((first, second))
+                if repeated:
+                    raise ValueError(
+                        f"kutty_fixed_course_pairs[{cohort!r}] reuses course code(s) {sorted(repeated)}"
+                    )
+                used_codes.update((first, second))
+                pairs.append(tuple(sorted((first, second))))
+            fixed_pairs[cohort] = tuple(pairs)
+        object.__setattr__(self, "kutty_fixed_course_pairs", fixed_pairs)
 
 
 @dataclass(frozen=True)

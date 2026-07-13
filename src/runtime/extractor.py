@@ -15,6 +15,7 @@ from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Optional,
 from ortools.sat.python import cp_model
 
 from ..data.schemas import (
+	CombinedLabAllocation,
 	CourseGroup,
 	ExtendedDataContainer,
 	LabSessionDetail,
@@ -99,6 +100,7 @@ class ScheduleExtractor:
 		self._instance_lookup = self._index_instances()
 		self._group_lookup = self._index_groups()
 		self._teacher_lookup = self._index_teachers()
+		self._combined_lab_allocation_lookup = self._index_combined_lab_allocations()
 		self._room_index = self._index_rooms()
 		self._course_row_lookup = self._index_course_rows()
 		self._group_display = self._build_group_display()
@@ -185,6 +187,30 @@ class ScheduleExtractor:
 					(course_row or {}).get("co_schedule_info"),
 					"Single session" if not co_schedule_id else f"Co-scheduled ({co_schedule_id})",
 				)
+				is_co_scheduled = bool(co_schedule_id)
+				combined_allocation = self._combined_lab_allocation_lookup.get(str(course_instance_id))
+				if combined_allocation is not None:
+					co_schedule_id = combined_allocation.allocation_id
+					co_schedule_group_size = len(combined_allocation.instance_ids)
+					is_co_scheduled = co_schedule_group_size > 1
+					partner_ids = [
+						partner_teacher_id
+						for partner_instance_id, partner_teacher_id in zip(
+							combined_allocation.instance_ids,
+							combined_allocation.teacher_ids,
+						)
+						if str(partner_instance_id) != str(course_instance_id)
+					]
+					co_schedule_partner_teachers = ", ".join(
+						f"{self._teacher_lookup.get(str(partner_id), str(partner_id))} ({partner_id})"
+						for partner_id in partner_ids
+					) or None
+					co_schedule_info = (
+						f"Stable {combined_allocation.course_code} pair: "
+						+ " + ".join(str(instance_id) for instance_id in combined_allocation.instance_ids)
+						if is_co_scheduled
+						else f"Unpaired {combined_allocation.course_code} singleton"
+					)
 				for day_index, session_map in day_map.items():
 					day_label = day_pattern[day_index % len(day_pattern)] if day_pattern else str(day_index)
 					for session_name, room_map in session_map.items():
@@ -244,7 +270,7 @@ class ScheduleExtractor:
 								group_name=group_name,
 								group_index=group_index,
 								day_pattern=day_pattern_label,
-								is_co_scheduled=bool(co_schedule_id),
+								is_co_scheduled=is_co_scheduled,
 								co_schedule_id=co_schedule_id,
 								co_schedule_group_size=co_schedule_group_size,
 								co_schedule_partner_teachers=co_schedule_partner_teachers,
@@ -253,6 +279,15 @@ class ScheduleExtractor:
 							)
 							entries.append(entry)
 		return tuple(self._annotate_lab_batches(entries))
+
+	def _index_combined_lab_allocations(self) -> Dict[str, CombinedLabAllocation]:
+		lookup: Dict[str, CombinedLabAllocation] = {}
+		for allocation in (
+			getattr(self._data.preprocessing, "combined_lab_allocations", ()) or ()
+		):
+			for instance_id in allocation.instance_ids:
+				lookup[str(instance_id)] = allocation
+		return lookup
 
 	def _annotate_lab_batches(self, entries: Sequence[LabScheduleEntry]) -> Sequence[LabScheduleEntry]:
 		if not entries:

@@ -1,0 +1,168 @@
+{
+  "course_codes": [
+    "CS23332",
+    "CS23333"
+  ],
+  "combined_csv": "data\\2_combined\\DBMS_OOPS_Combined_course_data.csv",
+  "row_count": 199,
+  "department_count": 8,
+  "sources": [
+    {
+      "file": "data\\2\\2\\Artificial Intelligence and Data Science_course_data.csv",
+      "rows": 36,
+      "departments": [
+        "Artificial Intelligence & Data Science"
+      ],
+      "dbms_instances": 6,
+      "oops_instances": 6
+    },
+    {
+      "file": "data\\2\\2\\Artificial Intelligence and Machine Learning_course_data.csv",
+      "rows": 20,
+      "departments": [
+        "Artificial Intelligence & Machine Learning"
+      ],
+      "dbms_instances": 4,
+      "oops_instances": 4
+    },
+    {
+      "file": "data\\2\\2\\Computer Science and Business Systems_course_data.csv",
+      "rows": 14,
+      "departments": [
+        "Computer Science & Business Systems"
+      ],
+      "dbms_instances": 0,
+      "oops_instances": 2
+    },
+    {
+      "file": "data\\2\\2\\Computer Science and Design_course_data.csv",
+      "rows": 6,
+      "departments": [
+        "Computer Science & Design"
+      ],
+      "dbms_instances": 1,
+      "oops_instances": 0
+    },
+    {
+      "file": "data\\2\\2\\Computer Science and Engineering A and B_course_data.csv",
+      "rows": 78,
+      "departments": [
+        "Computer Science & Engineering-A",
+        "Computer Science & Engineering-B"
+      ],
+      "dbms_instances": 13,
+      "oops_instances": 13
+    },
+    {
+      "file": "data\\2\\2\\Computer Science and Engineering Cyber Security_course_data.csv",
+      "rows": 15,
+      "departments": [
+        "Computer Science & Engineering (Cyber Security)"
+      ],
+      "dbms_instances": 3,
+      "oops_instances": 3
+    },
+    {
+      "file": "data\\2\\2\\Information Technology_course_data.csv",
+      "rows": 30,
+      "departments": [
+        "Information Technology"
+      ],
+      "dbms_instances": 5,
+      "oops_instances": 5
+    }
+  ],
+  "other_combined_csv": "data\\2_combined\\Other_Departments_Combined_course_data.csv",
+  "other_row_count": 175,
+  "other_department_count": 12,
+  "other_sources": [
+    {
+      "file": "data\\2\\2\\Aeronautical Engineering_course_data.csv",
+      "rows": 6,
+      "departments": [
+        "Aeronautical Engineering"
+      ]
+    },
+    {
+      "file": "data\\2\\2\\Automobile Engineering_course_data.csv",
+      "rows": 6,
+      "departments": [
+        "Automobile Engineering"
+      ]
+    },
+    {
+      "file": "data\\2\\2\\Biomedical Engineering_course_data.csv",
+      "rows": 16,
+      "departments": [
+        "Biomedical Engineering"
+      ]
+    },
+    {
+      "file": "data\\2\\2\\Biotechnology_course_data.csv",
+      "rows": 21,
+      "departments": [
+        "Biotechnology"
+      ]
+    },
+    {
+      "file": "data\\2\\2\\Chemical Engineering_course_data.csv",
+      "rows": 6,
+      "departments": [
+        "Chemical Engineering"
+      ]
+    },
+    {
+      "file": "data\\2\\2\\Civil Engineering_course_data.csv",
+      "rows": 7,
+      "departments": [
+        "Civil Engineering"
+      ]
+    },
+    {
+      "file": "data\\2\\2\\Electrical and Electronics Engineering_course_data.csv",
+      "rows": 16,
+      "departments": [
+        "Electrical & Electronics Engineering"
+      ]
+    },
+    {
+      "file": "data\\2\\2\\Electronics and Communication Engineering_course_data.csv",
+      "rows": 56,
+      "departments": [
+        "Electronics & Communication Engineering"
+      ]
+    },
+    {
+      "file": "data\\2\\2\\Food Technology_course_data.csv",
+      "rows": 8,
+      "departments": [
+        "Food Technology"
+      ]
+    },
+    {
+      "file": "data\\2\\2\\Mechanical Engineering_course_data.csv",
+      "rows": 14,
+      "departments": [
+        "Mechanical Engineering"
+      ]
+    },
+    {
+      "file": "data\\2\\2\\Mechatronics Engineering_course_data.csv",
+      "rows": 12,
+      "departments": [
+        "Mechatronics Engineering"
+      ]
+    },
+    {
+      "file": "data\\2\\2\\Robotics and Automation_course_data.csv",
+      "rows": 7,
+      "departments": [
+        "Robotics & Automation"
+      ]
+    }
+  ],
+  "all_combined_csv": "data\\2_combined\\All_Departments_Combined_course_data.csv",
+  "all_row_count": 374,
+  "all_source_file_count": 19,
+  "all_department_count": 20
+}

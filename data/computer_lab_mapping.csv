@@ -36,9 +36,9 @@ csbs,CB23731,JL1;JL2,J Block
 csbs,CB23732,JR1;JR2,J Block
 csbs,CB23E32,TLGL3;TLGL4,Techlounge
 csbs,CB23E36,TLGL3;TLGL4,Techlounge
-csd,CD23321,TLFL3,Techlounge
-csd,CD23331,KFL01,K Block
-csd,CD23332,KFL01,K Block
+csd,CD23321,,Techlounge
+csd,CD23331,,K Block
+csd,CD23332,,K Block
 csd,CD23531,KFL01,K Block
 csd,CD23721,KFL01,K Block
 csd,CD23731,KFL01,K Block
@@ -62,3 +62,4 @@ me,OCS23XXX1,TLGL1;TLGL2,Techlounge
 me,ME23PE32,TLGL1;TLGL2,Techlounge
 mechatronics engineering,OCS23XXX1,TLGL1;TLGL2,Techlounge
 mechatronics engineering,MT23PE32,TLGL1;TLGL2,Techlounge
+mechatronics engineering,CS23336,B310;TLFR4/5,Techlounge

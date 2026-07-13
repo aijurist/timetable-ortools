@@ -260,13 +260,13 @@ def test_kutty_linked_groups_may_overlap_and_leave_staff_guard_to_teacher_constr
 
 	assert result.status == ConstraintStatus.SKIPPED
 	assert result.details["allowed_bundle_group_pairs"] == 1
-	assert result.details["paired_group_policy"] == "allow_overlap_teacher_guarded"
+	assert result.details["paired_group_policy"] == "allow_cohort_overlap_teacher_guarded"
 	context.model.Add(lab_vars["CSE_S5_G2"] == 1)
 	context.model.Add(bundle_var == 1)
 	assert cp_model.CpSolver().Solve(context.model) in (cp_model.FEASIBLE, cp_model.OPTIMAL)
 
 
-def test_kutty_mode_still_blocks_unrelated_group_overlap() -> None:
+def test_kutty_cohort_allows_other_groups_to_overlap() -> None:
 	groups = ("CSE_S5_G1", "CSE_S5_G2", "CSE_S5_G3")
 	context, theory_vars, lab_vars = _build_context(group_ids=groups)
 	context, _bundle_var = _add_kutty_pair(context, theory_vars)
@@ -274,10 +274,12 @@ def test_kutty_mode_still_blocks_unrelated_group_overlap() -> None:
 
 	result = constraint.apply(context)
 
-	assert result.status == ConstraintStatus.APPLIED
+	assert result.status == ConstraintStatus.SKIPPED
+	assert result.details["allowed_bundle_group_pairs"] == 3
+	assert result.details["teacher_guarded_cohorts"] == 1
 	context.model.Add(lab_vars["CSE_S5_G1"] == 1)
 	context.model.Add(theory_vars["CSE_S5_G3"] == 1)
-	assert cp_model.CpSolver().Solve(context.model) == cp_model.INFEASIBLE
+	assert cp_model.CpSolver().Solve(context.model) in (cp_model.FEASIBLE, cp_model.OPTIMAL)
 
 
 def test_teacher_guard_still_blocks_same_staff_inside_allowed_kutty_pair() -> None:

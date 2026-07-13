@@ -7,14 +7,14 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data\2\2\Artificial Intelligence and Data Science_course_data.csv
+  courses_csv: data\2_combined\All_Departments_Combined_course_data.csv
   rooms_csv: data\block_wise\rooms_new.csv
   day_order_csv: data/day_order_odd.csv
   core_lab_mapping_csv: data\core_lab_mapping.csv
   computer_lab_mapping_csv: data\computer_lab_mapping.csv
   preferences_csv: data\pop.csv
-  # fixed_lab_schedule_csv: data/final/2025-12-26_04-47-12/csv/lab_schedule.csv
-  # fixed_theory_schedule_csv: data/final/2025-12-26_04-47-12/csv/theory_schedule.csv
+  fixed_lab_schedule_csv: prod/lab_schedule_lock.csv
+  fixed_theory_schedule_csv: prod/theory_schedule_lock.csv
   output_root: output/combined_scheduler
 
 data:
@@ -527,6 +527,11 @@ grouping:
   kutty_semesters: [3, 4]
   # An odd/incompatible offering remains a legacy full-slot theory course and is reported.
   kutty_unmatched_policy: full_slot
+  # Keep known-feasible course pairings stable for cohorts whose repeated staff
+  # offerings make a different minimum-cost matching infeasible downstream.
+  kutty_fixed_course_pairs:
+    Artificial Intelligence & Data Science_S3:
+      - [AI23231, CS23331]
   # Fine-grained control for the "maximize courses into one group" behaviour.
   #
   # - If empty / not provided: consolidation is enabled for semesters 5 & 7 for ALL departments.
@@ -691,6 +696,10 @@ constraints:
           - CH23521
           - CH23721
           - CH23722
+          - FT23311
+          - FT23312
+          - BT23321
+          - BT23331
         preferred_pairs:
           - [L1, L2]
           - [L4, L5]
@@ -702,6 +711,8 @@ constraints:
       weight: 0.7
       params:
         max_daily_sessions: 2
+        excluded_departments:
+          - Computer Science & Design
         early_sessions:
           - L1
         buffer_sessions:
@@ -720,6 +731,9 @@ constraints:
       weight: 1.0
       params:
         max_daily_slots: 2
+        # POP offerings are constrained by their own availability windows.
+        # Exempt the full Kutty bundle so the paired staff shares the same grid.
+        exempt_pop_bundles: true
 
     course_consecutive_pairs:
       enabled: true
@@ -869,8 +883,8 @@ constraints:
       priority: 10
       weight: 1.0
       params:
-        lab_csv_path: 'prod/final/lab_schedule (11).csv'
-        theory_csv_path: 'prod/final/theory_schedule (13).csv'
+        lab_csv_path: prod/lab_schedule_lock.csv
+        theory_csv_path: prod/theory_schedule_lock.csv
         lock_assignments: true
         block_rooms: true
         block_teachers: true
@@ -1051,19 +1065,52 @@ model:
   # DBMS and OOPS-Java are eight-hour combined lab-block courses, not Kutty theory.
   combined_lab_courses:
     course_codes: [CS23332, CS23333]
-    room_numbers: [ANEW101, ANEW102, ANEW103, ANEW104, ANEW201, ANEW202]
+    room_numbers:
+      - ANEW101
+      - ANEW102
+      - ANEW103
+      - ANEW104
+      - A104/105
+      - KSL02
+      - B125
+      - B416
+      - B417
+      - B418
+      - B419
+      - B422
+      - B423
+      - B424
+      - B425
+      - B426
+      - TIFAC I02
+      - TIFAC I03
+      - TIFAC I04
+      - TIFAC I11
+      - TIFAC I12
     blocks: 4
     block_len: 2
+    excluded_session_names: [L3]
+    # External delivery can cover two blocks for the same permanent pair on
+    # one day. This is required when all departments share the six-room pool;
+    # the 11:50-13:20 L3 window remains excluded by hard lunch alignment.
+    max_blocks_per_day_per_pair: 2
     # CSV teacher IDs are stable bundle labels; external staff deliver the sessions.
     ignore_teacher_constraints: true
     # Allocate permanent pairs and room/session cells in a small pre-solve,
     # then remove every alternative from the main timetable model.
     preallocate_slots: true
-    preallocation_time_limit_sec: 30
-    preallocation_workers: 1
+    preallocation_time_limit_sec: 180
+    preallocation_workers: 8
     preallocation_seed: 23
-    # Four weekly blocks require at least four distinct timetable cells.
-    max_unique_slots_per_course: 4
+    # A multi-department combined run needs a larger aggregate grid than a
+    # single department. Expand to a capacity-aware lower bound: ordinary
+    # 70-seat rooms do not reduce the cap for a 128+ student paired unit.
+    # The objective still minimizes the slots actually occupied.
+    auto_expand_unique_slot_cap: true
+    unique_slot_cap_slack: 1
+    # This is the preferred floor for small departmental runs. Combined runs
+    # automatically raise it only as far as usable room capacity requires.
+    max_unique_slots_per_course: 5
 
 runtime:
   time_limit_sec: 600

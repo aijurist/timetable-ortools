@@ -151,7 +151,7 @@ THEORY_CONSTRAINT_DEFINITIONS = {
 	},
 	"course_daily_limit": {
 		"title": "Theory Course Daily Limit",
-		"description": "Prevent a course instance from taking more than the configured number of theory slots per day.",
+		"description": "Limit ordinary theory slots per day while allowing POP-led Kutty bundles to follow their availability windows.",
 		"factory": build_theory_course_daily_limit_constraint,
 		"tags": ("theory", "coverage", "daily"),
 	},
