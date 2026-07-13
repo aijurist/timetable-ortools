@@ -8,6 +8,7 @@ from typing import Callable, Mapping, Sequence
 from ..config.schemas import ConstraintSetting, SchedulerConfig
 from .base import ConstraintMetadata
 from .cross_system.five_pm_policy import build_five_pm_policy_constraint
+from .cross_system.section_late_day import build_section_late_day_constraint
 from .cross_system.group_non_overlap import build_group_non_overlap_constraint
 from .cross_system.lunch_alignment import build_lunch_alignment_constraint
 from .cross_system.shift_pattern import build_shift_pattern_constraint
@@ -232,6 +233,12 @@ CROSS_SYSTEM_CONSTRAINT_DEFINITIONS = {
 		"description": "Block or penalize late sessions for configured departments across lab and theory.",
 		"factory": build_five_pm_policy_constraint,
 		"tags": ("cross-system", "time", "policy"),
+	},
+	"section_late_day": {
+		"title": "Section Late-Day Cap",
+		"description": "Cap the number of after-3pm days per section (hard or soft).",
+		"factory": build_section_late_day_constraint,
+		"tags": ("cross-system", "time", "section"),
 	},
 	"shift_pattern": {
 		"title": "Shift Pattern Ratio",

@@ -442,10 +442,14 @@ def default_constraint_config() -> ConstraintConfig:
         ),
         "lunch_alignment": ConstraintSetting(priority=6, weight=0.4, enabled=True),
         "five_pm_policy": ConstraintSetting(priority=7, weight=0.5, enabled=True),
+        "section_late_day": ConstraintSetting(
+            priority=6, weight=1.0, enabled=False,
+            params={"mode": "soft", "max_late_days": 2, "soft_penalty_weight": 40},
+        ),
         "shift_pattern": ConstraintSetting(
             priority=8,
             weight=0.7,
-            enabled=True,
+            enabled=False,  # superseded by section_late_day
             params={
                 "shift_templates": ("SHIFT_1", "SHIFT_2"),
                 "allowed_patterns": ((3, 2), (2, 3)),

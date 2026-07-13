@@ -974,7 +974,9 @@ constraints:
         discouraged_lab_sessions: []
         soft_penalty_weight: 10
     shift_pattern:
-      enabled: true
+      # Disabled: superseded by section_late_day (per-section after-3pm cap), which
+      # controls day-timing more directly. shift_pattern was largely violated anyway.
+      enabled: false
       priority: 8
       weight: 0.7
       params:

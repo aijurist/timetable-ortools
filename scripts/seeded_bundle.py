@@ -68,7 +68,7 @@ big_nums = set(r["room_number"] for _, r in rooms_df.iterrows()
 import os
 PARALLEL = os.environ.get("PARALLEL_BATCH") == "1"
 
-def build(dept, rseed=1, parallel=None):
+def build(dept, rseed=1, parallel=None, late_mode="hard"):
     if parallel is None:
         parallel = PARALLEL
     cross = {"bundled_theory": {"enabled": True, "priority": 2, "weight": 1.0,
@@ -77,6 +77,13 @@ def build(dept, rseed=1, parallel=None):
                          # per-slot partial pairing: unequal-hour courses bundle their
                          # overlapping hours, the longer course's extra hour(s) go solo.
                          "allow_partial_pairing": True}}}
+    # Section late-day cap: keep each section mostly done before 3pm — at most 2 days
+    # may run into 3:10-5pm. Applied HARD per department where feasible; a department
+    # that can't meet the hard cap falls back to SOFT (see the phase-1 attempt loop).
+    if late_mode:
+        cross["section_late_day"] = {"enabled": True, "priority": 6, "weight": 1.0,
+              "params": {"mode": late_mode, "max_late_days": 2, "single_section_max_late_days": 2,
+                         "soft_penalty_weight": 40, "late_theory_slots": [7, 8], "late_lab_sessions": ["L5"]}}
     lab = {}
     if parallel:
         # gate the parallel-batch feature ON (separate output; default runs unaffected).
@@ -120,11 +127,11 @@ def phase1(rseed):
     thbusy |= sen_theory_room
     for t, s in sen_teacher.items(): tbusy[t] |= s
     lab_values = {}; per_lab_occ = {}; per_lab_teacher = {}; per_th_room = {}; per_th_teacher = {}
-    dept_parallel = {}
+    dept_parallel = {}; dept_late_mode = {}
     infeasible = []
     for dept in ORDER:
-        def attempt(parallel):
-            cm, data = build(dept, parallel=parallel)
+        def attempt(parallel, late_mode):
+            cm, data = build(dept, parallel=parallel, late_mode=late_mode)
             model = cm.model; tb = cm.variables.theory; lb = cm.variables.lab
             # reserve labs + theory + teachers
             anew_cell = defaultdict(list)
@@ -162,19 +169,27 @@ def phase1(rseed):
             s.parameters.num_search_workers = 8; s.parameters.stop_after_first_solution = True; s.parameters.random_seed = rseed
             st = s.StatusName(s.Solve(model))
             return st, cm, data, model, tb, lb, s
-        used_parallel = PARALLEL
-        st, cm, data, model, tb, lb, s = attempt(PARALLEL)
-        if st not in ("OPTIMAL", "FEASIBLE") and PARALLEL:
-            # per-department fallback: this dept could not be fully parallelised
-            # around the seniors, so schedule it sequentially instead.
-            used_parallel = False
-            st, cm, data, model, tb, lb, s = attempt(False)
-            print(f"    [fallback] {dept} could not fit fully-parallel -> sequential ({st})", flush=True)
+        # Fallback chain: prefer parallel + HARD late-cap, then relax parallel, then relax
+        # the late-cap to SOFT (a dept that can't finish by 3pm on >2 days keeps a soft nudge).
+        candidates = [(PARALLEL, "hard")]
+        if PARALLEL: candidates.append((False, "hard"))
+        candidates.append((PARALLEL, "soft"))
+        if PARALLEL: candidates.append((False, "soft"))
+        used_parallel, used_late = PARALLEL, "hard"
+        st = cm = data = model = tb = lb = s = None
+        for cand_par, cand_late in candidates:
+            st, cm, data, model, tb, lb, s = attempt(cand_par, cand_late)
+            if st in ("OPTIMAL", "FEASIBLE"):
+                used_parallel, used_late = cand_par, cand_late
+                if (cand_par, cand_late) != (PARALLEL, "hard"):
+                    print(f"    [fallback] {dept} -> parallel={cand_par} late={cand_late} ({st})", flush=True)
+                break
         if os.environ.get("DEBUG_DEPT") == "1":
-            print(f"    {dept[:34]:34s} -> {st}", flush=True)
+            print(f"    {dept[:34]:34s} -> {st} (par={used_parallel} late={used_late})", flush=True)
         if st not in ("OPTIMAL", "FEASIBLE"):
             infeasible.append(dept); continue
         dept_parallel[dept] = used_parallel
+        dept_late_mode[dept] = used_late
         # record lab var values (for locking) + occupancy
         lv = {}
         for tid, cmap in lb.assignments.items():
@@ -195,7 +210,7 @@ def phase1(rseed):
             thbusy.add((rn, day, e.slot_index)); throom.add((rn, day, e.slot_index))
             if e.teacher_id: tbusy[str(e.teacher_id)].add((day, e.slot_index)); tteach[str(e.teacher_id)].add((day, e.slot_index))
         per_lab_occ[dept] = locc; per_lab_teacher[dept] = lteach; per_th_room[dept] = throom; per_th_teacher[dept] = tteach
-    return infeasible, lab_values, per_lab_occ, per_lab_teacher, per_th_room, per_th_teacher, dept_parallel
+    return infeasible, lab_values, per_lab_occ, per_lab_teacher, per_th_room, per_th_teacher, dept_parallel, dept_late_mode
 
 print("PHASE 1: first-solution multi-seed to fit all 18 around seniors...", flush=True)
 best = None
@@ -205,7 +220,7 @@ for rseed in range(1, 13):
     if best is None or len(infeas) < len(best[0][0]): best = (res1, rseed)
     if not infeas: break
 res1, used_seed = best
-infeasible, lab_values, per_lab_occ, per_lab_teacher, per_th_room, per_th_teacher, dept_parallel = res1
+infeasible, lab_values, per_lab_occ, per_lab_teacher, per_th_room, per_th_teacher, dept_parallel, dept_late_mode = res1
 print(f"PHASE 1 done (seed {used_seed}): {len(ORDER)-len(infeasible)}/{len(ORDER)} fit" + (f", dropped {infeasible}" if infeasible else "") + "\n", flush=True)
 fit_depts = [d for d in ORDER if d not in infeasible]
 
@@ -231,7 +246,7 @@ for dept in fit_depts:
     for d in fit_depts:
         if d != dept:
             for t, s in cur_th_teacher[d].items(): res_teacher[t] |= s
-    cm, data = build(dept, parallel=dept_parallel.get(dept, PARALLEL))
+    cm, data = build(dept, parallel=dept_parallel.get(dept, PARALLEL), late_mode=dept_late_mode.get(dept, "hard"))
     model = cm.model; tb = cm.variables.theory; lb = cm.variables.lab
     # LOCK labs to phase-1
     lv = lab_values[dept]
