@@ -14,6 +14,7 @@ from ..fixed_schedule_context import get_fixed_schedule_occupancy, normalize_day
 from ..schema import ConstraintApplicationResult, ConstraintStatus
 from ..utils import build_presence_literal, register_objective_penalty
 from ...utils.normalization import normalize_teacher_id
+from ...utils.course_rules import ignores_teacher_constraints
 
 HourLiteral = Tuple[cp_model.IntVar, int]
 
@@ -212,6 +213,7 @@ def _collect_lab_daily_literals(
 	context: ConstraintContext,
 ) -> Mapping[str, Mapping[str, Tuple[HourLiteral, ...]]]:
 	assignments = getattr(context.variables.lab, "assignments", {}) or {}
+	requirements = getattr(context.variables.lab, "requirements", {}) or {}
 	day_patterns = getattr(context.variables.lab, "day_patterns", {}) or {}
 	lab_session_to_theory = getattr(context.data.raw.time, "lab_session_to_theory", {}) or {}
 	collector: MutableMapping[str, MutableMapping[str, list[HourLiteral]]] = defaultdict(
@@ -229,6 +231,8 @@ def _collect_lab_daily_literals(
 	for teacher_id, course_map in assignments.items():
 		teacher_key = normalize_teacher_id(teacher_id)
 		for course_id, day_map in course_map.items():
+			if ignores_teacher_constraints(requirements.get(course_id)):
+				continue
 			pattern = day_patterns.get(course_id, tuple())
 			for day_idx, session_map in day_map.items():
 				if not session_map:

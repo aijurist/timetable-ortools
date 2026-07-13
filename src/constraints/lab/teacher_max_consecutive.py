@@ -13,6 +13,7 @@ from ..fixed_schedule_context import get_fixed_schedule_occupancy, resolve_day_l
 from ..schema import ConstraintApplicationResult, ConstraintStatus
 from ..utils import build_presence_literal, ensure_extra_bucket, register_objective_penalty
 from ...utils.normalization import normalize_teacher_id
+from ...utils.course_rules import ignores_teacher_constraints
 
 
 SessionMap = Mapping[str, cp_model.IntVar]
@@ -177,6 +178,8 @@ class TeacherMaxConsecutiveLabConstraint(Constraint):
 			teacher_key = normalize_teacher_id(teacher_id)
 			teacher_bucket = course_literals.setdefault(teacher_key, {})
 			for course_id, day_map in course_map.items():
+				if ignores_teacher_constraints(context.variables.lab.requirements.get(course_id)):
+					continue
 				day_bucket = teacher_bucket.setdefault(course_id, {})
 				for day_idx, session_map in day_map.items():
 					day_label = resolve_day_label(

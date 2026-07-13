@@ -13,6 +13,7 @@ from ..fixed_schedule_context import get_fixed_schedule_occupancy, resolve_day_l
 from ..schema import ConstraintApplicationResult, ConstraintStatus
 from ..utils import build_presence_literal, iter_lab_session_variables
 from ...utils.normalization import normalize_teacher_id
+from ...utils.course_rules import ignores_teacher_constraints
 
 
 TeacherDaySessionLiterals = Mapping[str, Mapping[str, Mapping[str, cp_model.IntVar]]]
@@ -136,6 +137,8 @@ class TeacherDailyPresenceLabConstraint(Constraint):
 
 		terms: Dict[Tuple[str, str, str], list[cp_model.IntVar]] = {}
 		for teacher_id, course_id, day_index, session_name, _, variable in iter_lab_session_variables(context):
+			if ignores_teacher_constraints(context.variables.lab.requirements.get(course_id)):
+				continue
 			day_label = resolve_day_label(
 				context,
 				day_index_value=day_index,

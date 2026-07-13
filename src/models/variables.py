@@ -122,6 +122,69 @@ class VariableCreator:
 			theory_room_anchor_candidates=getattr(model_config, "theory_room_anchor_candidates", 4),
 		)
 
+		# DBMS/OOPS-style combined blocks bypass ordinary lab eligibility and use
+		# exactly the configured ANEW room pool.
+		combined_cfg = getattr(model_config, "combined_lab_courses", {}) or {}
+		self._combined_lab_ignores_teacher_constraints = bool(
+			combined_cfg.get("ignore_teacher_constraints", False)
+		)
+		self._combined_lab_codes = frozenset(
+			str(code).strip().upper()
+			for code in combined_cfg.get("course_codes", ())
+			if str(code).strip()
+		)
+		configured_room_numbers = tuple(
+			str(room).strip() for room in combined_cfg.get("room_numbers", ()) if str(room).strip()
+		)
+		registry = getattr(data.raw, "room_registry", {}) or {}
+		room_ids_by_number = {
+			str((metadata or {}).get("room_number", "")).strip().upper(): str(room_id)
+			for room_id, metadata in registry.items()
+		}
+		self._combined_lab_room_ids = tuple(
+			room_ids_by_number[number.upper()]
+			for number in configured_room_numbers
+			if number.upper() in room_ids_by_number
+		)
+		self._missing_combined_lab_rooms = tuple(
+			number for number in configured_room_numbers if number.upper() not in room_ids_by_number
+		)
+		if self._combined_lab_codes:
+			self._logger.info(
+				"Combined-lab courses %s restricted to rooms %s (ids=%s, missing=%s)",
+				sorted(self._combined_lab_codes),
+				configured_room_numbers,
+				self._combined_lab_room_ids,
+				self._missing_combined_lab_rooms,
+			)
+
+		allocations = tuple(getattr(data.preprocessing, "combined_lab_allocations", ()) or ())
+		self._combined_lab_cells_by_instance: Dict[str, frozenset[Tuple[str, str, str]]] = {}
+		self._combined_lab_reserved_lab_cells: set[Tuple[str, str, str]] = set()
+		self._combined_lab_reserved_theory_cells: set[Tuple[str, int, str]] = set()
+		for allocation in allocations:
+			cells = frozenset(
+				(
+					self._normalize_day_for_blocking(cell.day),
+					str(cell.session_name),
+					str(cell.room_id),
+				)
+				for cell in allocation.cells
+			)
+			for instance_id in allocation.instance_ids:
+				self._combined_lab_cells_by_instance[str(instance_id)] = cells
+			self._combined_lab_reserved_lab_cells.update(cells)
+			for day, session_name, room_id in cells:
+				for slot_index in data.raw.time.lab_session_to_theory.get(session_name, ()) or ():
+					self._combined_lab_reserved_theory_cells.add((day, int(slot_index), room_id))
+		if allocations:
+			self._logger.info(
+				"Loaded %d preallocated combined-lab pairs reserving %d lab and %d theory-room cells",
+				len(allocations),
+				len(self._combined_lab_reserved_lab_cells),
+				len(self._combined_lab_reserved_theory_cells),
+			)
+
 		self._blocking_mask: Optional[ScheduleBlockingMask] = getattr(data.raw, "blocking_mask", None)
 		if self._blocking_mask:
 			self._logger.info(
@@ -172,7 +235,20 @@ class VariableCreator:
 	def _create_lab_variables(self, model: cp_model.CpModel) -> LabVariableBlock:
 		self._lab_var_count = 0
 		self._lab_pruned_count = 0
+		self._lab_preallocation_pruned_count = 0
 		requirements = self._build_lab_course_requirements()
+		combined_requirements = tuple(
+			requirement
+			for requirement in requirements.values()
+			if str(requirement.course_code or "").strip().upper() in self._combined_lab_codes
+		)
+		if combined_requirements and self._missing_combined_lab_rooms:
+			raise ValueError(
+				"Combined-lab room configuration references rooms absent from the active room CSV: "
+				+ ", ".join(self._missing_combined_lab_rooms)
+			)
+		if combined_requirements and not self._combined_lab_room_ids:
+			raise ValueError("Combined-lab courses have no eligible configured rooms")
 		assignments: LabAssignmentDict = {}
 		teacher_courses: Dict[str, Tuple[str, ...]] = {}
 		day_patterns: Dict[str, Tuple[str, ...]] = {}
@@ -188,10 +264,20 @@ class VariableCreator:
 				pattern = self._resolve_day_pattern(requirement.department)
 				day_patterns[requirement.course_instance_id] = pattern
 				lab_cache_key = str(requirement.course_code or "").strip().upper()
-				eligible_rooms = lab_eligibility_cache.get(lab_cache_key)
-				if eligible_rooms is None:
-					eligible_rooms = self._room_eligibility.get_eligible_lab_rooms(requirement.course_code)
-					lab_eligibility_cache[lab_cache_key] = eligible_rooms
+				ignore_teacher_blocks = (
+					self._combined_lab_ignores_teacher_constraints
+					and lab_cache_key in self._combined_lab_codes
+				)
+				preallocated_cells = self._combined_lab_cells_by_instance.get(
+					requirement.course_instance_id
+				)
+				if lab_cache_key in self._combined_lab_codes:
+					eligible_rooms = self._combined_lab_room_ids
+				else:
+					eligible_rooms = lab_eligibility_cache.get(lab_cache_key)
+					if eligible_rooms is None:
+						eligible_rooms = self._room_eligibility.get_eligible_lab_rooms(requirement.course_code)
+						lab_eligibility_cache[lab_cache_key] = eligible_rooms
 				for day_index, day_label in enumerate(pattern):
 					normalized_day = self._normalize_day_for_blocking(day_label)
 					session_map: Dict[str, Dict[str, cp_model.IntVar]] = {}
@@ -201,12 +287,21 @@ class VariableCreator:
 						session_map[session_name] = room_map
 
 						for room_id in eligible_rooms:
+							cell_key = (normalized_day, str(session_name), str(room_id))
+							if preallocated_cells is not None:
+								if cell_key not in preallocated_cells:
+									self._lab_preallocation_pruned_count += 1
+									continue
+							elif cell_key in self._combined_lab_reserved_lab_cells:
+								self._lab_preallocation_pruned_count += 1
+								continue
 							if self._blocking_mask and self._blocking_mask.is_lab_variable_blocked(
 								teacher_id=teacher_id,
 								course_id=requirement.course_instance_id,
 								day_label=normalized_day,
 								session_name=session_name,
 								room_id=room_id,
+								ignore_teacher=ignore_teacher_blocks,
 							):
 								self._lab_pruned_count += 1
 								continue
@@ -219,6 +314,11 @@ class VariableCreator:
 
 		if self._lab_pruned_count > 0:
 			self._logger.info("Pruned %d lab variables via blocking mask", self._lab_pruned_count)
+		if self._lab_preallocation_pruned_count > 0:
+			self._logger.info(
+				"Pruned %d lab variables via combined-lab preallocation",
+				self._lab_preallocation_pruned_count,
+			)
 
 		return LabVariableBlock(
 			assignments=assignments,
@@ -226,7 +326,7 @@ class VariableCreator:
 			teacher_courses=teacher_courses,
 			day_patterns=day_patterns,
 			lab_session_names=self._lab_session_names,
-			room_ids=self._lab_room_ids,
+			room_ids=tuple(dict.fromkeys(self._lab_room_ids + self._combined_lab_room_ids)),
 			instance_group_lookup=self._instance_group_lookup,
 		)
 
@@ -235,6 +335,7 @@ class VariableCreator:
 		self._theory_pruned_count = 0
 		self._theory_slot_pruned_count = 0
 		self._theory_pop_pruned_count = 0
+		self._theory_preallocation_room_pruned_count = 0
 		group_requirements = self._build_group_timeslot_requirements()
 		course_requirements = self._build_theory_course_requirements()
 		assignments: TheoryAssignmentDict = {}
@@ -309,6 +410,11 @@ class VariableCreator:
 				self._theory_pruned_count,
 				self._theory_slot_pruned_count,
 				self._theory_pop_pruned_count,
+			)
+		if self._theory_preallocation_room_pruned_count > 0:
+			self._logger.info(
+				"Pruned %d theory room variables reserved by combined-lab preallocation",
+				self._theory_preallocation_room_pruned_count,
 			)
 
 		teacher_courses = {
@@ -436,6 +542,9 @@ class VariableCreator:
 				course_vars[day_index][slot_index] = literal
 				room_bucket: Dict[str, cp_model.IntVar] = {}
 				for room_id in eligible_rooms:
+					if (normalized_day, slot_index, str(room_id)) in self._combined_lab_reserved_theory_cells:
+						self._theory_preallocation_room_pruned_count += 1
+						continue
 					if self._blocking_mask and any(
 						self._blocking_mask.is_theory_variable_blocked(
 							req.teacher_id,

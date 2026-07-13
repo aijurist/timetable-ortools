@@ -395,6 +395,17 @@ def default_constraint_config() -> ConstraintConfig:
         "shift_alignment": ConstraintSetting(priority=8, weight=0.6, enabled=True),
     }
     cross_constraints = {
+        "combined_lab": ConstraintSetting(
+            priority=3,
+            weight=1.0,
+            enabled=True,
+            params={
+                "enforce_stable_pairing": True,
+                "same_department_only": False,
+                "solo_penalty_weight": 1000,
+                "max_pair_pool": 8,
+            },
+        ),
         "group_non_overlap": ConstraintSetting(priority=9, weight=1.0, enabled=True),
         "teacher_overlap": ConstraintSetting(priority=10, weight=1.0, enabled=True),
         "dept_day_coverage": ConstraintSetting(
@@ -464,6 +475,7 @@ def default_model_config() -> ModelConfig:
         theory_room_candidate_limit=12,
         theory_room_min_candidates=4,
         theory_room_anchor_candidates=4,
+        combined_lab_courses={},
     )
 
 

@@ -11,6 +11,7 @@ from ..base import Constraint, ConstraintMetadata
 from ..context import ConstraintContext
 from ..schema import ConstraintApplicationResult, ConstraintStatus
 from ..utils import build_presence_literal
+from ...utils.course_rules import ignores_teacher_constraints
 
 ActivityMap = Mapping[str, Mapping[str, cp_model.IntVar]]
 
@@ -134,6 +135,8 @@ def _build_teacher_lab_activity(context: ConstraintContext) -> Dict[str, Tuple[L
 				continue
 			requirement = requirements.get(course_id)
 			if requirement is None:
+				continue
+			if ignores_teacher_constraints(requirement):
 				continue
 			day_pattern = day_patterns.get(course_id, tuple())
 			day_sessions: Dict[str, Dict[str, cp_model.IntVar]] = {}

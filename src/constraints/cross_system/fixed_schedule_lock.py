@@ -39,6 +39,7 @@ from ..utils import (
 	iter_theory_room_variables,
 )
 from ...utils.time_utils import DayNormalizer
+from ...utils.course_rules import ignores_teacher_constraints
 
 LOGGER = logging.getLogger(__name__)
 
@@ -281,7 +282,8 @@ class FixedScheduleLockConstraint(Constraint):
 
 				if (var_day, s_session, s_room) not in occupied_lab_rooms:
 					continue
-				if (s_tid, s_cid, var_day, s_session, s_room) in allowed_lab_keys:
+				is_external = self._lab_course_ignores_teacher_constraints(context, s_cid)
+				if not is_external and (s_tid, s_cid, var_day, s_session, s_room) in allowed_lab_keys:
 					continue
 				model.Add(var == 0)
 				blocked += 1
@@ -314,6 +316,8 @@ class FixedScheduleLockConstraint(Constraint):
 		if settings.block_teachers and occupied_lab_teachers:
 			blocked = 0
 			for tid, cid, day_idx, session_name, room_id, var in iter_lab_session_variables(context):
+				if self._lab_course_ignores_teacher_constraints(context, str(cid)):
+					continue
 				var_day = self._resolve_var_day_label(
 					context,
 					day_patterns=context.variables.lab.day_patterns,
@@ -415,6 +419,8 @@ class FixedScheduleLockConstraint(Constraint):
 			day_index = _safe_int(record.get("day_index"))
 			day_label = self._normalize_day_label(record.get("day"))
 			if not teacher_id or not course_id or not room_id or not session_name:
+				continue
+			if self._lab_course_ignores_teacher_constraints(context, course_id):
 				continue
 			
 			# Try lookup with clean ID first, then fallback to appended .0
@@ -602,6 +608,8 @@ class FixedScheduleLockConstraint(Constraint):
 		# 2) Block lab vars if teacher is busy in theory
 		if blocked_lab_sessions:
 			for tid, cid, day_idx, session_name, room_id, var in iter_lab_session_variables(context):
+				if self._lab_course_ignores_teacher_constraints(context, str(cid)):
+					continue
 				var_day = self._resolve_var_day_label(
 					context,
 					day_patterns=context.variables.lab.day_patterns,
@@ -636,6 +644,8 @@ class FixedScheduleLockConstraint(Constraint):
 	) -> dict[str, int]:
 		lab_hits = 0
 		for tid, _cid, day_idx, session_name, _room_id, _var in iter_lab_session_variables(context):
+			if self._lab_course_ignores_teacher_constraints(context, str(_cid)):
+				continue
 			var_day = self._resolve_var_day_label(
 				context,
 				day_patterns=context.variables.lab.day_patterns,
@@ -698,6 +708,8 @@ class FixedScheduleLockConstraint(Constraint):
 				for session_name in inv.get(slot_idx, ()):
 					blocked_lab_sessions.add((tid, day_label, session_name))
 			for tid, _cid, day_idx, session_name, _room_id, _var in iter_lab_session_variables(context):
+				if self._lab_course_ignores_teacher_constraints(context, str(_cid)):
+					continue
 				var_day = self._resolve_var_day_label(
 					context,
 					day_patterns=context.variables.lab.day_patterns,
@@ -715,6 +727,11 @@ class FixedScheduleLockConstraint(Constraint):
 			"theory_teacher_key_hits": theory_hits,
 			"cross_domain_teacher_key_hits": cross_hits,
 		}
+
+	@staticmethod
+	def _lab_course_ignores_teacher_constraints(context: ConstraintContext, course_id: str) -> bool:
+		requirements = getattr(context.variables.lab, "requirements", {}) or {}
+		return ignores_teacher_constraints(requirements.get(str(course_id)))
 
 	def _normalize_payload(
 		self,

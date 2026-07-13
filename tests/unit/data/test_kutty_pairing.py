@@ -7,7 +7,7 @@ from ortools.sat.python import cp_model
 
 from src.config.defaults import default_scheduler_config
 from src.data.kutty_pairing import KuttyBundlePlanner
-from src.data.preprocessing import DepartmentCourseGrouper
+from src.data.preprocessing import DataPreprocessor, DepartmentCourseGrouper
 from src.data.schedule_blocking import ScheduleBlockingMask, build_schedule_blocking_mask
 from src.data.schemas import (
     CourseGroup,
@@ -309,3 +309,128 @@ def test_roomless_fixed_row_still_blocks_repeated_teacher(tmp_path) -> None:
     mask = build_schedule_blocking_mask(None, theory_csv)
     assert mask.is_theory_slot_blocked("T1", "NEW", "monday", 1)
     assert ("monday", 1, "") not in mask.blocked_theory_rooms
+
+
+def test_combined_lab_courses_are_excluded_from_kutty_pairing(tmp_path) -> None:
+    dbms = _instance("DBMS1", "CS23332", "T1")
+    oops = _instance("OOPS1", "CS23333", "T2")
+    first = _instance("A1", "A", "T3")
+    second = _instance("B1", "B", "T4")
+    instances = (dbms, oops, first, second)
+    groups = tuple(_group(index, instance) for index, instance in enumerate(instances, start=1))
+    raw = _raw_data()
+
+    planner = KuttyBundlePlanner(
+        raw.config.grouping,
+        excluded_course_codes=("CS23332", "CS23333"),
+    )
+    bundles, stats = planner.plan({KEY: instances}, {KEY: groups}, raw)
+
+    bundled_instance_ids = {
+        instance_id
+        for bundle in bundles[KEY]
+        for instance_id in bundle.instance_ids
+    }
+    assert bundled_instance_ids == {"A1", "B1"}
+    assert stats["paired_bundles"] == 1
+
+
+def test_combined_lab_override_creates_four_blocks_in_only_configured_rooms(tmp_path) -> None:
+    base_config = default_scheduler_config()
+    config = replace(
+        base_config,
+        model=replace(
+            base_config.model,
+            combined_lab_courses={
+                "course_codes": ("CS23332", "CS23333"),
+                "room_numbers": ("ANEW101", "ANEW201"),
+                "blocks": 4,
+                "block_len": 2,
+                "ignore_teacher_constraints": True,
+            },
+        ),
+    )
+    dbms = _instance("DBMS1", "CS23332", "T1")
+    preprocessor = DataPreprocessor(config, base_dir=tmp_path)
+    overridden = preprocessor._apply_combined_lab_overrides({KEY: (dbms,)})[KEY][0]
+
+    assert overridden.has_lab is True
+    assert overridden.has_theory is False
+    assert overridden.practical_hours == 8
+    assert overridden.lecture_hours == 0
+    assert overridden.tutorial_hours == 0
+    assert {"combined_lab", "kutty_excluded", "external_staff_proxy"}.issubset(
+        overridden.tags
+    )
+
+    group = _group(1, overridden)
+    requirement = GroupRequirement(
+        group_id=group.group_id,
+        department=KEY.department,
+        semester=KEY.semester,
+        has_lab=True,
+        required_lab_sessions=4,
+        prefer_consecutive_labs=False,
+        lunch_slot_window=tuple(),
+        five_pm_policy=None,
+    )
+    preprocessing = PreprocessingResult(
+        normalized_instances={KEY: (overridden,)},
+        groups={KEY: (group,)},
+        scheduling_packages={
+            KEY: DepartmentSchedulingPackage(
+                key=KEY,
+                requirements=(requirement,),
+                penalties=tuple(),
+                teacher_workload={},
+            )
+        },
+        warnings=tuple(),
+        stats={},
+        kutty_bundles={},
+    )
+    raw = replace(
+        _raw_data(),
+        config=config,
+        room_registry={
+            "101": {"room_number": "ANEW101", "capacity": 165},
+            "201": {"room_number": "ANEW201", "capacity": 355},
+            "999": {"room_number": "OTHER", "capacity": 500},
+        },
+    )
+    variables = VariableCreator(
+        ExtendedDataContainer(raw=raw, preprocessing=preprocessing)
+    ).create(cp_model.CpModel())
+
+    assert variables.lab.requirements["DBMS1"].required_sessions == 4
+    room_ids = {
+        room_id
+        for day_map in variables.lab.assignments["T1"]["DBMS1"].values()
+        for session_map in day_map.values()
+        for room_id in session_map
+    }
+    assert room_ids == {"101", "201"}
+
+
+def test_external_delivery_ignores_fixed_teacher_but_keeps_fixed_room_block() -> None:
+    mask = ScheduleBlockingMask(
+        blocked_lab_teacher_sessions={("T1", "monday", "L1")},
+        blocked_lab_rooms={("monday", "L1", "R1")},
+    )
+
+    assert not mask.is_lab_variable_blocked(
+        teacher_id="T1",
+        course_id="DBMS1",
+        day_label="monday",
+        session_name="L1",
+        room_id="R2",
+        ignore_teacher=True,
+    )
+    assert mask.is_lab_variable_blocked(
+        teacher_id="T1",
+        course_id="DBMS1",
+        day_label="monday",
+        session_name="L1",
+        room_id="R1",
+        ignore_teacher=True,
+    )

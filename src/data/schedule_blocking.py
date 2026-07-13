@@ -52,6 +52,8 @@ class ScheduleBlockingMask:
         day_label: str,
         session_name: str,
         room_id: str,
+        *,
+        ignore_teacher: bool = False,
     ) -> bool:
         """Check if a lab variable should be pruned (not created)."""
         tid = normalize_teacher_id(teacher_id)
@@ -60,11 +62,14 @@ class ScheduleBlockingMask:
         session = normalize_session_name(session_name)
         rid = normalize_room_id(room_id)
 
-        if (tid, cid, day, session, rid) in self.locked_lab_assignments:
+        if not ignore_teacher and (tid, cid, day, session, rid) in self.locked_lab_assignments:
             return False
 
         if (day, session, rid) in self.blocked_lab_rooms:
             return True
+
+        if ignore_teacher:
+            return False
 
         if (tid, day, session) in self.blocked_lab_teacher_sessions:
             return True

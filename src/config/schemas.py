@@ -287,6 +287,10 @@ class ModelConfig:
     theory_room_candidate_limit: Optional[int] = 12
     theory_room_min_candidates: int = 4
     theory_room_anchor_candidates: int = 4
+    # Courses delivered as repeated two-slot lab blocks in a restricted room pool.
+    # Keys include course_codes, room_numbers, blocks, block_len,
+    # ignore_teacher_constraints, and preallocation controls.
+    combined_lab_courses: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.big_m_value <= 0:

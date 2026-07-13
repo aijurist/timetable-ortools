@@ -7,7 +7,7 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data\dept_wise_course\2\Aeronautical_Engineering_course_data.csv
+  courses_csv: data\2\2\Artificial Intelligence and Data Science_course_data.csv
   rooms_csv: data\block_wise\rooms_new.csv
   day_order_csv: data/day_order_odd.csv
   core_lab_mapping_csv: data\core_lab_mapping.csv
@@ -802,6 +802,15 @@ constraints:
     #       - SHIFT_1
     #       - SHIFT_2
   cross_system:
+    combined_lab:
+      enabled: true
+      priority: 3
+      weight: 1.0
+      params:
+        enforce_stable_pairing: true
+        same_department_only: false
+        solo_penalty_weight: 1000
+        max_pair_pool: 8
     dept_day_span:
       enabled: false
       priority: 8
@@ -890,6 +899,10 @@ constraints:
           - 4
           - 5
         minimum_free_slots: 1
+        # Second-year lunch remains an optimisation target, not a feasibility blocker.
+        soft_semesters:
+          - 3
+          - 4
         soft_departments:
           - Information Technology_S1
           - Biomedical Engineering_S5
@@ -1039,6 +1052,21 @@ model:
   theory_room_candidate_limit: 20
   theory_room_min_candidates: 10
   theory_room_anchor_candidates: 4
+  # DBMS and OOPS-Java are eight-hour combined lab-block courses, not Kutty theory.
+  combined_lab_courses:
+    course_codes: [CS23332, CS23333]
+    room_numbers: [ANEW101, ANEW102, ANEW103, ANEW104, ANEW201, ANEW202]
+    blocks: 4
+    block_len: 2
+    # CSV teacher IDs are stable bundle labels; external staff deliver the sessions.
+    ignore_teacher_constraints: true
+    # Allocate permanent pairs and room/session cells in a small pre-solve,
+    # then remove every alternative from the main timetable model.
+    preallocate_slots: true
+    preallocation_time_limit_sec: 30
+    preallocation_workers: 1
+    preallocation_seed: 23
+    max_unique_slots_per_course: 6
 
 runtime:
   time_limit_sec: 600

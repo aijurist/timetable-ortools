@@ -145,5 +145,7 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 219,WS Aero GF,A Block,Aerodynamics Lab,1,Core-Lab,35,35,0,0,None,,0,0,0
 225,A104/105,A Block,OS Classroom,0,Class-Room,140,140,0,0,None,,0,0,0
 226,ANEW104,A Block,Classroom (ANEW104),0,Class-Room,165,165,1,0,None,,0,0,0
+231,ANEW201,A Block,Combined Lab Classroom (ANEW201),1,Core-Lab,340,355,0,0,None,,0,0,0
+232,ANEW202,A Block,Combined Lab Classroom (ANEW202),1,Core-Lab,340,355,0,0,None,,0,0,0
 1002,DG,D Block,Medical Image Processing Lab,1,Core-Lab,35,35,0,0,None,,0,0,0
 1003,TIFAC V01/02,A Block,Soft Skills – II,1,Core-Lab,140,140,0,0,None,,0,0,0

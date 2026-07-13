@@ -471,6 +471,46 @@ class DepartmentSchedulingPackage:
 
 
 @dataclass(frozen=True)
+class CombinedLabCell:
+	"""One preallocated lab room/session cell."""
+
+	day: str
+	session_name: str
+	room_id: str
+
+	def as_dict(self) -> Dict[str, str]:
+		return {
+			"day": self.day,
+			"session_name": self.session_name,
+			"room_id": self.room_id,
+		}
+
+
+@dataclass(frozen=True)
+class CombinedLabAllocation:
+	"""A permanent same-course instance pair and its fixed weekly cells."""
+
+	allocation_id: str
+	course_code: str
+	instance_ids: Tuple[str, ...]
+	teacher_ids: Tuple[str, ...]
+	departments: Tuple[str, ...]
+	semester: int
+	cells: Tuple[CombinedLabCell, ...]
+
+	def as_dict(self) -> Dict[str, Any]:
+		return {
+			"allocation_id": self.allocation_id,
+			"course_code": self.course_code,
+			"instance_ids": list(self.instance_ids),
+			"teacher_ids": list(self.teacher_ids),
+			"departments": list(self.departments),
+			"semester": self.semester,
+			"cells": [cell.as_dict() for cell in self.cells],
+		}
+
+
+@dataclass(frozen=True)
 class PreprocessingResult:
 	normalized_instances: Mapping[DepartmentSemesterKey, Tuple[NormalizedCourseInstance, ...]]
 	groups: Mapping[DepartmentSemesterKey, Tuple[CourseGroup, ...]]
@@ -478,6 +518,7 @@ class PreprocessingResult:
 	warnings: Tuple[str, ...]
 	stats: Mapping[str, Any]
 	kutty_bundles: Mapping[DepartmentSemesterKey, Tuple[KuttyBundle, ...]] = field(default_factory=dict)
+	combined_lab_allocations: Tuple[CombinedLabAllocation, ...] = field(default_factory=tuple)
 
 	def to_dict(self) -> Dict[str, Any]:
 		return {
@@ -505,6 +546,9 @@ class PreprocessingResult:
 				key.slug(): [bundle.as_dict() for bundle in bundles]
 				for key, bundles in self.kutty_bundles.items()
 			},
+			"combined_lab_allocations": [
+				allocation.as_dict() for allocation in self.combined_lab_allocations
+			],
 			"warnings": list(self.warnings),
 			"stats": dict(self.stats),
 		}

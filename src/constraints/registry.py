@@ -7,6 +7,7 @@ from typing import Callable, Mapping, Sequence
 
 from ..config.schemas import ConstraintSetting, SchedulerConfig
 from .base import ConstraintMetadata
+from .cross_system.combined_lab import build_combined_lab_constraint
 from .cross_system.five_pm_policy import build_five_pm_policy_constraint
 from .cross_system.group_non_overlap import build_group_non_overlap_constraint
 from .cross_system.lunch_alignment import build_lunch_alignment_constraint
@@ -164,6 +165,12 @@ THEORY_CONSTRAINT_DEFINITIONS = {
 
 
 CROSS_SYSTEM_CONSTRAINT_DEFINITIONS = {
+	"combined_lab": {
+		"title": "Combined DBMS/OOPS Lab Blocks",
+		"description": "Restrict configured combined-lab courses to their room pool and keep selected same-course instance pairs together across every block.",
+		"factory": build_combined_lab_constraint,
+		"tags": ("cross-system", "lab", "rooms", "pairing"),
+	},
 	"dept_day_span": {
 		"title": "Department Day Span Limit",
 		"description": "Cap distinct active days for targeted department-semester pairs across lab/theory (e.g., 8th sem packed into two days).",

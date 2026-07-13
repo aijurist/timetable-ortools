@@ -62,9 +62,13 @@ class KuttyBundlePlanner:
         self,
         config: GroupingConfig,
         *,
+        excluded_course_codes: Sequence[str] = (),
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self._config = config
+        self._excluded_course_codes = frozenset(
+            str(code).strip().upper() for code in excluded_course_codes if str(code).strip()
+        )
         self._logger = logger or logging.getLogger(__name__)
         self._warnings: list[str] = []
 
@@ -98,6 +102,7 @@ class KuttyBundlePlanner:
                 instance
                 for instance in normalized.get(key, ())
                 if instance.has_theory and self._theory_hours(instance) > 0
+                and instance.course_code.strip().upper() not in self._excluded_course_codes
             )
             if not theory_instances:
                 continue

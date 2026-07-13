@@ -266,6 +266,26 @@ def _solve_soft_lunch_with_fixed_split(context: ConstraintContext) -> tuple[int,
 	return solver.Value(penalties[0][1]), int(solver.ObjectiveValue())
 
 
+def test_soft_semester_applies_alongside_explicit_soft_departments() -> None:
+	context = _build_soft_split_context(same_course=True)
+	constraint = build_lunch_alignment_constraint(
+		metadata=_metadata("soft_semester"),
+		params={
+			"lunch_slot_window": LUNCH_WINDOW,
+			"minimum_free_slots": 1,
+			"soft_departments": ("Another Department_S5",),
+			"soft_semesters": (5,),
+			"penalty_weight": 10,
+		},
+	)
+
+	result = constraint.apply(context)
+
+	assert result.status == ConstraintStatus.APPLIED
+	assert result.details["soft_groups"] == 1
+	assert result.details["soft_penalties"] == 1
+
+
 def test_solver_can_keep_one_candidate_session_active() -> None:
 	context = _build_context()
 	constraint = build_lunch_alignment_constraint(metadata=_metadata("slot_choice"))

@@ -21,6 +21,7 @@ from ..fixed_schedule_context import get_fixed_schedule_occupancy
 from ..schema import ConstraintApplicationResult, ConstraintStatus
 from ..utils import iter_course_timeslot_variables, iter_lab_session_variables, iter_theory_room_variables
 from ...utils.normalization import normalize_teacher_id
+from ...utils.course_rules import ignores_teacher_constraints
 from ...utils.time_utils import DayNormalizer
 
 
@@ -72,7 +73,11 @@ class TeacherDayWindowConstraint(Constraint):
 		for teacher_id in teacher_ids:
 			# If a teacher has no variables at all, skip.
 			has_any = False
-			for _ in iter_lab_session_variables(context, teacher_id=teacher_id):
+			for _tid, course_id, _day_idx, _session, _room, _var in iter_lab_session_variables(
+				context, teacher_id=teacher_id
+			):
+				if ignores_teacher_constraints(context.variables.lab.requirements.get(course_id)):
+					continue
 				has_any = True
 				break
 			if not has_any:
@@ -106,6 +111,8 @@ class TeacherDayWindowConstraint(Constraint):
 				context,
 				teacher_id=teacher_id,
 			):
+				if ignores_teacher_constraints(context.variables.lab.requirements.get(course_id)):
+					continue
 				day_label = self._resolve_course_day_label(
 					context,
 					context.variables.lab.day_patterns,

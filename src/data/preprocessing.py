@@ -23,6 +23,7 @@ import logging
 import json
 import re
 from collections import defaultdict
+from dataclasses import replace
 from pathlib import Path
 import shutil
 from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Tuple
@@ -33,6 +34,7 @@ from ..config.schemas import PreprocessingConfig, SchedulerConfig
 from ..config.manager import ConfigManager
 from .course_group_optimizer import CourseGroupOptimizer
 from .kutty_pairing import KuttyBundlePlanner
+from .combined_lab_preallocation import CombinedLabPreallocator
 from .schemas import (
 	DataLoadResult,
 	DepartmentArtifacts,
@@ -57,6 +59,16 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Helper utilities
 # ---------------------------------------------------------------------------
+
+def combined_lab_config(config: SchedulerConfig) -> Tuple[frozenset[str], int, Tuple[str, ...]]:
+	"""Return configured combined-lab codes, practical slots, and room numbers."""
+
+	cfg = getattr(getattr(config, "model", None), "combined_lab_courses", {}) or {}
+	codes = frozenset(str(code).strip().upper() for code in cfg.get("course_codes", ()) if str(code).strip())
+	blocks = max(1, int(cfg.get("blocks", 4) or 4))
+	block_len = max(1, int(cfg.get("block_len", 2) or 2))
+	rooms = tuple(str(room).strip() for room in cfg.get("room_numbers", ()) if str(room).strip())
+	return codes, blocks * block_len, rooms
 
 def _clean_str(value: Any, *, default: str = "") -> str:
 	if value is None:
@@ -960,12 +972,23 @@ class DataPreprocessor:
 		self._logger = logger or logging.getLogger(__name__)
 		self._normalizer = CourseInstanceNormalizer(config.preprocessing, logger=self._logger)
 		self._grouper = DepartmentCourseGrouper(config, base_dir=self._base_dir, logger=self._logger)
-		self._kutty_planner = KuttyBundlePlanner(config.grouping, logger=self._logger)
+		combined_codes, _combined_slots, _combined_rooms = combined_lab_config(config)
+		self._kutty_planner = KuttyBundlePlanner(
+			config.grouping,
+			excluded_course_codes=combined_codes,
+			logger=self._logger,
+		)
+		self._combined_lab_preallocator = CombinedLabPreallocator(config, logger=self._logger)
 		self._post_processor = GroupAssignmentPostProcessor(config, logger=self._logger)
 
 	def run(self, data: DataLoadResult) -> PreprocessingResult:
 		normalized = self._normalizer.normalize(data.courses_df)
+		normalized = self._apply_combined_lab_overrides(normalized)
 		grouped = self._grouper.group(normalized)
+		combined_lab_allocations, combined_lab_stats = self._combined_lab_preallocator.plan(
+			normalized,
+			data,
+		)
 		kutty_bundles, kutty_stats = self._kutty_planner.plan(normalized, grouped, data)
 		packages = self._post_processor.build_packages(grouped, normalized, data.departments)
 
@@ -978,6 +1001,7 @@ class DataPreprocessor:
 
 		stats = self._build_stats(normalized, grouped)
 		stats["kutty"] = dict(kutty_stats)
+		stats["combined_lab_preallocation"] = dict(combined_lab_stats)
 
 		return PreprocessingResult(
 			normalized_instances=normalized,
@@ -986,7 +1010,52 @@ class DataPreprocessor:
 			warnings=tuple(warnings),
 			stats=stats,
 			kutty_bundles=kutty_bundles,
+			combined_lab_allocations=combined_lab_allocations,
 		)
+
+	def _apply_combined_lab_overrides(
+		self,
+		normalized: Mapping[DepartmentSemesterKey, Tuple[NormalizedCourseInstance, ...]],
+	) -> Dict[DepartmentSemesterKey, Tuple[NormalizedCourseInstance, ...]]:
+		"""Route DBMS/OOPS-style courses through the ordinary lab pipeline.
+
+		The configured weekly load is represented as practical hours so four
+		two-slot lab blocks are generated.  Removing their theory component also
+		makes the Kutty exclusion structural in addition to the planner allowlist.
+		"""
+
+		codes, total_slots, _rooms = combined_lab_config(self._config)
+		if not codes:
+			return {key: tuple(instances) for key, instances in normalized.items()}
+		cfg = getattr(getattr(self._config, "model", None), "combined_lab_courses", {}) or {}
+		ignore_teacher_constraints = bool(cfg.get("ignore_teacher_constraints", False))
+
+		result: Dict[DepartmentSemesterKey, Tuple[NormalizedCourseInstance, ...]] = {}
+		for key, instances in normalized.items():
+			overridden = []
+			for instance in instances:
+				if str(instance.course_code).strip().upper() not in codes:
+					overridden.append(instance)
+					continue
+				tag_set = set(instance.tags) | {"combined_lab", "lab", "kutty_excluded"}
+				if ignore_teacher_constraints:
+					tag_set.add("external_staff_proxy")
+				tags = tuple(sorted(tag_set))
+				overridden.append(
+					replace(
+						instance,
+						lecture_hours=0,
+						tutorial_hours=0,
+						practical_hours=total_slots,
+						has_lab=True,
+						has_theory=False,
+						required_room_type="Core-Lab",
+						preferred_lab_type="Core-Lab",
+						tags=tags,
+					)
+				)
+			result[key] = tuple(overridden)
+		return result
 
 	def build_extended_container(self, data: DataLoadResult) -> ExtendedDataContainer:
 		preprocessing = self.run(data)
