@@ -50,7 +50,7 @@ def _instance(instance_id: str, course_code: str, department: str, teacher_id: s
     )
 
 
-def test_preallocator_pairs_across_departments_and_caps_each_course_to_six_slots() -> None:
+def test_preallocator_pairs_across_departments_and_caps_each_course_to_four_slots() -> None:
     base = default_scheduler_config()
     cross_system = dict(base.constraints.cross_system)
     cross_system["lunch_alignment"] = replace(
@@ -72,7 +72,7 @@ def test_preallocator_pairs_across_departments_and_caps_each_course_to_six_slots
                 "room_numbers": ROOMS,
                 "blocks": 4,
                 "preallocate_slots": True,
-                "max_unique_slots_per_course": 6,
+                "max_unique_slots_per_course": 4,
                 "preallocation_time_limit_sec": 10,
                 "preallocation_workers": 1,
                 "preallocation_seed": 23,
@@ -146,5 +146,5 @@ def test_preallocator_pairs_across_departments_and_caps_each_course_to_six_slots
     assert all(allocation.departments == ("Dept A", "Dept B") for allocation in allocations)
     assert all(len(allocation.cells) == 4 for allocation in allocations)
     assert stats["unique_slots_by_course"] == {"CS23332": 4, "CS23333": 4}
-    assert all(count <= 6 for count in stats["unique_slots_by_course"].values())
+    assert all(count <= 4 for count in stats["unique_slots_by_course"].values())
     assert all(cell.session_name != "L3" for allocation in allocations for cell in allocation.cells)

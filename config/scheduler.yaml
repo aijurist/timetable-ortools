@@ -899,10 +899,6 @@ constraints:
           - 4
           - 5
         minimum_free_slots: 1
-        # Second-year lunch remains an optimisation target, not a feasibility blocker.
-        soft_semesters:
-          - 3
-          - 4
         soft_departments:
           - Information Technology_S1
           - Biomedical Engineering_S5
@@ -1066,7 +1062,8 @@ model:
     preallocation_time_limit_sec: 30
     preallocation_workers: 1
     preallocation_seed: 23
-    max_unique_slots_per_course: 6
+    # Four weekly blocks require at least four distinct timetable cells.
+    max_unique_slots_per_course: 4
 
 runtime:
   time_limit_sec: 600

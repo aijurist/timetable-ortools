@@ -1,15 +1,17 @@
 // Combined Schedule Viewer powered by FastAPI schedule API
 import {
     KUTTY_REMAINDER_MODE,
+    buildSessionHoverDetails,
     buildTeacherSchedule,
     countPhysicalSessions,
     escapeHtml,
     expandKuttyOccurrenceMatches,
     groupCellSessions,
     renderKuttySessionCard,
+    sessionGroupNumber,
     teacherKey,
     updateBundlePanel,
-} from "./kutty_schedule.mjs?v=20260713e";
+} from "./kutty_schedule.mjs?v=20260713g";
 
 let labData = [];
 let theoryData = [];
@@ -70,16 +72,6 @@ const deptColors = {
     "Computer Science & Business Systems": "dept-cb",
     "Computer Science & Design": "dept-cd"
 };
-
-function getGroupClass(groupName) {
-    if (!groupName) return "";
-    const match = groupName.match(/_G(\d+)$/);
-    if (match) {
-        const groupNum = parseInt(match[1], 10);
-        return groupColors[groupNum] || "";
-    }
-    return "";
-}
 
 function getDeptClass(department) {
     return deptColors[department] || "";
@@ -625,19 +617,22 @@ function renderStandardSession(session) {
     const sessionClass = isLab ? "lab-session" : "theory-session";
     const batchClass = isBatched ? "batched-session" : "";
     const remainderClass = isRemainder ? "kutty-remainder-session" : "";
-    const groupClass = getGroupClass(session.group_name);
+    const groupNumber = sessionGroupNumber(session);
+    const groupClass = groupColors[Number(groupNumber)] || "";
     const deptClass = getDeptClass(session.department);
     const semester = getSemesterFromGroupName(session.group_name) || `S${session.semester}`;
-    const groupNumber = session.group_name ? session.group_name.match(/_G(\d+)$/)?.[1] || "" : "";
     const bundleClass = session.bundle_id ? "bundle-session" : "";
     const bundleId = session.bundle_id || "";
+    const block = session.block ? ` · ${session.block}` : "";
+    const groupDetails = buildSessionHoverDetails(session, session.room_number || "TBD", block);
 
     return `
         <div class="${sessionClass} ${batchClass} ${remainderClass} ${deptClass} ${bundleClass} schedule-session-card"
              data-bundle-id="${escapeHtml(bundleId)}">
             <div class="session-header">
                 <div class="session-code">${escapeHtml(session.course_code_display || session.course_code || "Course")}</div>
-                ${groupNumber ? `<div class="group-number ${groupClass}">G${escapeHtml(groupNumber)}</div>` : ""}
+                ${groupNumber ? `<div class="group-number ${groupClass}" tabindex="0"
+                    title="${escapeHtml(groupDetails)}" aria-label="${escapeHtml(groupDetails)}">G${escapeHtml(groupNumber)}</div>` : ""}
             </div>
             <div class="session-teacher">${escapeHtml(session.teacher_name || "Staff TBA")}</div>
             <div class="session-room">${escapeHtml(session.room_number || "TBD")}</div>

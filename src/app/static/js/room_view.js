@@ -1,11 +1,13 @@
 // Room timetable viewer powered by FastAPI room aggregation API
 import {
     KUTTY_REMAINDER_MODE,
+    buildSessionHoverDetails,
     escapeHtml,
     groupCellSessions,
     renderKuttySessionCard,
+    sessionGroupNumber,
     updateBundlePanel,
-} from "./kutty_schedule.mjs?v=20260713e";
+} from "./kutty_schedule.mjs?v=20260713g";
 
 const timeSlots = [
     "8:00 - 8:50", "9:00 - 9:50", "10:00 - 10:50", "11:00 - 11:50",
@@ -50,22 +52,6 @@ const groupColors = {
     9: "group-g9",
     10: "group-g10"
 };
-
-function getGroupClass(groupName) {
-    if (!groupName) return "";
-    const match = groupName.match(/_G(\d+)$/);
-    if (match) {
-        const groupNum = parseInt(match[1], 10);
-        return groupColors[groupNum] || "";
-    }
-    return "";
-}
-
-function getGroupNumber(groupName) {
-    if (!groupName) return "";
-    const match = groupName.match(/_G(\d+)$/);
-    return match ? match[1] : "";
-}
 
 async function loadRoomData() {
     try {
@@ -322,17 +308,20 @@ function generateRoomScheduleTable(room) {
 function renderRoomStandardSession(session) {
     const isLab = session.schedule_type === "lab";
     const isRemainder = session.delivery_mode === KUTTY_REMAINDER_MODE;
-    const groupNumber = getGroupNumber(session.group_name);
-    const groupClass = getGroupClass(session.group_name);
+    const groupNumber = sessionGroupNumber(session);
+    const groupClass = groupColors[Number(groupNumber)] || "";
     const semester = session.semester || "";
     const teacher = session.teacher_name || "Unknown";
     const bundleClass = session.bundle_id ? "bundle-session" : "";
+    const block = session.block ? ` · ${session.block}` : "";
+    const groupDetails = buildSessionHoverDetails(session, session.room_number || "TBD", block);
     return `
         <div class="session ${isLab ? "" : "theory-session"} ${isRemainder ? "kutty-remainder-session" : ""} ${bundleClass} schedule-session-card"
              data-bundle-id="${escapeHtml(session.bundle_id || "")}">
             <div class="session-header">
                 <div class="session-code">${escapeHtml(session.course_code || session.course_name || "Course")}</div>
-                ${groupNumber ? `<div class="group-number ${groupClass}">G${escapeHtml(groupNumber)}</div>` : ""}
+                ${groupNumber ? `<div class="group-number ${groupClass}" tabindex="0"
+                    title="${escapeHtml(groupDetails)}" aria-label="${escapeHtml(groupDetails)}">G${escapeHtml(groupNumber)}</div>` : ""}
             </div>
             <div class="session-details">${escapeHtml(teacher)}</div>
             <div class="session-details">${escapeHtml(session.group_name || session.department || "")}</div>

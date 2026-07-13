@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 import logging
 from types import SimpleNamespace
 from typing import Iterable, Tuple
@@ -11,12 +12,14 @@ from ortools.sat.python import cp_model
 from src.constraints.base import ConstraintMetadata
 from src.constraints.context import ConstraintContext
 from src.constraints.cross_system.group_non_overlap import build_group_non_overlap_constraint
+from src.constraints.cross_system.teacher_overlap import build_teacher_overlap_constraint
 from src.constraints.schema import ConstraintStatus
-from src.data.schemas import ExtendedDataContainer, LabSessionDetail
+from src.data.schemas import DepartmentSemesterKey, ExtendedDataContainer, KuttyBundle, LabSessionDetail
 from src.models.schema import (
 	GroupTimeslotRequirement,
 	LabCourseRequirement,
 	LabVariableBlock,
+	TheoryCourseRequirement,
 	TheoryVariableBlock,
 	VariableCreationResult,
 )
@@ -172,3 +175,118 @@ def test_skips_when_only_one_group_present() -> None:
 	constraint = build_group_non_overlap_constraint(metadata=_metadata("single"))
 	result = constraint.apply(context)
 	assert result.status == ConstraintStatus.SKIPPED
+
+
+def _add_kutty_pair(
+	context: ConstraintContext,
+	theory_vars: dict[str, cp_model.IntVar],
+) -> tuple[ConstraintContext, cp_model.IntVar]:
+	first_group = "CSE_S5_G1"
+	second_group = "CSE_S5_G2"
+	first_instance = "THEORY_G1"
+	second_instance = "THEORY_G2"
+	bundle_id = "CSE_S5_KUTTY_G1_G2_B01"
+	bundle_var = context.model.NewBoolVar("kutty_bundle_g1_g2_d0_s0")
+
+	def requirement(instance_id: str, group_id: str, teacher_id: str) -> TheoryCourseRequirement:
+		return TheoryCourseRequirement(
+			course_instance_id=instance_id,
+			course_code=instance_id,
+			group_id=group_id,
+			teacher_id=teacher_id,
+			department=DEPARTMENT,
+			semester=SEMESTER,
+			required_slots=1,
+			lecture_hours=1,
+			tutorial_hours=0,
+			student_count=32,
+			preferred_room_type=None,
+			required_room_type=None,
+			bundle_id=bundle_id,
+		)
+
+	assignments = {
+		"BT1": {first_instance: {0: {0: bundle_var}}},
+		"T2": {second_instance: {0: {0: bundle_var}}},
+	}
+	course_requirements = {
+		first_instance: requirement(first_instance, first_group, "BT1"),
+		second_instance: requirement(second_instance, second_group, "T2"),
+	}
+	for group_id, theory_var in theory_vars.items():
+		if group_id in (first_group, second_group):
+			continue
+		instance_id = f"THEORY_{group_id}"
+		teacher_id = f"BT_{group_id}"
+		assignments[teacher_id] = {instance_id: {0: {0: theory_var}}}
+		course_requirements[instance_id] = requirement(instance_id, group_id, teacher_id)
+
+	bundle = KuttyBundle(
+		key=DepartmentSemesterKey(DEPARTMENT, SEMESTER),
+		bundle_id=bundle_id,
+		bundle_group_id="CSE_S5_KUTTY_G1_G2",
+		first_instance_id=first_instance,
+		first_group_id=first_group,
+		second_instance_id=second_instance,
+		second_group_id=second_group,
+		delivery_mode="kutty_25x2",
+		required_blocks=1,
+		theory_hours=1,
+		second_theory_hours=1,
+		first_remainder_blocks=0,
+		second_remainder_blocks=0,
+		pairing_score=0,
+		feasible_slot_count=1,
+	)
+	theory_block = replace(
+		context.variables.theory,
+		assignments=assignments,
+		course_requirements=course_requirements,
+		course_day_patterns={instance_id: DAY_PATTERN for instance_id in course_requirements},
+		bundle_specs={bundle_id: bundle},
+		bundle_assignments={bundle_id: {0: {0: bundle_var}}},
+		instance_bundle_lookup={first_instance: bundle_id, second_instance: bundle_id},
+	)
+	variables = replace(context.variables, theory=theory_block)
+	return replace(context, variables=variables), bundle_var
+
+
+def test_kutty_linked_groups_may_overlap_and_leave_staff_guard_to_teacher_constraint() -> None:
+	context, theory_vars, lab_vars = _build_context()
+	context, bundle_var = _add_kutty_pair(context, theory_vars)
+	constraint = build_group_non_overlap_constraint(metadata=_metadata("kutty_pair"))
+
+	result = constraint.apply(context)
+
+	assert result.status == ConstraintStatus.SKIPPED
+	assert result.details["allowed_bundle_group_pairs"] == 1
+	assert result.details["paired_group_policy"] == "allow_overlap_teacher_guarded"
+	context.model.Add(lab_vars["CSE_S5_G2"] == 1)
+	context.model.Add(bundle_var == 1)
+	assert cp_model.CpSolver().Solve(context.model) in (cp_model.FEASIBLE, cp_model.OPTIMAL)
+
+
+def test_kutty_mode_still_blocks_unrelated_group_overlap() -> None:
+	groups = ("CSE_S5_G1", "CSE_S5_G2", "CSE_S5_G3")
+	context, theory_vars, lab_vars = _build_context(group_ids=groups)
+	context, _bundle_var = _add_kutty_pair(context, theory_vars)
+	constraint = build_group_non_overlap_constraint(metadata=_metadata("kutty_unrelated"))
+
+	result = constraint.apply(context)
+
+	assert result.status == ConstraintStatus.APPLIED
+	context.model.Add(lab_vars["CSE_S5_G1"] == 1)
+	context.model.Add(theory_vars["CSE_S5_G3"] == 1)
+	assert cp_model.CpSolver().Solve(context.model) == cp_model.INFEASIBLE
+
+
+def test_teacher_guard_still_blocks_same_staff_inside_allowed_kutty_pair() -> None:
+	context, theory_vars, lab_vars = _build_context()
+	context, bundle_var = _add_kutty_pair(context, theory_vars)
+	build_group_non_overlap_constraint(metadata=_metadata("kutty_teacher_group")).apply(context)
+	build_teacher_overlap_constraint(metadata=_metadata("kutty_teacher")).apply(context)
+
+	context.model.Add(lab_vars["CSE_S5_G2"] == 1)
+	context.model.Add(bundle_var == 1)
+
+	assert cp_model.CpSolver().Solve(context.model) == cp_model.INFEASIBLE

@@ -116,11 +116,13 @@ class GroupNonOverlapConstraint(Constraint):
 		)
 
 	def _apply_kutty(self, context: ConstraintContext) -> ConstraintApplicationResult:
-		"""Protect one-course selection groups while allowing only bundle twins.
+		"""Allow overlap between Kutty-linked selection groups.
 
-		The two course groups in a matched bundle may be active together only via
-		the same composite theory literal.  Their labs, singleton fallbacks, and
-		any unrelated group activity remain mutually exclusive.
+		Once two groups are paired into permanent bundles, a lab in one group does
+		not represent every student option in that group.  Different staff bundles
+		may therefore run in the paired group at the same time.  Teacher overlap
+		still prevents the same staff member from being double-booked, while this
+		constraint continues to protect every unrelated group pair.
 		"""
 
 		theory_block = context.variables.theory
@@ -146,6 +148,7 @@ class GroupNonOverlapConstraint(Constraint):
 					shared_bundle_ids = tuple(partner_bundles.get(pair_key, ()))
 					if shared_bundle_ids:
 						allowed_bundle_pairs += 1
+						continue
 					for day_idx in range(day_count):
 						for slot_idx in range(len(theory_block.theory_slot_labels)):
 							first_vars = _raw_group_activity(
@@ -157,43 +160,18 @@ class GroupNonOverlapConstraint(Constraint):
 							if not first_vars or not second_vars:
 								continue
 
-							if not shared_bundle_ids:
-								first_presence = build_presence_literal(
-									context.model,
-									first_vars,
-									f"kutty_group_presence_{first_group}_d{day_idx}_s{slot_idx}",
-								)
-								second_presence = build_presence_literal(
-									context.model,
-									second_vars,
-									f"kutty_group_presence_{second_group}_d{day_idx}_s{slot_idx}",
-								)
-								if first_presence is not None and second_presence is not None:
-									context.model.AddAtMostOne(first_presence, second_presence)
-									clauses += 1
-								continue
-
-							shared_vars = _bundle_slot_variables(
-								theory_block, shared_bundle_ids, day_idx, slot_idx
+							first_presence = build_presence_literal(
+								context.model,
+								first_vars,
+								f"kutty_group_presence_{first_group}_d{day_idx}_s{slot_idx}",
 							)
-							shared_ids = {var.Index() for var in shared_vars}
-							first_extras = tuple(var for var in first_vars if var.Index() not in shared_ids)
-							second_extras = tuple(var for var in second_vars if var.Index() not in shared_ids)
-							presences = []
-							for label, variables in (
-								("shared", shared_vars),
-								("first_extra", first_extras),
-								("second_extra", second_extras),
-							):
-								presence = build_presence_literal(
-									context.model,
-									variables,
-									f"kutty_pair_{label}_{first_group}_{second_group}_d{day_idx}_s{slot_idx}",
-								)
-								if presence is not None:
-									presences.append(presence)
-							if len(presences) > 1:
-								context.model.AddAtMostOne(presences)
+							second_presence = build_presence_literal(
+								context.model,
+								second_vars,
+								f"kutty_group_presence_{second_group}_d{day_idx}_s{slot_idx}",
+							)
+							if first_presence is not None and second_presence is not None:
+								context.model.AddAtMostOne(first_presence, second_presence)
 								clauses += 1
 
 		status = ConstraintStatus.APPLIED if clauses else ConstraintStatus.SKIPPED
@@ -207,6 +185,7 @@ class GroupNonOverlapConstraint(Constraint):
 				"mode": "kutty_bundle_aware",
 				"guard_clauses": clauses,
 				"allowed_bundle_group_pairs": allowed_bundle_pairs,
+				"paired_group_policy": "allow_overlap_teacher_guarded",
 			},
 		)
 
@@ -280,25 +259,6 @@ def _raw_group_activity(
 	day_sessions = lab_activity.get(group_id, {}).get(day_idx, {})
 	for session_name in overlap_index.get(slot_idx, ()):
 		variables.extend(day_sessions.get(session_name, ()))
-	return _dedupe_literals(variables)
-
-
-def _bundle_slot_variables(
-	theory_block,
-	bundle_ids: Sequence[str],
-	day_idx: int,
-	slot_idx: int,
-) -> Tuple[cp_model.IntVar, ...]:
-	variables = []
-	for bundle_id in bundle_ids:
-		variable = (
-			getattr(theory_block, "bundle_assignments", {})
-			.get(bundle_id, {})
-			.get(day_idx, {})
-			.get(slot_idx)
-		)
-		if variable is not None:
-			variables.append(variable)
 	return _dedupe_literals(variables)
 
 

@@ -54,12 +54,26 @@
     line-height: 1.15;
 }
 
-.kutty-compact-topline time {
-    color: #64748b;
-    font-size: 0.59rem;
-    font-weight: 700;
-    white-space: nowrap;
+.kutty-group-chip {
+    flex: 0 0 auto;
+    cursor: help;
 }
+
+.kutty-group-chip:focus-visible {
+    outline: 2px solid #1d4ed8;
+    outline-offset: 2px;
+}
+
+.group-g1 { background-color: #ff6b6b !important; }
+.group-g2 { background-color: #4ecdc4 !important; }
+.group-g3 { background-color: #45b7d1 !important; }
+.group-g4 { background-color: #96ceb4 !important; }
+.group-g5 { background-color: #feca57 !important; color: #333 !important; }
+.group-g6 { background-color: #ff9ff3 !important; color: #333 !important; }
+.group-g7 { background-color: #54a0ff !important; }
+.group-g8 { background-color: #5f27cd !important; }
+.group-g9 { background-color: #00d2d3 !important; color: #333 !important; }
+.group-g10 { background-color: #81ecec !important; color: #333 !important; }
 
 .kutty-compact-teacher {
     margin-top: 2px;

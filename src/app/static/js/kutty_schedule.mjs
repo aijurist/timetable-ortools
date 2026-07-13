@@ -92,11 +92,18 @@ export function renderKuttySessionCard(sessions, options = {}) {
         }
         const isFocused = focusTeacher && teacherKey(half) === focusTeacher;
         const staffIdentifier = half.staff_code || half.teacher_id || "TBA";
+        const groupNumber = sessionGroupNumber(half);
+        const hoverDetails = buildSessionHoverDetails(half, room, block);
         return `
             <div class="kutty-compact-half${isFocused ? " kutty-compact-focus" : ""}">
                 <div class="kutty-compact-topline">
                     <strong class="kutty-compact-course">${escapeHtml(half.course_code_display || half.course_code || "Course")}</strong>
-                    <time>${escapeHtml(half.half_time || (halfIndex === 1 ? "First 25 min" : "Next 25 min"))}</time>
+                    ${groupNumber ? `
+                        <span class="group-number group-g${escapeHtml(groupNumber)} kutty-group-chip"
+                              tabindex="0"
+                              title="${escapeHtml(hoverDetails)}"
+                              aria-label="${escapeHtml(hoverDetails)}">G${escapeHtml(groupNumber)}</span>
+                    ` : ""}
                 </div>
                 <div class="kutty-compact-teacher">${escapeHtml(half.teacher_name || "Staff TBA")}</div>
                 <div class="kutty-compact-staff">Staff ${escapeHtml(staffIdentifier)}</div>
@@ -113,6 +120,33 @@ export function renderKuttySessionCard(sessions, options = {}) {
             <div class="kutty-compact-room"><i class="fas fa-door-open"></i> ${escapeHtml(room + block)}</div>
         </div>
     `;
+}
+
+export function sessionGroupNumber(session) {
+    const direct = Number(session?.group_index);
+    if (Number.isInteger(direct) && direct > 0) return String(direct);
+    const match = String(session?.group_name || session?.group_id || "").match(/(?:_G|\bG)(\d+)$/i);
+    return match ? match[1] : "";
+}
+
+export function buildSessionHoverDetails(session, room = "TBD", block = "") {
+    const groupNumber = sessionGroupNumber(session);
+    const teacherIdentifier = session?.staff_code || session?.teacher_id || "TBA";
+    const partnerIdentifier = session?.partner_teacher_id ? ` (${session.partner_teacher_id})` : "";
+    const lines = [
+        groupNumber ? `Group: G${groupNumber}` : "",
+        `Course: ${session?.course_code_display || session?.course_code || "Course"}${session?.course_name ? ` — ${session.course_name}` : ""}`,
+        `Staff: ${session?.teacher_name || "Staff TBA"} (${teacherIdentifier})`,
+        `Time: ${session?.half_time || session?.time_slot || session?.time_label || session?.time_range || "Scheduled slot"}`,
+        `Room: ${room}${block}`,
+        session?.course_instance_id ? `Instance: ${session.course_instance_id}` : "",
+        session?.partner_course_code
+            ? `Partner: ${session.partner_course_code} — ${session?.partner_teacher_name || "Staff TBA"}${partnerIdentifier}`
+            : "",
+        session?.bundle_label ? `Bundle: ${session.bundle_label}` : "",
+        session?.bundle_id ? `Bundle ID: ${session.bundle_id}` : "",
+    ];
+    return lines.filter(Boolean).join("\n");
 }
 
 export function updateBundlePanel(entries) {
