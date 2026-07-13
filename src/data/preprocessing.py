@@ -32,6 +32,7 @@ from .data_loader import DataLoader
 from ..config.schemas import PreprocessingConfig, SchedulerConfig
 from ..config.manager import ConfigManager
 from .course_group_optimizer import CourseGroupOptimizer
+from .kutty_pairing import KuttyBundlePlanner
 from .schemas import (
 	DataLoadResult,
 	DepartmentArtifacts,
@@ -418,7 +419,15 @@ class DepartmentCourseGrouper:
 		for key, instances in normalized_instances.items():
 			if not instances:
 				continue
-			
+
+			# A second-year selection group represents exactly one course code.
+			# The selectable two-course object is built explicitly by the Kutty
+			# planner after this stage, instead of relying on optimizer side-effects.
+			if self._is_kutty_cohort(key):
+				groups = self._group_one_course_per_group(key, instances)
+				grouped[key] = tuple(groups)
+				continue
+
 			# Check if we have fixed groups for this cohort
 			if key in self._telemetry_groups:
 				self._logger.info("Using fixed groups from telemetry for %s", key.label())
@@ -428,6 +437,57 @@ class DepartmentCourseGrouper:
 			
 			grouped[key] = tuple(groups)
 		return grouped
+
+	def _is_kutty_cohort(self, key: DepartmentSemesterKey) -> bool:
+		return bool(
+			self._config.grouping.kutty_enabled
+			and key.semester in self._config.grouping.kutty_semesters
+		)
+
+	def _group_one_course_per_group(
+		self,
+		key: DepartmentSemesterKey,
+		instances: Sequence[NormalizedCourseInstance],
+	) -> List[CourseGroup]:
+		by_code: MutableMapping[str, list[NormalizedCourseInstance]] = defaultdict(list)
+		for instance in instances:
+			by_code[instance.course_code].append(instance)
+
+		groups: List[CourseGroup] = []
+		for ordinal, course_code in enumerate(sorted(by_code), start=1):
+			entries = tuple(sorted(by_code[course_code], key=lambda item: (item.teacher_id, item.instance_id)))
+			teacher_ids = tuple(sorted({item.teacher_id for item in entries}))
+			lab_instances = sum(1 for item in entries if item.has_lab)
+			theory_instances = sum(1 for item in entries if item.has_theory)
+			tags = {"selection_course_group"}
+			if lab_instances:
+				tags.add("lab")
+			if any(item.pe_flag for item in entries):
+				tags.add("professional_elective")
+			groups.append(
+				CourseGroup(
+					key=key,
+					group_id=f"{key.slug()}_g{ordinal:02d}",
+					ordinal=ordinal,
+					is_professional_elective="professional_elective" in tags,
+					course_instance_ids=tuple(item.instance_id for item in entries),
+					teacher_ids=teacher_ids,
+					course_codes=(course_code,),
+					summary=GroupSummary(
+						num_instances=len(entries),
+						num_courses=1,
+						num_teachers=len(teacher_ids),
+						lab_instances=lab_instances,
+						theory_instances=theory_instances,
+						total_student_count=sum(item.student_count for item in entries),
+						lab_hours=sum(item.practical_hours for item in entries),
+						theory_hours=sum(item.lecture_hours + item.tutorial_hours for item in entries),
+					),
+					tags=tuple(sorted(tags)),
+				)
+			)
+		self._logger.info("Built %d one-course selection groups for %s", len(groups), key.label())
+		return groups
 
 	def _group_from_telemetry(
 		self, 
@@ -900,20 +960,24 @@ class DataPreprocessor:
 		self._logger = logger or logging.getLogger(__name__)
 		self._normalizer = CourseInstanceNormalizer(config.preprocessing, logger=self._logger)
 		self._grouper = DepartmentCourseGrouper(config, base_dir=self._base_dir, logger=self._logger)
+		self._kutty_planner = KuttyBundlePlanner(config.grouping, logger=self._logger)
 		self._post_processor = GroupAssignmentPostProcessor(config, logger=self._logger)
 
 	def run(self, data: DataLoadResult) -> PreprocessingResult:
 		normalized = self._normalizer.normalize(data.courses_df)
 		grouped = self._grouper.group(normalized)
+		kutty_bundles, kutty_stats = self._kutty_planner.plan(normalized, grouped, data)
 		packages = self._post_processor.build_packages(grouped, normalized, data.departments)
 
 		warnings = (
 			list(self._normalizer.warnings)
 			+ list(self._grouper.warnings)
+			+ list(self._kutty_planner.warnings)
 			+ list(self._post_processor.warnings)
 		)
 
 		stats = self._build_stats(normalized, grouped)
+		stats["kutty"] = dict(kutty_stats)
 
 		return PreprocessingResult(
 			normalized_instances=normalized,
@@ -921,6 +985,7 @@ class DataPreprocessor:
 			scheduling_packages=packages,
 			warnings=tuple(warnings),
 			stats=stats,
+			kutty_bundles=kutty_bundles,
 		)
 
 	def build_extended_container(self, data: DataLoadResult) -> ExtendedDataContainer:

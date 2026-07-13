@@ -228,6 +228,8 @@ class ScheduleRepository:
 
                 normalized_session = {
                     "day": entry.get("day"),
+                    "room_number": room_number,
+                    "block": block,
                     "time_label": entry.get("time_slot")
                     or entry.get("time_range")
                     or entry.get("session_name"),
@@ -237,10 +239,28 @@ class ScheduleRepository:
                     "department": entry.get("department"),
                     "semester": entry.get("semester"),
                     "teacher_name": entry.get("teacher_name"),
+                    "teacher_id": entry.get("teacher_id"),
+                    "staff_code": entry.get("staff_code"),
                     "schedule_type": schedule_type,
                     "session_kind": entry.get("session_type"),
                     "session_number": entry.get("session_number"),
                     "day_pattern": entry.get("day_pattern"),
+                    "course_instance_id": entry.get("course_instance_id"),
+                    "partner_instance_id": entry.get("partner_instance_id"),
+                    "delivery_mode": entry.get("delivery_mode"),
+                    "bundle_id": entry.get("bundle_id"),
+                    "bundle_group_id": entry.get("bundle_group_id"),
+                    "bundle_label": entry.get("bundle_label"),
+                    "bundle_course_codes": entry.get("bundle_course_codes"),
+                    "bundle_teacher_ids": entry.get("bundle_teacher_ids"),
+                    "half_index": entry.get("half_index"),
+                    "half_minutes": entry.get("half_minutes"),
+                    "half_time": entry.get("half_time"),
+                    "partner_course_code": entry.get("partner_course_code"),
+                    "partner_teacher_id": entry.get("partner_teacher_id"),
+                    "partner_teacher_name": entry.get("partner_teacher_name"),
+                    "pairing_score": entry.get("pairing_score"),
+                    "selection_mode": entry.get("selection_mode"),
                 }
 
                 if room_number == "TBD" and not entry.get("room_id"):
@@ -254,8 +274,9 @@ class ScheduleRepository:
         for record in rooms.values():
             sessions = record["sessions"]
             day_count = len({session["day"] for session in sessions if session.get("day")})
-            record["session_count"] = len(sessions)
-            record["utilization"] = self._estimate_room_utilization(len(sessions), day_count)
+            physical_session_count = self._count_physical_room_sessions(sessions)
+            record["session_count"] = physical_session_count
+            record["utilization"] = self._estimate_room_utilization(physical_session_count, day_count)
             record["room_type"] = self._derive_room_type(record["room_types"])
             record.pop("room_types", None)
             # Sort sessions chronologically for that room
@@ -267,6 +288,23 @@ class ScheduleRepository:
 
         room_list.sort(key=lambda item: (item.get("block", ""), item.get("room_number", "")))
         return {"rooms": room_list, "unassigned": unassigned, "day_order": list(DAY_ORDER)}
+
+    @staticmethod
+    def _count_physical_room_sessions(sessions: Sequence[Mapping[str, Any]]) -> int:
+        physical_keys = set()
+        for index, session in enumerate(sessions):
+            if session.get("delivery_mode") == "kutty_25x2" and session.get("bundle_id"):
+                physical_keys.add(
+                    (
+                        "kutty",
+                        session.get("bundle_id"),
+                        session.get("day"),
+                        session.get("time_label"),
+                    )
+                )
+            else:
+                physical_keys.add(("standard", index))
+        return len(physical_keys)
 
     def _build_metrics(
         self, schedule: Mapping[str, Sequence[Mapping[str, Any]]], snapshot: ScheduleSnapshot

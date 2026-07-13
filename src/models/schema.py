@@ -1,5 +1,5 @@
 from ortools.sat.python import cp_model
-from ..data.schemas import GroupRequirement
+from ..data.schemas import GroupRequirement, KuttyBundle
 
 from dataclasses import dataclass, field
 from typing import Dict, Mapping,Optional, Tuple
@@ -8,6 +8,8 @@ LabAssignmentDict = Dict[str, Dict[str, Dict[int, Dict[str, Dict[str, cp_model.I
 TheoryAssignmentDict = Dict[str, Dict[str, Dict[int, Dict[int, cp_model.IntVar]]]]
 TheoryRoomAssignmentDict = Dict[str, Dict[str, Dict[int, Dict[int, Dict[str, cp_model.IntVar]]]]]
 GroupTimeslotDict = Dict[str, Dict[int, Dict[int, cp_model.IntVar]]]
+KuttyBundleAssignmentDict = Dict[str, Dict[int, Dict[int, cp_model.IntVar]]]
+KuttyBundleRoomAssignmentDict = Dict[str, Dict[int, Dict[int, Dict[str, cp_model.IntVar]]]]
 
 @dataclass(frozen=True)
 class LabCourseRequirement:
@@ -39,7 +41,20 @@ class TheoryCourseRequirement:
 	student_count: int
 	preferred_room_type: Optional[str]
 	required_room_type: Optional[str]
+	# Synthetic remainder components keep their own variable key while pointing
+	# back to the real course instance used in exports and bundle selection.
+	source_instance_id: Optional[str] = None
 	tags: Tuple[str, ...] = field(default_factory=tuple)
+	delivery_mode: str = "legacy_full_slot"
+	bundle_id: Optional[str] = None
+	bundle_group_id: Optional[str] = None
+	partner_instance_id: Optional[str] = None
+	selection_group_id: Optional[str] = None
+	half_index: Optional[int] = None
+	half_minutes: int = 50
+	pairing_score: int = 0
+	schedule_component: str = "full_slot"
+	session_sequence_offset: int = 0
 
 
 @dataclass(frozen=True)
@@ -92,6 +107,10 @@ class TheoryVariableBlock:
 	group_course_index: Mapping[str, Tuple[str, ...]] = field(default_factory=dict)
 	instance_group_lookup: Mapping[str, str] = field(default_factory=dict)
 	room_ids: Tuple[str, ...] = field(default_factory=tuple)
+	bundle_specs: Mapping[str, KuttyBundle] = field(default_factory=dict)
+	bundle_assignments: KuttyBundleAssignmentDict = field(default_factory=dict)
+	bundle_room_assignments: KuttyBundleRoomAssignmentDict = field(default_factory=dict)
+	instance_bundle_lookup: Mapping[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

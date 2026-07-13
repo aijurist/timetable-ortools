@@ -195,11 +195,12 @@ class FixedScheduleLockConstraint(Constraint):
 						course_id=course_id,
 						day_index=day_index,
 					)
-			if not teacher_id or not session_name or not room_id or not day_label:
+			if not teacher_id or not session_name or not day_label:
 				continue
-			occupied_lab_rooms.add((day_label, session_name, room_id))
 			occupied_lab_teachers.add((teacher_id, day_label, session_name))
-			if teacher_id and course_id:
+			if room_id:
+				occupied_lab_rooms.add((day_label, session_name, room_id))
+			if course_id and room_id:
 				allowed_lab_keys.add((teacher_id, course_id, day_label, session_name, room_id))
 
 		for record in theory_records:
@@ -218,11 +219,12 @@ class FixedScheduleLockConstraint(Constraint):
 						day_index=day_index,
 					)
 			slot_index = _safe_int(record.get("slot_index"))
-			if not teacher_id or not room_id or not day_label or slot_index is None:
+			if not teacher_id or not day_label or slot_index is None:
 				continue
-			occupied_theory_rooms.add((day_label, slot_index, room_id))
 			occupied_theory_teachers.add((teacher_id, day_label, slot_index))
-			if teacher_id and course_id:
+			if room_id:
+				occupied_theory_rooms.add((day_label, slot_index, room_id))
+			if course_id and room_id:
 				allowed_theory_room_keys.add((teacher_id, course_id, day_label, slot_index, room_id))
 				allowed_theory_slot_keys.add((teacher_id, course_id, day_label, slot_index))
 
@@ -464,10 +466,12 @@ class FixedScheduleLockConstraint(Constraint):
 		assignment_map = getattr(theory_block, "assignments", {}) or {}
 		room_map = getattr(theory_block, "room_assignments", {}) or {}
 		course_day_patterns = getattr(theory_block, "course_day_patterns", {}) or {}
+		course_requirements = getattr(theory_block, "course_requirements", {}) or {}
 
 		for record in records:
 			teacher_id = str(record.get("teacher_id") or "").strip()
 			course_id = str(record.get("course_instance_id") or "").strip()
+			component_id = self._resolve_theory_component_id(record, course_id, course_requirements)
 			room_id = str(record.get("room_id") or "").strip()
 			day_index = _safe_int(record.get("day_index"))
 			day_label = self._normalize_day_label(record.get("day"))
@@ -480,13 +484,13 @@ class FixedScheduleLockConstraint(Constraint):
 			if teacher_bucket is None:
 				teacher_bucket = assignment_map.get(f"{teacher_id}.0") or {}
 
-			course_bucket = teacher_bucket.get(course_id) or {}
+			course_bucket = teacher_bucket.get(component_id) or {}
 			if day_index is None:
 				if not day_label:
 					continue
 				detected = self._find_day_index(
 					context,
-					course_id=course_id,
+					course_id=component_id,
 					course_day_map=course_bucket,
 					day_patterns=course_day_patterns,
 					scheduled_day=day_label,
@@ -503,7 +507,7 @@ class FixedScheduleLockConstraint(Constraint):
 			if room_teacher_bucket is None:
 				room_teacher_bucket = room_map.get(f"{teacher_id}.0") or {}
 
-			room_course_bucket = room_teacher_bucket.get(course_id) or {}
+			room_course_bucket = room_teacher_bucket.get(component_id) or {}
 			room_day_bucket = room_course_bucket.get(day_index) or {}
 			room_slot_bucket = room_day_bucket.get(slot_index) or {}
 			room_var = room_slot_bucket.get(room_id)
@@ -773,7 +777,7 @@ class FixedScheduleLockConstraint(Constraint):
 					with open(lab_path, 'r', encoding='utf-8-sig') as f:
 						reader = csv.DictReader(f)
 						self._logger.debug("Fixed schedule lock lab CSV headers: %s", reader.fieldnames)
-						skipped = 0
+						incomplete = 0
 						for row in reader:
 							record = {
 								"teacher_id": _csv_value(row, "teacher_id", "faculty_id", "teacher"),
@@ -792,13 +796,13 @@ class FixedScheduleLockConstraint(Constraint):
 								record,
 								("teacher_id", "course_instance_id", "day", "session_name", "room_id"),
 							):
-								skipped += 1
+								incomplete += 1
 							lab_records.append(record)
-						if skipped:
+						if incomplete:
 							self._logger.warning(
-								"Fixed schedule lock skipped %d/%d lab CSV rows with missing required lock keys. "
-								"Expected teacher_id, course_instance_id, day, session_name, room_id.",
-								skipped,
+								"Fixed schedule lock found %d/%d incomplete lab assignment rows; "
+								"available teacher/time occupancy is still retained.",
+								incomplete,
 								len(lab_records),
 							)
 				except Exception as e:
@@ -813,7 +817,7 @@ class FixedScheduleLockConstraint(Constraint):
 					with open(theory_path, 'r', encoding='utf-8-sig') as f:
 						reader = csv.DictReader(f)
 						self._logger.debug("Fixed schedule lock theory CSV headers: %s", reader.fieldnames)
-						skipped = 0
+						incomplete = 0
 						for row in reader:
 							record = {
 								"teacher_id": _csv_value(row, "teacher_id", "faculty_id", "teacher"),
@@ -832,19 +836,34 @@ class FixedScheduleLockConstraint(Constraint):
 								record,
 								("teacher_id", "course_instance_id", "day", "slot_index", "room_id"),
 							):
-								skipped += 1
+								incomplete += 1
 							theory_records.append(record)
-						if skipped:
+						if incomplete:
 							self._logger.warning(
-								"Fixed schedule lock skipped %d/%d theory CSV rows with missing required lock keys. "
-								"Expected teacher_id, course_instance_id, day, slot_index, room_id.",
-								skipped,
+								"Fixed schedule lock found %d/%d incomplete theory assignment rows; "
+								"available teacher/time occupancy is still retained.",
+								incomplete,
 								len(theory_records),
 							)
 				except Exception as e:
 					self._logger.warning("Failed to read theory CSV %s: %s", theory_path, e)
 		
 		return tuple(lab_records), tuple(theory_records), "csv_files"
+
+	@staticmethod
+	def _resolve_theory_component_id(
+		record: Mapping[str, Any],
+		course_id: str,
+		requirements: Mapping[str, Any],
+	) -> str:
+		delivery_mode = str(record.get("delivery_mode") or "legacy_full_slot")
+		for component_id, requirement in requirements.items():
+			source_id = str(getattr(requirement, "source_instance_id", None) or component_id)
+			if source_id != course_id:
+				continue
+			if str(getattr(requirement, "delivery_mode", "legacy_full_slot")) == delivery_mode:
+				return component_id
+		return course_id
 
 	@staticmethod
 	def _normalize_day_label(value: object) -> str:

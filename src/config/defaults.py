@@ -367,6 +367,9 @@ def default_grouping_config() -> GroupingConfig:
         consecutive_lab_pairs=True,
         random_seed=42,
         consolidation_dept_sem_allowlist=(),
+        kutty_enabled=True,
+        kutty_semesters=(3, 4),
+        kutty_unmatched_policy="full_slot",
     )
 
 

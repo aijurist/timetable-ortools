@@ -82,9 +82,10 @@ class DataLoader:
         teachers = self._extract_sorted_unique(courses_df, ["teacher", "teacher_name", "faculty"], fallback="teacher_id")
         departments = self._extract_sorted_unique(courses_df, ["department", "dept", "course_dept"])
 
+        fixed_lab_path, fixed_theory_path = self._effective_fixed_schedule_paths()
         blocking_mask = build_schedule_blocking_mask(
-            lab_csv_path=self._paths.fixed_lab_schedule_csv,
-            theory_csv_path=self._paths.fixed_theory_schedule_csv,
+            lab_csv_path=fixed_lab_path,
+            theory_csv_path=fixed_theory_path,
             lab_session_to_theory_mapping=time_artifacts.lab_session_to_theory,
             day_patterns=department_artifacts.day_patterns,
             working_days=time_artifacts.working_days,
@@ -116,6 +117,41 @@ class DataLoader:
             len(result.teachers),
         )
         return result
+
+    def _effective_fixed_schedule_paths(self) -> Tuple[Optional[Path], Optional[Path]]:
+        """Return the files used by both early pruning and the fixed lock.
+
+        Historically variable creation only read ``paths.fixed_*`` while the
+        enabled lock read paths from its constraint params.  That allowed a
+        second-year staff bundle to be chosen without seeing the same staff's
+        third/fourth-year occupancy.  The enabled constraint is now the source
+        of truth, with the legacy path fields retained as fallbacks.
+        """
+
+        lab_path = self._paths.fixed_lab_schedule_csv
+        theory_path = self._paths.fixed_theory_schedule_csv
+        setting = (self._config.constraints.cross_system or {}).get("fixed_schedule_lock")
+        if setting is None:
+            return lab_path, theory_path
+        if not getattr(setting, "enabled", False):
+            return None, None
+
+        params = getattr(setting, "params", {}) or {}
+        lab_path = self._resolve_optional_path(params.get("lab_csv_path")) or lab_path
+        theory_path = self._resolve_optional_path(params.get("theory_csv_path")) or theory_path
+        logger.info(
+            "Effective fixed schedules for blocking: lab=%s theory=%s",
+            lab_path,
+            theory_path,
+        )
+        return lab_path, theory_path
+
+    def _resolve_optional_path(self, value: object) -> Optional[Path]:
+        text = str(value or "").strip()
+        if not text:
+            return None
+        path = Path(text)
+        return path if path.is_absolute() else (self._base_dir / path).resolve()
 
     # ------------------------------------------------------------------
     # CSV helpers

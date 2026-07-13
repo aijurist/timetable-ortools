@@ -86,7 +86,8 @@ class TeacherDailyWorkloadConstraint(Constraint):
 		blocking_mask = getattr(context.data.raw, "blocking_mask", None)
 		fixed_hours_map = dict(getattr(blocking_mask, "teacher_daily_fixed_hours", {}) if blocking_mask else {})
 		fixed_occupancy = get_fixed_schedule_occupancy(context)
-		fixed_hours_map.update(fixed_occupancy.teacher_daily_hours)
+		for key, hours in fixed_occupancy.teacher_daily_hours.items():
+			fixed_hours_map.setdefault(key, hours)
 
 		excluded_teachers = set()
 		if config.excluded_departments:
@@ -116,10 +117,10 @@ class TeacherDailyWorkloadConstraint(Constraint):
 			stats.teachers_considered += 1
 			for day_name in _sort_day_names(day_names, working_days):
 				terms = []
-				for literal in theory_literals.get(teacher_id, {}).get(day_name, tuple()):
-					terms.append((literal, 1))
+				for literal, half_hour_units in theory_literals.get(teacher_id, {}).get(day_name, tuple()):
+					terms.append((literal, half_hour_units))
 				for literal, hours in lab_literals.get(teacher_id, {}).get(day_name, tuple()):
-					terms.append((literal, hours))
+					terms.append((literal, hours * 2))
 				if not terms:
 					continue
 
@@ -130,28 +131,29 @@ class TeacherDailyWorkloadConstraint(Constraint):
 					fixed_hours = 0
 				if fixed_hours > 0:
 					stats.fixed_hours_applied += 1
-				remaining_capacity = config.max_daily_hours - fixed_hours
-				total_hours = sum(weight * literal for literal, weight in terms)
+				fixed_units = int(round(float(fixed_hours) * 2))
+				remaining_capacity = config.max_daily_hours * 2 - fixed_units
+				total_units = sum(weight * literal for literal, weight in terms)
 
 				stats.hard_constraints += 1
 				if config.mode == "soft" and config.soft_cap_hours:
-					cap = max(0, config.soft_cap_hours - fixed_hours)
-					context.model.Add(total_hours <= cap)
+					cap = max(0, config.soft_cap_hours * 2 - fixed_units)
+					context.model.Add(total_units <= cap)
 					if cap > remaining_capacity:
 						max_overage = cap - remaining_capacity
 						overage = context.model.NewIntVar(0, max_overage, f"teacher_daily_overage_{teacher_key}_{day_key}")
-						context.model.Add(total_hours - remaining_capacity <= overage)
+						context.model.Add(total_units - remaining_capacity <= overage)
 						register_objective_penalty(
 							context,
 							overage,
-							weight=config.penalty_weight,
+							weight=config.penalty_weight / 2,
 							tag=f"teacher_spread:daily_workload:{teacher_key}:{day_key}",
 						)
 						stats.soft_penalties += 1
 					else:
-						context.model.Add(total_hours <= remaining_capacity)
+						context.model.Add(total_units <= remaining_capacity)
 				else:
-					context.model.Add(total_hours <= max(0, remaining_capacity))
+					context.model.Add(total_units <= max(0, remaining_capacity))
 
 
 		status = ConstraintStatus.APPLIED if stats.hard_constraints else ConstraintStatus.SKIPPED
@@ -175,20 +177,25 @@ class TeacherDailyWorkloadConstraint(Constraint):
 
 def _collect_theory_daily_literals(
 	context: ConstraintContext,
-) -> Mapping[str, Mapping[str, Tuple[cp_model.IntVar, ...]]]:
+) -> Mapping[str, Mapping[str, Tuple[HourLiteral, ...]]]:
 	assignments = getattr(context.variables.theory, "assignments", {}) or {}
 	day_patterns = getattr(context.variables.theory, "course_day_patterns", {}) or {}
-	collector: MutableMapping[str, MutableMapping[str, list[cp_model.IntVar]]] = defaultdict(lambda: defaultdict(list))
+	requirements = getattr(context.variables.theory, "course_requirements", {}) or {}
+	collector: MutableMapping[str, MutableMapping[str, list[HourLiteral]]] = defaultdict(lambda: defaultdict(list))
 
 	for teacher_id, course_map in assignments.items():
 		teacher_key = normalize_teacher_id(teacher_id)
 		for course_id, day_map in course_map.items():
 			pattern = day_patterns.get(course_id, tuple())
+			requirement = requirements.get(course_id)
+			units = 1 if getattr(requirement, "delivery_mode", "") == "kutty_25x2" else 2
 			for day_idx, slot_map in day_map.items():
 				if not slot_map:
 					continue
 				day_name = _safe_day_name(pattern, day_idx)
-				collector[teacher_key][normalize_day_label(day_name)].extend(slot_map.values())
+				collector[teacher_key][normalize_day_label(day_name)].extend(
+					(literal, units) for literal in slot_map.values()
+				)
 
 	return {
 		teacher_id: {

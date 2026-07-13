@@ -13,6 +13,7 @@ from ..data.schemas import (
 	CourseGroup,
 	ExtendedDataContainer,
 	GroupRequirement,
+	KuttyBundle,
 	NormalizedCourseInstance,
 )
 from ..data.pop_availability import (
@@ -63,6 +64,12 @@ class VariableCreator:
 		}
 		self._group_index = self._build_group_index()
 		self._group_requirement_index = self._build_group_requirement_index()
+		self._bundle_index = self._build_kutty_bundle_index()
+		self._instance_bundle_lookup = {
+			instance_id: bundle.bundle_id
+			for bundle in self._bundle_index.values()
+			for instance_id in bundle.instance_ids
+		}
 		self._day_pattern_cache: Dict[str, Tuple[str, ...]] = {}
 		self._lab_room_ids = tuple(str(room_id) for room_id in data.raw.rooms.lab_room_ids)
 		self._theory_room_ids = tuple(str(room_id) for room_id in getattr(data.raw.rooms, "theory_room_ids", tuple()))
@@ -232,7 +239,9 @@ class VariableCreator:
 		course_requirements = self._build_theory_course_requirements()
 		assignments: TheoryAssignmentDict = {}
 		room_assignments: Dict[str, Dict[str, Dict[int, Dict[int, Dict[str, cp_model.IntVar]]]]] = {}
-		teacher_courses: Dict[str, Tuple[str, ...]] = {}
+		bundle_assignments: Dict[str, Dict[int, Dict[int, cp_model.IntVar]]] = {}
+		bundle_room_assignments: Dict[str, Dict[int, Dict[int, Dict[str, cp_model.IntVar]]]] = {}
+		teacher_course_buffer: MutableMapping[str, set[str]] = defaultdict(set)
 		course_day_patterns: Dict[str, Tuple[str, ...]] = {}
 		theory_eligibility_cache: Dict[Tuple[int, Optional[int], str, str], Tuple[str, ...]] = {}
 		group_course_buffer: MutableMapping[str, set[str]] = defaultdict(set)
@@ -241,103 +250,58 @@ class VariableCreator:
 			MutableMapping[int, MutableMapping[int, list[cp_model.IntVar]]],
 		] = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
 
-		for teacher_id, course_list in self._group_requirements_by_teacher(course_requirements).items():
-			assignments[teacher_id] = {}
-			room_assignments[teacher_id] = {}
-			teacher_courses[teacher_id] = tuple(req.course_instance_id for req in course_list)
-			for requirement in course_list:
+		processed: set[str] = set()
+		for bundle in sorted(self._bundle_index.values(), key=lambda item: item.bundle_id):
+			bundle_requirements = tuple(
+				course_requirements[instance_id]
+				for instance_id in bundle.instance_ids
+				if instance_id in course_requirements
+			)
+			if len(bundle_requirements) != len(bundle.instance_ids):
+				self._logger.warning("Skipping incomplete Kutty bundle %s", bundle.bundle_id)
+				continue
+			course_vars, room_course_vars, pattern = self._create_shared_theory_grid(
+				model,
+				bundle_requirements,
+				variable_key=bundle.bundle_id,
+				eligibility_cache=theory_eligibility_cache,
+			)
+			bundle_assignments[bundle.bundle_id] = course_vars
+			bundle_room_assignments[bundle.bundle_id] = room_course_vars
+			for requirement in bundle_requirements:
 				course_id = requirement.course_instance_id
-				course_vars: Dict[int, Dict[int, cp_model.IntVar]] = {}
-				room_course_vars: Dict[int, Dict[int, Dict[str, cp_model.IntVar]]] = {}
-				assignments[teacher_id][course_id] = course_vars
-				room_assignments[teacher_id][course_id] = room_course_vars
-				pattern = self._resolve_day_pattern(requirement.department)
+				teacher_id = requirement.teacher_id
+				assignments.setdefault(teacher_id, {})[course_id] = course_vars
+				room_assignments.setdefault(teacher_id, {})[course_id] = room_course_vars
+				teacher_course_buffer[teacher_id].add(course_id)
 				course_day_patterns[course_id] = pattern
 				group_course_buffer[requirement.group_id].add(course_id)
-				student_count = int(getattr(requirement, "student_count", 0) or 0)
-				semester = getattr(requirement, "semester", None)
-				theory_cache_key = (
-					student_count,
-					int(semester) if semester is not None else None,
-					str(course_id),
-					str(requirement.group_id),
-				)
-				eligible_rooms = theory_eligibility_cache.get(theory_cache_key)
-				if eligible_rooms is None:
-					eligible_rooms = self._room_eligibility.get_eligible_theory_rooms(
-						student_count=student_count,
-						semester=theory_cache_key[1],
-						course_id=course_id,
-						group_id=requirement.group_id,
-					)
-					theory_eligibility_cache[theory_cache_key] = eligible_rooms
-				eligible_rooms = self._augment_special_cse_theory_rooms(requirement, eligible_rooms)
-				for day_index, day_label in enumerate(pattern):
-					normalized_day = self._normalize_day_for_blocking(day_label)
-					slot_map: Dict[int, cp_model.IntVar] = {}
-					room_day_map: Dict[int, Dict[str, cp_model.IntVar]] = {}
-					course_vars[day_index] = slot_map
-					room_course_vars[day_index] = {}
-					for slot_index, _ in enumerate(self._theory_slot_labels):
-						if self._is_pop_theory_slot_blocked(
-							teacher_id,
-							normalized_day,
-							self._theory_slot_labels[slot_index],
-						):
-							self._theory_pop_pruned_count += 1
-							room_day_map = room_course_vars[day_index]
-							room_day_map[slot_index] = {}
-							continue
-
-						slot_blocked = (
-							self._blocking_mask
-							and self._blocking_mask.is_theory_slot_blocked(
-								teacher_id=teacher_id,
-								course_id=course_id,
-								day_label=normalized_day,
-								slot_index=slot_index,
-							)
-						)
-
-						if slot_blocked:
-							self._theory_slot_pruned_count += 1
-							room_day_map = room_course_vars[day_index]
-							room_day_map[slot_index] = {}
-							continue
-
-						var_name = (
-							f"theory_{teacher_id}_{course_id}_d{day_index}_s{slot_index}"
-						)
-						literal = model.NewBoolVar(var_name)
-						slot_map[slot_index] = literal
-						room_bucket: Dict[str, cp_model.IntVar] = {}
-
-						if eligible_rooms:
-							for room_id in eligible_rooms:
-								if self._blocking_mask and self._blocking_mask.is_theory_variable_blocked(
-									teacher_id=teacher_id,
-									course_id=course_id,
-									day_label=normalized_day,
-									slot_index=slot_index,
-									room_id=room_id,
-								):
-									self._theory_pruned_count += 1
-									continue
-
-								room_var = model.NewBoolVar(
-									f"theory_{teacher_id}_{course_id}_d{day_index}_s{slot_index}_r{room_id}"
-								)
-								room_bucket[room_id] = room_var
-								self._theory_var_count += 1
-							if room_bucket:
-								model.Add(sum(room_bucket.values()) == literal)
-							else:
-								model.Add(literal == 0)
-						else:
-							model.Add(literal == 0)
-						room_day_map = room_course_vars[day_index]
-						room_day_map[slot_index] = room_bucket
+				for day_index, slot_map in course_vars.items():
+					for slot_index, literal in slot_map.items():
 						group_slot_sources[requirement.group_id][day_index][slot_index].append(literal)
+				processed.add(course_id)
+
+		# Third/fourth-year theory and any explicitly non-Kutty instances retain
+		# the legacy one-course/one-slot variable structure.
+		for requirement in sorted(course_requirements.values(), key=lambda item: item.course_instance_id):
+			if requirement.course_instance_id in processed:
+				continue
+			course_vars, room_course_vars, pattern = self._create_shared_theory_grid(
+				model,
+				(requirement,),
+				variable_key=f"{requirement.teacher_id}_{requirement.course_instance_id}",
+				eligibility_cache=theory_eligibility_cache,
+			)
+			course_id = requirement.course_instance_id
+			teacher_id = requirement.teacher_id
+			assignments.setdefault(teacher_id, {})[course_id] = course_vars
+			room_assignments.setdefault(teacher_id, {})[course_id] = room_course_vars
+			teacher_course_buffer[teacher_id].add(course_id)
+			course_day_patterns[course_id] = pattern
+			group_course_buffer[requirement.group_id].add(course_id)
+			for day_index, slot_map in course_vars.items():
+				for slot_index, literal in slot_map.items():
+					group_slot_sources[requirement.group_id][day_index][slot_index].append(literal)
 
 		if self._theory_pruned_count > 0 or self._theory_slot_pruned_count > 0 or self._theory_pop_pruned_count > 0:
 			self._logger.info(
@@ -347,6 +311,10 @@ class VariableCreator:
 				self._theory_pop_pruned_count,
 			)
 
+		teacher_courses = {
+			teacher_id: tuple(sorted(course_ids))
+			for teacher_id, course_ids in teacher_course_buffer.items()
+		}
 		group_timeslots: GroupTimeslotDict = {}
 		day_patterns: Dict[str, Tuple[str, ...]] = {}
 		for group_id, requirement in group_requirements.items():
@@ -386,9 +354,111 @@ class VariableCreator:
 			day_patterns=day_patterns,
 			theory_slot_labels=self._theory_slot_labels,
 			group_course_index=group_course_index,
-			instance_group_lookup=self._instance_group_lookup,
+			instance_group_lookup={
+				**self._instance_group_lookup,
+				**{
+					requirement.course_instance_id: requirement.group_id
+					for requirement in course_requirements.values()
+				},
+			},
 			room_ids=self._theory_room_ids,
+			bundle_specs=self._bundle_index,
+			bundle_assignments=bundle_assignments,
+			bundle_room_assignments=bundle_room_assignments,
+			instance_bundle_lookup=self._instance_bundle_lookup,
 		)
+
+	def _create_shared_theory_grid(
+		self,
+		model: cp_model.CpModel,
+		requirements: Sequence[TheoryCourseRequirement],
+		*,
+		variable_key: str,
+		eligibility_cache: MutableMapping[Tuple[int, Optional[int], str, str], Tuple[str, ...]],
+	) -> Tuple[
+		Dict[int, Dict[int, cp_model.IntVar]],
+		Dict[int, Dict[int, Dict[str, cp_model.IntVar]]],
+		Tuple[str, ...],
+	]:
+		primary = requirements[0]
+		pattern = self._resolve_day_pattern(primary.department)
+		room_sets = []
+		for requirement in requirements:
+			student_count = int(requirement.student_count or 0)
+			semester = int(requirement.semester) if requirement.semester is not None else None
+			source_instance_id = requirement.source_instance_id or requirement.course_instance_id
+			cache_key = (student_count, semester, source_instance_id, requirement.group_id)
+			eligible = eligibility_cache.get(cache_key)
+			if eligible is None:
+				eligible = self._room_eligibility.get_eligible_theory_rooms(
+					student_count=student_count,
+					semester=semester,
+					course_id=source_instance_id,
+					group_id=requirement.group_id,
+				)
+				eligibility_cache[cache_key] = eligible
+			eligible = self._augment_special_cse_theory_rooms(requirement, eligible)
+			room_sets.append(set(str(room_id) for room_id in eligible))
+		eligible_rooms = tuple(
+			room_id
+			for room_id in self._theory_room_ids
+			if all(room_id in room_set for room_set in room_sets)
+		)
+
+		course_vars: Dict[int, Dict[int, cp_model.IntVar]] = {}
+		room_course_vars: Dict[int, Dict[int, Dict[str, cp_model.IntVar]]] = {}
+		for day_index, day_label in enumerate(pattern):
+			normalized_day = self._normalize_day_for_blocking(day_label)
+			course_vars[day_index] = {}
+			room_course_vars[day_index] = {}
+			for slot_index, slot_label in enumerate(self._theory_slot_labels):
+				if any(
+					self._is_pop_theory_slot_blocked(req.teacher_id, normalized_day, slot_label)
+					for req in requirements
+				):
+					self._theory_pop_pruned_count += 1
+					room_course_vars[day_index][slot_index] = {}
+					continue
+				if self._blocking_mask and any(
+					self._blocking_mask.is_theory_slot_blocked(
+						req.teacher_id,
+						req.source_instance_id or req.course_instance_id,
+						normalized_day,
+						slot_index,
+					)
+					for req in requirements
+				):
+					self._theory_slot_pruned_count += 1
+					room_course_vars[day_index][slot_index] = {}
+					continue
+
+				literal = model.NewBoolVar(f"theory_{variable_key}_d{day_index}_s{slot_index}")
+				course_vars[day_index][slot_index] = literal
+				room_bucket: Dict[str, cp_model.IntVar] = {}
+				for room_id in eligible_rooms:
+					if self._blocking_mask and any(
+						self._blocking_mask.is_theory_variable_blocked(
+							req.teacher_id,
+							req.source_instance_id or req.course_instance_id,
+							normalized_day,
+							slot_index,
+							room_id,
+						)
+						for req in requirements
+					):
+						self._theory_pruned_count += 1
+						continue
+					room_var = model.NewBoolVar(
+						f"theory_{variable_key}_d{day_index}_s{slot_index}_r{room_id}"
+					)
+					room_bucket[room_id] = room_var
+					self._theory_var_count += 1
+				if room_bucket:
+					model.Add(sum(room_bucket.values()) == literal)
+				else:
+					model.Add(literal == 0)
+				room_course_vars[day_index][slot_index] = room_bucket
+		return course_vars, room_course_vars, pattern
 
 	def _build_lab_course_requirements(self) -> Dict[str, LabCourseRequirement]:
 		requirements: Dict[str, LabCourseRequirement] = {}
@@ -421,15 +491,43 @@ class VariableCreator:
 		for instance_id, instance in self._instance_index.items():
 			if not instance.has_theory:
 				continue
-			required_slots = max(instance.lecture_hours + instance.tutorial_hours, 0)
-			if required_slots <= 0:
+			theory_hours = max(instance.lecture_hours + instance.tutorial_hours, 0)
+			if theory_hours <= 0:
 				continue
 			group = self._instance_group_index.get(instance_id)
 			if not group:
 				self._logger.debug("Skipping theory instance %s without group assignment", instance_id)
 				continue
+			bundle_id = self._instance_bundle_lookup.get(instance_id)
+			bundle = self._bundle_index.get(bundle_id) if bundle_id else None
+			required_slots = theory_hours
+			partner_instance_id: Optional[str] = None
+			half_index: Optional[int] = None
+			half_minutes = 50
+			delivery_mode = "legacy_full_slot"
+			bundle_group_id: Optional[str] = None
+			pairing_score = 0
+			schedule_component = "full_slot"
+			if bundle:
+				required_slots = bundle.required_blocks
+				delivery_mode = bundle.delivery_mode
+				bundle_group_id = bundle.bundle_group_id
+				pairing_score = bundle.pairing_score
+				if bundle.is_paired:
+					half_minutes = 25
+					schedule_component = "kutty_shared"
+					if instance_id == bundle.first_instance_id:
+						half_index = 1
+						partner_instance_id = bundle.second_instance_id
+					else:
+						half_index = 2
+						partner_instance_id = bundle.first_instance_id
+			tags = set(instance.tags)
+			if bundle:
+				tags.update(bundle.tags)
 			requirements[instance_id] = TheoryCourseRequirement(
 				course_instance_id=instance_id,
+				source_instance_id=instance_id,
 				course_code=instance.course_code,
 				group_id=group.group_id,
 				teacher_id=instance.teacher_id,
@@ -441,9 +539,57 @@ class VariableCreator:
 				student_count=instance.student_count,
 				preferred_room_type=instance.preferred_room_type,
 				required_room_type=instance.required_room_type,
-				tags=instance.tags,
+				tags=tuple(sorted(tags)),
+				delivery_mode=delivery_mode,
+				bundle_id=bundle.bundle_id if bundle else None,
+				bundle_group_id=bundle_group_id,
+				partner_instance_id=partner_instance_id,
+				selection_group_id=group.group_id,
+				half_index=half_index,
+				half_minutes=half_minutes,
+				pairing_score=pairing_score,
+				schedule_component=schedule_component,
+			)
+
+			if not bundle or not bundle.is_paired:
+				continue
+			remainder_blocks = bundle.remainder_blocks_for(instance_id)
+			if remainder_blocks <= 0:
+				continue
+			component_id = self._remainder_component_id(instance_id, bundle.bundle_id)
+			remainder_tags = set(tags)
+			remainder_tags.update(("kutty_remainder", "full_slot_remainder"))
+			requirements[component_id] = TheoryCourseRequirement(
+				course_instance_id=component_id,
+				source_instance_id=instance_id,
+				course_code=instance.course_code,
+				group_id=group.group_id,
+				teacher_id=instance.teacher_id,
+				department=instance.student_dept,
+				semester=instance.semester,
+				required_slots=remainder_blocks,
+				lecture_hours=max(instance.lecture_hours, 0),
+				tutorial_hours=max(instance.tutorial_hours, 0),
+				student_count=instance.student_count,
+				preferred_room_type=instance.preferred_room_type,
+				required_room_type=instance.required_room_type,
+				tags=tuple(sorted(remainder_tags)),
+				delivery_mode="kutty_remainder_full_slot",
+				bundle_id=bundle.bundle_id,
+				bundle_group_id=bundle.bundle_group_id,
+				partner_instance_id=partner_instance_id,
+				selection_group_id=group.group_id,
+				half_index=None,
+				half_minutes=50,
+				pairing_score=pairing_score,
+				schedule_component="kutty_remainder",
+				session_sequence_offset=min(bundle.theory_hours, bundle.second_theory_hours),
 			)
 		return requirements
+
+	@staticmethod
+	def _remainder_component_id(instance_id: str, bundle_id: str) -> str:
+		return f"{instance_id}__{bundle_id}__remainder"
 
 	def _group_requirements_by_teacher(
 		self,
@@ -502,6 +648,13 @@ class VariableCreator:
 		for package in self._data.preprocessing.scheduling_packages.values():
 			for requirement in package.requirements:
 				index[requirement.group_id] = requirement
+		return index
+
+	def _build_kutty_bundle_index(self) -> Dict[str, KuttyBundle]:
+		index: Dict[str, KuttyBundle] = {}
+		for bundles in getattr(self._data.preprocessing, "kutty_bundles", {}).values():
+			for bundle in bundles:
+				index[bundle.bundle_id] = bundle
 		return index
 
 	def _build_instance_group_lookup(self) -> Dict[str, CourseGroup]:

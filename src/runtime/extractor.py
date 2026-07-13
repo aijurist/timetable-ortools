@@ -471,22 +471,41 @@ class ScheduleExtractor:
 		course_requirements = getattr(self._theory_vars, "course_requirements", {}) or {}
 		course_patterns = getattr(self._theory_vars, "course_day_patterns", {}) or {}
 		group_requirements = getattr(self._theory_vars, "requirements", {}) or {}
+		bundle_specs = getattr(self._theory_vars, "bundle_specs", {}) or {}
 		for teacher_id, course_map in assignments.items():
-			for course_instance_id, day_map in course_map.items():
-				requirement = course_requirements.get(course_instance_id)
+			for assignment_course_id, day_map in course_map.items():
+				requirement = course_requirements.get(assignment_course_id)
 				if not requirement:
 					continue
+				course_instance_id = requirement.source_instance_id or assignment_course_id
 				group_requirement = group_requirements.get(requirement.group_id)
 				instance = self._instance_lookup.get(course_instance_id)
 				group = self._group_lookup.get(requirement.group_id)
-				day_pattern = course_patterns.get(course_instance_id, self._time.working_days)
+				bundle = bundle_specs.get(getattr(requirement, "bundle_id", None))
+				partner_instance = (
+					self._instance_lookup.get(requirement.partner_instance_id)
+					if getattr(requirement, "partner_instance_id", None)
+					else None
+				)
+				day_pattern = course_patterns.get(assignment_course_id, self._time.working_days)
 				day_pattern_label = self._format_day_pattern(day_pattern)
 				group_display = self._group_display.get(requirement.group_id, {})
 				group_name = group_display.get("name") or self._format_group_name(group) or requirement.group_id
 				group_index = group_display.get("index") or (group.ordinal if group else None)
-				teacher_ids = tuple(group.teacher_ids) if group and group.teacher_ids else (teacher_id,)
+				teacher_ids = (teacher_id,)
 				teacher_names = tuple(self._teacher_lookup.get(tid, tid) for tid in teacher_ids)
-				course_codes = group.course_codes if group else (requirement.course_code,)
+				course_codes = (requirement.course_code,)
+				bundle_instances = tuple(
+					self._instance_lookup.get(instance_id)
+					for instance_id in bundle.instance_ids
+				) if bundle else tuple()
+				bundle_instances = tuple(item for item in bundle_instances if item is not None)
+				bundle_course_codes = tuple(item.course_code for item in bundle_instances)
+				bundle_teacher_ids = tuple(item.teacher_id for item in bundle_instances)
+				bundle_label = self._format_bundle_label(bundle_instances) if bundle and bundle.is_paired else None
+				if bundle_label:
+					group_name = bundle.bundle_group_id
+					course_codes = bundle_course_codes
 				course_row = self._get_course_row(instance)
 				staff_code = self._coalesce_str(
 					(course_row or {}).get("staff_code"),
@@ -501,13 +520,28 @@ class ScheduleExtractor:
 						var = slot_map.get(slot_index)
 						if var is None or not accessor.bool_value(var):
 							continue
-						course_session_counts[course_instance_id] += 1
-						session_number = course_session_counts[course_instance_id]
-						session_type = self._resolve_course_session_type(course_instance_id, session_number)
+						course_session_counts[assignment_course_id] += 1
+						component_session_number = course_session_counts[assignment_course_id]
+						delivery_mode = getattr(requirement, "delivery_mode", "legacy_full_slot")
+						session_number = (
+							component_session_number
+							if delivery_mode == "kutty_25x2"
+							else getattr(requirement, "session_sequence_offset", 0) + component_session_number
+						)
+						session_type = (
+							self._resolve_kutty_session_type(instance, component_session_number)
+							if delivery_mode == "kutty_25x2"
+							else self._resolve_course_session_type(course_instance_id, session_number)
+						)
 						slot_label = (
 							self._time.theory_slots[slot_index]
 							if slot_index < len(self._time.theory_slots)
 							else f"slot_{slot_index}"
+						)
+						half_time = self._resolve_half_time(
+							slot_label,
+							getattr(requirement, "half_index", None),
+							getattr(requirement, "half_minutes", 50),
 						)
 						is_lunch = self._is_lunch_slot(requirement.department, slot_index)
 						five_policy, five_flag = self._theory_five_pm(
@@ -532,7 +566,7 @@ class ScheduleExtractor:
 						)
 						room_assignment = self._resolve_theory_room_variable(
 							teacher_id,
-							course_instance_id,
+							assignment_course_id,
 							day_index,
 							slot_index,
 							accessor,
@@ -574,9 +608,27 @@ class ScheduleExtractor:
 							group_name=group_name,
 							group_index=group_index,
 							day_pattern=day_pattern_label,
-							is_co_scheduled=False,
+							is_co_scheduled=bool(bundle and bundle.is_paired and delivery_mode == "kutty_25x2"),
 							capacity_info=capacity_info,
-							partner_instance_id=None,
+							partner_instance_id=getattr(requirement, "partner_instance_id", None),
+							delivery_mode=delivery_mode,
+							bundle_id=getattr(requirement, "bundle_id", None),
+							bundle_group_id=getattr(requirement, "bundle_group_id", None),
+							bundle_label=bundle_label,
+							bundle_course_codes=bundle_course_codes,
+							bundle_teacher_ids=bundle_teacher_ids,
+							half_index=getattr(requirement, "half_index", None),
+							half_minutes=getattr(requirement, "half_minutes", 50),
+							half_time=half_time,
+							partner_course_code=partner_instance.course_code if partner_instance else None,
+							partner_teacher_id=partner_instance.teacher_id if partner_instance else None,
+							partner_teacher_name=partner_instance.teacher_name if partner_instance else None,
+							pairing_score=getattr(requirement, "pairing_score", 0),
+							selection_mode=(
+								"CHOOSE_BUNDLE"
+								if bundle and bundle.is_paired
+								else "CHOOSE_FACULTY"
+							),
 						)
 						entries.append(entry)
 		entries.sort(
@@ -613,7 +665,8 @@ class ScheduleExtractor:
 			)
 		for entry in theory_entries:
 			identifier = (
-				f"{entry.course_instance_id}_{entry.day_index}_{entry.slot_index}"
+				f"{entry.bundle_id or entry.course_instance_id}_{entry.course_instance_id}_"
+				f"{entry.day_index}_{entry.slot_index}_{entry.half_index or 0}"
 				if entry.course_instance_id
 				else f"{entry.group_id}_{entry.day_index}_{entry.slot_index}"
 			)
@@ -625,7 +678,7 @@ class ScheduleExtractor:
 					group_id=entry.group_id,
 					identifier=identifier,
 					day=entry.day,
-					label=entry.slot_label,
+					label=entry.half_time or entry.slot_label,
 					resource_id=entry.room_id or entry.block,
 					payload=entry.to_dict(),
 				)
@@ -828,6 +881,59 @@ class ScheduleExtractor:
 			return "Theory"
 		index = (max(session_number, 1) - 1) % len(sequence)
 		return sequence[index]
+
+	@staticmethod
+	def _resolve_kutty_session_type(
+		instance: Optional[NormalizedCourseInstance],
+		session_number: int,
+	) -> str:
+		if instance is None:
+			return "Theory Half"
+		lecture_halves = max(0, instance.lecture_hours) * 2
+		tutorial_halves = max(0, instance.tutorial_hours) * 2
+		index = max(1, session_number)
+		if index <= lecture_halves:
+			return "Lecture Half"
+		if index <= lecture_halves + tutorial_halves:
+			return "Tutorial Half"
+		return "Theory Half"
+
+	def _format_bundle_label(
+		self,
+		instances: Sequence[NormalizedCourseInstance],
+	) -> Optional[str]:
+		if len(instances) != 2:
+			return None
+		parts = []
+		for instance in instances:
+			row = self._get_course_row(instance)
+			staff = self._coalesce_str(row.get("staff_code"), instance.teacher_id) or instance.teacher_id
+			parts.append(f"{instance.course_code} - {staff}")
+		return " + ".join(parts)
+
+	@staticmethod
+	def _resolve_half_time(
+		slot_label: str,
+		half_index: Optional[int],
+		half_minutes: int,
+	) -> str:
+		if half_index not in (1, 2) or half_minutes != 25:
+			return slot_label
+		match = re.search(r"(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})", slot_label)
+		if not match:
+			return f"{slot_label} ({'first' if half_index == 1 else 'second'} 25 min)"
+		start = int(match.group(1)) * 60 + int(match.group(2))
+		end = int(match.group(3)) * 60 + int(match.group(4))
+		if end <= start:
+			end += 12 * 60
+		midpoint = start + 25
+		left, right = (start, midpoint) if half_index == 1 else (midpoint, end)
+
+		def _format(total: int) -> str:
+			total %= 24 * 60
+			return f"{total // 60}:{total % 60:02d}"
+
+		return f"{_format(left)} - {_format(right)}"
 
 	def _resolve_theory_room_variable(
 		self,

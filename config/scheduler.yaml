@@ -7,7 +7,7 @@ meta:
 paths:
   # data/sem2026/4th year/Department of Artificial Intelligence and Machine Learning.csv
   # data/department_data/core-v3/Artificial_Intelligence_and_Machine_Learning_v3.0.csv
-  courses_csv: data\dept_wise_course\3\Electrical and Electronics Engineering_course_data.csv
+  courses_csv: data\dept_wise_course\2\Aeronautical_Engineering_course_data.csv
   rooms_csv: data\block_wise\rooms_new.csv
   day_order_csv: data/day_order_odd.csv
   core_lab_mapping_csv: data\core_lab_mapping.csv
@@ -522,6 +522,11 @@ grouping:
   hall_theorem_tolerance: 0.05
   consecutive_lab_pairs: true
   random_seed: 42
+  # Second-year theory: one 50-minute room block contains two fixed 25-minute halves.
+  kutty_enabled: true
+  kutty_semesters: [3, 4]
+  # An odd/incompatible offering remains a legacy full-slot theory course and is reported.
+  kutty_unmatched_policy: full_slot
   # Fine-grained control for the "maximize courses into one group" behaviour.
   #
   # - If empty / not provided: consolidation is enabled for semesters 5 & 7 for ALL departments.

@@ -1,4 +1,12 @@
 // Room timetable viewer powered by FastAPI room aggregation API
+import {
+    KUTTY_REMAINDER_MODE,
+    escapeHtml,
+    groupCellSessions,
+    renderKuttySessionCard,
+    updateBundlePanel,
+} from "./kutty_schedule.mjs?v=20260713e";
+
 const timeSlots = [
     "8:00 - 8:50", "9:00 - 9:50", "10:00 - 10:50", "11:00 - 11:50",
     "12:00 - 12:50", "1:00 - 1:50", "2:00 - 2:50", "3:10 - 4:00",
@@ -160,6 +168,7 @@ function renderRooms() {
                 No rooms match the selected filters.
             </div>
         `;
+        updateBundlePanel([]);
         return;
     }
 
@@ -226,6 +235,7 @@ function renderRooms() {
     }
 
     container.innerHTML = html;
+    updateBundlePanel(rooms.flatMap((room) => room.sessions || []));
 }
 
 function generateRoomScheduleTable(room) {
@@ -288,28 +298,10 @@ function generateRoomScheduleTable(room) {
             if (!sessions.length) {
                 html += '<div class="empty-slot">Free</div>';
             } else {
-                sessions.forEach((session) => {
-                    const isLab = session.schedule_type === "lab";
-                    const groupNumber = getGroupNumber(session.group_name);
-                    const groupClass = getGroupClass(session.group_name);
-                    const semester = session.semester || "";
-                    const teacher = session.teacher_name || "Unknown";
-                    html += `
-                        <div class="session ${isLab ? '' : 'theory-session'}" title="
-                            Course: ${session.course_name}
-                            Teacher: ${teacher}
-                            Department: ${session.department}
-                            Group: ${session.group_name}
-                        ">
-                            <div class="session-header">
-                                <div class="session-code">${session.course_code || session.course_name || 'Course'}</div>
-                                ${groupNumber ? `<div class="group-number ${groupClass}">G${groupNumber}</div>` : ''}
-                            </div>
-                            <div class="session-details">${teacher}</div>
-                            <div class="session-details">${session.group_name || session.department || ''}</div>
-                            <div class="session-details">${semester ? `Sem ${semester}` : ''}</div>
-                        </div>
-                    `;
+                groupCellSessions(sessions).forEach((block) => {
+                    html += block.kind === "kutty"
+                        ? renderKuttySessionCard(block.sessions)
+                        : renderRoomStandardSession(block.sessions[0]);
                 });
             }
 
@@ -325,6 +317,28 @@ function generateRoomScheduleTable(room) {
     `;
 
     return html;
+}
+
+function renderRoomStandardSession(session) {
+    const isLab = session.schedule_type === "lab";
+    const isRemainder = session.delivery_mode === KUTTY_REMAINDER_MODE;
+    const groupNumber = getGroupNumber(session.group_name);
+    const groupClass = getGroupClass(session.group_name);
+    const semester = session.semester || "";
+    const teacher = session.teacher_name || "Unknown";
+    const bundleClass = session.bundle_id ? "bundle-session" : "";
+    return `
+        <div class="session ${isLab ? "" : "theory-session"} ${isRemainder ? "kutty-remainder-session" : ""} ${bundleClass} schedule-session-card"
+             data-bundle-id="${escapeHtml(session.bundle_id || "")}">
+            <div class="session-header">
+                <div class="session-code">${escapeHtml(session.course_code || session.course_name || "Course")}</div>
+                ${groupNumber ? `<div class="group-number ${groupClass}">G${escapeHtml(groupNumber)}</div>` : ""}
+            </div>
+            <div class="session-details">${escapeHtml(teacher)}</div>
+            <div class="session-details">${escapeHtml(session.group_name || session.department || "")}</div>
+            <div class="session-details">${semester ? `Sem ${escapeHtml(semester)}` : ""}</div>
+        </div>
+    `;
 }
 
 function renderUnassignedSection() {

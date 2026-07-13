@@ -131,6 +131,20 @@ class TheoryScheduleEntry:
 	is_co_scheduled: bool = False
 	capacity_info: Optional[str] = None
 	partner_instance_id: Optional[str] = None
+	delivery_mode: str = "legacy_full_slot"
+	bundle_id: Optional[str] = None
+	bundle_group_id: Optional[str] = None
+	bundle_label: Optional[str] = None
+	bundle_course_codes: Tuple[str, ...] = field(default_factory=tuple)
+	bundle_teacher_ids: Tuple[str, ...] = field(default_factory=tuple)
+	half_index: Optional[int] = None
+	half_minutes: int = 50
+	half_time: Optional[str] = None
+	partner_course_code: Optional[str] = None
+	partner_teacher_id: Optional[str] = None
+	partner_teacher_name: Optional[str] = None
+	pairing_score: int = 0
+	selection_mode: str = "CHOOSE_FACULTY"
 
 	def to_dict(self) -> Dict[str, object]:
 		return {
@@ -155,6 +169,20 @@ class TheoryScheduleEntry:
 			"is_co_scheduled": self.is_co_scheduled,
 			"capacity_info": self.capacity_info,
 			"partner_instance_id": self.partner_instance_id,
+			"delivery_mode": self.delivery_mode,
+			"bundle_id": self.bundle_id,
+			"bundle_group_id": self.bundle_group_id,
+			"bundle_label": self.bundle_label,
+			"bundle_course_codes": self.bundle_course_codes,
+			"bundle_teacher_ids": self.bundle_teacher_ids,
+			"half_index": self.half_index,
+			"half_minutes": self.half_minutes,
+			"half_time": self.half_time,
+			"partner_course_code": self.partner_course_code,
+			"partner_teacher_id": self.partner_teacher_id,
+			"partner_teacher_name": self.partner_teacher_name,
+			"pairing_score": self.pairing_score,
+			"selection_mode": self.selection_mode,
 			"group_name": self.group_name or self.group_id,
 			"group_index": self.group_index,
 			"department": self.department,

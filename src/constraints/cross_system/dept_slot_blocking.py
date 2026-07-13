@@ -504,6 +504,7 @@ class DeptSlotBlockingConstraint(Constraint):
         assignment_map = getattr(theory_block, "assignments", {}) or {}
         room_map = getattr(theory_block, "room_assignments", {}) or {}
         course_day_patterns = getattr(theory_block, "course_day_patterns", {}) or {}
+        course_requirements = getattr(theory_block, "course_requirements", {}) or {}
 
         for record in records:
             course_code = str(record.get("course_code") or "").strip().upper()
@@ -512,6 +513,7 @@ class DeptSlotBlockingConstraint(Constraint):
 
             teacher_id = str(record.get("teacher_id") or "").strip()
             course_id = str(record.get("course_instance_id") or "").strip()
+            component_id = self._resolve_theory_component_id(record, course_id, course_requirements)
             room_id = str(record.get("room_id") or "").strip()
             day_index = _safe_int(record.get("day_index"))
             day_label = self._normalize_day_label(record.get("day"))
@@ -519,10 +521,10 @@ class DeptSlotBlockingConstraint(Constraint):
             if not teacher_id or not course_id or not room_id or slot_index is None: continue
 
             teacher_bucket = assignment_map.get(teacher_id) or assignment_map.get(f"{teacher_id}.0") or {}
-            course_bucket = teacher_bucket.get(course_id) or {}
+            course_bucket = teacher_bucket.get(component_id) or {}
             if day_index is None:
                 if not day_label: continue
-                detected = self._find_day_index(context, course_id=course_id, course_day_map=course_bucket, day_patterns=course_day_patterns, scheduled_day=day_label)
+                detected = self._find_day_index(context, course_id=component_id, course_day_map=course_bucket, day_patterns=course_day_patterns, scheduled_day=day_label)
                 if detected is None:
                     missing += 1
                     continue
@@ -532,7 +534,7 @@ class DeptSlotBlockingConstraint(Constraint):
             slot_var = day_bucket.get(slot_index)
             
             room_teacher_bucket = room_map.get(teacher_id) or room_map.get(f"{teacher_id}.0") or {}
-            room_course_bucket = room_teacher_bucket.get(course_id) or {}
+            room_course_bucket = room_teacher_bucket.get(component_id) or {}
             room_day_bucket = room_course_bucket.get(day_index) or {}
             room_slot_bucket = room_day_bucket.get(slot_index) or {}
             room_var = room_slot_bucket.get(room_id)
@@ -655,6 +657,17 @@ class DeptSlotBlockingConstraint(Constraint):
             return value
         collapsed = " ".join(value.replace("&", " & ").split())
         return collapsed.replace("  ", " ").strip().lower()
+
+    @staticmethod
+    def _resolve_theory_component_id(record, course_id, requirements):
+        delivery_mode = str(record.get("delivery_mode") or "legacy_full_slot")
+        for component_id, requirement in requirements.items():
+            source_id = str(getattr(requirement, "source_instance_id", None) or component_id)
+            if source_id != course_id:
+                continue
+            if str(getattr(requirement, "delivery_mode", "legacy_full_slot")) == delivery_mode:
+                return component_id
+        return course_id
 
     @staticmethod
     def _normalize_day_label(value: object) -> str:

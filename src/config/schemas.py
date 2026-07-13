@@ -219,6 +219,11 @@ class GroupingConfig:
     # - "<department_slug>_s<semester>" (matches DepartmentSemesterKey.slug())
     # Wildcards are supported for dept/semester: "*|6", "Information Technology|*".
     consolidation_dept_sem_allowlist: Sequence[str] = field(default_factory=tuple)
+    # Second-year theory delivery: two permanent 25-minute course/staff halves
+    # share one ordinary 50-minute timetable slot and one classroom.
+    kutty_enabled: bool = True
+    kutty_semesters: Sequence[int] = field(default_factory=lambda: (3, 4))
+    kutty_unmatched_policy: str = "full_slot"
 
     def __post_init__(self) -> None:
         if self.max_groups_per_dept_sem is not None and self.max_groups_per_dept_sem <= 0:
@@ -229,6 +234,14 @@ class GroupingConfig:
             raise ValueError("random_seed cannot be negative")
 
         object.__setattr__(self, "consolidation_dept_sem_allowlist", tuple(self.consolidation_dept_sem_allowlist))
+        semesters = tuple(sorted({int(value) for value in self.kutty_semesters}))
+        if any(value <= 0 for value in semesters):
+            raise ValueError("kutty_semesters must contain positive semester numbers")
+        policy = str(self.kutty_unmatched_policy or "full_slot").strip().lower()
+        if policy not in {"full_slot", "error"}:
+            raise ValueError("kutty_unmatched_policy must be 'full_slot' or 'error'")
+        object.__setattr__(self, "kutty_semesters", semesters)
+        object.__setattr__(self, "kutty_unmatched_policy", policy)
 
 
 @dataclass(frozen=True)

@@ -142,6 +142,7 @@ class ScheduleValidator:
 			"lab_room_conflicts": self._check_lab_room_conflicts,
 			"theory_room_conflicts": self._check_theory_room_conflicts,
 			"group_overlaps": self._check_group_overlaps,
+			"kutty_bundle_integrity": self._check_kutty_bundle_integrity,
 			"theory_lab_conflicts": self._check_theory_lab_conflicts,
 			"lab_coverage": self._check_lab_session_coverage,
 			"theory_coverage": self._check_theory_slot_coverage,
@@ -271,7 +272,15 @@ class ScheduleValidator:
 			bucket[(entry.room_id, day_key, entry.slot_index)].append(entry)
 		issues: List[ValidationIssue] = []
 		for (room_id, day_key, slot_index), entries in bucket.items():
-			if len(entries) <= 1:
+			occupancies = {
+				(
+					entry.bundle_id
+					if entry.delivery_mode == "kutty_25x2" and entry.bundle_id
+					else f"course:{entry.course_instance_id}:{entry.teacher_id}"
+				)
+				for entry in entries
+			}
+			if len(occupancies) <= 1:
 				continue
 			day_index = entries[0].day_index if entries else None
 			day_label = entries[0].day if entries else None
@@ -303,7 +312,13 @@ class ScheduleValidator:
 	def _check_group_overlaps(self, schedule: ScheduleExtractionResult) -> List[ValidationIssue]:
 		bucket: MutableMapping[Tuple[str, int, int, int], List[str]] = defaultdict(list)
 		for entry in schedule.theory_entries:
-			bucket[(entry.department, entry.semester, entry.day_index, entry.slot_index)].append(entry.group_id)
+			bucket[(entry.department, entry.semester, entry.day_index, entry.slot_index)].append(
+				(
+					entry.bundle_group_id
+					if entry.delivery_mode == "kutty_25x2" and entry.bundle_group_id
+					else entry.group_id
+				)
+			)
 		issues: List[ValidationIssue] = []
 		for key, groups in bucket.items():
 			unique_groups = set(groups)
@@ -323,6 +338,39 @@ class ScheduleValidator:
 						"day_index": day_index,
 						"slot_index": slot_index,
 						"group_ids": sorted(unique_groups),
+					},
+				)
+			)
+		return issues
+
+	def _check_kutty_bundle_integrity(self, schedule: ScheduleExtractionResult) -> List[ValidationIssue]:
+		bucket: MutableMapping[Tuple[str, int, int], List[TheoryScheduleEntry]] = defaultdict(list)
+		for entry in schedule.theory_entries:
+			if entry.delivery_mode == "kutty_25x2" and entry.bundle_id:
+				bucket[(entry.bundle_id, entry.day_index, entry.slot_index)].append(entry)
+
+		issues: List[ValidationIssue] = []
+		for (bundle_id, day_index, slot_index), entries in bucket.items():
+			half_indices = {entry.half_index for entry in entries}
+			room_ids = {entry.room_id for entry in entries}
+			instance_ids = {entry.course_instance_id for entry in entries}
+			partner_ids = {entry.partner_instance_id for entry in entries}
+			valid_partners = instance_ids == partner_ids and None not in partner_ids
+			if len(entries) == 2 and half_indices == {1, 2} and len(room_ids) == 1 and valid_partners:
+				continue
+			issues.append(
+				ValidationIssue(
+					category="kutty_bundle_integrity",
+					severity=ValidationSeverity.ERROR,
+					message=f"Kutty bundle {bundle_id} is not a complete same-room 25+25 occurrence",
+					context={
+						"bundle_id": bundle_id,
+						"day_index": day_index,
+						"slot_index": slot_index,
+						"entry_count": len(entries),
+						"half_indices": sorted(value for value in half_indices if value is not None),
+						"room_ids": sorted(value for value in room_ids if value),
+						"instance_ids": sorted(value for value in instance_ids if value),
 					},
 				)
 			)
@@ -391,14 +439,16 @@ class ScheduleValidator:
 	def _check_theory_slot_coverage(self, schedule: ScheduleExtractionResult) -> List[ValidationIssue]:
 		if self._theory_course_requirements:
 			counts = Counter(
-				entry.course_instance_id
+				(entry.course_instance_id, entry.delivery_mode)
 				for entry in schedule.theory_entries
 				if entry.course_instance_id
 			)
 			issues: List[ValidationIssue] = []
 			for requirement in self._theory_course_requirements.values():
 				required = max(0, requirement.required_slots)
-				scheduled = counts.get(requirement.course_instance_id, 0)
+				source_instance_id = requirement.source_instance_id or requirement.course_instance_id
+				delivery_mode = getattr(requirement, "delivery_mode", "legacy_full_slot")
+				scheduled = counts.get((source_instance_id, delivery_mode), 0)
 				if scheduled == required:
 					continue
 				severity = (
@@ -411,11 +461,13 @@ class ScheduleValidator:
 						category="theory_coverage",
 						severity=severity,
 						message=(
-							f"Course {requirement.course_code} ({requirement.course_instance_id}) expected {required} theory slots "
+							f"Course {requirement.course_code} ({source_instance_id}, {delivery_mode}) expected {required} theory slots "
 							f"but found {scheduled}"
 						),
 						context={
-							"course_instance_id": requirement.course_instance_id,
+							"course_instance_id": source_instance_id,
+							"component_id": requirement.course_instance_id,
+							"delivery_mode": delivery_mode,
 							"group_id": requirement.group_id,
 							"department": requirement.department,
 							"semester": requirement.semester,

@@ -10,7 +10,13 @@ from ortools.sat.python import cp_model
 from ..base import Constraint, ConstraintMetadata
 from ..context import ConstraintContext
 from ..schema import ConstraintApplicationResult, ConstraintStatus
-from ..utils import iter_lab_session_variables, resolve_day_pattern, resolve_group_slot_map
+from ..utils import (
+	build_presence_literal,
+	iter_course_timeslot_variables,
+	iter_lab_session_variables,
+	resolve_day_pattern,
+	resolve_group_slot_map,
+)
 
 GroupKey = Tuple[str, int]
 LabSessionPresenceMap = Mapping[str, Mapping[int, Mapping[str, Tuple[cp_model.IntVar, ...]]]]
@@ -32,6 +38,9 @@ class GroupNonOverlapConstraint(Constraint):
 				status=ConstraintStatus.SKIPPED,
 				details={"reason": "no theory groups available"},
 			)
+
+		if getattr(theory_block, "bundle_specs", None):
+			return self._apply_kutty(context)
 
 		group_index = _group_ids_by_semester(theory_block.requirements)
 		relevant_keys = {key: ids for key, ids in group_index.items() if len(ids) > 1}
@@ -106,6 +115,101 @@ class GroupNonOverlapConstraint(Constraint):
 			},
 		)
 
+	def _apply_kutty(self, context: ConstraintContext) -> ConstraintApplicationResult:
+		"""Protect one-course selection groups while allowing only bundle twins.
+
+		The two course groups in a matched bundle may be active together only via
+		the same composite theory literal.  Their labs, singleton fallbacks, and
+		any unrelated group activity remain mutually exclusive.
+		"""
+
+		theory_block = context.variables.theory
+		group_index = _group_ids_by_semester(theory_block.requirements)
+		theory_activity = _collect_group_theory_activity(context)
+		lab_activity = _collect_group_lab_sessions(context)
+		overlap_index = _build_theory_lab_overlap_index(context)
+		partner_bundles: MutableMapping[frozenset[str], list[str]] = defaultdict(list)
+		for bundle_id, bundle in theory_block.bundle_specs.items():
+			if not bundle.is_paired or not bundle.second_group_id:
+				continue
+			partner_bundles[frozenset((bundle.first_group_id, bundle.second_group_id))].append(bundle_id)
+
+		clauses = 0
+		allowed_bundle_pairs = 0
+		for (department, _semester), group_ids in group_index.items():
+			if len(group_ids) <= 1:
+				continue
+			day_count = _resolve_day_count(context, theory_block, group_ids, department)
+			for first_index, first_group in enumerate(group_ids):
+				for second_group in group_ids[first_index + 1 :]:
+					pair_key = frozenset((first_group, second_group))
+					shared_bundle_ids = tuple(partner_bundles.get(pair_key, ()))
+					if shared_bundle_ids:
+						allowed_bundle_pairs += 1
+					for day_idx in range(day_count):
+						for slot_idx in range(len(theory_block.theory_slot_labels)):
+							first_vars = _raw_group_activity(
+								theory_activity, lab_activity, overlap_index, first_group, day_idx, slot_idx
+							)
+							second_vars = _raw_group_activity(
+								theory_activity, lab_activity, overlap_index, second_group, day_idx, slot_idx
+							)
+							if not first_vars or not second_vars:
+								continue
+
+							if not shared_bundle_ids:
+								first_presence = build_presence_literal(
+									context.model,
+									first_vars,
+									f"kutty_group_presence_{first_group}_d{day_idx}_s{slot_idx}",
+								)
+								second_presence = build_presence_literal(
+									context.model,
+									second_vars,
+									f"kutty_group_presence_{second_group}_d{day_idx}_s{slot_idx}",
+								)
+								if first_presence is not None and second_presence is not None:
+									context.model.AddAtMostOne(first_presence, second_presence)
+									clauses += 1
+								continue
+
+							shared_vars = _bundle_slot_variables(
+								theory_block, shared_bundle_ids, day_idx, slot_idx
+							)
+							shared_ids = {var.Index() for var in shared_vars}
+							first_extras = tuple(var for var in first_vars if var.Index() not in shared_ids)
+							second_extras = tuple(var for var in second_vars if var.Index() not in shared_ids)
+							presences = []
+							for label, variables in (
+								("shared", shared_vars),
+								("first_extra", first_extras),
+								("second_extra", second_extras),
+							):
+								presence = build_presence_literal(
+									context.model,
+									variables,
+									f"kutty_pair_{label}_{first_group}_{second_group}_d{day_idx}_s{slot_idx}",
+								)
+								if presence is not None:
+									presences.append(presence)
+							if len(presences) > 1:
+								context.model.AddAtMostOne(presences)
+								clauses += 1
+
+		status = ConstraintStatus.APPLIED if clauses else ConstraintStatus.SKIPPED
+		return ConstraintApplicationResult(
+			name=self.metadata.name,
+			domain=self.metadata.category,
+			priority=self.metadata.priority,
+			enabled=True,
+			status=status,
+			details={
+				"mode": "kutty_bundle_aware",
+				"guard_clauses": clauses,
+				"allowed_bundle_group_pairs": allowed_bundle_pairs,
+			},
+		)
+
 
 def _group_ids_by_semester(
 	requirements: Mapping[str, object]
@@ -138,6 +242,76 @@ def _collect_group_lab_sessions(context: ConstraintContext) -> LabSessionPresenc
 		}
 		for group_id, group_map in bucket.items()
 	}
+
+
+def _collect_group_theory_activity(
+	context: ConstraintContext,
+) -> Mapping[str, Mapping[int, Mapping[int, Tuple[cp_model.IntVar, ...]]]]:
+	bucket: MutableMapping[str, MutableMapping[int, MutableMapping[int, list[cp_model.IntVar]]]] = defaultdict(
+		lambda: defaultdict(lambda: defaultdict(list))
+	)
+	requirements = getattr(context.variables.theory, "course_requirements", {}) or {}
+	for _teacher_id, course_id, day_idx, slot_idx, var in iter_course_timeslot_variables(context):
+		requirement = requirements.get(course_id)
+		group_id = getattr(requirement, "group_id", None)
+		if group_id:
+			bucket[group_id][day_idx][slot_idx].append(var)
+	return {
+		group_id: {
+			day_idx: {
+				slot_idx: _dedupe_literals(variables)
+				for slot_idx, variables in slot_map.items()
+			}
+			for day_idx, slot_map in day_map.items()
+		}
+		for group_id, day_map in bucket.items()
+	}
+
+
+def _raw_group_activity(
+	theory_activity: Mapping[str, Mapping[int, Mapping[int, Tuple[cp_model.IntVar, ...]]]],
+	lab_activity: LabSessionPresenceMap,
+	overlap_index: TheorySlotSessionMap,
+	group_id: str,
+	day_idx: int,
+	slot_idx: int,
+) -> Tuple[cp_model.IntVar, ...]:
+	variables = list(theory_activity.get(group_id, {}).get(day_idx, {}).get(slot_idx, ()))
+	day_sessions = lab_activity.get(group_id, {}).get(day_idx, {})
+	for session_name in overlap_index.get(slot_idx, ()):
+		variables.extend(day_sessions.get(session_name, ()))
+	return _dedupe_literals(variables)
+
+
+def _bundle_slot_variables(
+	theory_block,
+	bundle_ids: Sequence[str],
+	day_idx: int,
+	slot_idx: int,
+) -> Tuple[cp_model.IntVar, ...]:
+	variables = []
+	for bundle_id in bundle_ids:
+		variable = (
+			getattr(theory_block, "bundle_assignments", {})
+			.get(bundle_id, {})
+			.get(day_idx, {})
+			.get(slot_idx)
+		)
+		if variable is not None:
+			variables.append(variable)
+	return _dedupe_literals(variables)
+
+
+def _dedupe_literals(variables: Sequence[cp_model.IntVar]) -> Tuple[cp_model.IntVar, ...]:
+	seen: set[int] = set()
+	result = []
+	for variable in variables:
+		identity = variable.Index()
+		if identity in seen:
+			continue
+		seen.add(identity)
+		result.append(variable)
+	return tuple(result)
 
 
 def _build_theory_lab_overlap_index(context: ConstraintContext) -> TheorySlotSessionMap:

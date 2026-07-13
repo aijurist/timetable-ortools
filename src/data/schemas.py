@@ -351,6 +351,82 @@ class CourseGroup:
 
 
 @dataclass(frozen=True)
+class KuttyBundle:
+	"""A permanent second-year theory offering pair.
+
+	Matched bundles teach ``first`` then ``second`` for 25 minutes each in the
+	same room for the common portion of their theory load.  When one course has
+	more lecture/tutorial hours, the excess is retained inside the same bundle
+	as ordinary 50-minute remainder blocks.  A singleton is an explicit
+	full-slot fallback for an odd or genuinely infeasible course code.
+	"""
+
+	key: DepartmentSemesterKey
+	bundle_id: str
+	bundle_group_id: str
+	first_instance_id: str
+	first_group_id: str
+	second_instance_id: Optional[str]
+	second_group_id: Optional[str]
+	delivery_mode: str
+	# Number of shared physical 50-minute blocks.  Each block contains one
+	# 25-minute half for each course.
+	required_blocks: int
+	# Kept for backwards compatibility; this is the first course's L+T load.
+	theory_hours: int
+	second_theory_hours: int
+	first_remainder_blocks: int
+	second_remainder_blocks: int
+	pairing_score: int
+	feasible_slot_count: int
+	score_breakdown: Mapping[str, int] = field(default_factory=dict)
+	tags: Tuple[str, ...] = field(default_factory=tuple)
+
+	@property
+	def is_paired(self) -> bool:
+		return bool(self.second_instance_id)
+
+	@property
+	def instance_ids(self) -> Tuple[str, ...]:
+		if self.second_instance_id:
+			return self.first_instance_id, self.second_instance_id
+		return (self.first_instance_id,)
+
+	@property
+	def shared_blocks(self) -> int:
+		return self.required_blocks if self.is_paired else 0
+
+	def remainder_blocks_for(self, instance_id: str) -> int:
+		if instance_id == self.first_instance_id:
+			return self.first_remainder_blocks
+		if instance_id == self.second_instance_id:
+			return self.second_remainder_blocks
+		return 0
+
+	def as_dict(self) -> Dict[str, Any]:
+		return {
+			"bundle_id": self.bundle_id,
+			"bundle_group_id": self.bundle_group_id,
+			"department": self.key.department,
+			"semester": self.key.semester,
+			"first_instance_id": self.first_instance_id,
+			"first_group_id": self.first_group_id,
+			"second_instance_id": self.second_instance_id,
+			"second_group_id": self.second_group_id,
+			"delivery_mode": self.delivery_mode,
+			"required_blocks": self.required_blocks,
+			"theory_hours": self.theory_hours,
+			"second_theory_hours": self.second_theory_hours,
+			"first_remainder_blocks": self.first_remainder_blocks,
+			"second_remainder_blocks": self.second_remainder_blocks,
+			"pairing_score": self.pairing_score,
+			"feasible_slot_count": self.feasible_slot_count,
+			"score_breakdown": dict(self.score_breakdown),
+			"tags": self.tags,
+		}
+
+
+@dataclass(frozen=True)
 class GroupRequirement:
 	group_id: str
 	department: str
@@ -401,6 +477,7 @@ class PreprocessingResult:
 	scheduling_packages: Mapping[DepartmentSemesterKey, DepartmentSchedulingPackage]
 	warnings: Tuple[str, ...]
 	stats: Mapping[str, Any]
+	kutty_bundles: Mapping[DepartmentSemesterKey, Tuple[KuttyBundle, ...]] = field(default_factory=dict)
 
 	def to_dict(self) -> Dict[str, Any]:
 		return {
@@ -423,6 +500,10 @@ class PreprocessingResult:
 					"metadata": dict(package.metadata),
 				}
 				for key, package in self.scheduling_packages.items()
+			},
+			"kutty_bundles": {
+				key.slug(): [bundle.as_dict() for bundle in bundles]
+				for key, bundles in self.kutty_bundles.items()
 			},
 			"warnings": list(self.warnings),
 			"stats": dict(self.stats),

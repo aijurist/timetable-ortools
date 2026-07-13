@@ -20,7 +20,7 @@ LOGGER = logging.getLogger(__name__)
 class WarmStartManager:
     """Persist and reload solver assignments to prime subsequent solves."""
 
-    SNAPSHOT_VERSION = 1
+    SNAPSHOT_VERSION = 3
 
     def __init__(self, config: SchedulerConfig, *, base_dir: Optional[Path] = None) -> None:
         self._config = config
@@ -131,11 +131,13 @@ class WarmStartManager:
             assignment_map = getattr(theory_block, "assignments", {}) or {}
             group_map = getattr(theory_block, "group_timeslots", {}) or {}
             room_map = getattr(theory_block, "room_assignments", {}) or {}
+            requirements = getattr(theory_block, "course_requirements", {}) or {}
             for record in payload.get("theory_assignments", []):
                 if _limit_reached():
                     break
+                component_id = self._resolve_theory_component_id(record, requirements)
                 teacher_bucket = assignment_map.get(record.get("teacher_id")) or {}
-                course_bucket = teacher_bucket.get(record.get("course_instance_id")) or {}
+                course_bucket = teacher_bucket.get(component_id) or {}
                 day_bucket = course_bucket.get(record.get("day_index")) or {}
                 var = day_bucket.get(record.get("slot_index"))
                 _try_hint(var)
@@ -147,7 +149,7 @@ class WarmStartManager:
                 room_id = record.get("room_id")
                 if room_id:
                     room_teacher_bucket = room_map.get(record.get("teacher_id")) or {}
-                    room_course_bucket = room_teacher_bucket.get(record.get("course_instance_id")) or {}
+                    room_course_bucket = room_teacher_bucket.get(component_id) or {}
                     room_day_bucket = room_course_bucket.get(record.get("day_index")) or {}
                     room_slot_bucket = room_day_bucket.get(record.get("slot_index")) or {}
                     room_var = room_slot_bucket.get(room_id)
@@ -158,6 +160,21 @@ class WarmStartManager:
         else:
             self._logger.info("Warm-start snapshot available but no hints were applied")
         return hints_applied
+
+    @staticmethod
+    def _resolve_theory_component_id(
+        record: Mapping[str, Any],
+        requirements: Mapping[str, Any],
+    ) -> str:
+        source_id = str(record.get("course_instance_id") or "")
+        delivery_mode = str(record.get("delivery_mode") or "legacy_full_slot")
+        for component_id, requirement in requirements.items():
+            requirement_source = str(getattr(requirement, "source_instance_id", None) or component_id)
+            if requirement_source != source_id:
+                continue
+            if str(getattr(requirement, "delivery_mode", "legacy_full_slot")) == delivery_mode:
+                return component_id
+        return source_id
 
     # ------------------------------------------------------------------
     # Snapshot serialisation helpers
@@ -190,6 +207,9 @@ class WarmStartManager:
                 "day_index": entry.day_index,
                 "slot_index": entry.slot_index,
                 "room_id": entry.room_id,
+                "bundle_id": entry.bundle_id,
+                "bundle_group_id": entry.bundle_group_id,
+                "half_index": entry.half_index,
             }
             for entry in schedule.theory_entries
             if entry.teacher_id and entry.course_instance_id and entry.group_id
@@ -257,6 +277,16 @@ class WarmStartManager:
             if variables and variables.theory
             else tuple()
         )
+        bundle_keys: Sequence[Tuple[str, Tuple[str, ...]]] = (
+            tuple(
+                sorted(
+                    (bundle_id, tuple(bundle.instance_ids))
+                    for bundle_id, bundle in (variables.theory.bundle_specs or {}).items()
+                )
+            )
+            if variables and variables.theory
+            else tuple()
+        )
         payload = {
             "config": {
                 "name": self._config.meta.name,
@@ -265,6 +295,7 @@ class WarmStartManager:
             "lab": lab_keys,
             "theory": theory_course_keys,
             "groups": group_keys,
+            "kutty_bundles": bundle_keys,
         }
         return hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()
 

@@ -46,6 +46,12 @@ class TheorySlotCoverageConstraint(Constraint):
 				)
 			]
 			if not slot_variables:
+				# A required course with every slot pruned (fixed schedule, POP, or
+				# room intersection) is a genuine infeasibility.  Skipping here would
+				# produce a superficially feasible timetable with the course missing.
+				model.Add(0 == required_slots)
+				stats.courses_with_constraints += 1
+				stats.constraints_added += 1
 				continue
 
 			model.Add(sum(slot_variables) == required_slots)

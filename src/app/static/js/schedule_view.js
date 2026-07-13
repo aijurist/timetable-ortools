@@ -1,4 +1,16 @@
 // Combined Schedule Viewer powered by FastAPI schedule API
+import {
+    KUTTY_REMAINDER_MODE,
+    buildTeacherSchedule,
+    countPhysicalSessions,
+    escapeHtml,
+    expandKuttyOccurrenceMatches,
+    groupCellSessions,
+    renderKuttySessionCard,
+    teacherKey,
+    updateBundlePanel,
+} from "./kutty_schedule.mjs?v=20260713e";
+
 let labData = [];
 let theoryData = [];
 let allData = [];
@@ -163,9 +175,9 @@ function updateDaysFromData() {
 }
 
 function updateSummaryStats() {
-    const totalSessions = allData.length;
+    const totalSessions = countPhysicalSessions(allData);
     const labSessionsCount = labData.length;
-    const theorySessionsCount = theoryData.length;
+    const theorySessionsCount = countPhysicalSessions(theoryData);
     const teacherIds = allData.map((item) => item.teacher_id || item.teacher_name).filter(Boolean);
     const teachers = new Set(teacherIds).size;
     const rooms = new Set(allData.map((item) => item.room_id || item.room_number).filter(Boolean)).size;
@@ -208,18 +220,20 @@ function getFilteredData() {
     if (dayPattern) {
         filtered = filtered.filter((item) => item.day_pattern === dayPattern);
     }
-    if (courseSearch) {
-        filtered = filtered.filter(
-            (item) =>
+    const structuralScope = filtered;
+    if (courseSearch || teacherSearch || roomSearch) {
+        const directMatches = structuralScope.filter((item) => {
+            const matchesCourse = !courseSearch ||
                 (item.course_code || "").toLowerCase().includes(courseSearch) ||
-                (item.course_name || "").toLowerCase().includes(courseSearch)
-        );
-    }
-    if (teacherSearch) {
-        filtered = filtered.filter((item) => (item.teacher_name || "").toLowerCase().includes(teacherSearch));
-    }
-    if (roomSearch) {
-        filtered = filtered.filter((item) => (item.room_number || "").toLowerCase().includes(roomSearch));
+                (item.course_name || "").toLowerCase().includes(courseSearch);
+            const matchesTeacher = !teacherSearch ||
+                (item.teacher_name || "").toLowerCase().includes(teacherSearch) ||
+                String(item.staff_code || item.teacher_id || "").toLowerCase().includes(teacherSearch);
+            const matchesRoom = !roomSearch ||
+                (item.room_number || "").toLowerCase().includes(roomSearch);
+            return matchesCourse && matchesTeacher && matchesRoom;
+        });
+        filtered = expandKuttyOccurrenceMatches(structuralScope, directMatches);
     }
 
     return filtered;
@@ -228,6 +242,7 @@ function getFilteredData() {
 function renderContent() {
     const viewType = document.getElementById("viewType").value;
     const filteredData = getFilteredData();
+    updateBundlePanel(filteredData);
 
     switch (viewType) {
         case "department":
@@ -267,7 +282,7 @@ function renderDepartmentView(data) {
                     <h5 class="mb-0">
                         <i class="fas fa-building me-2"></i>
                         ${dept}
-                        <span class="badge bg-light text-dark ms-2">${deptData.length} sessions</span>
+                        <span class="badge bg-light text-dark ms-2">${countPhysicalSessions(deptData)} sessions</span>
                         ${deptDayPattern ? `<span class="badge bg-info ms-2">${deptDayPattern}</span>` : ""}
                     </h5>
                 </div>
@@ -279,7 +294,7 @@ function renderDepartmentView(data) {
             html += `
                 <h6 class="text-primary mb-3">
                     <i class="fas fa-graduation-cap me-1"></i>
-                    Semester ${semester} (${semesterData.length} sessions)
+                    Semester ${semester} (${countPhysicalSessions(semesterData)} sessions)
                 </h6>
                 ${generateScheduleTable(semesterData)}
                 <hr>
@@ -313,7 +328,7 @@ function renderSemesterView(data) {
                     <h5 class="mb-0">
                         <i class="fas fa-graduation-cap me-2"></i>
                         Semester ${semester}
-                        <span class="badge bg-light text-dark ms-2">${semesterData.length} sessions</span>
+                        <span class="badge bg-light text-dark ms-2">${countPhysicalSessions(semesterData)} sessions</span>
                     </h5>
                 </div>
                 <div class="card-body">
@@ -324,7 +339,7 @@ function renderSemesterView(data) {
             html += `
                 <h6 class="text-success mb-3">
                     <i class="fas fa-building me-1"></i>
-                    ${dept} (${deptData.length} sessions)
+                    ${dept} (${countPhysicalSessions(deptData)} sessions)
                 </h6>
                 ${generateScheduleTable(deptData)}
                 <hr>
@@ -361,7 +376,7 @@ function renderRoomView(data) {
                         <i class="fas ${isLab ? 'fa-flask' : 'fa-chalkboard'} me-2"></i>
                         ${roomNumber} - ${blockName}
                         <span class="badge bg-light text-dark ms-2">Capacity: ${capacity}</span>
-                        <span class="badge bg-light text-dark ms-2">${roomData.length} sessions</span>
+                        <span class="badge bg-light text-dark ms-2">${countPhysicalSessions(roomData)} sessions</span>
                     </h5>
                 </div>
                 <div class="card-body">
@@ -375,15 +390,28 @@ function renderRoomView(data) {
 }
 
 function renderTeacherView(data) {
-    const teachers = [...new Set(data.map((item) => `${item.teacher_name || "Unknown"}|${item.staff_code || item.teacher_id || ""}`))].sort();
+    const teacherSearch = document.getElementById("teacherSearch").value.toLowerCase();
+    const teacherMap = new Map();
+    data.forEach((item) => {
+        const key = teacherKey(item);
+        if (!key || teacherMap.has(key)) return;
+        const name = item.teacher_name || "Unknown";
+        const staffCode = item.staff_code || item.teacher_id || "";
+        const haystack = `${name} ${staffCode}`.toLowerCase();
+        if (teacherSearch && !haystack.includes(teacherSearch)) return;
+        teacherMap.set(key, { key, name, staffCode });
+    });
+    const teachers = [...teacherMap.values()].sort((left, right) => left.name.localeCompare(right.name));
     let html = "";
 
-    teachers.forEach((teacherInfo) => {
-        const [teacherName, staffCode] = teacherInfo.split("|");
-        const teacherData = data.filter((item) => item.teacher_name === teacherName);
+    teachers.forEach(({ key, name: teacherName, staffCode }) => {
+        const ownedData = data.filter((item) => teacherKey(item) === key);
+        const teacherData = buildTeacherSchedule(data, key);
 
-        const labSessions = teacherData.filter((item) => item.schedule_type === "lab").length;
-        const theorySessions = teacherData.filter((item) => item.schedule_type === "theory").length;
+        const labSessions = ownedData.filter((item) => item.schedule_type === "lab").length;
+        const theorySessions = countPhysicalSessions(
+            ownedData.filter((item) => item.schedule_type === "theory")
+        );
 
         html += `
             <div class="card mb-4">
@@ -396,7 +424,7 @@ function renderTeacherView(data) {
                     </h5>
                 </div>
                 <div class="card-body">
-                    ${generateScheduleTable(teacherData)}
+                    ${generateScheduleTable(teacherData, { focusTeacherKey: key })}
                 </div>
             </div>
         `;
@@ -413,7 +441,9 @@ function renderDayView(data) {
         if (dayData.length === 0) return;
 
         const labCount = dayData.filter((item) => item.schedule_type === "lab").length;
-        const theoryCount = dayData.filter((item) => item.schedule_type === "theory").length;
+        const theoryCount = countPhysicalSessions(
+            dayData.filter((item) => item.schedule_type === "theory"),
+        );
 
         html += `
             <div class="card mb-4">
@@ -435,7 +465,7 @@ function renderDayView(data) {
     document.getElementById("mainContent").innerHTML = html || emptyState();
 }
 
-function generateScheduleTable(data) {
+function generateScheduleTable(data, options = {}) {
     if (data.length === 0) {
         return '<div class="alert alert-info">No sessions found for the selected filters.</div>';
     }
@@ -565,40 +595,10 @@ function generateScheduleTable(data) {
             const sessions = scheduleGrid[day][timeSlot] || [];
             html += "<td>";
 
-            sessions.forEach((session) => {
-                const isLab = session.schedule_type === "lab";
-                const isBatched = session.is_batched;
-                const batchLabel = session.batch_label || session.batch_info;
-                const batchNumber = session.batch_number;
-                const sessionClass = isLab ? "lab-session" : "theory-session";
-                const batchClass = isBatched ? "batched-session" : "";
-
-                const groupClass = getGroupClass(session.group_name);
-                const deptClass = getDeptClass(session.department);
-                const semester = getSemesterFromGroupName(session.group_name) || `S${session.semester}`;
-                const groupNumber = session.group_name ? session.group_name.match(/_G(\d+)$/)?.[1] || "" : "";
-
-                html += `
-                    <div class="${sessionClass} ${batchClass} ${deptClass}" title="
-                        Course: ${session.course_name}
-                        Teacher: ${session.teacher_name}
-                        Room: ${session.room_number} (${session.block})
-                        Department: ${session.department}
-                        Group: ${session.group_name}
-                        Semester: ${semester}
-                        ${isLab ? 'Capacity: ' + (session.capacity || 'NA') : ''}
-                        ${isLab && (batchLabel || batchNumber) ? 'Batch: ' + (batchLabel || `Batch ${batchNumber}`) : ''}
-                    ">
-                        <div class="session-header">
-                            <div class="session-code">${session.course_code_display || session.course_code}</div>
-                            ${groupNumber ? `<div class="group-number ${groupClass}">G${groupNumber}</div>` : ""}
-                        </div>
-                        <div class="session-teacher">${session.teacher_name}</div>
-                        <div class="session-room">${session.room_number || 'TBD'}</div>
-                        ${isLab && (batchLabel || batchNumber) ? `<div class="batch-label">${batchLabel || `Batch ${batchNumber}`}</div>` : ""}
-                        <div class="semester-indicator">${semester}</div>
-                    </div>
-                `;
+            groupCellSessions(sessions).forEach((block) => {
+                html += block.kind === "kutty"
+                    ? renderKuttySessionCard(block.sessions, options)
+                    : renderStandardSession(block.sessions[0]);
             });
 
             html += "</td>";
@@ -614,6 +614,37 @@ function generateScheduleTable(data) {
     `;
 
     return html;
+}
+
+function renderStandardSession(session) {
+    const isLab = session.schedule_type === "lab";
+    const isBatched = session.is_batched;
+    const isRemainder = session.delivery_mode === KUTTY_REMAINDER_MODE;
+    const batchLabel = session.batch_label || session.batch_info;
+    const batchNumber = session.batch_number;
+    const sessionClass = isLab ? "lab-session" : "theory-session";
+    const batchClass = isBatched ? "batched-session" : "";
+    const remainderClass = isRemainder ? "kutty-remainder-session" : "";
+    const groupClass = getGroupClass(session.group_name);
+    const deptClass = getDeptClass(session.department);
+    const semester = getSemesterFromGroupName(session.group_name) || `S${session.semester}`;
+    const groupNumber = session.group_name ? session.group_name.match(/_G(\d+)$/)?.[1] || "" : "";
+    const bundleClass = session.bundle_id ? "bundle-session" : "";
+    const bundleId = session.bundle_id || "";
+
+    return `
+        <div class="${sessionClass} ${batchClass} ${remainderClass} ${deptClass} ${bundleClass} schedule-session-card"
+             data-bundle-id="${escapeHtml(bundleId)}">
+            <div class="session-header">
+                <div class="session-code">${escapeHtml(session.course_code_display || session.course_code || "Course")}</div>
+                ${groupNumber ? `<div class="group-number ${groupClass}">G${escapeHtml(groupNumber)}</div>` : ""}
+            </div>
+            <div class="session-teacher">${escapeHtml(session.teacher_name || "Staff TBA")}</div>
+            <div class="session-room">${escapeHtml(session.room_number || "TBD")}</div>
+            ${isLab && (batchLabel || batchNumber) ? `<div class="batch-label">${escapeHtml(batchLabel || `Batch ${batchNumber}`)}</div>` : ""}
+            <div class="semester-indicator">${escapeHtml(semester)}</div>
+        </div>
+    `;
 }
 
 function parseTimeSlot(timeSlot) {

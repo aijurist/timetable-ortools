@@ -43,7 +43,7 @@ class ScheduleBlockingMask:
     cross_blocked_lab_sessions: Set[Tuple[str, str, str]] = field(default_factory=set)
 
     # Fixed schedule hours per teacher per day: (teacher_id, day_label) -> hours
-    teacher_daily_fixed_hours: Dict[Tuple[str, str], int] = field(default_factory=dict)
+    teacher_daily_fixed_hours: Dict[Tuple[str, str], float] = field(default_factory=dict)
 
     def is_lab_variable_blocked(
         self,
@@ -211,12 +211,14 @@ def build_schedule_blocking_mask(
         rid = normalize_room_id(record.get("room_id"))
         day = _resolve_day_label(record.get("day"), record.get("day_index"), cid, day_patterns, working_days)
 
-        if not tid or not session or not rid or not day:
+        if not tid or not session or not day:
             continue
 
-        mask.locked_lab_assignments.add((tid, cid, day, session, rid))
-        mask.blocked_lab_rooms.add((day, session, rid))
         mask.blocked_lab_teacher_sessions.add((tid, day, session))
+        if rid:
+            mask.blocked_lab_rooms.add((day, session, rid))
+            if cid:
+                mask.locked_lab_assignments.add((tid, cid, day, session, rid))
 
         # Count fixed hours (only once per teacher/day/session)
         session_key = (tid, day, session)
@@ -233,19 +235,24 @@ def build_schedule_blocking_mask(
         day = _resolve_day_label(record.get("day"), record.get("day_index"), cid, day_patterns, working_days)
         slot_idx = safe_int(record.get("slot_index"))
 
-        if not tid or not rid or not day or slot_idx is None:
+        if not tid or not day or slot_idx is None:
             continue
 
-        mask.locked_theory_assignments.add((tid, cid, day, slot_idx, rid))
-        mask.blocked_theory_rooms.add((day, slot_idx, rid))
         mask.blocked_theory_teacher_slots.add((tid, day, slot_idx))
+        if rid:
+            mask.blocked_theory_rooms.add((day, slot_idx, rid))
+            if cid:
+                mask.locked_theory_assignments.add((tid, cid, day, slot_idx, rid))
 
-        # Count fixed theory hours (1 hour per slot, only once per teacher/day/slot)
+        # Count teaching load once per teacher/day/slot.  Kutty exports occupy
+        # the full conflict window but contribute only a 25-minute teaching half.
         slot_key = (tid, day, slot_idx)
         if slot_key not in counted_theory_slots:
             counted_theory_slots.add(slot_key)
             key = (tid, day)
-            mask.teacher_daily_fixed_hours[key] = mask.teacher_daily_fixed_hours.get(key, 0) + 1
+            mask.teacher_daily_fixed_hours[key] = (
+                mask.teacher_daily_fixed_hours.get(key, 0) + _theory_teaching_hours(record)
+            )
 
     _build_cross_domain_blocks(mask, lab_session_to_theory_mapping)
 
@@ -366,6 +373,14 @@ def _resolve_path(candidate: Path) -> Path:
 def _normalize_csv_header(value: object) -> str:
     """Normalize exported CSV headers, including UTF-8 BOM-prefixed first columns."""
     return str(value or "").replace("\ufeff", "").strip()
+
+
+def _theory_teaching_hours(record: Mapping[str, object]) -> float:
+    delivery_mode = str(record.get("delivery_mode") or "").strip().lower()
+    half_minutes = safe_int(record.get("half_minutes"))
+    if delivery_mode == "kutty_25x2" or half_minutes == 25:
+        return 0.5
+    return 1.0
 
 
 __all__ = ["ScheduleBlockingMask", "build_schedule_blocking_mask"]

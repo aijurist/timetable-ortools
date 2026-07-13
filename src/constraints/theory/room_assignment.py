@@ -155,6 +155,29 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 				stats["penalties"] += 1
 
 		for (room_id, _day, _slot), usage_list in room_slot_usage.items():
+			# A Kutty bundle is intentionally exposed through both course/staff
+			# aliases, but those aliases point to one physical room literal.  Collapse
+			# them before capacity/conflict constraints or AddAtMostOne([x, x]) would
+			# incorrectly force every bundle occurrence to zero.
+			by_literal: Dict[int, tuple[list[str], cp_model.IntVar]] = {}
+			for course_id, literal in usage_list:
+				identity = literal.Index()
+				if identity not in by_literal:
+					by_literal[identity] = ([course_id], literal)
+				else:
+					by_literal[identity][0].append(course_id)
+			collapsed_usage = []
+			has_kutty = False
+			for course_ids, literal in by_literal.values():
+				for course_id in course_ids:
+					requirement = theory_block.course_requirements.get(course_id)
+					has_kutty = has_kutty or getattr(requirement, "delivery_mode", "") == "kutty_25x2"
+				representative = max(
+					course_ids,
+					key=lambda cid: getattr(theory_block.course_requirements.get(cid), "student_count", 0) or 0,
+				)
+				collapsed_usage.append((representative, literal))
+			usage_list = collapsed_usage
 			if len(usage_list) <= 1:
 				continue
 
@@ -173,6 +196,13 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 					weights.append(sc)
 					vars_only.append(var)
 				model.Add(sum(w * v for w, v in zip(weights, vars_only)) <= capacity)
+
+			# A 25+25 bundle reserves its classroom for the entire 50-minute block.
+			# It cannot share that room with another full-slot or bundled offering.
+			if has_kutty:
+				model.AddAtMostOne([var for _, var in usage_list])
+				stats["room_conflict_constraints"] += 1
+				continue
 
 			# Determine co-scheduling limit based on capacity; disallow co-scheduling for large courses
 			limit = 1

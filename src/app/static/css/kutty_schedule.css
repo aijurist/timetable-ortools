@@ -1,0 +1,277 @@
+.schedule-session-card {
+    transition: opacity 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.schedule-table td.time-header,
+.schedule-table td.time-slot {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    width: 120px;
+    min-width: 120px !important;
+    color: #fff !important;
+    background-color: #3498db !important;
+    box-shadow: 1px 0 0 #d1d5db;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.schedule-table thead th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 4;
+    width: 120px;
+    min-width: 120px;
+}
+
+.kutty-simple-session {
+    overflow: hidden;
+    margin: 2px 0 !important;
+    padding: 0 !important;
+    border: 1px solid #cbd5e1;
+    border-left: 4px solid #27ae60 !important;
+    border-radius: 4px !important;
+    background: #f8f9fa !important;
+    box-shadow: none !important;
+    text-align: left;
+}
+
+.kutty-compact-half {
+    padding: 5px 6px;
+    background: transparent;
+}
+
+.kutty-compact-topline {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+.kutty-compact-course {
+    color: var(--primary-color, #2c3e50);
+    font-size: 0.76rem;
+    line-height: 1.15;
+}
+
+.kutty-compact-topline time {
+    color: #64748b;
+    font-size: 0.59rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.kutty-compact-teacher {
+    margin-top: 2px;
+    color: #4b5563;
+    font-size: 0.69rem;
+    line-height: 1.2;
+}
+
+.kutty-compact-staff {
+    color: #6b7280;
+    font-size: 0.6rem;
+}
+
+.kutty-compact-divider {
+    height: 0;
+    margin: 0 5px;
+    border-top: 1px solid #94a3b8;
+}
+
+.kutty-compact-room {
+    padding: 3px 6px;
+    border-top: 1px solid #e5e7eb;
+    color: #6b7280;
+    background: #fff;
+    font-size: 0.62rem;
+    text-align: center;
+}
+
+.kutty-compact-focus {
+    background: #fff7d6;
+    box-shadow: inset 3px 0 0 #f59e0b;
+}
+
+.kutty-compact-missing {
+    color: #991b1b;
+    background: #fef2f2;
+}
+
+.kutty-remainder-session {
+    padding: 4px 4px 14px !important;
+    border: 1px solid #f4cf75 !important;
+    border-left: 4px solid #f59e0b !important;
+    background: #fffbeb !important;
+}
+
+.bundle-panel-toggle {
+    position: fixed;
+    right: 0;
+    top: 44%;
+    z-index: 1040;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 11px;
+    border: 0;
+    border-radius: 8px 0 0 8px;
+    color: #fff;
+    background: #2c3e50;
+    box-shadow: 0 3px 12px rgba(15, 23, 42, 0.24);
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.bundle-panel-toggle span {
+    min-width: 20px;
+    padding: 1px 5px;
+    border-radius: 999px;
+    color: #1e293b;
+    background: #fff;
+    text-align: center;
+}
+
+.bundle-side-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1050;
+    width: min(390px, 92vw);
+    padding: 0;
+    border-left: 1px solid #cbd5e1;
+    background: #f8fafc;
+    box-shadow: -8px 0 24px rgba(15, 23, 42, 0.18);
+    transform: translateX(105%);
+    transition: transform 180ms ease;
+}
+
+.bundle-side-panel.is-open {
+    transform: translateX(0);
+}
+
+.bundle-panel-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #fff;
+    background: #2c3e50;
+}
+
+.bundle-panel-header strong,
+.bundle-panel-header small {
+    display: block;
+}
+
+.bundle-panel-header small {
+    margin-top: 3px;
+    color: #cbd5e1;
+    font-size: 0.7rem;
+}
+
+.bundle-panel-close {
+    border: 0;
+    color: #fff;
+    background: transparent;
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.bundle-panel-content {
+    overflow-y: auto;
+    height: calc(100% - 78px);
+    padding: 10px;
+}
+
+.bundle-panel-item {
+    display: block;
+    width: 100%;
+    margin-bottom: 8px;
+    padding: 10px;
+    border: 1px solid #dbe3ec;
+    border-radius: 6px;
+    color: #334155;
+    background: #fff;
+    text-align: left;
+    transition: border-color 120ms ease, background 120ms ease;
+}
+
+.bundle-panel-item:hover,
+.bundle-panel-item:focus,
+.bundle-panel-item.is-active {
+    border-color: #4f46e5;
+    outline: none;
+    background: #eef2ff;
+}
+
+.bundle-panel-label,
+.bundle-panel-staff,
+.bundle-panel-instances,
+.bundle-panel-item code {
+    display: block;
+}
+
+.bundle-panel-label {
+    color: #1e293b;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.bundle-panel-staff {
+    margin-top: 3px;
+    color: #475569;
+    font-size: 0.7rem;
+}
+
+.bundle-panel-instances {
+    margin-top: 5px;
+    color: #4338ca;
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
+.bundle-panel-item code {
+    margin-top: 4px;
+    overflow-wrap: anywhere;
+    color: #64748b;
+    font-size: 0.58rem;
+}
+
+.bundle-panel-empty {
+    padding: 18px 10px;
+    color: #64748b;
+    text-align: center;
+}
+
+body.bundle-inspect-active .schedule-session-card {
+    opacity: 0.2;
+}
+
+body.bundle-inspect-active .schedule-session-card.bundle-session-highlight {
+    position: relative;
+    z-index: 2;
+    opacity: 1;
+    outline: 3px solid #f59e0b;
+    outline-offset: 2px;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3) !important;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    .bundle-panel-toggle {
+        top: auto;
+        right: 10px;
+        bottom: 10px;
+        border-radius: 8px;
+    }
+
+    .kutty-compact-topline {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 1px;
+    }
+}
