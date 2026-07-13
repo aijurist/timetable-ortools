@@ -81,7 +81,11 @@ def build(dept, rseed=1, parallel=None):
     if parallel:
         # gate the parallel-batch feature ON (separate output; default runs unaffected).
         # Scope = dept-private core-labs only (exclude shared-pool computer-lab courses).
-        PBC = ["EC23321", "IT23331", "BM23322", "AE23331"]
+        # Parallel-batch scope: dept-private 2-room core-labs + pinned computer-labs
+        # (each pinned to a specific 2-room set, so no shared-pool contention).
+        # Combined-lab courses (CS23332/CS23333/CB23333) never qualify (140-cap ANEW).
+        PBC = ["EC23321", "IT23331", "BM23322", "AE23331",
+               "CB23331", "CB23332", "CD23331", "CD23332", "CS23422"]
         cross["teacher_overlap"] = {"params": {"parallel_batch_enabled": True, "parallel_batch_courses": PBC}}
         lab["room_single_assignment"] = {"params": {"parallel_batch_enabled": True, "parallel_batch_courses": PBC}}
         lab["parallel_batch_lab"] = {"enabled": True, "params": {"min_eligible_rooms": 2, "parallel_batch_courses": PBC}}
@@ -165,6 +169,7 @@ def phase1(rseed):
             # around the seniors, so schedule it sequentially instead.
             used_parallel = False
             st, cm, data, model, tb, lb, s = attempt(False)
+            print(f"    [fallback] {dept} could not fit fully-parallel -> sequential ({st})", flush=True)
         if os.environ.get("DEBUG_DEPT") == "1":
             print(f"    {dept[:34]:34s} -> {st}", flush=True)
         if st not in ("OPTIMAL", "FEASIBLE"):
