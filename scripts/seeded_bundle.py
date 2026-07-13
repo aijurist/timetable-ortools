@@ -73,7 +73,10 @@ def build(dept, rseed=1, parallel=None):
         parallel = PARALLEL
     cross = {"bundled_theory": {"enabled": True, "priority": 2, "weight": 1.0,
               "params": {"eligible_cohorts": ["*_S3"], "force_maximal_pairing": False,
-                         "solo_penalty_weight": 50, "enforce_shared_room": True}}}
+                         "solo_penalty_weight": 50, "enforce_shared_room": True,
+                         # per-slot partial pairing: unequal-hour courses bundle their
+                         # overlapping hours, the longer course's extra hour(s) go solo.
+                         "allow_partial_pairing": True}}}
     lab = {}
     if parallel:
         # gate the parallel-batch feature ON (separate output; default runs unaffected).

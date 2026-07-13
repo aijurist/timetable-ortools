@@ -56,6 +56,10 @@ class BundledTheoryConstraint(Constraint):
 		solo_penalty = int(self.params.get("solo_penalty_weight", 10) or 0)
 		enforce_shared_room = bool(self.params.get("enforce_shared_room", True))
 		hint_pairing = bool(self.params.get("hint_maximal_pairing", True))
+		# Partial (per-slot) pairing: two courses of UNEQUAL required hours may still
+		# bundle their overlapping hours (min of the two); the longer course's extra
+		# hour(s) schedule solo. Off by default -> only equal-hour pairs bundle.
+		allow_partial = bool(self.params.get("allow_partial_pairing", False))
 
 		# Combined lab-block courses are individual (never bundled) — exclude their codes.
 		combined_cfg = getattr(getattr(context.config, "model", None), "combined_lab_courses", {}) or {}
@@ -101,19 +105,27 @@ class BundledTheoryConstraint(Constraint):
 				for course_id, _ in courses
 			}
 
-			# Candidate pairs: equal required hours + different teacher.
+			# Candidate pairs: different teacher, and (unless partial pairing is enabled)
+			# equal required hours. ``pair_share`` records how many hours each pair bundles
+			# together (min of the two courses' hours); the coupling below uses it.
 			pair_vars: Dict[Tuple[int, int], cp_model.IntVar] = {}
+			pair_share: Dict[Tuple[int, int], int] = {}
 			for a in range(len(courses)):
 				cid_a, req_a = courses[a]
+				base_a = int(getattr(req_a, "required_slots", 0))
 				for b in range(a + 1, len(courses)):
 					cid_b, req_b = courses[b]
-					if int(getattr(req_a, "required_slots", 0)) != int(getattr(req_b, "required_slots", 0)):
+					base_b = int(getattr(req_b, "required_slots", 0))
+					if base_a <= 0 or base_b <= 0:
+						continue
+					if not allow_partial and base_a != base_b:
 						continue
 					if str(getattr(req_a, "teacher_id", "")) == str(getattr(req_b, "teacher_id", "")):
 						continue
 					pair_vars[(a, b)] = model.NewBoolVar(
 						f"bundle_pair_{_sanitize(cid_a)}__{_sanitize(cid_b)}"
 					)
+					pair_share[(a, b)] = min(base_a, base_b)
 
 			# Role: each course is either solo or in exactly one pair.
 			for i, (course_id, _req) in enumerate(courses):
@@ -128,30 +140,51 @@ class BundledTheoryConstraint(Constraint):
 				for bucket_courses in buckets.values():
 					model.Add(sum(solo[c] for c in bucket_courses) == len(bucket_courses) % 2)
 
-			# Coverage tied to pairing: solo -> required_slots, paired -> 2x (8 half-slots).
-			# sum(slots) == required_slots + required_slots*is_paired = 2*base - base*solo.
-			for course_id, req in courses:
+			# Coverage tied to pairing: solo -> required_slots; paired -> required_slots
+			# plus the bundled (shared) hours. For an equal-hour pair the shared count is
+			# ``base`` so paired coverage is 2*base (the original 8-half-slot rule); for a
+			# partial pair the shorter course contributes its full hours as shared while the
+			# longer course keeps (base - shared) solo hours.
+			for i, (course_id, req) in enumerate(courses):
 				slot_vars = list(course_slot_map[course_id].values())
 				if not slot_vars:
 					continue
 				base = int(getattr(req, "required_slots", 0))
 				if base <= 0:
 					continue
-				model.Add(sum(slot_vars) == 2 * base - base * solo[course_id])
+				share_terms = [
+					pair_share[(a, b)] * pv
+					for (a, b), pv in pair_vars.items()
+					if a == i or b == i
+				]
+				# course i is in at most one pair, so sum(share_terms) is that pair's
+				# shared count when paired, else 0.
+				model.Add(sum(slot_vars) == base + sum(share_terms))
 
 			# Co-scheduling + shared room per candidate pair.
 			for (a, b), pv in pair_vars.items():
-				cid_a, _ = courses[a]
-				cid_b, _ = courses[b]
-				self._link_co_schedule(model, course_slot_map[cid_a], course_slot_map[cid_b], pv)
-				if enforce_shared_room:
-					self._link_shared_room(context, cid_a, cid_b, pv)
+				cid_a, req_a = courses[a]
+				cid_b, req_b = courses[b]
+				base_a = int(getattr(req_a, "required_slots", 0))
+				base_b = int(getattr(req_b, "required_slots", 0))
+				if allow_partial and base_a != base_b:
+					# Unequal pair: the shorter course sits entirely inside the longer
+					# course's slots (shared 25+25 cells); the longer course's extra hours
+					# fall outside, scheduled solo.
+					short_id, long_id = (cid_a, cid_b) if base_a < base_b else (cid_b, cid_a)
+					self._link_subset(model, course_slot_map[short_id], course_slot_map[long_id], pv)
+					if enforce_shared_room:
+						self._link_shared_room_subset(context, short_id, long_id, pv)
+				else:
+					self._link_co_schedule(model, course_slot_map[cid_a], course_slot_map[cid_b], pv)
+					if enforce_shared_room:
+						self._link_shared_room(context, cid_a, cid_b, pv)
 
 			# Hint a greedy maximal pairing so the solver STARTS bundled and only un-bundles
 			# where feasibility forces it (soft mode won't otherwise reach heavy bundling
 			# within a time budget). Cheap and safe: hints never make a model infeasible.
 			if hint_pairing:
-				self._hint_maximal_pairing(model, courses, pair_vars, solo)
+				self._hint_maximal_pairing(model, courses, pair_vars, solo, allow_partial)
 
 			# Objective: prefer fewer solos (harmless alongside force_maximal).
 			if solo_penalty:
@@ -160,11 +193,19 @@ class BundledTheoryConstraint(Constraint):
 						context, solo[course_id], weight=solo_penalty, tag="bundled_theory"
 					)
 
+			# Store each pair with the SHORTER course first: group_non_overlap uses the
+			# first course's presence to mark the shared (bundled) cell, and the shorter
+			# course is present only at shared cells. For equal pairs either order is fine.
+			def _short_first(a: int, b: int) -> Tuple[str, str]:
+				base_a = int(getattr(courses[a][1], "required_slots", 0))
+				base_b = int(getattr(courses[b][1], "required_slots", 0))
+				return (courses[a][0], courses[b][0]) if base_a <= base_b else (courses[b][0], courses[a][0])
+
 			bundles_store[cohort_key] = {
 				"courses": [course_id for course_id, _ in courses],
 				"solo": solo,
 				"pairs": [
-					(pv, courses[a][0], courses[b][0]) for (a, b), pv in pair_vars.items()
+					(pv, *_short_first(a, b)) for (a, b), pv in pair_vars.items()
 				],
 			}
 			total_pairs += len(pair_vars)
@@ -199,30 +240,52 @@ class BundledTheoryConstraint(Constraint):
 		courses: List[Tuple[str, object]],
 		pair_vars: Dict[Tuple[int, int], cp_model.IntVar],
 		solo: Dict[str, cp_model.IntVar],
+		allow_partial: bool = False,
 	) -> None:
-		"""Greedy maximal matching within each hour-bucket, fed as solution hints."""
+		"""Greedy maximal matching fed as solution hints (warm start).
 
-		by_bucket: Dict[int, List[int]] = defaultdict(list)
-		for i, (_cid, req) in enumerate(courses):
-			by_bucket[int(getattr(req, "required_slots", 0))].append(i)
+		Non-partial: match within each equal-hour bucket. Partial: match greedily over
+		ALL candidate pairs (across hour buckets) so the solver starts from a maximal
+		bundling that already uses the cross-hour pairs — important for large cohorts to
+		reach heavy bundling within the time budget.
+		"""
 
 		chosen: set = set()
 		matched_indices: set = set()
-		for indices in by_bucket.values():
-			available = list(indices)
-			while available:
-				a = available.pop(0)
-				partner_pos = None
-				for pos, b in enumerate(available):
-					key = (min(a, b), max(a, b))
-					if key in pair_vars:
-						partner_pos = pos
-						chosen.add(key)
-						matched_indices.add(a)
-						matched_indices.add(b)
-						break
-				if partner_pos is not None:
-					available.pop(partner_pos)
+
+		if allow_partial:
+			# Greedy over the whole candidate-pair graph, preferring larger shared hours
+			# first (min of the two bases) to lock in the most valuable bundles early.
+			def _base(i: int) -> int:
+				return int(getattr(courses[i][1], "required_slots", 0))
+			ordered = sorted(
+				pair_vars.keys(), key=lambda k: -min(_base(k[0]), _base(k[1]))
+			)
+			for a, b in ordered:
+				if a in matched_indices or b in matched_indices:
+					continue
+				chosen.add((a, b))
+				matched_indices.add(a)
+				matched_indices.add(b)
+		else:
+			by_bucket: Dict[int, List[int]] = defaultdict(list)
+			for i, (_cid, req) in enumerate(courses):
+				by_bucket[int(getattr(req, "required_slots", 0))].append(i)
+			for indices in by_bucket.values():
+				available = list(indices)
+				while available:
+					a = available.pop(0)
+					partner_pos = None
+					for pos, b in enumerate(available):
+						key = (min(a, b), max(a, b))
+						if key in pair_vars:
+							partner_pos = pos
+							chosen.add(key)
+							matched_indices.add(a)
+							matched_indices.add(b)
+							break
+					if partner_pos is not None:
+						available.pop(partner_pos)
 
 		for key, pv in pair_vars.items():
 			model.AddHint(pv, 1 if key in chosen else 0)
@@ -247,6 +310,29 @@ class BundledTheoryConstraint(Constraint):
 			model.Add(slots_a[key] == 0).OnlyEnforceIf(pair_var)
 		for key in keys_b - keys_a:
 			model.Add(slots_b[key] == 0).OnlyEnforceIf(pair_var)
+
+	@staticmethod
+	def _link_subset(
+		model: cp_model.CpModel,
+		slots_short: Mapping[SlotKey, cp_model.IntVar],
+		slots_long: Mapping[SlotKey, cp_model.IntVar],
+		pair_var: cp_model.IntVar,
+	) -> None:
+		"""Partial pair: the shorter course's slots are a subset of the longer's.
+
+		Wherever the shorter course meets, the longer course also meets (a shared 25+25
+		cell); coverage gives the longer course its extra hours in cells the shorter one
+		never occupies. A slot the shorter course can reach but the longer cannot cannot
+		host the pair.
+		"""
+
+		keys_short = set(slots_short)
+		keys_long = set(slots_long)
+		for key in keys_short & keys_long:
+			# short present -> long present at the same cell (short <= long).
+			model.Add(slots_short[key] <= slots_long[key]).OnlyEnforceIf(pair_var)
+		for key in keys_short - keys_long:
+			model.Add(slots_short[key] == 0).OnlyEnforceIf(pair_var)
 
 	@staticmethod
 	def _link_shared_room(
@@ -275,6 +361,35 @@ class BundledTheoryConstraint(Constraint):
 			model.Add(rooms_a[key] == 0).OnlyEnforceIf(pair_var)
 		for key in set(rooms_b) - set(rooms_a):
 			model.Add(rooms_b[key] == 0).OnlyEnforceIf(pair_var)
+
+	@staticmethod
+	def _link_shared_room_subset(
+		context: ConstraintContext,
+		short_id: str,
+		long_id: str,
+		pair_var: cp_model.IntVar,
+	) -> None:
+		"""Partial pair: wherever the shorter course uses a room, the longer course uses
+		the same room (shared 25+25 cell). The longer course's extra (solo) cells are
+		left free to use any room."""
+
+		model = context.model
+		rooms_short: Dict[Tuple[int, int, str], cp_model.IntVar] = {}
+		for _t, _c, day_idx, slot_idx, room_id, var in iter_theory_room_variables(
+			context, course_instance_id=short_id
+		):
+			rooms_short[(day_idx, slot_idx, str(room_id))] = var
+		rooms_long: Dict[Tuple[int, int, str], cp_model.IntVar] = {}
+		for _t, _c, day_idx, slot_idx, room_id, var in iter_theory_room_variables(
+			context, course_instance_id=long_id
+		):
+			rooms_long[(day_idx, slot_idx, str(room_id))] = var
+
+		for key in set(rooms_short) & set(rooms_long):
+			# short uses room r at (d,s) -> long uses the same room r at (d,s).
+			model.Add(rooms_short[key] <= rooms_long[key]).OnlyEnforceIf(pair_var)
+		for key in set(rooms_short) - set(rooms_long):
+			model.Add(rooms_short[key] == 0).OnlyEnforceIf(pair_var)
 
 	def _skip(self, reason: str) -> ConstraintApplicationResult:
 		return ConstraintApplicationResult(
