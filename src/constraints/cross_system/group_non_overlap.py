@@ -50,9 +50,12 @@ class GroupNonOverlapConstraint(Constraint):
 				details={"reason": "no dept-semester pairs with multiple groups"},
 			)
 
-		lab_sessions = _collect_group_lab_sessions(context)
+		# When batch_interleave owns lab conflicts (half-cohort model), skip labs here
+		# so this constraint governs theory only and does not block opposite-batch sharing.
+		skip_labs = bool(self.params.get("skip_labs", False))
+		lab_sessions = {} if skip_labs else _collect_group_lab_sessions(context)
 
-		overlap_index = _build_theory_lab_overlap_index(context)
+		overlap_index = {} if skip_labs else _build_theory_lab_overlap_index(context)
 		theory_slot_count = len(theory_block.theory_slot_labels)
 		if theory_slot_count == 0:
 			return ConstraintApplicationResult(

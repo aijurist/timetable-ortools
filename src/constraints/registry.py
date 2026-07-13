@@ -10,6 +10,7 @@ from .base import ConstraintMetadata
 from .cross_system.five_pm_policy import build_five_pm_policy_constraint
 from .cross_system.section_late_day import build_section_late_day_constraint
 from .cross_system.group_non_overlap import build_group_non_overlap_constraint
+from .cross_system.batch_interleave import build_batch_interleave_constraint
 from .cross_system.lunch_alignment import build_lunch_alignment_constraint
 from .cross_system.shift_pattern import build_shift_pattern_constraint
 from .cross_system.teacher_overlap import build_teacher_overlap_constraint
@@ -203,6 +204,12 @@ CROSS_SYSTEM_CONSTRAINT_DEFINITIONS = {
 		"description": "Prevent different groups within the same department-semester from occupying the same lab/theory time.",
 		"factory": build_group_non_overlap_constraint,
 		"tags": ("cross-system", "groups", "conflict"),
+	},
+	"batch_interleave": {
+		"title": "Batch Interleave (half-cohort labs)",
+		"description": "Allow opposite batches of different courses to share a lab slot; forbid same-batch overlap.",
+		"factory": build_batch_interleave_constraint,
+		"tags": ("cross-system", "labs", "batches"),
 	},
 	"teacher_overlap": {
 		"title": "Teacher Overlap Guard",

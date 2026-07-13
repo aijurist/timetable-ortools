@@ -446,6 +446,9 @@ def default_constraint_config() -> ConstraintConfig:
             priority=6, weight=1.0, enabled=False,
             params={"mode": "soft", "max_late_days": 2, "soft_penalty_weight": 40},
         ),
+        "batch_interleave": ConstraintSetting(
+            priority=5, weight=1.0, enabled=False, params={"batch_threshold": 35},
+        ),
         "shift_pattern": ConstraintSetting(
             priority=8,
             weight=0.7,
