@@ -23,6 +23,7 @@ class ConsecutiveBatchConfig:
 
 	course_codes: Tuple[str, ...]
 	preferred_pairs: Tuple[Tuple[str, str], ...]
+	restrict_to_preferred_pairs: bool
 	min_practical_hours: int
 	min_student_count: int
 
@@ -52,11 +53,13 @@ class ConsecutiveBatchConfig:
 				pairs.append((first, second))
 		if not pairs:
 			pairs = [("L1", "L2")]
+		restrict_to_preferred_pairs = bool(params.get("restrict_to_preferred_pairs", True))
 		min_hours = max(1, int(params.get("min_practical_hours", 4)))
 		min_students = max(1, int(params.get("min_student_count", 36)))
 		return ConsecutiveBatchConfig(
 			course_codes=tuple(code_bucket),
 			preferred_pairs=tuple(pairs),
+			restrict_to_preferred_pairs=restrict_to_preferred_pairs,
 			min_practical_hours=min_hours,
 			min_student_count=min_students,
 		)
@@ -66,12 +69,14 @@ class ConsecutiveBatchConfig:
 class ConsecutiveBatchStats:
 	targeted_courses: set[str] = field(default_factory=set)
 	constraints_added: int = 0
+	blocked_outside_pair_vars: int = 0
 	skipped_courses: int = 0
 
 	def as_details(self) -> Mapping[str, object]:
 		return {
 			"targeted_courses": tuple(sorted(self.targeted_courses)),
 			"constraints_added": self.constraints_added,
+			"blocked_outside_pair_vars": self.blocked_outside_pair_vars,
 			"skipped_courses": self.skipped_courses,
 		}
 
@@ -110,6 +115,13 @@ class ConsecutiveBatchLabConstraint(Constraint):
 				stats.targeted_courses.add(course_code)
 
 				for day_idx, session_map in day_map.items():
+					if config.restrict_to_preferred_pairs:
+						self._block_sessions_outside_pairs(
+							model,
+							session_map,
+							config.preferred_pairs,
+							stats,
+						)
 					self._apply_day_pairs(
 						model,
 						course_id,
@@ -119,13 +131,18 @@ class ConsecutiveBatchLabConstraint(Constraint):
 						stats,
 					)
 
-		status = ConstraintStatus.APPLIED if stats.constraints_added else ConstraintStatus.SKIPPED
+		status = (
+			ConstraintStatus.APPLIED
+			if stats.constraints_added or stats.blocked_outside_pair_vars
+			else ConstraintStatus.SKIPPED
+		)
 		details = stats.as_details()
 		details.update(
 			{
 				"min_practical_hours": config.min_practical_hours,
 				"min_student_count": config.min_student_count,
 				"preferred_pairs": config.preferred_pairs,
+				"restrict_to_preferred_pairs": config.restrict_to_preferred_pairs,
 			}
 		)
 		return ConstraintApplicationResult(
@@ -165,6 +182,21 @@ class ConsecutiveBatchLabConstraint(Constraint):
 				continue
 			model.Add(literal_first == literal_second)
 			stats.constraints_added += 1
+
+	def _block_sessions_outside_pairs(
+		self,
+		model: cp_model.CpModel,
+		session_map: Mapping[str, Mapping[str, cp_model.IntVar]],
+		pairs: Sequence[Tuple[str, str]],
+		stats: ConsecutiveBatchStats,
+	) -> None:
+		allowed_sessions = {session for pair in pairs for session in pair}
+		for session_name, room_map in session_map.items():
+			if session_name in allowed_sessions:
+				continue
+			for variable in room_map.values():
+				model.Add(variable == 0)
+				stats.blocked_outside_pair_vars += 1
 
 	def _skip(self, reason: str) -> ConstraintApplicationResult:
 		return ConstraintApplicationResult(

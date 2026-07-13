@@ -275,10 +275,10 @@ def _load_csv_records(csv_path: Optional[Path], schedule_type: str) -> list:
 
     records = []
     try:
-        with open(resolved_path, "r", encoding="utf-8") as f:
+        with open(resolved_path, "r", encoding="utf-8-sig") as f:
             reader = csv.DictReader(f)
             for row in reader:
-                records.append(row)
+                records.append({_normalize_csv_header(key): value for key, value in row.items()})
         logger.info("Loaded %d %s records from %s", len(records), schedule_type, resolved_path)
     except Exception as e:
         logger.warning("Failed to read %s CSV %s: %s", schedule_type, resolved_path, e)
@@ -361,6 +361,11 @@ def _resolve_path(candidate: Path) -> Path:
     if candidate.is_absolute():
         return candidate
     return (Path.cwd() / candidate).resolve()
+
+
+def _normalize_csv_header(value: object) -> str:
+    """Normalize exported CSV headers, including UTF-8 BOM-prefixed first columns."""
+    return str(value or "").replace("\ufeff", "").strip()
 
 
 __all__ = ["ScheduleBlockingMask", "build_schedule_blocking_mask"]

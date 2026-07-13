@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Mapping as MappingABC
 from typing import DefaultDict, Mapping, Optional
 
 from ortools.sat.python import cp_model
@@ -21,6 +22,7 @@ class TheoryCourseConsecutivePairsConstraint(Constraint):
 	Params:
 	- course_codes: list[str] course codes to target
 	- required_slots: int (default: 4) only apply to instances with exactly this many slots
+	- required_slots_by_course: dict[str, int] optional per-course override for required_slots
 	- pair_length: int (default: 2) length of each consecutive block
 	- enforce_same_room: bool (default: false) enforce each consecutive block uses the same room
 	"""
@@ -36,12 +38,35 @@ class TheoryCourseConsecutivePairsConstraint(Constraint):
 			self._required_slots = int(settings.get("required_slots", 4))
 		except (TypeError, ValueError):
 			self._required_slots = 4
+		self._required_slots_by_course = self._parse_required_slots_by_course(
+			settings.get("required_slots_by_course")
+		)
 		try:
 			self._pair_length = max(2, int(settings.get("pair_length", 2)))
 		except (TypeError, ValueError):
 			self._pair_length = 2
 		enforce_same_room = settings.get("enforce_same_room", False)
 		self._enforce_same_room = bool(enforce_same_room)
+
+	@staticmethod
+	def _parse_required_slots_by_course(raw: object) -> dict[str, int]:
+		if not isinstance(raw, MappingABC):
+			return {}
+		overrides: dict[str, int] = {}
+		for course_code, value in raw.items():
+			code = str(course_code).strip()
+			if not code:
+				continue
+			try:
+				slots = int(value)
+			except (TypeError, ValueError):
+				continue
+			if slots > 0:
+				overrides[code] = slots
+		return overrides
+
+	def _required_slots_for(self, course_code: str) -> int:
+		return self._required_slots_by_course.get(course_code, self._required_slots)
 
 	def apply(self, context: ConstraintContext) -> ConstraintApplicationResult:
 		model = context.model
@@ -57,41 +82,42 @@ class TheoryCourseConsecutivePairsConstraint(Constraint):
 				details={"reason": "no course_codes configured"},
 			)
 
-		if self._required_slots <= 0 or self._pair_length <= 0:
+		if self._pair_length <= 0:
 			return ConstraintApplicationResult(
 				name=self.metadata.name,
 				domain=self.metadata.category,
 				priority=self.metadata.priority,
 				enabled=True,
 				status=ConstraintStatus.SKIPPED,
-				details={"reason": "invalid required_slots/pair_length"},
+				details={"reason": "invalid pair_length"},
 			)
 
-		if self._required_slots % self._pair_length != 0:
+		if self._required_slots <= 0 and not self._required_slots_by_course:
 			return ConstraintApplicationResult(
 				name=self.metadata.name,
 				domain=self.metadata.category,
 				priority=self.metadata.priority,
 				enabled=True,
 				status=ConstraintStatus.SKIPPED,
-				details={
-					"reason": "required_slots not divisible by pair_length",
-					"required_slots": self._required_slots,
-					"pair_length": self._pair_length,
-				},
+				details={"reason": "invalid required_slots"},
 			)
 
-		pair_count = self._required_slots // self._pair_length
 		num_slots = len(theory_block.theory_slot_labels)
 
 		constraints_added = 0
 		courses_affected = 0
+		courses_skipped_invalid_slots = 0
 
 		for course_id, requirement in theory_block.course_requirements.items():
 			if requirement.course_code not in self._course_codes:
 				continue
-			if requirement.required_slots != self._required_slots:
+			required_slots = self._required_slots_for(requirement.course_code)
+			if required_slots <= 0 or required_slots % self._pair_length != 0:
+				courses_skipped_invalid_slots += 1
 				continue
+			if requirement.required_slots != required_slots:
+				continue
+			pair_count = required_slots // self._pair_length
 
 			# day_idx -> slot_idx -> var
 			day_slot_vars: DefaultDict[int, dict[int, cp_model.IntVar]] = defaultdict(dict)
@@ -144,9 +170,16 @@ class TheoryCourseConsecutivePairsConstraint(Constraint):
 							if not rooms_a or not rooms_b:
 								# If room variables are not available, skip room consistency enforcement.
 								continue
-							common_rooms = set(rooms_a.keys()) & set(rooms_b.keys())
-							for room_id in common_rooms:
-								model.Add(rooms_a[room_id] == rooms_b[room_id]).OnlyEnforceIf(pair_var)
+							all_rooms = set(rooms_a.keys()) | set(rooms_b.keys())
+							for room_id in all_rooms:
+								room_a = rooms_a.get(room_id)
+								room_b = rooms_b.get(room_id)
+								if room_a is not None and room_b is not None:
+									model.Add(room_a == room_b).OnlyEnforceIf(pair_var)
+								elif room_a is not None:
+									model.Add(room_a == 0).OnlyEnforceIf(pair_var)
+								elif room_b is not None:
+									model.Add(room_b == 0).OnlyEnforceIf(pair_var)
 								constraints_added += 1
 
 			if not pair_starts:
@@ -185,9 +218,15 @@ class TheoryCourseConsecutivePairsConstraint(Constraint):
 				"constraints": constraints_added,
 				"course_codes": self._course_codes,
 				"required_slots": self._required_slots,
+				"required_slots_by_course": self._required_slots_by_course,
 				"pair_length": self._pair_length,
-				"pair_count": pair_count,
+				"pair_count": (
+					self._required_slots // self._pair_length
+					if self._required_slots > 0 and self._required_slots % self._pair_length == 0
+					else None
+				),
 				"enforce_same_room": self._enforce_same_room,
+				"courses_skipped_invalid_slots": courses_skipped_invalid_slots,
 			},
 		)
 

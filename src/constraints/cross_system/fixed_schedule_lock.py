@@ -226,6 +226,22 @@ class FixedScheduleLockConstraint(Constraint):
 				allowed_theory_room_keys.add((teacher_id, course_id, day_label, slot_index, room_id))
 				allowed_theory_slot_keys.add((teacher_id, course_id, day_label, slot_index))
 
+		teacher_key_hits = self._count_teacher_key_hits(
+			context,
+			occupied_lab_teachers=occupied_lab_teachers,
+			occupied_theory_teachers=occupied_theory_teachers,
+		)
+		stats.update(teacher_key_hits)
+		self._logger.info(
+			"Fixed schedule lock teacher key intersection: lab=%d theory=%d cross=%d "
+			"(occupied_lab=%d occupied_theory=%d)",
+			teacher_key_hits["lab_teacher_key_hits"],
+			teacher_key_hits["theory_teacher_key_hits"],
+			teacher_key_hits["cross_domain_teacher_key_hits"],
+			len(occupied_lab_teachers),
+			len(occupied_theory_teachers),
+		)
+
 		# 1) Lock explicit assignments where matching variables exist.
 		if settings.lock_assignments:
 			stats["locked_lab"] = self._lock_lab_assignments(
@@ -607,6 +623,95 @@ class FixedScheduleLockConstraint(Constraint):
 
 		return blocked
 
+	def _count_teacher_key_hits(
+		self,
+		context: ConstraintContext,
+		*,
+		occupied_lab_teachers: Set[Tuple[str, str, str]],
+		occupied_theory_teachers: Set[Tuple[str, str, int]],
+	) -> dict[str, int]:
+		lab_hits = 0
+		for tid, _cid, day_idx, session_name, _room_id, _var in iter_lab_session_variables(context):
+			var_day = self._resolve_var_day_label(
+				context,
+				day_patterns=context.variables.lab.day_patterns,
+				course_id=str(_cid),
+				day_index=day_idx,
+			)
+			s_tid = str(tid).strip()
+			if s_tid.endswith(".0"):
+				s_tid = s_tid[:-2]
+			if (s_tid, var_day, str(session_name).strip()) in occupied_lab_teachers:
+				lab_hits += 1
+
+		theory_hits = 0
+		for tid, _cid, day_idx, slot_idx, _var in iter_course_timeslot_variables(context):
+			theory_patterns = getattr(context.variables.theory, "course_day_patterns", {}) or {}
+			var_day = self._resolve_var_day_label(
+				context,
+				day_patterns=theory_patterns,
+				course_id=str(_cid),
+				day_index=day_idx,
+			)
+			s_tid = str(tid).strip()
+			if s_tid.endswith(".0"):
+				s_tid = s_tid[:-2]
+			if (s_tid, var_day, slot_idx) in occupied_theory_teachers:
+				theory_hits += 1
+
+		cross_hits = 0
+		time_cfg = getattr(getattr(context.data, "raw", None), "time", None)
+		mapping = getattr(time_cfg, "lab_session_to_theory", {}) or {}
+		if mapping:
+			blocked_theory_slots: Set[Tuple[str, str, int]] = set()
+			for tid, day_label, session_name in occupied_lab_teachers:
+				for slot in mapping.get(session_name, ()) or ():
+					idx = _safe_int(slot)
+					if idx is not None:
+						blocked_theory_slots.add((tid, day_label, idx))
+			for tid, _cid, day_idx, slot_idx, _var in iter_course_timeslot_variables(context):
+				theory_patterns = getattr(context.variables.theory, "course_day_patterns", {}) or {}
+				var_day = self._resolve_var_day_label(
+					context,
+					day_patterns=theory_patterns,
+					course_id=str(_cid),
+					day_index=day_idx,
+				)
+				s_tid = str(tid).strip()
+				if s_tid.endswith(".0"):
+					s_tid = s_tid[:-2]
+				if (s_tid, var_day, slot_idx) in blocked_theory_slots:
+					cross_hits += 1
+
+			inv: dict[int, set[str]] = defaultdict(set)
+			for session_name, slots in mapping.items():
+				for slot in slots or ():
+					idx = _safe_int(slot)
+					if idx is not None:
+						inv[idx].add(str(session_name).strip())
+			blocked_lab_sessions: Set[Tuple[str, str, str]] = set()
+			for tid, day_label, slot_idx in occupied_theory_teachers:
+				for session_name in inv.get(slot_idx, ()):
+					blocked_lab_sessions.add((tid, day_label, session_name))
+			for tid, _cid, day_idx, session_name, _room_id, _var in iter_lab_session_variables(context):
+				var_day = self._resolve_var_day_label(
+					context,
+					day_patterns=context.variables.lab.day_patterns,
+					course_id=str(_cid),
+					day_index=day_idx,
+				)
+				s_tid = str(tid).strip()
+				if s_tid.endswith(".0"):
+					s_tid = s_tid[:-2]
+				if (s_tid, var_day, str(session_name).strip()) in blocked_lab_sessions:
+					cross_hits += 1
+
+		return {
+			"lab_teacher_key_hits": lab_hits,
+			"theory_teacher_key_hits": theory_hits,
+			"cross_domain_teacher_key_hits": cross_hits,
+		}
+
 	def _normalize_payload(
 		self,
 		payload: Mapping[str, Any],
@@ -665,16 +770,37 @@ class FixedScheduleLockConstraint(Constraint):
 			if lab_path.exists():
 				self._logger.info("Loading lab schedule from CSV: %s", lab_path)
 				try:
-					with open(lab_path, 'r', encoding='utf-8') as f:
+					with open(lab_path, 'r', encoding='utf-8-sig') as f:
 						reader = csv.DictReader(f)
+						self._logger.debug("Fixed schedule lock lab CSV headers: %s", reader.fieldnames)
+						skipped = 0
 						for row in reader:
-							lab_records.append({
-								"teacher_id": row.get("teacher_id"),
-								"course_instance_id": row.get("course_instance_id"),
-								"day": row.get("day"),
-								"session_name": row.get("session_name"),
-								"room_id": row.get("room_id"),
-							})
+							record = {
+								"teacher_id": _csv_value(row, "teacher_id", "faculty_id", "teacher"),
+								"course_instance_id": _csv_value(
+									row,
+									"course_instance_id",
+									"course_id",
+									"instance_id",
+								),
+								"day": _csv_value(row, "day", "day_label"),
+								"day_index": _csv_value(row, "day_index"),
+								"session_name": _csv_value(row, "session_name", "lab_session", "session"),
+								"room_id": _csv_value(row, "room_id"),
+							}
+							if not _has_required_csv_values(
+								record,
+								("teacher_id", "course_instance_id", "day", "session_name", "room_id"),
+							):
+								skipped += 1
+							lab_records.append(record)
+						if skipped:
+							self._logger.warning(
+								"Fixed schedule lock skipped %d/%d lab CSV rows with missing required lock keys. "
+								"Expected teacher_id, course_instance_id, day, session_name, room_id.",
+								skipped,
+								len(lab_records),
+							)
 				except Exception as e:
 					self._logger.warning("Failed to read lab CSV %s: %s", lab_path, e)
 		
@@ -684,16 +810,37 @@ class FixedScheduleLockConstraint(Constraint):
 			if theory_path.exists():
 				self._logger.info("Loading theory schedule from CSV: %s", theory_path)
 				try:
-					with open(theory_path, 'r', encoding='utf-8') as f:
+					with open(theory_path, 'r', encoding='utf-8-sig') as f:
 						reader = csv.DictReader(f)
+						self._logger.debug("Fixed schedule lock theory CSV headers: %s", reader.fieldnames)
+						skipped = 0
 						for row in reader:
-							theory_records.append({
-								"teacher_id": row.get("teacher_id"),
-								"course_instance_id": row.get("course_instance_id"),
-								"day": row.get("day"),
-								"slot_index": row.get("slot_index"),
-								"room_id": row.get("room_id"),
-							})
+							record = {
+								"teacher_id": _csv_value(row, "teacher_id", "faculty_id", "teacher"),
+								"course_instance_id": _csv_value(
+									row,
+									"course_instance_id",
+									"course_id",
+									"instance_id",
+								),
+								"day": _csv_value(row, "day", "day_label"),
+								"day_index": _csv_value(row, "day_index"),
+								"slot_index": _csv_value(row, "slot_index", "slot", "timeslot_index"),
+								"room_id": _csv_value(row, "room_id"),
+							}
+							if not _has_required_csv_values(
+								record,
+								("teacher_id", "course_instance_id", "day", "slot_index", "room_id"),
+							):
+								skipped += 1
+							theory_records.append(record)
+						if skipped:
+							self._logger.warning(
+								"Fixed schedule lock skipped %d/%d theory CSV rows with missing required lock keys. "
+								"Expected teacher_id, course_instance_id, day, slot_index, room_id.",
+								skipped,
+								len(theory_records),
+							)
 				except Exception as e:
 					self._logger.warning("Failed to read theory CSV %s: %s", theory_path, e)
 		
@@ -776,6 +923,28 @@ def _safe_int(value: object) -> Optional[int]:
 			return int(float(str(value)))
 		except (TypeError, ValueError):
 			return None
+
+
+def _csv_value(row: Mapping[str, Any], *names: str) -> object:
+	if not row or not names:
+		return None
+	lower_lookup = {_normalize_csv_header(key): value for key, value in row.items()}
+	for name in names:
+		value = row.get(name)
+		if value is not None and str(value).strip():
+			return value
+		value = lower_lookup.get(_normalize_csv_header(name))
+		if value is not None and str(value).strip():
+			return value
+	return None
+
+
+def _normalize_csv_header(value: object) -> str:
+	return str(value or "").replace("\ufeff", "").strip().lower()
+
+
+def _has_required_csv_values(record: Mapping[str, Any], keys: Sequence[str]) -> bool:
+	return all(str(record.get(key) or "").strip() for key in keys)
 
 
 def build_fixed_schedule_lock_constraint(

@@ -14,7 +14,7 @@ Teacher ID,Preferred Day 1,Preferred Day 2,Preferred Day 3,day_time_windows,lab_
 1026,Tue,Wed,Thu,"Tue 08:00-17:00, Wed 08:00-17:00, Thu 08:00-17:00, Fri 08:00-17:00, Sat 08:00-17:00",,,
 9,Wed,Thu,Fri,"Wed 08:00-17:00, Thu 08:00-17:00, Fri 08:00-17:00",,,
 42,,,,,,,
-467,Tue,Wed,,"Tue 12:00-12:50, Tue 14:00-17:00, Wed 12:00-12:50",Thu 10:00-11:50,,true
+467,Tue,Wed,,"Tue 12:00-15:00, Wed 12:00-15:00",,,
 459,Mon,Tue,Wed,"Mon 08:00-17:00, Tue 08:00-17:00, Wed 08:00-17:00, Thu 08:00-17:00, Fri 08:00-17:00",,,
 287,,,,,,,
 491,,,,,,,
@@ -29,3 +29,6 @@ Teacher ID,Preferred Day 1,Preferred Day 2,Preferred Day 3,day_time_windows,lab_
 322,Wed,Thu,Fri,"Wed 10:00-17:00, Thu 10:00-17:00, Fri 10:00-17:00, Sat 10:00-17:00",,,
 189,Tue,Wed,Thu,"Tue 08:00-17:00, Wed 08:00-17:00, Thu 08:00-17:00, Fri 08:00-17:00",,,true
 1032,Tue,Wed,Thu,"Tue 08:00-17:00, Wed 08:00-17:00, Thu 08:00-17:00, Fri 08:00-17:00",,,true
+103,Tue,Wed,,"Tue 08:00-17:00, Wed 08:00-17:00","Tue 08:00-17:00, Wed 08:00-17:00",,true
+183,Tue,Wed,"Thu,Fri","Tue 08:00-17:00, Wed 08:00-17:00, Thu 08:00-17:00, Fri 08:00-17:00",,,
+31,Tue,Wed,Thu,"Tue 08:00-15:00, Wed 08:00-15:00, Thu 08:00-15:00","Tue 08:00-15:00, Wed 08:00-15:00, Thu 08:00-15:00",,true

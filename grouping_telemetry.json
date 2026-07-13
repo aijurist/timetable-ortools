@@ -1,0 +1,3516 @@
+{
+  "generated_at": "2026-07-08T16:47:38.770160+00:00",
+  "summary": {
+    "total_groups": 121,
+    "departments": 19,
+    "groups_without_lab_sessions": 51,
+    "groups_without_theory_slots": 21
+  },
+  "departments": [
+    {
+      "department": "Aeronautical Engineering",
+      "semester": 5,
+      "group_count": 7,
+      "lab_sessions": 7,
+      "theory_slots": 18,
+      "groups": [
+        {
+          "group_id": "aeronautical_engineering_s5_g01",
+          "course_instances": [
+            "746"
+          ],
+          "course_codes": [
+            "AE23531"
+          ],
+          "teachers": [
+            "Balaji R"
+          ],
+          "lab_sessions": [
+            "Thur \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Tuesday \u00b7 L1 \u00b7 8:00 - 9:40"
+          ],
+          "theory_slots": [
+            "Thur \u00b7 11:00 - 11:50",
+            "Tuesday \u00b7 2:00 - 2:50",
+            "Tuesday \u00b7 4:10 - 5:00"
+          ],
+          "lab_session_count": 2,
+          "theory_slot_count": 3,
+          "lab_entry_count": 2,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "aeronautical_engineering_s5_g02",
+          "course_instances": [
+            "600"
+          ],
+          "course_codes": [
+            "AE23521"
+          ],
+          "teachers": [
+            "Surendra Bogadi"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Saturday \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Thur \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Wed \u00b7 L4 \u00b7 1:20 - 3:00"
+          ],
+          "theory_slots": [],
+          "lab_session_count": 4,
+          "theory_slot_count": 0,
+          "lab_entry_count": 4,
+          "theory_entry_count": 0
+        },
+        {
+          "group_id": "aeronautical_engineering_s5_g03",
+          "course_instances": [
+            "715"
+          ],
+          "course_codes": [
+            "AE23513"
+          ],
+          "teachers": [
+            "Kathiravan B"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 3:10 - 4:00",
+            "Tuesday \u00b7 1:00 - 1:50",
+            "Tuesday \u00b7 3:10 - 4:00",
+            "Wed \u00b7 11:00 - 11:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 4,
+          "lab_entry_count": 0,
+          "theory_entry_count": 4
+        },
+        {
+          "group_id": "aeronautical_engineering_s5_g04",
+          "course_instances": [
+            "860"
+          ],
+          "course_codes": [
+            "AE23511"
+          ],
+          "teachers": [
+            "Suresh Chandra Khandai"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 11:00 - 11:50",
+            "Saturday \u00b7 11:00 - 11:50",
+            "Saturday \u00b7 3:10 - 4:00"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "aeronautical_engineering_s5_g05",
+          "course_instances": [
+            "873"
+          ],
+          "course_codes": [
+            "AE23512"
+          ],
+          "teachers": [
+            "Surendra Bogadi"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 1:00 - 1:50",
+            "Wed \u00b7 3:10 - 4:00",
+            "Wed \u00b7 8:00 - 8:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "aeronautical_engineering_s5_g06",
+          "course_instances": [
+            "579"
+          ],
+          "course_codes": [
+            "AE23PE31"
+          ],
+          "teachers": [
+            "Nithiyanantham K K"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Saturday \u00b7 4:10 - 5:00",
+            "Thur \u00b7 12:00 - 12:50",
+            "Wed \u00b7 10:00 - 10:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "aeronautical_engineering_s5_g07",
+          "course_instances": [
+            "1555"
+          ],
+          "course_codes": [
+            "AE23PE32"
+          ],
+          "teachers": [
+            "Harikrishnan Ravichandran"
+          ],
+          "lab_sessions": [
+            "Saturday \u00b7 L1 \u00b7 8:00 - 9:40"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 10:00 - 10:50",
+            "Thur \u00b7 10:00 - 10:50"
+          ],
+          "lab_session_count": 1,
+          "theory_slot_count": 2,
+          "lab_entry_count": 1,
+          "theory_entry_count": 2
+        }
+      ]
+    },
+    {
+      "department": "Artificial Intelligence & Data Science",
+      "semester": 5,
+      "group_count": 5,
+      "lab_sessions": 15,
+      "theory_slots": 28,
+      "groups": [
+        {
+          "group_id": "artificial_intelligence___data_science_s5_g01",
+          "course_instances": [
+            "795",
+            "796",
+            "797",
+            "798",
+            "799"
+          ],
+          "course_codes": [
+            "AD23532"
+          ],
+          "teachers": [
+            "Beulah A",
+            "Ek Subramanian",
+            "Jayasri Archana Devi P",
+            "Nirmala Anandhi Y",
+            "Ramesh Kumar S"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Saturday \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Thur \u00b7 L5 \u00b7 3:10 - 4:50"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 1:00 - 1:50",
+            "Thur \u00b7 10:00 - 10:50",
+            "Thur \u00b7 4:10 - 5:00",
+            "Wed \u00b7 11:00 - 11:50"
+          ],
+          "lab_session_count": 3,
+          "theory_slot_count": 4,
+          "lab_entry_count": 10,
+          "theory_entry_count": 10
+        },
+        {
+          "group_id": "artificial_intelligence___data_science_s5_g02",
+          "course_instances": [
+            "1143",
+            "1144",
+            "1145",
+            "1146",
+            "1147"
+          ],
+          "course_codes": [
+            "AI23531"
+          ],
+          "teachers": [
+            "Jayasri Archana Devi P",
+            "Kapilamithran S",
+            "Priyadharsini R",
+            "S Renuka Devi",
+            "Savithri R"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Tuesday \u00b7 L1 \u00b7 8:00 - 9:40"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 11:00 - 11:50",
+            "Fri \u00b7 2:00 - 2:50",
+            "Fri \u00b7 9:00 - 9:50",
+            "Tuesday \u00b7 8:00 - 8:50",
+            "Tuesday \u00b7 9:00 - 9:50",
+            "Wed \u00b7 10:00 - 10:50"
+          ],
+          "lab_session_count": 2,
+          "theory_slot_count": 6,
+          "lab_entry_count": 7,
+          "theory_entry_count": 15
+        },
+        {
+          "group_id": "artificial_intelligence___data_science_s5_g03",
+          "course_instances": [
+            "33",
+            "34",
+            "35",
+            "36",
+            "37"
+          ],
+          "course_codes": [
+            "AD23531"
+          ],
+          "teachers": [
+            "John Clinton",
+            "Kapilamithran S",
+            "Kiruthika S",
+            "Suresh Kumar S",
+            "T Rajesh"
+          ],
+          "lab_sessions": [
+            "Saturday \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Thur \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Wed \u00b7 L4 \u00b7 1:20 - 3:00"
+          ],
+          "theory_slots": [
+            "Saturday \u00b7 8:00 - 8:50",
+            "Saturday \u00b7 9:00 - 9:50",
+            "Thur \u00b7 11:00 - 11:50",
+            "Thur \u00b7 2:00 - 2:50",
+            "Wed \u00b7 1:00 - 1:50",
+            "Wed \u00b7 2:00 - 2:50"
+          ],
+          "lab_session_count": 3,
+          "theory_slot_count": 6,
+          "lab_entry_count": 9,
+          "theory_entry_count": 15
+        },
+        {
+          "group_id": "artificial_intelligence___data_science_s5_g04",
+          "course_instances": [
+            "814",
+            "815",
+            "816",
+            "817",
+            "818"
+          ],
+          "course_codes": [
+            "CS23532"
+          ],
+          "teachers": [
+            "G Nirmala",
+            "Madhubala B",
+            "Meenakshi D",
+            "T Vidhya",
+            "V Dhivya Bhavani"
+          ],
+          "lab_sessions": [
+            "Saturday \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Saturday \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Thur \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Tuesday \u00b7 L5 \u00b7 3:10 - 4:50"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 8:00 - 8:50",
+            "Saturday \u00b7 10:00 - 10:50",
+            "Saturday \u00b7 1:00 - 1:50",
+            "Thur \u00b7 8:00 - 8:50",
+            "Tuesday \u00b7 3:10 - 4:00",
+            "Tuesday \u00b7 4:10 - 5:00",
+            "Wed \u00b7 3:10 - 4:00",
+            "Wed \u00b7 4:10 - 5:00"
+          ],
+          "lab_session_count": 4,
+          "theory_slot_count": 8,
+          "lab_entry_count": 14,
+          "theory_entry_count": 15
+        },
+        {
+          "group_id": "artificial_intelligence___data_science_s5_g05",
+          "course_instances": [
+            "1176",
+            "1177",
+            "1178",
+            "1179",
+            "1180"
+          ],
+          "course_codes": [
+            "AD23PE31"
+          ],
+          "teachers": [
+            "Anisha Nan",
+            "Nithin Sangeethkumar",
+            "Sachin Adith",
+            "Selvarani K",
+            "Sorna Shanthi D"
+          ],
+          "lab_sessions": [
+            "Tuesday \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Tuesday \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Wed \u00b7 L1 \u00b7 8:00 - 9:40"
+          ],
+          "theory_slots": [
+            "Tuesday \u00b7 11:00 - 11:50",
+            "Tuesday \u00b7 1:00 - 1:50",
+            "Tuesday \u00b7 2:00 - 2:50",
+            "Wed \u00b7 9:00 - 9:50"
+          ],
+          "lab_session_count": 3,
+          "theory_slot_count": 4,
+          "lab_entry_count": 6,
+          "theory_entry_count": 10
+        }
+      ]
+    },
+    {
+      "department": "Artificial Intelligence & Machine Learning",
+      "semester": 5,
+      "group_count": 6,
+      "lab_sessions": 12,
+      "theory_slots": 21,
+      "groups": [
+        {
+          "group_id": "artificial_intelligence___machine_learning_s5_g01",
+          "course_instances": [
+            "1237",
+            "1238",
+            "1239",
+            "1240"
+          ],
+          "course_codes": [
+            "AD23632"
+          ],
+          "teachers": [
+            "J Jasmine Gabriel",
+            "Priya M",
+            "R Anitha",
+            "V Akshaya"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Wed \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Wed \u00b7 L5 \u00b7 3:10 - 4:50"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 11:00 - 11:50",
+            "Tuesday \u00b7 4:10 - 5:00",
+            "Wed \u00b7 1:00 - 1:50",
+            "Wed \u00b7 3:10 - 4:00",
+            "Wed \u00b7 4:10 - 5:00",
+            "Wed \u00b7 9:00 - 9:50"
+          ],
+          "lab_session_count": 3,
+          "theory_slot_count": 6,
+          "lab_entry_count": 7,
+          "theory_entry_count": 12
+        },
+        {
+          "group_id": "artificial_intelligence___machine_learning_s5_g02",
+          "course_instances": [
+            "272",
+            "273",
+            "274",
+            "275"
+          ],
+          "course_codes": [
+            "AI23531"
+          ],
+          "teachers": [
+            "R Anitha",
+            "Sangeetha K",
+            "Soundarya M",
+            "V Akshaya"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Saturday \u00b7 L2 \u00b7 10:00 - 11:40"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 1:00 - 1:50",
+            "Fri \u00b7 8:00 - 8:50",
+            "Tuesday \u00b7 1:00 - 1:50",
+            "Tuesday \u00b7 8:00 - 8:50"
+          ],
+          "lab_session_count": 2,
+          "theory_slot_count": 4,
+          "lab_entry_count": 7,
+          "theory_entry_count": 12
+        },
+        {
+          "group_id": "artificial_intelligence___machine_learning_s5_g03",
+          "course_instances": [
+            "1233",
+            "1235",
+            "1236",
+            "512"
+          ],
+          "course_codes": [
+            "AI23521",
+            "CS23532"
+          ],
+          "teachers": [
+            "M P Magesh",
+            "Pavithra P",
+            "U Kumaran",
+            "Vijay K"
+          ],
+          "lab_sessions": [
+            "Saturday \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Tuesday \u00b7 L2 \u00b7 10:00 - 11:40"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 2:00 - 2:50",
+            "Fri \u00b7 4:10 - 5:00",
+            "Tuesday \u00b7 3:10 - 4:00"
+          ],
+          "lab_session_count": 2,
+          "theory_slot_count": 3,
+          "lab_entry_count": 8,
+          "theory_entry_count": 9
+        },
+        {
+          "group_id": "artificial_intelligence___machine_learning_s5_g04",
+          "course_instances": [
+            "1234",
+            "513",
+            "514",
+            "515"
+          ],
+          "course_codes": [
+            "AI23521",
+            "CS23532"
+          ],
+          "teachers": [
+            "Dr Rajasekaran A",
+            "Nf1 Nan",
+            "Sangeetha K",
+            "Vijay K"
+          ],
+          "lab_sessions": [
+            "Saturday \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Thur \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Thur \u00b7 L4 \u00b7 1:20 - 3:00"
+          ],
+          "theory_slots": [
+            "Thur \u00b7 1:00 - 1:50",
+            "Thur \u00b7 2:00 - 2:50",
+            "Tuesday \u00b7 2:00 - 2:50"
+          ],
+          "lab_session_count": 3,
+          "theory_slot_count": 3,
+          "lab_entry_count": 8,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "artificial_intelligence___machine_learning_s5_g05",
+          "course_instances": [
+            "1223",
+            "1224",
+            "1225",
+            "1546"
+          ],
+          "course_codes": [
+            "AI23511"
+          ],
+          "teachers": [
+            "Arunvinodh C",
+            "Pramela J",
+            "Sangeetha Archana J",
+            "Unknown Teacher"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Thur \u00b7 11:00 - 11:50",
+            "Wed \u00b7 11:00 - 11:50",
+            "Wed \u00b7 2:00 - 2:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 12
+        },
+        {
+          "group_id": "artificial_intelligence___machine_learning_s5_g06",
+          "course_instances": [
+            "1226",
+            "1227",
+            "1228",
+            "1229"
+          ],
+          "course_codes": [
+            "AI23PE31"
+          ],
+          "teachers": [
+            "J Jasmine Gabriel",
+            "Priya M",
+            "Sangeetha Archana J",
+            "Saranya S"
+          ],
+          "lab_sessions": [
+            "Saturday \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Thur \u00b7 L5 \u00b7 3:10 - 4:50"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 3:10 - 4:00",
+            "Tuesday \u00b7 9:00 - 9:50"
+          ],
+          "lab_session_count": 2,
+          "theory_slot_count": 2,
+          "lab_entry_count": 5,
+          "theory_entry_count": 8
+        }
+      ]
+    },
+    {
+      "department": "Automobile Engineering",
+      "semester": 5,
+      "group_count": 7,
+      "lab_sessions": 4,
+      "theory_slots": 15,
+      "groups": [
+        {
+          "group_id": "automobile_engineering_s5_g01",
+          "course_instances": [
+            "160"
+          ],
+          "course_codes": [
+            "AT23521"
+          ],
+          "teachers": [
+            "Mohanraj K"
+          ],
+          "lab_sessions": [
+            "Thur \u00b7 L1 \u00b7 8:00 - 9:40"
+          ],
+          "theory_slots": [],
+          "lab_session_count": 1,
+          "theory_slot_count": 0,
+          "lab_entry_count": 1,
+          "theory_entry_count": 0
+        },
+        {
+          "group_id": "automobile_engineering_s5_g02",
+          "course_instances": [
+            "32"
+          ],
+          "course_codes": [
+            "AT23532"
+          ],
+          "teachers": [
+            "Pavan P"
+          ],
+          "lab_sessions": [
+            "Monday \u00b7 L5 \u00b7 3:10 - 4:50"
+          ],
+          "theory_slots": [
+            "Monday \u00b7 10:00 - 10:50",
+            "Tuesday \u00b7 12:00 - 12:50",
+            "Tuesday \u00b7 1:00 - 1:50"
+          ],
+          "lab_session_count": 1,
+          "theory_slot_count": 3,
+          "lab_entry_count": 1,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "automobile_engineering_s5_g03",
+          "course_instances": [
+            "31"
+          ],
+          "course_codes": [
+            "AT23531"
+          ],
+          "teachers": [
+            "Zahir Hussain M"
+          ],
+          "lab_sessions": [
+            "Thur \u00b7 L4 \u00b7 1:20 - 3:00"
+          ],
+          "theory_slots": [
+            "Monday \u00b7 11:00 - 11:50",
+            "Monday \u00b7 1:00 - 1:50",
+            "Wed \u00b7 9:00 - 9:50"
+          ],
+          "lab_session_count": 1,
+          "theory_slot_count": 3,
+          "lab_entry_count": 1,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "automobile_engineering_s5_g04",
+          "course_instances": [
+            "43"
+          ],
+          "course_codes": [
+            "AT23522"
+          ],
+          "teachers": [
+            "Zahir Hussain M"
+          ],
+          "lab_sessions": [
+            "Wed \u00b7 L2 \u00b7 10:00 - 11:40"
+          ],
+          "theory_slots": [],
+          "lab_session_count": 1,
+          "theory_slot_count": 0,
+          "lab_entry_count": 1,
+          "theory_entry_count": 0
+        },
+        {
+          "group_id": "automobile_engineering_s5_g05",
+          "course_instances": [
+            "908"
+          ],
+          "course_codes": [
+            "GE23311"
+          ],
+          "teachers": [
+            "Karthikeyan R"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 3:10 - 4:00",
+            "Monday \u00b7 9:00 - 9:50",
+            "Wed \u00b7 2:00 - 2:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "automobile_engineering_s5_g06",
+          "course_instances": [
+            "40"
+          ],
+          "course_codes": [
+            "AT23511"
+          ],
+          "teachers": [
+            "Edwin Joseph R"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Thur \u00b7 11:00 - 11:50",
+            "Tuesday \u00b7 9:00 - 9:50",
+            "Wed \u00b7 12:00 - 12:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "automobile_engineering_s5_g07",
+          "course_instances": [
+            "1401",
+            "500"
+          ],
+          "course_codes": [
+            "AT23PE31"
+          ],
+          "teachers": [
+            "Mohanraj K",
+            "Selvaraju P N"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 1:00 - 1:50",
+            "Fri \u00b7 4:10 - 5:00",
+            "Monday \u00b7 2:00 - 2:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 6
+        }
+      ]
+    },
+    {
+      "department": "Biomedical Engineering",
+      "semester": 5,
+      "group_count": 8,
+      "lab_sessions": 15,
+      "theory_slots": 21,
+      "groups": [
+        {
+          "group_id": "biomedical_engineering_s5_g01",
+          "course_instances": [
+            "187",
+            "557"
+          ],
+          "course_codes": [
+            "BM23521",
+            "CS23422"
+          ],
+          "teachers": [
+            "Jemina Asnoth Sylvia J",
+            "Sankar K"
+          ],
+          "lab_sessions": [
+            "Thur \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Thur \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Tuesday \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Tuesday \u00b7 L2 \u00b7 10:00 - 11:40"
+          ],
+          "theory_slots": [],
+          "lab_session_count": 4,
+          "theory_slot_count": 0,
+          "lab_entry_count": 6,
+          "theory_entry_count": 0
+        },
+        {
+          "group_id": "biomedical_engineering_s5_g02",
+          "course_instances": [
+            "185",
+            "61"
+          ],
+          "course_codes": [
+            "BM23531",
+            "BM23532"
+          ],
+          "teachers": [
+            "Glory Precious J",
+            "Rubeshkumar Thulasingam"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Saturday \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Wed \u00b7 L4 \u00b7 1:20 - 3:00"
+          ],
+          "theory_slots": [
+            "Saturday \u00b7 3:10 - 4:00",
+            "Saturday \u00b7 4:10 - 5:00",
+            "Thur \u00b7 12:00 - 12:50",
+            "Wed \u00b7 2:00 - 2:50",
+            "Wed \u00b7 3:10 - 4:00"
+          ],
+          "lab_session_count": 3,
+          "theory_slot_count": 5,
+          "lab_entry_count": 4,
+          "theory_entry_count": 6
+        },
+        {
+          "group_id": "biomedical_engineering_s5_g03",
+          "course_instances": [
+            "188",
+            "556"
+          ],
+          "course_codes": [
+            "BM23521",
+            "CS23422"
+          ],
+          "teachers": [
+            "Ramachandran R",
+            "Senthilkumar P"
+          ],
+          "lab_sessions": [
+            "Saturday \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Saturday \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Thur \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Thur \u00b7 L2 \u00b7 10:00 - 11:40"
+          ],
+          "theory_slots": [],
+          "lab_session_count": 4,
+          "theory_slot_count": 0,
+          "lab_entry_count": 6,
+          "theory_entry_count": 0
+        },
+        {
+          "group_id": "biomedical_engineering_s5_g04",
+          "course_instances": [
+            "186",
+            "60"
+          ],
+          "course_codes": [
+            "BM23531",
+            "BM23532"
+          ],
+          "teachers": [
+            "R Kalpana",
+            "Ramachandran R"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Saturday \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Tuesday \u00b7 L5 \u00b7 3:10 - 4:50"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 10:00 - 10:50",
+            "Fri \u00b7 4:10 - 5:00",
+            "Saturday \u00b7 1:00 - 1:50",
+            "Saturday \u00b7 2:00 - 2:50",
+            "Wed \u00b7 10:00 - 10:50"
+          ],
+          "lab_session_count": 3,
+          "theory_slot_count": 5,
+          "lab_entry_count": 4,
+          "theory_entry_count": 6
+        },
+        {
+          "group_id": "biomedical_engineering_s5_g05",
+          "course_instances": [
+            "103",
+            "121"
+          ],
+          "course_codes": [
+            "BM23511",
+            "BM23512"
+          ],
+          "teachers": [
+            "Jemina Asnoth Sylvia J",
+            "R Premkumar"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Saturday \u00b7 12:00 - 12:50",
+            "Tuesday \u00b7 1:00 - 1:50",
+            "Wed \u00b7 11:00 - 11:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 6
+        },
+        {
+          "group_id": "biomedical_engineering_s5_g06",
+          "course_instances": [
+            "104",
+            "120"
+          ],
+          "course_codes": [
+            "BM23511",
+            "BM23512"
+          ],
+          "teachers": [
+            "Jemina Asnoth Sylvia J",
+            "Senthilkumar P"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 3:10 - 4:00",
+            "Tuesday \u00b7 12:00 - 12:50",
+            "Wed \u00b7 12:00 - 12:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 6
+        },
+        {
+          "group_id": "biomedical_engineering_s5_g07",
+          "course_instances": [
+            "1196",
+            "1197"
+          ],
+          "course_codes": [
+            "BM23PE31"
+          ],
+          "teachers": [
+            "Krishnakumar S",
+            "Senthilkumar P"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 12:00 - 12:50",
+            "Fri \u00b7 1:00 - 1:50",
+            "Wed \u00b7 4:10 - 5:00"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 6
+        },
+        {
+          "group_id": "biomedical_engineering_s5_g08",
+          "course_instances": [
+            "1567",
+            "1568"
+          ],
+          "course_codes": [
+            "BM23PE32"
+          ],
+          "teachers": [
+            "Ramachandran R",
+            "Sankar K"
+          ],
+          "lab_sessions": [
+            "Wed \u00b7 L1 \u00b7 8:00 - 9:40"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 2:00 - 2:50",
+            "Tuesday \u00b7 2:00 - 2:50"
+          ],
+          "lab_session_count": 1,
+          "theory_slot_count": 2,
+          "lab_entry_count": 2,
+          "theory_entry_count": 4
+        }
+      ]
+    },
+    {
+      "department": "Biotechnology",
+      "semester": 5,
+      "group_count": 7,
+      "lab_sessions": 16,
+      "theory_slots": 12,
+      "groups": [
+        {
+          "group_id": "biotechnology_s5_g01",
+          "course_instances": [
+            "343",
+            "344",
+            "414"
+          ],
+          "course_codes": [
+            "BT23521",
+            "BT23522"
+          ],
+          "teachers": [
+            "Carlin Geor Malar G",
+            "M Shanthi",
+            "T Anitha"
+          ],
+          "lab_sessions": [
+            "Saturday \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Thur \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Tuesday \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Tuesday \u00b7 L3 \u00b7 11:40 - 1:20",
+            "Tuesday \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Tuesday \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Wed \u00b7 L3 \u00b7 11:40 - 1:20",
+            "Wed \u00b7 L4 \u00b7 1:20 - 3:00"
+          ],
+          "theory_slots": [],
+          "lab_session_count": 8,
+          "theory_slot_count": 0,
+          "lab_entry_count": 10,
+          "theory_entry_count": 0
+        },
+        {
+          "group_id": "biotechnology_s5_g02",
+          "course_instances": [
+            "243",
+            "412",
+            "413"
+          ],
+          "course_codes": [
+            "BT23521",
+            "BT23523"
+          ],
+          "teachers": [
+            "B Preethi",
+            "Millicent Mabel M",
+            "Sinduja M E"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L3 \u00b7 11:40 - 1:20",
+            "Fri \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Fri \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Saturday \u00b7 L3 \u00b7 11:40 - 1:20"
+          ],
+          "theory_slots": [],
+          "lab_session_count": 4,
+          "theory_slot_count": 0,
+          "lab_entry_count": 6,
+          "theory_entry_count": 0
+        },
+        {
+          "group_id": "biotechnology_s5_g03",
+          "course_instances": [
+            "242",
+            "244",
+            "345"
+          ],
+          "course_codes": [
+            "BT23522",
+            "BT23523"
+          ],
+          "teachers": [
+            "P Saravanan",
+            "Preethy K R",
+            "S Thiruvengadam"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Saturday \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Thur \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Thur \u00b7 L2 \u00b7 10:00 - 11:40"
+          ],
+          "theory_slots": [],
+          "lab_session_count": 4,
+          "theory_slot_count": 0,
+          "lab_entry_count": 8,
+          "theory_entry_count": 0
+        },
+        {
+          "group_id": "biotechnology_s5_g04",
+          "course_instances": [
+            "199",
+            "202",
+            "204"
+          ],
+          "course_codes": [
+            "BT23512",
+            "BT23513"
+          ],
+          "teachers": [
+            "M Shanthi",
+            "N Premalatha",
+            "S Sangeetha Gandhi"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Thur \u00b7 1:00 - 1:50",
+            "Tuesday \u00b7 9:00 - 9:50",
+            "Wed \u00b7 8:00 - 8:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 9
+        },
+        {
+          "group_id": "biotechnology_s5_g05",
+          "course_instances": [
+            "203",
+            "311",
+            "312"
+          ],
+          "course_codes": [
+            "BT23511",
+            "BT23513"
+          ],
+          "teachers": [
+            "Ebine Joel S C",
+            "N Premalatha",
+            "T Anitha"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Thur \u00b7 12:00 - 12:50",
+            "Tuesday \u00b7 8:00 - 8:50",
+            "Wed \u00b7 3:10 - 4:00"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 9
+        },
+        {
+          "group_id": "biotechnology_s5_g06",
+          "course_instances": [
+            "205",
+            "207",
+            "313"
+          ],
+          "course_codes": [
+            "BT23511",
+            "BT23514"
+          ],
+          "teachers": [
+            "R Anila",
+            "S Thiruvengadam",
+            "Sankar M"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Saturday \u00b7 10:00 - 10:50",
+            "Thur \u00b7 2:00 - 2:50",
+            "Wed \u00b7 9:00 - 9:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 9
+        },
+        {
+          "group_id": "biotechnology_s5_g07",
+          "course_instances": [
+            "200",
+            "201",
+            "206"
+          ],
+          "course_codes": [
+            "BT23512",
+            "BT23514"
+          ],
+          "teachers": [
+            "Carlin Geor Malar G",
+            "P Saravanan",
+            "Sujata Roy"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 10:00 - 10:50",
+            "Saturday \u00b7 2:00 - 2:50",
+            "Wed \u00b7 4:10 - 5:00"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 9
+        }
+      ]
+    },
+    {
+      "department": "Chemical Engineering",
+      "semester": 5,
+      "group_count": 7,
+      "lab_sessions": 3,
+      "theory_slots": 20,
+      "groups": [
+        {
+          "group_id": "chemical_engineering_s5_g01",
+          "course_instances": [
+            "692"
+          ],
+          "course_codes": [
+            "CH23511"
+          ],
+          "teachers": [
+            "G Vijayaraghavan"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Monday \u00b7 3:10 - 4:00",
+            "Tuesday \u00b7 10:00 - 10:50",
+            "Tuesday \u00b7 8:00 - 8:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "chemical_engineering_s5_g02",
+          "course_instances": [
+            "11"
+          ],
+          "course_codes": [
+            "CH23513"
+          ],
+          "teachers": [
+            "Kalaiarasi N"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 11:00 - 11:50",
+            "Thur \u00b7 10:00 - 10:50",
+            "Thur \u00b7 3:10 - 4:00"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "chemical_engineering_s5_g03",
+          "course_instances": [
+            "712"
+          ],
+          "course_codes": [
+            "CH23512"
+          ],
+          "teachers": [
+            "T R Sundararaman"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Monday \u00b7 8:00 - 8:50",
+            "Thur \u00b7 4:10 - 5:00",
+            "Wed \u00b7 2:00 - 2:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "chemical_engineering_s5_g04",
+          "course_instances": [
+            "695"
+          ],
+          "course_codes": [
+            "CH23521"
+          ],
+          "teachers": [
+            "G Vijayaraghavan"
+          ],
+          "lab_sessions": [
+            "Wed \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Wed \u00b7 L2 \u00b7 10:00 - 11:40"
+          ],
+          "theory_slots": [],
+          "lab_session_count": 2,
+          "theory_slot_count": 0,
+          "lab_entry_count": 2,
+          "theory_entry_count": 0
+        },
+        {
+          "group_id": "chemical_engineering_s5_g05",
+          "course_instances": [
+            "691"
+          ],
+          "course_codes": [
+            "CH23514"
+          ],
+          "teachers": [
+            "Mary Rosana N T"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Monday \u00b7 9:00 - 9:50",
+            "Thur \u00b7 1:00 - 1:50",
+            "Tuesday \u00b7 1:00 - 1:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "chemical_engineering_s5_g06",
+          "course_instances": [
+            "1418",
+            "1419"
+          ],
+          "course_codes": [
+            "CH23PE31"
+          ],
+          "teachers": [
+            "Sivamani S",
+            "Vincent Joseph K L"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 10:00 - 10:50",
+            "Fri \u00b7 1:00 - 1:50",
+            "Monday \u00b7 12:00 - 12:50",
+            "Thur \u00b7 12:00 - 12:50",
+            "Tuesday \u00b7 11:00 - 11:50",
+            "Wed \u00b7 12:00 - 12:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 6,
+          "lab_entry_count": 0,
+          "theory_entry_count": 6
+        },
+        {
+          "group_id": "chemical_engineering_s5_g07",
+          "course_instances": [
+            "1444"
+          ],
+          "course_codes": [
+            "CH23PE32"
+          ],
+          "teachers": [
+            "Mangaleswari ."
+          ],
+          "lab_sessions": [
+            "Monday \u00b7 L4 \u00b7 1:20 - 3:00"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 9:00 - 9:50",
+            "Monday \u00b7 10:00 - 10:50"
+          ],
+          "lab_session_count": 1,
+          "theory_slot_count": 2,
+          "lab_entry_count": 1,
+          "theory_entry_count": 2
+        }
+      ]
+    },
+    {
+      "department": "Civil Engineering",
+      "semester": 5,
+      "group_count": 7,
+      "lab_sessions": 4,
+      "theory_slots": 19,
+      "groups": [
+        {
+          "group_id": "civil_engineering_s5_g01",
+          "course_instances": [
+            "1292"
+          ],
+          "course_codes": [
+            "CE23521"
+          ],
+          "teachers": [
+            "Eswary Devi T"
+          ],
+          "lab_sessions": [
+            "Saturday \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Thur \u00b7 L2 \u00b7 10:00 - 11:40"
+          ],
+          "theory_slots": [],
+          "lab_session_count": 2,
+          "theory_slot_count": 0,
+          "lab_entry_count": 2,
+          "theory_entry_count": 0
+        },
+        {
+          "group_id": "civil_engineering_s5_g02",
+          "course_instances": [
+            "1280"
+          ],
+          "course_codes": [
+            "CE23531"
+          ],
+          "teachers": [
+            "Mahamood Ul Hasan N"
+          ],
+          "lab_sessions": [
+            "Saturday \u00b7 L4 \u00b7 1:20 - 3:00"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 12:00 - 12:50",
+            "Wed \u00b7 11:00 - 11:50",
+            "Wed \u00b7 2:00 - 2:50"
+          ],
+          "lab_session_count": 1,
+          "theory_slot_count": 3,
+          "lab_entry_count": 1,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "civil_engineering_s5_g03",
+          "course_instances": [
+            "1277"
+          ],
+          "course_codes": [
+            "CE23511"
+          ],
+          "teachers": [
+            "S Geetha"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 8:00 - 8:50",
+            "Saturday \u00b7 12:00 - 12:50",
+            "Thur \u00b7 2:00 - 2:50",
+            "Tuesday \u00b7 10:00 - 10:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 4,
+          "lab_entry_count": 0,
+          "theory_entry_count": 4
+        },
+        {
+          "group_id": "civil_engineering_s5_g04",
+          "course_instances": [
+            "1279"
+          ],
+          "course_codes": [
+            "CE23513"
+          ],
+          "teachers": [
+            "Eswary Devi T"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Saturday \u00b7 8:00 - 8:50",
+            "Thur \u00b7 3:10 - 4:00",
+            "Wed \u00b7 10:00 - 10:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "civil_engineering_s5_g05",
+          "course_instances": [
+            "1278"
+          ],
+          "course_codes": [
+            "CE23512"
+          ],
+          "teachers": [
+            "Muthu Lakshmi S"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 9:00 - 9:50",
+            "Thur \u00b7 1:00 - 1:50",
+            "Thur \u00b7 4:10 - 5:00"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "civil_engineering_s5_g06",
+          "course_instances": [
+            "1420",
+            "1421"
+          ],
+          "course_codes": [
+            "CE23PE31"
+          ],
+          "teachers": [
+            "Jeya Arthi A J",
+            "M Selvakumar"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 1:00 - 1:50",
+            "Saturday \u00b7 10:00 - 10:50",
+            "Saturday \u00b7 9:00 - 9:50",
+            "Tuesday \u00b7 12:00 - 12:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 4,
+          "lab_entry_count": 0,
+          "theory_entry_count": 6
+        },
+        {
+          "group_id": "civil_engineering_s5_g07",
+          "course_instances": [
+            "1569"
+          ],
+          "course_codes": [
+            "CE23PE32"
+          ],
+          "teachers": [
+            "Ammaiapppan M"
+          ],
+          "lab_sessions": [
+            "Tuesday \u00b7 L5 \u00b7 3:10 - 4:50"
+          ],
+          "theory_slots": [
+            "Wed \u00b7 1:00 - 1:50",
+            "Wed \u00b7 3:10 - 4:00"
+          ],
+          "lab_session_count": 1,
+          "theory_slot_count": 2,
+          "lab_entry_count": 1,
+          "theory_entry_count": 2
+        }
+      ]
+    },
+    {
+      "department": "Computer Science & Business Systems",
+      "semester": 5,
+      "group_count": 5,
+      "lab_sessions": 13,
+      "theory_slots": 11,
+      "groups": [
+        {
+          "group_id": "computer_science___business_systems_s5_g01",
+          "course_instances": [
+            "383",
+            "384"
+          ],
+          "course_codes": [
+            "GE23627"
+          ],
+          "teachers": [
+            "Padmasheela Keshvan",
+            "Vishnu Kumar A"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Monday \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Monday \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Thur \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Tuesday \u00b7 L5 \u00b7 3:10 - 4:50"
+          ],
+          "theory_slots": [],
+          "lab_session_count": 5,
+          "theory_slot_count": 0,
+          "lab_entry_count": 6,
+          "theory_entry_count": 0
+        },
+        {
+          "group_id": "computer_science___business_systems_s5_g02",
+          "course_instances": [
+            "936",
+            "937"
+          ],
+          "course_codes": [
+            "BA23511"
+          ],
+          "teachers": [
+            "Sindhu Al",
+            "Sudhan S K"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Thur \u00b7 9:00 - 9:50",
+            "Wed \u00b7 4:10 - 5:00"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 2,
+          "lab_entry_count": 0,
+          "theory_entry_count": 4
+        },
+        {
+          "group_id": "computer_science___business_systems_s5_g03",
+          "course_instances": [
+            "850",
+            "851"
+          ],
+          "course_codes": [
+            "CB23532"
+          ],
+          "teachers": [
+            "Padmasheela Keshvan",
+            "Stanlin Prija"
+          ],
+          "lab_sessions": [
+            "Monday \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Tuesday \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Wed \u00b7 L1 \u00b7 8:00 - 9:40"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 11:00 - 11:50",
+            "Wed \u00b7 12:00 - 12:50",
+            "Wed \u00b7 2:00 - 2:50"
+          ],
+          "lab_session_count": 3,
+          "theory_slot_count": 3,
+          "lab_entry_count": 4,
+          "theory_entry_count": 6
+        },
+        {
+          "group_id": "computer_science___business_systems_s5_g04",
+          "course_instances": [
+            "810",
+            "811"
+          ],
+          "course_codes": [
+            "CB23531"
+          ],
+          "teachers": [
+            "Bakiyalakshmi S",
+            "Jayanthi M"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Thur \u00b7 L2 \u00b7 10:00 - 11:40"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 10:00 - 10:50",
+            "Wed \u00b7 10:00 - 10:50",
+            "Wed \u00b7 11:00 - 11:50"
+          ],
+          "lab_session_count": 2,
+          "theory_slot_count": 3,
+          "lab_entry_count": 4,
+          "theory_entry_count": 6
+        },
+        {
+          "group_id": "computer_science___business_systems_s5_g05",
+          "course_instances": [
+            "168",
+            "169"
+          ],
+          "course_codes": [
+            "CB23PE31"
+          ],
+          "teachers": [
+            "Domi Evangeline S",
+            "M.l. Alphin Ezhil Manuel"
+          ],
+          "lab_sessions": [
+            "Monday \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Tuesday \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Tuesday \u00b7 L4 \u00b7 1:20 - 3:00"
+          ],
+          "theory_slots": [
+            "Monday \u00b7 9:00 - 9:50",
+            "Thur \u00b7 8:00 - 8:50",
+            "Tuesday \u00b7 2:00 - 2:50"
+          ],
+          "lab_session_count": 3,
+          "theory_slot_count": 3,
+          "lab_entry_count": 4,
+          "theory_entry_count": 4
+        }
+      ]
+    },
+    {
+      "department": "Computer Science & Design",
+      "semester": 5,
+      "group_count": 5,
+      "lab_sessions": 12,
+      "theory_slots": 10,
+      "groups": [
+        {
+          "group_id": "computer_science___design_s5_g01",
+          "course_instances": [
+            "1124"
+          ],
+          "course_codes": [
+            "CS23431"
+          ],
+          "teachers": [
+            "Gunasekar S"
+          ],
+          "lab_sessions": [
+            "Monday \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Thur \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Tuesday \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Wed \u00b7 L5 \u00b7 3:10 - 4:50"
+          ],
+          "theory_slots": [
+            "Thur \u00b7 9:00 - 9:50",
+            "Tuesday \u00b7 12:00 - 12:50",
+            "Tuesday \u00b7 2:00 - 2:50"
+          ],
+          "lab_session_count": 4,
+          "theory_slot_count": 3,
+          "lab_entry_count": 4,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "computer_science___design_s5_g02",
+          "course_instances": [
+            "1125"
+          ],
+          "course_codes": [
+            "GE23627"
+          ],
+          "teachers": [
+            "P Revathy"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Wed \u00b7 L4 \u00b7 1:20 - 3:00"
+          ],
+          "theory_slots": [],
+          "lab_session_count": 2,
+          "theory_slot_count": 0,
+          "lab_entry_count": 2,
+          "theory_entry_count": 0
+        },
+        {
+          "group_id": "computer_science___design_s5_g03",
+          "course_instances": [
+            "1091"
+          ],
+          "course_codes": [
+            "CD23531"
+          ],
+          "teachers": [
+            "S Umamaheswararao"
+          ],
+          "lab_sessions": [
+            "Monday \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Monday \u00b7 L4 \u00b7 1:20 - 3:00"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 3:10 - 4:00",
+            "Fri \u00b7 4:10 - 5:00"
+          ],
+          "lab_session_count": 2,
+          "theory_slot_count": 2,
+          "lab_entry_count": 2,
+          "theory_entry_count": 2
+        },
+        {
+          "group_id": "computer_science___design_s5_g04",
+          "course_instances": [
+            "1101"
+          ],
+          "course_codes": [
+            "IT23E31"
+          ],
+          "teachers": [
+            "Kalpana D"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Tuesday \u00b7 L5 \u00b7 3:10 - 4:50"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 9:00 - 9:50",
+            "Thur \u00b7 12:00 - 12:50"
+          ],
+          "lab_session_count": 2,
+          "theory_slot_count": 2,
+          "lab_entry_count": 2,
+          "theory_entry_count": 2
+        },
+        {
+          "group_id": "computer_science___design_s5_g05",
+          "course_instances": [
+            "1543"
+          ],
+          "course_codes": [
+            "CS23531"
+          ],
+          "teachers": [
+            "Karuppiah Sp"
+          ],
+          "lab_sessions": [
+            "Tuesday \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Wed \u00b7 L1 \u00b7 8:00 - 9:40"
+          ],
+          "theory_slots": [
+            "Thur \u00b7 11:00 - 11:50",
+            "Thur \u00b7 8:00 - 8:50",
+            "Wed \u00b7 12:00 - 12:50"
+          ],
+          "lab_session_count": 2,
+          "theory_slot_count": 3,
+          "lab_entry_count": 2,
+          "theory_entry_count": 3
+        }
+      ]
+    },
+    {
+      "department": "Computer Science & Engineering",
+      "semester": 5,
+      "group_count": 6,
+      "lab_sessions": 12,
+      "theory_slots": 28,
+      "groups": [
+        {
+          "group_id": "computer_science___engineering_s5_g01",
+          "course_instances": [
+            "1157",
+            "1160",
+            "1162",
+            "1164",
+            "1166",
+            "415",
+            "418",
+            "420",
+            "421",
+            "423"
+          ],
+          "course_codes": [
+            "CS23531",
+            "CS23533"
+          ],
+          "teachers": [
+            "Anantha Sivaprakasam S",
+            "Anitha M",
+            "Divya M",
+            "Duraimurugan N",
+            "Karthi S",
+            "P Kumar",
+            "P Muneeshwari",
+            "Senthil Kumar S S",
+            "Shyni M",
+            "Vinodh Kumar S"
+          ],
+          "lab_sessions": [
+            "Monday \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Monday \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Thur \u00b7 L5 \u00b7 3:10 - 4:50"
+          ],
+          "theory_slots": [
+            "Monday \u00b7 10:00 - 10:50",
+            "Monday \u00b7 2:00 - 2:50",
+            "Monday \u00b7 4:10 - 5:00",
+            "Thur \u00b7 1:00 - 1:50",
+            "Thur \u00b7 3:10 - 4:00",
+            "Thur \u00b7 4:10 - 5:00"
+          ],
+          "lab_session_count": 3,
+          "theory_slot_count": 6,
+          "lab_entry_count": 16,
+          "theory_entry_count": 30
+        },
+        {
+          "group_id": "computer_science___engineering_s5_g02",
+          "course_instances": [
+            "1158",
+            "1159",
+            "1161",
+            "1163",
+            "1165",
+            "1370",
+            "1371",
+            "1374",
+            "1375",
+            "1377"
+          ],
+          "course_codes": [
+            "CS23531",
+            "CS23532"
+          ],
+          "teachers": [
+            "Anantha Sivaprakasam S",
+            "Balachandar J",
+            "Duraimurugan N",
+            "K Anand",
+            "Karthi S",
+            "R Sabitha",
+            "Senthil Kumar S S",
+            "Shafiya Banu M",
+            "Shyni M",
+            "Tamilarasu P"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Wed \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Wed \u00b7 L5 \u00b7 3:10 - 4:50"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 8:00 - 8:50",
+            "Fri \u00b7 9:00 - 9:50",
+            "Monday \u00b7 12:00 - 12:50",
+            "Thur \u00b7 10:00 - 10:50",
+            "Wed \u00b7 11:00 - 11:50",
+            "Wed \u00b7 4:10 - 5:00"
+          ],
+          "lab_session_count": 3,
+          "theory_slot_count": 6,
+          "lab_entry_count": 20,
+          "theory_entry_count": 30
+        },
+        {
+          "group_id": "computer_science___engineering_s5_g03",
+          "course_instances": [
+            "1369",
+            "1372",
+            "1373",
+            "1376",
+            "1378",
+            "416",
+            "417",
+            "419",
+            "422",
+            "424"
+          ],
+          "course_codes": [
+            "CS23532",
+            "CS23533"
+          ],
+          "teachers": [
+            "Anitha M",
+            "Balachandar J",
+            "Divya M",
+            "K Anand",
+            "P Kumar",
+            "P Muneeshwari",
+            "R Sabitha",
+            "Shafiya Banu M",
+            "Tamilarasu P",
+            "Vinodh Kumar S"
+          ],
+          "lab_sessions": [
+            "Monday \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Tuesday \u00b7 L1 \u00b7 8:00 - 9:40"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 12:00 - 12:50",
+            "Thur \u00b7 2:00 - 2:50",
+            "Thur \u00b7 8:00 - 8:50",
+            "Wed \u00b7 9:00 - 9:50"
+          ],
+          "lab_session_count": 2,
+          "theory_slot_count": 4,
+          "lab_entry_count": 19,
+          "theory_entry_count": 30
+        },
+        {
+          "group_id": "computer_science___engineering_s5_g04",
+          "course_instances": [
+            "1068",
+            "1070",
+            "1072",
+            "1074",
+            "1076",
+            "727",
+            "729",
+            "731",
+            "733",
+            "735"
+          ],
+          "course_codes": [
+            "CS23511",
+            "CS23512"
+          ],
+          "teachers": [
+            "Akiladevi R",
+            "Bhavani M",
+            "E M Malathy",
+            "Jeya Mohan H",
+            "K Ananthajothi",
+            "Parthasarathy Chandravinothan",
+            "Ponmani S",
+            "Punitha S",
+            "S Vinothini",
+            "Sathiyavathi S"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Thur \u00b7 11:00 - 11:50",
+            "Tuesday \u00b7 11:00 - 11:50",
+            "Tuesday \u00b7 2:00 - 2:50",
+            "Wed \u00b7 8:00 - 8:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 4,
+          "lab_entry_count": 0,
+          "theory_entry_count": 35
+        },
+        {
+          "group_id": "computer_science___engineering_s5_g05",
+          "course_instances": [
+            "1067",
+            "1069",
+            "1071",
+            "1073",
+            "1075",
+            "726",
+            "728",
+            "730",
+            "732",
+            "734"
+          ],
+          "course_codes": [
+            "CS23511",
+            "CS23512"
+          ],
+          "teachers": [
+            "Akiladevi R",
+            "Bhavani M",
+            "Chettiyar Vani Vivekanand",
+            "Jeya Mohan H",
+            "K Ananthajothi",
+            "Parthasarathy Chandravinothan",
+            "Ponmani S",
+            "Punitha S",
+            "S Vinothini",
+            "Sathiyavathi S"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 2:00 - 2:50",
+            "Thur \u00b7 9:00 - 9:50",
+            "Tuesday \u00b7 10:00 - 10:50",
+            "Tuesday \u00b7 1:00 - 1:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 4,
+          "lab_entry_count": 0,
+          "theory_entry_count": 35
+        },
+        {
+          "group_id": "computer_science___engineering_s5_g06",
+          "course_instances": [
+            "1459",
+            "1460",
+            "1461",
+            "1462"
+          ],
+          "course_codes": [
+            "CS23PE33"
+          ],
+          "teachers": [
+            "Aswana Lal",
+            "Bhuvaneswaran B",
+            "Pravin P",
+            "S. Kaviya"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Fri \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Tuesday \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Wed \u00b7 L4 \u00b7 1:20 - 3:00"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 10:00 - 10:50",
+            "Fri \u00b7 11:00 - 11:50",
+            "Fri \u00b7 4:10 - 5:00",
+            "Tuesday \u00b7 4:10 - 5:00"
+          ],
+          "lab_session_count": 4,
+          "theory_slot_count": 4,
+          "lab_entry_count": 4,
+          "theory_entry_count": 8
+        }
+      ]
+    },
+    {
+      "department": "Computer Science & Engineering (Cyber Security)",
+      "semester": 5,
+      "group_count": 5,
+      "lab_sessions": 11,
+      "theory_slots": 21,
+      "groups": [
+        {
+          "group_id": "computer_science___engineering__cyber_security_s5_g01",
+          "course_instances": [
+            "390",
+            "391"
+          ],
+          "course_codes": [
+            "CS23533"
+          ],
+          "teachers": [
+            "Divya R",
+            "Dr. Bhuvana S."
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Thur \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Tuesday \u00b7 L5 \u00b7 3:10 - 4:50"
+          ],
+          "theory_slots": [
+            "Thur \u00b7 10:00 - 10:50",
+            "Thur \u00b7 11:00 - 11:50",
+            "Thur \u00b7 2:00 - 2:50",
+            "Tuesday \u00b7 3:10 - 4:00",
+            "Tuesday \u00b7 4:10 - 5:00",
+            "Wed \u00b7 2:00 - 2:50"
+          ],
+          "lab_session_count": 3,
+          "theory_slot_count": 6,
+          "lab_entry_count": 4,
+          "theory_entry_count": 6
+        },
+        {
+          "group_id": "computer_science___engineering__cyber_security_s5_g02",
+          "course_instances": [
+            "1257",
+            "436"
+          ],
+          "course_codes": [
+            "CR23531",
+            "CR23532"
+          ],
+          "teachers": [
+            "Dr. Sivakumar D",
+            "Janani I"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Saturday \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Tuesday \u00b7 L1 \u00b7 8:00 - 9:40"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 12:00 - 12:50",
+            "Saturday \u00b7 12:00 - 12:50",
+            "Thur \u00b7 12:00 - 12:50",
+            "Tuesday \u00b7 2:00 - 2:50"
+          ],
+          "lab_session_count": 3,
+          "theory_slot_count": 4,
+          "lab_entry_count": 4,
+          "theory_entry_count": 6
+        },
+        {
+          "group_id": "computer_science___engineering__cyber_security_s5_g03",
+          "course_instances": [
+            "392",
+            "393"
+          ],
+          "course_codes": [
+            "CS23432"
+          ],
+          "teachers": [
+            "Fowzia Sihana",
+            "R Rupmala"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Saturday \u00b7 1:00 - 1:50",
+            "Saturday \u00b7 2:00 - 2:50",
+            "Wed \u00b7 12:00 - 12:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 6
+        },
+        {
+          "group_id": "computer_science___engineering__cyber_security_s5_g04",
+          "course_instances": [
+            "240",
+            "241"
+          ],
+          "course_codes": [
+            "CS23531"
+          ],
+          "teachers": [
+            "Prithipa A",
+            "Swathi Lakshmi S"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Saturday \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Thur \u00b7 L1 \u00b7 8:00 - 9:40"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 10:00 - 10:50",
+            "Fri \u00b7 2:00 - 2:50",
+            "Thur \u00b7 9:00 - 9:50",
+            "Wed \u00b7 1:00 - 1:50"
+          ],
+          "lab_session_count": 3,
+          "theory_slot_count": 4,
+          "lab_entry_count": 4,
+          "theory_entry_count": 6
+        },
+        {
+          "group_id": "computer_science___engineering__cyber_security_s5_g05",
+          "course_instances": [
+            "1258",
+            "435"
+          ],
+          "course_codes": [
+            "CR23531",
+            "CR23532"
+          ],
+          "teachers": [
+            "Dr. Sivakumar D",
+            "New Faculty Cse Cs"
+          ],
+          "lab_sessions": [
+            "Tuesday \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Wed \u00b7 L5 \u00b7 3:10 - 4:50"
+          ],
+          "theory_slots": [
+            "Saturday \u00b7 10:00 - 10:50",
+            "Tuesday \u00b7 12:00 - 12:50",
+            "Wed \u00b7 10:00 - 10:50",
+            "Wed \u00b7 3:10 - 4:00"
+          ],
+          "lab_session_count": 2,
+          "theory_slot_count": 4,
+          "lab_entry_count": 3,
+          "theory_entry_count": 6
+        }
+      ]
+    },
+    {
+      "department": "Electrical & Electronics Engineering",
+      "semester": 5,
+      "group_count": 7,
+      "lab_sessions": 17,
+      "theory_slots": 16,
+      "groups": [
+        {
+          "group_id": "electrical___electronics_engineering_s5_g01",
+          "course_instances": [
+            "1210",
+            "1423"
+          ],
+          "course_codes": [
+            "EE23521",
+            "EE23PE31"
+          ],
+          "teachers": [
+            "Ron Carter S B",
+            "Thirusenthilkumaran P"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Fri \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Saturday \u00b7 L3 \u00b7 11:40 - 1:20",
+            "Saturday \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Thur \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Thur \u00b7 L3 \u00b7 11:40 - 1:20"
+          ],
+          "theory_slots": [],
+          "lab_session_count": 6,
+          "theory_slot_count": 0,
+          "lab_entry_count": 8,
+          "theory_entry_count": 0
+        },
+        {
+          "group_id": "electrical___electronics_engineering_s5_g02",
+          "course_instances": [
+            "1211",
+            "1424"
+          ],
+          "course_codes": [
+            "EE23521",
+            "EE23PE31"
+          ],
+          "teachers": [
+            "Devi Maheswaran",
+            "Sivaraman P R"
+          ],
+          "lab_sessions": [
+            "Thur \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Wed \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Wed \u00b7 L3 \u00b7 11:40 - 1:20"
+          ],
+          "theory_slots": [],
+          "lab_session_count": 3,
+          "theory_slot_count": 0,
+          "lab_entry_count": 5,
+          "theory_entry_count": 0
+        },
+        {
+          "group_id": "electrical___electronics_engineering_s5_g03",
+          "course_instances": [
+            "543",
+            "544"
+          ],
+          "course_codes": [
+            "EE23531"
+          ],
+          "teachers": [
+            "Amutha C",
+            "Anto Sheeba J"
+          ],
+          "lab_sessions": [
+            "Saturday \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Tuesday \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Wed \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Wed \u00b7 L5 \u00b7 3:10 - 4:50"
+          ],
+          "theory_slots": [
+            "Saturday \u00b7 3:10 - 4:00",
+            "Saturday \u00b7 4:10 - 5:00",
+            "Tuesday \u00b7 3:10 - 4:00",
+            "Tuesday \u00b7 4:10 - 5:00",
+            "Wed \u00b7 4:10 - 5:00",
+            "Wed \u00b7 8:00 - 8:50"
+          ],
+          "lab_session_count": 4,
+          "theory_slot_count": 6,
+          "lab_entry_count": 4,
+          "theory_entry_count": 6
+        },
+        {
+          "group_id": "electrical___electronics_engineering_s5_g04",
+          "course_instances": [
+            "535",
+            "536"
+          ],
+          "course_codes": [
+            "EE23511"
+          ],
+          "teachers": [
+            "Brindhu Kumari A",
+            "Jayashree K"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Saturday \u00b7 8:00 - 8:50",
+            "Saturday \u00b7 9:00 - 9:50",
+            "Tuesday \u00b7 9:00 - 9:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 6
+        },
+        {
+          "group_id": "electrical___electronics_engineering_s5_g05",
+          "course_instances": [
+            "537",
+            "538"
+          ],
+          "course_codes": [
+            "EE23512"
+          ],
+          "teachers": [
+            "Nazar Ali A",
+            "S Rama Reddy"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Saturday \u00b7 10:00 - 10:50",
+            "Thur \u00b7 2:00 - 2:50",
+            "Tuesday \u00b7 8:00 - 8:50",
+            "Wed \u00b7 2:00 - 2:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 4,
+          "lab_entry_count": 0,
+          "theory_entry_count": 6
+        },
+        {
+          "group_id": "electrical___electronics_engineering_s5_g06",
+          "course_instances": [
+            "539",
+            "540"
+          ],
+          "course_codes": [
+            "EE23513"
+          ],
+          "teachers": [
+            "Essaki Raj R",
+            "Kavitha J"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 12:00 - 12:50",
+            "Tuesday \u00b7 10:00 - 10:50",
+            "Tuesday \u00b7 2:00 - 2:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 6
+        },
+        {
+          "group_id": "electrical___electronics_engineering_s5_g07",
+          "course_instances": [
+            "1214",
+            "1215"
+          ],
+          "course_codes": [
+            "GE23627"
+          ],
+          "teachers": [
+            "Anto Sheeba J",
+            "Padmavathi R"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Fri \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Thur \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Tuesday \u00b7 L3 \u00b7 11:40 - 1:20"
+          ],
+          "theory_slots": [],
+          "lab_session_count": 4,
+          "theory_slot_count": 0,
+          "lab_entry_count": 8,
+          "theory_entry_count": 0
+        }
+      ]
+    },
+    {
+      "department": "Electronics & Communication Engineering",
+      "semester": 5,
+      "group_count": 6,
+      "lab_sessions": 12,
+      "theory_slots": 30,
+      "groups": [
+        {
+          "group_id": "electronics___communication_engineering_s5_g01",
+          "course_instances": [
+            "321",
+            "322",
+            "323",
+            "340",
+            "341",
+            "342"
+          ],
+          "course_codes": [
+            "EC23521",
+            "EC23531"
+          ],
+          "teachers": [
+            "Anitha Mary M",
+            "Helan Vidhya T",
+            "M Latha",
+            "Murugan C",
+            "Radhamani V",
+            "Sudharsan S"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Fri \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Monday \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Thur \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Tuesday \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Wed \u00b7 L1 \u00b7 8:00 - 9:40"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 11:00 - 11:50",
+            "Monday \u00b7 10:00 - 10:50",
+            "Monday \u00b7 11:00 - 11:50",
+            "Thur \u00b7 9:00 - 9:50",
+            "Tuesday \u00b7 10:00 - 10:50",
+            "Wed \u00b7 8:00 - 8:50",
+            "Wed \u00b7 9:00 - 9:50"
+          ],
+          "lab_session_count": 6,
+          "theory_slot_count": 7,
+          "lab_entry_count": 12,
+          "theory_entry_count": 12
+        },
+        {
+          "group_id": "electronics___communication_engineering_s5_g02",
+          "course_instances": [
+            "318",
+            "319",
+            "320",
+            "337",
+            "338",
+            "339"
+          ],
+          "course_codes": [
+            "EC23521",
+            "EC23531"
+          ],
+          "teachers": [
+            "Asokan V",
+            "Benazir Begam R",
+            "Ganesamoorthy R",
+            "Gururaj D",
+            "Srividhya R",
+            "Thaiyalnayaki K"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Monday \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Monday \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Thur \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Tuesday \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Wed \u00b7 L4 \u00b7 1:20 - 3:00"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 8:00 - 8:50",
+            "Monday \u00b7 1:00 - 1:50",
+            "Monday \u00b7 2:00 - 2:50",
+            "Monday \u00b7 9:00 - 9:50",
+            "Thur \u00b7 10:00 - 10:50",
+            "Thur \u00b7 11:00 - 11:50",
+            "Wed \u00b7 1:00 - 1:50",
+            "Wed \u00b7 2:00 - 2:50"
+          ],
+          "lab_session_count": 6,
+          "theory_slot_count": 8,
+          "lab_entry_count": 12,
+          "theory_entry_count": 12
+        },
+        {
+          "group_id": "electronics___communication_engineering_s5_g03",
+          "course_instances": [
+            "190",
+            "191",
+            "192",
+            "193",
+            "194",
+            "195"
+          ],
+          "course_codes": [
+            "EC23511"
+          ],
+          "teachers": [
+            "Mariammal T",
+            "Priya B",
+            "Radhamani V",
+            "S R Balaji",
+            "Shaik Thasleem Bhanu",
+            "Thilakavathi B"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Monday \u00b7 3:10 - 4:00",
+            "Thur \u00b7 2:00 - 2:50",
+            "Tuesday \u00b7 3:10 - 4:00"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 18
+        },
+        {
+          "group_id": "electronics___communication_engineering_s5_g04",
+          "course_instances": [
+            "162",
+            "163",
+            "164",
+            "165",
+            "166",
+            "167"
+          ],
+          "course_codes": [
+            "EC23512"
+          ],
+          "teachers": [
+            "Anitha Mary M",
+            "Chitra S",
+            "Ganesamoorthy R",
+            "Murugan C",
+            "Srividhya R",
+            "Sudharsan S"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Monday \u00b7 4:10 - 5:00",
+            "Thur \u00b7 4:10 - 5:00",
+            "Tuesday \u00b7 4:10 - 5:00",
+            "Wed \u00b7 11:00 - 11:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 4,
+          "lab_entry_count": 0,
+          "theory_entry_count": 18
+        },
+        {
+          "group_id": "electronics___communication_engineering_s5_g05",
+          "course_instances": [
+            "1132",
+            "1133",
+            "1134",
+            "1135",
+            "1136",
+            "1137"
+          ],
+          "course_codes": [
+            "EC23PE31"
+          ],
+          "teachers": [
+            "Nirmala D",
+            "Pradeep Narayanan S",
+            "S Suganthi",
+            "Saranya G",
+            "Selva Kumar V S",
+            "Suma Nair"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 1:00 - 1:50",
+            "Fri \u00b7 2:00 - 2:50",
+            "Wed \u00b7 3:10 - 4:00",
+            "Wed \u00b7 4:10 - 5:00"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 4,
+          "lab_entry_count": 0,
+          "theory_entry_count": 18
+        },
+        {
+          "group_id": "electronics___communication_engineering_s5_g06",
+          "course_instances": [
+            "108",
+            "1217",
+            "181",
+            "182",
+            "183",
+            "236",
+            "237"
+          ],
+          "course_codes": [
+            "EC23PE32"
+          ],
+          "teachers": [
+            "A Asha",
+            "Divya M",
+            "Manikandan T",
+            "Murugan C",
+            "Pradeep Narayanan S",
+            "S Priyanka Devi",
+            "Sudharsan S"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Thur \u00b7 1:00 - 1:50",
+            "Thur \u00b7 3:10 - 4:00",
+            "Tuesday \u00b7 12:00 - 12:50",
+            "Wed \u00b7 10:00 - 10:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 4,
+          "lab_entry_count": 0,
+          "theory_entry_count": 21
+        }
+      ]
+    },
+    {
+      "department": "Food Technology",
+      "semester": 5,
+      "group_count": 7,
+      "lab_sessions": 4,
+      "theory_slots": 17,
+      "groups": [
+        {
+          "group_id": "food_technology_s5_g01",
+          "course_instances": [
+            "564"
+          ],
+          "course_codes": [
+            "FT23503"
+          ],
+          "teachers": [
+            "P Bharathi"
+          ],
+          "lab_sessions": [
+            "Monday \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Monday \u00b7 L5 \u00b7 3:10 - 4:50"
+          ],
+          "theory_slots": [
+            "Thur \u00b7 12:00 - 12:50",
+            "Thur \u00b7 2:00 - 2:50",
+            "Wed \u00b7 1:00 - 1:50"
+          ],
+          "lab_session_count": 2,
+          "theory_slot_count": 3,
+          "lab_entry_count": 2,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "food_technology_s5_g02",
+          "course_instances": [
+            "567"
+          ],
+          "course_codes": [
+            "FT23512"
+          ],
+          "teachers": [
+            "V Sudhakar"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L2 \u00b7 10:00 - 11:40"
+          ],
+          "theory_slots": [],
+          "lab_session_count": 1,
+          "theory_slot_count": 0,
+          "lab_entry_count": 1,
+          "theory_entry_count": 0
+        },
+        {
+          "group_id": "food_technology_s5_g03",
+          "course_instances": [
+            "565"
+          ],
+          "course_codes": [
+            "FT23511"
+          ],
+          "teachers": [
+            "P Bharathi"
+          ],
+          "lab_sessions": [
+            "Wed \u00b7 L2 \u00b7 10:00 - 11:40"
+          ],
+          "theory_slots": [],
+          "lab_session_count": 1,
+          "theory_slot_count": 0,
+          "lab_entry_count": 1,
+          "theory_entry_count": 0
+        },
+        {
+          "group_id": "food_technology_s5_g04",
+          "course_instances": [
+            "563"
+          ],
+          "course_codes": [
+            "FT23502"
+          ],
+          "teachers": [
+            "Nithya Bala Sundari S"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 4:10 - 5:00",
+            "Thur \u00b7 10:00 - 10:50",
+            "Thur \u00b7 9:00 - 9:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "food_technology_s5_g05",
+          "course_instances": [
+            "400"
+          ],
+          "course_codes": [
+            "GE23311"
+          ],
+          "teachers": [
+            "Prem Kumar S"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Monday \u00b7 11:00 - 11:50",
+            "Tuesday \u00b7 10:00 - 10:50",
+            "Tuesday \u00b7 11:00 - 11:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "food_technology_s5_g06",
+          "course_instances": [
+            "562"
+          ],
+          "course_codes": [
+            "FT23501"
+          ],
+          "teachers": [
+            "J S Divyashree"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 3:10 - 4:00",
+            "Wed \u00b7 2:00 - 2:50",
+            "Wed \u00b7 8:00 - 8:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "food_technology_s5_g07",
+          "course_instances": [
+            "1256",
+            "569"
+          ],
+          "course_codes": [
+            "FT23PE31"
+          ],
+          "teachers": [
+            "Aruthra Devi G",
+            "Niveadhitha S"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 12:00 - 12:50",
+            "Monday \u00b7 9:00 - 9:50",
+            "Thur \u00b7 8:00 - 8:50",
+            "Tuesday \u00b7 1:00 - 1:50",
+            "Tuesday \u00b7 4:10 - 5:00"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 5,
+          "lab_entry_count": 0,
+          "theory_entry_count": 6
+        }
+      ]
+    },
+    {
+      "department": "Information Technology",
+      "semester": 5,
+      "group_count": 5,
+      "lab_sessions": 15,
+      "theory_slots": 25,
+      "groups": [
+        {
+          "group_id": "information_technology_s5_g01",
+          "course_instances": [
+            "668",
+            "669",
+            "670",
+            "671",
+            "672"
+          ],
+          "course_codes": [
+            "AI23231"
+          ],
+          "teachers": [
+            "A P Aruna Jameela",
+            "Premalatha Anand",
+            "Priyanka D",
+            "Subashree R",
+            "Suresh Kumar K"
+          ],
+          "lab_sessions": [
+            "Thur \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Tuesday \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Wed \u00b7 L1 \u00b7 8:00 - 9:40"
+          ],
+          "theory_slots": [
+            "Thur \u00b7 10:00 - 10:50",
+            "Thur \u00b7 11:00 - 11:50",
+            "Tuesday \u00b7 3:10 - 4:00",
+            "Tuesday \u00b7 4:10 - 5:00",
+            "Wed \u00b7 12:00 - 12:50"
+          ],
+          "lab_session_count": 3,
+          "theory_slot_count": 5,
+          "lab_entry_count": 8,
+          "theory_entry_count": 15
+        },
+        {
+          "group_id": "information_technology_s5_g02",
+          "course_instances": [
+            "663",
+            "664",
+            "665",
+            "666",
+            "667"
+          ],
+          "course_codes": [
+            "CS23531"
+          ],
+          "teachers": [
+            "Ms Janani M",
+            "Narayana K E",
+            "Padmini S",
+            "Pragadeesh M",
+            "Satheesh Kumar N"
+          ],
+          "lab_sessions": [
+            "Saturday \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Thur \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Thur \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Tuesday \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Tuesday \u00b7 L4 \u00b7 1:20 - 3:00"
+          ],
+          "theory_slots": [
+            "Saturday \u00b7 3:10 - 4:00",
+            "Thur \u00b7 3:10 - 4:00",
+            "Thur \u00b7 4:10 - 5:00",
+            "Thur \u00b7 8:00 - 8:50",
+            "Thur \u00b7 9:00 - 9:50",
+            "Wed \u00b7 2:00 - 2:50"
+          ],
+          "lab_session_count": 5,
+          "theory_slot_count": 6,
+          "lab_entry_count": 14,
+          "theory_entry_count": 15
+        },
+        {
+          "group_id": "information_technology_s5_g03",
+          "course_instances": [
+            "596",
+            "599",
+            "674",
+            "676",
+            "677"
+          ],
+          "course_codes": [
+            "CS23532",
+            "IT23511"
+          ],
+          "teachers": [
+            "M Sathish",
+            "P Neelaveni",
+            "Priya Vijay",
+            "Shunmuganathan K L",
+            "Vinothkumar R"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Saturday \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Thur \u00b7 L4 \u00b7 1:20 - 3:00"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 1:00 - 1:50",
+            "Fri \u00b7 2:00 - 2:50",
+            "Fri \u00b7 8:00 - 8:50",
+            "Saturday \u00b7 2:00 - 2:50",
+            "Saturday \u00b7 8:00 - 8:50",
+            "Thur \u00b7 1:00 - 1:50"
+          ],
+          "lab_session_count": 3,
+          "theory_slot_count": 6,
+          "lab_entry_count": 6,
+          "theory_entry_count": 15
+        },
+        {
+          "group_id": "information_technology_s5_g04",
+          "course_instances": [
+            "595",
+            "597",
+            "598",
+            "673",
+            "675"
+          ],
+          "course_codes": [
+            "CS23532",
+            "IT23511"
+          ],
+          "teachers": [
+            "Nalini S",
+            "P Neelaveni",
+            "Priya Vijay",
+            "S Subbiah",
+            "Suresh Kumar K"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Wed \u00b7 L2 \u00b7 10:00 - 11:40"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 12:00 - 12:50",
+            "Fri \u00b7 3:10 - 4:00",
+            "Wed \u00b7 10:00 - 10:50",
+            "Wed \u00b7 3:10 - 4:00",
+            "Wed \u00b7 4:10 - 5:00"
+          ],
+          "lab_session_count": 2,
+          "theory_slot_count": 5,
+          "lab_entry_count": 4,
+          "theory_entry_count": 15
+        },
+        {
+          "group_id": "information_technology_s5_g05",
+          "course_instances": [
+            "257",
+            "258",
+            "259",
+            "260",
+            "261"
+          ],
+          "course_codes": [
+            "IT23531"
+          ],
+          "teachers": [
+            "A Kalaivani",
+            "Bennet Prabhu",
+            "L Leena Jenifer",
+            "M Babu",
+            "Muthu Kumar B"
+          ],
+          "lab_sessions": [
+            "Saturday \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Tuesday \u00b7 L2 \u00b7 10:00 - 11:40"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 10:00 - 10:50",
+            "Fri \u00b7 9:00 - 9:50",
+            "Saturday \u00b7 9:00 - 9:50"
+          ],
+          "lab_session_count": 2,
+          "theory_slot_count": 3,
+          "lab_entry_count": 9,
+          "theory_entry_count": 15
+        }
+      ]
+    },
+    {
+      "department": "Mechanical Engineering",
+      "semester": 5,
+      "group_count": 7,
+      "lab_sessions": 13,
+      "theory_slots": 22,
+      "groups": [
+        {
+          "group_id": "mechanical_engineering_s5_g01",
+          "course_instances": [
+            "305",
+            "330"
+          ],
+          "course_codes": [
+            "ME23521",
+            "ME23532"
+          ],
+          "teachers": [
+            "Arulmurugan S",
+            "Devanathan C"
+          ],
+          "lab_sessions": [
+            "Monday \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Thur \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Thur \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Wed \u00b7 L4 \u00b7 1:20 - 3:00"
+          ],
+          "theory_slots": [
+            "Monday \u00b7 10:00 - 10:50",
+            "Monday \u00b7 1:00 - 1:50",
+            "Tuesday \u00b7 12:00 - 12:50"
+          ],
+          "lab_session_count": 4,
+          "theory_slot_count": 3,
+          "lab_entry_count": 6,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "mechanical_engineering_s5_g02",
+          "course_instances": [
+            "328",
+            "329"
+          ],
+          "course_codes": [
+            "ME23531"
+          ],
+          "teachers": [
+            "Muthiah C T",
+            "Parthiban N"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Tuesday \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Tuesday \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Wed \u00b7 L1 \u00b7 8:00 - 9:40"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 8:00 - 8:50",
+            "Fri \u00b7 9:00 - 9:50",
+            "Tuesday \u00b7 8:00 - 8:50",
+            "Tuesday \u00b7 9:00 - 9:50",
+            "Wed \u00b7 3:10 - 4:00"
+          ],
+          "lab_session_count": 4,
+          "theory_slot_count": 5,
+          "lab_entry_count": 4,
+          "theory_entry_count": 6
+        },
+        {
+          "group_id": "mechanical_engineering_s5_g03",
+          "course_instances": [
+            "304",
+            "331"
+          ],
+          "course_codes": [
+            "ME23521",
+            "ME23532"
+          ],
+          "teachers": [
+            "Abraham Antony D",
+            "Pannerselvan S"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Fri \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Tuesday \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Wed \u00b7 L2 \u00b7 10:00 - 11:40"
+          ],
+          "theory_slots": [
+            "Thur \u00b7 12:00 - 12:50",
+            "Tuesday \u00b7 11:00 - 11:50",
+            "Wed \u00b7 12:00 - 12:50"
+          ],
+          "lab_session_count": 4,
+          "theory_slot_count": 3,
+          "lab_entry_count": 6,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "mechanical_engineering_s5_g04",
+          "course_instances": [
+            "247",
+            "248"
+          ],
+          "course_codes": [
+            "GE23511"
+          ],
+          "teachers": [
+            "Rajesh Kumar B",
+            "S Venkat Prasat"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 11:00 - 11:50",
+            "Monday \u00b7 11:00 - 11:50",
+            "Thur \u00b7 3:10 - 4:00"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 6
+        },
+        {
+          "group_id": "mechanical_engineering_s5_g05",
+          "course_instances": [
+            "326",
+            "327"
+          ],
+          "course_codes": [
+            "ME23511"
+          ],
+          "teachers": [
+            "N Venkateshwaran",
+            "Shankar E"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 10:00 - 10:50",
+            "Monday \u00b7 12:00 - 12:50",
+            "Thur \u00b7 4:10 - 5:00"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 6
+        },
+        {
+          "group_id": "mechanical_engineering_s5_g06",
+          "course_instances": [
+            "1317",
+            "1318",
+            "1322"
+          ],
+          "course_codes": [
+            "ME23PE31"
+          ],
+          "teachers": [
+            "Ragavendiran R",
+            "S Ramkumar",
+            "Santhanakrishnan M"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Monday \u00b7 2:00 - 2:50",
+            "Monday \u00b7 8:00 - 8:50",
+            "Tuesday \u00b7 10:00 - 10:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 9
+        },
+        {
+          "group_id": "mechanical_engineering_s5_g07",
+          "course_instances": [
+            "1435",
+            "1436"
+          ],
+          "course_codes": [
+            "ME23PE32"
+          ],
+          "teachers": [
+            "Arun Prakash N",
+            "Kumar S"
+          ],
+          "lab_sessions": [
+            "Thur \u00b7 L2 \u00b7 10:00 - 11:40"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 12:00 - 12:50",
+            "Wed \u00b7 4:10 - 5:00"
+          ],
+          "lab_session_count": 1,
+          "theory_slot_count": 2,
+          "lab_entry_count": 2,
+          "theory_entry_count": 4
+        }
+      ]
+    },
+    {
+      "department": "Mechatronics Engineering",
+      "semester": 5,
+      "group_count": 8,
+      "lab_sessions": 5,
+      "theory_slots": 18,
+      "groups": [
+        {
+          "group_id": "mechatronics_engineering_s5_g01",
+          "course_instances": [
+            "906"
+          ],
+          "course_codes": [
+            "MT23522"
+          ],
+          "teachers": [
+            "Uma Maheswari M"
+          ],
+          "lab_sessions": [
+            "Fri \u00b7 L2 \u00b7 10:00 - 11:40",
+            "Thur \u00b7 L5 \u00b7 3:10 - 4:50"
+          ],
+          "theory_slots": [],
+          "lab_session_count": 2,
+          "theory_slot_count": 0,
+          "lab_entry_count": 2,
+          "theory_entry_count": 0
+        },
+        {
+          "group_id": "mechatronics_engineering_s5_g02",
+          "course_instances": [
+            "1121"
+          ],
+          "course_codes": [
+            "CS23422"
+          ],
+          "teachers": [
+            "V Santhanam"
+          ],
+          "lab_sessions": [
+            "Saturday \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Saturday \u00b7 L2 \u00b7 10:00 - 11:40"
+          ],
+          "theory_slots": [],
+          "lab_session_count": 2,
+          "theory_slot_count": 0,
+          "lab_entry_count": 2,
+          "theory_entry_count": 0
+        },
+        {
+          "group_id": "mechatronics_engineering_s5_g03",
+          "course_instances": [
+            "1184"
+          ],
+          "course_codes": [
+            "GE23311"
+          ],
+          "teachers": [
+            "Roobini K"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 9:00 - 9:50",
+            "Thur \u00b7 10:00 - 10:50",
+            "Tuesday \u00b7 8:00 - 8:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "mechatronics_engineering_s5_g04",
+          "course_instances": [
+            "882"
+          ],
+          "course_codes": [
+            "MT23512"
+          ],
+          "teachers": [
+            "Uma Maheswari M"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Thur \u00b7 12:00 - 12:50",
+            "Tuesday \u00b7 1:00 - 1:50",
+            "Wed \u00b7 3:10 - 4:00"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "mechatronics_engineering_s5_g05",
+          "course_instances": [
+            "881"
+          ],
+          "course_codes": [
+            "MT23511"
+          ],
+          "teachers": [
+            "Naresh Babu G"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Saturday \u00b7 1:00 - 1:50",
+            "Saturday \u00b7 4:10 - 5:00",
+            "Tuesday \u00b7 10:00 - 10:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "mechatronics_engineering_s5_g06",
+          "course_instances": [
+            "883"
+          ],
+          "course_codes": [
+            "MT23513"
+          ],
+          "teachers": [
+            "Ramesh S"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Tuesday \u00b7 4:10 - 5:00",
+            "Wed \u00b7 10:00 - 10:50",
+            "Wed \u00b7 11:00 - 11:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "mechatronics_engineering_s5_g07",
+          "course_instances": [
+            "1463",
+            "1466"
+          ],
+          "course_codes": [
+            "MT23PE31"
+          ],
+          "teachers": [
+            "P Chandramohan",
+            "Shantharaj M"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Saturday \u00b7 2:00 - 2:50",
+            "Tuesday \u00b7 11:00 - 11:50",
+            "Tuesday \u00b7 2:00 - 2:50",
+            "Tuesday \u00b7 3:10 - 4:00"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 4,
+          "lab_entry_count": 0,
+          "theory_entry_count": 6
+        },
+        {
+          "group_id": "mechatronics_engineering_s5_g08",
+          "course_instances": [
+            "22"
+          ],
+          "course_codes": [
+            "MT23PE32"
+          ],
+          "teachers": [
+            "Ramesh S"
+          ],
+          "lab_sessions": [
+            "Wed \u00b7 L4 \u00b7 1:20 - 3:00"
+          ],
+          "theory_slots": [
+            "Fri \u00b7 1:00 - 1:50",
+            "Fri \u00b7 8:00 - 8:50"
+          ],
+          "lab_session_count": 1,
+          "theory_slot_count": 2,
+          "lab_entry_count": 1,
+          "theory_entry_count": 2
+        }
+      ]
+    },
+    {
+      "department": "Robotics & Automation",
+      "semester": 5,
+      "group_count": 6,
+      "lab_sessions": 8,
+      "theory_slots": 14,
+      "groups": [
+        {
+          "group_id": "robotics___automation_s5_g01",
+          "course_instances": [
+            "493"
+          ],
+          "course_codes": [
+            "RO23522"
+          ],
+          "teachers": [
+            "Venugopal K"
+          ],
+          "lab_sessions": [
+            "Saturday \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Thur \u00b7 L5 \u00b7 3:10 - 4:50",
+            "Tuesday \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Wed \u00b7 L2 \u00b7 10:00 - 11:40"
+          ],
+          "theory_slots": [],
+          "lab_session_count": 4,
+          "theory_slot_count": 0,
+          "lab_entry_count": 4,
+          "theory_entry_count": 0
+        },
+        {
+          "group_id": "robotics___automation_s5_g02",
+          "course_instances": [
+            "1563"
+          ],
+          "course_codes": [
+            "RO23521"
+          ],
+          "teachers": [
+            "New Staff 1"
+          ],
+          "lab_sessions": [
+            "Saturday \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Saturday \u00b7 L4 \u00b7 1:20 - 3:00",
+            "Thur \u00b7 L1 \u00b7 8:00 - 9:40",
+            "Wed \u00b7 L5 \u00b7 3:10 - 4:50"
+          ],
+          "theory_slots": [],
+          "lab_session_count": 4,
+          "theory_slot_count": 0,
+          "lab_entry_count": 4,
+          "theory_entry_count": 0
+        },
+        {
+          "group_id": "robotics___automation_s5_g03",
+          "course_instances": [
+            "490"
+          ],
+          "course_codes": [
+            "ME23511"
+          ],
+          "teachers": [
+            "S Senthilrajan"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 3:10 - 4:00",
+            "Saturday \u00b7 12:00 - 12:50",
+            "Tuesday \u00b7 1:00 - 1:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 3
+        },
+        {
+          "group_id": "robotics___automation_s5_g04",
+          "course_instances": [
+            "489"
+          ],
+          "course_codes": [
+            "RO23512"
+          ],
+          "teachers": [
+            "Nagarajan Tt"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 4:10 - 5:00",
+            "Saturday \u00b7 10:00 - 10:50",
+            "Thur \u00b7 10:00 - 10:50",
+            "Tuesday \u00b7 11:00 - 11:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 4,
+          "lab_entry_count": 0,
+          "theory_entry_count": 4
+        },
+        {
+          "group_id": "robotics___automation_s5_g05",
+          "course_instances": [
+            "488"
+          ],
+          "course_codes": [
+            "RO23511"
+          ],
+          "teachers": [
+            "Ravindra Kumar B"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 12:00 - 12:50",
+            "Thur \u00b7 11:00 - 11:50",
+            "Tuesday \u00b7 10:00 - 10:50",
+            "Wed \u00b7 1:00 - 1:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 4,
+          "lab_entry_count": 0,
+          "theory_entry_count": 4
+        },
+        {
+          "group_id": "robotics___automation_s5_g06",
+          "course_instances": [
+            "1467"
+          ],
+          "course_codes": [
+            "RO23PE31"
+          ],
+          "teachers": [
+            "P Vimalanathan"
+          ],
+          "lab_sessions": [],
+          "theory_slots": [
+            "Fri \u00b7 10:00 - 10:50",
+            "Fri \u00b7 1:00 - 1:50",
+            "Thur \u00b7 12:00 - 12:50"
+          ],
+          "lab_session_count": 0,
+          "theory_slot_count": 3,
+          "lab_entry_count": 0,
+          "theory_entry_count": 3
+        }
+      ]
+    }
+  ],
+  "constraints": {
+    "group_non_overlap": {
+      "name": "Department Group Non-Overlap",
+      "status": "applied",
+      "enabled": true,
+      "priority": 9,
+      "details": {
+        "dept_semesters": 19,
+        "guard_clauses": 855,
+        "activity_literals": 5445,
+        "protected_group_entries": 5445
+      }
+    }
+  }
+}

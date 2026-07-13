@@ -12,6 +12,13 @@ from ..base import Constraint, ConstraintMetadata
 from ..context import ConstraintContext
 from ..schema import ConstraintApplicationResult, ConstraintStatus
 from ..utils import iter_theory_room_variables, register_objective_penalty
+from ...utils.special_cse_rules import (
+	LOW_CODE_MIN_THEORY_ROOM_CAPACITY,
+	is_cse_large_low_code_theory,
+	is_jeya_mohan_cs23511,
+	is_jeya_mohan_room,
+	is_low_code_theory_slot,
+)
 from ...utils.time_utils import DayNormalizer
 
 
@@ -70,6 +77,7 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 			"blocks": len(inventory.blocks),
 			"enabled_literals": stats["active_literals"],
 			"disabled_literals": stats["disabled_literals"],
+			"special_slot_disabled_literals": stats["special_slot_disabled_literals"],
 			"room_conflict_constraints": stats["room_conflict_constraints"],
 			"overflow_penalties": stats["penalties"],
 		})
@@ -90,6 +98,7 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 			"disabled_literals": 0,
 			"room_conflict_constraints": 0,
 			"penalties": 0,
+			"special_slot_disabled_literals": 0,
 		}
 		course_day_patterns = getattr(theory_block, "course_day_patterns", {}) or {}
 		time_config = getattr(context.data.raw, "time", None)
@@ -101,8 +110,15 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 		pattern_cache: Dict[str, Tuple[str, ...]] = {}
 		day_key_cache: Dict[Tuple[str, int], str] = {}
 
+		slot_labels = tuple(getattr(theory_block, "theory_slot_labels", ()) or tuple())
 		for _tid, course_id, day_idx, slot_idx, room_id, var in iter_theory_room_variables(context):
 			policy = course_policies.get(course_id)
+			requirement = theory_block.course_requirements.get(course_id)
+			if self._is_low_code_slot_blocked(requirement, slot_idx, slot_labels):
+				model.Add(var == 0)
+				stats["disabled_literals"] += 1
+				stats["special_slot_disabled_literals"] += 1
+				continue
 			room_meta = room_lookup.get(str(room_id))
 			if (
 				not policy
@@ -246,6 +262,16 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 			allowed = self._resolve_allowed_blocks(semester, inventory)
 			if not allowed:
 				continue
+			special_rooms = self._special_allowed_rooms(requirement, inventory)
+			if special_rooms is not None:
+				primary = self._resolve_primary_block(semester, allowed)
+				policies[course_id] = CoursePolicy(
+					allowed_blocks=allowed,
+					primary_block=primary,
+					is_big_course=student_count >= self._big_threshold,
+					allowed_rooms=special_rooms,
+				)
+				continue
 			
 			# Keep capacity as the hard filter, without a hardcoded special-room tier.
 			is_big = student_count >= self._big_threshold
@@ -316,6 +342,50 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 				allowed_rooms=filtered_rooms,
 			)
 		return policies
+
+	def _special_allowed_rooms(
+		self,
+		requirement: object,
+		inventory: RoomInventory,
+	) -> Optional[Tuple[str, ...]]:
+		course_code = getattr(requirement, "course_code", None)
+		department = getattr(requirement, "department", None)
+		teacher_id = getattr(requirement, "teacher_id", None)
+		student_count = getattr(requirement, "student_count", None)
+
+		if is_cse_large_low_code_theory(course_code, department, student_count):
+			return tuple(
+				room_id
+				for room_id, room in inventory.room_index.items()
+				if (self._safe_int(room.get("capacity")) or 0) >= LOW_CODE_MIN_THEORY_ROOM_CAPACITY
+			)
+
+		if is_jeya_mohan_cs23511(course_code, department, teacher_id):
+			return tuple(
+				room_id
+				for room_id, room in inventory.room_index.items()
+				if is_jeya_mohan_room(room.get("room_number"))
+			)
+
+		return None
+
+	def _is_low_code_slot_blocked(
+		self,
+		requirement: object,
+		slot_index: int,
+		slot_labels: Sequence[object],
+	) -> bool:
+		if not requirement:
+			return False
+		if not is_cse_large_low_code_theory(
+			getattr(requirement, "course_code", None),
+			getattr(requirement, "department", None),
+			getattr(requirement, "student_count", None),
+		):
+			return False
+		if slot_index < 0 or slot_index >= len(slot_labels):
+			return True
+		return not is_low_code_theory_slot(slot_labels[slot_index])
 
 	def _resolve_day_key(
 		self,

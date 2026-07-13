@@ -63,16 +63,19 @@ def test_mechanical_s5_forces_target_courses_to_split_across_two_groups() -> Non
     assert len(groups_by_course["ME23532"]) == 2
 
 
-def test_eee_s5_pairs_pe_with_ee23521_in_two_subject_groups(tmp_path) -> None:
+def test_eee_s5_fixed_grouping_adds_standalone_pe_group(tmp_path) -> None:
     pe_map = tmp_path / "pe_course_map.csv"
     pe_map.write_text(
         "GENERAL CODE,PE1,PE2,PE3,PE4,PE5,DEPT,SEM\n"
-        "EE23PE31,EE23B21,,,,,EEE,5\n",
+        "EE23PE31,EE23B21,,,,,EEE,5\n"
+        "EE23PE32,CS23XXX1,,,,,EEE,5\n",
         encoding="utf-8",
     )
     courses = [
         _course("1136", "EE23PE31", "319", practical_hours=6),
         _course("1137", "EE23PE31", "320", practical_hours=6),
+        _course("1544", "EE23PE32", "296", practical_hours=2, lecture_hours=2),
+        _course("1545", "EE23PE32", "314", practical_hours=2, lecture_hours=2),
         _course("1130", "EE23521", "313", practical_hours=2),
         _course("1131", "EE23521", "317", practical_hours=2),
         _course("557", "EE23531", "308", practical_hours=2, lecture_hours=3),
@@ -98,10 +101,11 @@ def test_eee_s5_pairs_pe_with_ee23521_in_two_subject_groups(tmp_path) -> None:
     assert optimizer.optimize_distribution()
     assert optimizer.validate_solution()
 
-    assert optimizer.num_groups == 7
-    assert len(optimizer.groups) == 7
+    assert optimizer.num_groups == 8
+    assert len(optimizer.groups) == 8
     assert [set(inst["course_code"] for inst in group) for group in optimizer.groups[:2]] == [
-        {"EE23PE31", "EE23521"},
-        {"EE23PE31", "EE23521"},
+        {"EE23PE31", "EE23531"},
+        {"EE23PE31", "EE23531"},
     ]
+    assert [inst["course_code"] for inst in optimizer.groups[7]] == ["EE23PE32", "EE23PE32"]
     assert all(len({inst["course_code"] for inst in group}) <= 2 for group in optimizer.groups)

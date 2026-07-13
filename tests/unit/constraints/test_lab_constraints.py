@@ -16,6 +16,7 @@ from src.constraints.lab.computer_lab_mapping import (
 	ComputerLabMappingStats,
 	build_computer_lab_mapping_constraint,
 )
+from src.constraints.lab.consecutive_batches import build_consecutive_batch_lab_constraint
 from src.constraints.lab.core_lab import build_core_lab_mapping_constraint
 from src.constraints.lab.requirements import build_lab_session_coverage_constraint
 from src.constraints.lab.room_single_assignment import build_lab_room_single_assignment_constraint
@@ -733,6 +734,37 @@ def test_semester_slot_cap_ignores_core_courses(slot_cap_constraint_context: Con
 	assert result.status == ConstraintStatus.APPLIED
 	assert result.details["constrained_semesters"] == 1
 	assert result.details["semesters"] == ("Computer Science & Engineering S5",)
+
+
+def test_consecutive_batches_blocks_sessions_outside_configured_pairs() -> None:
+	context = _build_teacher_consecutive_context(
+		course_definitions=(
+			(
+				"COURSE_A",
+				"Food Technology",
+				((0, "L1"), (0, "L2"), (0, "L3"), (0, "L4"), (0, "L5")),
+			),
+		),
+		session_labels=("L1", "L2", "L3", "L4", "L5"),
+	)
+	constraint = build_consecutive_batch_lab_constraint(
+		metadata=_metadata("consecutive_batches", priority=7),
+		params={
+			"course_codes": ("LC0",),
+			"preferred_pairs": (("L1", "L2"), ("L4", "L5")),
+			"min_practical_hours": 1,
+			"min_student_count": 1,
+		},
+	)
+
+	result = constraint.apply(context)
+
+	assert result.status == ConstraintStatus.APPLIED
+	assert result.details["blocked_outside_pair_vars"] == 1
+	l3_var = context.variables.lab.assignments["T_CON"]["COURSE_A"][0]["L3"]["R_CON"]
+	context.model.Add(l3_var == 1)
+	solver = cp_model.CpSolver()
+	assert solver.Solve(context.model) == cp_model.INFEASIBLE
 
 
 def test_teacher_max_consecutive_blocks_hard_departments() -> None:

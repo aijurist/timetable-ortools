@@ -27,7 +27,8 @@ import seaborn as sns
 
 MECH_S5_FORCED_SPLIT_COURSES = ("ME23521", "ME23532")
 EEE_S5_PE_COURSE = "EE23PE31"
-EEE_S5_PE_PARTNER_COURSE = "EE23521"
+EEE_S5_PE_PARTNER_COURSE = "EE23531"
+EEE_S5_STANDALONE_PE_COURSE = "EE23PE32"
 EEE_S5_FIXED_REGULAR_COURSES = (
     "EE23521",
     "EE23531",
@@ -567,6 +568,8 @@ class CourseGroupOptimizer:
         # if self.dept == "Biotechnology" and self.semester == 5:
         #     return self._build_biotech_s5_fixed_groups()
 
+        # EEE S5 uses a curated fixed grouping because the PE/TANCAM course is
+        # otherwise difficult for the generic grouping optimizer to place.
         if self.dept == "Electrical & Electronics Engineering" and self.semester == 5:
             return self._build_eee_s5_fixed_groups()
         
@@ -709,11 +712,12 @@ class CourseGroupOptimizer:
         return True
 
     def _build_eee_s5_fixed_groups(self):
-        """Build the curated EEE S5 grouping directly, pairing PE with EE23521."""
+        """Build the curated EEE S5 grouping directly for PE-heavy EEE courses."""
         self.logger.info(
-            "Using hardcoded EEE S5 group distribution; pairing %s with %s",
+            "Using hardcoded EEE S5 group distribution; pairing %s with %s and placing %s in its own group",
             EEE_S5_PE_COURSE,
             EEE_S5_PE_PARTNER_COURSE,
+            EEE_S5_STANDALONE_PE_COURSE,
         )
 
         regular_by_code = self._group_instances_by_course_code(self.courses)
@@ -733,25 +737,29 @@ class CourseGroupOptimizer:
             return False
 
         pe_instances = pe_by_code.get(EEE_S5_PE_COURSE, [])
+        standalone_pe_instances = pe_by_code.get(EEE_S5_STANDALONE_PE_COURSE, [])
         partner_instances = regular_by_code.get(EEE_S5_PE_PARTNER_COURSE, [])
-        if len(pe_instances) != 2 or len(partner_instances) != 2:
+        if len(pe_instances) != 2 or len(partner_instances) != 2 or len(standalone_pe_instances) != 2:
             self.logger.error(
-                "EEE S5 fixed grouping requires exactly two %s instances and two %s instances; got %s and %s",
+                "EEE S5 fixed grouping requires exactly two %s instances, two %s instances, and two %s instances; got %s, %s, and %s",
                 EEE_S5_PE_COURSE,
                 EEE_S5_PE_PARTNER_COURSE,
+                EEE_S5_STANDALONE_PE_COURSE,
                 len(pe_instances),
                 len(partner_instances),
+                len(standalone_pe_instances),
             )
             return False
 
         fixed_groups = [
             [pe_instances[0], partner_instances[0]],
             [pe_instances[1], partner_instances[1]],
-            list(regular_by_code["EE23531"]),
+            list(regular_by_code["EE23521"]),
             list(regular_by_code["EE23511"]),
             list(regular_by_code["EE23512"]),
             list(regular_by_code["EE23513"]),
             list(regular_by_code["GE23627"]),
+            list(standalone_pe_instances),
         ]
 
         assigned_ids = {
@@ -763,7 +771,9 @@ class CourseGroupOptimizer:
             str(instance.get("id"))
             for course_code in EEE_S5_FIXED_REGULAR_COURSES
             for instance in regular_by_code[course_code]
-        } | {str(instance.get("id")) for instance in pe_instances}
+        } | {str(instance.get("id")) for instance in pe_instances} | {
+            str(instance.get("id")) for instance in standalone_pe_instances
+        }
 
         if assigned_ids != expected_ids:
             missing = sorted(expected_ids - assigned_ids)

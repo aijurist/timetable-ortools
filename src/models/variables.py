@@ -25,6 +25,13 @@ from ..data.pop_availability import (
 from ..data.room_eligibility import RoomEligibilityIndex, build_room_eligibility_index
 from ..data.schedule_blocking import ScheduleBlockingMask
 from ..utils.time_utils import DayNormalizer
+from ..utils.special_cse_rules import (
+	JEYA_MOHAN_ROOM_NUMBER,
+	LOW_CODE_MIN_THEORY_ROOM_CAPACITY,
+	is_cse_large_low_code_theory,
+	is_jeya_mohan_cs23511,
+	normalize_room_number,
+)
 
 from .schema import (
 	LabCourseRequirement,
@@ -264,6 +271,7 @@ class VariableCreator:
 						group_id=requirement.group_id,
 					)
 					theory_eligibility_cache[theory_cache_key] = eligible_rooms
+				eligible_rooms = self._augment_special_cse_theory_rooms(requirement, eligible_rooms)
 				for day_index, day_label in enumerate(pattern):
 					normalized_day = self._normalize_day_for_blocking(day_label)
 					slot_map: Dict[int, cp_model.IntVar] = {}
@@ -553,6 +561,67 @@ class VariableCreator:
 		if availability is None:
 			return False
 		return not availability.allows_theory(day_label, slot_label)
+
+	def _augment_special_cse_theory_rooms(
+		self,
+		requirement: TheoryCourseRequirement,
+		room_ids: Sequence[str],
+	) -> Tuple[str, ...]:
+		required_rooms: set[str] = set()
+		if is_cse_large_low_code_theory(
+			requirement.course_code,
+			requirement.department,
+			requirement.student_count,
+		):
+			required_rooms.update(self._theory_rooms_with_min_capacity(LOW_CODE_MIN_THEORY_ROOM_CAPACITY))
+		if is_jeya_mohan_cs23511(requirement.course_code, requirement.department, requirement.teacher_id):
+			required_rooms.update(self._theory_rooms_matching_number(JEYA_MOHAN_ROOM_NUMBER))
+		if not required_rooms:
+			return tuple(room_ids)
+
+		ordered = [str(room_id) for room_id in room_ids]
+		seen = set(ordered)
+		for room_id in self._theory_room_ids:
+			room_id = str(room_id)
+			if room_id in required_rooms and room_id not in seen:
+				ordered.append(room_id)
+				seen.add(room_id)
+		return tuple(ordered)
+
+	def _theory_rooms_with_min_capacity(self, min_capacity: int) -> Tuple[str, ...]:
+		rooms = []
+		for room_id in self._theory_room_ids:
+			metadata = self._theory_room_metadata(room_id)
+			if self._safe_int_metadata(
+				metadata.get("room_max_cap")
+				or metadata.get("capacity")
+				or metadata.get("room_capacity")
+				or metadata.get("max_capacity")
+			) >= min_capacity:
+				rooms.append(str(room_id))
+		return tuple(rooms)
+
+	def _theory_rooms_matching_number(self, room_number: str) -> Tuple[str, ...]:
+		rooms = []
+		target = normalize_room_number(room_number)
+		for room_id in self._theory_room_ids:
+			metadata = self._theory_room_metadata(room_id)
+			actual = normalize_room_number(metadata.get("room_number") or metadata.get("room_no") or metadata.get("name"))
+			if actual == target:
+				rooms.append(str(room_id))
+		return tuple(rooms)
+
+	def _theory_room_metadata(self, room_id: object) -> Mapping[str, object]:
+		registry = getattr(self._data.raw, "room_registry", None) or {}
+		metadata = registry.get(str(room_id), {})
+		return metadata if isinstance(metadata, Mapping) else {}
+
+	@staticmethod
+	def _safe_int_metadata(value: object) -> int:
+		try:
+			return int(round(float(value)))
+		except (TypeError, ValueError):
+			return 0
 
 
 __all__ = [

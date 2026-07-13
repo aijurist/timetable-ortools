@@ -24,6 +24,7 @@ from src.models.schema import (
 def _build_context(
 	room_specs: Iterable[Dict[str, object]],
 	course_specs: Iterable[Dict[str, object]],
+	slot_labels: Tuple[str, ...] = ("Slot-1", "Slot-2"),
 ) -> Tuple[ConstraintContext, Dict[str, cp_model.IntVar]]:
 	model = cp_model.CpModel()
 	assignments: Dict[str, Dict[str, Dict[int, Dict[int, cp_model.IntVar]]]] = {}
@@ -46,11 +47,13 @@ def _build_context(
 		for room_id in room_ids:
 			room_var = model.NewBoolVar(f"{course_id}_d{day_idx}_s{slot_idx}_r{room_id}")
 			room_bucket[room_id] = room_var
+			course_vars[f"{course_id}:d{day_idx}:s{slot_idx}:r{room_id}"] = room_var
 		if room_bucket:
 			model.Add(sum(room_bucket.values()) == var)
 		room_assignments.setdefault(teacher_id, {}).setdefault(course_id, {}).setdefault(day_idx, {})[slot_idx] = room_bucket
 		teacher_courses.setdefault(teacher_id, []).append(course_id)
 		course_vars[course_id] = var
+		course_vars[f"{course_id}:d{day_idx}:s{slot_idx}"] = var
 		course_day_patterns[course_id] = ("mon",)
 		course_requirements[course_id] = TheoryCourseRequirement(
 			course_instance_id=course_id,
@@ -79,7 +82,7 @@ def _build_context(
 		group_timeslots={},
 		requirements={},
 		day_patterns={},
-		theory_slot_labels=("Slot-1", "Slot-2"),
+		theory_slot_labels=slot_labels,
 		group_course_index={},
 		instance_group_lookup={},
 		room_ids=room_ids,
@@ -105,7 +108,7 @@ def _build_context(
 	)
 
 	raw = SimpleNamespace(
-		time=SimpleNamespace(theory_slots=("Slot-1", "Slot-2")),
+		time=SimpleNamespace(theory_slots=slot_labels),
 		departments=SimpleNamespace(day_patterns={"__default__": ("mon", "tue")}),
 		rooms=rooms,
 		room_registry={str(room["id"]): room for room in room_list},
@@ -154,7 +157,7 @@ def test_big_courses_require_140_rooms():
 	assert status == cp_model.INFEASIBLE
 
 
-def test_small_courses_cannot_use_140_only_block():
+def test_small_courses_can_fallback_to_140_only_block():
 	rooms = [
 		{"id": "A1", "block": "A Block", "room_max_cap": 150},
 	]
@@ -168,7 +171,7 @@ def test_small_courses_cannot_use_140_only_block():
 	context.model.Add(vars_map["C_SMALL"] == 1)
 	solver = cp_model.CpSolver()
 	status = solver.Solve(context.model)
-	assert status == cp_model.INFEASIBLE
+	assert status == cp_model.OPTIMAL
 
 
 def test_second_year_overflow_uses_c_block():
@@ -203,3 +206,162 @@ def test_year_block_preferences_penalise_alt_blocks():
 	result = _apply_constraint(context)
 	assert result.status == ConstraintStatus.APPLIED
 	assert result.details["overflow_penalties"] > 0
+
+
+def test_cse_low_code_theory_is_blocked_outside_12_slot():
+	rooms = [
+		{"id": "A102", "room_number": "A102", "block": "A Block", "room_max_cap": 70},
+		{"id": "ANEW103", "room_number": "ANEW103", "block": "A Block", "room_max_cap": 165},
+	]
+	courses = [
+		{
+			"course_id": "LOW_CODE",
+			"course_code": "CS23PE33",
+			"department": "Computer Science & Engineering",
+			"semester": 5,
+			"student_count": 140,
+			"slot": 0,
+		},
+	]
+	context, vars_map = _build_context(
+		rooms,
+		courses,
+		slot_labels=("10:00 - 10:50", "12:00 - 12:50"),
+	)
+	result = _apply_constraint(context)
+	assert result.status == ConstraintStatus.APPLIED
+	assert result.details["special_slot_disabled_literals"] == 2
+
+	context.model.Add(vars_map["LOW_CODE"] == 1)
+	status = cp_model.CpSolver().Solve(context.model)
+	assert status == cp_model.INFEASIBLE
+
+
+def test_cse_low_code_theory_uses_only_140_plus_rooms_at_12_slot():
+	rooms = [
+		{"id": "A102", "room_number": "A102", "block": "A Block", "room_max_cap": 70},
+		{"id": "ANEW103", "room_number": "ANEW103", "block": "A Block", "room_max_cap": 165},
+	]
+	courses = [
+		{
+			"course_id": "LOW_CODE",
+			"course_code": "CS23PE33",
+			"department": "Computer Science & Engineering",
+			"semester": 5,
+			"student_count": 140,
+			"slot": 1,
+		},
+	]
+	context, vars_map = _build_context(
+		rooms,
+		courses,
+		slot_labels=("10:00 - 10:50", "12:00 - 12:50"),
+	)
+	result = _apply_constraint(context)
+	assert result.status == ConstraintStatus.APPLIED
+
+	context.model.Add(vars_map["LOW_CODE"] == 1)
+	context.model.Add(vars_map["LOW_CODE:d0:s1:rA102"] == 1)
+	status = cp_model.CpSolver().Solve(context.model)
+	assert status == cp_model.INFEASIBLE
+
+	context, vars_map = _build_context(
+		rooms,
+		courses,
+		slot_labels=("10:00 - 10:50", "12:00 - 12:50"),
+	)
+	_apply_constraint(context)
+	context.model.Add(vars_map["LOW_CODE"] == 1)
+	context.model.Add(vars_map["LOW_CODE:d0:s1:rANEW103"] == 1)
+	status = cp_model.CpSolver().Solve(context.model)
+	assert status == cp_model.OPTIMAL
+
+
+def test_cse_low_code_70_student_instance_uses_standard_room_and_slot():
+	rooms = [
+		{"id": "A102", "room_number": "A102", "block": "A Block", "room_max_cap": 70},
+		{"id": "ANEW103", "room_number": "ANEW103", "block": "A Block", "room_max_cap": 165},
+	]
+	courses = [
+		{
+			"course_id": "LOW_CODE_70",
+			"course_code": "CS23PE33",
+			"department": "Computer Science & Engineering",
+			"semester": 5,
+			"student_count": 70,
+			"slot": 0,
+		},
+	]
+	context, vars_map = _build_context(
+		rooms,
+		courses,
+		slot_labels=("10:00 - 10:50", "12:00 - 12:50"),
+	)
+	result = _apply_constraint(context)
+	assert result.status == ConstraintStatus.APPLIED
+	assert result.details["special_slot_disabled_literals"] == 0
+
+	context.model.Add(vars_map["LOW_CODE_70"] == 1)
+	context.model.Add(vars_map["LOW_CODE_70:d0:s0:rA102"] == 1)
+	status = cp_model.CpSolver().Solve(context.model)
+	assert status == cp_model.OPTIMAL
+
+
+def test_low_code_rule_does_not_apply_to_cse_variant_departments():
+	rooms = [
+		{"id": "A102", "room_number": "A102", "block": "A Block", "room_max_cap": 70},
+	]
+	courses = [
+		{
+			"course_id": "LOW_CODE_CSD",
+			"course_code": "CS23PE33",
+			"department": "Computer Science & Design",
+			"semester": 5,
+			"student_count": 60,
+			"slot": 0,
+		},
+	]
+	context, vars_map = _build_context(
+		rooms,
+		courses,
+		slot_labels=("10:00 - 10:50", "12:00 - 12:50"),
+	)
+	result = _apply_constraint(context)
+	assert result.status == ConstraintStatus.APPLIED
+
+	context.model.Add(vars_map["LOW_CODE_CSD"] == 1)
+	context.model.Add(vars_map["LOW_CODE_CSD:d0:s0:rA102"] == 1)
+	status = cp_model.CpSolver().Solve(context.model)
+	assert status == cp_model.OPTIMAL
+
+
+def test_jeya_mohan_cs23511_is_locked_to_a104_105_for_cse_only():
+	rooms = [
+		{"id": "OS", "room_number": "A104/105", "block": "A Block", "room_max_cap": 140},
+		{"id": "ANEW103", "room_number": "ANEW103", "block": "A Block", "room_max_cap": 165},
+	]
+	courses = [
+		{
+			"course_id": "TOC_JEYA",
+			"course_code": "CS23511",
+			"department": "Computer Science & Engineering",
+			"teacher_id": "1004",
+			"semester": 5,
+			"student_count": 65,
+		},
+	]
+	context, vars_map = _build_context(rooms, courses)
+	result = _apply_constraint(context)
+	assert result.status == ConstraintStatus.APPLIED
+
+	context.model.Add(vars_map["TOC_JEYA"] == 1)
+	context.model.Add(vars_map["TOC_JEYA:d0:s0:rANEW103"] == 1)
+	status = cp_model.CpSolver().Solve(context.model)
+	assert status == cp_model.INFEASIBLE
+
+	context, vars_map = _build_context(rooms, courses)
+	_apply_constraint(context)
+	context.model.Add(vars_map["TOC_JEYA"] == 1)
+	context.model.Add(vars_map["TOC_JEYA:d0:s0:rOS"] == 1)
+	status = cp_model.CpSolver().Solve(context.model)
+	assert status == cp_model.OPTIMAL
