@@ -577,8 +577,10 @@ class ScheduleExtractor:
 							is_co_scheduled=False,
 							capacity_info=capacity_info,
 							partner_instance_id=None,
+							section_id=getattr(requirement, "section_id", None),
 						)
 						entries.append(entry)
+		entries = self._annotate_bundled_theory(entries)
 		entries.sort(
 			key=lambda entry: (
 				entry.department,
@@ -590,6 +592,39 @@ class ScheduleExtractor:
 			)
 		)
 		return tuple(entries)
+
+	def _annotate_bundled_theory(self, entries: List[TheoryScheduleEntry]) -> List[TheoryScheduleEntry]:
+		"""Mark two theory courses sharing a group's slot as a bundled pair (25+25 min).
+
+		group_non_overlap guarantees that two theory courses of the same cohort can only
+		occupy the same slot when they are a bundled pair, so co-location is a reliable signal.
+		The two courses are rendered as the two 25-minute halves of the shared 50-min slot.
+		"""
+
+		# Each course is its own group, so bundled partners differ in group_id but share the
+		# same cohort (department, semester, section) and (day, slot). group_non_overlap
+		# guarantees two theory courses of one cohort/section only co-occur when bundled.
+		# section_id is included so parallel sections sharing a slot are NOT mistaken for a bundle.
+		buckets: Dict[Tuple[str, object, object, int, int], List[int]] = defaultdict(list)
+		for idx, entry in enumerate(entries):
+			buckets[(entry.department, entry.semester, entry.section_id, entry.day_index, entry.slot_index)].append(idx)
+
+		for indices in buckets.values():
+			if len(indices) < 2:
+				continue
+			# Deterministic half order by course instance id.
+			ordered = sorted(indices, key=lambda i: str(entries[i].course_instance_id or ""))
+			partners = [entries[i].course_instance_id for i in ordered]
+			for half, i in enumerate(ordered, start=1):
+				others = [pid for pid in partners if pid != entries[i].course_instance_id]
+				entries[i] = replace(
+					entries[i],
+					is_co_scheduled=True,
+					partner_instance_id=others[0] if others else None,
+					bundle_half=half,
+					tags=tuple(sorted(set(entries[i].tags) | {"bundled_theory"})),
+				)
+		return entries
 
 	@staticmethod
 	def _combine_entries(

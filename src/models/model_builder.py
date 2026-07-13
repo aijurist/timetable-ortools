@@ -226,7 +226,13 @@ class ModelBuilder:
 		if not penalties:
 			return
 		proto = context.model.Proto()
-		if proto.HasField("objective") and proto.objective.vars:
+		# Note: newer OR-Tools (>=9.x) CpModelProto has no HasField; an unset objective
+		# simply has empty ``objective.vars``. Guard accordingly for version compatibility.
+		try:
+			objective_already_set = bool(proto.objective.vars)
+		except Exception:  # pragma: no cover - defensive across proto API variants
+			objective_already_set = False
+		if objective_already_set:
 			self._logger.warning("Objective already defined; skipping penalty aggregation")
 			return
 		linear_terms = []

@@ -92,6 +92,13 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 			"penalties": 0,
 		}
 		course_day_patterns = getattr(theory_block, "course_day_patterns", {}) or {}
+		# Combined lab-block courses are handled by CombinedLabConstraint (own rooms + sharing);
+		# skip them here so this constraint never disables their ANEW room vars.
+		combined_cfg = getattr(getattr(context.config, "model", None), "combined_lab_courses", {}) or {}
+		combined_codes = frozenset(
+			str(c).strip().upper() for c in combined_cfg.get("course_codes", ()) if str(c).strip()
+		)
+		course_reqs = getattr(theory_block, "course_requirements", {}) or {}
 		time_config = getattr(context.data.raw, "time", None)
 		working_days = getattr(time_config, "working_days", tuple()) or tuple()
 		default_day_pattern = self._canonical_day_pattern(working_days)
@@ -102,6 +109,10 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 		day_key_cache: Dict[Tuple[str, int], str] = {}
 
 		for _tid, course_id, day_idx, slot_idx, room_id, var in iter_theory_room_variables(context):
+			if combined_codes:
+				req = course_reqs.get(course_id)
+				if req is not None and str(getattr(req, "course_code", "")).strip().upper() in combined_codes:
+					continue
 			policy = course_policies.get(course_id)
 			room_meta = room_lookup.get(str(room_id))
 			if (
@@ -138,13 +149,23 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 				)
 				stats["penalties"] += 1
 
+		# A bundled pair shares one room/slot (25+25 min for one cohort). Pairing is a solver
+		# decision, so we subtract a reified "paired & co-located here" term from the capacity
+		# and exclusivity sums: a bundled pair counts as ONE cohort of one room, not two.
+		bundle_pairs = self._build_bundle_pairs(context)
+
 		for (room_id, _day, _slot), usage_list in room_slot_usage.items():
 			if len(usage_list) <= 1:
 				continue
 
+			present = {cid: var for cid, var in usage_list}
+			paired_terms = self._paired_colocated_terms(
+				context, bundle_pairs, present, theory_block, room_id, _day, _slot
+			)
+
 			room_meta = room_lookup.get(room_id, {})
 			capacity = self._safe_int(room_meta.get("capacity"))
-			
+
 			# Always apply a student-capacity guard when capacity is known
 			if capacity is not None:
 				weights = []
@@ -156,7 +177,11 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 						sc = 70  # conservative fallback
 					weights.append(sc)
 					vars_only.append(var)
-				model.Add(sum(w * v for w, v in zip(weights, vars_only)) <= capacity)
+				guard = sum(w * v for w, v in zip(weights, vars_only))
+				if paired_terms:
+					guard = guard - sum(sc * pc for sc, pc in paired_terms)
+				slack = int(getattr(getattr(context.config, "model", None), "room_capacity_slack", 0) or 0)
+				model.Add(guard <= capacity + slack)
 
 			# Determine co-scheduling limit based on capacity; disallow co-scheduling for large courses
 			limit = 1
@@ -172,7 +197,11 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 
 			if limit == 1:
 				vars_only = [v for _, v in usage_list]
-				model.AddAtMostOne(vars_only)
+				if paired_terms:
+					# A bundled pair sharing this room counts as one occupant.
+					model.Add(sum(vars_only) - sum(pc for _, pc in paired_terms) <= 1)
+				else:
+					model.AddAtMostOne(vars_only)
 				stats["room_conflict_constraints"] += 1
 			else:
 				by_code: DefaultDict[str, list[cp_model.IntVar]] = defaultdict(list)
@@ -233,6 +262,52 @@ class TheoryClassroomAssignmentConstraint(Constraint):
 
 		return stats
 
+
+	@staticmethod
+	def _build_bundle_pairs(context: ConstraintContext):
+		"""Return candidate bundle pairs [(pair_var, course_a, course_b), ...] from extras."""
+
+		pairs = []
+		bundles = context.extra.get("bundles") if isinstance(context.extra, Mapping) else None
+		if not isinstance(bundles, Mapping):
+			return pairs
+		for info in bundles.values():
+			for entry in info.get("pairs", ()):  # (pair_var, course_a, course_b)
+				if len(entry) >= 3:
+					pairs.append((entry[0], str(entry[1]), str(entry[2])))
+		return pairs
+
+	def _paired_colocated_terms(
+		self,
+		context: ConstraintContext,
+		bundle_pairs,
+		present: Mapping[str, cp_model.IntVar],
+		theory_block,
+		room_id: str,
+		day: str,
+		slot: object,
+	):
+		"""Reified (student_count, literal) terms for pairs co-located in this room/slot.
+
+		literal = pair_var AND (course_a uses this room here). Shared-room linking forces the
+		partner's room literal equal when paired, so one member's room var suffices.
+		"""
+
+		terms = []
+		for pair_var, course_a, course_b in bundle_pairs:
+			if course_a not in present or course_b not in present:
+				continue
+			room_var = present[course_a]
+			pc = context.model.NewBoolVar(f"ra_paired_{room_id}_{day}_{slot}_{course_a}_{course_b}")
+			context.model.Add(pc <= pair_var)
+			context.model.Add(pc <= room_var)
+			context.model.Add(pc >= pair_var + room_var - 1)
+			req = theory_block.course_requirements.get(course_a)
+			sc = getattr(req, "student_count", 0) or 0
+			if sc <= 0:
+				sc = 70
+			terms.append((sc, pc))
+		return terms
 
 	def _build_course_policies(
 		self,

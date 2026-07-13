@@ -131,6 +131,10 @@ class TheoryScheduleEntry:
 	is_co_scheduled: bool = False
 	capacity_info: Optional[str] = None
 	partner_instance_id: Optional[str] = None
+	# For bundled theory (2nd year): which 25-min half of the shared 50-min slot (1 or 2).
+	bundle_half: Optional[int] = None
+	# Parallel-section model (2nd year): which section this entry belongs to.
+	section_id: Optional[int] = None
 
 	def to_dict(self) -> Dict[str, object]:
 		return {
@@ -155,6 +159,8 @@ class TheoryScheduleEntry:
 			"is_co_scheduled": self.is_co_scheduled,
 			"capacity_info": self.capacity_info,
 			"partner_instance_id": self.partner_instance_id,
+			"bundle_half": self.bundle_half,
+			"section_id": self.section_id,
 			"group_name": self.group_name or self.group_id,
 			"group_index": self.group_index,
 			"department": self.department,

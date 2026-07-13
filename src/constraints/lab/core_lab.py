@@ -46,7 +46,11 @@ class CoreLabMappingConstraint(Constraint):
 				continue
 
 			course_code = self._normalise_course_code(requirement.course_code)
-			core_rooms = mapping.get(course_code)
+			department = self._normalise_department(getattr(requirement, "department", ""))
+			# Dept-aware lookup: wildcard rows (empty department) apply to all
+			# departments; department-specific rows apply only to their department.
+			core_rooms = set(mapping.get(("", course_code), ()))
+			core_rooms |= set(mapping.get((department, course_code), ()))
 			in_catalog = course_code in catalog
 			if in_catalog:
 				stats.catalog_courses += 1
@@ -138,21 +142,24 @@ class CoreLabMappingConstraint(Constraint):
 		core_df: pd.DataFrame,
 		rooms_df: pd.DataFrame,
 		logger,
-	) -> Mapping[str, Set[str]]:
+	) -> Mapping[Tuple[str, str], Set[str]]:
 		lookup = self._build_room_lookup(rooms_df)
-		mapping: Dict[str, Set[str]] = {}
+		mapping: Dict[Tuple[str, str], Set[str]] = {}
 
 		for _, row in core_df.iterrows():
 			course_code = self._normalise_course_code(row.get("course_code"))
 			if not course_code:
 				continue
 
+			department = self._normalise_department(row.get("department"))
 			room_ids = self._extract_room_ids(row, lookup)
 			if not room_ids:
 				logger.debug("No room matches found for core course %s", course_code)
 				continue
 
-			bucket = mapping.setdefault(course_code, set())
+			# Key by (department, course_code). Rows with an empty department act
+			# as wildcards that apply to every department (see apply()).
+			bucket = mapping.setdefault((department, course_code), set())
 			bucket.update(room_ids)
 
 		return mapping
@@ -228,6 +235,10 @@ class CoreLabMappingConstraint(Constraint):
 	@staticmethod
 	def _normalise_course_code(value: Optional[str]) -> str:
 		return str(value or "").strip().upper()
+
+	@staticmethod
+	def _normalise_department(value: Optional[str]) -> str:
+		return " ".join(str(value or "").replace("&", "and").lower().split())
 
 	def _build_catalog(self, core_df: Optional[pd.DataFrame]) -> Set[str]:
 		if core_df is None or core_df.empty:

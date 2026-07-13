@@ -9,7 +9,11 @@ from typing import Any, DefaultDict, List, Mapping, Optional, Sequence, Tuple
 from ..base import Constraint, ConstraintMetadata
 from ..context import ConstraintContext
 from ..schema import ConstraintApplicationResult, ConstraintStatus
-from ..utils import iter_lab_session_variables, register_objective_penalty
+from ..utils import (
+    iter_lab_session_variables,
+    qualifying_parallel_lab_ids,
+    register_objective_penalty,
+)
 from ...utils.time_utils import DayNormalizer
 
 
@@ -53,6 +57,16 @@ class LabRoomSingleAssignmentConstraint(Constraint):
         if not lab_block.assignments:
             logger.info("No lab assignments available; skipping room single-assignment constraint")
             return self._build_result(stats, ConstraintStatus.SKIPPED)
+
+        # Parallel-batch courses may occupy several rooms in the same session (their
+        # batches run simultaneously); the ParallelBatchLab constraint governs them.
+        parallel_ids = (
+            qualifying_parallel_lab_ids(
+                context, course_codes=self.params.get("parallel_batch_courses", ())
+            )
+            if self.params.get("parallel_batch_enabled", False)
+            else frozenset()
+        )
 
         room_slot_buckets: DefaultDict[Tuple[str, str, str], List[Any]] = defaultdict(list)
         course_slot_buckets: DefaultDict[Tuple[str, str, str], List[Any]] = defaultdict(list)
@@ -201,6 +215,9 @@ class LabRoomSingleAssignmentConstraint(Constraint):
 
         for key, variables in course_slot_buckets.items():
             if len(variables) <= 1:
+                continue
+            if key[0] in parallel_ids:
+                # batches share this session across different rooms — do not force one room
                 continue
             context.model.AddAtMostOne(variables)
             stats.course_slot_constraints += 1

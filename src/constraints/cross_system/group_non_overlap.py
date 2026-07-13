@@ -10,9 +10,14 @@ from ortools.sat.python import cp_model
 from ..base import Constraint, ConstraintMetadata
 from ..context import ConstraintContext
 from ..schema import ConstraintApplicationResult, ConstraintStatus
-from ..utils import iter_lab_session_variables, resolve_day_pattern, resolve_group_slot_map
+from ..utils import (
+	is_bundle_eligible,
+	iter_lab_session_variables,
+	resolve_day_pattern,
+	resolve_group_slot_map,
+)
 
-GroupKey = Tuple[str, int]
+GroupKey = Tuple[str, int, Optional[int]]
 LabSessionPresenceMap = Mapping[str, Mapping[int, Mapping[str, Tuple[cp_model.IntVar, ...]]]]
 TheorySlotSessionMap = Mapping[int, Tuple[str, ...]]
 
@@ -59,15 +64,26 @@ class GroupNonOverlapConstraint(Constraint):
 				details={"reason": "no configured theory slots"},
 			)
 
+		bundles = context.extra.get("bundles", {}) if isinstance(context.extra, Mapping) else {}
+		instance_group_lookup = getattr(theory_block, "instance_group_lookup", {}) or {}
+
 		guard_clauses = 0
 		activity_literals = 0
 		protected_pairs = 0
 
 		for key, group_ids in relevant_keys.items():
-			dept, _semester = key
+			dept, semester, section_id = key
 			day_count = _resolve_day_count(context, theory_block, group_ids, dept)
 			if day_count == 0:
 				continue
+
+			# Bundle-eligible cohorts allow a paired theory pair to share one slot: a
+			# bundled pair counts as ONE occupancy rather than two colliding ones.
+			bundle_pairs = None
+			if is_bundle_eligible(context.config, dept, semester):
+				info = bundles.get((dept, int(semester) if semester is not None else None, section_id))
+				if info:
+					bundle_pairs = info.get("pairs")
 
 			for day_idx in range(day_count):
 				for slot_idx in range(theory_slot_count):
@@ -86,7 +102,23 @@ class GroupNonOverlapConstraint(Constraint):
 							group_literals.append(literal)
 							activity_literals += 1
 
-					if len(group_literals) > 1:
+					if not group_literals:
+						continue
+
+					if bundle_pairs:
+						paired_active = _build_paired_active_literals(
+							context.model,
+							bundle_pairs,
+							instance_group_lookup,
+							group_slot_map,
+							day_idx,
+							slot_idx,
+						)
+						# events = active occupancies minus double-counted bundled pairs <= 1
+						context.model.Add(sum(group_literals) - sum(paired_active) <= 1)
+						guard_clauses += 1
+						protected_pairs += len(group_literals)
+					elif len(group_literals) > 1:
 						context.model.AddAtMostOne(group_literals)
 						guard_clauses += 1
 						protected_pairs += len(group_literals)
@@ -116,7 +148,10 @@ def _group_ids_by_semester(
 		semester = getattr(requirement, "semester", None)
 		if not dept or semester is None:
 			continue
-		bucket[(dept, int(semester))].append(group_id)
+		# Section-based cohorts serialise per section (parallel sections); non-section
+		# groups all share section_id=None and stay serialised per (dept, semester).
+		section_id = getattr(requirement, "section_id", None)
+		bucket[(dept, int(semester), section_id)].append(group_id)
 	return {key: tuple(ids) for key, ids in bucket.items()}
 
 
@@ -160,6 +195,42 @@ def _resolve_day_count(
 	if day_count == 0:
 		day_count = len(resolve_day_pattern(context, department))
 	return day_count
+
+
+def _build_paired_active_literals(
+	model: cp_model.CpModel,
+	bundle_pairs,
+	instance_group_lookup: Mapping[str, str],
+	group_slot_map: Mapping[str, Mapping[int, Mapping[int, cp_model.IntVar]]],
+	day_idx: int,
+	slot_idx: int,
+):
+	"""For each bundled pair active at (day, slot), a literal that is 1 when both meet here.
+
+	paired_active = pair_var AND (theory presence of the pair at this slot). Since a paired
+	pair is co-scheduled (both theory literals equal), one side's presence suffices.
+	"""
+
+	literals = []
+	for pair_var, course_a, _course_b in bundle_pairs:
+		group_a = instance_group_lookup.get(course_a)
+		if group_a is None:
+			continue
+		theory_literal = (
+			group_slot_map.get(group_a, {}).get(day_idx, {}).get(slot_idx)
+		)
+		if theory_literal is None:
+			continue
+		paired = model.NewBoolVar(f"bundle_active_{day_idx}_{slot_idx}_{_sanitize_group_id(str(group_a))}")
+		model.Add(paired <= pair_var)
+		model.Add(paired <= theory_literal)
+		model.Add(paired >= pair_var + theory_literal - 1)
+		literals.append(paired)
+	return literals
+
+
+def _sanitize_group_id(group_id: str) -> str:
+	return group_id.replace(" ", "_")
 
 
 def _build_activity_literal(

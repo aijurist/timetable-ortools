@@ -375,6 +375,9 @@ def default_constraint_config() -> ConstraintConfig:
         "session_coverage": ConstraintSetting(priority=10, weight=1.0, enabled=True),
         "room_capacity": ConstraintSetting(priority=9, weight=1.0, enabled=True),
         "room_single_assignment": ConstraintSetting(priority=9, weight=1.0, enabled=True),
+        "parallel_batch_lab": ConstraintSetting(
+            priority=7, weight=1.0, enabled=False, params={"min_eligible_rooms": 2}
+        ),
         "core_lab_mapping": ConstraintSetting(priority=8, weight=0.8, enabled=True),
         "computer_lab_mapping": ConstraintSetting(
             priority=8,
@@ -392,6 +395,38 @@ def default_constraint_config() -> ConstraintConfig:
         "shift_alignment": ConstraintSetting(priority=8, weight=0.6, enabled=True),
     }
     cross_constraints = {
+        "bundled_theory": ConstraintSetting(
+            priority=2,
+            weight=1.0,
+            enabled=True,
+            params={
+                # Cohorts (Department_S<sem>) whose theory courses are bundled.
+                # Sem-5 single-teacher depts used as a stand-in until sem-3 data lands.
+                "eligible_cohorts": [
+                    "Robotics & Automation_S5",
+                    "Computer Science & Design_S5",
+                    "Chemical Engineering_S5",
+                ],
+                # Force maximal pairing per hour-bucket (leftover only from odd count).
+                "force_maximal_pairing": True,
+                "solo_penalty_weight": 10,
+                # Both bundled courses share one room at the shared slot (25+25 min).
+                "enforce_shared_room": True,
+            },
+        ),
+        "combined_lab": ConstraintSetting(
+            priority=3,
+            weight=1.0,
+            enabled=True,
+            params={
+                # Solver-chosen STABLE pairing: if two combined-lab sections share a room
+                # for one block they must share ALL blocks (identical day/session/room).
+                # Partners may be cross-department; solo is penalised so pairing is maximised.
+                "enforce_stable_pairing": True,
+                "same_department_only": False,
+                "solo_penalty_weight": 1000,
+            },
+        ),
         "group_non_overlap": ConstraintSetting(priority=9, weight=1.0, enabled=True),
         "teacher_overlap": ConstraintSetting(priority=10, weight=1.0, enabled=True),
         "dept_day_coverage": ConstraintSetting(
@@ -461,6 +496,7 @@ def default_model_config() -> ModelConfig:
         theory_room_candidate_limit=12,
         theory_room_min_candidates=4,
         theory_room_anchor_candidates=4,
+        combined_lab_courses={},
     )
 
 

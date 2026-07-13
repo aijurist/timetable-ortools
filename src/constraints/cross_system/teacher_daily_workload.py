@@ -200,10 +200,19 @@ def _collect_theory_daily_literals(
 ) -> Mapping[str, Mapping[str, Tuple[cp_model.IntVar, ...]]]:
 	assignments = getattr(context.variables.theory, "assignments", {}) or {}
 	day_patterns = getattr(context.variables.theory, "course_day_patterns", {}) or {}
+	course_reqs = getattr(context.variables.theory, "course_requirements", {}) or {}
+	# Combined lab-block courses are staff-less: they don't count toward teacher daily workload.
+	combined_cfg = getattr(getattr(context.config, "model", None), "combined_lab_courses", {}) or {}
+	combined_codes = frozenset(
+		str(c).strip().upper() for c in combined_cfg.get("course_codes", ()) if str(c).strip()
+	)
 	collector: MutableMapping[str, MutableMapping[str, list[cp_model.IntVar]]] = defaultdict(lambda: defaultdict(list))
 
 	for teacher_id, course_map in assignments.items():
 		for course_id, day_map in course_map.items():
+			req = course_reqs.get(course_id)
+			if req is not None and str(getattr(req, "course_code", "")).strip().upper() in combined_codes:
+				continue
 			pattern = day_patterns.get(course_id, tuple())
 			for day_idx, slot_map in day_map.items():
 				if not slot_map:
@@ -227,7 +236,13 @@ def _collect_lab_daily_literals(
 ) -> Mapping[str, Mapping[str, Tuple[HourLiteral, ...]]]:
 	assignments = getattr(context.variables.lab, "assignments", {}) or {}
 	day_patterns = getattr(context.variables.lab, "day_patterns", {}) or {}
+	lab_reqs = getattr(context.variables.lab, "requirements", {}) or {}
 	lab_session_to_theory = getattr(context.data.raw.time, "lab_session_to_theory", {}) or {}
+	# Combined lab-block courses are staff-less: excluded from teacher daily workload.
+	combined_cfg = getattr(getattr(context.config, "model", None), "combined_lab_courses", {}) or {}
+	combined_codes = frozenset(
+		str(c).strip().upper() for c in combined_cfg.get("course_codes", ()) if str(c).strip()
+	)
 	collector: MutableMapping[str, MutableMapping[str, list[HourLiteral]]] = defaultdict(
 		lambda: defaultdict(list)
 	)
@@ -242,6 +257,9 @@ def _collect_lab_daily_literals(
 
 	for teacher_id, course_map in assignments.items():
 		for course_id, day_map in course_map.items():
+			req = lab_reqs.get(course_id)
+			if req is not None and str(getattr(req, "course_code", "")).strip().upper() in combined_codes:
+				continue
 			pattern = day_patterns.get(course_id, tuple())
 			for day_idx, session_map in day_map.items():
 				if not session_map:

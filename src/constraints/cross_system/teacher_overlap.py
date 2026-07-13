@@ -10,7 +10,7 @@ from ortools.sat.python import cp_model
 from ..base import Constraint, ConstraintMetadata
 from ..context import ConstraintContext
 from ..schema import ConstraintApplicationResult, ConstraintStatus
-from ..utils import build_presence_literal
+from ..utils import build_presence_literal, qualifying_parallel_lab_ids
 
 ActivityMap = Mapping[str, Mapping[str, cp_model.IntVar]]
 
@@ -59,6 +59,16 @@ class TeacherOverlapConstraint(Constraint):
 		slot_session_index = _build_theory_slot_session_index(context)
 		working_days = tuple(getattr(context.data.raw.time, "working_days", tuple())) or ("monday",)
 
+		# Parallel-batch courses: a teacher may supervise both batches of the SAME
+		# instance at once (they run in adjacent rooms), regardless of practical hours.
+		parallel_ids = (
+			qualifying_parallel_lab_ids(
+				context, course_codes=self.params.get("parallel_batch_courses", ())
+			)
+			if self.params.get("parallel_batch_enabled", False)
+			else frozenset()
+		)
+
 		clauses = 0
 		activity_literals = 0
 		teachers_with_activity = 0
@@ -82,7 +92,7 @@ class TeacherOverlapConstraint(Constraint):
 					if len(entries) <= 1:
 						continue
 
-					if _can_co_schedule(entries):
+					if _can_co_schedule(entries, parallel_ids):
 						continue
 					context.model.AddAtMostOne(e.literal for e in entries)
 					clauses += 1
@@ -121,6 +131,11 @@ def _build_teacher_lab_activity(context: ConstraintContext) -> Dict[str, Tuple[L
 	day_patterns = lab_block.day_patterns
 	requirements = lab_block.requirements
 	model = context.model
+	# Combined lab-block courses are staff-less (BYOD) — excluded from teacher overlap.
+	combined_cfg = getattr(getattr(context.config, "model", None), "combined_lab_courses", {}) or {}
+	combined_codes = frozenset(
+		str(c).strip().upper() for c in combined_cfg.get("course_codes", ()) if str(c).strip()
+	)
 
 	result: Dict[str, Tuple[LabActivity, ...]] = {}
 	for teacher_id, course_ids in teacher_courses.items():
@@ -135,6 +150,8 @@ def _build_teacher_lab_activity(context: ConstraintContext) -> Dict[str, Tuple[L
 			requirement = requirements.get(course_id)
 			if requirement is None:
 				continue
+			if str(getattr(requirement, "course_code", "")).strip().upper() in combined_codes:
+				continue  # staff-less combined lab course
 			day_pattern = day_patterns.get(course_id, tuple())
 			day_sessions: Dict[str, Dict[str, cp_model.IntVar]] = {}
 			for day_idx, session_map in day_map.items():
@@ -171,6 +188,13 @@ def _build_teacher_theory_activity(context: ConstraintContext) -> Dict[str, Tupl
 	assignments = getattr(theory_block, "assignments", {}) or {}
 	course_requirements = getattr(theory_block, "course_requirements", {}) or {}
 	course_patterns = getattr(theory_block, "course_day_patterns", {}) or {}
+	# Combined lab-block courses are BYOD/self-paced and STAFF-LESS: they are excluded from
+	# teacher overlap entirely (no faculty is tied up), so a placeholder "teacher" carrying
+	# many sections never blocks scheduling.
+	combined_cfg = getattr(getattr(context.config, "model", None), "combined_lab_courses", {}) or {}
+	combined_codes = frozenset(
+		str(c).strip().upper() for c in combined_cfg.get("course_codes", ()) if str(c).strip()
+	)
 	result: Dict[str, Tuple[TheoryActivity, ...]] = {}
 	for teacher_id, course_map in assignments.items():
 		entries = []
@@ -178,6 +202,9 @@ def _build_teacher_theory_activity(context: ConstraintContext) -> Dict[str, Tupl
 			requirement = course_requirements.get(course_id)
 			if not requirement:
 				continue
+			code = str(getattr(requirement, "course_code", "")).strip().upper()
+			if code in combined_codes:
+				continue  # staff-less combined course: no teacher-overlap contribution
 			pattern = course_patterns.get(course_id, tuple())
 			day_slots: Dict[str, Dict[int, cp_model.IntVar]] = {}
 			for day_idx, slot_map in day_map.items():
@@ -281,7 +308,10 @@ def _collect_activity_entries(
 	return tuple(entries)
 
 
-def _can_co_schedule(entries: Sequence[ActivityEntry]) -> bool:
+def _can_co_schedule(
+	entries: Sequence[ActivityEntry],
+	parallel_ids: frozenset = frozenset(),
+) -> bool:
 	if len(entries) != 2:
 		return False
 	lab_entries = [entry for entry in entries if entry.kind == "lab"]
@@ -301,6 +331,9 @@ def _can_co_schedule(entries: Sequence[ActivityEntry]) -> bool:
 	# would be incorrectly allowed to overlap
 	if first.course_id != second.course_id:
 		return False
+	# Parallel-batch courses: siblings may overlap regardless of practical hours.
+	if first.course_id in parallel_ids:
+		return True
 	return first.practical_hours >= 4 and second.practical_hours >= 4
 
 def build_teacher_overlap_constraint(

@@ -20,6 +20,8 @@ from .cross_system.pop_day import build_pop_day_constraint
 from .cross_system.fixed_schedule_lock import build_fixed_schedule_lock_constraint
 from .cross_system.dept_slot_blocking import build_dept_slot_blocking_constraint
 from .cross_system.course_day_spread import build_course_day_spread_constraint
+from .cross_system.bundled_theory import build_bundled_theory_constraint
+from .cross_system.combined_lab import build_combined_lab_constraint
 from .lab.consecutive_batches import build_consecutive_batch_lab_constraint
 from .cross_system.morning_theory_lab import build_morning_theory_lab_constraint
 from .cross_system.engineering_graphics_preference import build_engineering_graphics_preference_constraint
@@ -27,6 +29,7 @@ from .lab.computer_lab_mapping import build_computer_lab_mapping_constraint
 from .lab.core_lab import build_core_lab_mapping_constraint
 from .lab.requirements import build_lab_session_coverage_constraint
 from .lab.room_single_assignment import build_lab_room_single_assignment_constraint
+from .lab.parallel_batch_lab import build_parallel_batch_lab_constraint
 from .lab.slot_caps import (
 	build_computing_group_slot_cap_constraint,
 	build_core_lab_group_slot_cap_constraint,
@@ -65,6 +68,12 @@ LAB_CONSTRAINT_DEFINITIONS = {
 		"description": "Prevent double-booking lab rooms and multi-room sessions for any course instance.",
 		"factory": build_lab_room_single_assignment_constraint,
 		"tags": ("lab", "rooms", "exclusivity"),
+	},
+	"parallel_batch_lab": {
+		"title": "Parallel Batch Lab Scheduling",
+		"description": "Run a batched course's batches simultaneously in different rooms (same session).",
+		"factory": build_parallel_batch_lab_constraint,
+		"tags": ("lab", "batches", "parallel"),
 	},
 	"core_lab_mapping": {
 		"title": "Core Lab Room Mapping",
@@ -164,6 +173,18 @@ THEORY_CONSTRAINT_DEFINITIONS = {
 
 
 CROSS_SYSTEM_CONSTRAINT_DEFINITIONS = {
+	"bundled_theory": {
+		"title": "Bundled Theory (2nd year)",
+		"description": "Let eligible cohorts pair two theory courses into a shared 50-min slot (25+25) with doubled coverage and a shared room; solver decides the pairing.",
+		"factory": build_bundled_theory_constraint,
+		"tags": ("cross-system", "theory", "bundling"),
+	},
+	"combined_lab": {
+		"title": "Combined Lab-Block Courses",
+		"description": "Schedule DBMS/OOP-Java-style courses as 4x2 continuous lab-blocks in the ANEW big rooms, with multiple sections sharing a room up to capacity.",
+		"factory": build_combined_lab_constraint,
+		"tags": ("cross-system", "theory", "combined-lab"),
+	},
 	"dept_day_span": {
 		"title": "Department Day Span Limit",
 		"description": "Cap distinct active days for targeted department-semester pairs across lab/theory (e.g., 8th sem packed into two days).",

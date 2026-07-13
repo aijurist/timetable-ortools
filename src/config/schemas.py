@@ -219,6 +219,10 @@ class GroupingConfig:
     # - "<department_slug>_s<semester>" (matches DepartmentSemesterKey.slug())
     # Wildcards are supported for dept/semester: "*|6", "Information Technology|*".
     consolidation_dept_sem_allowlist: Sequence[str] = field(default_factory=tuple)
+    # Cohorts (Department_S<sem> tokens, wildcards allowed) built as TRADITIONAL PARALLEL
+    # SECTIONS (2nd year): sections = max faculty per course, run in parallel, within-section
+    # no-overlap. Empty => no cohort uses the section model.
+    section_based_cohorts: Sequence[str] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
         if self.max_groups_per_dept_sem is not None and self.max_groups_per_dept_sem <= 0:
@@ -229,6 +233,7 @@ class GroupingConfig:
             raise ValueError("random_seed cannot be negative")
 
         object.__setattr__(self, "consolidation_dept_sem_allowlist", tuple(self.consolidation_dept_sem_allowlist))
+        object.__setattr__(self, "section_based_cohorts", tuple(self.section_based_cohorts))
 
 
 @dataclass(frozen=True)
@@ -274,6 +279,13 @@ class ModelConfig:
     theory_room_candidate_limit: Optional[int] = 12
     theory_room_min_candidates: int = 4
     theory_room_anchor_candidates: int = 4
+    # Allowed student overflow above a theory room's capacity (a 70-seat room may host a
+    # section of up to 70 + slack). Handles 2nd-year sections slightly larger than any room.
+    room_capacity_slack: int = 0
+    # Combined lab-block courses (e.g. DBMS/OOP-Java): delivered as `blocks` x `block_len`
+    # continuous-slot lab-style sessions in `room_numbers` only, with multiple sections
+    # sharing a room up to capacity. Keys: course_codes, room_numbers, blocks, block_len.
+    combined_lab_courses: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.big_m_value <= 0:

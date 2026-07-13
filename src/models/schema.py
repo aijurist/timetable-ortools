@@ -23,6 +23,7 @@ class LabCourseRequirement:
 	preferred_room_type: Optional[str]
 	required_room_type: Optional[str]
 	tags: Tuple[str, ...] = field(default_factory=tuple)
+	section_id: Optional[int] = None
 
 
 @dataclass(frozen=True)
@@ -40,6 +41,7 @@ class TheoryCourseRequirement:
 	preferred_room_type: Optional[str]
 	required_room_type: Optional[str]
 	tags: Tuple[str, ...] = field(default_factory=tuple)
+	section_id: Optional[int] = None
 
 
 @dataclass(frozen=True)
@@ -53,6 +55,7 @@ class GroupTimeslotRequirement:
 	five_pm_policy: Optional[str]
 	tags: Tuple[str, ...] = field(default_factory=tuple)
 	base_requirement: Optional[GroupRequirement] = None
+	section_id: Optional[int] = None
 
 	@property
 	def requires_lab(self) -> bool:

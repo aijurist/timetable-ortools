@@ -106,6 +106,7 @@ class VariableCreator:
 			theory_room_candidate_limit=theory_room_candidate_limit,
 			theory_room_min_candidates=getattr(model_config, "theory_room_min_candidates", 4),
 			theory_room_anchor_candidates=getattr(model_config, "theory_room_anchor_candidates", 4),
+			theory_room_capacity_slack=getattr(model_config, "room_capacity_slack", 0),
 		)
 
 		self._blocking_mask: Optional[ScheduleBlockingMask] = getattr(data.raw, "blocking_mask", None)
@@ -123,6 +124,33 @@ class VariableCreator:
 			self._logger.info(
 				"Loaded POP theory availability for %d teachers during variable creation",
 				len(self._pop_availability),
+			)
+
+		# Cohorts (department_lower, semester) whose theory courses are bundled. Their
+		# courses must share one room when paired, so give the whole cohort an identical
+		# theory-room candidate set (shared salt) instead of per-course rotated tails.
+		self._bundle_cohorts = self._compute_bundle_cohorts()
+
+		# Combined lab-block courses (DBMS/OOP-Java/...): restricted to the ANEW big rooms.
+		combined_cfg = getattr(model_config, "combined_lab_courses", {}) or {}
+		self._combined_lab_codes = frozenset(
+			str(c).strip().upper() for c in combined_cfg.get("course_codes", ()) if str(c).strip()
+		)
+		combined_room_numbers = {str(r).strip() for r in combined_cfg.get("room_numbers", ()) if str(r).strip()}
+		self._combined_lab_room_ids: Tuple[str, ...] = tuple()
+		if self._combined_lab_codes and combined_room_numbers:
+			registry = getattr(data.raw, "room_registry", {}) or {}
+			ids = [
+				str(rid)
+				for rid, meta in registry.items()
+				if str((meta or {}).get("room_number", "")).strip() in combined_room_numbers
+			]
+			self._combined_lab_room_ids = tuple(ids)
+			self._logger.info(
+				"Combined-lab courses %s restricted to ANEW rooms %s (ids %s)",
+				sorted(self._combined_lab_codes),
+				sorted(combined_room_numbers),
+				self._combined_lab_room_ids,
 			)
 
 	def create(self, model: cp_model.CpModel) -> VariableCreationResult:
@@ -173,10 +201,16 @@ class VariableCreator:
 				assignments[teacher_id][requirement.course_instance_id] = course_vars
 				pattern = self._resolve_day_pattern(requirement.department)
 				day_patterns[requirement.course_instance_id] = pattern
-				lab_cache_key = str(requirement.course_code or "").strip().upper()
+				lab_cache_key = (
+					str(requirement.course_code or "").strip().upper(),
+					str(getattr(requirement, "department", "") or "").strip().lower(),
+				)
 				eligible_rooms = lab_eligibility_cache.get(lab_cache_key)
 				if eligible_rooms is None:
-					eligible_rooms = self._room_eligibility.get_eligible_lab_rooms(requirement.course_code)
+					eligible_rooms = self._room_eligibility.get_eligible_lab_rooms(
+						requirement.course_code,
+						getattr(requirement, "department", ""),
+					)
 					lab_eligibility_cache[lab_cache_key] = eligible_rooms
 				for day_index, day_label in enumerate(pattern):
 					normalized_day = self._normalize_day_for_blocking(day_label)
@@ -249,21 +283,41 @@ class VariableCreator:
 				group_course_buffer[requirement.group_id].add(course_id)
 				student_count = int(getattr(requirement, "student_count", 0) or 0)
 				semester = getattr(requirement, "semester", None)
+				# Bundle cohorts share one salt so all their theory courses get an identical
+				# room candidate set (required for a paired pair to share a room). Scope the salt
+				# PER SECTION so parallel sections spread across rooms instead of contending for
+				# one shared 20-room pool (non-section cohorts share section_id=None -> one set).
+				if self._is_bundle_cohort(getattr(requirement, "department", None), semester):
+					salt_course_id = None
+					salt_group_id = (
+						f"bundle::{requirement.department}::{semester}::sec{getattr(requirement, 'section_id', None)}"
+					)
+				else:
+					salt_course_id = course_id
+					salt_group_id = requirement.group_id
 				theory_cache_key = (
 					student_count,
 					int(semester) if semester is not None else None,
-					str(course_id),
-					str(requirement.group_id),
+					str(salt_course_id),
+					str(salt_group_id),
 				)
-				eligible_rooms = theory_eligibility_cache.get(theory_cache_key)
-				if eligible_rooms is None:
-					eligible_rooms = self._room_eligibility.get_eligible_theory_rooms(
-						student_count=student_count,
-						semester=theory_cache_key[1],
-						course_id=course_id,
-						group_id=requirement.group_id,
-					)
-					theory_eligibility_cache[theory_cache_key] = eligible_rooms
+				# Combined lab-block courses use ONLY the designated ANEW rooms (bypass the
+				# capacity/block-ranked theory eligibility).
+				if (
+					self._combined_lab_room_ids
+					and str(getattr(requirement, "course_code", "")).strip().upper() in self._combined_lab_codes
+				):
+					eligible_rooms = self._combined_lab_room_ids
+				else:
+					eligible_rooms = theory_eligibility_cache.get(theory_cache_key)
+					if eligible_rooms is None:
+						eligible_rooms = self._room_eligibility.get_eligible_theory_rooms(
+							student_count=student_count,
+							semester=theory_cache_key[1],
+							course_id=salt_course_id,
+							group_id=salt_group_id,
+						)
+						theory_eligibility_cache[theory_cache_key] = eligible_rooms
 				for day_index, day_label in enumerate(pattern):
 					normalized_day = self._normalize_day_for_blocking(day_label)
 					slot_map: Dict[int, cp_model.IntVar] = {}
@@ -405,6 +459,7 @@ class VariableCreator:
 				preferred_room_type=instance.preferred_room_type,
 				required_room_type=instance.required_room_type,
 				tags=instance.tags,
+				section_id=instance.section_id,
 			)
 		return requirements
 
@@ -434,6 +489,7 @@ class VariableCreator:
 				preferred_room_type=instance.preferred_room_type,
 				required_room_type=instance.required_room_type,
 				tags=instance.tags,
+				section_id=instance.section_id,
 			)
 		return requirements
 
@@ -472,6 +528,7 @@ class VariableCreator:
 				five_pm_policy=base_requirement.five_pm_policy if base_requirement else None,
 				tags=tuple(sorted(tags)),
 				base_requirement=base_requirement,
+				section_id=group.section_id,
 			)
 		return requirements
 
@@ -524,6 +581,47 @@ class VariableCreator:
 		if normalized:
 			return normalized
 		return str(day_label).strip().lower()
+
+	def _compute_bundle_cohorts(self) -> set:
+		"""Read the bundled_theory allowlist into a set of (department_lower, semester)."""
+
+		result: set = set()
+		config = getattr(self._data.raw, "config", None)
+		constraints = getattr(config, "constraints", None)
+		cross_system = getattr(constraints, "cross_system", None) or {}
+		getter = getattr(cross_system, "get", None)
+		setting = getter("bundled_theory") if callable(getter) else None
+		if setting is None or not getattr(setting, "enabled", False):
+			return result
+		params = getattr(setting, "params", {}) or {}
+		for token in params.get("eligible_cohorts", ()) or ():
+			value = str(token).strip()
+			dept, semester = value, None
+			if "_S" in value:
+				dept, _, suffix = value.partition("_S")
+				try:
+					semester = int(suffix)
+				except ValueError:
+					semester = None
+			if dept:
+				dept_key = "*" if dept.strip().lower() in ("*", "all") else dept.strip().lower()
+				result.add((dept_key, semester))
+		return result
+
+	def _is_bundle_cohort(self, department: object, semester: object) -> bool:
+		if not self._bundle_cohorts:
+			return False
+		dept_norm = str(department).strip().lower()
+		try:
+			sem_value = int(semester) if semester is not None else None
+		except (TypeError, ValueError):
+			sem_value = None
+		return (
+			(dept_norm, sem_value) in self._bundle_cohorts
+			or (dept_norm, None) in self._bundle_cohorts
+			or ("*", sem_value) in self._bundle_cohorts
+			or ("*", None) in self._bundle_cohorts
+		)
 
 	def _build_pop_availability_index(self) -> Dict[str, PopTeacherAvailability]:
 		setting = self._pop_constraint_setting()

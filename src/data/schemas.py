@@ -251,6 +251,7 @@ class NormalizedCourseInstance:
 	tags: Tuple[str, ...] = field(default_factory=tuple)
 	metadata: Mapping[str, Any] = field(default_factory=dict)
 	raw_row_index: Optional[int] = None
+	section_id: Optional[int] = None
 
 	def total_hours(self) -> int:
 		return self.lecture_hours + self.tutorial_hours + self.practical_hours
@@ -334,6 +335,7 @@ class CourseGroup:
 	course_codes: Tuple[str, ...]
 	summary: GroupSummary
 	tags: Tuple[str, ...] = field(default_factory=tuple)
+	section_id: Optional[int] = None
 
 	def as_dict(self) -> Dict[str, Any]:
 		return {
@@ -341,6 +343,7 @@ class CourseGroup:
 			"ordinal": self.ordinal,
 			"department": self.key.department,
 			"semester": self.key.semester,
+			"section_id": self.section_id,
 			"is_professional_elective": self.is_professional_elective,
 			"course_instance_ids": self.course_instance_ids,
 			"teacher_ids": self.teacher_ids,
@@ -361,6 +364,7 @@ class GroupRequirement:
 	lunch_slot_window: Tuple[int, ...]
 	five_pm_policy: Optional[str]
 	tags: Tuple[str, ...] = field(default_factory=tuple)
+	section_id: Optional[int] = None
 
 
 @dataclass(frozen=True)

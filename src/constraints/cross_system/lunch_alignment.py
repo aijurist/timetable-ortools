@@ -34,7 +34,13 @@ def _matches_department(tokens: Sequence[DepartmentToken], department: str, seme
 	if not tokens:
 		return False
 	needle = (department, semester)
-	return needle in tokens or (department, None) in tokens
+	# "*" department acts as a wildcard (e.g. "*_S3" => every department at semester 3).
+	return (
+		needle in tokens
+		or (department, None) in tokens
+		or ("*", semester) in tokens
+		or ("*", None) in tokens
+	)
 
 
 @dataclass(frozen=True)
@@ -258,6 +264,11 @@ class LunchAlignmentConstraint(Constraint):
 				group_windows[key] = window
 
 		working_days = tuple(getattr(context.data.raw.time, "working_days", tuple()))
+		# group_id -> section_id (section-based cohorts). Lets the hard lunch guarantee a lunch
+		# slot PER SECTION (varying across sections) rather than one slot shared by all sections.
+		group_section = {
+			gid: getattr(req, "section_id", None) for gid, req in theory_block.requirements.items()
+		}
 
 		for key, group_ids in dept_sem_groups.items():
 			dept, semester = key
@@ -306,6 +317,7 @@ class LunchAlignmentConstraint(Constraint):
 					context.data.raw.time.lab_session_to_theory,
 					working_days,
 					window,
+					group_section,
 				)
 				standard_groups += len(cohort_group_ids)
 				theory_guards += theory_delta
@@ -345,8 +357,42 @@ class LunchAlignmentConstraint(Constraint):
 		lab_session_to_theory: Mapping[str, Sequence[int]],
 		working_days: Sequence[str],
 		window: Tuple[int, ...],
+		group_section: Optional[Mapping[str, Optional[int]]] = None,
 	) -> Tuple[int, int]:
-		cohort_label = self._cohort_label(*cohort_key)
+		# Partition groups by section so the free-lunch slot is guaranteed PER SECTION (each
+		# section may take lunch at a different window slot). Non-section cohorts keep one
+		# partition (section_id=None) => original shared-lunch behaviour.
+		partitions: MutableMapping[Optional[int], list[str]] = defaultdict(list)
+		for group_id in group_ids:
+			partitions[(group_section or {}).get(group_id)].append(group_id)
+
+		total_theory = 0
+		total_lab = 0
+		for section_id, section_group_ids in partitions.items():
+			t, l = self._apply_standard_lunch_partition(
+				model, config, cohort_key, section_id, section_group_ids, group_slot_map,
+				lab_sessions, lab_overlap_cache, lab_session_to_theory, working_days, window,
+			)
+			total_theory += t
+			total_lab += l
+		return total_theory, total_lab
+
+	def _apply_standard_lunch_partition(
+		self,
+		model: cp_model.CpModel,
+		config: LunchAlignmentConfig,
+		cohort_key: Tuple[str, Optional[int]],
+		section_id: Optional[int],
+		group_ids: Sequence[str],
+		group_slot_map: Mapping[str, Mapping[int, Mapping[int, cp_model.IntVar]]],
+		lab_sessions: Mapping[str, Mapping[int, Mapping[str, Tuple[cp_model.IntVar, ...]]]],
+		lab_overlap_cache: Dict[int, Tuple[str, ...]],
+		lab_session_to_theory: Mapping[str, Sequence[int]],
+		working_days: Sequence[str],
+		window: Tuple[int, ...],
+	) -> Tuple[int, int]:
+		sec_suffix = "" if section_id is None else f"_sec{section_id}"
+		cohort_label = self._cohort_label(*cohort_key) + sec_suffix
 		theory_clauses = 0
 		lab_clauses = 0
 		session_literal_cache: Dict[Tuple[str, int, str], cp_model.IntVar] = {}

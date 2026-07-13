@@ -13,6 +13,7 @@ from ..context import ConstraintContext
 from ..schema import ConstraintApplicationResult, ConstraintStatus
 from ..utils import (
 	build_presence_literal,
+	is_bundle_eligible,
 	iter_course_timeslot_variables,
 	iter_group_timeslot_variables,
 	parse_department_token,
@@ -33,9 +34,26 @@ class TheorySlotCoverageConstraint(Constraint):
 		theory_block = context.variables.theory
 		stats = CoverageStats()
 
+		combined_cfg = getattr(getattr(context.config, "model", None), "combined_lab_courses", {}) or {}
+		combined_codes = frozenset(
+			str(c).strip().upper() for c in combined_cfg.get("course_codes", ()) if str(c).strip()
+		)
+
 		for course_id, requirement in theory_block.course_requirements.items():
 			required_slots = max(0, requirement.required_slots)
 			if required_slots <= 0:
+				continue
+
+			# Bundle-eligible cohorts have their theory coverage owned by the
+			# BundledTheoryConstraint (paired courses need 2x appearances), so skip them here.
+			# EXCEPT combined lab-block courses, which are excluded from bundling and must keep
+			# their normal (== required_slots) coverage here.
+			is_combined = str(getattr(requirement, "course_code", "")).strip().upper() in combined_codes
+			if not is_combined and is_bundle_eligible(
+				context.config,
+				getattr(requirement, "department", None),
+				getattr(requirement, "semester", None),
+			):
 				continue
 
 			slot_variables = [

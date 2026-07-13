@@ -20,8 +20,9 @@ logger = logging.getLogger(__name__)
 class RoomEligibilityIndex:
     """Pre-computed index mapping course codes to eligible room IDs."""
     
-    # Core lab courses: course_code -> specific allowed room IDs
-    core_lab_mapping: Dict[str, Set[str]] = field(default_factory=dict)
+    # Core lab courses: (department, course_code) -> specific allowed room IDs.
+    # An empty department ("") is a wildcard applying to all departments.
+    core_lab_mapping: Dict[Tuple[str, str], Set[str]] = field(default_factory=dict)
     
     # Fallback rooms for non-mapped lab courses, normally Computer-Lab rooms.
     general_lab_rooms: Set[str] = field(default_factory=set)
@@ -36,23 +37,27 @@ class RoomEligibilityIndex:
     # Theory inventory for filtering
     theory_inventory: Optional['TheoryRoomInventory'] = None
     
-    def get_eligible_lab_rooms(self, course_code: str) -> Tuple[str, ...]:
+    def get_eligible_lab_rooms(self, course_code: str, department: str = "") -> Tuple[str, ...]:
         """Return eligible room IDs for a lab course.
-        
+
         Args:
             course_code: Normalized course code (uppercase, stripped)
-            
+            department: Course's department. Core-lab rows with an empty
+                department act as wildcards (all departments); rows with a
+                department apply only to that department.
+
         Returns:
             Tuple of room IDs eligible for this course
         """
         normalized = _normalize_course_code(course_code)
-        
-        # Check if course has specific core lab mapping
-        if normalized in self.core_lab_mapping:
-            rooms = self.core_lab_mapping[normalized]
-            if rooms:
-                return tuple(rooms)
-        
+        dept = _normalize_department(department)
+
+        # Check if course has specific core lab mapping (wildcard + dept-specific)
+        rooms = set(self.core_lab_mapping.get(("", normalized), ()))
+        rooms |= set(self.core_lab_mapping.get((dept, normalized), ()))
+        if rooms:
+            return tuple(rooms)
+
         # Fall back to general computer lab rooms for unmapped lab courses.
         if self.general_lab_rooms:
             return tuple(self.general_lab_rooms)
@@ -105,12 +110,14 @@ class TheoryRoomInventory:
     candidate_limit: Optional[int] = 12
     minimum_candidates: int = 4
     anchor_candidates: int = 4
-    
+    capacity_slack: int = 0
+
     def __post_init__(self) -> None:
         if self.candidate_limit is not None:
             self.candidate_limit = max(1, int(self.candidate_limit))
         self.minimum_candidates = max(1, int(self.minimum_candidates))
         self.anchor_candidates = max(0, int(self.anchor_candidates))
+        self.capacity_slack = max(0, int(self.capacity_slack))
 
     def get_eligible_rooms(
         self,
@@ -133,7 +140,9 @@ class TheoryRoomInventory:
         salt = f"{group_id or ''}:{course_id or ''}:{count}:{semester or ''}"
 
         min_cap_needed = self._capacity_policy(count)
-        capacity_floor = max(count, min_cap_needed, 1)
+        # Allow sections slightly larger than any room (capacity_slack): a room qualifies when
+        # its capacity is within `slack` of the requirement.
+        capacity_floor = max(max(count, min_cap_needed) - self.capacity_slack, 1)
         all_capacity_valid = [
             room_id
             for room_id in self._all_room_ids()
@@ -305,9 +314,10 @@ def build_room_eligibility_index(
     theory_room_candidate_limit: Optional[int] = 12,
     theory_room_min_candidates: int = 4,
     theory_room_anchor_candidates: int = 4,
+    theory_room_capacity_slack: int = 0,
 ) -> RoomEligibilityIndex:
     """Build room eligibility index from data sources.
-    
+
     Uses the same logic as CoreLabMappingConstraint to ensure consistency.
     """
     index = RoomEligibilityIndex(
@@ -331,6 +341,7 @@ def build_room_eligibility_index(
             candidate_limit=theory_room_candidate_limit,
             minimum_candidates=theory_room_min_candidates,
             anchor_candidates=theory_room_anchor_candidates,
+            capacity_slack=theory_room_capacity_slack,
         )
         logger.info("Built theory room inventory with %d rooms", len(index.theory_inventory.capacity_lookup))
     
@@ -367,6 +378,7 @@ def _build_theory_inventory(
     candidate_limit: Optional[int],
     minimum_candidates: int,
     anchor_candidates: int,
+    capacity_slack: int = 0,
 ) -> TheoryRoomInventory:
     """Build the helper inventory for theory room filtering."""
     rooms_by_block = defaultdict(list)
@@ -412,6 +424,7 @@ def _build_theory_inventory(
         candidate_limit=candidate_limit,
         minimum_candidates=minimum_candidates,
         anchor_candidates=anchor_candidates,
+        capacity_slack=capacity_slack,
     )
 
 
@@ -475,23 +488,25 @@ def _build_room_lookup(rooms_df: pd.DataFrame) -> Dict[str, str]:
 def _build_core_mapping(
     core_df: pd.DataFrame,
     room_lookup: Dict[str, str],
-) -> Dict[str, Set[str]]:
-    """Build course code to room IDs mapping.
-    
-    Replicates CoreLabMappingConstraint._build_room_map logic.
+) -> Dict[Tuple[str, str], Set[str]]:
+    """Build (department, course_code) to room IDs mapping.
+
+    Replicates CoreLabMappingConstraint._build_room_map logic. An empty
+    department acts as a wildcard applying to all departments.
     """
-    mapping: Dict[str, Set[str]] = {}
-    
+    mapping: Dict[Tuple[str, str], Set[str]] = {}
+
     for _, row in core_df.iterrows():
         course_code = _normalize_course_code(row.get("course_code"))
         if not course_code:
             continue
-        
+
+        department = _normalize_department(row.get("department"))
         room_ids = _extract_room_ids(row, room_lookup)
         if room_ids:
-            bucket = mapping.setdefault(course_code, set())
+            bucket = mapping.setdefault((department, course_code), set())
             bucket.update(room_ids)
-    
+
     return mapping
 
 
@@ -559,3 +574,13 @@ def _normalize_course_code(value: Optional[str]) -> str:
     if not value or pd.isna(value):
         return ""
     return str(value).strip().upper()
+
+
+def _normalize_department(value: Optional[str]) -> str:
+    """Normalize a department name (lowercase, '&'->'and', collapsed whitespace).
+
+    An empty/blank department normalizes to "" which is treated as a wildcard.
+    """
+    if value is None or (isinstance(value, float) and pd.isna(value)):
+        return ""
+    return " ".join(str(value).replace("&", "and").lower().split())

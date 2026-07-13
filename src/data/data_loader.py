@@ -206,6 +206,13 @@ class DataLoader:
             name: tuple(sorted({slot for idx in detail.slots for slot in lab_slot_to_theory.get(idx, ())}))
             for name, detail in lab_sessions.items()
         }
+        # L3 REMAP: L3 (11:40-1:20) only clips 10 min into theory slot 3 (11:00-11:50) -> the
+        # auto-computed overlap tags it {3,4,5} = the whole lunch window, making L3 unschedulable
+        # (a lab there leaves no free lunch slot). But 11:00-11:40 is genuinely free for lunch, so
+        # we drop slot 3 -> L3 occupies only {4,5}. This frees the lunch slot and recovers the 5th
+        # lab block (~25% more lab capacity). Only L3 is affected.
+        if "L3" in lab_session_to_theory and 3 in lab_session_to_theory["L3"]:
+            lab_session_to_theory["L3"] = tuple(s for s in lab_session_to_theory["L3"] if s != 3)
 
         return TimeSystemArtifacts(
             theory_slots=theory_slots,
@@ -328,12 +335,20 @@ class DataLoader:
         lab_rooms = rooms_df.loc[lab_mask].copy()
         theory_rooms = rooms_df.loc[~lab_mask].copy()
 
-        # The active room schema uses "Core-Lab" and "Computer-Lab".
-        # Unmapped lab courses should fall back to computer labs only, while
-        # core labs remain available through explicit core_lab_mapping.csv rows.
-        laboratory_mask = pd.Series(False, index=rooms_df.index)
-        if "room_type" in rooms_df.columns:
-            laboratory_mask = lab_mask & room_type_normalized.str.contains("computer", na=False)
+        # Unmapped lab courses should fall back to COMPUTER labs only, while core labs
+        # remain available through explicit core_lab_mapping.csv rows. Computer labs are
+        # tagged either by room_type (e.g. "Computer-Lab" in some schemas) OR — in the
+        # active new.csv schema — by a "Computer Lab (...)" description while room_type is
+        # just "Laboratory". Matching only room_type missed every computer lab here, which
+        # let unmapped courses spill into specialised core labs / workshops.
+        type_is_computer = room_type_normalized.str.contains("computer", na=False)
+        if "description" in rooms_df.columns:
+            desc_is_computer = (
+                rooms_df["description"].astype(str).str.lower().str.contains("computer lab", na=False)
+            )
+        else:
+            desc_is_computer = pd.Series(False, index=rooms_df.index)
+        laboratory_mask = lab_mask & (type_is_computer | desc_is_computer)
 
         lab_room_ids = tuple(lab_rooms["id"].astype(str))
         theory_room_ids = tuple(theory_rooms["id"].astype(str))

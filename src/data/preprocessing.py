@@ -174,6 +174,25 @@ def _cohort_key_matches_allowlist(
 	return False
 
 
+def _is_section_based_cohort(config: SchedulerConfig, key: DepartmentSemesterKey) -> bool:
+	"""True when this (department, semester) is configured for the parallel-section model."""
+
+	allowlist = getattr(getattr(config, "grouping", None), "section_based_cohorts", ()) or ()
+	if not allowlist:
+		return False
+	return _cohort_key_matches_allowlist(key, allowlist)
+
+
+def combined_lab_config(config: SchedulerConfig) -> Tuple[frozenset, int, Tuple[str, ...]]:
+	"""Return (course_codes_upper, total_slots, room_numbers) for the combined-lab feature."""
+
+	cfg = getattr(getattr(config, "model", None), "combined_lab_courses", {}) or {}
+	codes = frozenset(str(c).strip().upper() for c in cfg.get("course_codes", ()) if str(c).strip())
+	total_slots = int(cfg.get("blocks", 4) or 4) * int(cfg.get("block_len", 2) or 2)
+	rooms = tuple(str(r).strip() for r in cfg.get("room_numbers", ()) if str(r).strip())
+	return codes, total_slots, rooms
+
+
 def _normalise_department(value: str) -> str:
 	if not value:
 		return value
@@ -419,15 +438,64 @@ class DepartmentCourseGrouper:
 			if not instances:
 				continue
 			
+			# Parallel-section model (2nd year): one group per section-instance.
+			if _is_section_based_cohort(self._config, key):
+				groups = self._group_into_sections(key, instances)
 			# Check if we have fixed groups for this cohort
-			if key in self._telemetry_groups:
+			elif key in self._telemetry_groups:
 				self._logger.info("Using fixed groups from telemetry for %s", key.label())
 				groups = self._group_from_telemetry(key, instances, self._telemetry_groups[key])
 			else:
 				groups = self._group_single_cohort(key, instances)
-			
+
 			grouped[key] = tuple(groups)
 		return grouped
+
+	def _group_into_sections(
+		self,
+		key: DepartmentSemesterKey,
+		instances: Sequence[NormalizedCourseInstance],
+	) -> List[CourseGroup]:
+		"""One CourseGroup per section-instance, tagged with its section_id.
+
+		Sections run in parallel; group_non_overlap serialises groups sharing a section_id,
+		while teacher/room exclusivity stays global.
+		"""
+
+		groups: List[CourseGroup] = []
+		ordered = sorted(
+			instances,
+			key=lambda inst: (inst.section_id if inst.section_id is not None else 0, inst.course_code),
+		)
+		for ordinal, inst in enumerate(ordered, start=1):
+			theory_hours = max(inst.total_hours() - inst.practical_hours, 0)
+			summary = GroupSummary(
+				num_instances=1,
+				num_courses=1,
+				num_teachers=1,
+				lab_instances=1 if inst.has_lab else 0,
+				theory_instances=1 if inst.has_theory else 0,
+				total_student_count=inst.student_count,
+				lab_hours=inst.practical_hours,
+				theory_hours=theory_hours,
+			)
+			tags = {"lab"} if inst.has_lab else set()
+			tags.add("section_based")
+			groups.append(
+				CourseGroup(
+					key=key,
+					group_id=f"{key.slug()}_sec{inst.section_id}_{inst.course_code}",
+					ordinal=ordinal,
+					is_professional_elective=False,
+					course_instance_ids=(inst.instance_id,),
+					teacher_ids=(inst.teacher_id,),
+					course_codes=(inst.course_code,),
+					summary=summary,
+					tags=tuple(sorted(tags)),
+					section_id=inst.section_id,
+				)
+			)
+		return groups
 
 	def _group_from_telemetry(
 		self, 
@@ -770,6 +838,7 @@ class GroupAssignmentPostProcessor:
 			lunch_slot_window=lunch_window,
 			five_pm_policy=five_pm_policy.get("label") if five_pm_policy else None,
 			tags=tuple(sorted(tags)),
+			section_id=group.section_id,
 		)
 
 	def _build_penalties(
@@ -904,6 +973,8 @@ class DataPreprocessor:
 
 	def run(self, data: DataLoadResult) -> PreprocessingResult:
 		normalized = self._normalizer.normalize(data.courses_df)
+		normalized = self._apply_combined_lab_overrides(normalized)
+		normalized = self._expand_sections(normalized)
 		grouped = self._grouper.group(normalized)
 		packages = self._post_processor.build_packages(grouped, normalized, data.departments)
 
@@ -922,6 +993,95 @@ class DataPreprocessor:
 			warnings=tuple(warnings),
 			stats=stats,
 		)
+
+	def _apply_combined_lab_overrides(
+		self,
+		normalized: Mapping[DepartmentSemesterKey, Tuple[NormalizedCourseInstance, ...]],
+	) -> Dict[DepartmentSemesterKey, Tuple[NormalizedCourseInstance, ...]]:
+		"""Retype combined-lab courses to pure PRACTICAL of `total_slots` hours.
+
+		These BYOD courses (DBMS/OOP-Java) are delivered as lab sessions, so we replace their
+		lecture/tutorial/practical with `total_slots` practical hours (=> ceil/2 lab sessions)
+		and force a Core-Lab room type, letting the standard lab pipeline place them in the
+		core-lab rooms. Tagged `combined_lab` for any downstream special handling.
+		"""
+
+		from dataclasses import replace as _replace
+
+		codes, total_slots, _rooms = combined_lab_config(self._config)
+		if not codes:
+			return {key: tuple(instances) for key, instances in normalized.items()}
+
+		result: Dict[DepartmentSemesterKey, Tuple[NormalizedCourseInstance, ...]] = {}
+		for key, instances in normalized.items():
+			new_instances: List[NormalizedCourseInstance] = []
+			for inst in instances:
+				if str(inst.course_code).strip().upper() in codes:
+					tags = tuple(sorted(set(inst.tags) | {"combined_lab", "lab"}))
+					new_instances.append(
+						_replace(
+							inst,
+							lecture_hours=0,
+							tutorial_hours=0,
+							practical_hours=total_slots,
+							has_lab=True,
+							has_theory=False,
+							required_room_type="Core-Lab",
+							preferred_lab_type="Core-Lab",
+							tags=tags,
+						)
+					)
+				else:
+					new_instances.append(inst)
+			result[key] = tuple(new_instances)
+		return result
+
+	def _expand_sections(
+		self,
+		normalized: Mapping[DepartmentSemesterKey, Tuple[NormalizedCourseInstance, ...]],
+	) -> Dict[DepartmentSemesterKey, Tuple[NormalizedCourseInstance, ...]]:
+		"""Expand section-based cohorts into S parallel sections (S = max faculty per course).
+
+		Each course gets one instance per section, cycling faculty when a course has fewer
+		faculty than sections. Every section-instance carries a unique id and its section_id.
+		"""
+
+		from dataclasses import replace as _replace
+
+		result: Dict[DepartmentSemesterKey, Tuple[NormalizedCourseInstance, ...]] = {}
+		for key, instances in normalized.items():
+			if not _is_section_based_cohort(self._config, key):
+				result[key] = tuple(instances)
+				continue
+
+			by_course: "MutableMapping[str, List[NormalizedCourseInstance]]" = defaultdict(list)
+			for inst in instances:
+				by_course[inst.course_code].append(inst)
+			section_count = max((len(v) for v in by_course.values()), default=0)
+			if section_count <= 0:
+				result[key] = tuple(instances)
+				continue
+
+			expanded: List[NormalizedCourseInstance] = []
+			for _course, course_instances in by_course.items():
+				n = len(course_instances)
+				for section_index in range(section_count):
+					base = course_instances[section_index % n]
+					expanded.append(
+						_replace(
+							base,
+							instance_id=f"{base.instance_id}__s{section_index}",
+							section_id=section_index,
+						)
+					)
+			result[key] = tuple(expanded)
+			self._logger.info(
+				"Section expansion: %s -> %d sections, %d course-instances",
+				key.label(),
+				section_count,
+				len(expanded),
+			)
+		return result
 
 	def build_extended_container(self, data: DataLoadResult) -> ExtendedDataContainer:
 		preprocessing = self.run(data)
