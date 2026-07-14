@@ -247,3 +247,68 @@ def test_fixed_lab_session_counts_for_daily_presence_and_consecutive_limits(tmp_
     model.Add(l2 == 1)
     model.Add(l3 == 1)
     assert cp_model.CpSolver().Solve(model) == cp_model.INFEASIBLE
+
+
+def test_fixed_early_and_late_day_does_not_invalidate_other_days(tmp_path: Path) -> None:
+    fixed_lab = _write_csv(
+        tmp_path / "fixed_lab.csv",
+        "teacher_id,course_instance_id,day,session_name,room_id",
+        (
+            "T1,OLD_EARLY,monday,L1,R_FIXED",
+            "T1,OLD_LATE,monday,L5,R_FIXED",
+        ),
+    )
+
+    model = cp_model.CpModel()
+    monday_l2 = model.NewBoolVar("monday_l2")
+    tuesday_l2 = model.NewBoolVar("tuesday_l2")
+    requirement = LabCourseRequirement(
+        course_instance_id="NEW",
+        course_code="LAB2",
+        teacher_id="T1",
+        group_id="G1",
+        department="Dept",
+        semester=3,
+        practical_hours=2,
+        required_sessions=1,
+        student_count=30,
+        preferred_room_type=None,
+        required_room_type=None,
+    )
+    lab_block = LabVariableBlock(
+        assignments={
+            "T1": {
+                "NEW": {
+                    0: {"L2": {"R1": monday_l2}},
+                    1: {"L2": {"R1": tuesday_l2}},
+                }
+            }
+        },
+        requirements={"NEW": requirement},
+        teacher_courses={"T1": ("NEW",)},
+        day_patterns={"NEW": ("monday", "tuesday")},
+        lab_session_names=("L1", "L2", "L5"),
+        room_ids=("R1",),
+        instance_group_lookup={"NEW": "G1"},
+    )
+    context = ConstraintContext(
+        model=model,
+        config=_config_with_fixed(lab_csv=fixed_lab),
+        data=ExtendedDataContainer(raw=SimpleNamespace(time=_raw_time()), preprocessing=SimpleNamespace()),
+        variables=VariableCreationResult(lab=lab_block, theory=_empty_theory_block(), metadata={}),
+        logger=logging.getLogger("tests.fixed.lab_presence.residual"),
+    )
+
+    build_teacher_daily_presence_lab_constraint(
+        metadata=_metadata("teacher_daily_presence_lab", domain="lab"),
+        params={
+            "max_daily_sessions": 2,
+            "early_sessions": ("L1",),
+            "buffer_sessions": ("L3",),
+            "late_sessions": ("L5",),
+        },
+    ).apply(context)
+
+    model.Add(monday_l2 == 0)
+    model.Add(tuesday_l2 == 1)
+    assert cp_model.CpSolver().Solve(model) in (cp_model.FEASIBLE, cp_model.OPTIMAL)

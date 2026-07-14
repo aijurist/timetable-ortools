@@ -271,6 +271,8 @@ class CombinedLabPreallocator:
 			1, int(cfg.get("preallocation_workers", 1) or 1)
 		)
 		solver.parameters.random_seed = int(cfg.get("preallocation_seed", 23) or 23)
+		stop_after_first_solution = bool(cfg.get("preallocation_stop_after_first_solution", False))
+		solver.parameters.stop_after_first_solution = stop_after_first_solution
 		status = solver.Solve(model)
 		if status not in (cp_model.FEASIBLE, cp_model.OPTIMAL):
 			raise ValueError(
@@ -355,6 +357,7 @@ class CombinedLabPreallocator:
 				for department, slots in sorted(unique_slots_by_department.items())
 			},
 			"candidate_variables": len(variables),
+			"stop_after_first_solution": stop_after_first_solution,
 			"solver_status": solver.StatusName(status),
 			"wall_time_sec": solver.WallTime(),
 		}

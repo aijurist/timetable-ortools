@@ -50,12 +50,21 @@ class TeacherDailyPresenceLabConstraint(Constraint):
 
 	def apply(self, context: ConstraintContext) -> ConstraintApplicationResult:
 		logger = context.child_logger("teacher_daily_presence_lab")
+		excluded_teacher_ids = frozenset(
+			normalize_teacher_id(value)
+			for value in (self.params.get("excluded_teacher_ids", ()) or ())
+			if normalize_teacher_id(value)
+		)
 		excluded_departments = frozenset(
 			self._normalise_department(value)
 			for value in (self.params.get("excluded_departments", ()) or ())
 			if self._normalise_department(value)
 		)
-		session_literals = self._collect_teacher_day_literals(context, excluded_departments)
+		session_literals = self._collect_teacher_day_literals(
+			context,
+			excluded_departments,
+			excluded_teacher_ids,
+		)
 		if not session_literals:
 			logger.info("No lab assignments available; skipping teacher daily presence constraint")
 			return self._result(
@@ -76,6 +85,7 @@ class TeacherDailyPresenceLabConstraint(Constraint):
 
 		stats = TeacherDailyPresenceStats()
 		model = context.model
+		fixed_occupancy = get_fixed_schedule_occupancy(context)
 
 		for teacher_id, day_map in session_literals.items():
 			for day_label, session_map in day_map.items():
@@ -85,9 +95,15 @@ class TeacherDailyPresenceLabConstraint(Constraint):
 				stats.teachers_targeted.add(teacher_id)
 				stats.constrained_days += 1
 
-				# Hard limit on the number of lab sessions per day
+				# Fixed S5/S7 sessions are immutable history, not decisions that the
+				# new S3 model may reject. Charge them against the remaining capacity
+				# and force new work onto another day when the day is already full.
+				fixed_sessions = frozenset(
+					fixed_occupancy.lab_sessions_for(teacher_id, day_label)
+				)
+				remaining_daily_sessions = max(0, max_daily_labs - len(fixed_sessions))
 				daily_sessions = tuple(session_map.values())
-				model.Add(sum(daily_sessions) <= max_daily_labs)
+				model.Add(sum(daily_sessions) <= remaining_daily_sessions)
 				stats.daily_cap_days += 1
 
 				early_literal = self._build_group_literal(
@@ -109,16 +125,44 @@ class TeacherDailyPresenceLabConstraint(Constraint):
 					f"teacher_{teacher_id}_{self._safe_name(day_label)}_buffer_lab",
 				)
 
-				if early_literal is not None and late_literal is not None:
+				fixed_early = any(label in fixed_sessions for label in early_sessions)
+				fixed_buffer = any(label in fixed_sessions for label in buffer_sessions)
+				fixed_late = any(label in fixed_sessions for label in late_sessions)
+
+				# Do not retroactively invalidate a fixed early+late day. Instead,
+				# block only new assignments that would extend the long day.
+				if fixed_early:
+					if late_literal is not None:
+						model.Add(late_literal == 0)
+						stats.early_late_blocks += 1
+				elif fixed_late:
+					if early_literal is not None:
+						model.Add(early_literal == 0)
+						stats.early_late_blocks += 1
+				elif early_literal is not None and late_literal is not None:
 					model.Add(early_literal + late_literal <= 1)
 					stats.early_late_blocks += 1
 
-				if (
-					early_literal is not None
-					and buffer_literal is not None
-					and late_literal is not None
-				):
-					model.Add(late_literal == 0).OnlyEnforceIf([early_literal, buffer_literal])
+				group_states = (
+					(fixed_early, early_literal),
+					(fixed_buffer, buffer_literal),
+					(fixed_late, late_literal),
+				)
+				fixed_group_count = sum(1 for fixed, _literal in group_states if fixed)
+				missing_literals = [
+					literal
+					for fixed, literal in group_states
+					if not fixed and literal is not None
+				]
+				if fixed_group_count == 2 and missing_literals:
+					for literal in missing_literals:
+						model.Add(literal == 0)
+					stats.triple_window_blocks += 1
+				elif fixed_group_count == 1 and len(missing_literals) >= 2:
+					model.Add(sum(missing_literals) <= 1)
+					stats.triple_window_blocks += 1
+				elif fixed_group_count == 0 and len(missing_literals) == 3:
+					model.Add(sum(missing_literals) <= 2)
 					stats.triple_window_blocks += 1
 
 		status = (
@@ -134,6 +178,7 @@ class TeacherDailyPresenceLabConstraint(Constraint):
 				"buffer_sessions": tuple(buffer_sessions),
 				"late_sessions": tuple(late_sessions),
 				"excluded_departments": tuple(sorted(excluded_departments)),
+				"excluded_teacher_ids": tuple(sorted(excluded_teacher_ids)),
 			}
 		)
 		return self._result(status, details)
@@ -142,6 +187,7 @@ class TeacherDailyPresenceLabConstraint(Constraint):
 		self,
 		context: ConstraintContext,
 		excluded_departments: frozenset[str],
+		excluded_teacher_ids: frozenset[str],
 	) -> TeacherDaySessionLiterals:
 		cache = context.extra.setdefault(self.CACHE_KEY, {})  # type: ignore[assignment]
 		cached = cache.get("teacher_day_literals")
@@ -150,6 +196,8 @@ class TeacherDailyPresenceLabConstraint(Constraint):
 
 		terms: Dict[Tuple[str, str, str], list[cp_model.IntVar]] = {}
 		for teacher_id, course_id, day_index, session_name, _, variable in iter_lab_session_variables(context):
+			if normalize_teacher_id(teacher_id) in excluded_teacher_ids:
+				continue
 			requirement = context.variables.lab.requirements.get(course_id)
 			if ignores_teacher_constraints(requirement):
 				continue
@@ -165,19 +213,6 @@ class TeacherDailyPresenceLabConstraint(Constraint):
 			terms.setdefault(key, []).append(variable)
 
 		model = context.model
-		fixed_occupancy = get_fixed_schedule_occupancy(context)
-		current_teachers = {teacher_id for teacher_id, _day_label, _session_name in terms}
-		for teacher_id, day_map in fixed_occupancy.lab_teacher_sessions.items():
-			if teacher_id not in current_teachers:
-				continue
-			for day_label, sessions in day_map.items():
-				for session_name in sessions:
-					fixed_literal = model.NewBoolVar(
-						f"fixed_teacher_lab_presence_{teacher_id}_{self._safe_name(day_label)}_{self._safe_name(session_name)}"
-					)
-					model.Add(fixed_literal == 1)
-					terms.setdefault((teacher_id, day_label, session_name), []).append(fixed_literal)
-
 		result: Dict[str, Dict[str, Dict[str, cp_model.IntVar]]] = {}
 		for (teacher_id, day_label, session_name), variables in terms.items():
 			literal = build_presence_literal(

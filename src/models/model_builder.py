@@ -146,9 +146,12 @@ class ModelBuilder:
 			# Guard every newly added proto constraint behind this assumption.
 			# Note: constraints can already be reified; adding another enforcement literal is safe
 			# (it just conjoins the enforcement conditions).
-			# Some CP-SAT constraint proto types reject enforcement literals (notably lin_max/lin_min).
-			# Skipping those keeps the model valid; they simply won't participate in the unsat core.
-			unsupported_enforcement_types = {"lin_max", "lin_min"}
+			# CP-SAT supports enforcement literals only for bool_or, bool_and,
+			# linear, and interval constraints.  Guarding proto types such as
+			# at_most_one/exactly_one makes the entire model invalid, so leave all
+			# other types active.  They still participate in feasibility, but cannot
+			# be named individually in the sufficient assumption core.
+			supported_enforcement_types = {"bool_or", "bool_and", "linear", "interval"}
 			skipped_by_type: dict[str, int] = {}
 			for i in range(constraints_before, constraints_after):
 				ct = proto.constraints[i]
@@ -158,7 +161,7 @@ class ModelBuilder:
 				except Exception:  # pragma: no cover - protobuf edge cases
 					kind = None
 
-				if kind in unsupported_enforcement_types:
+				if kind not in supported_enforcement_types:
 					skipped_by_type[kind] = skipped_by_type.get(kind, 0) + 1
 					continue
 

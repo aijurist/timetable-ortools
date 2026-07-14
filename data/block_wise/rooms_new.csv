@@ -51,7 +51,7 @@ id,room_number,block,description,is_lab,room_type,room_min_cap,room_max_cap,has_
 61,B302,B Block,Classroom,0,Class-Room,70,70,0,0,None,,0,0,0
 62,B304,B Block,Computer Application in Chemical Engg Lab,1,Core-Lab,35,35,0,0,None,,0,0,0
 63,B305,B Block,Industrial Automation Lab,1,Core-Lab,35,35,0,0,None,,0,0,0
-64,B310,B Block,MCT CAD Lab,1,Core-Lab,35,35,0,0,None,,0,0,0
+64,B310,B Block,MCT CAD Lab,1,Computer-Lab,70,70,0,0,None,,0,0,0
 65,B311,B Block,Electronic Devices & Circuits Lab,1,Core-Lab,35,35,0,0,None,,0,0,0
 66,B318,B Block,Power System Simulation Lab,1,Core-Lab,35,35,0,0,None,,0,0,0
 67,B320,B Block,Classroom,0,Class-Room,70,70,0,0,None,,0,0,0

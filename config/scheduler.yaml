@@ -918,6 +918,7 @@ constraints:
           - Biomedical Engineering_S5
           - Biotechnology_S5
           - Electrical & Electronics Engineering_S5
+          - Electronics & Communication Engineering
         penalty_weight: 200
     five_pm_policy:
       enabled: true
@@ -1062,9 +1063,10 @@ model:
   theory_room_candidate_limit: 20
   theory_room_min_candidates: 10
   theory_room_anchor_candidates: 4
-  # DBMS and OOPS-Java are eight-hour combined lab-block courses, not Kutty theory.
+  # DBMS, CSBS Database Technology, and OOPS-Java are eight-hour
+  # combined lab-block courses, not Kutty theory.
   combined_lab_courses:
-    course_codes: [CS23332, CS23333]
+    course_codes: [CS23332, CB23333, CS23333]
     room_numbers:
       - ANEW101
       - ANEW102
@@ -1072,21 +1074,6 @@ model:
       - ANEW104
       - A104/105
       - KSL02
-      - B125
-      - B416
-      - B417
-      - B418
-      - B419
-      - B422
-      - B423
-      - B424
-      - B425
-      - B426
-      - TIFAC I02
-      - TIFAC I03
-      - TIFAC I04
-      - TIFAC I11
-      - TIFAC I12
     blocks: 4
     block_len: 2
     excluded_session_names: [L3]
