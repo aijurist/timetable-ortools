@@ -50,6 +50,11 @@ class SectionLateDayConstraint(Constraint):
         )
         mode = str(params.get("mode", "soft")).strip().lower()
         penalty_weight = max(1, int(params.get("soft_penalty_weight", 40)))
+        # Optional DIRECT penalty per theory activity placed in a late slot (7-8), on top of
+        # the per-late-day cap. Unlike the day cap, this discourages late theory even on days
+        # already made late by a lab -> steers theory earlier. 0 disables it (default).
+        late_theory_penalty_weight = int(params.get("late_theory_penalty_weight", 0))
+        late_theory_vars: List[cp_model.IntVar] = []
 
         model = context.model
         theory_block = context.variables.theory
@@ -83,6 +88,7 @@ class SectionLateDayConstraint(Constraint):
                 for slot_idx, var in slot_map.items():
                     if slot_idx in late_theory_slots:
                         late_by_group_day[section][day_idx].append(var)
+                        late_theory_vars.append(var)
 
         # LAB: session L5 room vars, keyed via the course's section.
         for _tid, course_id, day_idx, session_name, _room_id, var in iter_lab_session_variables(context):
@@ -135,6 +141,16 @@ class SectionLateDayConstraint(Constraint):
                     context, excess, penalty_weight, tag=f"section_late_day:{group_id}"
                 )
                 penalties += 1
+
+        # Direct late-theory penalty: charge for every theory activity in a late slot, so the
+        # solver pulls theory into earlier slots regardless of the per-day cap.
+        if late_theory_penalty_weight > 0 and late_theory_vars:
+            late_theory_count = model.NewIntVar(0, len(late_theory_vars), "late_theory_count")
+            model.Add(late_theory_count == sum(late_theory_vars))
+            register_objective_penalty(
+                context, late_theory_count, late_theory_penalty_weight,
+                tag="section_late_day:late_theory",
+            )
 
         status = ConstraintStatus.APPLIED if (hard_caps or penalties) else ConstraintStatus.SKIPPED
         return self._result(

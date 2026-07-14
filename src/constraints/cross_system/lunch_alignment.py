@@ -74,6 +74,7 @@ class LunchAlignmentConfig:
 	hard_overrides: Tuple[str, ...]
 	penalty_weight: int
 	soft_split_lab_session_pairs: Tuple[Tuple[str, str], ...]
+	global_soft: bool = False
 
 	@staticmethod
 	def from_context(context: ConstraintContext, params: Optional[Mapping[str, object]]) -> "LunchAlignmentConfig":
@@ -111,6 +112,9 @@ class LunchAlignmentConfig:
 		soft_semesters = tuple(int(s) for s in params.get("soft_semesters", ()))
 		hard_overrides = tuple(str(d) for d in params.get("hard_overrides", ()))
 		penalty_weight = int(params.get("penalty_weight", 10))
+		# When true, every department is treated as soft (hard->soft lunch fallback). Lets a
+		# per-department solve relax its own lunch to a strong penalty when hard is infeasible.
+		global_soft = bool(params.get("global_soft", False))
 		split_pair_payload = params.get(
 			"soft_split_lab_session_pairs",
 			params.get("split_lab_session_pairs", DEFAULT_SOFT_SPLIT_LAB_SESSION_PAIRS),
@@ -135,6 +139,7 @@ class LunchAlignmentConfig:
 			hard_overrides=hard_overrides,
 			penalty_weight=penalty_weight,
 			soft_split_lab_session_pairs=tuple(split_pairs) or DEFAULT_SOFT_SPLIT_LAB_SESSION_PAIRS,
+			global_soft=global_soft,
 		)
 
 	def is_flexible(self, department: str, semester: Optional[int]) -> bool:
@@ -143,6 +148,8 @@ class LunchAlignmentConfig:
 	def is_soft(self, department: str, semester: Optional[int]) -> bool:
 		if department in self.hard_overrides:
 			return False
+		if self.global_soft:
+			return True
 		# If explicit soft targets are configured, treat them as authoritative.
 		# This avoids accidentally softening an entire semester cohort via `soft_semesters`.
 		if self.soft_tokens:

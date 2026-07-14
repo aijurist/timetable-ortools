@@ -80,7 +80,7 @@ OUTDIR.mkdir(parents=True, exist_ok=True)
 # Phase-2 (theory bundling re-optimization) per-department time budget, seconds.
 PHASE2_TIME = int(os.environ.get("PHASE2_TIME", "150"))
 
-def build(dept, rseed=1, parallel=None, late_mode="hard", interleave=True, combined_strict=True):
+def build(dept, rseed=1, parallel=None, late_mode="hard", interleave=True, combined_strict=True, lunch_mode="hard"):
     if parallel is None:
         parallel = PARALLEL
     cross = {"bundled_theory": {"enabled": True, "priority": 2, "weight": 1.0,
@@ -95,7 +95,16 @@ def build(dept, rseed=1, parallel=None, late_mode="hard", interleave=True, combi
     if late_mode:
         cross["section_late_day"] = {"enabled": True, "priority": 6, "weight": 1.0,
               "params": {"mode": late_mode, "max_late_days": 2, "single_section_max_late_days": 2,
-                         "soft_penalty_weight": 40, "late_theory_slots": [7, 8], "late_lab_sessions": ["L5"]}}
+                         "soft_penalty_weight": 40, "late_theory_slots": [7, 8], "late_lab_sessions": ["L5"],
+                         # direct per-late-theory-slot penalty: pulls theory out of 3:10/4:10pm
+                         # even on lab-late days (helps combined-heavy depts like CSE).
+                         "late_theory_penalty_weight": 8}}
+    # Lunch (11-2 = slots 3,4,5): HARD per-section guarantee, with a per-department fallback
+    # to a STRONG soft penalty (300) when hard is infeasible. Lunch penalty (300) >> the 3pm
+    # late-day penalty (40), so lunch is preserved BEFORE the 3pm limit is relaxed.
+    cross["lunch_alignment"] = {"enabled": True, "priority": 9, "weight": 1.0,
+          "params": {"lunch_slot_window": [3, 4, 5], "minimum_free_slots": 1,
+                     "penalty_weight": 300, "global_soft": (lunch_mode == "soft")}}
     # Combined labs (DBMS / OOP-Java / DB-Tech): room-lock each section into ONE room for
     # all 4 blocks (trainer stays put) and split the 6 ANEW rooms into two FIXED disjoint
     # 3-room pools (DBMS+DB-Tech: A104/105+ANEW104+KS02[210-cap,3 sections]; OOP-Java: ANEW101/102/103).
@@ -162,11 +171,11 @@ def phase1(rseed):
     thbusy |= sen_theory_room
     for t, s in sen_teacher.items(): tbusy[t] |= s
     lab_values = {}; per_lab_occ = {}; per_lab_teacher = {}; per_th_room = {}; per_th_teacher = {}
-    dept_parallel = {}; dept_late_mode = {}; dept_interleave = {}; dept_combined = {}
+    dept_parallel = {}; dept_late_mode = {}; dept_interleave = {}; dept_combined = {}; dept_lunch_mode = {}
     infeasible = []; p1_recs = []
     for dept in ORDER:
-        def attempt(parallel, late_mode, interleave, combined_strict=True):
-            cm, data = build(dept, parallel=parallel, late_mode=late_mode, interleave=interleave, combined_strict=combined_strict)
+        def attempt(parallel, late_mode, interleave, combined_strict=True, lunch_mode="hard"):
+            cm, data = build(dept, parallel=parallel, late_mode=late_mode, interleave=interleave, combined_strict=combined_strict, lunch_mode=lunch_mode)
             model = cm.model; tb = cm.variables.theory; lb = cm.variables.lab
             # reserve labs + theory + teachers
             anew_cell = defaultdict(list)   # (rn,aday,sess) -> [(course_code, students, var), ...]
@@ -227,31 +236,39 @@ def phase1(rseed):
             s.parameters.num_search_workers = 12; s.parameters.stop_after_first_solution = True; s.parameters.random_seed = rseed
             st = s.StatusName(s.Solve(model))
             return st, cm, data, model, tb, lb, s
-        # Fallback chain: HARD late-cap first, then relax to SOFT. Combined labs keep STRICT
-        # room-lock + fixed 3+3 pools per department (combined_strict=True) throughout.
-        # Batch-interleave is OFF for now (il=False). Combined-heavy depts (CSE, AIDS) whose
-        # combined labs need the late L5 session naturally fall back to the SOFT late-cap.
-        candidates = [(PARALLEL, "hard", False, True), (PARALLEL, "soft", False, True)]
-        if PARALLEL:
-            candidates += [(False, "hard", False, True), (False, "soft", False, True)]
+        # Fallback chain (relaxed in order of LEAST importance first): lunch is MORE important
+        # than the 3pm cap, so we relax the 3pm late-cap (hard->soft) BEFORE relaxing the lunch
+        # guarantee (hard->soft). Batch-interleave is ON (il=True): opposite batches share a
+        # lab slot, compressing labs and freeing midday slots for the hard lunch. Combined labs
+        # keep STRICT room-lock + fixed 3+3 pools throughout.
+        # Try interleave ON first (compresses labs -> space for lunch); keep lunch hard as long
+        # as possible (relax 3pm before lunch). If interleave itself makes a dept infeasible,
+        # fall through to the il=False block and repeat the late/lunch relaxation there.
+        candidates = [(PARALLEL, "hard", True,  True, "hard"),
+                      (PARALLEL, "soft", True,  True, "hard"),
+                      (PARALLEL, "soft", True,  True, "soft"),
+                      (PARALLEL, "hard", False, True, "hard"),
+                      (PARALLEL, "soft", False, True, "hard"),
+                      (PARALLEL, "soft", False, True, "soft")]
         first = candidates[0]
-        used_parallel, used_late, used_il, used_cs = PARALLEL, "hard", False, True
+        used_parallel, used_late, used_il, used_cs, used_lunch = PARALLEL, "hard", True, True, "hard"
         st = cm = data = model = tb = lb = s = None
-        for cand_par, cand_late, cand_il, cand_cs in candidates:
-            st, cm, data, model, tb, lb, s = attempt(cand_par, cand_late, cand_il, cand_cs)
+        for cand_par, cand_late, cand_il, cand_cs, cand_lunch in candidates:
+            st, cm, data, model, tb, lb, s = attempt(cand_par, cand_late, cand_il, cand_cs, cand_lunch)
             if st in ("OPTIMAL", "FEASIBLE"):
-                used_parallel, used_late, used_il, used_cs = cand_par, cand_late, cand_il, cand_cs
-                if (cand_par, cand_late, cand_il, cand_cs) != first:
-                    print(f"    [fallback] {dept} -> late={cand_late} ({st})", flush=True)
+                used_parallel, used_late, used_il, used_cs, used_lunch = cand_par, cand_late, cand_il, cand_cs, cand_lunch
+                if (cand_par, cand_late, cand_il, cand_cs, cand_lunch) != first:
+                    print(f"    [fallback] {dept} -> late={cand_late} lunch={cand_lunch} ({st})", flush=True)
                 break
         if os.environ.get("DEBUG_DEPT") == "1":
-            print(f"    {dept[:34]:34s} -> {st} (late={used_late} il={used_il} strict={used_cs})", flush=True)
+            print(f"    {dept[:30]:30s} -> {st} (late={used_late} lunch={used_lunch} il={used_il} strict={used_cs})", flush=True)
         if st not in ("OPTIMAL", "FEASIBLE"):
             infeasible.append(dept); continue
         dept_parallel[dept] = used_parallel
         dept_late_mode[dept] = used_late
         dept_interleave[dept] = used_il
         dept_combined[dept] = used_cs
+        dept_lunch_mode[dept] = used_lunch
         # record lab var values (for locking) + occupancy
         lv = {}
         for tid, cmap in lb.assignments.items():
@@ -287,7 +304,7 @@ def phase1(rseed):
                             "room":str(e.room_number or e.room_id),"teacher":str(e.teacher_name or ""),
                             "is_comb":str(e.course_code) in COMB,
                             "batch":str(getattr(e,"batch_label",None) or getattr(e,"batch_info",None) or "")})
-    return infeasible, lab_values, per_lab_occ, per_lab_teacher, per_th_room, per_th_teacher, dept_parallel, dept_late_mode, dept_interleave, dept_combined, p1_recs
+    return infeasible, lab_values, per_lab_occ, per_lab_teacher, per_th_room, per_th_teacher, dept_parallel, dept_late_mode, dept_interleave, dept_combined, p1_recs, dept_lunch_mode
 
 print("PHASE 1: first-solution multi-seed to fit all 18 around seniors...", flush=True)
 best = None
@@ -297,7 +314,7 @@ for rseed in range(1, 13):
     if best is None or len(infeas) < len(best[0][0]): best = (res1, rseed)
     if not infeas: break
 res1, used_seed = best
-infeasible, lab_values, per_lab_occ, per_lab_teacher, per_th_room, per_th_teacher, dept_parallel, dept_late_mode, dept_interleave, dept_combined, p1_recs = res1
+infeasible, lab_values, per_lab_occ, per_lab_teacher, per_th_room, per_th_teacher, dept_parallel, dept_late_mode, dept_interleave, dept_combined, p1_recs, dept_lunch_mode = res1
 print(f"PHASE 1 done (seed {used_seed}): {len(ORDER)-len(infeasible)}/{len(ORDER)} fit" + (f", dropped {infeasible}" if infeasible else "") + "\n", flush=True)
 # write a phase-1 JSON snapshot (labs + phase-1 theory) so placement/pairing can be
 # verified immediately, without waiting for the phase-2 bundling to finish.
@@ -330,7 +347,7 @@ for dept in fit_depts:
     for d in fit_depts:
         if d != dept:
             for t, s in cur_th_teacher[d].items(): res_teacher[t] |= s
-    cm, data = build(dept, parallel=dept_parallel.get(dept, PARALLEL), late_mode=dept_late_mode.get(dept, "hard"), interleave=dept_interleave.get(dept, True), combined_strict=dept_combined.get(dept, True))
+    cm, data = build(dept, parallel=dept_parallel.get(dept, PARALLEL), late_mode=dept_late_mode.get(dept, "hard"), interleave=dept_interleave.get(dept, True), combined_strict=dept_combined.get(dept, True), lunch_mode=dept_lunch_mode.get(dept, "hard"))
     model = cm.model; tb = cm.variables.theory; lb = cm.variables.lab
     # LOCK labs to phase-1
     lv = lab_values[dept]

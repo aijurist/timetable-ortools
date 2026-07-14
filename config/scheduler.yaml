@@ -891,19 +891,9 @@ constraints:
           - Electronics & Communication Engineering_S1
           - Biomedical Engineering_S5
           - Electrical & Electronics Engineering_S5
-          # 2nd year (sem 3) now uses PER-SECTION lunch (each section gets its own lunch slot).
-          # Only these over-capacity / lab-dense depts stay soft (can't fit a hard lunch).
-          - Robotics & Automation_S3
-          - Automobile Engineering_S3
-          # Biomedical: 9 lab sessions/section (BM23312 = L3+P6) — hard per-section lunch
-          # over-tightens it; soft makes it feasible (~10s) while still preferring lunch.
-          - Biomedical Engineering_S3
-          # ECE: 8 sections, lab-dense; IT23331 split 3x176 -> 8x66 to fit rooms. Soft lunch.
-          - Electronics & Communication Engineering_S3
-          # CS&Design: 1 section, 11 lab sessions; lab rooms widened to multi-room sets. Soft lunch.
-          - Computer Science & Design_S3
-          # CS&Business: 2 sections, lab-dense (CB23333/CS23333 combined labs). Soft lunch.
-          - Computer Science & Business Systems_S3
+          # 2nd year (sem 3): TESTING a hard per-section lunch for ALL depts. The previously
+          # soft lab-dense depts (Robotics/Automobile/Biomedical/ECE/CS&Design/CS&Business _S3)
+          # were removed to force a hard lunch; any that turn infeasible must go back to soft.
         penalty_weight: 200
     five_pm_policy:
       enabled: true
