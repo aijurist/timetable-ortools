@@ -69,6 +69,127 @@ class CombinedPreallocationPlan:
     wall_time_seconds: float
 
 
+def load_certified_preallocation(
+    *,
+    payload: Mapping[str, object],
+    instances: Sequence[PreallocationInstance],
+    room_capacities: Mapping[str, int],
+    fixed_occupancy: Mapping[CombinedCell, int] | None = None,
+) -> CombinedPreallocationPlan:
+    """Load and fully validate a previously certified stable-footprint plan.
+
+    Extra payload members are ignored so a department-filtered diagnostic can
+    reuse the production plan. Every current instance must still be present.
+    """
+
+    fixed_occupancy = fixed_occupancy or {}
+    instance_by_key = {instance.key: instance for instance in instances}
+    assignments: dict[PlanKey, Tuple[CombinedCell, ...]] = {}
+    groups: list[StableSectionGroup] = []
+    raw_groups = payload.get("groups", ())
+    if not isinstance(raw_groups, Sequence) or isinstance(raw_groups, (str, bytes)):
+        raise ValueError("Certified combined plan must contain a groups list")
+
+    for raw_group in raw_groups:
+        if not isinstance(raw_group, Mapping):
+            raise ValueError("Certified combined plan group must be an object")
+        family = str(raw_group.get("family", "")).strip().upper()
+        group_id = str(raw_group.get("group_id", "")).strip()
+        raw_members = raw_group.get("members", ())
+        raw_footprint = raw_group.get("footprint", ())
+        if not group_id or not family:
+            raise ValueError("Certified combined plan group is missing id/family")
+        if not isinstance(raw_members, Sequence) or isinstance(raw_members, (str, bytes)):
+            raise ValueError(f"Certified group {group_id} has invalid members")
+        if not isinstance(raw_footprint, Sequence) or isinstance(raw_footprint, (str, bytes)):
+            raise ValueError(f"Certified group {group_id} has invalid footprint")
+        footprint: Tuple[CombinedCell, ...] = tuple(
+            sorted((str(cell[0]), str(cell[1]), str(cell[2])) for cell in raw_footprint)
+        )
+        selected_members: list[PreallocationInstance] = []
+        for raw_member in raw_members:
+            if not isinstance(raw_member, Mapping):
+                raise ValueError(f"Certified group {group_id} has invalid member")
+            key = (str(raw_member.get("department", "")), str(raw_member.get("instance_id", "")))
+            instance = instance_by_key.get(key)
+            if instance is None:
+                continue
+            if instance.key in assignments:
+                raise ValueError(f"Certified combined instance is duplicated: {instance.key}")
+            if instance.family != family:
+                raise ValueError(
+                    f"Certified family mismatch for {instance.key}: {family} != {instance.family}"
+                )
+            if len(footprint) != instance.required_sessions:
+                raise ValueError(
+                    f"Certified footprint length mismatch for {instance.key}: "
+                    f"{len(footprint)} != {instance.required_sessions}"
+                )
+            missing_cells = sorted(set(footprint) - set(instance.allowed_cells))
+            if missing_cells:
+                raise ValueError(f"Certified footprint has invalid cells for {instance.key}: {missing_cells}")
+            assignments[instance.key] = footprint
+            selected_members.append(instance)
+        if not selected_members:
+            continue
+        groups.append(
+            StableSectionGroup(
+                group_id=group_id,
+                family=family,
+                members=tuple(sorted(selected_members, key=_instance_sort_key)),
+                required_sessions=selected_members[0].required_sessions,
+                allowed_cells=footprint,
+            )
+        )
+
+    missing_instances = sorted(set(instance_by_key) - set(assignments))
+    if missing_instances:
+        raise ValueError(f"Certified combined plan is missing instances: {missing_instances}")
+
+    cell_occupancy: dict[CombinedCell, int] = defaultdict(int)
+    section_times: dict[Tuple[SectionKey, str, str], PlanKey] = {}
+    for group in groups:
+        footprint = assignments[group.members[0].key]
+        for cell in footprint:
+            cell_occupancy[cell] += group.size
+        for member in group.members:
+            for _room, day, session in footprint:
+                section_time = (member.section_key, day, session)
+                previous = section_times.get(section_time)
+                if previous is not None and previous != member.key:
+                    raise ValueError(
+                        f"Certified DBMS/OOPS section overlap for {member.section_key} at {day}/{session}"
+                    )
+                section_times[section_time] = member.key
+    for cell, occupancy in cell_occupancy.items():
+        capacity = int(room_capacities.get(cell[0], 0)) - int(fixed_occupancy.get(cell, 0))
+        if occupancy > capacity:
+            raise ValueError(
+                f"Certified combined room capacity exceeded at {cell}: {occupancy} > {capacity}"
+            )
+
+    for index, first in enumerate(groups):
+        first_footprint = set(assignments[first.members[0].key])
+        for second in groups[index + 1 :]:
+            second_footprint = set(assignments[second.members[0].key])
+            if first_footprint & second_footprint and first_footprint != second_footprint:
+                raise ValueError(
+                    f"Certified groups change partners across sessions: {first.group_id}/{second.group_id}"
+                )
+
+    return CombinedPreallocationPlan(
+        status="CERTIFIED",
+        assignments=assignments,
+        groups=tuple(groups),
+        objective_value=(
+            float(payload["objective_value"])
+            if payload.get("objective_value") is not None
+            else None
+        ),
+        wall_time_seconds=0.0,
+    )
+
+
 def _instance_sort_key(instance: PreallocationInstance) -> tuple[object, ...]:
     return (
         instance.day_pattern,
@@ -622,5 +743,6 @@ __all__ = [
     "PreallocationInstance",
     "StableSectionGroup",
     "build_maximal_section_groups",
+    "load_certified_preallocation",
     "solve_combined_preallocation",
 ]

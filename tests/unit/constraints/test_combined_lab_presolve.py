@@ -5,6 +5,7 @@ from collections import Counter, defaultdict
 from src.constraints.cross_system.combined_lab_presolve import (
     PreallocationInstance,
     build_maximal_section_groups,
+    load_certified_preallocation,
     solve_combined_preallocation,
 )
 
@@ -120,3 +121,34 @@ def test_preferred_local_pairs_survive_global_triple_packing():
     assert any({("dept_a", "0"), ("dept_a", "2")} <= members for members in member_sets)
     assert any({("dept_a", "1"), ("dept_a", "3")} <= members for members in member_sets)
     assert Counter(group.size for group in groups) == {3: 1, 2: 1}
+
+
+def test_certified_plan_loads_exact_footprint_and_filters_extra_departments():
+    capacities = {"DBMS_ROOM": 2}
+    current = _instance(0, "DBMS", MF, capacities, required=2, department="dept_a")
+    footprint = [["DBMS_ROOM", "monday", "L1"], ["DBMS_ROOM", "tuesday", "L2"]]
+    payload = {
+        "objective_value": 10,
+        "groups": [
+            {
+                "group_id": "certified_pair",
+                "family": "DBMS",
+                "members": [
+                    {"department": "dept_a", "instance_id": "DBMS_0"},
+                    {"department": "dept_b", "instance_id": "DBMS_0"},
+                ],
+                "footprint": footprint,
+            }
+        ],
+    }
+
+    plan = load_certified_preallocation(
+        payload=payload,
+        instances=[current],
+        room_capacities=capacities,
+    )
+
+    assert plan.status == "CERTIFIED"
+    assert plan.assignments[current.key] == tuple(tuple(cell) for cell in footprint)
+    assert len(plan.groups) == 1
+    assert plan.groups[0].size == 1

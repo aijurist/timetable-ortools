@@ -1,0 +1,1605 @@
+{
+  "status": "FEASIBLE",
+  "wall_time_seconds": 60.0058075,
+  "objective_value": 1712476531.0,
+  "groups": [
+    {
+      "group_id": "prealloc_dbms_0e2b3793a486",
+      "family": "DBMS",
+      "size": 2,
+      "members": [
+        {
+          "department": "Information Technology",
+          "instance_id": "604__s0",
+          "course_code": "CS23332",
+          "teacher_id": "450",
+          "section_key": [
+            "Information Technology",
+            "0"
+          ]
+        },
+        {
+          "department": "Information Technology",
+          "instance_id": "606__s2",
+          "course_code": "CS23332",
+          "teacher_id": "454",
+          "section_key": [
+            "Information Technology",
+            "2"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "ANEW104",
+          "fri",
+          "L5"
+        ],
+        [
+          "ANEW104",
+          "saturday",
+          "L1"
+        ],
+        [
+          "ANEW104",
+          "thur",
+          "L5"
+        ],
+        [
+          "ANEW104",
+          "wed",
+          "L2"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_dbms_1629bd928a3a",
+      "family": "DBMS",
+      "size": 2,
+      "members": [
+        {
+          "department": "Information Technology",
+          "instance_id": "605__s1",
+          "course_code": "CS23332",
+          "teacher_id": "432",
+          "section_key": [
+            "Information Technology",
+            "1"
+          ]
+        },
+        {
+          "department": "Information Technology",
+          "instance_id": "607__s3",
+          "course_code": "CS23332",
+          "teacher_id": "672",
+          "section_key": [
+            "Information Technology",
+            "3"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "ANEW104",
+          "saturday",
+          "L2"
+        ],
+        [
+          "ANEW104",
+          "saturday",
+          "L4"
+        ],
+        [
+          "ANEW104",
+          "tuesday",
+          "L1"
+        ],
+        [
+          "ANEW104",
+          "wed",
+          "L4"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_dbms_234d0da9be61",
+      "family": "DBMS",
+      "size": 2,
+      "members": [
+        {
+          "department": "Artificial Intelligence and Machine Learning",
+          "instance_id": "269__s1",
+          "course_code": "CS23332",
+          "teacher_id": "1242",
+          "section_key": [
+            "Artificial Intelligence & Machine Learning",
+            "1"
+          ]
+        },
+        {
+          "department": "Artificial Intelligence and Machine Learning",
+          "instance_id": "271__s3",
+          "course_code": "CS23332",
+          "teacher_id": "1009",
+          "section_key": [
+            "Artificial Intelligence & Machine Learning",
+            "3"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "A104/105",
+          "saturday",
+          "L1"
+        ],
+        [
+          "A104/105",
+          "tuesday",
+          "L2"
+        ],
+        [
+          "A104/105",
+          "tuesday",
+          "L5"
+        ],
+        [
+          "A104/105",
+          "wed",
+          "L4"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_dbms_42b61496bbf2",
+      "family": "DBMS",
+      "size": 3,
+      "members": [
+        {
+          "department": "Computer Science & Engineering A",
+          "instance_id": "926__s4",
+          "course_code": "CS23332",
+          "teacher_id": "262",
+          "section_key": [
+            "Computer Science & Engineering A",
+            "4"
+          ]
+        },
+        {
+          "department": "Computer Science & Engineering B",
+          "instance_id": "919__s0",
+          "course_code": "CS23332",
+          "teacher_id": "237",
+          "section_key": [
+            "Computer Science & Engineering B",
+            "0"
+          ]
+        },
+        {
+          "department": "Computer Science & Engineering B",
+          "instance_id": "927__s4",
+          "course_code": "CS23332",
+          "teacher_id": "262",
+          "section_key": [
+            "Computer Science & Engineering B",
+            "4"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "KS02",
+          "monday",
+          "L1"
+        ],
+        [
+          "KS02",
+          "monday",
+          "L2"
+        ],
+        [
+          "KS02",
+          "thur",
+          "L2"
+        ],
+        [
+          "KS02",
+          "tuesday",
+          "L5"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_dbms_55ff990d1602",
+      "family": "DBMS",
+      "size": 3,
+      "members": [
+        {
+          "department": "Artificial Intelligence and Data Science",
+          "instance_id": "1091__s2",
+          "course_code": "CS23332",
+          "teacher_id": "20",
+          "section_key": [
+            "Artificial Intelligence & Data Science",
+            "2"
+          ]
+        },
+        {
+          "department": "Artificial Intelligence and Data Science",
+          "instance_id": "1094__s5",
+          "course_code": "CS23332",
+          "teacher_id": "1036",
+          "section_key": [
+            "Artificial Intelligence & Data Science",
+            "5"
+          ]
+        },
+        {
+          "department": "Information Technology",
+          "instance_id": "608__s4",
+          "course_code": "CS23332",
+          "teacher_id": "1231",
+          "section_key": [
+            "Information Technology",
+            "4"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "KS02",
+          "fri",
+          "L1"
+        ],
+        [
+          "KS02",
+          "saturday",
+          "L5"
+        ],
+        [
+          "KS02",
+          "thur",
+          "L1"
+        ],
+        [
+          "KS02",
+          "tuesday",
+          "L1"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_dbms_633d348e7080",
+      "family": "DBMS",
+      "size": 3,
+      "members": [
+        {
+          "department": "Computer Science & Engineering A",
+          "instance_id": "922__s2",
+          "course_code": "CS23332",
+          "teacher_id": "282",
+          "section_key": [
+            "Computer Science & Engineering A",
+            "2"
+          ]
+        },
+        {
+          "department": "Computer Science & Engineering A",
+          "instance_id": "924__s3",
+          "course_code": "CS23332",
+          "teacher_id": "1171",
+          "section_key": [
+            "Computer Science & Engineering A",
+            "3"
+          ]
+        },
+        {
+          "department": "Artificial Intelligence and Data Science",
+          "instance_id": "1090__s1",
+          "course_code": "CS23332",
+          "teacher_id": "35",
+          "section_key": [
+            "Artificial Intelligence & Data Science",
+            "1"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "KS02",
+          "fri",
+          "L4"
+        ],
+        [
+          "KS02",
+          "thur",
+          "L4"
+        ],
+        [
+          "KS02",
+          "tuesday",
+          "L4"
+        ],
+        [
+          "KS02",
+          "wed",
+          "L4"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_dbms_6354dd3bae4f",
+      "family": "DBMS",
+      "size": 2,
+      "members": [
+        {
+          "department": "Computer Science and Business Systems",
+          "instance_id": "931__s0",
+          "course_code": "CB23333",
+          "teacher_id": "1018",
+          "section_key": [
+            "Computer Science & Business Systems",
+            "0"
+          ]
+        },
+        {
+          "department": "Computer Science and Design",
+          "instance_id": "1119__s0",
+          "course_code": "CS23332",
+          "teacher_id": "207",
+          "section_key": [
+            "Computer Science & Design",
+            "0"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "ANEW104",
+          "fri",
+          "L1"
+        ],
+        [
+          "ANEW104",
+          "thur",
+          "L4"
+        ],
+        [
+          "ANEW104",
+          "tuesday",
+          "L4"
+        ],
+        [
+          "ANEW104",
+          "wed",
+          "L5"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_dbms_64156a05dd71",
+      "family": "DBMS",
+      "size": 3,
+      "members": [
+        {
+          "department": "Artificial Intelligence and Data Science",
+          "instance_id": "1089__s0",
+          "course_code": "CS23332",
+          "teacher_id": "1205",
+          "section_key": [
+            "Artificial Intelligence & Data Science",
+            "0"
+          ]
+        },
+        {
+          "department": "Artificial Intelligence and Data Science",
+          "instance_id": "1092__s3",
+          "course_code": "CS23332",
+          "teacher_id": "42",
+          "section_key": [
+            "Artificial Intelligence & Data Science",
+            "3"
+          ]
+        },
+        {
+          "department": "Computer Science and Engineering Cyber Security",
+          "instance_id": "371__s2",
+          "course_code": "CS23332",
+          "teacher_id": "1226",
+          "section_key": [
+            "Computer Science & Engineering (Cyber Security)",
+            "2"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "KS02",
+          "fri",
+          "L5"
+        ],
+        [
+          "KS02",
+          "saturday",
+          "L2"
+        ],
+        [
+          "KS02",
+          "thur",
+          "L5"
+        ],
+        [
+          "KS02",
+          "wed",
+          "L5"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_dbms_6ad8e14ce33c",
+      "family": "DBMS",
+      "size": 1,
+      "members": [
+        {
+          "department": "Computer Science & Engineering A",
+          "instance_id": "929__s6",
+          "course_code": "CS23332",
+          "teacher_id": "272",
+          "section_key": [
+            "Computer Science & Engineering A",
+            "6"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "A104/105",
+          "fri",
+          "L5"
+        ],
+        [
+          "A104/105",
+          "monday",
+          "L2"
+        ],
+        [
+          "A104/105",
+          "tuesday",
+          "L1"
+        ],
+        [
+          "A104/105",
+          "wed",
+          "L1"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_dbms_703c61048d19",
+      "family": "DBMS",
+      "size": 3,
+      "members": [
+        {
+          "department": "Artificial Intelligence and Data Science",
+          "instance_id": "1093__s4",
+          "course_code": "CS23332",
+          "teacher_id": "1045",
+          "section_key": [
+            "Artificial Intelligence & Data Science",
+            "4"
+          ]
+        },
+        {
+          "department": "Artificial Intelligence and Machine Learning",
+          "instance_id": "268__s0",
+          "course_code": "CS23332",
+          "teacher_id": "1242",
+          "section_key": [
+            "Artificial Intelligence & Machine Learning",
+            "0"
+          ]
+        },
+        {
+          "department": "Artificial Intelligence and Machine Learning",
+          "instance_id": "270__s2",
+          "course_code": "CS23332",
+          "teacher_id": "1009",
+          "section_key": [
+            "Artificial Intelligence & Machine Learning",
+            "2"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "KS02",
+          "fri",
+          "L2"
+        ],
+        [
+          "KS02",
+          "saturday",
+          "L1"
+        ],
+        [
+          "KS02",
+          "saturday",
+          "L4"
+        ],
+        [
+          "KS02",
+          "wed",
+          "L2"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_dbms_7e6a3cfed79b",
+      "family": "DBMS",
+      "size": 2,
+      "members": [
+        {
+          "department": "Computer Science & Engineering B",
+          "instance_id": "925__s3",
+          "course_code": "CS23332",
+          "teacher_id": "1171",
+          "section_key": [
+            "Computer Science & Engineering B",
+            "3"
+          ]
+        },
+        {
+          "department": "Computer Science & Engineering B",
+          "instance_id": "930__s5",
+          "course_code": "CS23332",
+          "teacher_id": "1037",
+          "section_key": [
+            "Computer Science & Engineering B",
+            "5"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "ANEW104",
+          "fri",
+          "L2"
+        ],
+        [
+          "ANEW104",
+          "monday",
+          "L1"
+        ],
+        [
+          "ANEW104",
+          "monday",
+          "L5"
+        ],
+        [
+          "ANEW104",
+          "thur",
+          "L1"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_dbms_88ed14fa446d",
+      "family": "DBMS",
+      "size": 3,
+      "members": [
+        {
+          "department": "Computer Science & Engineering A",
+          "instance_id": "918__s0",
+          "course_code": "CS23332",
+          "teacher_id": "237",
+          "section_key": [
+            "Computer Science & Engineering A",
+            "0"
+          ]
+        },
+        {
+          "department": "Computer Science & Engineering A",
+          "instance_id": "920__s1",
+          "course_code": "CS23332",
+          "teacher_id": "222",
+          "section_key": [
+            "Computer Science & Engineering A",
+            "1"
+          ]
+        },
+        {
+          "department": "Computer Science and Business Systems",
+          "instance_id": "932__s1",
+          "course_code": "CB23333",
+          "teacher_id": "190",
+          "section_key": [
+            "Computer Science & Business Systems",
+            "1"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "KS02",
+          "monday",
+          "L4"
+        ],
+        [
+          "KS02",
+          "monday",
+          "L5"
+        ],
+        [
+          "KS02",
+          "tuesday",
+          "L2"
+        ],
+        [
+          "KS02",
+          "wed",
+          "L1"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_dbms_a39c10798765",
+      "family": "DBMS",
+      "size": 1,
+      "members": [
+        {
+          "department": "Computer Science & Engineering A",
+          "instance_id": "928__s5",
+          "course_code": "CS23332",
+          "teacher_id": "1218",
+          "section_key": [
+            "Computer Science & Engineering A",
+            "5"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "A104/105",
+          "fri",
+          "L5"
+        ],
+        [
+          "A104/105",
+          "monday",
+          "L2"
+        ],
+        [
+          "A104/105",
+          "tuesday",
+          "L1"
+        ],
+        [
+          "A104/105",
+          "wed",
+          "L1"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_dbms_a76d70762b8e",
+      "family": "DBMS",
+      "size": 2,
+      "members": [
+        {
+          "department": "Computer Science & Engineering B",
+          "instance_id": "921__s1",
+          "course_code": "CS23332",
+          "teacher_id": "222",
+          "section_key": [
+            "Computer Science & Engineering B",
+            "1"
+          ]
+        },
+        {
+          "department": "Computer Science & Engineering B",
+          "instance_id": "923__s2",
+          "course_code": "CS23332",
+          "teacher_id": "282",
+          "section_key": [
+            "Computer Science & Engineering B",
+            "2"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "ANEW104",
+          "fri",
+          "L4"
+        ],
+        [
+          "ANEW104",
+          "monday",
+          "L2"
+        ],
+        [
+          "ANEW104",
+          "monday",
+          "L4"
+        ],
+        [
+          "ANEW104",
+          "tuesday",
+          "L5"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_dbms_f81a116e970d",
+      "family": "DBMS",
+      "size": 2,
+      "members": [
+        {
+          "department": "Computer Science and Engineering Cyber Security",
+          "instance_id": "369__s0",
+          "course_code": "CS23332",
+          "teacher_id": "261",
+          "section_key": [
+            "Computer Science & Engineering (Cyber Security)",
+            "0"
+          ]
+        },
+        {
+          "department": "Computer Science and Engineering Cyber Security",
+          "instance_id": "370__s1",
+          "course_code": "CS23332",
+          "teacher_id": "291",
+          "section_key": [
+            "Computer Science & Engineering (Cyber Security)",
+            "1"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "ANEW104",
+          "saturday",
+          "L5"
+        ],
+        [
+          "ANEW104",
+          "thur",
+          "L2"
+        ],
+        [
+          "ANEW104",
+          "tuesday",
+          "L2"
+        ],
+        [
+          "ANEW104",
+          "wed",
+          "L1"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_oops_013e2e6dd849",
+      "family": "OOPS",
+      "size": 2,
+      "members": [
+        {
+          "department": "Artificial Intelligence and Data Science",
+          "instance_id": "361__s4",
+          "course_code": "CS23333",
+          "teacher_id": "26",
+          "section_key": [
+            "Artificial Intelligence & Data Science",
+            "4"
+          ]
+        },
+        {
+          "department": "Artificial Intelligence and Data Science",
+          "instance_id": "362__s5",
+          "course_code": "CS23333",
+          "teacher_id": "20",
+          "section_key": [
+            "Artificial Intelligence & Data Science",
+            "5"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "ANEW103",
+          "fri",
+          "L5"
+        ],
+        [
+          "ANEW103",
+          "saturday",
+          "L2"
+        ],
+        [
+          "ANEW103",
+          "thur",
+          "L5"
+        ],
+        [
+          "ANEW103",
+          "wed",
+          "L5"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_oops_0c102d5819bf",
+      "family": "OOPS",
+      "size": 2,
+      "members": [
+        {
+          "department": "Artificial Intelligence and Data Science",
+          "instance_id": "358__s1",
+          "course_code": "CS23333",
+          "teacher_id": "1059",
+          "section_key": [
+            "Artificial Intelligence & Data Science",
+            "1"
+          ]
+        },
+        {
+          "department": "Artificial Intelligence and Data Science",
+          "instance_id": "360__s3",
+          "course_code": "CS23333",
+          "teacher_id": "42",
+          "section_key": [
+            "Artificial Intelligence & Data Science",
+            "3"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "ANEW102",
+          "fri",
+          "L1"
+        ],
+        [
+          "ANEW102",
+          "saturday",
+          "L4"
+        ],
+        [
+          "ANEW102",
+          "saturday",
+          "L5"
+        ],
+        [
+          "ANEW102",
+          "wed",
+          "L1"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_oops_1530d6c8bb37",
+      "family": "OOPS",
+      "size": 2,
+      "members": [
+        {
+          "department": "Computer Science and Business Systems",
+          "instance_id": "530__s0",
+          "course_code": "CS23333",
+          "teacher_id": "256",
+          "section_key": [
+            "Computer Science & Business Systems",
+            "0"
+          ]
+        },
+        {
+          "department": "Computer Science and Business Systems",
+          "instance_id": "531__s1",
+          "course_code": "CS23333",
+          "teacher_id": "189",
+          "section_key": [
+            "Computer Science & Business Systems",
+            "1"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "ANEW101",
+          "monday",
+          "L1"
+        ],
+        [
+          "ANEW101",
+          "monday",
+          "L2"
+        ],
+        [
+          "ANEW101",
+          "thur",
+          "L1"
+        ],
+        [
+          "ANEW101",
+          "wed",
+          "L4"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_oops_2235b871d1fe",
+      "family": "OOPS",
+      "size": 1,
+      "members": [
+        {
+          "department": "Information Technology",
+          "instance_id": "665__s3",
+          "course_code": "CS23333",
+          "teacher_id": "1117",
+          "section_key": [
+            "Information Technology",
+            "3"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "ANEW101",
+          "fri",
+          "L1"
+        ],
+        [
+          "ANEW101",
+          "saturday",
+          "L1"
+        ],
+        [
+          "ANEW101",
+          "saturday",
+          "L5"
+        ],
+        [
+          "ANEW101",
+          "tuesday",
+          "L2"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_oops_2c214493c35f",
+      "family": "OOPS",
+      "size": 2,
+      "members": [
+        {
+          "department": "Artificial Intelligence and Machine Learning",
+          "instance_id": "1542__s2",
+          "course_code": "CS23333",
+          "teacher_id": "1015",
+          "section_key": [
+            "Artificial Intelligence & Machine Learning",
+            "2"
+          ]
+        },
+        {
+          "department": "Computer Science and Engineering Cyber Security",
+          "instance_id": "476__s2",
+          "course_code": "CS23333",
+          "teacher_id": "289",
+          "section_key": [
+            "Computer Science & Engineering (Cyber Security)",
+            "2"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "ANEW103",
+          "fri",
+          "L4"
+        ],
+        [
+          "ANEW103",
+          "saturday",
+          "L5"
+        ],
+        [
+          "ANEW103",
+          "thur",
+          "L1"
+        ],
+        [
+          "ANEW103",
+          "tuesday",
+          "L2"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_oops_35f0ec30f8f0",
+      "family": "OOPS",
+      "size": 2,
+      "members": [
+        {
+          "department": "Computer Science & Engineering B",
+          "instance_id": "906__s1",
+          "course_code": "CS23333",
+          "teacher_id": "259",
+          "section_key": [
+            "Computer Science & Engineering B",
+            "1"
+          ]
+        },
+        {
+          "department": "Computer Science & Engineering B",
+          "instance_id": "908__s2",
+          "course_code": "CS23333",
+          "teacher_id": "251",
+          "section_key": [
+            "Computer Science & Engineering B",
+            "2"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "ANEW103",
+          "monday",
+          "L1"
+        ],
+        [
+          "ANEW103",
+          "thur",
+          "L2"
+        ],
+        [
+          "ANEW103",
+          "tuesday",
+          "L1"
+        ],
+        [
+          "ANEW103",
+          "wed",
+          "L1"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_oops_4e3b98df0fde",
+      "family": "OOPS",
+      "size": 2,
+      "members": [
+        {
+          "department": "Computer Science & Engineering B",
+          "instance_id": "910__s3",
+          "course_code": "CS23333",
+          "teacher_id": "257",
+          "section_key": [
+            "Computer Science & Engineering B",
+            "3"
+          ]
+        },
+        {
+          "department": "Computer Science & Engineering B",
+          "instance_id": "915__s5",
+          "course_code": "CS23333",
+          "teacher_id": "279",
+          "section_key": [
+            "Computer Science & Engineering B",
+            "5"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "ANEW102",
+          "fri",
+          "L4"
+        ],
+        [
+          "ANEW102",
+          "monday",
+          "L4"
+        ],
+        [
+          "ANEW102",
+          "tuesday",
+          "L1"
+        ],
+        [
+          "ANEW102",
+          "wed",
+          "L4"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_oops_6337ab008c9a",
+      "family": "OOPS",
+      "size": 2,
+      "members": [
+        {
+          "department": "Artificial Intelligence and Machine Learning",
+          "instance_id": "1541__s1",
+          "course_code": "CS23333",
+          "teacher_id": "1015",
+          "section_key": [
+            "Artificial Intelligence & Machine Learning",
+            "1"
+          ]
+        },
+        {
+          "department": "Artificial Intelligence and Machine Learning",
+          "instance_id": "1543__s3",
+          "course_code": "CS23333",
+          "teacher_id": "1015",
+          "section_key": [
+            "Artificial Intelligence & Machine Learning",
+            "3"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "ANEW101",
+          "fri",
+          "L5"
+        ],
+        [
+          "ANEW101",
+          "saturday",
+          "L2"
+        ],
+        [
+          "ANEW101",
+          "thur",
+          "L2"
+        ],
+        [
+          "ANEW101",
+          "wed",
+          "L1"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_oops_7aa260a0b31c",
+      "family": "OOPS",
+      "size": 2,
+      "members": [
+        {
+          "department": "Computer Science & Engineering A",
+          "instance_id": "907__s2",
+          "course_code": "CS23333",
+          "teacher_id": "251",
+          "section_key": [
+            "Computer Science & Engineering A",
+            "2"
+          ]
+        },
+        {
+          "department": "Computer Science & Engineering A",
+          "instance_id": "909__s3",
+          "course_code": "CS23333",
+          "teacher_id": "257",
+          "section_key": [
+            "Computer Science & Engineering A",
+            "3"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "ANEW102",
+          "fri",
+          "L5"
+        ],
+        [
+          "ANEW102",
+          "monday",
+          "L2"
+        ],
+        [
+          "ANEW102",
+          "monday",
+          "L5"
+        ],
+        [
+          "ANEW102",
+          "thur",
+          "L2"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_oops_7d9bb43f95b1",
+      "family": "OOPS",
+      "size": 2,
+      "members": [
+        {
+          "department": "Information Technology",
+          "instance_id": "663__s1",
+          "course_code": "CS23333",
+          "teacher_id": "1252",
+          "section_key": [
+            "Information Technology",
+            "1"
+          ]
+        },
+        {
+          "department": "Information Technology",
+          "instance_id": "666__s4",
+          "course_code": "CS23333",
+          "teacher_id": "1255",
+          "section_key": [
+            "Information Technology",
+            "4"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "ANEW102",
+          "saturday",
+          "L1"
+        ],
+        [
+          "ANEW102",
+          "thur",
+          "L4"
+        ],
+        [
+          "ANEW102",
+          "tuesday",
+          "L4"
+        ],
+        [
+          "ANEW102",
+          "wed",
+          "L5"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_oops_bde746c13cf8",
+      "family": "OOPS",
+      "size": 2,
+      "members": [
+        {
+          "department": "Computer Science & Engineering A",
+          "instance_id": "905__s1",
+          "course_code": "CS23333",
+          "teacher_id": "259",
+          "section_key": [
+            "Computer Science & Engineering A",
+            "1"
+          ]
+        },
+        {
+          "department": "Artificial Intelligence and Machine Learning",
+          "instance_id": "1540__s0",
+          "course_code": "CS23333",
+          "teacher_id": "1015",
+          "section_key": [
+            "Artificial Intelligence & Machine Learning",
+            "0"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "ANEW103",
+          "fri",
+          "L1"
+        ],
+        [
+          "ANEW103",
+          "thur",
+          "L4"
+        ],
+        [
+          "ANEW103",
+          "tuesday",
+          "L5"
+        ],
+        [
+          "ANEW103",
+          "wed",
+          "L4"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_oops_c3399261d9a9",
+      "family": "OOPS",
+      "size": 2,
+      "members": [
+        {
+          "department": "Computer Science & Engineering A",
+          "instance_id": "903__s0",
+          "course_code": "CS23333",
+          "teacher_id": "670",
+          "section_key": [
+            "Computer Science & Engineering A",
+            "0"
+          ]
+        },
+        {
+          "department": "Computer Science & Engineering A",
+          "instance_id": "913__s6",
+          "course_code": "CS23333",
+          "teacher_id": "232",
+          "section_key": [
+            "Computer Science & Engineering A",
+            "6"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "ANEW102",
+          "monday",
+          "L1"
+        ],
+        [
+          "ANEW102",
+          "thur",
+          "L5"
+        ],
+        [
+          "ANEW102",
+          "tuesday",
+          "L5"
+        ],
+        [
+          "ANEW102",
+          "wed",
+          "L2"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_oops_d0fd0cf21422",
+      "family": "OOPS",
+      "size": 2,
+      "members": [
+        {
+          "department": "Computer Science & Engineering A",
+          "instance_id": "911__s4",
+          "course_code": "CS23333",
+          "teacher_id": "230",
+          "section_key": [
+            "Computer Science & Engineering A",
+            "4"
+          ]
+        },
+        {
+          "department": "Computer Science & Engineering A",
+          "instance_id": "912__s5",
+          "course_code": "CS23333",
+          "teacher_id": "255",
+          "section_key": [
+            "Computer Science & Engineering A",
+            "5"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "ANEW101",
+          "fri",
+          "L4"
+        ],
+        [
+          "ANEW101",
+          "monday",
+          "L4"
+        ],
+        [
+          "ANEW101",
+          "tuesday",
+          "L4"
+        ],
+        [
+          "ANEW101",
+          "wed",
+          "L5"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_oops_d53fa936dd80",
+      "family": "OOPS",
+      "size": 2,
+      "members": [
+        {
+          "department": "Computer Science & Engineering B",
+          "instance_id": "904__s0",
+          "course_code": "CS23333",
+          "teacher_id": "670",
+          "section_key": [
+            "Computer Science & Engineering B",
+            "0"
+          ]
+        },
+        {
+          "department": "Computer Science & Engineering B",
+          "instance_id": "914__s4",
+          "course_code": "CS23333",
+          "teacher_id": "1029",
+          "section_key": [
+            "Computer Science & Engineering B",
+            "4"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "ANEW101",
+          "fri",
+          "L2"
+        ],
+        [
+          "ANEW101",
+          "monday",
+          "L5"
+        ],
+        [
+          "ANEW101",
+          "thur",
+          "L5"
+        ],
+        [
+          "ANEW101",
+          "tuesday",
+          "L1"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_oops_dd0ebc80d77b",
+      "family": "OOPS",
+      "size": 2,
+      "members": [
+        {
+          "department": "Information Technology",
+          "instance_id": "662__s0",
+          "course_code": "CS23333",
+          "teacher_id": "448",
+          "section_key": [
+            "Information Technology",
+            "0"
+          ]
+        },
+        {
+          "department": "Information Technology",
+          "instance_id": "664__s2",
+          "course_code": "CS23333",
+          "teacher_id": "441",
+          "section_key": [
+            "Information Technology",
+            "2"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "ANEW102",
+          "fri",
+          "L2"
+        ],
+        [
+          "ANEW102",
+          "saturday",
+          "L2"
+        ],
+        [
+          "ANEW102",
+          "thur",
+          "L1"
+        ],
+        [
+          "ANEW102",
+          "tuesday",
+          "L2"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_oops_de21c69168af",
+      "family": "OOPS",
+      "size": 2,
+      "members": [
+        {
+          "department": "Artificial Intelligence and Data Science",
+          "instance_id": "357__s0",
+          "course_code": "CS23333",
+          "teacher_id": "1052",
+          "section_key": [
+            "Artificial Intelligence & Data Science",
+            "0"
+          ]
+        },
+        {
+          "department": "Artificial Intelligence and Data Science",
+          "instance_id": "359__s2",
+          "course_code": "CS23333",
+          "teacher_id": "1201",
+          "section_key": [
+            "Artificial Intelligence & Data Science",
+            "2"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "ANEW103",
+          "fri",
+          "L2"
+        ],
+        [
+          "ANEW103",
+          "saturday",
+          "L1"
+        ],
+        [
+          "ANEW103",
+          "tuesday",
+          "L4"
+        ],
+        [
+          "ANEW103",
+          "wed",
+          "L2"
+        ]
+      ]
+    },
+    {
+      "group_id": "prealloc_oops_ff44bbd7d8a6",
+      "family": "OOPS",
+      "size": 2,
+      "members": [
+        {
+          "department": "Computer Science and Engineering Cyber Security",
+          "instance_id": "474__s0",
+          "course_code": "CS23333",
+          "teacher_id": "1262",
+          "section_key": [
+            "Computer Science & Engineering (Cyber Security)",
+            "0"
+          ]
+        },
+        {
+          "department": "Computer Science and Engineering Cyber Security",
+          "instance_id": "475__s1",
+          "course_code": "CS23333",
+          "teacher_id": "291",
+          "section_key": [
+            "Computer Science & Engineering (Cyber Security)",
+            "1"
+          ]
+        }
+      ],
+      "footprint": [
+        [
+          "ANEW101",
+          "saturday",
+          "L4"
+        ],
+        [
+          "ANEW101",
+          "thur",
+          "L4"
+        ],
+        [
+          "ANEW101",
+          "tuesday",
+          "L5"
+        ],
+        [
+          "ANEW101",
+          "wed",
+          "L2"
+        ]
+      ]
+    }
+  ]
+}

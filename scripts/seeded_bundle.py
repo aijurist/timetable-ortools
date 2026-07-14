@@ -43,6 +43,7 @@ from src.constraints.cross_system.combined_lab_presolve import (
     CombinedPreallocationPlan,
     PreallocationInstance,
     build_maximal_section_groups,
+    load_certified_preallocation,
     solve_combined_preallocation,
 )
 from src.data.data_loader import DataLoader
@@ -125,6 +126,10 @@ COMBINED_CELL_PACKING_WEIGHT = int(os.environ.get("COMBINED_CELL_PACKING_WEIGHT"
 PACK_COMBINED_CELLS = os.environ.get("PACK_COMBINED_CELLS", "1") != "0"
 GLOBAL_COMBINED_PRESOLVE = os.environ.get("GLOBAL_COMBINED_PRESOLVE", "1") != "0"
 COMBINED_PRESOLVE_TIME = float(os.environ.get("COMBINED_PRESOLVE_TIME", "120"))
+CERTIFIED_COMBINED_PLAN = Path(
+    os.environ.get("CERTIFIED_COMBINED_PLAN", "config/combined_lab_certified_plan.json")
+)
+RECOMPUTE_COMBINED_PLAN = os.environ.get("RECOMPUTE_COMBINED_PLAN", "0") == "1"
 PHASE1_ABSOLUTE_GAP = max(0.0, float(os.environ.get("PHASE1_ABSOLUTE_GAP", "0")))
 FIXED_THEORY_CSV = Path(os.environ.get("FIXED_THEORY_CSV", "prod/theory_schedule_lock.csv"))
 FIXED_LAB_CSV = Path(os.environ.get("FIXED_LAB_CSV", "prod/lab_schedule_lock.csv"))
@@ -373,6 +378,31 @@ def _precompute_combined_plan():
         for rooms in COMB_ROOM_POOLS.values()
         for room in rooms
     }
+    if CERTIFIED_COMBINED_PLAN.is_file() and not RECOMPUTE_COMBINED_PLAN:
+        certified_payload = json.loads(CERTIFIED_COMBINED_PLAN.read_text(encoding="utf-8"))
+        plan = load_certified_preallocation(
+            payload=certified_payload,
+            instances=instances,
+            room_capacities=capacities,
+            fixed_occupancy=load_seniors_lab,
+        )
+        sizes = defaultdict(int)
+        for group in plan.groups:
+            sizes[(group.family, group.size)] += 1
+        print(
+            "COMBINED PRESOLVE: "
+            f"CERTIFIED sections={len(instances)} groups={len(plan.groups)} "
+            f"sizes={dict(sorted(sizes.items()))} source={CERTIFIED_COMBINED_PLAN}",
+            flush=True,
+        )
+        output_payload = dict(certified_payload)
+        output_payload["status"] = "CERTIFIED"
+        output_payload["wall_time_seconds"] = 0.0
+        (OUTDIR / "combined_lab_preallocation.json").write_text(
+            json.dumps(output_payload, indent=2),
+            encoding="utf-8",
+        )
+        return plan
     hint_path = base / "config" / "combined_lab_pairing_hints.json"
     hint_payload = json.loads(hint_path.read_text(encoding="utf-8")) if hint_path.is_file() else {}
     preferred_clusters = {
