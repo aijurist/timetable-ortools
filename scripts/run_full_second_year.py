@@ -1,6 +1,6 @@
 """Run, certify, and validate the complete 19-department second-year timetable.
 
-This is the production entrypoint intended for a high-core-count machine. It
+This is the production entrypoint intended for the solver machine. It
 uses the two fixed schedule locks in ``prod/`` and writes an isolated complete
 run below ``output/timetables/second_year_full/`` by default.
 """
@@ -93,8 +93,9 @@ def run(args: argparse.Namespace) -> int:
             "RUN_TAG": args.run_tag,
             "PHASE1_TIME": str(args.phase1_time),
             "PHASE2_TIME": str(args.phase2_time),
-            "MAX_SEEDS": str(args.max_seeds),
-            "SOLVER_WORKERS": str(args.workers),
+            "DETERMINISTIC_SOLVE": "1",
+            "DETERMINISTIC_TIE_BREAKER": "1",
+            "SOLVER_WORKERS": "1",
             "OPTIMIZE_PHASE1": "1",
             "PHASE1_OBJECTIVE_SCOPE": "lab_cells",
             "DEBUG_DEPT": "1",
@@ -177,8 +178,6 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--phase1-time", type=int, default=900, help="Per-department Phase 1 proof budget in seconds")
     parser.add_argument("--phase2-time", type=int, default=900, help="Per-department Phase 2 proof budget in seconds")
-    parser.add_argument("--max-seeds", type=int, default=12)
-    parser.add_argument("--workers", type=int, default=max(1, os.cpu_count() or 12))
     parser.add_argument("--run-tag", default="second_year_full")
     return parser
 

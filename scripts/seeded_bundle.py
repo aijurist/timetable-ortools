@@ -1,7 +1,7 @@
-"""Two-phase seeded 2nd-year (semester-3) timetable solve, fit AROUND the fixed
+"""Two-phase deterministic 2nd-year (semester-3) timetable solve, fit AROUND the fixed
 senior (sem 5/7) schedule.
 
-Phase 1: first-solution multi-seed until all 19 departments fit around the seniors
+Phase 1: one fixed direct pass for all 19 departments around the seniors
          (every senior teacher/room/lab-session from the uploaded CSVs is reserved
          before scheduling each sem-3 department, dept-by-dept on a shared calendar).
 Phase 2: LOCK each department's phase-1 labs and re-optimize ONLY theory for 25+25
@@ -93,14 +93,18 @@ OUTDIR.mkdir(parents=True, exist_ok=True)
 # Phase-2 (theory bundling re-optimization) per-department time budget, seconds.
 PHASE1_TIME = int(os.environ.get("PHASE1_TIME", "90"))
 PHASE2_TIME = int(os.environ.get("PHASE2_TIME", "150"))
-MAX_SEEDS = int(os.environ.get("MAX_SEEDS", "12"))
 SOLVER_WORKERS = max(1, int(os.environ.get("SOLVER_WORKERS", "12")))
+DETERMINISTIC_SOLVE = os.environ.get("DETERMINISTIC_SOLVE", "1") != "0"
+DETERMINISTIC_TIE_BREAKER = int(os.environ.get("DETERMINISTIC_TIE_BREAKER", "1"))
 OPTIMIZE_PHASE1 = os.environ.get("OPTIMIZE_PHASE1", "1") != "0"
 PHASE1_OBJECTIVE_SCOPE = os.environ.get("PHASE1_OBJECTIVE_SCOPE", "lab_cells").strip().lower()
+COMBINED_CELL_PACKING_WEIGHT = int(os.environ.get("COMBINED_CELL_PACKING_WEIGHT", "10000"))
 FIXED_THEORY_CSV = Path(os.environ.get("FIXED_THEORY_CSV", "prod/theory_schedule_lock.csv"))
 FIXED_LAB_CSV = Path(os.environ.get("FIXED_LAB_CSV", "prod/lab_schedule_lock.csv"))
 
 def build(dept, rseed=1, parallel=None, late_mode="hard", interleave=True, combined_strict=True, lunch_mode="hard"):
+    if lunch_mode != "hard":
+        raise ValueError("Second-year production solves require hard lunch alignment")
     if parallel is None:
         parallel = PARALLEL
     cross = {"bundled_theory": {"enabled": True, "priority": 2, "weight": 1.0,
@@ -164,13 +168,15 @@ def build(dept, rseed=1, parallel=None, late_mode="hard", interleave=True, combi
     return ModelBuilder(config=cfg).build(data=data), data
 
 
-def _focus_phase1_objective(constraint_model):
-    """Use Phase 1 to prove the minimum number of physical section lab cells.
+def _phase1_lab_objective_terms(constraint_model):
+    """Return the ordinary-lab terms used by the focused Phase 1 objective.
 
     Theory is fully re-optimized in Phase 2 after those optimal labs are locked.
+    The caller adds shared combined-lab cell terms after cross-department occupancy
+    is known, then installs one joint objective.
     """
     if not OPTIMIZE_PHASE1 or PHASE1_OBJECTIVE_SCOPE != "lab_cells":
-        return 0
+        return []
     objective = constraint_model.extras.get("objective", {})
     penalties = objective.get("penalties", ()) if isinstance(objective, dict) else ()
     terms = []
@@ -181,9 +187,15 @@ def _focus_phase1_objective(constraint_model):
         if not str(tag).startswith("lab_interleave:"):
             continue
         terms.append(int(weight) * variable)
-    if terms:
-        constraint_model.model.Minimize(sum(terms))
-    return len(terms)
+    return terms
+
+
+def _configure_solver(solver, *, time_limit):
+    """Apply one reproducible CP-SAT configuration to both solve phases."""
+    solver.parameters.max_time_in_seconds = time_limit
+    solver.parameters.num_search_workers = 1 if DETERMINISTIC_SOLVE else SOLVER_WORKERS
+    solver.parameters.random_seed = DETERMINISTIC_TIE_BREAKER
+    solver.parameters.randomize_search = False
 
 # ---- production fixed-schedule seed ----
 # ``sen_room_slots`` is deliberately cross-domain: fixed labs are expanded to
@@ -212,7 +224,7 @@ def load_seniors():
                 sen_teacher[str(r["teacher_id"])].add((day, s))
 load_seniors()
 
-# =================== PHASE 1: first-solution, multi-seed until all-18 fit ===================
+# =================== PHASE 1: deterministic direct placement ===================
 def phase1(rseed):
     labbusy = defaultdict(int); thbusy = set(); tbusy = defaultdict(set)
     # course code(s) occupying each GENERAL 140 computer-lab cell (non-ANEW big rooms).
@@ -230,9 +242,7 @@ def phase1(rseed):
         def attempt(parallel, late_mode, interleave, combined_strict=True, lunch_mode="hard"):
             cm, data = build(dept, parallel=parallel, late_mode=late_mode, interleave=interleave, combined_strict=combined_strict, lunch_mode=lunch_mode)
             model = cm.model; tb = cm.variables.theory; lb = cm.variables.lab
-            phase1_terms = _focus_phase1_objective(cm)
-            if os.environ.get("DEBUG_DEPT") == "1" and phase1_terms:
-                print(f"      phase1 objective: {phase1_terms} lab-cell terms", flush=True)
+            phase1_lab_terms = _phase1_lab_objective_terms(cm)
             # reserve labs + theory + teachers
             anew_cell = defaultdict(list)   # (rn,aday,sess) -> [(course_code, students, var), ...]
             for tid, cmap in lb.assignments.items():
@@ -255,11 +265,27 @@ def phase1(rseed):
                                 if tconf or room_conflict: model.Add(var == 0); continue
                                 if rn in big_nums or rn in ANEW_NUMS: anew_cell[(rn, aday, sess)].append((code, students, var))
                                 elif labbusy.get((rn, aday, sess), 0) >= 1: model.Add(var == 0)
+            combined_cell_terms = []
             for (rn, aday, sess), items in anew_cell.items():
                 # block combined-lab cell entirely if seniors (or already-placed depts)
                 # hold THEORY in that room during any slot the lab session spans
                 cap = max(0, _max_share(rn) - labbusy.get((rn, aday, sess), 0))
                 model.Add(sum(v for _, _, v in items) <= cap)
+                # Phase 1 previously replaced the global objective with ordinary
+                # batch-interleave terms, accidentally dropping combined_lab:solo.
+                # As a result, DBMS/OOPS sections scattered across otherwise-free
+                # ANEW cells and later departments became infeasible.  Charge once
+                # per NEW physical combined-lab cell (not once per section), while
+                # already-occupied cells remain free so later departments pack into
+                # their remaining capacity.
+                combined_vars = [
+                    v for code, _students, v in items
+                    if str(code).strip().upper() in COMB and rn in ANEW_NUMS
+                ]
+                if combined_vars and labbusy.get((rn, aday, sess), 0) == 0:
+                    cell_used = model.NewBoolVar(f"combined_cell_used_{rn}_{aday}_{sess}")
+                    model.AddMaxEquality(cell_used, combined_vars)
+                    combined_cell_terms.append(cell_used)
                 # 140 GENERAL computer labs (not the ANEW combined pool): usable ONLY to
                 # co-schedule two sections of the SAME course from the SAME department
                 # (a within-dept 70/70 pair, e.g. 64+64). Everything else -> 70 or 35 lab.
@@ -280,6 +306,18 @@ def phase1(rseed):
                             if csize[code] <= 70:
                                 pair = model.NewBoolVar(f"pair140_{rn}_{aday}_{sess}_{code}")
                                 model.Add(sum(vs) == 2 * pair)   # 0 or 2 -> pair only, no lone
+            if OPTIMIZE_PHASE1 and PHASE1_OBJECTIVE_SCOPE == "lab_cells":
+                objective_terms = list(phase1_lab_terms)
+                objective_terms.extend(COMBINED_CELL_PACKING_WEIGHT * term for term in combined_cell_terms)
+                if objective_terms:
+                    model.Minimize(sum(objective_terms))
+            if os.environ.get("DEBUG_DEPT") == "1" and (phase1_lab_terms or combined_cell_terms):
+                print(
+                    "      phase1 objective: "
+                    f"{len(phase1_lab_terms)} ordinary lab-cell terms + "
+                    f"{len(combined_cell_terms)} new combined-cell terms",
+                    flush=True,
+                )
             for tid, skmap in tb.room_assignments.items():
                 for sk, dmap in skmap.items():
                     pat = tb.course_day_patterns.get(sk, ())
@@ -291,10 +329,8 @@ def phase1(rseed):
                             for rid, var in rmap.items():
                                 rn = rid2num.get(str(rid), str(rid))
                                 if (rn, aday, slot) in thbusy or tconf: model.Add(var == 0)
-            s = cp_model.CpSolver(); s.parameters.max_time_in_seconds = PHASE1_TIME
-            s.parameters.num_search_workers = SOLVER_WORKERS
+            s = cp_model.CpSolver(); _configure_solver(s, time_limit=PHASE1_TIME)
             s.parameters.stop_after_first_solution = not OPTIMIZE_PHASE1
-            s.parameters.random_seed = rseed
             st = s.StatusName(s.Solve(model))
             return st, cm, data, model, tb, lb, s
         # Fallback chain: only the after-3pm cap may relax. Lunch stays hard and
@@ -394,16 +430,18 @@ def phase1(rseed):
                             "batch":str(getattr(e,"batch_label",None) or getattr(e,"batch_info",None) or "")})
     return infeasible, lab_values, per_lab_occ, per_lab_teacher, per_th_room, per_th_teacher, dept_parallel, dept_late_mode, dept_interleave, dept_combined, p1_recs, dept_lunch_mode
 
-print(f"PHASE 1: first-solution multi-seed to fit {len(ORDER)} departments around production locks...", flush=True)
-best = None
-for rseed in range(1, MAX_SEEDS + 1):
-    t0 = time.time(); res1 = phase1(rseed); infeas = res1[0]
-    print(f"  [seed {rseed}] {len(ORDER)-len(infeas)}/{len(ORDER)} fit ({time.time()-t0:.0f}s)" + ("" if infeas else " ALL FIT"), flush=True)
-    if best is None or len(infeas) < len(best[0][0]): best = (res1, rseed)
-    if not infeas: break
-res1, used_seed = best
+print(f"PHASE 1: deterministic direct pass for {len(ORDER)} departments around production locks...", flush=True)
+t0 = time.time()
+res1 = phase1(DETERMINISTIC_TIE_BREAKER)
+infeas = res1[0]
+print(
+    f"  [direct] {len(ORDER)-len(infeas)}/{len(ORDER)} fit ({time.time()-t0:.0f}s)"
+    + ("" if infeas else " ALL FIT"),
+    flush=True,
+)
+used_seed = DETERMINISTIC_TIE_BREAKER
 infeasible, lab_values, per_lab_occ, per_lab_teacher, per_th_room, per_th_teacher, dept_parallel, dept_late_mode, dept_interleave, dept_combined, p1_recs, dept_lunch_mode = res1
-print(f"PHASE 1 done (seed {used_seed}): {len(ORDER)-len(infeasible)}/{len(ORDER)} fit" + (f", dropped {infeasible}" if infeasible else "") + "\n", flush=True)
+print(f"PHASE 1 done (tie-breaker {used_seed}): {len(ORDER)-len(infeasible)}/{len(ORDER)} fit" + (f", dropped {infeasible}" if infeasible else "") + "\n", flush=True)
 # write a phase-1 JSON snapshot (labs + phase-1 theory) so placement/pairing can be
 # verified immediately, without waiting for the phase-2 bundling to finish.
 _p1_suf = "_parallel" if PARALLEL else ""
@@ -464,7 +502,7 @@ for dept in fit_depts:
                     for rid, var in rmap.items():
                         rn = rid2num.get(str(rid), str(rid))
                         if (rn, aday, slot) in res_rooms or tconf: model.Add(var == 0)
-    s = cp_model.CpSolver(); s.parameters.max_time_in_seconds = PHASE2_TIME; s.parameters.num_search_workers = SOLVER_WORKERS
+    s = cp_model.CpSolver(); _configure_solver(s, time_limit=PHASE2_TIME)
     st = s.StatusName(s.Solve(model))
     ext = ScheduleExtractor(data, cm).extract(SimpleNamespace(response=s.ResponseProto())) if st in ("OPTIMAL","FEASIBLE") else None
     if ext is None:

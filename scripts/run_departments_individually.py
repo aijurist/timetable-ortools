@@ -2,7 +2,7 @@
 
 Each department receives the same CP-SAT budgets and sees only the production
 schedule locks, eliminating department-order effects. Outputs are written below
-output/timetables/dept_by_dept/<department-slug>/.
+output/timetables/dept_by_dept_hard_deterministic/<department-slug>/ by default.
 """
 
 from __future__ import annotations
@@ -77,7 +77,7 @@ def _mode(output: str, name: str, default: str = "") -> str:
 def run(args: argparse.Namespace) -> int:
     root = Path(__file__).resolve().parents[1]
     departments = tuple(args.department) if args.department else DEPARTMENTS
-    report_root = root / "output" / "timetables" / "dept_by_dept"
+    report_root = root / "output" / "timetables" / args.run_tag
     report_root.mkdir(parents=True, exist_ok=True)
     results: list[dict[str, object]] = []
 
@@ -91,12 +91,16 @@ def run(args: argparse.Namespace) -> int:
             {
                 "PYTHONPATH": ".",
                 "DEPT_FILTER": department,
-                "RUN_TAG": f"dept_by_dept/{slug}",
+                "RUN_TAG": f"{args.run_tag}/{slug}",
                 "PHASE1_TIME": str(args.phase1_time),
                 "PHASE2_TIME": str(args.phase2_time),
-                "MAX_SEEDS": str(args.max_seeds),
+                "DETERMINISTIC_SOLVE": "1",
+                "DETERMINISTIC_TIE_BREAKER": "1",
+                "SOLVER_WORKERS": "1",
                 "OPTIMIZE_PHASE1": "1",
                 "DEBUG_DEPT": "1",
+                "FIXED_THEORY_CSV": "prod/theory_schedule_lock.csv",
+                "FIXED_LAB_CSV": "prod/lab_schedule_lock.csv",
             }
         )
         started = time.monotonic()
@@ -212,7 +216,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--department", action="append", choices=DEPARTMENTS)
     parser.add_argument("--phase1-time", type=int, default=180)
     parser.add_argument("--phase2-time", type=int, default=300)
-    parser.add_argument("--max-seeds", type=int, default=1)
+    parser.add_argument("--run-tag", default="dept_by_dept_hard_deterministic")
     return parser
 
 
