@@ -40,6 +40,21 @@ DEPARTMENTS = (
     "Robotics and Automation",
 )
 
+COMBINED_COURSE_DEPARTMENTS = (
+    "Artificial Intelligence and Data Science",
+    "Artificial Intelligence and Machine Learning",
+    "Computer Science and Business Systems",
+    "Computer Science and Design",
+    "Computer Science and Engineering Cyber Security",
+    "Computer Science and Engineering",
+    "Information Technology",
+)
+
+CORE_DEPARTMENTS = tuple(
+    department for department in DEPARTMENTS
+    if department not in COMBINED_COURSE_DEPARTMENTS
+)
+
 
 def _slug(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_")
@@ -76,7 +91,12 @@ def _mode(output: str, name: str, default: str = "") -> str:
 
 def run(args: argparse.Namespace) -> int:
     root = Path(__file__).resolve().parents[1]
-    departments = tuple(args.department) if args.department else DEPARTMENTS
+    if args.core_only:
+        departments = CORE_DEPARTMENTS
+    elif args.combined_only:
+        departments = COMBINED_COURSE_DEPARTMENTS
+    else:
+        departments = tuple(args.department) if args.department else DEPARTMENTS
     report_root = root / "output" / "timetables" / args.run_tag
     report_root.mkdir(parents=True, exist_ok=True)
     results: list[dict[str, object]] = []
@@ -94,10 +114,14 @@ def run(args: argparse.Namespace) -> int:
                 "RUN_TAG": f"{args.run_tag}/{slug}",
                 "PHASE1_TIME": str(args.phase1_time),
                 "PHASE2_TIME": str(args.phase2_time),
-                "DETERMINISTIC_SOLVE": "1",
                 "DETERMINISTIC_TIE_BREAKER": "1",
-                "SOLVER_WORKERS": "1",
+                "DIRECT_SINGLE_WORKER": "0",
+                "SOLVER_WORKERS": str(args.workers),
                 "OPTIMIZE_PHASE1": "1",
+                "PACK_COMBINED_CELLS": "0",
+                # One 25-point lab-cell gap is acceptable; do not spend minutes
+                # proving 1500 after a valid 1525 A.I.D.S. layout is available.
+                "PHASE1_ABSOLUTE_GAP": "25",
                 "DEBUG_DEPT": "1",
                 "FIXED_THEORY_CSV": "prod/theory_schedule_lock.csv",
                 "FIXED_LAB_CSV": "prod/lab_schedule_lock.csv",
@@ -213,9 +237,13 @@ def run(args: argparse.Namespace) -> int:
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--department", action="append", choices=DEPARTMENTS)
+    selection = parser.add_mutually_exclusive_group()
+    selection.add_argument("--department", action="append", choices=DEPARTMENTS)
+    selection.add_argument("--core-only", action="store_true", help="Run the 12 departments without DBMS/OOPS/DB-Tech")
+    selection.add_argument("--combined-only", action="store_true", help="Run the 7 departments with DBMS/OOPS/DB-Tech")
     parser.add_argument("--phase1-time", type=int, default=180)
     parser.add_argument("--phase2-time", type=int, default=300)
+    parser.add_argument("--workers", type=int, default=min(16, max(1, os.cpu_count() or 8)))
     parser.add_argument("--run-tag", default="dept_by_dept_hard_deterministic")
     return parser
 

@@ -94,11 +94,13 @@ OUTDIR.mkdir(parents=True, exist_ok=True)
 PHASE1_TIME = int(os.environ.get("PHASE1_TIME", "90"))
 PHASE2_TIME = int(os.environ.get("PHASE2_TIME", "150"))
 SOLVER_WORKERS = max(1, int(os.environ.get("SOLVER_WORKERS", "12")))
-DETERMINISTIC_SOLVE = os.environ.get("DETERMINISTIC_SOLVE", "1") != "0"
+DIRECT_SINGLE_WORKER = os.environ.get("DIRECT_SINGLE_WORKER", "0") == "1"
 DETERMINISTIC_TIE_BREAKER = int(os.environ.get("DETERMINISTIC_TIE_BREAKER", "1"))
 OPTIMIZE_PHASE1 = os.environ.get("OPTIMIZE_PHASE1", "1") != "0"
 PHASE1_OBJECTIVE_SCOPE = os.environ.get("PHASE1_OBJECTIVE_SCOPE", "lab_cells").strip().lower()
 COMBINED_CELL_PACKING_WEIGHT = int(os.environ.get("COMBINED_CELL_PACKING_WEIGHT", "10000"))
+PACK_COMBINED_CELLS = os.environ.get("PACK_COMBINED_CELLS", "1") != "0"
+PHASE1_ABSOLUTE_GAP = max(0.0, float(os.environ.get("PHASE1_ABSOLUTE_GAP", "0")))
 FIXED_THEORY_CSV = Path(os.environ.get("FIXED_THEORY_CSV", "prod/theory_schedule_lock.csv"))
 FIXED_LAB_CSV = Path(os.environ.get("FIXED_LAB_CSV", "prod/lab_schedule_lock.csv"))
 
@@ -176,26 +178,33 @@ def _phase1_lab_objective_terms(constraint_model):
     is known, then installs one joint objective.
     """
     if not OPTIMIZE_PHASE1 or PHASE1_OBJECTIVE_SCOPE != "lab_cells":
-        return []
+        return [], 0, 0
     objective = constraint_model.extras.get("objective", {})
     penalties = objective.get("penalties", ()) if isinstance(objective, dict) else ()
-    terms = []
+    lab_terms = []
+    stable_pair_terms = []
     for entry in penalties:
         if not isinstance(entry, tuple) or len(entry) < 3:
             continue
         weight, variable, tag = entry[:3]
-        if not str(tag).startswith("lab_interleave:"):
-            continue
-        terms.append(int(weight) * variable)
-    return terms
+        tag = str(tag)
+        if tag.startswith("lab_interleave:"):
+            lab_terms.append(int(weight) * variable)
+        elif not PACK_COMBINED_CELLS and tag.startswith("combined_lab:solo"):
+            # Independent department certification does not need to compact a
+            # global room pool.  Keep only the direct stable-partner objective.
+            stable_pair_terms.append(int(weight) * variable)
+    return lab_terms + stable_pair_terms, len(lab_terms), len(stable_pair_terms)
 
 
-def _configure_solver(solver, *, time_limit):
+def _configure_solver(solver, *, time_limit, absolute_gap_limit=0.0):
     """Apply one reproducible CP-SAT configuration to both solve phases."""
     solver.parameters.max_time_in_seconds = time_limit
-    solver.parameters.num_search_workers = 1 if DETERMINISTIC_SOLVE else SOLVER_WORKERS
+    solver.parameters.num_search_workers = 1 if DIRECT_SINGLE_WORKER else SOLVER_WORKERS
     solver.parameters.random_seed = DETERMINISTIC_TIE_BREAKER
     solver.parameters.randomize_search = False
+    if absolute_gap_limit > 0:
+        solver.parameters.absolute_gap_limit = absolute_gap_limit
 
 # ---- production fixed-schedule seed ----
 # ``sen_room_slots`` is deliberately cross-domain: fixed labs are expanded to
@@ -242,7 +251,7 @@ def phase1(rseed):
         def attempt(parallel, late_mode, interleave, combined_strict=True, lunch_mode="hard"):
             cm, data = build(dept, parallel=parallel, late_mode=late_mode, interleave=interleave, combined_strict=combined_strict, lunch_mode=lunch_mode)
             model = cm.model; tb = cm.variables.theory; lb = cm.variables.lab
-            phase1_lab_terms = _phase1_lab_objective_terms(cm)
+            phase1_base_terms, phase1_lab_count, phase1_pair_count = _phase1_lab_objective_terms(cm)
             # reserve labs + theory + teachers
             anew_cell = defaultdict(list)   # (rn,aday,sess) -> [(course_code, students, var), ...]
             for tid, cmap in lb.assignments.items():
@@ -282,7 +291,7 @@ def phase1(rseed):
                     v for code, _students, v in items
                     if str(code).strip().upper() in COMB and rn in ANEW_NUMS
                 ]
-                if combined_vars and labbusy.get((rn, aday, sess), 0) == 0:
+                if PACK_COMBINED_CELLS and combined_vars and labbusy.get((rn, aday, sess), 0) == 0:
                     cell_used = model.NewBoolVar(f"combined_cell_used_{rn}_{aday}_{sess}")
                     model.AddMaxEquality(cell_used, combined_vars)
                     combined_cell_terms.append(cell_used)
@@ -307,15 +316,16 @@ def phase1(rseed):
                                 pair = model.NewBoolVar(f"pair140_{rn}_{aday}_{sess}_{code}")
                                 model.Add(sum(vs) == 2 * pair)   # 0 or 2 -> pair only, no lone
             if OPTIMIZE_PHASE1 and PHASE1_OBJECTIVE_SCOPE == "lab_cells":
-                objective_terms = list(phase1_lab_terms)
+                objective_terms = list(phase1_base_terms)
                 objective_terms.extend(COMBINED_CELL_PACKING_WEIGHT * term for term in combined_cell_terms)
                 if objective_terms:
                     model.Minimize(sum(objective_terms))
-            if os.environ.get("DEBUG_DEPT") == "1" and (phase1_lab_terms or combined_cell_terms):
+            if os.environ.get("DEBUG_DEPT") == "1" and (phase1_base_terms or combined_cell_terms):
                 print(
                     "      phase1 objective: "
-                    f"{len(phase1_lab_terms)} ordinary lab-cell terms + "
-                    f"{len(combined_cell_terms)} new combined-cell terms",
+                    f"{phase1_lab_count} ordinary lab-cell terms + "
+                    f"{phase1_pair_count} stable-pair terms + "
+                    f"{len(combined_cell_terms)} physical combined-cell terms",
                     flush=True,
                 )
             for tid, skmap in tb.room_assignments.items():
@@ -329,12 +339,16 @@ def phase1(rseed):
                             for rid, var in rmap.items():
                                 rn = rid2num.get(str(rid), str(rid))
                                 if (rn, aday, slot) in thbusy or tconf: model.Add(var == 0)
-            s = cp_model.CpSolver(); _configure_solver(s, time_limit=PHASE1_TIME)
+            s = cp_model.CpSolver(); _configure_solver(
+                s,
+                time_limit=PHASE1_TIME,
+                absolute_gap_limit=PHASE1_ABSOLUTE_GAP,
+            )
             s.parameters.stop_after_first_solution = not OPTIMIZE_PHASE1
             st = s.StatusName(s.Solve(model))
             return st, cm, data, model, tb, lb, s
-        # Fallback chain: only the after-3pm cap may relax. Lunch stays hard and
-        # half-cohort batch interleave remains enabled in every attempt.
+        # Only the after-3pm cap may relax. Lunch stays hard and half-cohort batch
+        # interleave remains enabled in every attempt.
         candidates = [(PARALLEL, "hard", True, True, "hard"),
                       (PARALLEL, "soft", True, True, "hard")]
         first = candidates[0]

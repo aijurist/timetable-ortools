@@ -93,11 +93,13 @@ def run(args: argparse.Namespace) -> int:
             "RUN_TAG": args.run_tag,
             "PHASE1_TIME": str(args.phase1_time),
             "PHASE2_TIME": str(args.phase2_time),
-            "DETERMINISTIC_SOLVE": "1",
             "DETERMINISTIC_TIE_BREAKER": "1",
-            "SOLVER_WORKERS": "1",
+            "DIRECT_SINGLE_WORKER": "0",
+            "SOLVER_WORKERS": str(args.workers),
             "OPTIMIZE_PHASE1": "1",
             "PHASE1_OBJECTIVE_SCOPE": "lab_cells",
+            "PACK_COMBINED_CELLS": "1",
+            "PHASE1_ABSOLUTE_GAP": "0",
             "DEBUG_DEPT": "1",
             "FIXED_THEORY_CSV": "prod/theory_schedule_lock.csv",
             "FIXED_LAB_CSV": "prod/lab_schedule_lock.csv",
@@ -178,6 +180,7 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--phase1-time", type=int, default=900, help="Per-department Phase 1 proof budget in seconds")
     parser.add_argument("--phase2-time", type=int, default=900, help="Per-department Phase 2 proof budget in seconds")
+    parser.add_argument("--workers", type=int, default=min(16, max(1, os.cpu_count() or 8)))
     parser.add_argument("--run-tag", default="second_year_full")
     return parser
 
