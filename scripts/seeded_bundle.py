@@ -66,6 +66,10 @@ def _day_token(value):
     token = str(value or "").strip().lower()
     return {"wednesday": "wed", "thursday": "thur", "friday": "fri"}.get(token, token)
 ORDER = [
+    # Civil has a narrow B-block theory-room anchor set. Schedule it before the
+    # flexible computing departments so only its actual cells are reserved;
+    # later departments can then choose from their wider room candidate pools.
+    "Civil Engineering",
     # Combined-lab departments are kept in the established compact-to-large order.
     # The CSE-only filtered run is independently certified 5/5 feasible; a global
     # eight-department run still needs combined-footprint presolve to remove the
@@ -80,7 +84,7 @@ ORDER = [
     "Computer Science & Engineering B",
     # workshop / single-section lab-dense depts (use dept-private specialised labs, not ANEW)
     "Robotics and Automation", "Aeronautical Engineering", "Biomedical Engineering",
-    "Civil Engineering", "Automobile Engineering",
+    "Automobile Engineering",
     # flexible remainder
     "Electronics and Communication Engineering", "Biotechnology", "Mechatronics Engineering",
     "Mechanical Engineering", "Food Technology", "Electrical and Electronics Engineering",
