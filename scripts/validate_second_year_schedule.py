@@ -302,6 +302,19 @@ def _batch_overlap_violations(lab: Sequence[Mapping[str, str]]) -> list[str]:
 	return violations
 
 
+def _combined_lab_window_violations(lab: Sequence[Mapping[str, str]]) -> list[str]:
+	violations: list[str] = []
+	for row in lab:
+		course_code = _norm(row.get("course_code") or row.get("course_code_display")).upper()
+		session_name = _norm(row.get("session_name")).upper()
+		if course_code in EXTERNAL_COMBINED_CODES and session_name == "L3":
+			violations.append(
+				f"{course_code}:{_norm(row.get('course_instance_id'))} "
+				f"uses blocked L3 on {_day(row.get('day'))}"
+			)
+	return violations
+
+
 def validate(args: argparse.Namespace) -> dict[str, object]:
 	theory = _read_csv(args.theory)
 	lab = _read_csv(args.lab)
@@ -313,6 +326,7 @@ def validate(args: argparse.Namespace) -> dict[str, object]:
 	lunch = _lunch_violations(theory, lab)
 	consecutive, consecutive_codes = _consecutive_violations(lab, args.config)
 	batch_overlap = _batch_overlap_violations(lab)
+	combined_lab_window = _combined_lab_window_violations(lab)
 
 	new_teacher_events = [
 		_event(row, domain="theory", resource_field="teacher_id", physical_id="theory:" + _norm(row.get("course_instance_id")))
@@ -357,6 +371,7 @@ def validate(args: argparse.Namespace) -> dict[str, object]:
 		"hard_lunch": lunch,
 		"consecutive_batches": consecutive,
 		"batch_overlap": batch_overlap,
+		"combined_lab_blocked_session": combined_lab_window,
 		"fixed_teacher": fixed_teacher_conflicts,
 		"fixed_room": fixed_room_conflicts,
 		"internal_teacher": internal_teacher_conflicts,

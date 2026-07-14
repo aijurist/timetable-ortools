@@ -125,6 +125,34 @@ departments:
           - 5
         shift_id: SHIFT_1
         flexible_lunch: false
+      Computer Science & Engineering A:
+        day_pattern:
+          - monday
+          - tuesday
+          - wed
+          - thur
+          - fri
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_1
+        flexible_lunch: false
+      Computer Science & Engineering B:
+        day_pattern:
+          - monday
+          - tuesday
+          - wed
+          - thur
+          - fri
+        lunch_break_slot: null
+        lunch_slot_window:
+          - 3
+          - 4
+          - 5
+        shift_id: SHIFT_1
+        flexible_lunch: false
       Computer Science & Engineering-2:
         day_pattern:
           - monday
@@ -799,6 +827,10 @@ constraints:
         enforce_stable_pairing: true
         same_department_only: false
         solo_penalty_weight: 1000
+        # Each section retains its department's own five working days. Across
+        # Mon-Fri and Tue-Sat departments the shared pool can use all six days.
+        # The 11:40-1:20 L3 block is not approved for these courses.
+        blocked_sessions: [L3]
         # Cap pairing candidate pool per course (dept-interleaved buckets) to keep the
         # O(n^2) pairing constraint tractable in large combined runs. 0 = pool everything.
         max_pair_pool: 8

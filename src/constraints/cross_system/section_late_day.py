@@ -42,6 +42,11 @@ class SectionLateDayConstraint(Constraint):
         params = self.params or {}
         late_theory_slots = {int(s) for s in params.get("late_theory_slots", (7, 8))}
         late_lab_sessions = {str(s).strip() for s in params.get("late_lab_sessions", ("L5",))}
+        excluded_course_codes = {
+            str(code).strip().upper()
+            for code in params.get("excluded_course_codes", ())
+            if str(code).strip()
+        }
         max_late_days = int(params.get("max_late_days", 2))
         # Single-section departments (workshop-dense, one cohort) get a looser cap:
         # their labs often must run late and there is no parallel section to balance.
@@ -60,14 +65,13 @@ class SectionLateDayConstraint(Constraint):
         theory_block = context.variables.theory
         lab_block = context.variables.lab
         group_slot_map = resolve_group_slot_map(context)
-        if not group_slot_map:
-            return self._result(ConstraintStatus.SKIPPED, {"reason": "no theory groups"})
 
         # A "section" is (department, section_id) — multiple course-groups share it.
         # Map each theory group_id and each lab course_id to its section key so the cap
         # applies to the section's whole day, not to individual courses.
         group_to_section: Dict[str, Tuple[str, object]] = {}
-        for _cid, req in getattr(theory_block, "course_requirements", {}).items():
+        theory_requirements = getattr(theory_block, "course_requirements", {}) or {}
+        for _cid, req in theory_requirements.items():
             gid = getattr(req, "group_id", None)
             if gid is not None:
                 group_to_section[gid] = (getattr(req, "department", ""), getattr(req, "section_id", None))
@@ -79,16 +83,37 @@ class SectionLateDayConstraint(Constraint):
         late_by_group_day: Dict[Tuple[str, object], Dict[int, List[cp_model.IntVar]]] = defaultdict(
             lambda: defaultdict(list)
         )
-        # THEORY: slots 7-8, keyed via the group's section.
-        for group_id, day_map in group_slot_map.items():
-            section = group_to_section.get(group_id)
-            if section is None:
-                continue
-            for day_idx, slot_map in day_map.items():
-                for slot_idx, var in slot_map.items():
-                    if slot_idx in late_theory_slots:
-                        late_by_group_day[section][day_idx].append(var)
-                        late_theory_vars.append(var)
+        # THEORY: slots 7-8, keyed via the course's section. When exclusions are
+        # configured, use course-level literals so an exempt course does not make the
+        # entire section/group look late through its aggregate group-timeslot literal.
+        if excluded_course_codes:
+            for _teacher_id, course_map in (getattr(theory_block, "assignments", {}) or {}).items():
+                for course_id, day_map in course_map.items():
+                    requirement = theory_requirements.get(course_id)
+                    if requirement is None:
+                        continue
+                    course_code = str(getattr(requirement, "course_code", "")).strip().upper()
+                    if course_code in excluded_course_codes:
+                        continue
+                    section = (
+                        getattr(requirement, "department", ""),
+                        getattr(requirement, "section_id", None),
+                    )
+                    for day_idx, slot_map in day_map.items():
+                        for slot_idx, var in slot_map.items():
+                            if slot_idx in late_theory_slots:
+                                late_by_group_day[section][day_idx].append(var)
+                                late_theory_vars.append(var)
+        else:
+            for group_id, day_map in group_slot_map.items():
+                section = group_to_section.get(group_id)
+                if section is None:
+                    continue
+                for day_idx, slot_map in day_map.items():
+                    for slot_idx, var in slot_map.items():
+                        if slot_idx in late_theory_slots:
+                            late_by_group_day[section][day_idx].append(var)
+                            late_theory_vars.append(var)
 
         # LAB: session L5 room vars, keyed via the course's section.
         for _tid, course_id, day_idx, session_name, _room_id, var in iter_lab_session_variables(context):
@@ -96,6 +121,10 @@ class SectionLateDayConstraint(Constraint):
                 continue
             section = course_to_section.get(course_id)
             if section is None:
+                continue
+            requirement = getattr(lab_block, "requirements", {}).get(course_id)
+            course_code = str(getattr(requirement, "course_code", "")).strip().upper()
+            if course_code in excluded_course_codes:
                 continue
             late_by_group_day[section][day_idx].append(var)
 
@@ -158,6 +187,7 @@ class SectionLateDayConstraint(Constraint):
             {
                 "mode": mode,
                 "max_late_days": max_late_days,
+                "excluded_course_codes": sorted(excluded_course_codes),
                 "sections_capped": hard_caps,
                 "sections_penalised": penalties,
             },

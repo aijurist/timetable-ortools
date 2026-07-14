@@ -178,8 +178,30 @@ class ScheduleRepository:
         if not candidates:
             raise FileNotFoundError("No schedule snapshots found in the output directory.")
 
-        candidates.sort(key=lambda snap: snap.modified_at, reverse=True)
+        # A copied full/composed run can be a few milliseconds older than one of
+        # its independently generated department snapshots merely because of file
+        # copy order. Prefer a certified composed result over those fragments;
+        # otherwise retain the original newest-snapshot behaviour.
+        candidates.sort(
+            key=lambda snap: (self._is_certified_composed(snap.root), snap.modified_at),
+            reverse=True,
+        )
         return candidates[0]
+
+    @staticmethod
+    def _is_certified_composed(root: Path) -> bool:
+        report_path = root / "full_run_report.json"
+        if not report_path.is_file():
+            return False
+        try:
+            with report_path.open("r", encoding="utf-8") as handle:
+                report = json.load(handle)
+        except (OSError, ValueError, TypeError):
+            return False
+        return (
+            str(report.get("status", "")).upper() == "PASS"
+            and int(report.get("department_count", 0) or 0) > 1
+        )
 
     # ------------------------------------------------------------------
     # Loaders & builders

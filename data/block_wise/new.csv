@@ -144,30 +144,7 @@ id,room_number,block,maintained_by_id,is_lab,room_type,room_min_cap,room_max_cap
 139,D209,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
 140,D210,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
 141,D211,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
-142,D302,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
-143,D305,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
-144,D309,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
-145,D310,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
-146,D311,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
-147,D402,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
-148,D405,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
-149,D409,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
-150,D410,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
-151,D411,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
 152,D503,D Block,2,1,Core-Lab,0,70,0,0,None,Chemistry Lab,0,0,0
-153,D510,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
-154,D511,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
-155,D512,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
-156,D610,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
-157,D611,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
-158,D612,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
-159,D702,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
-160,D703,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
-161,D704,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
-162,D705,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
-163,D709,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
-164,D710,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
-165,D711,D Block,2,0,Classroom,50,70,0,0,None,Classroom,0,0,0
 166,DG,D Block,7,1,Core-Lab,20,35,1,0,Advanced,Medical Image Processing Lab,0,0,0
 167,DG009,D Block,2,1,Core-Lab,20,35,1,0,High-tech,Food Chemistry Lab,0,0,0
 168,DG010,D Block,2,1,Core-Lab,30,70,1,1,Advanced,Food Analysis Laboratory,1,1,1
@@ -192,20 +169,13 @@ id,room_number,block,maintained_by_id,is_lab,room_type,room_min_cap,room_max_cap
 189,KSL02,K Block,2,1,Core-Lab,110,140,1,1,None,Core Lab (KSL02),1,0,0
 190,KSL03,K Block,14,1,Laboratory,110,140,1,0,Advanced,Computer Lab (KSL03),0,0,0
 25,TIFAC I01,TIFAC,14,1,Laboratory,50,70,1,0,Basic,Computer Lab (Arch) ,0,0,0
-193,TLFL1,Techlounge,4,1,Laboratory,20,35,1,0,High-tech,Computer Lab (TLFL1),0,0,0
-194,TLFL2,Techlounge,12,1,Laboratory,20,35,1,0,Basic,Computer Lab (TLFL2),0,0,0
-195,TLFL3,Techlounge,14,1,Laboratory,20,35,1,0,Basic,Computer Lab (TLFL3),0,0,0
-196,TLFL4,Techlounge,5,1,Laboratory,20,35,1,0,None,Computer Lab (TLFL4),0,0,0
-197,TLFL5,Techlounge,14,1,Laboratory,20,35,1,0,Basic,Computer Lab (TLFL5),0,0,0
-198,TLFR1,Techlounge,14,1,Laboratory,20,35,1,0,None,Computer Lab (TLFR1),0,0,0
-199,TLFR2,Techlounge,20,1,Laboratory,20,35,1,0,High-tech,Computer Lab (TLFR2),0,0,0
-200,TLFR3,Techlounge,5,1,Laboratory,20,35,1,0,Basic,Computer Lab (TLFR3),0,0,0
-201,TLFR4,Techlounge,4,1,Laboratory,20,35,1,0,None,Computer Lab (TLFR4),0,0,0
-202,TLFR5,Techlounge,20,1,Laboratory,20,35,1,0,Advanced,Computer Lab (TLFR5),0,0,0
+9001,TLFL1/2,Techlounge,Computer Lab (TLFL1/2),1,Computer-Lab,70,70,0,0,None,,0,0,0
+9003,TLFL4/5,Techlounge,Computer Lab (TLFL4/5),1,Computer-Lab,70,70,0,0,None,,0,0,0
+9004,TLFR1/2,Techlounge,Computer Lab (TLFR1/2),1,Computer-Lab,70,70,0,0,None,,0,0,0
+9006,TLFR4/5,Techlounge,Computer Lab (TLFR4/5),1,Computer-Lab,70,70,0,0,None,,0,0,0
+9007,TLGL3/4,Techlounge,Computer Lab (TLGL3/4),1,Computer-Lab,70,70,0,0,None,,0,0,0
 203,TLGL1,Techlounge,20,1,Laboratory,50,70,1,0,Advanced,Computer Lab (TLGL1),0,0,0
 204,TLGL2,Techlounge,14,1,Laboratory,50,70,1,0,Advanced,Computer Lab (TLGL2),0,0,0
-205,TLGL3,Techlounge,14,1,Laboratory,20,35,1,0,None,Computer Lab (TLGL3),0,0,0
-206,TLGL4,Techlounge,5,1,Laboratory,20,35,1,0,Basic,Computer Lab (TLGL4),0,0,0
 210,WS AUTO FF1,Workshop,9,1,Core-Lab,20,35,0,0,High-tech,Mass Transfer Lab,0,0,0
 211,WS AUTO FF2,Workshop,9,1,Core-Lab,20,35,0,0,Basic,Heat Transfer Lab,0,0,0
 212,WS AUTO FF3,Workshop,9,1,Core-Lab,20,35,0,0,High-tech,Process Control Lab,0,0,0

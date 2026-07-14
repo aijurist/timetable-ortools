@@ -32,6 +32,7 @@ from typing import Dict, FrozenSet, List, Mapping, Optional, Tuple
 
 from ortools.sat.python import cp_model
 
+from ...utils.time_utils import DayNormalizer
 from ..base import Constraint, ConstraintMetadata
 from ..context import ConstraintContext
 from ..schema import ConstraintApplicationResult, ConstraintStatus
@@ -61,6 +62,7 @@ class CombinedLabConstraint(Constraint):
 		enforce_pairing = bool(self.params.get("enforce_stable_pairing", True))
 		solo_weight = int(self.params.get("solo_penalty_weight", 1000))
 		same_department_only = bool(self.params.get("same_department_only", False))
+		max_stable_group_size = max(2, int(self.params.get("max_stable_group_size", 2) or 2))
 		# Pairing is O(n^2) in candidate pairs. Pooling EVERY same-code section across all
 		# departments (n~32) explodes the reified identity constraints and stalls the solver.
 		# Partition each course's sections into department-interleaved buckets of this size and
@@ -81,23 +83,39 @@ class CombinedLabConstraint(Constraint):
 		# across the sequential per-department solve. Solver-chosen room_pool_groups only
 		# works in a single global model, so the seeded solve uses this instead.
 		room_pools_fixed = self.params.get("room_pools_fixed", ()) or ()
+		blocked_sessions = frozenset(
+			str(session).strip()
+			for session in (self.params.get("blocked_sessions", ()) or ())
+			if str(session).strip()
+		)
 
-		# Gather combined-lab instances -> flat cell map {(day, session, room): bool}.
-		inst_cells: Dict[str, Dict[Tuple[int, str, str], cp_model.IntVar]] = {}
+		# Gather combined-lab instances -> flat cell map {(actual day, session, room): bool}.
+		# Day labels are essential here: Monday-Friday and Tuesday-Saturday departments
+		# use different numeric indices for the same calendar day.
+		inst_cells: Dict[str, Dict[Tuple[str, str, str], cp_model.IntVar]] = {}
 		inst_code: Dict[str, str] = {}
 		inst_dept: Dict[str, str] = {}
 		requirements = getattr(lab_block, "requirements", {}) or {}
+		day_patterns = getattr(lab_block, "day_patterns", {}) or {}
+		blocked_variables = 0
 		for _teacher_id, course_map in lab_block.assignments.items():
 			for instance_key, day_map in course_map.items():
 				req = requirements.get(instance_key)
 				code = str(getattr(req, "course_code", "")).strip().upper() if req else ""
 				if not req or code not in codes:
 					continue
-				cells: Dict[Tuple[int, str, str], cp_model.IntVar] = {}
+				cells: Dict[Tuple[str, str, str], cp_model.IntVar] = {}
+				pattern = tuple(day_patterns.get(instance_key, ()) or ())
 				for day_idx, session_map in day_map.items():
+					raw_day = pattern[day_idx] if 0 <= day_idx < len(pattern) else str(day_idx)
+					day_label = DayNormalizer.normalize_day_name(str(raw_day)) or str(raw_day).strip().lower()
 					for session_name, room_bucket in session_map.items():
 						for room_id, var in room_bucket.items():
-							cells[(day_idx, session_name, str(room_id))] = var
+							if session_name in blocked_sessions:
+								model.Add(var == 0)
+								blocked_variables += 1
+								continue
+							cells[(day_label, session_name, str(room_id))] = var
 				if not cells:
 					continue
 				inst_cells[instance_key] = cells
@@ -225,13 +243,17 @@ class CombinedLabConstraint(Constraint):
 				for cell in cells_b.keys() - cells_a.keys():
 					model.Add(cells_b[cell] == 0).OnlyEnforceIf(together)
 
-		# At most one partner each; penalise remaining solo instances.
+		# Room-capacity constraints still limit 140/165-seat rooms to pairs. Allowing
+		# two stable partners here lets KS02 use its full 210-seat capacity without
+		# forcing it to be full when only one or two compatible sections are free.
 		solo_terms = 0
 		for instance_key, togs in tog_by_instance.items():
-			model.Add(sum(togs) <= 1)
+			model.Add(sum(togs) <= max_stable_group_size - 1)
 			if solo_weight > 0:
+				partnered = model.NewBoolVar(f"clab_partnered_{instance_key}")
+				model.AddMaxEquality(partnered, togs)
 				solo = model.NewBoolVar(f"clab_solo_{instance_key}")
-				model.Add(sum(togs) + solo == 1)
+				model.Add(partnered + solo == 1)
 				register_objective_penalty(context, solo, solo_weight, tag="combined_lab:solo")
 				solo_terms += 1
 
@@ -245,7 +267,10 @@ class CombinedLabConstraint(Constraint):
 				"solo_penalty_terms": solo_terms,
 				"solo_penalty_weight": solo_weight,
 				"same_department_only": same_department_only,
+				"max_stable_group_size": max_stable_group_size,
 				"blocks_each": blocks,
+				"blocked_sessions": sorted(blocked_sessions),
+				"blocked_variables": blocked_variables,
 			},
 		)
 

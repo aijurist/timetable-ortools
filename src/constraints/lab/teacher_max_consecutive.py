@@ -168,12 +168,23 @@ class TeacherMaxConsecutiveLabConstraint(Constraint):
 
 		model = context.model
 		assignments = context.variables.lab.assignments
+		requirements = getattr(context.variables.lab, "requirements", {}) or {}
+		combined_cfg = getattr(getattr(context.config, "model", None), "combined_lab_courses", {}) or {}
+		combined_codes = frozenset(
+			str(code).strip().upper()
+			for code in combined_cfg.get("course_codes", ())
+			if str(code).strip()
+		)
 		course_literals: Dict[str, MutableMapping[str, MutableMapping[int, MutableMapping[str, cp_model.IntVar]]]] = {}
 		teacher_terms: Dict[Tuple[str, int, str], list[cp_model.IntVar]] = {}
 
 		for teacher_id, course_map in assignments.items():
 			teacher_bucket = course_literals.setdefault(teacher_id, {})
 			for course_id, day_map in course_map.items():
+				requirement = requirements.get(course_id)
+				course_code = str(getattr(requirement, "course_code", "")).strip().upper()
+				if course_code in combined_codes:
+					continue
 				day_bucket = teacher_bucket.setdefault(course_id, {})
 				for day_idx, session_map in day_map.items():
 					session_bucket = day_bucket.setdefault(day_idx, {})

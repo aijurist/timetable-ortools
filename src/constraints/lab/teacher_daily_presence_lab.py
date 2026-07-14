@@ -133,7 +133,18 @@ class TeacherDailyPresenceLabConstraint(Constraint):
 			return cached  # type: ignore[return-value]
 
 		terms: Dict[Tuple[str, int, str], list[cp_model.IntVar]] = {}
-		for teacher_id, _, day_index, session_name, _, variable in iter_lab_session_variables(context):
+		lab_block = context.variables.lab
+		combined_cfg = getattr(getattr(context.config, "model", None), "combined_lab_courses", {}) or {}
+		combined_codes = frozenset(
+			str(code).strip().upper()
+			for code in combined_cfg.get("course_codes", ())
+			if str(code).strip()
+		)
+		for teacher_id, course_id, day_index, session_name, _, variable in iter_lab_session_variables(context):
+			requirement = (getattr(lab_block, "requirements", {}) or {}).get(course_id)
+			course_code = str(getattr(requirement, "course_code", "")).strip().upper()
+			if course_code in combined_codes:
+				continue
 			key = (teacher_id, day_index, session_name)
 			terms.setdefault(key, []).append(variable)
 
