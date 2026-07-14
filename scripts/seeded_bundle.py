@@ -19,14 +19,15 @@ Run (from the project root, with the venv active):
 
     # DEBUG_DEPT=1 additionally prints each department's per-seed solve status.
 
-Inputs : data/2/2/<Department>_course_data.csv, data/{theory,lab}_schedule_combined_only_latest_uploads.csv
-         (seniors), data/block_wise/new.csv (rooms), data/{core,computer}_lab_mapping.csv, data/pop.csv
+Inputs : data/2/2/<Department>_course_data.csv, prod/{theory,lab}_schedule_lock.csv
+         (senior locks), data/block_wise/new.csv (rooms),
+         data/{core,computer}_lab_mapping.csv, data/pop.csv
 Outputs: output/timetables/seeded_schedule[_parallel].json and
          data/{theory,lab}_schedule_second_year[_parallel].csv (senior-upload column format).
 Then render with scripts/viz_seeded.py and scripts/viz_rooms.py (honour the same PARALLEL_BATCH flag).
 """
 import logging; logging.disable(logging.CRITICAL)
-import time, sys, json
+import os, time, sys, json
 from pathlib import Path
 from collections import defaultdict
 from types import SimpleNamespace
@@ -41,7 +42,12 @@ from src.runtime.extractor import ScheduleExtractor
 base = Path.cwd()
 COMB = {"CS23332", "CS23333", "CB23333"}
 ANEW_NUMS = {"ANEW101","ANEW102","ANEW103","ANEW104","A104/105","KS02"}
-L2T = {"L1": (0,1), "L2": (2,3), "L3": (4,5), "L4": (5,6), "L5": (7,8)}
+L2T = {"L1": (0,1), "L2": (2,3), "L3": (3,4,5), "L4": (5,6), "L5": (7,8)}
+
+
+def _day_token(value):
+    token = str(value or "").strip().lower()
+    return {"wednesday": "wed", "thursday": "thur", "friday": "fri"}.get(token, token)
 ORDER = [
     # combined-lab (ANEW) CS-family depts FIRST, smallest->largest. With KS02 (210-cap,
     # 3 sections) replacing KSL02 in Pool 1, the DBMS pool has enough capacity for CSE
@@ -61,6 +67,14 @@ ORDER = [
     "Mechanical Engineering", "Food Technology", "Electrical and Electronics Engineering",
     "Chemical Engineering",
 ]
+DEPT_FILTER = tuple(
+    token.strip() for token in os.environ.get("DEPT_FILTER", "").split(",") if token.strip()
+)
+if DEPT_FILTER:
+    unknown = sorted(set(DEPT_FILTER) - set(ORDER))
+    if unknown:
+        raise ValueError(f"Unknown DEPT_FILTER department(s): {unknown}")
+    ORDER = [department for department in ORDER if department in DEPT_FILTER]
 rooms_df = pd.read_csv("data/block_wise/new.csv", keep_default_na=False)
 rid2num = {str(r["id"]): r["room_number"] for _, r in rooms_df.iterrows()}
 big_nums = set(r["room_number"] for _, r in rooms_df.iterrows()
@@ -69,7 +83,6 @@ room_cap = {r["room_number"]: (float(r["room_max_cap"]) if str(r.get("room_max_c
 def _max_share(rn):
     return max(2, int(room_cap.get(rn, 140.0) // 70))
 
-import os
 PARALLEL = os.environ.get("PARALLEL_BATCH") == "1"
 # Optional run isolation: set RUN_TAG to write all JSON + CSV outputs into a separate
 # folder (output/timetables/<RUN_TAG>/) so a run does not overwrite the default outputs.
@@ -78,14 +91,22 @@ OUTDIR = (base / "output" / "timetables" / RUN_TAG) if RUN_TAG else (base / "out
 CSVDIR = OUTDIR if RUN_TAG else (base / "data")
 OUTDIR.mkdir(parents=True, exist_ok=True)
 # Phase-2 (theory bundling re-optimization) per-department time budget, seconds.
+PHASE1_TIME = int(os.environ.get("PHASE1_TIME", "90"))
 PHASE2_TIME = int(os.environ.get("PHASE2_TIME", "150"))
+MAX_SEEDS = int(os.environ.get("MAX_SEEDS", "12"))
+SOLVER_WORKERS = max(1, int(os.environ.get("SOLVER_WORKERS", "12")))
+OPTIMIZE_PHASE1 = os.environ.get("OPTIMIZE_PHASE1", "1") != "0"
+PHASE1_OBJECTIVE_SCOPE = os.environ.get("PHASE1_OBJECTIVE_SCOPE", "lab_cells").strip().lower()
+FIXED_THEORY_CSV = Path(os.environ.get("FIXED_THEORY_CSV", "prod/theory_schedule_lock.csv"))
+FIXED_LAB_CSV = Path(os.environ.get("FIXED_LAB_CSV", "prod/lab_schedule_lock.csv"))
 
 def build(dept, rseed=1, parallel=None, late_mode="hard", interleave=True, combined_strict=True, lunch_mode="hard"):
     if parallel is None:
         parallel = PARALLEL
     cross = {"bundled_theory": {"enabled": True, "priority": 2, "weight": 1.0,
-              "params": {"eligible_cohorts": ["*_S3"], "force_maximal_pairing": False,
-                         "solo_penalty_weight": 50, "enforce_shared_room": True,
+              "params": {"eligible_cohorts": ["*_S3"], "force_maximal_pairing": True,
+                         "solo_penalty_weight": 50, "pair_load_gap_penalty_weight": 5,
+                         "enforce_shared_room": True,
                          # per-slot partial pairing: unequal-hour courses bundle their
                          # overlapping hours, the longer course's extra hour(s) go solo.
                          "allow_partial_pairing": True}}}
@@ -99,12 +120,11 @@ def build(dept, rseed=1, parallel=None, late_mode="hard", interleave=True, combi
                          # direct per-late-theory-slot penalty: pulls theory out of 3:10/4:10pm
                          # even on lab-late days (helps combined-heavy depts like CSE).
                          "late_theory_penalty_weight": 8}}
-    # Lunch (11-2 = slots 3,4,5): HARD per-section guarantee, with a per-department fallback
-    # to a STRONG soft penalty (300) when hard is infeasible. Lunch penalty (300) >> the 3pm
-    # late-day penalty (40), so lunch is preserved BEFORE the 3pm limit is relaxed.
+    # Lunch (11-2 = slots 3,4,5): always a HARD per-section guarantee.  The run may
+    # relax the after-3pm preference, but never lunch alignment.
     cross["lunch_alignment"] = {"enabled": True, "priority": 9, "weight": 1.0,
           "params": {"lunch_slot_window": [3, 4, 5], "minimum_free_slots": 1,
-                     "penalty_weight": 300, "global_soft": (lunch_mode == "soft")}}
+                     "penalty_weight": 300, "global_soft": False}}
     # Combined labs (DBMS / OOP-Java / DB-Tech): room-lock each section into ONE room for
     # all 4 blocks (trainer stays put) and split the 6 ANEW rooms into two FIXED disjoint
     # 3-room pools (DBMS+DB-Tech: A104/105+ANEW104+KS02[210-cap,3 sections]; OOP-Java: ANEW101/102/103).
@@ -143,20 +163,53 @@ def build(dept, rseed=1, parallel=None, late_mode="hard", interleave=True, combi
     data = DataPreprocessor(cfg).build_extended_container(data=res)
     return ModelBuilder(config=cfg).build(data=data), data
 
-# ---- seniors seed ----
-sen_theory_room = set(); sen_teacher = defaultdict(set); load_seniors_lab = defaultdict(int)
+
+def _focus_phase1_objective(constraint_model):
+    """Use Phase 1 to prove the minimum number of physical section lab cells.
+
+    Theory is fully re-optimized in Phase 2 after those optimal labs are locked.
+    """
+    if not OPTIMIZE_PHASE1 or PHASE1_OBJECTIVE_SCOPE != "lab_cells":
+        return 0
+    objective = constraint_model.extras.get("objective", {})
+    penalties = objective.get("penalties", ()) if isinstance(objective, dict) else ()
+    terms = []
+    for entry in penalties:
+        if not isinstance(entry, tuple) or len(entry) < 3:
+            continue
+        weight, variable, tag = entry[:3]
+        if not str(tag).startswith("lab_interleave:"):
+            continue
+        terms.append(int(weight) * variable)
+    if terms:
+        constraint_model.model.Minimize(sum(terms))
+    return len(terms)
+
+# ---- production fixed-schedule seed ----
+# ``sen_room_slots`` is deliberately cross-domain: fixed labs are expanded to
+# their covered 50-minute theory slots, so a newly generated theory class can
+# never reuse a room occupied by a fixed lab (and vice versa).
+sen_room_slots = set(); sen_teacher = defaultdict(set); load_seniors_lab = defaultdict(int)
 def load_seniors():
-    t = pd.read_csv("data/theory_schedule_combined_only_latest_uploads.csv", keep_default_na=False)
-    l = pd.read_csv("data/lab_schedule_combined_only_latest_uploads.csv", keep_default_na=False)
+    missing = [str(path) for path in (FIXED_THEORY_CSV, FIXED_LAB_CSV) if not path.is_file()]
+    if missing:
+        raise FileNotFoundError(f"Missing production schedule lock file(s): {', '.join(missing)}")
+    t = pd.read_csv(FIXED_THEORY_CSV, keep_default_na=False)
+    l = pd.read_csv(FIXED_LAB_CSV, keep_default_na=False)
     for _, r in t.iterrows():
         try: sl = int(r["slot_index"])
         except (TypeError, ValueError): continue
-        day = str(r["day"]).lower(); sen_theory_room.add((str(r["room_number"]), day, sl))
+        day = _day_token(r["day"]); sen_room_slots.add((str(r["room_number"]), day, sl))
         sen_teacher[str(r["teacher_id"])].add((day, sl))
     for _, r in l.iterrows():
-        day = str(r["day"]).lower(); sess = str(r["session_name"])
-        load_seniors_lab[(str(r["room_number"]), day, sess)] += 1
-        for s in L2T.get(sess, ()): sen_teacher[str(r["teacher_id"])].add((day, s))
+        day = _day_token(r["day"]); sess = str(r["session_name"])
+        room_number = str(r["room_number"])
+        load_seniors_lab[(room_number, day, sess)] += 1
+        is_external_combined = str(r.get("course_code", "")).strip().upper() in COMB
+        for s in L2T.get(sess, ()):
+            sen_room_slots.add((room_number, day, s))
+            if not is_external_combined:
+                sen_teacher[str(r["teacher_id"])].add((day, s))
 load_seniors()
 
 # =================== PHASE 1: first-solution, multi-seed until all-18 fit ===================
@@ -168,7 +221,7 @@ def phase1(rseed):
     labcode = defaultdict(set)
     # seed seniors
     for k, v in load_seniors_lab.items(): labbusy[k] += v
-    thbusy |= sen_theory_room
+    thbusy |= sen_room_slots
     for t, s in sen_teacher.items(): tbusy[t] |= s
     lab_values = {}; per_lab_occ = {}; per_lab_teacher = {}; per_th_room = {}; per_th_teacher = {}
     dept_parallel = {}; dept_late_mode = {}; dept_interleave = {}; dept_combined = {}; dept_lunch_mode = {}
@@ -177,6 +230,9 @@ def phase1(rseed):
         def attempt(parallel, late_mode, interleave, combined_strict=True, lunch_mode="hard"):
             cm, data = build(dept, parallel=parallel, late_mode=late_mode, interleave=interleave, combined_strict=combined_strict, lunch_mode=lunch_mode)
             model = cm.model; tb = cm.variables.theory; lb = cm.variables.lab
+            phase1_terms = _focus_phase1_objective(cm)
+            if os.environ.get("DEBUG_DEPT") == "1" and phase1_terms:
+                print(f"      phase1 objective: {phase1_terms} lab-cell terms", flush=True)
             # reserve labs + theory + teachers
             anew_cell = defaultdict(list)   # (rn,aday,sess) -> [(course_code, students, var), ...]
             for tid, cmap in lb.assignments.items():
@@ -186,20 +242,23 @@ def phase1(rseed):
                     code = getattr(_req, "course_code", None) or str(inst)
                     students = int(getattr(_req, "student_count", 0) or 0)
                     for di, smap in dmap.items():
-                        aday = pat[di] if 0 <= di < len(pat) else None
+                        aday = _day_token(pat[di]) if 0 <= di < len(pat) else None
                         if aday is None: continue
                         for sess, rmap in smap.items():
-                            tconf = any((aday, s) in tbusy.get(str(tid), set()) for s in L2T.get(sess, ()))
+                            is_external_combined = str(code).strip().upper() in COMB
+                            tconf = (not is_external_combined) and any(
+                                (aday, s) in tbusy.get(str(tid), set()) for s in L2T.get(sess, ())
+                            )
                             for rid, var in rmap.items():
                                 rn = rid2num.get(str(rid), str(rid))
-                                if tconf: model.Add(var == 0); continue
+                                room_conflict = any((rn, aday, s) in thbusy for s in L2T.get(sess, ()))
+                                if tconf or room_conflict: model.Add(var == 0); continue
                                 if rn in big_nums or rn in ANEW_NUMS: anew_cell[(rn, aday, sess)].append((code, students, var))
                                 elif labbusy.get((rn, aday, sess), 0) >= 1: model.Add(var == 0)
             for (rn, aday, sess), items in anew_cell.items():
                 # block combined-lab cell entirely if seniors (or already-placed depts)
                 # hold THEORY in that room during any slot the lab session spans
-                theory_block = any((rn, aday, s) in thbusy for s in L2T.get(sess, ()))
-                cap = 0 if theory_block else max(0, _max_share(rn) - labbusy.get((rn, aday, sess), 0))
+                cap = max(0, _max_share(rn) - labbusy.get((rn, aday, sess), 0))
                 model.Add(sum(v for _, _, v in items) <= cap)
                 # 140 GENERAL computer labs (not the ANEW combined pool): usable ONLY to
                 # co-schedule two sections of the SAME course from the SAME department
@@ -225,30 +284,23 @@ def phase1(rseed):
                 for sk, dmap in skmap.items():
                     pat = tb.course_day_patterns.get(sk, ())
                     for di, slmap in dmap.items():
-                        aday = pat[di] if 0 <= di < len(pat) else None
+                        aday = _day_token(pat[di]) if 0 <= di < len(pat) else None
                         if aday is None: continue
                         for slot, rmap in slmap.items():
                             tconf = (aday, slot) in tbusy.get(str(tid), set())
                             for rid, var in rmap.items():
                                 rn = rid2num.get(str(rid), str(rid))
                                 if (rn, aday, slot) in thbusy or tconf: model.Add(var == 0)
-            s = cp_model.CpSolver(); s.parameters.max_time_in_seconds = 90
-            s.parameters.num_search_workers = 12; s.parameters.stop_after_first_solution = True; s.parameters.random_seed = rseed
+            s = cp_model.CpSolver(); s.parameters.max_time_in_seconds = PHASE1_TIME
+            s.parameters.num_search_workers = SOLVER_WORKERS
+            s.parameters.stop_after_first_solution = not OPTIMIZE_PHASE1
+            s.parameters.random_seed = rseed
             st = s.StatusName(s.Solve(model))
             return st, cm, data, model, tb, lb, s
-        # Fallback chain (relaxed in order of LEAST importance first): lunch is MORE important
-        # than the 3pm cap, so we relax the 3pm late-cap (hard->soft) BEFORE relaxing the lunch
-        # guarantee (hard->soft). Batch-interleave is ON (il=True): opposite batches share a
-        # lab slot, compressing labs and freeing midday slots for the hard lunch. Combined labs
-        # keep STRICT room-lock + fixed 3+3 pools throughout.
-        # Try interleave ON first (compresses labs -> space for lunch); keep lunch hard as long
-        # as possible (relax 3pm before lunch). If interleave itself makes a dept infeasible,
-        # fall through to the il=False block and repeat the late/lunch relaxation there.
-        # Batch-interleave OFF (il=False). Relax the 3pm cap (hard->soft) before the lunch
-        # guarantee (hard->soft); lunch stays the highest-priority soft target.
-        candidates = [(PARALLEL, "hard", False, True, "hard"),
-                      (PARALLEL, "soft", False, True, "hard"),
-                      (PARALLEL, "soft", False, True, "soft")]
+        # Fallback chain: only the after-3pm cap may relax. Lunch stays hard and
+        # half-cohort batch interleave remains enabled in every attempt.
+        candidates = [(PARALLEL, "hard", True, True, "hard"),
+                      (PARALLEL, "soft", True, True, "hard")]
         first = candidates[0]
         used_parallel, used_late, used_il, used_cs, used_lunch = PARALLEL, "hard", True, True, "hard"
         st = cm = data = model = tb = lb = s = None
@@ -260,9 +312,40 @@ def phase1(rseed):
                     print(f"    [fallback] {dept} -> late={cand_late} lunch={cand_lunch} ({st})", flush=True)
                 break
         if os.environ.get("DEBUG_DEPT") == "1":
-            print(f"    {dept[:30]:30s} -> {st} (late={used_late} lunch={used_lunch} il={used_il} strict={used_cs})", flush=True)
+            proof = ""
+            if st in ("OPTIMAL", "FEASIBLE"):
+                proof = f" obj={s.ObjectiveValue():.1f} bound={s.BestObjectiveBound():.1f}"
+            print(
+                f"    {dept[:30]:30s} -> {st}{proof} "
+                f"(late={used_late} lunch={used_lunch} il={used_il} strict={used_cs})",
+                flush=True,
+            )
         if st not in ("OPTIMAL", "FEASIBLE"):
             infeasible.append(dept); continue
+        if os.environ.get("DEBUG_CONSECUTIVE") == "1":
+            for result in cm.constraint_results:
+                if "Consecutive Lab Batches" in result.name or "Lab Session Coverage" in result.name:
+                    print(f"      {result.name}: {result.status} {result.details}", flush=True)
+            configured_codes = set(
+                cm.variables.lab.requirements[course_id].course_code
+                for teacher_map in cm.variables.lab.assignments.values()
+                for course_id in teacher_map
+                if cm.variables.lab.requirements[course_id].course_code in
+                {"BM23321", "BM23322", "FT23311", "FT23312", "BT23321", "BT23331"}
+            )
+            for teacher_id, course_map in cm.variables.lab.assignments.items():
+                for course_id, day_map in course_map.items():
+                    requirement = cm.variables.lab.requirements.get(course_id)
+                    if not requirement or requirement.course_code not in configured_codes:
+                        continue
+                    selected = []
+                    pattern = cm.variables.lab.day_patterns.get(course_id, ())
+                    for day_index, session_map in day_map.items():
+                        for session_name, room_map in session_map.items():
+                            for room_id, var in room_map.items():
+                                if s.Value(var):
+                                    selected.append((pattern[day_index], session_name, rid2num.get(str(room_id), str(room_id))))
+                    print(f"      consecutive selection {course_id}/{requirement.course_code}: {selected}", flush=True)
         dept_parallel[dept] = used_parallel
         dept_late_mode[dept] = used_late
         dept_interleave[dept] = used_il
@@ -280,14 +363,20 @@ def phase1(rseed):
         ext = ScheduleExtractor(data, cm).extract(SimpleNamespace(response=s.ResponseProto()))
         locc = defaultdict(int); lteach = defaultdict(set); throom = set(); tteach = defaultdict(set)
         for e in ext.lab_entries:
-            rn = str(e.room_number or e.room_id); day = str(getattr(e, "day", "")).lower()
+            rn = str(e.room_number or e.room_id); day = _day_token(getattr(e, "day", ""))
             labbusy[(rn, day, e.session_name)] += 1; locc[(rn, day, e.session_name)] += 1
             # record the subject occupying general 140 computer-lab cells (same-subject rule)
             if rn in big_nums and rn not in ANEW_NUMS:
                 labcode[(rn, day, e.session_name)].add(getattr(e, "course_code", None))
-            for sc in L2T.get(e.session_name, ()): tbusy[str(e.teacher_id)].add((day, sc)); lteach[str(e.teacher_id)].add((day, sc))
+            is_external_combined = str(e.course_code).strip().upper() in COMB
+            for sc in L2T.get(e.session_name, ()):
+                # Reserve the physical room for later departments' theory models.
+                thbusy.add((rn, day, sc))
+                if not is_external_combined:
+                    tbusy[str(e.teacher_id)].add((day, sc))
+                    lteach[str(e.teacher_id)].add((day, sc))
         for e in ext.theory_entries:
-            rn = str(e.room_number or e.room_id); day = str(getattr(e, "day", "")).lower()
+            rn = str(e.room_number or e.room_id); day = _day_token(getattr(e, "day", ""))
             thbusy.add((rn, day, e.slot_index)); throom.add((rn, day, e.slot_index))
             if e.teacher_id: tbusy[str(e.teacher_id)].add((day, e.slot_index)); tteach[str(e.teacher_id)].add((day, e.slot_index))
         per_lab_occ[dept] = locc; per_lab_teacher[dept] = lteach; per_th_room[dept] = throom; per_th_teacher[dept] = tteach
@@ -295,19 +384,19 @@ def phase1(rseed):
         # inspected/verified immediately, before the long phase-2 bundling runs.
         for e in ext.theory_entries:
             p1_recs.append({"dept": dept, "kind":"theory","course":str(e.course_code),"group":str(e.group_id),
-                            "day":str(getattr(e,"day","")).lower(),"slot":e.slot_index,"session":None,
+                            "day":_day_token(getattr(e,"day","")),"slot":e.slot_index,"session":None,
                             "room":str(e.room_number or e.room_id),"teacher":str(e.teacher_name or ""),"is_comb":False})
         for e in ext.lab_entries:
             p1_recs.append({"dept": dept, "kind":"lab","course":str(e.course_code),"group":str(e.group_id),
-                            "day":str(getattr(e,"day","")).lower(),"slot":None,"session":e.session_name,
+                            "day":_day_token(getattr(e,"day","")),"slot":None,"session":e.session_name,
                             "room":str(e.room_number or e.room_id),"teacher":str(e.teacher_name or ""),
                             "is_comb":str(e.course_code) in COMB,
                             "batch":str(getattr(e,"batch_label",None) or getattr(e,"batch_info",None) or "")})
     return infeasible, lab_values, per_lab_occ, per_lab_teacher, per_th_room, per_th_teacher, dept_parallel, dept_late_mode, dept_interleave, dept_combined, p1_recs, dept_lunch_mode
 
-print("PHASE 1: first-solution multi-seed to fit all 18 around seniors...", flush=True)
+print(f"PHASE 1: first-solution multi-seed to fit {len(ORDER)} departments around production locks...", flush=True)
 best = None
-for rseed in range(1, 13):
+for rseed in range(1, MAX_SEEDS + 1):
     t0 = time.time(); res1 = phase1(rseed); infeas = res1[0]
     print(f"  [seed {rseed}] {len(ORDER)-len(infeas)}/{len(ORDER)} fit ({time.time()-t0:.0f}s)" + ("" if infeas else " ALL FIT"), flush=True)
     if best is None or len(infeas) < len(best[0][0]): best = (res1, rseed)
@@ -324,11 +413,18 @@ _p1_out.write_text(json.dumps(p1_recs), encoding="utf-8")
 print(f"  phase-1 JSON: {len(p1_recs)} records -> {_p1_out}", flush=True)
 fit_depts = [d for d in ORDER if d not in infeasible]
 
-# precompute fixed lab-teacher footprint (seniors + all fitted depts' locked labs)
+# Precompute fixed lab footprints (production locks + all fitted departments'
+# phase-1 labs).  Phase 2 re-solves theory only, so these rooms and teachers must
+# be reserved explicitly across department models.
 fixed_lab_teacher = defaultdict(set)
 for t, s in sen_teacher.items(): fixed_lab_teacher[t] |= s   # includes senior theory too (fine, they're fixed)
+fixed_lab_room_slots = set()
 for d in fit_depts:
     for t, s in per_lab_teacher[d].items(): fixed_lab_teacher[t] |= s
+    for (room_number, day, session_name), occupancy in per_lab_occ[d].items():
+        if occupancy:
+            for slot_index in L2T.get(session_name, ()):
+                fixed_lab_room_slots.add((room_number, day, slot_index))
 
 # =================== PHASE 2: lock labs, re-optimize theory for bundling ===================
 print("PHASE 2: locking labs, re-optimizing theory for 25+25 bundling...", flush=True)
@@ -338,7 +434,7 @@ all_recs = []
 full_theory = []; full_lab = []   # full extractor entries -> senior-format CSVs
 for dept in fit_depts:
     # others' theory reservation
-    res_rooms = set(sen_theory_room)
+    res_rooms = set(sen_room_slots) | fixed_lab_room_slots
     for d in fit_depts:
         if d != dept: res_rooms |= cur_th_room[d]
     res_teacher = defaultdict(set)
@@ -368,7 +464,7 @@ for dept in fit_depts:
                     for rid, var in rmap.items():
                         rn = rid2num.get(str(rid), str(rid))
                         if (rn, aday, slot) in res_rooms or tconf: model.Add(var == 0)
-    s = cp_model.CpSolver(); s.parameters.max_time_in_seconds = PHASE2_TIME; s.parameters.num_search_workers = 12
+    s = cp_model.CpSolver(); s.parameters.max_time_in_seconds = PHASE2_TIME; s.parameters.num_search_workers = SOLVER_WORKERS
     st = s.StatusName(s.Solve(model))
     ext = ScheduleExtractor(data, cm).extract(SimpleNamespace(response=s.ResponseProto())) if st in ("OPTIMAL","FEASIBLE") else None
     if ext is None:
@@ -377,26 +473,34 @@ for dept in fit_depts:
     # update current theory occupancy for this dept
     nroom = set(); nteach = defaultdict(set)
     for e in ext.theory_entries:
-        rn = str(e.room_number or e.room_id); day = str(getattr(e,"day","")).lower()
+        rn = str(e.room_number or e.room_id); day = _day_token(getattr(e,"day",""))
         nroom.add((rn, day, e.slot_index))
         if e.teacher_id: nteach[str(e.teacher_id)].add((day, e.slot_index))
     cur_th_room[dept] = nroom; cur_th_teacher[dept] = nteach
     full_theory.extend(ext.theory_entries); full_lab.extend(ext.lab_entries)
     for e in ext.theory_entries:
         all_recs.append({"dept": dept, "kind":"theory","course":str(e.course_code),"group":str(e.group_id),
-                         "day":str(getattr(e,"day","")).lower(),"slot":e.slot_index,"session":None,
+                         "day":_day_token(getattr(e,"day","")),"slot":e.slot_index,"session":None,
                          "room":str(e.room_number or e.room_id),"teacher":str(e.teacher_name or ""),"is_comb":False})
     for e in ext.lab_entries:
         all_recs.append({"dept": dept, "kind":"lab","course":str(e.course_code),"group":str(e.group_id),
-                         "day":str(getattr(e,"day","")).lower(),"slot":None,"session":e.session_name,
+                         "day":_day_token(getattr(e,"day","")),"slot":None,"session":e.session_name,
                          "room":str(e.room_number or e.room_id),"teacher":str(e.teacher_name or ""),
                          "is_comb":str(e.course_code) in COMB,
                          "batch":str(getattr(e,"batch_label",None) or getattr(e,"batch_info",None) or "")})
-    print(f"  {dept[:38]:38s} -> {st}", flush=True)
+    objective = f" obj={s.ObjectiveValue():.1f} bound={s.BestObjectiveBound():.1f}" if st in ("OPTIMAL", "FEASIBLE") else ""
+    print(f"  {dept[:38]:38s} -> {st}{objective}", flush=True)
 
 SUF = "_parallel" if PARALLEL else ""
 outp = OUTDIR / f"seeded_schedule{SUF}.json"
 outp.write_text(json.dumps(all_recs), encoding="utf-8")
+# App-compatible full-fidelity payload. Unlike seeded_schedule.json, this keeps
+# every extractor field needed for Kutty halves, group chips and lab batches.
+schedule_path = OUTDIR / "schedule.json"
+schedule_path.write_text(json.dumps({
+    "lab_entries": [entry.to_dict() for entry in full_lab],
+    "theory_entries": [entry.to_dict() for entry in full_theory],
+}, indent=2), encoding="utf-8")
 # bundle count
 import re
 from collections import defaultdict as dd
@@ -419,7 +523,8 @@ TH_COLS = [("day","day"),("time_slot","slot_label"),("slot_index","slot_index"),
     ("teacher_name","teacher_name"),("staff_code","staff_code"),("room_id","room_id"),("room_number","room_number"),
     ("block","block"),("student_count","student_count"),("lecture_hours","lecture_hours"),
     ("tutorial_hours","tutorial_hours"),("schedule_type","schedule_type"),("is_co_scheduled","is_co_scheduled"),
-    ("capacity_info","capacity_info"),("partner_instance_id","partner_instance_id"),("group_name","group_name"),
+    ("capacity_info","capacity_info"),("partner_instance_id","partner_instance_id"),("bundle_half","bundle_half"),
+    ("section_id","section_id"),("group_name","group_name"),
     ("group_index","group_index"),("department","department"),("semester","semester"),("day_pattern","day_pattern")]
 LAB_COLS = [("day","day"),("session_name","session_name"),("time_range","session_time"),
     ("course_instance_id","course_instance_id"),("course_code","course_code"),("course_code_display","course_code_display"),

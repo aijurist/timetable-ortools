@@ -19,6 +19,7 @@ from ..utils import (
 )
 
 DepartmentToken = Tuple[str, Optional[int]]
+SectionToken = Tuple[str, Optional[int], Optional[int]]
 
 
 def _normalize_department_tokens(tokens: Iterable[object]) -> Tuple[DepartmentToken, ...]:
@@ -182,6 +183,25 @@ def _build_group_lab_session_map(lab_block) -> Dict[str, Dict[int, Dict[str, Tup
 	return result
 
 
+def _build_lab_groups_by_section(lab_block) -> Dict[SectionToken, Tuple[str, ...]]:
+	bucket: MutableMapping[SectionToken, set[str]] = defaultdict(set)
+	group_lookup = getattr(lab_block, "instance_group_lookup", {}) or {}
+	for course_id, requirement in (getattr(lab_block, "requirements", {}) or {}).items():
+		group_id = group_lookup.get(course_id) or getattr(requirement, "group_id", None)
+		department = getattr(requirement, "department", None)
+		semester = getattr(requirement, "semester", None)
+		if not group_id or not department:
+			continue
+		bucket[
+			(
+				str(department),
+				int(semester) if semester is not None else None,
+				getattr(requirement, "section_id", None),
+			)
+		].add(str(group_id))
+	return {key: tuple(sorted(group_ids)) for key, group_ids in bucket.items()}
+
+
 def _build_group_course_lab_session_map(
 	lab_block,
 ) -> Dict[str, Dict[str, Dict[int, Dict[str, Dict[str, Tuple[cp_model.IntVar, ...]]]]]]:
@@ -246,6 +266,7 @@ class LunchAlignmentConstraint(Constraint):
 			)
 
 		lab_sessions_by_group = _build_group_lab_session_map(lab_block)
+		lab_groups_by_section = _build_lab_groups_by_section(lab_block)
 		course_lab_sessions_by_group = _build_group_course_lab_session_map(lab_block)
 		lab_overlap_cache: Dict[int, Tuple[str, ...]] = {}
 
@@ -325,6 +346,7 @@ class LunchAlignmentConstraint(Constraint):
 					working_days,
 					window,
 					group_section,
+					lab_groups_by_section,
 				)
 				standard_groups += len(cohort_group_ids)
 				theory_guards += theory_delta
@@ -365,6 +387,7 @@ class LunchAlignmentConstraint(Constraint):
 		working_days: Sequence[str],
 		window: Tuple[int, ...],
 		group_section: Optional[Mapping[str, Optional[int]]] = None,
+		lab_groups_by_section: Optional[Mapping[SectionToken, Sequence[str]]] = None,
 	) -> Tuple[int, int]:
 		# Partition groups by section so the free-lunch slot is guaranteed PER SECTION (each
 		# section may take lunch at a different window slot). Non-section cohorts keep one
@@ -372,6 +395,12 @@ class LunchAlignmentConstraint(Constraint):
 		partitions: MutableMapping[Optional[int], list[str]] = defaultdict(list)
 		for group_id in group_ids:
 			partitions[(group_section or {}).get(group_id)].append(group_id)
+		for (department, semester, section_id), lab_group_ids in (lab_groups_by_section or {}).items():
+			if (department, semester) != cohort_key:
+				continue
+			partitions[section_id].extend(
+				group_id for group_id in lab_group_ids if group_id not in partitions[section_id]
+			)
 
 		total_theory = 0
 		total_lab = 0

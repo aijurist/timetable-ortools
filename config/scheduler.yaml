@@ -13,8 +13,8 @@ paths:
   core_lab_mapping_csv: data\core_lab_mapping.csv
   computer_lab_mapping_csv: data\computer_lab_mapping.csv
   preferences_csv: data\pop.csv
-  # fixed_lab_schedule_csv: data/final/2025-12-26_04-47-12/csv/lab_schedule.csv
-  # fixed_theory_schedule_csv: data/final/2025-12-26_04-47-12/csv/theory_schedule.csv
+  fixed_lab_schedule_csv: prod/lab_schedule_lock.csv
+  fixed_theory_schedule_csv: prod/theory_schedule_lock.csv
   output_root: output/combined_scheduler
 
 data:
@@ -653,6 +653,7 @@ constraints:
           - FT23511
           - FT23512
           - BT23721
+          - BT23523
           - BT23521
           - CH23521
           - CH23721
@@ -660,9 +661,10 @@ constraints:
           # Food Tech labs: 2 lab sessions must run consecutively (continuous 4 hours)
           - FT23311
           - FT23312
+          - BT23321
+          - BT23331
         preferred_pairs:
           - [L1, L2]
-          - [L3, L4]
           - [L4, L5]
         min_practical_hours: 4
         min_student_count: 36
@@ -858,8 +860,8 @@ constraints:
       priority: 10
       weight: 1.0
       params:
-        lab_csv_path: output/final/2025-12-26_04-47-12/csv/lab_schedule.csv
-        theory_csv_path: output/final/2025-12-26_04-47-12/csv/theory_schedule.csv
+        lab_csv_path: prod/lab_schedule_lock.csv
+        theory_csv_path: prod/theory_schedule_lock.csv
         lock_assignments: true
         block_rooms: true
         block_teachers: true

@@ -287,7 +287,17 @@ class LabCourseRequirementConstraint(Constraint):
 		if isinstance(index, RoomCategoryIndex):
 			return index
 		registry = getattr(getattr(context.data, "raw", None), "room_registry", {}) or {}
-		lab_room_ids = set(context.variables.lab.room_ids)
+		# Include every room that actually received a lab decision variable, even
+		# when the room registry has ``is_lab=0``.  Explicit core/computer mappings
+		# can legitimately route a course to such a room (for example B126); omitting
+		# it here misclassifies a 35-seat mapped lab as a large room and incorrectly
+		# reduces a two-batch course to one session.
+		lab_room_ids = {str(room_id) for room_id in context.variables.lab.room_ids}
+		for teacher_map in context.variables.lab.assignments.values():
+			for day_map in teacher_map.values():
+				for session_map in day_map.values():
+					for room_map in session_map.values():
+						lab_room_ids.update(str(room_id) for room_id in room_map)
 		small: set[str] = set()
 		large: set[str] = set()
 		large_140: set[str] = set()

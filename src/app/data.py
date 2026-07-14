@@ -138,12 +138,13 @@ class ScheduleRepository:
             raise FileNotFoundError("Output directory not found – generate a schedule first.")
 
         candidates: List[ScheduleSnapshot] = []
-        for child in self._output_dir.iterdir():
-            if not child.is_dir():
+        seen_roots = set()
+        for schedule_path in self._output_dir.rglob("schedule.json"):
+            child = schedule_path.parent
+            if child in seen_roots:
                 continue
-
-            schedule_path = child / "schedule.json"
-            if schedule_path.exists():
+            seen_roots.add(child)
+            if schedule_path.is_file():
                 candidates.append(
                     ScheduleSnapshot(
                         root=child,
@@ -155,11 +156,13 @@ class ScheduleRepository:
                         modified_at=schedule_path.stat().st_mtime,
                     )
                 )
+        for lab_path in self._output_dir.rglob("combined_lab_schedule.json"):
+            child = lab_path.parent
+            if child in seen_roots:
                 continue
-
-            lab_path = child / "combined_lab_schedule.json"
             theory_path = child / "combined_theory_schedule.json"
             if lab_path.exists() and theory_path.exists():
+                seen_roots.add(child)
                 candidates.append(
                     ScheduleSnapshot(
                         root=child,
@@ -228,6 +231,8 @@ class ScheduleRepository:
 
                 normalized_session = {
                     "day": entry.get("day"),
+                    "room_number": room_number,
+                    "block": block,
                     "time_label": entry.get("time_slot")
                     or entry.get("time_range")
                     or entry.get("session_name"),
@@ -237,10 +242,31 @@ class ScheduleRepository:
                     "department": entry.get("department"),
                     "semester": entry.get("semester"),
                     "teacher_name": entry.get("teacher_name"),
+                    "teacher_id": entry.get("teacher_id"),
+                    "staff_code": entry.get("staff_code"),
                     "schedule_type": schedule_type,
                     "session_kind": entry.get("session_type"),
                     "session_number": entry.get("session_number"),
                     "day_pattern": entry.get("day_pattern"),
+                    "course_instance_id": entry.get("course_instance_id"),
+                    "partner_instance_id": entry.get("partner_instance_id"),
+                    "is_co_scheduled": entry.get("is_co_scheduled"),
+                    "bundle_half": entry.get("bundle_half"),
+                    "section_id": entry.get("section_id"),
+                    "delivery_mode": entry.get("delivery_mode"),
+                    "bundle_id": entry.get("bundle_id"),
+                    "bundle_group_id": entry.get("bundle_group_id"),
+                    "bundle_label": entry.get("bundle_label"),
+                    "bundle_course_codes": entry.get("bundle_course_codes"),
+                    "bundle_teacher_ids": entry.get("bundle_teacher_ids"),
+                    "half_index": entry.get("half_index"),
+                    "half_minutes": entry.get("half_minutes"),
+                    "half_time": entry.get("half_time"),
+                    "partner_course_code": entry.get("partner_course_code"),
+                    "partner_teacher_id": entry.get("partner_teacher_id"),
+                    "partner_teacher_name": entry.get("partner_teacher_name"),
+                    "pairing_score": entry.get("pairing_score"),
+                    "selection_mode": entry.get("selection_mode"),
                 }
 
                 if room_number == "TBD" and not entry.get("room_id"):

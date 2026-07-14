@@ -3,12 +3,14 @@
 Two theory courses of an eligible cohort may share a single 50-minute slot, split
 25min + 25min ("bundling"). The solver decides which courses pair, subject to:
 
-* only courses with equal required theory hours and different teachers may pair;
+* courses with different teachers may pair; unequal theory loads share as many
+  25-minute halves as possible and leave the longer course a full-slot remainder;
 * a bundled course needs twice as many slot appearances (the 8-half-slot rule);
 * a bundled pair is co-scheduled (same day/slot) and shares one room;
-* pairing is maximal per hour-bucket (leftover only from an odd count) unless the
-  ``force_maximal_pairing`` param is disabled, in which case fewer solos are only
-  softly preferred.
+* pairing is maximum-cardinality over the feasible course graph (so an even
+  section has no singleton whenever a perfect matching exists);
+* among maximum-cardinality matchings, courses with equal or near-equal theory
+  loads are preferred.
 
 Cohort-level exclusivity (a bundled pair counting as one occupancy) is enforced in
 :mod:`group_non_overlap`, which reads the pairing variables this constraint stores
@@ -43,6 +45,47 @@ def _sanitize(value: object) -> str:
 	return re.sub(r"[^0-9A-Za-z]+", "_", str(value)).strip("_") or "x"
 
 
+def _maximum_matching_size(vertex_count: int, edges: Mapping[Tuple[int, int], object]) -> int:
+	"""Return the exact maximum-cardinality matching size for a small section graph.
+
+	Second-year sections have only a handful of theory offerings, so a memoized
+	bit-mask search is both faster and more deterministic than starting a nested
+	CP-SAT solve while the main model is being built.  The result is used only as a
+	hard cardinality target; the main solver still chooses *which* maximum matching
+	fits rooms, staff availability, POP windows, and the fixed schedule.
+	"""
+
+	if vertex_count < 2 or not edges:
+		return 0
+	adjacency = [0] * vertex_count
+	for raw_a, raw_b in edges:
+		a, b = int(raw_a), int(raw_b)
+		if a == b or a < 0 or b < 0 or a >= vertex_count or b >= vertex_count:
+			continue
+		adjacency[a] |= 1 << b
+		adjacency[b] |= 1 << a
+
+	cache: Dict[int, int] = {0: 0}
+
+	def solve(mask: int) -> int:
+		cached = cache.get(mask)
+		if cached is not None:
+			return cached
+		first_bit = mask & -mask
+		first = first_bit.bit_length() - 1
+		rest = mask ^ first_bit
+		best = solve(rest)  # leave ``first`` unmatched when the graph requires it
+		partners = adjacency[first] & rest
+		while partners:
+			partner_bit = partners & -partners
+			best = max(best, 1 + solve(rest ^ partner_bit))
+			partners ^= partner_bit
+		cache[mask] = best
+		return best
+
+	return solve((1 << vertex_count) - 1)
+
+
 class BundledTheoryConstraint(Constraint):
 	"""Create bundle decision variables and their coupling constraints."""
 
@@ -54,6 +97,7 @@ class BundledTheoryConstraint(Constraint):
 
 		force_maximal = bool(self.params.get("force_maximal_pairing", True))
 		solo_penalty = int(self.params.get("solo_penalty_weight", 10) or 0)
+		load_gap_penalty = int(self.params.get("pair_load_gap_penalty_weight", 5) or 0)
 		enforce_shared_room = bool(self.params.get("enforce_shared_room", True))
 		hint_pairing = bool(self.params.get("hint_maximal_pairing", True))
 		# Partial (per-slot) pairing: two courses of UNEQUAL required hours may still
@@ -85,6 +129,8 @@ class BundledTheoryConstraint(Constraint):
 		total_pairs = 0
 		total_courses = 0
 		cohorts_done = 0
+		forced_pair_count = 0
+		forced_singleton_count = 0
 
 		for cohort_key, courses in cohort_courses.items():
 			if len(courses) < 2:
@@ -132,13 +178,15 @@ class BundledTheoryConstraint(Constraint):
 				involved = [pv for (a, b), pv in pair_vars.items() if a == i or b == i]
 				model.Add(sum(involved) + solo[course_id] == 1)
 
-			# Maximal pairing per hour-bucket (leftover only from odd count).
+			# Maximum-cardinality pairing over the actual candidate graph.  This is
+			# deliberately graph-based rather than bucket-based: with partial pairing,
+			# a 2+1 theory course may validly pair with a 3+1 theory course.  The old
+			# per-hour-bucket parity equations incorrectly forced both to remain solo.
 			if force_maximal:
-				buckets: Dict[int, List[str]] = defaultdict(list)
-				for course_id, req in courses:
-					buckets[int(getattr(req, "required_slots", 0))].append(course_id)
-				for bucket_courses in buckets.values():
-					model.Add(sum(solo[c] for c in bucket_courses) == len(bucket_courses) % 2)
+				maximum_pairs = _maximum_matching_size(len(courses), pair_vars)
+				model.Add(sum(pair_vars.values()) == maximum_pairs)
+				forced_pair_count += maximum_pairs
+				forced_singleton_count += len(courses) - 2 * maximum_pairs
 
 			# Coverage tied to pairing: solo -> required_slots; paired -> required_slots
 			# plus the bundled (shared) hours. For an equal-hour pair the shared count is
@@ -192,6 +240,20 @@ class BundledTheoryConstraint(Constraint):
 					register_objective_penalty(
 						context, solo[course_id], weight=solo_penalty, tag="bundled_theory"
 					)
+			# Once cardinality is fixed, prefer equal/near-equal L+T loads.  This is a
+			# quality tie-break only: it can never reduce the number of paired courses.
+			if load_gap_penalty:
+				for (a, b), pair_var in pair_vars.items():
+					base_a = int(getattr(courses[a][1], "required_slots", 0))
+					base_b = int(getattr(courses[b][1], "required_slots", 0))
+					gap = abs(base_a - base_b)
+					if gap:
+						register_objective_penalty(
+							context,
+							pair_var,
+							weight=gap * load_gap_penalty,
+							tag="bundled_theory_pair_quality",
+						)
 
 			# Store each pair with the SHORTER course first: group_non_overlap uses the
 			# first course's presence to mark the shared (bundled) cell, and the shorter
@@ -231,6 +293,8 @@ class BundledTheoryConstraint(Constraint):
 				"candidate_pairs": total_pairs,
 				"eligible_courses": total_courses,
 				"force_maximal_pairing": force_maximal,
+				"forced_pairs": forced_pair_count,
+				"forced_singletons": forced_singleton_count,
 			},
 		)
 

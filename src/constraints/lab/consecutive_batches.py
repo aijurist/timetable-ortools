@@ -146,24 +146,53 @@ class ConsecutiveBatchLabConstraint(Constraint):
 		pairs: Sequence[Tuple[str, str]],
 		stats: ConsecutiveBatchStats,
 	) -> None:
+		allowed_sessions = {session for pair in pairs for session in pair}
+		# Targeted courses may use only complete configured pairs.  Previously an
+		# L3 placement (or a lone L1/L5 when its partner map was empty) escaped all
+		# equalities and silently violated the consecutive-batch requirement.
+		for session_name, room_map in session_map.items():
+			if session_name in allowed_sessions or not room_map:
+				continue
+			literal = build_presence_literal(
+				model,
+				tuple(room_map.values()),
+				f"consec_{course_id}_d{day_idx}_{session_name}_blocked",
+			)
+			if literal is not None:
+				model.Add(literal == 0)
+				stats.constraints_added += 1
+
 		for first_session, second_session in pairs:
 			first_rooms = session_map.get(first_session)
 			second_rooms = session_map.get(second_session)
-			if not first_rooms or not second_rooms:
+			if not first_rooms and not second_rooms:
 				continue
-			literal_first = build_presence_literal(
-				model,
-				tuple(first_rooms.values()),
-				f"consec_{course_id}_d{day_idx}_{first_session}",
+			literal_first = (
+				build_presence_literal(
+					model,
+					tuple(first_rooms.values()),
+					f"consec_{course_id}_d{day_idx}_{first_session}",
+				)
+				if first_rooms
+				else None
 			)
-			literal_second = build_presence_literal(
-				model,
-				tuple(second_rooms.values()),
-				f"consec_{course_id}_d{day_idx}_{second_session}",
+			literal_second = (
+				build_presence_literal(
+					model,
+					tuple(second_rooms.values()),
+					f"consec_{course_id}_d{day_idx}_{second_session}",
+				)
+				if second_rooms
+				else None
 			)
-			if literal_first is None or literal_second is None:
+			if literal_first is not None and literal_second is not None:
+				model.Add(literal_first == literal_second)
+			elif literal_first is not None:
+				model.Add(literal_first == 0)
+			elif literal_second is not None:
+				model.Add(literal_second == 0)
+			else:
 				continue
-			model.Add(literal_first == literal_second)
 			stats.constraints_added += 1
 
 	def _skip(self, reason: str) -> ConstraintApplicationResult:

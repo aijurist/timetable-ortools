@@ -252,15 +252,46 @@ class ScheduleExtractor:
 								capacity_info=capacity_info,
 							)
 							entries.append(entry)
-		return tuple(self._annotate_lab_batches(entries))
+		return tuple(self._annotate_lab_batches(entries, accessor))
 
-	def _annotate_lab_batches(self, entries: Sequence[LabScheduleEntry]) -> Sequence[LabScheduleEntry]:
+	def _annotate_lab_batches(
+		self,
+		entries: Sequence[LabScheduleEntry],
+		accessor: Optional[_SolutionAccessor] = None,
+	) -> Sequence[LabScheduleEntry]:
 		if not entries:
 			return entries
 		session_pair_lookup = self._session_pair_lookup()
 		per_course: Dict[str, List[int]] = defaultdict(list)
 		annotated = list(entries)
-		for idx, entry in enumerate(entries):
+		constraint_model = getattr(self, "_constraint_model", None)
+		interleave_assignments = getattr(constraint_model, "extras", {}).get(
+			"batch_interleave_assignments", {}
+		)
+		if accessor is not None and isinstance(interleave_assignments, Mapping):
+			for idx, entry in enumerate(annotated):
+				assignment = interleave_assignments.get(
+					(str(entry.course_instance_id), int(entry.day_index), str(entry.session_name))
+				)
+				if not isinstance(assignment, (tuple, list)) or len(assignment) < 2:
+					continue
+				if len(assignment) >= 3:
+					split_literal = assignment[2]
+					if split_literal is None or not accessor.bool_value(split_literal):
+						continue
+				batch_number = 1 if accessor.bool_value(assignment[0]) else 2 if accessor.bool_value(assignment[1]) else None
+				if batch_number is None:
+					continue
+				label = f"Batch {batch_number}"
+				annotated[idx] = replace(
+					entry,
+					batch_number=batch_number,
+					batch_label=label,
+					batch_info=label,
+					num_batches=max(2, int(entry.num_batches or 0)),
+					is_batched=True,
+				)
+		for idx, entry in enumerate(annotated):
 			per_course[entry.course_instance_id].append(idx)
 		for course_id, indices in per_course.items():
 			if not indices:

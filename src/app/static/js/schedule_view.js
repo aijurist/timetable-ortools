@@ -1,4 +1,21 @@
 // Combined Schedule Viewer powered by FastAPI schedule API
+import {
+    bundleIdentity,
+    buildSessionHoverDetails,
+    buildTeacherSchedule,
+    countPhysicalSessions,
+    escapeHtml,
+    expandKuttyOccurrenceMatches,
+    groupCellSessions,
+    isKuttyShared,
+    renderKuttySessionCard,
+    sessionGroupNumber,
+    sessionSectionIndex,
+    sessionSectionLabel,
+    teacherKey,
+    updateBundlePanel,
+} from "./kutty_schedule.mjs?v=20260714b";
+
 let labData = [];
 let theoryData = [];
 let allData = [];
@@ -58,16 +75,6 @@ const deptColors = {
     "Computer Science & Business Systems": "dept-cb",
     "Computer Science & Design": "dept-cd"
 };
-
-function getGroupClass(groupName) {
-    if (!groupName) return "";
-    const match = groupName.match(/_G(\d+)$/);
-    if (match) {
-        const groupNum = parseInt(match[1], 10);
-        return groupColors[groupNum] || "";
-    }
-    return "";
-}
 
 function getDeptClass(department) {
     return deptColors[department] || "";
@@ -142,18 +149,68 @@ function initializeFilters() {
     });
 
     updateDaysFromData();
+    updateCohortFilterMode();
 
     document.getElementById("viewType").addEventListener("change", renderContent);
-    document.getElementById("departmentFilter").addEventListener("change", renderContent);
-    document.getElementById("semesterFilter").addEventListener("change", renderContent);
+    document.getElementById("departmentFilter").addEventListener("change", () => {
+        updateSectionOptions();
+        renderContent();
+    });
+    document.getElementById("semesterFilter").addEventListener("change", () => {
+        updateCohortFilterMode();
+        renderContent();
+    });
     document.getElementById("dayFilter").addEventListener("change", renderContent);
     document.getElementById("sessionTypeFilter").addEventListener("change", renderContent);
     document.getElementById("groupFilter").addEventListener("change", renderContent);
+    document.getElementById("sectionFilter").addEventListener("change", renderContent);
     document.getElementById("dayPatternFilter").addEventListener("change", renderContent);
 
     document.getElementById("courseSearch").addEventListener("input", debounce(renderContent, 300));
     document.getElementById("teacherSearch").addEventListener("input", debounce(renderContent, 300));
     document.getElementById("roomSearch").addEventListener("input", debounce(renderContent, 300));
+}
+
+function isSectionMode() {
+    return document.getElementById("semesterFilter").value === "3";
+}
+
+function updateCohortFilterMode() {
+    const sectionMode = isSectionMode();
+    document.getElementById("groupFilterField").classList.toggle("d-none", sectionMode);
+    document.getElementById("sectionFilterField").classList.toggle("d-none", !sectionMode);
+    document.getElementById("groupLegendCard").classList.toggle("d-none", sectionMode);
+    if (sectionMode) {
+        document.getElementById("groupFilter").value = "";
+        updateSectionOptions();
+    } else {
+        document.getElementById("sectionFilter").value = "";
+    }
+}
+
+function updateSectionOptions() {
+    const department = document.getElementById("departmentFilter").value;
+    const select = document.getElementById("sectionFilter");
+    const previous = select.value;
+    select.innerHTML = "";
+    if (!department) {
+        select.add(new Option("Select department first", ""));
+        select.disabled = true;
+        return;
+    }
+    select.disabled = false;
+    select.add(new Option("All Sections", ""));
+    const indices = [...new Set(
+        allData
+            .filter((item) => item.department === department && Number(item.semester) === 3)
+            .map(sessionSectionIndex)
+            .filter((value) => value !== null),
+    )].sort((left, right) => left - right);
+    indices.forEach((index) => {
+        const label = sessionSectionLabel({ section_id: index });
+        select.add(new Option(`Section ${label}`, String(index)));
+    });
+    select.value = indices.includes(Number(previous)) ? previous : "";
 }
 
 function updateDaysFromData() {
@@ -163,9 +220,9 @@ function updateDaysFromData() {
 }
 
 function updateSummaryStats() {
-    const totalSessions = allData.length;
+    const totalSessions = countPhysicalSessions(allData);
     const labSessionsCount = labData.length;
-    const theorySessionsCount = theoryData.length;
+    const theorySessionsCount = countPhysicalSessions(theoryData);
     const teacherIds = allData.map((item) => item.teacher_id || item.teacher_name).filter(Boolean);
     const teachers = new Set(teacherIds).size;
     const rooms = new Set(allData.map((item) => item.room_id || item.room_number).filter(Boolean)).size;
@@ -185,6 +242,7 @@ function getFilteredData() {
     const day = document.getElementById("dayFilter").value;
     const sessionType = document.getElementById("sessionTypeFilter").value;
     const group = document.getElementById("groupFilter").value;
+    const section = document.getElementById("sectionFilter").value;
     const dayPattern = document.getElementById("dayPatternFilter").value;
     const courseSearch = document.getElementById("courseSearch").value.toLowerCase();
     const teacherSearch = document.getElementById("teacherSearch").value.toLowerCase();
@@ -202,24 +260,28 @@ function getFilteredData() {
     if (sessionType) {
         filtered = filtered.filter((item) => item.schedule_type === sessionType);
     }
-    if (group) {
+    if (isSectionMode() && section) {
+        filtered = filtered.filter((item) => String(sessionSectionIndex(item)) === section);
+    } else if (!isSectionMode() && group) {
         filtered = filtered.filter((item) => item.group_name === group);
     }
     if (dayPattern) {
         filtered = filtered.filter((item) => item.day_pattern === dayPattern);
     }
-    if (courseSearch) {
-        filtered = filtered.filter(
-            (item) =>
+    const structuralScope = filtered;
+    if (courseSearch || teacherSearch || roomSearch) {
+        const directMatches = structuralScope.filter((item) => {
+            const matchesCourse = !courseSearch ||
                 (item.course_code || "").toLowerCase().includes(courseSearch) ||
-                (item.course_name || "").toLowerCase().includes(courseSearch)
-        );
-    }
-    if (teacherSearch) {
-        filtered = filtered.filter((item) => (item.teacher_name || "").toLowerCase().includes(teacherSearch));
-    }
-    if (roomSearch) {
-        filtered = filtered.filter((item) => (item.room_number || "").toLowerCase().includes(roomSearch));
+                (item.course_name || "").toLowerCase().includes(courseSearch);
+            const matchesTeacher = !teacherSearch ||
+                (item.teacher_name || "").toLowerCase().includes(teacherSearch) ||
+                String(item.staff_code || item.teacher_id || "").toLowerCase().includes(teacherSearch);
+            const matchesRoom = !roomSearch ||
+                (item.room_number || "").toLowerCase().includes(roomSearch);
+            return matchesCourse && matchesTeacher && matchesRoom;
+        });
+        filtered = expandKuttyOccurrenceMatches(structuralScope, directMatches);
     }
 
     return filtered;
@@ -228,6 +290,12 @@ function getFilteredData() {
 function renderContent() {
     const viewType = document.getElementById("viewType").value;
     const filteredData = getFilteredData();
+    updateBundlePanel(filteredData);
+
+    if (isSectionMode() && document.getElementById("departmentFilter").value) {
+        renderSectionView(filteredData);
+        return;
+    }
 
     switch (viewType) {
         case "department":
@@ -246,6 +314,34 @@ function renderContent() {
             renderDayView(filteredData);
             break;
     }
+}
+
+function renderSectionView(data) {
+    const sections = new Map();
+    data.forEach((session) => {
+        const index = sessionSectionIndex(session);
+        if (index === null) return;
+        if (!sections.has(index)) sections.set(index, []);
+        sections.get(index).push(session);
+    });
+    let html = "";
+    [...sections.entries()]
+        .sort(([left], [right]) => left - right)
+        .forEach(([index, rows]) => {
+            const label = sessionSectionLabel({ section_id: index });
+            html += `
+                <article class="card schedule-card mb-4">
+                    <header class="card-header changer-section-header">
+                        <h5 class="mb-0">Section ${escapeHtml(label)}</h5>
+                        <span>${countPhysicalSessions(rows)} sessions</span>
+                    </header>
+                    <div class="card-body">
+                        ${generateScheduleTable(rows)}
+                    </div>
+                </article>
+            `;
+        });
+    document.getElementById("mainContent").innerHTML = html || emptyState();
 }
 
 function renderDepartmentView(data) {
@@ -267,7 +363,7 @@ function renderDepartmentView(data) {
                     <h5 class="mb-0">
                         <i class="fas fa-building me-2"></i>
                         ${dept}
-                        <span class="badge bg-light text-dark ms-2">${deptData.length} sessions</span>
+                        <span class="badge bg-light text-dark ms-2">${countPhysicalSessions(deptData)} sessions</span>
                         ${deptDayPattern ? `<span class="badge bg-info ms-2">${deptDayPattern}</span>` : ""}
                     </h5>
                 </div>
@@ -279,7 +375,7 @@ function renderDepartmentView(data) {
             html += `
                 <h6 class="text-primary mb-3">
                     <i class="fas fa-graduation-cap me-1"></i>
-                    Semester ${semester} (${semesterData.length} sessions)
+                    Semester ${semester} (${countPhysicalSessions(semesterData)} sessions)
                 </h6>
                 ${generateScheduleTable(semesterData)}
                 <hr>
@@ -313,7 +409,7 @@ function renderSemesterView(data) {
                     <h5 class="mb-0">
                         <i class="fas fa-graduation-cap me-2"></i>
                         Semester ${semester}
-                        <span class="badge bg-light text-dark ms-2">${semesterData.length} sessions</span>
+                        <span class="badge bg-light text-dark ms-2">${countPhysicalSessions(semesterData)} sessions</span>
                     </h5>
                 </div>
                 <div class="card-body">
@@ -324,7 +420,7 @@ function renderSemesterView(data) {
             html += `
                 <h6 class="text-success mb-3">
                     <i class="fas fa-building me-1"></i>
-                    ${dept} (${deptData.length} sessions)
+                    ${dept} (${countPhysicalSessions(deptData)} sessions)
                 </h6>
                 ${generateScheduleTable(deptData)}
                 <hr>
@@ -361,7 +457,7 @@ function renderRoomView(data) {
                         <i class="fas ${isLab ? 'fa-flask' : 'fa-chalkboard'} me-2"></i>
                         ${roomNumber} - ${blockName}
                         <span class="badge bg-light text-dark ms-2">Capacity: ${capacity}</span>
-                        <span class="badge bg-light text-dark ms-2">${roomData.length} sessions</span>
+                        <span class="badge bg-light text-dark ms-2">${countPhysicalSessions(roomData)} sessions</span>
                     </h5>
                 </div>
                 <div class="card-body">
@@ -375,15 +471,28 @@ function renderRoomView(data) {
 }
 
 function renderTeacherView(data) {
-    const teachers = [...new Set(data.map((item) => `${item.teacher_name || "Unknown"}|${item.staff_code || item.teacher_id || ""}`))].sort();
+    const teacherSearch = document.getElementById("teacherSearch").value.toLowerCase();
+    const teacherMap = new Map();
+    data.forEach((item) => {
+        const key = teacherKey(item);
+        if (!key || teacherMap.has(key)) return;
+        const name = item.teacher_name || "Unknown";
+        const staffCode = item.staff_code || item.teacher_id || "";
+        const haystack = `${name} ${staffCode}`.toLowerCase();
+        if (teacherSearch && !haystack.includes(teacherSearch)) return;
+        teacherMap.set(key, { key, name, staffCode });
+    });
+    const teachers = [...teacherMap.values()].sort((left, right) => left.name.localeCompare(right.name));
     let html = "";
 
-    teachers.forEach((teacherInfo) => {
-        const [teacherName, staffCode] = teacherInfo.split("|");
-        const teacherData = data.filter((item) => item.teacher_name === teacherName);
+    teachers.forEach(({ key, name: teacherName, staffCode }) => {
+        const ownedData = data.filter((item) => teacherKey(item) === key);
+        const teacherData = buildTeacherSchedule(data, key);
 
-        const labSessions = teacherData.filter((item) => item.schedule_type === "lab").length;
-        const theorySessions = teacherData.filter((item) => item.schedule_type === "theory").length;
+        const labSessions = ownedData.filter((item) => item.schedule_type === "lab").length;
+        const theorySessions = countPhysicalSessions(
+            ownedData.filter((item) => item.schedule_type === "theory")
+        );
 
         html += `
             <div class="card mb-4">
@@ -396,7 +505,7 @@ function renderTeacherView(data) {
                     </h5>
                 </div>
                 <div class="card-body">
-                    ${generateScheduleTable(teacherData)}
+                    ${generateScheduleTable(teacherData, { focusTeacherKey: key })}
                 </div>
             </div>
         `;
@@ -413,7 +522,9 @@ function renderDayView(data) {
         if (dayData.length === 0) return;
 
         const labCount = dayData.filter((item) => item.schedule_type === "lab").length;
-        const theoryCount = dayData.filter((item) => item.schedule_type === "theory").length;
+        const theoryCount = countPhysicalSessions(
+            dayData.filter((item) => item.schedule_type === "theory"),
+        );
 
         html += `
             <div class="card mb-4">
@@ -435,7 +546,7 @@ function renderDayView(data) {
     document.getElementById("mainContent").innerHTML = html || emptyState();
 }
 
-function generateScheduleTable(data) {
+function generateScheduleTable(data, options = {}) {
     if (data.length === 0) {
         return '<div class="alert alert-info">No sessions found for the selected filters.</div>';
     }
@@ -502,7 +613,7 @@ function generateScheduleTable(data) {
             <table class="table table-bordered schedule-table">
                 <thead>
                     <tr>
-                        <th style="width: 120px;">Time</th>
+                        <th>Time</th>
     `;
 
     currentDays.forEach((day) => {
@@ -559,46 +670,17 @@ function generateScheduleTable(data) {
             `;
         }
 
-        html += `<tr><td class="time-header"><strong>${timeSlot}</strong></td>`;
+        const rowSessions = currentDays.flatMap((day) => scheduleGrid[day][timeSlot] || []);
+        html += `<tr><td class="time-cell"><strong>${formatTimeHeader(timeSlot, rowSessions)}</strong></td>`;
 
         currentDays.forEach((day) => {
             const sessions = scheduleGrid[day][timeSlot] || [];
             html += "<td>";
 
-            sessions.forEach((session) => {
-                const isLab = session.schedule_type === "lab";
-                const isBatched = session.is_batched;
-                const batchLabel = session.batch_label || session.batch_info;
-                const batchNumber = session.batch_number;
-                const sessionClass = isLab ? "lab-session" : "theory-session";
-                const batchClass = isBatched ? "batched-session" : "";
-
-                const groupClass = getGroupClass(session.group_name);
-                const deptClass = getDeptClass(session.department);
-                const semester = getSemesterFromGroupName(session.group_name) || `S${session.semester}`;
-                const groupNumber = session.group_name ? session.group_name.match(/_G(\d+)$/)?.[1] || "" : "";
-
-                html += `
-                    <div class="${sessionClass} ${batchClass} ${deptClass}" title="
-                        Course: ${session.course_name}
-                        Teacher: ${session.teacher_name}
-                        Room: ${session.room_number} (${session.block})
-                        Department: ${session.department}
-                        Group: ${session.group_name}
-                        Semester: ${semester}
-                        ${isLab ? 'Capacity: ' + (session.capacity || 'NA') : ''}
-                        ${isLab && (batchLabel || batchNumber) ? 'Batch: ' + (batchLabel || `Batch ${batchNumber}`) : ''}
-                    ">
-                        <div class="session-header">
-                            <div class="session-code">${session.course_code_display || session.course_code}</div>
-                            ${groupNumber ? `<div class="group-number ${groupClass}">G${groupNumber}</div>` : ""}
-                        </div>
-                        <div class="session-teacher">${session.teacher_name}</div>
-                        <div class="session-room">${session.room_number || 'TBD'}</div>
-                        ${isLab && (batchLabel || batchNumber) ? `<div class="batch-label">${batchLabel || `Batch ${batchNumber}`}</div>` : ""}
-                        <div class="semester-indicator">${semester}</div>
-                    </div>
-                `;
+            groupCellSessions(sessions).forEach((block) => {
+                html += block.kind === "kutty"
+                    ? renderKuttySessionCard(block.sessions, options)
+                    : renderStandardSession(block.sessions[0]);
             });
 
             html += "</td>";
@@ -616,6 +698,38 @@ function generateScheduleTable(data) {
     return html;
 }
 
+function renderStandardSession(session) {
+    const isLab = session.schedule_type === "lab";
+    const isBatched = session.is_batched;
+    const batchLabel = session.batch_label || session.batch_info;
+    const batchNumber = session.batch_number;
+    const sessionClass = isLab ? "lab-session" : "theory-session";
+    const batchClass = isBatched ? "batched-session" : "";
+    const groupNumber = sessionGroupNumber(session);
+    const sectionLabel = Number(session.semester) === 3 ? sessionSectionLabel(session) : "";
+    const deptClass = getDeptClass(session.department);
+    const bundleId = bundleIdentity(session);
+    const bundleClass = bundleId ? "bundle-session" : "";
+    const block = session.block ? ` · ${session.block}` : "";
+    const groupDetails = buildSessionHoverDetails(session, session.room_number || "TBD", block);
+
+    return `
+        <div class="session-block ${sessionClass} ${batchClass} ${deptClass} ${bundleClass} schedule-session-card"
+             data-bundle-id="${escapeHtml(bundleId)}" title="${escapeHtml(groupDetails)}">
+            ${sectionLabel
+                ? `<span class="section-number" tabindex="0" aria-label="Section ${escapeHtml(sectionLabel)}">${escapeHtml(sectionLabel)}</span>`
+                : groupNumber ? `<span class="group-number group-g${escapeHtml(groupNumber)}-badge" tabindex="0"
+                aria-label="${escapeHtml(groupDetails)}">G${escapeHtml(groupNumber)}</span>` : ""}
+            <span class="session-teacher">${escapeHtml(session.teacher_name || "Staff TBA")}</span>
+            <strong class="session-code">${escapeHtml(session.course_code_display || session.course_code || "Course")}</strong>
+            <span class="session-course">${escapeHtml(session.course_name || "-")}</span>
+            <span class="session-room">${escapeHtml((session.room_number || "TBD") + block)}</span>
+            ${isLab && (batchLabel || batchNumber) ? `<span class="session-batch">${escapeHtml(batchLabel || `Batch ${batchNumber}`)}</span>` : ""}
+            <small class="session-instance">${escapeHtml(session.course_instance_id || "")}</small>
+        </div>
+    `;
+}
+
 function parseTimeSlot(timeSlot) {
     if (!timeSlot) return 0;
     const startTime = timeSlot.split(" - ")[0].trim();
@@ -627,6 +741,24 @@ function parseTimeSlot(timeSlot) {
         hours += 12;
     }
     return hours * 60 + minutes;
+}
+
+function formatTimeHeader(timeSlot, sessions) {
+    if (!(sessions || []).some(isKuttyShared)) return escapeHtml(timeSlot);
+    const parts = String(timeSlot || "").split(" - ").map((part) => part.trim());
+    if (parts.length !== 2) return escapeHtml(timeSlot);
+    const match = parts[0].match(/^(\d{1,2}):(\d{2})$/);
+    if (!match) return escapeHtml(timeSlot);
+    let hour = Number(match[1]);
+    let minute = Number(match[2]) + 25;
+    if (minute >= 60) {
+        hour = hour % 12 + 1;
+        minute -= 60;
+    }
+    const midpoint = `${hour}:${String(minute).padStart(2, "0")}`;
+    return `<span class="kutty-time-half">${escapeHtml(parts[0])} - ${escapeHtml(midpoint)}</span>` +
+        '<span class="kutty-time-divider"></span>' +
+        `<span class="kutty-time-half">${escapeHtml(midpoint)} - ${escapeHtml(parts[1])}</span>`;
 }
 
 function debounce(func, wait) {

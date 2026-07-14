@@ -147,6 +147,49 @@ def test_lab_batch_annotation_avoids_same_day_reuse_for_nonconsecutive_sessions(
 	assert labels_by_day == {0: {"Batch 1", "Batch 2"}, 1: {"Batch 1", "Batch 2"}}
 
 
+def test_lab_batch_annotation_preserves_solver_interleave_halves() -> None:
+	extractor = object.__new__(ScheduleExtractor)
+	extractor._time = SimpleNamespace(lab_sessions={})
+	extractor._lab_vars = SimpleNamespace(
+		requirements={
+			"C1": LabCourseRequirement(
+				course_instance_id="C1",
+				course_code="CS101",
+				teacher_id="t1",
+				group_id="G1",
+				department="Engineering",
+				semester=3,
+				practical_hours=4,
+				required_sessions=2,
+				student_count=70,
+				preferred_room_type=None,
+				required_room_type=None,
+				tags=tuple(),
+			)
+		}
+	)
+	assignments = {
+		("C1", 0, "L1"): ("A0", "B0"),
+		("C1", 1, "L1"): ("A1", "B1"),
+		("C1", 0, "L3"): ("A2", "B2"),
+		("C1", 1, "L3"): ("A3", "B3"),
+	}
+	extractor._constraint_model = SimpleNamespace(
+		extras={"batch_interleave_assignments": assignments}
+	)
+	accessor = SimpleNamespace(bool_value=lambda var: var in {"A0", "A1", "B2", "B3"})
+	entries = (
+		_lab_entry("L1", day_index=0),
+		_lab_entry("L1", day_index=1),
+		_lab_entry("L3", day_index=0),
+		_lab_entry("L3", day_index=1),
+	)
+
+	annotated = extractor._annotate_lab_batches(entries, accessor)
+
+	assert [entry.batch_number for entry in annotated] == [1, 1, 2, 2]
+
+
 def _lab_entry(session_name: str, *, day_index: int) -> LabScheduleEntry:
 	return LabScheduleEntry(
 		teacher_id="t1",
