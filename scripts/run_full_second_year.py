@@ -1,8 +1,9 @@
-"""Run, certify, and validate the complete 19-department second-year timetable.
+"""Run, certify, and validate a composed second-year timetable.
 
 This is the production entrypoint intended for the solver machine. It
 uses the two fixed schedule locks in ``prod/`` and writes an isolated complete
-run below ``output/timetables/second_year_full/`` by default.
+run below ``output/timetables/second_year_full/`` by default. It schedules all
+19 departments unless ``--core-only`` selects the 12 non-combined departments.
 """
 
 from __future__ import annotations
@@ -18,6 +19,20 @@ from pathlib import Path
 
 
 EXPECTED_DEPARTMENT_COUNT = 19
+CORE_DEPARTMENTS = (
+    "Aeronautical Engineering",
+    "Automobile Engineering",
+    "Biomedical Engineering",
+    "Biotechnology",
+    "Chemical Engineering",
+    "Civil Engineering",
+    "Electrical and Electronics Engineering",
+    "Electronics and Communication Engineering",
+    "Food Technology",
+    "Mechanical Engineering",
+    "Mechatronics Engineering",
+    "Robotics and Automation",
+)
 LOCK_HASHES = {
     "prod/theory_schedule_lock.csv": "42303b4d6991cbfe95b7c0e03513746193598a8c061580c9a15afe43f332eb66",
     "prod/lab_schedule_lock.csv": "f0eae7eb337736393e57eb85461956c0b0da8a1e797794458f6241580eb7f9fd",
@@ -69,24 +84,29 @@ def _stream(command: list[str], *, cwd: Path, env: dict[str, str]) -> tuple[int,
     return process.wait(), "".join(lines)
 
 
-def _phase_statuses(output: str) -> tuple[list[str], list[str]]:
+def _phase_statuses(output: str, expected_count: int) -> tuple[list[str], list[str]]:
     before, marker, after = output.partition("PHASE 2:")
     if not marker:
         return [], []
     pattern = rf"->\s+({'|'.join(STATUSES)})"
     phase1 = re.findall(pattern, before)
     phase2 = re.findall(pattern, after)
-    return phase1[-EXPECTED_DEPARTMENT_COUNT:], phase2[:EXPECTED_DEPARTMENT_COUNT]
+    return phase1[-expected_count:], phase2[:expected_count]
 
 
 def run(args: argparse.Namespace) -> int:
     root = Path(__file__).resolve().parents[1]
     lock_hashes = _verify_locks(root)
+    selected_departments = CORE_DEPARTMENTS if args.core_only else ()
+    expected_count = len(selected_departments) or EXPECTED_DEPARTMENT_COUNT
     output_dir = root / "output" / "timetables" / args.run_tag
     output_dir.mkdir(parents=True, exist_ok=True)
 
     env = dict(os.environ)
-    env.pop("DEPT_FILTER", None)
+    if selected_departments:
+        env["DEPT_FILTER"] = ",".join(selected_departments)
+    else:
+        env.pop("DEPT_FILTER", None)
     env.update(
         {
             "PYTHONPATH": ".",
@@ -99,7 +119,7 @@ def run(args: argparse.Namespace) -> int:
             "OPTIMIZE_PHASE1": "1",
             "PHASE1_OBJECTIVE_SCOPE": "lab_cells",
             "PACK_COMBINED_CELLS": "1",
-            "PHASE1_ABSOLUTE_GAP": "0",
+            "PHASE1_ABSOLUTE_GAP": str(args.phase1_gap),
             "DEBUG_DEPT": "1",
             "FIXED_THEORY_CSV": "prod/theory_schedule_lock.csv",
             "FIXED_LAB_CSV": "prod/lab_schedule_lock.csv",
@@ -114,7 +134,7 @@ def run(args: argparse.Namespace) -> int:
     )
     (output_dir / "solver.log").write_text(output, encoding="utf-8")
 
-    phase1, phase2 = _phase_statuses(output)
+    phase1, phase2 = _phase_statuses(output, expected_count)
     schedule_path = output_dir / "schedule.json"
     theory_path = output_dir / "theory_schedule_second_year.csv"
     lab_path = output_dir / "lab_schedule_second_year.csv"
@@ -150,10 +170,10 @@ def run(args: argparse.Namespace) -> int:
 
     certified = (
         exit_code == 0
-        and len(phase1) == EXPECTED_DEPARTMENT_COUNT
-        and len(phase2) == EXPECTED_DEPARTMENT_COUNT
+        and len(phase1) == expected_count
+        and len(phase2) == expected_count
         and all(status == "OPTIMAL" for status in phase1 + phase2)
-        and len(departments) == EXPECTED_DEPARTMENT_COUNT
+        and len(departments) == expected_count
         and validation_exit == 0
         and validation.get("status") == "PASS"
     )
@@ -165,6 +185,8 @@ def run(args: argparse.Namespace) -> int:
         "phase2_statuses": phase2,
         "departments": departments,
         "department_count": len(departments),
+        "expected_department_count": expected_count,
+        "core_only": args.core_only,
         "validation_status": validation.get("status", "NOT_RUN"),
         "violation_counts": validation.get("violation_counts", {}),
         "output_dir": str(output_dir),
@@ -181,6 +203,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--phase1-time", type=int, default=900, help="Per-department Phase 1 proof budget in seconds")
     parser.add_argument("--phase2-time", type=int, default=900, help="Per-department Phase 2 proof budget in seconds")
     parser.add_argument("--workers", type=int, default=min(16, max(1, os.cpu_count() or 8)))
+    parser.add_argument("--phase1-gap", type=float, default=25, help="Accepted absolute Phase-1 objective gap")
+    parser.add_argument("--core-only", action="store_true", help="Compose only the 12 non-DBMS/OOPS/DB-Tech departments")
     parser.add_argument("--run-tag", default="second_year_full")
     return parser
 

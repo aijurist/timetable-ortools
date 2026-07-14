@@ -34,17 +34,20 @@ The independent report is written to:
 output/timetables/dept_by_dept_hard_deterministic/report.csv
 ```
 
-To finish the 12 departments without DBMS/OOPS/DB-Tech first:
+To certify the 12 departments without DBMS/OOPS/DB-Tech independently (each
+department sees only the production locks):
 
 ```powershell
 .venv\Scripts\python.exe -u scripts\run_departments_individually.py --core-only --phase1-time 300 --phase2-time 300 --workers 16 --run-tag core_departments_hard_lunch
 ```
 
-The remaining seven computing departments can be run later with the same
-production locks:
+To produce one composed, cross-department conflict-free timetable for those 12
+departments, use the full runner. It solves them sequentially on one shared
+occupancy calendar, so every department reserves rooms and staff before the next
+department is placed:
 
 ```powershell
-.venv\Scripts\python.exe -u scripts\run_departments_individually.py --combined-only --phase1-time 900 --phase2-time 900 --workers 16 --run-tag combined_departments_hard_lunch
+.venv\Scripts\python.exe -u scripts\run_full_second_year.py --core-only --phase1-time 900 --phase2-time 900 --workers 16 --phase1-gap 25 --run-tag core_departments_composed
 ```
 
 Override the direct solve proof budgets when required:
