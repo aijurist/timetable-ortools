@@ -1058,7 +1058,7 @@ model:
     # 6 combined-lab rooms: the 5 ANEW rooms + KSL02 (converted to Core-Lab). This relieves
     # the ANEW saturation (demand 130 roomblocks / supply 150 = 87%) without using the
     # ANEW201/202 DSA classrooms.
-    room_numbers: [ANEW101, ANEW102, ANEW103, ANEW104, A104/105, KSL02]
+    room_numbers: [ANEW101, ANEW102, ANEW103, ANEW104, A104/105, KS02]
     blocks: 4
     block_len: 2
 

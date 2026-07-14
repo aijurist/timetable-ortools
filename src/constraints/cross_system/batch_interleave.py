@@ -45,6 +45,11 @@ class BatchInterleaveConstraint(Constraint):
     def apply(self, context: ConstraintContext) -> ConstraintApplicationResult:
         params = self.params or {}
         batch_threshold = int(params.get("batch_threshold", 35))
+        # Courses that are never half-split (combined labs run the WHOLE section together
+        # in a 140-seat room; they occupy both halves and are owned by combined_lab).
+        whole_section_courses = frozenset(
+            str(c).strip().upper() for c in (params.get("whole_section_courses", ()) or ())
+        )
 
         lab_block = context.variables.lab
         assignments = getattr(lab_block, "assignments", None)
@@ -101,7 +106,9 @@ class BatchInterleaveConstraint(Constraint):
                     continue
                 students = int(getattr(req, "student_count", 0) or 0)
                 base = max(1, int(getattr(req, "required_sessions", 0) or 0))
-                is_batched = students > batch_threshold
+                course_code = str(getattr(req, "course_code", "")).strip().upper()
+                # Whole-section courses (combined labs) are never half-split.
+                is_batched = students > batch_threshold and course_code not in whole_section_courses
 
                 halfA_terms: List[cp_model.IntVar] = []
                 halfB_terms: List[cp_model.IntVar] = []

@@ -173,8 +173,6 @@ id,room_number,block,maintained_by_id,is_lab,room_type,room_min_cap,room_max_cap
 168,DG010,D Block,2,1,Core-Lab,30,70,1,1,Advanced,Food Analysis Laboratory,1,1,1
 169,DG012,D Block,7,1,Core-Lab,20,35,1,0,None,Electronics and Instrumentation,0,0,0
 170,DG013,D Block,7,1,Core-Lab,20,35,1,0,Basic,Diagnostic and Therapeutic Equipment Lab,0,0,0
-171,DG02,D Block,14,1,Laboratory,50,70,1,0,High-tech,Computer Lab (DG02),0,0,0
-172,DG03,D Block,14,1,Laboratory,50,70,1,0,Basic,Computer Lab (DG03),0,0,0
 173,DG0IAL,D Block,2,1,Core-Lab,20,35,1,0,Basic,Isaac Asimov Laboratory,0,0,0
 174,D403,D block,2,1,Core-Lab,30,70,0,0,Advanced,Physics LAB - 2,0,0,0
 175,D603,D block,2,1,Core-Lab,30,70,0,0,Advanced,Physics LAB - 1,0,0,0
@@ -218,3 +216,4 @@ id,room_number,block,maintained_by_id,is_lab,room_type,room_min_cap,room_max_cap
 217,WS Aero FF1,Workshop,3,1,Core-Lab,20,35,0,0,None,Airframe Repair and Aero Engine Lab,0,0,0
 218,WS Aero FF2,Workshop,3,1,Core-Lab,20,35,0,0,Advanced,Aircraft Structures Lab,0,0,0
 219,WS Aero GF,Workshop,3,1,Core-Lab,20,35,0,0,Advanced,Aerodynamics Lab,0,0,0
+233,KS02,K Block,2,1,Core-Lab,140,210,1,1,None,Core Lab (KS02),1,0,0

@@ -86,9 +86,9 @@ RO23332,Robotics and Automation,1,Strength of Materials Lab,,,,,,Mechanics of Ma
 RO23521,Robotics and Automation,1,Isaac Asimov Laboratory,,,,,,Mobile Robotics laboratory
 RO23522,Robotics and Automation,1,Industrial Automation Lab,,,,,,Industrial Automation Laboratory-II
 RO23721,Robotics and Automation,1,Isaac Asimov Laboratory,,,,,,"Robotics and Automation Problem Solving using AI, ML and DL"
-CS23332,,6,ANEW101,ANEW102,ANEW103,ANEW104,A104/105,KSL02,Database Management Systems
-CS23333,,6,ANEW101,ANEW102,ANEW103,ANEW104,A104/105,KSL02,Object Oriented Programming using Java
-CB23333,Computer Science & Business Systems,6,ANEW101,ANEW102,ANEW103,ANEW104,A104/105,KSL02,Database Technology
+CS23332,,6,ANEW101,ANEW102,ANEW103,ANEW104,A104/105,KS02,Database Management Systems
+CS23333,,6,ANEW101,ANEW102,ANEW103,ANEW104,A104/105,KS02,Object Oriented Programming using Java
+CB23333,Computer Science & Business Systems,6,ANEW101,ANEW102,ANEW103,ANEW104,A104/105,KS02,Database Technology
 AE23531,Aeronautical Engineering,1,Aircraft Structures Lab,,,,,,Aircraft Structures - II
 BT23521,Biotechnology,1,Downstream Processing Lab,,,,,,Bioprocess Laboratory- I
 EC23531,Electronics and Communication Engineering,1,DSP Lab,,,,,,Digital Signal Processing
@@ -104,3 +104,4 @@ IT23331,Information Technology,2,B328,B327,,,,,
 BT23321,Biotechnology,1,B126,,,,,,
 BT23331,Biotechnology,1,B126,,,,,,
 CS23336,Mechatronics Engineering,1,B310,,,,,,Introduction to Python Programming
+CS23422,Aeronautical Engineering,1,B310,,,,,,Python Programming for Machine learning

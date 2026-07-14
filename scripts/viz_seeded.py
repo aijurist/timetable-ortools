@@ -17,9 +17,14 @@ from collections import defaultdict
 base = Path.cwd()
 _PAR = os.environ.get("PARALLEL_BATCH") == "1"
 _SUF = "_parallel" if _PAR else ""
-OUT = base / "output" / "timetables" / ("parallel" if _PAR else "seeded")
+# Optional overrides: VIZ_JSON (input schedule JSON), VIZ_OUT (output HTML dir), both
+# relative to cwd — lets us render an isolated run (e.g. optimized/) without touching defaults.
+_VIZ_JSON = os.environ.get("VIZ_JSON")
+_VIZ_OUT = os.environ.get("VIZ_OUT")
+OUT = (base / _VIZ_OUT) if _VIZ_OUT else (base / "output" / "timetables" / ("parallel" if _PAR else "seeded"))
 OUT.mkdir(parents=True, exist_ok=True)
-recs = json.loads((base / "output" / "timetables" / f"seeded_schedule{_SUF}.json").read_text(encoding="utf-8"))
+_json_path = (base / _VIZ_JSON) if _VIZ_JSON else (base / "output" / "timetables" / f"seeded_schedule{_SUF}.json")
+recs = json.loads(_json_path.read_text(encoding="utf-8"))
 
 DAYS = ["monday", "tuesday", "wed", "thur", "fri", "saturday"]
 DLBL = {"monday":"Mon","tuesday":"Tue","wed":"Wed","thur":"Thu","fri":"Fri","saturday":"Sat"}

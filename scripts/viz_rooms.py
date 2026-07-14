@@ -17,7 +17,9 @@ import pandas as pd
 import os
 base = Path.cwd()
 _PAR = os.environ.get("PARALLEL_BATCH") == "1"
-OUT = base / "output" / "timetables" / ("parallel" if _PAR else "seeded")
+_VIZ_JSON = os.environ.get("VIZ_JSON")   # optional input schedule JSON (relative to cwd)
+_VIZ_OUT = os.environ.get("VIZ_OUT")     # optional output HTML dir (relative to cwd)
+OUT = (base / _VIZ_OUT) if _VIZ_OUT else (base / "output" / "timetables" / ("parallel" if _PAR else "seeded"))
 OUT.mkdir(parents=True, exist_ok=True)
 
 DAYS = ["monday", "tuesday", "wed", "thur", "fri", "saturday"]
@@ -54,7 +56,7 @@ def add_lab(room, day, sess, dept, course, sem, sem3):
         lab[room][day][sess].append((dept, course, sem, sem3))
 
 # 2nd-year (sem 3)
-recs = json.loads((base / "output" / "timetables" / f"seeded_schedule{'_parallel' if _PAR else ''}.json").read_text(encoding="utf-8"))
+recs = json.loads(((base / _VIZ_JSON) if _VIZ_JSON else (base / "output" / "timetables" / f"seeded_schedule{'_parallel' if _PAR else ''}.json")).read_text(encoding="utf-8"))
 for r in recs:
     if r["kind"] == "theory": add_theory(r["room"], r["day"], r["slot"], dab(r["dept"]), r["course"], 3, True)
     else: add_lab(r["room"], r["day"], r["session"], dab(r["dept"]), r["course"] + (f" [{r['batch']}]" if r.get("batch") else ""), 3, True)

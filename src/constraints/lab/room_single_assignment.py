@@ -104,6 +104,9 @@ class LabRoomSingleAssignmentConstraint(Constraint):
                     stats.room_conflict_examples.append(key)
                 continue
 
+            # How many ~70-seat sections a big room holds simultaneously (140->2, 210->3).
+            max_share = max(2, int(capacity // 70))
+
             # Large rooms (140+ capacity): Allow co-scheduling with strict rules
             # Rule 1: If a 140-student course is present, it must be the ONLY course
             # Rule 2: If 70-student courses are present, they must be the SAME course code (max 2)
@@ -127,7 +130,7 @@ class LabRoomSingleAssignmentConstraint(Constraint):
                 code_active_vars.append(is_active)
 
                 all_vars_for_code = [v for _, v, _ in course_vars[code]]
-                context.model.Add(sum(all_vars_for_code) <= 2 * is_active)
+                context.model.Add(sum(all_vars_for_code) <= max_share * is_active)
                 context.model.Add(sum(all_vars_for_code) >= is_active)
 
             if len(code_active_vars) > 1:
@@ -157,10 +160,10 @@ class LabRoomSingleAssignmentConstraint(Constraint):
                         context.model.Add(large_sum >= has_large)
                         context.model.Add(large_sum <= len(large_vars) * has_large)
                     # If a large batch is used, it must be the only one in the room slot.
-                    context.model.Add(all_sum <= 2 - has_large)
+                    context.model.Add(all_sum <= max_share - (max_share - 1) * has_large)
 
                 else:
-                    context.model.Add(all_sum <= 2)
+                    context.model.Add(all_sum <= max_share)
 
                 if medium_vars:
                     # Optimization: skip helper bool when only one medium var

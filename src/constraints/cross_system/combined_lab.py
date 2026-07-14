@@ -67,6 +67,20 @@ class CombinedLabConstraint(Constraint):
 		# only allow pairing WITHIN a bucket -> linear in n, cross-dept pairing still possible.
 		# 0 disables bucketing (pool everything).
 		max_pair_pool = int(self.params.get("max_pair_pool", 8) or 0)
+		# Room-lock: every block of a course-section stays in ONE room (trainer stays put).
+		room_lock = bool(self.params.get("room_lock", False))
+		# 3+3 room pools: each group of course codes may use at most room_pool_size rooms,
+		# and the pools are disjoint. e.g. [["CS23332","CB23333"], ["CS23333"]].
+		room_pool_groups = [
+			frozenset(str(c).strip().upper() for c in grp)
+			for grp in (self.params.get("room_pool_groups", ()) or ())
+		]
+		room_pool_size = int(self.params.get("room_pool_size", 3) or 3)
+		# Fixed named pools (per-dept-safe global split): [[codes...], [room_numbers...]].
+		# Each listed course is HARD-restricted to its pool's rooms -> globally consistent
+		# across the sequential per-department solve. Solver-chosen room_pool_groups only
+		# works in a single global model, so the seeded solve uses this instead.
+		room_pools_fixed = self.params.get("room_pools_fixed", ()) or ()
 
 		# Gather combined-lab instances -> flat cell map {(day, session, room): bool}.
 		inst_cells: Dict[str, Dict[Tuple[int, str, str], cp_model.IntVar]] = {}
@@ -92,6 +106,70 @@ class CombinedLabConstraint(Constraint):
 
 		if not inst_cells:
 			return self._skip("no combined-lab lab instances found")
+
+		# --- Fixed named pools: hard-restrict each course to its pool's rooms ---
+		pool_restrictions = 0
+		if room_pools_fixed:
+			registry = getattr(getattr(context.data, "raw", None), "room_registry", {}) or {}
+			def _room_num(room_id: str) -> str:
+				info = registry.get(str(room_id), {}) or {}
+				return str(info.get("room_number", room_id)).strip()
+			code_to_rooms: Dict[str, set] = {}
+			for entry in room_pools_fixed:
+				try:
+					codes_list, rooms_list = entry[0], entry[1]
+				except (TypeError, IndexError, KeyError):
+					continue
+				allowed = {str(r).strip().upper() for r in rooms_list}
+				for c in codes_list:
+					code_to_rooms[str(c).strip().upper()] = allowed
+			for instance_key, cells in inst_cells.items():
+				allowed = code_to_rooms.get(inst_code.get(instance_key, ""))
+				if not allowed:
+					continue
+				for (_day, _sess, room_id), var in cells.items():
+					if _room_num(room_id).upper() not in allowed:
+						model.Add(var == 0)
+						pool_restrictions += 1
+
+		# --- Room-lock + 3+3 pool split (gated) ---
+		room_active: Dict[str, Dict[str, cp_model.IntVar]] = {}
+		rooms_locked = pool_rooms_capped = 0
+		if room_lock or room_pool_groups:
+			for instance_key, cells in inst_cells.items():
+				by_room: Dict[str, List[cp_model.IntVar]] = defaultdict(list)
+				for (_day, _sess, room_id), var in cells.items():
+					by_room[room_id].append(var)
+				ra: Dict[str, cp_model.IntVar] = {}
+				for room_id, vars_list in by_room.items():
+					active = model.NewBoolVar(f"clab_room_{instance_key}_{room_id}")
+					for v in vars_list:
+						model.Add(v <= active)  # a cell in this room implies room active
+					ra[room_id] = active
+				room_active[instance_key] = ra
+				if room_lock and ra:
+					# All blocks of this section share ONE room.
+					model.Add(sum(ra.values()) <= 1)
+					rooms_locked += 1
+		if room_pool_groups:
+			all_rooms = sorted({r for ra in room_active.values() for r in ra})
+			pool_room_used: List[Dict[str, cp_model.IntVar]] = []
+			for gi, group in enumerate(room_pool_groups):
+				used: Dict[str, cp_model.IntVar] = {}
+				for room_id in all_rooms:
+					pu = model.NewBoolVar(f"clab_pool{gi}_{room_id}")
+					used[room_id] = pu
+					for instance_key, ra in room_active.items():
+						if inst_code.get(instance_key) in group and room_id in ra:
+							model.Add(ra[room_id] <= pu)  # instance uses room => pool uses room
+				model.Add(sum(used.values()) <= room_pool_size)  # <=3 rooms per pool
+				pool_rooms_capped += 1
+				pool_room_used.append(used)
+			# Pools are disjoint: a room belongs to at most one pool.
+			for room_id in all_rooms:
+				terms = [pu[room_id] for pu in pool_room_used if room_id in pu]
+				if len(terms) > 1:
+					model.Add(sum(terms) <= 1)
 
 		if not enforce_pairing:
 			return self._result(
