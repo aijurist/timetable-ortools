@@ -244,10 +244,9 @@ def phase1(rseed):
         # Try interleave ON first (compresses labs -> space for lunch); keep lunch hard as long
         # as possible (relax 3pm before lunch). If interleave itself makes a dept infeasible,
         # fall through to the il=False block and repeat the late/lunch relaxation there.
-        candidates = [(PARALLEL, "hard", True,  True, "hard"),
-                      (PARALLEL, "soft", True,  True, "hard"),
-                      (PARALLEL, "soft", True,  True, "soft"),
-                      (PARALLEL, "hard", False, True, "hard"),
+        # Batch-interleave OFF (il=False). Relax the 3pm cap (hard->soft) before the lunch
+        # guarantee (hard->soft); lunch stays the highest-priority soft target.
+        candidates = [(PARALLEL, "hard", False, True, "hard"),
                       (PARALLEL, "soft", False, True, "hard"),
                       (PARALLEL, "soft", False, True, "soft")]
         first = candidates[0]
