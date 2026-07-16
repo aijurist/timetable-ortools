@@ -11,6 +11,7 @@ from ..base import Constraint, ConstraintMetadata
 from ..context import ConstraintContext
 from ..schema import ConstraintApplicationResult, ConstraintStatus
 from ..utils import build_presence_literal, qualifying_parallel_lab_ids
+from ...data.pop_availability import normalize_teacher_id
 
 ActivityMap = Mapping[str, Mapping[str, cp_model.IntVar]]
 
@@ -137,7 +138,7 @@ def _build_teacher_lab_activity(context: ConstraintContext) -> Dict[str, Tuple[L
 		str(c).strip().upper() for c in combined_cfg.get("course_codes", ()) if str(c).strip()
 	)
 
-	result: Dict[str, Tuple[LabActivity, ...]] = {}
+	result_buffer: MutableMapping[str, list[LabActivity]] = {}
 	for teacher_id, course_ids in teacher_courses.items():
 		teacher_assignments = assignments.get(teacher_id)
 		if not teacher_assignments:
@@ -179,8 +180,9 @@ def _build_teacher_lab_activity(context: ConstraintContext) -> Dict[str, Tuple[L
 				)
 			)
 		if entries:
-			result[teacher_id] = tuple(entries)
-	return result
+			teacher_key = normalize_teacher_id(teacher_id)
+			result_buffer.setdefault(teacher_key, []).extend(entries)
+	return {teacher_id: tuple(entries) for teacher_id, entries in result_buffer.items()}
 
 
 def _build_teacher_theory_activity(context: ConstraintContext) -> Dict[str, Tuple[TheoryActivity, ...]]:
@@ -195,7 +197,7 @@ def _build_teacher_theory_activity(context: ConstraintContext) -> Dict[str, Tupl
 	combined_codes = frozenset(
 		str(c).strip().upper() for c in combined_cfg.get("course_codes", ()) if str(c).strip()
 	)
-	result: Dict[str, Tuple[TheoryActivity, ...]] = {}
+	result_buffer: MutableMapping[str, list[TheoryActivity]] = {}
 	for teacher_id, course_map in assignments.items():
 		entries = []
 		for course_id, day_map in course_map.items():
@@ -221,8 +223,9 @@ def _build_teacher_theory_activity(context: ConstraintContext) -> Dict[str, Tupl
 					)
 				)
 		if entries:
-			result[teacher_id] = tuple(entries)
-	return result
+			teacher_key = normalize_teacher_id(teacher_id)
+			result_buffer.setdefault(teacher_key, []).extend(entries)
+	return {teacher_id: tuple(entries) for teacher_id, entries in result_buffer.items()}
 
 
 def _build_theory_slot_session_index(context: ConstraintContext) -> Dict[int, Tuple[str, ...]]:

@@ -348,12 +348,34 @@ def _build_cross_domain_blocks(
             if slot_idx is not None:
                 mask.cross_blocked_theory_slots.add((tid, day, slot_idx))
 
+    # A fixed lab owns its room for every theory slot covered by that lab
+    # session, regardless of which teacher is assigned to the new activity.
+    fixed_lab_rooms = tuple(mask.blocked_lab_rooms)
+    for day, session, room_id in fixed_lab_rooms:
+        slots = lab_session_to_theory_mapping.get(session)
+        if not slots:
+            continue
+        for slot in slots:
+            slot_idx = safe_int(slot)
+            if slot_idx is not None:
+                mask.blocked_theory_rooms.add((day, slot_idx, room_id))
+
     for tid, day, slot_idx in mask.blocked_theory_teacher_slots:
         sessions = inv_mapping.get(slot_idx)
         if not sessions:
             continue
         for session in sessions:
             mask.cross_blocked_lab_sessions.add((tid, day, session))
+
+    # Conversely, a fixed theory room blocks every lab session whose clock
+    # footprint contains that theory slot.
+    fixed_theory_rooms = tuple(mask.blocked_theory_rooms)
+    for day, slot_idx, room_id in fixed_theory_rooms:
+        sessions = inv_mapping.get(slot_idx)
+        if not sessions:
+            continue
+        for session in sessions:
+            mask.blocked_lab_rooms.add((day, session, room_id))
 
 
 def _resolve_path(candidate: Path) -> Path:

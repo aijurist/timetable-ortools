@@ -9,7 +9,6 @@ run below ``output/timetables/second_year_full/`` by default. It schedules all
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import re
@@ -33,35 +32,20 @@ CORE_DEPARTMENTS = (
     "Mechatronics Engineering",
     "Robotics and Automation",
 )
-LOCK_HASHES = {
-    "prod/theory_schedule_lock.csv": "42303b4d6991cbfe95b7c0e03513746193598a8c061580c9a15afe43f332eb66",
-    "prod/lab_schedule_lock.csv": "f0eae7eb337736393e57eb85461956c0b0da8a1e797794458f6241580eb7f9fd",
-}
+LOCK_FILES = (
+    "prod/theory_schedule_lock.csv",
+    "prod/lab_schedule_lock.csv",
+)
 STATUSES = ("OPTIMAL", "FEASIBLE", "INFEASIBLE", "UNKNOWN", "MODEL_INVALID")
 
 
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
-def _verify_locks(root: Path) -> dict[str, str]:
-    actual: dict[str, str] = {}
-    for relative, expected in LOCK_HASHES.items():
+def _require_locks(root: Path) -> tuple[str, ...]:
+    """Require local production locks without pinning them to another branch."""
+    for relative in LOCK_FILES:
         path = root / relative
         if not path.is_file():
             raise FileNotFoundError(f"Required production lock is missing: {path}")
-        digest = _sha256(path)
-        actual[relative] = digest
-        if digest != expected:
-            raise RuntimeError(
-                f"Production lock does not match copy/kutty_concepts: {relative}\n"
-                f"expected {expected}\nactual   {digest}"
-            )
-    return actual
+    return LOCK_FILES
 
 
 def _stream(command: list[str], *, cwd: Path, env: dict[str, str]) -> tuple[int, str]:
@@ -96,7 +80,7 @@ def _phase_statuses(output: str, expected_count: int) -> tuple[list[str], list[s
 
 def run(args: argparse.Namespace) -> int:
     root = Path(__file__).resolve().parents[1]
-    lock_hashes = _verify_locks(root)
+    lock_files = _require_locks(root)
     selected_departments = CORE_DEPARTMENTS if args.core_only else ()
     expected_count = len(selected_departments) or EXPECTED_DEPARTMENT_COUNT
     output_dir = root / "output" / "timetables" / args.run_tag
@@ -126,7 +110,7 @@ def run(args: argparse.Namespace) -> int:
         }
     )
 
-    print("Verified production schedule locks from copy/kutty_concepts.", flush=True)
+    print("Using local production schedule locks from prod/.", flush=True)
     exit_code, output = _stream(
         [sys.executable, "-u", "scripts/seeded_bundle.py"],
         cwd=root,
@@ -179,7 +163,7 @@ def run(args: argparse.Namespace) -> int:
     )
     report = {
         "status": "PASS" if certified else "FAIL",
-        "lock_hashes": lock_hashes,
+        "lock_files": list(lock_files),
         "solver_exit_code": exit_code,
         "phase1_statuses": phase1,
         "phase2_statuses": phase2,

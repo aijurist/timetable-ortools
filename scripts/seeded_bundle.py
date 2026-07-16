@@ -47,7 +47,12 @@ from src.constraints.cross_system.combined_lab_presolve import (
     solve_combined_preallocation,
 )
 from src.data.data_loader import DataLoader
+from src.data.pop_availability import build_pop_availability_from_dataframe, normalize_teacher_id
 from src.data.preprocessing import DataPreprocessor
+from src.data.teacher_day_window_plan import (
+    TeacherWindowAssignment,
+    build_teacher_day_window_plan,
+)
 from src.models.model_builder import ModelBuilder
 from src.runtime.extractor import ScheduleExtractor
 
@@ -90,6 +95,7 @@ ORDER = [
     "Mechanical Engineering", "Food Technology", "Electrical and Electronics Engineering",
     "Chemical Engineering",
 ]
+ALL_DEPARTMENTS = tuple(ORDER)
 DEPT_FILTER = tuple(
     token.strip() for token in os.environ.get("DEPT_FILTER", "").split(",") if token.strip()
 )
@@ -137,6 +143,107 @@ RECOMPUTE_COMBINED_PLAN = os.environ.get("RECOMPUTE_COMBINED_PLAN", "0") == "1"
 PHASE1_ABSOLUTE_GAP = max(0.0, float(os.environ.get("PHASE1_ABSOLUTE_GAP", "0")))
 FIXED_THEORY_CSV = Path(os.environ.get("FIXED_THEORY_CSV", "prod/theory_schedule_lock.csv"))
 FIXED_LAB_CSV = Path(os.environ.get("FIXED_LAB_CSV", "prod/lab_schedule_lock.csv"))
+CSD_DEPT_BLOCK_CSV = Path(
+    os.environ.get("CSD_DEPT_BLOCK_CSV", "prod/csd-dept_block.csv")
+)
+
+
+def _load_owned_lab_preallocations(schedule_path):
+    if not schedule_path.is_file():
+        raise FileNotFoundError(f"Missing current-semester lab preallocation file: {schedule_path}")
+    rows = pd.read_csv(schedule_path, keep_default_na=False)
+    return frozenset(
+        (
+            str(row.get("department", "")).strip(),
+            normalize_teacher_id(row.get("teacher_id")),
+            str(row.get("course_instance_id", "")).strip(),
+            _day_token(row.get("day")),
+            str(row.get("session_name", "")).strip(),
+            str(row.get("room_id", "")).strip(),
+        )
+        for _, row in rows.iterrows()
+    )
+
+
+OWNED_LAB_PREALLOCATIONS = _load_owned_lab_preallocations(CSD_DEPT_BLOCK_CSV)
+
+
+def _safe_workload(row):
+    total = 0
+    for column in ("lecture_hours", "tutorial_hours", "practical_hours"):
+        try:
+            total += max(0, int(float(row.get(column, 0) or 0)))
+        except (TypeError, ValueError):
+            continue
+    return max(1, total)
+
+
+def _precompute_teacher_day_windows():
+    """Plan one global teacher window before the sequential department solves."""
+    cfg = ConfigManager(base_dir=base).load("config/scheduler.yaml")
+    assignments = []
+    for source_department in ALL_DEPARTMENTS:
+        course_path = base / "data" / "2" / "2" / f"{source_department}_course_data.csv"
+        if not course_path.is_file():
+            raise FileNotFoundError(f"Missing Semester-3 course input: {course_path}")
+        rows = pd.read_csv(course_path, keep_default_na=False)
+        for _, row in rows.iterrows():
+            course_code = str(row.get("course_code", "")).strip().upper()
+            if course_code in COMB:
+                # DBMS/OOPS are external-trainer activities; their nominal staff IDs
+                # must not influence ordinary staff working-day windows.
+                continue
+            department = str(row.get("student_dept", "")).strip()
+            settings = cfg.departments.overrides.get(department)
+            if settings is None:
+                raise ValueError(
+                    f"No explicit five-day pattern configured for {department!r} "
+                    f"(source {course_path.name})"
+                )
+            assignments.append(
+                TeacherWindowAssignment(
+                    teacher_id=normalize_teacher_id(row.get("teacher_id")),
+                    day_pattern=settings.day_pattern,
+                    workload=_safe_workload(row),
+                    department=department,
+                )
+            )
+
+    fixed_days = defaultdict(set)
+    for schedule_path in (FIXED_THEORY_CSV, FIXED_LAB_CSV):
+        if not schedule_path.is_file():
+            raise FileNotFoundError(f"Missing production schedule lock file: {schedule_path}")
+        fixed_rows = pd.read_csv(schedule_path, keep_default_na=False)
+        for _, row in fixed_rows.iterrows():
+            if str(row.get("course_code", "")).strip().upper() in COMB:
+                continue
+            teacher_id = normalize_teacher_id(row.get("teacher_id"))
+            if teacher_id:
+                fixed_days[teacher_id].add(row.get("day"))
+
+    pop_path = base / "data" / "pop.csv"
+    pop_availability = build_pop_availability_from_dataframe(
+        pd.read_csv(pop_path, keep_default_na=False)
+    )
+    pop_days = {
+        teacher_id: availability.preferred_days
+        for teacher_id, availability in pop_availability.items()
+    }
+    return build_teacher_day_window_plan(
+        assignments,
+        fixed_days=fixed_days,
+        pop_days=pop_days,
+    )
+
+
+TEACHER_WINDOW_PLAN = _precompute_teacher_day_windows()
+TEACHER_DAY_WINDOWS = dict(TEACHER_WINDOW_PLAN.forced_windows)
+print(
+    "TEACHER WINDOW PLAN: "
+    f"teachers={len(TEACHER_DAY_WINDOWS)} "
+    f"mixed={len(TEACHER_WINDOW_PLAN.mixed_pattern_teachers)} "
+    f"mixed_ids={list(TEACHER_WINDOW_PLAN.mixed_pattern_teachers)}"
+)
 
 def build(dept, rseed=1, parallel=None, late_mode="hard", interleave=True, combined_strict=True, lunch_mode="hard"):
     if lunch_mode != "hard":
@@ -147,9 +254,47 @@ def build(dept, rseed=1, parallel=None, late_mode="hard", interleave=True, combi
               "params": {"eligible_cohorts": ["*_S3"], "force_maximal_pairing": True,
                          "solo_penalty_weight": 50, "pair_load_gap_penalty_weight": 5,
                          "enforce_shared_room": True,
+                         # For an odd course count, maths remains the one ordinary
+                         # 50-minute singleton. CB23331 is CSBS's maths exception.
+                         "odd_cohort_forced_solo_course_prefixes": ["MA"],
+                         "odd_cohort_forced_solo_course_codes": ["CB23331"],
                          # per-slot partial pairing: unequal-hour courses bundle their
                          # overlapping hours, the longer course's extra hour(s) go solo.
                          "allow_partial_pairing": True}}}
+    cross["teacher_day_window"] = {
+        "enabled": True,
+        "priority": 9,
+        "weight": 1.0,
+        "params": {
+            "forced_windows": TEACHER_DAY_WINDOWS,
+            # Explicitly clear the stale diagnostic snapshot paths inherited from
+            # scheduler.yaml; the production-wide map above is the sole authority.
+            "window_lab_csv_path": "",
+            "window_theory_csv_path": "",
+            "window_snapshot_path": "",
+        },
+    }
+    if dept == "Computer Science and Design":
+        # These three CD23321 practicals are approved, owned reservations.  The
+        # same rows also block every other CSD activity in each lab cell, while
+        # the assignment lock makes the extractor emit CD23321 directly.
+        cross["dept_slot_blocking"] = {
+            "enabled": True,
+            "priority": 10,
+            "weight": 1.0,
+            "params": {
+                "lab_csv_path": str(CSD_DEPT_BLOCK_CSV),
+                "lock_assignments": True,
+                "lock_blocking_assignments": True,
+                "block_rooms": True,
+                "block_teachers": True,
+                "block_teachers_across_domains": True,
+                "block_dept_slots": True,
+                "block_dept_slots_lab": True,
+                "block_dept_slots_theory": True,
+                "block_dept_slots_course_codes": ["CD23321"],
+            },
+        }
     # Section late-day cap: keep each section mostly done before 3pm — at most 2 days
     # may run into 3:10-5pm. It stays HARD for ordinary courses; external combined
     # DBMS/OOPS/DB-Tech activities are exempt from this cap.
@@ -273,7 +418,7 @@ def load_seniors():
         except (TypeError, ValueError): continue
         day = _day_token(r["day"]); room_slot = (str(r["room_number"]), day, sl)
         sen_room_slots.add(room_slot); sen_hard_room_slots.add(room_slot)
-        sen_teacher[str(r["teacher_id"])].add((day, sl))
+        sen_teacher[normalize_teacher_id(r["teacher_id"])].add((day, sl))
     for _, r in l.iterrows():
         day = _day_token(r["day"]); sess = str(r["session_name"])
         room_number = str(r["room_number"])
@@ -285,7 +430,7 @@ def load_seniors():
             sen_room_slots.add((room_number, day, s))
             if not is_external_combined:
                 sen_hard_room_slots.add((room_number, day, s))
-                sen_teacher[str(r["teacher_id"])].add((day, s))
+                sen_teacher[normalize_teacher_id(r["teacher_id"])].add((day, s))
 load_seniors()
 
 
@@ -576,11 +721,22 @@ def phase1(rseed):
                             )
                             for rid, var in rmap.items():
                                 rn = rid2num.get(str(rid), str(rid))
+                                is_owned_fixed = (
+                                    str(getattr(_req, "department", dept) or dept).strip(),
+                                    normalize_teacher_id(tid),
+                                    str(inst).strip(),
+                                    aday,
+                                    str(sess).strip(),
+                                    str(rid).strip(),
+                                ) in OWNED_LAB_PREALLOCATIONS
                                 conflict_slots = hardbusy if is_external_combined else thbusy
                                 room_conflict = any((rn, aday, s) in conflict_slots for s in L2T.get(sess, ()))
-                                if tconf or room_conflict: model.Add(var == 0); continue
+                                if not is_owned_fixed and (tconf or room_conflict):
+                                    model.Add(var == 0)
+                                    continue
                                 if rn in big_nums or rn in ANEW_NUMS: anew_cell[(rn, aday, sess)].append((code, students, var))
-                                elif labbusy.get((rn, aday, sess), 0) >= 1: model.Add(var == 0)
+                                elif not is_owned_fixed and labbusy.get((rn, aday, sess), 0) >= 1:
+                                    model.Add(var == 0)
             combined_cell_terms = []
             for (rn, aday, sess), items in anew_cell.items():
                 # block combined-lab cell entirely if seniors (or already-placed depts)

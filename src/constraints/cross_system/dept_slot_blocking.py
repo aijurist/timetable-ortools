@@ -56,6 +56,7 @@ class DeptSlotBlockingSettings:
     block_dept_slots_lab: bool = True
     block_dept_slots_theory: bool = True
     block_dept_slots_course_codes: Tuple[str, ...] = ()
+    lock_blocking_assignments: bool = False
 
     @classmethod
     def from_params(cls, params: Mapping[str, object]) -> "DeptSlotBlockingSettings":
@@ -78,6 +79,9 @@ class DeptSlotBlockingSettings:
             block_dept_slots_lab=_as_bool(params.get("block_dept_slots_lab"), True),
             block_dept_slots_theory=_as_bool(params.get("block_dept_slots_theory"), True),
             block_dept_slots_course_codes=codes,
+            lock_blocking_assignments=_as_bool(
+                params.get("lock_blocking_assignments"), False
+            ),
         )
 
 
@@ -392,13 +396,15 @@ class DeptSlotBlockingConstraint(Constraint):
                             for idx in indices:
                                 dept_theory_slots[dept_key].add((day_label, idx))
 
-                theory_requirements = getattr(context.variables.theory, "requirements", {}) or {}
+                theory_requirements = (
+                    getattr(context.variables.theory, "course_requirements", {}) or {}
+                )
                 for tid, cid, day_idx, slot_idx, var in iter_course_timeslot_variables(context):
                     requirement = theory_requirements.get(cid) or theory_requirements.get(str(cid))
                     if requirement is None: continue
                     dept = str(getattr(requirement, "department", "") or "").strip()
                     if not dept: continue
-                    dept_key = dept.lower()
+                    dept_key = self._normalise_department(dept)
                     slots = dept_theory_slots.get(dept_key)
                     if not slots: continue
 
@@ -417,7 +423,7 @@ class DeptSlotBlockingConstraint(Constraint):
                     blocked_theory += 1
 
                 # Group variables logic if exists
-                group_requirements = theory_requirements
+                group_requirements = getattr(context.variables.theory, "requirements", {}) or {}
                 group_day_patterns = getattr(context.variables.theory, "day_patterns", {}) or {}
                 group_timeslots = getattr(context.variables.theory, "group_timeslots", {}) or {}
                 for group_id, day_map in group_timeslots.items():
@@ -427,7 +433,7 @@ class DeptSlotBlockingConstraint(Constraint):
                     if requirement is None: continue
                     dept = str(getattr(requirement, "department", "") or "").strip()
                     if not dept: continue
-                    dept_key = dept.lower()
+                    dept_key = self._normalise_department(dept)
                     slots = dept_theory_slots.get(dept_key)
                     if not slots: continue
                     
@@ -460,7 +466,11 @@ class DeptSlotBlockingConstraint(Constraint):
         lab_map = context.variables.lab.assignments or {}
         for record in records:
             course_code = str(record.get("course_code") or "").strip().upper()
-            if course_code and course_code in settings.block_dept_slots_course_codes:
+            if (
+                course_code
+                and course_code in settings.block_dept_slots_course_codes
+                and not settings.lock_blocking_assignments
+            ):
                 continue
 
             teacher_id = str(record.get("teacher_id") or "").strip()
@@ -507,7 +517,11 @@ class DeptSlotBlockingConstraint(Constraint):
 
         for record in records:
             course_code = str(record.get("course_code") or "").strip().upper()
-            if course_code and course_code in settings.block_dept_slots_course_codes:
+            if (
+                course_code
+                and course_code in settings.block_dept_slots_course_codes
+                and not settings.lock_blocking_assignments
+            ):
                 continue
 
             teacher_id = str(record.get("teacher_id") or "").strip()

@@ -36,6 +36,7 @@ from ..utils import (
 	iter_theory_room_variables,
 	register_objective_penalty,
 )
+from ...data.pop_availability import normalize_teacher_id
 
 CohortKey = Tuple[str, Optional[int], Optional[int]]
 SlotKey = Tuple[int, int]
@@ -43,6 +44,10 @@ SlotKey = Tuple[int, int]
 
 def _sanitize(value: object) -> str:
 	return re.sub(r"[^0-9A-Za-z]+", "_", str(value)).strip("_") or "x"
+
+
+def _same_teacher_id(first: object, second: object) -> bool:
+	return normalize_teacher_id(first) == normalize_teacher_id(second)
 
 
 def _maximum_matching_size(vertex_count: int, edges: Mapping[Tuple[int, int], object]) -> int:
@@ -86,6 +91,44 @@ def _maximum_matching_size(vertex_count: int, edges: Mapping[Tuple[int, int], ob
 	return solve((1 << vertex_count) - 1)
 
 
+def _forced_solo_indices_for_odd_cohort(
+	courses: List[Tuple[str, object]],
+	*,
+	course_codes: object = (),
+	course_prefixes: object = (),
+) -> frozenset[int]:
+	"""Choose the configured subject that must remain full-slot in an odd cohort.
+
+	The course stays inside the bundled-theory coverage owner; only its pairing edges
+	are removed.  This is important because excluding it from ``cohort_courses`` would
+	also bypass the ordinary theory coverage constraint for bundle-eligible cohorts.
+	"""
+
+	if len(courses) % 2 == 0:
+		return frozenset()
+	explicit_codes = {
+		str(code).strip().upper()
+		for code in (course_codes or ())
+		if str(code).strip()
+	}
+	prefixes = tuple(
+		str(prefix).strip().upper()
+		for prefix in (course_prefixes or ())
+		if str(prefix).strip()
+	)
+	candidates: List[Tuple[int, str, str, int]] = []
+	for index, (course_id, requirement) in enumerate(courses):
+		code = str(getattr(requirement, "course_code", "")).strip().upper()
+		if code in explicit_codes:
+			candidates.append((0, code, str(course_id), index))
+		elif prefixes and code.startswith(prefixes):
+			candidates.append((1, code, str(course_id), index))
+	if not candidates:
+		return frozenset()
+	# Exact-code exceptions (for example CSBS CB23331) outrank prefix matches.
+	return frozenset({min(candidates)[3]})
+
+
 class BundledTheoryConstraint(Constraint):
 	"""Create bundle decision variables and their coupling constraints."""
 
@@ -104,6 +147,8 @@ class BundledTheoryConstraint(Constraint):
 		# bundle their overlapping hours (min of the two); the longer course's extra
 		# hour(s) schedule solo. Off by default -> only equal-hour pairs bundle.
 		allow_partial = bool(self.params.get("allow_partial_pairing", False))
+		odd_solo_codes = self.params.get("odd_cohort_forced_solo_course_codes", ())
+		odd_solo_prefixes = self.params.get("odd_cohort_forced_solo_course_prefixes", ())
 
 		# Combined lab-block courses are individual (never bundled) — exclude their codes.
 		combined_cfg = getattr(getattr(context.config, "model", None), "combined_lab_courses", {}) or {}
@@ -131,10 +176,17 @@ class BundledTheoryConstraint(Constraint):
 		cohorts_done = 0
 		forced_pair_count = 0
 		forced_singleton_count = 0
+		configured_singleton_count = 0
 
 		for cohort_key, courses in cohort_courses.items():
 			if len(courses) < 2:
 				continue
+			forced_solo_indices = _forced_solo_indices_for_odd_cohort(
+				courses,
+				course_codes=odd_solo_codes,
+				course_prefixes=odd_solo_prefixes,
+			)
+			configured_singleton_count += len(forced_solo_indices)
 
 			# Per-course theory slot literal at each (day, slot).
 			course_slot_map: Dict[str, Dict[SlotKey, cp_model.IntVar]] = {}
@@ -160,13 +212,18 @@ class BundledTheoryConstraint(Constraint):
 				cid_a, req_a = courses[a]
 				base_a = int(getattr(req_a, "required_slots", 0))
 				for b in range(a + 1, len(courses)):
+					if a in forced_solo_indices or b in forced_solo_indices:
+						continue
 					cid_b, req_b = courses[b]
 					base_b = int(getattr(req_b, "required_slots", 0))
 					if base_a <= 0 or base_b <= 0:
 						continue
 					if not allow_partial and base_a != base_b:
 						continue
-					if str(getattr(req_a, "teacher_id", "")) == str(getattr(req_b, "teacher_id", "")):
+					if _same_teacher_id(
+						getattr(req_a, "teacher_id", ""),
+						getattr(req_b, "teacher_id", ""),
+					):
 						continue
 					pair_vars[(a, b)] = model.NewBoolVar(
 						f"bundle_pair_{_sanitize(cid_a)}__{_sanitize(cid_b)}"
@@ -236,7 +293,9 @@ class BundledTheoryConstraint(Constraint):
 
 			# Objective: prefer fewer solos (harmless alongside force_maximal).
 			if solo_penalty:
-				for course_id, _ in courses:
+				for index, (course_id, _requirement) in enumerate(courses):
+					if index in forced_solo_indices:
+						continue
 					register_objective_penalty(
 						context, solo[course_id], weight=solo_penalty, tag="bundled_theory"
 					)
@@ -295,6 +354,7 @@ class BundledTheoryConstraint(Constraint):
 				"force_maximal_pairing": force_maximal,
 				"forced_pairs": forced_pair_count,
 				"forced_singletons": forced_singleton_count,
+				"configured_odd_cohort_singletons": configured_singleton_count,
 			},
 		)
 

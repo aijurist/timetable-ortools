@@ -503,7 +503,10 @@ class VariableCreator:
 			teacher_id = getattr(requirement, "teacher_id", None)
 			if not teacher_id:
 				continue
-			buffer[str(teacher_id)].append(requirement)
+			teacher_key = normalize_teacher_id(teacher_id)
+			if not teacher_key:
+				continue
+			buffer[teacher_key].append(requirement)
 		for teacher_id, entries in buffer.items():
 			grouped[teacher_id] = tuple(
 				sorted(entries, key=lambda item: getattr(item, "course_instance_id", ""))

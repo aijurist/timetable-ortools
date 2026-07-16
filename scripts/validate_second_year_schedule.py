@@ -18,11 +18,15 @@ from typing import Iterable, Mapping, Sequence
 
 import yaml
 
+from src.data.pop_availability import normalize_teacher_id
+
 
 # Lunch accounting intentionally treats the 11:00-11:40 portion before L3 as
 # the section's break, while resource conflicts use the exact clock intervals.
 LAB_TO_THEORY = {"L1": (0, 1), "L2": (2, 3), "L3": (4, 5), "L4": (5, 6), "L5": (7, 8)}
 EXTERNAL_COMBINED_CODES = {"CS23332", "CS23333", "CB23333"}
+ODD_SINGLETON_EXACT_CODES = {"CB23331"}
+ODD_SINGLETON_PREFIXES = ("MA",)
 LUNCH_SLOTS = {3, 4, 5}
 
 
@@ -102,7 +106,11 @@ def _event(
 		day=_day(row.get("day")),
 		start=start,
 		end=end,
-		resource=_norm(row.get(resource_field)),
+		resource=(
+			normalize_teacher_id(row.get(resource_field))
+			if resource_field == "teacher_id"
+			else _norm(row.get(resource_field))
+		),
 		instance_id=_norm(row.get("course_instance_id")),
 		course_code=_norm(row.get("course_code") or row.get("course_code_display")).upper(),
 		domain=domain,
@@ -112,6 +120,20 @@ def _event(
 
 def _dedupe_events(events: Iterable[Event]) -> list[Event]:
 	return list({(event.day, event.start, event.end, event.resource, event.physical_id): event for event in events}.values())
+
+
+def _same_locked_assignment(first: Event, second: Event) -> bool:
+	"""Return true when generated output mirrors its own fixed-lock row."""
+	domains = {first.domain, second.domain}
+	return (
+		bool(first.instance_id)
+		and first.instance_id == second.instance_id
+		and first.day == second.day
+		and first.start == second.start
+		and first.end == second.end
+		and first.resource == second.resource
+		and domains in ({"lab", "fixed_lab"}, {"theory", "fixed_theory"})
+	)
 
 
 def _find_overlaps(first: Sequence[Event], second: Sequence[Event], *, same_collection: bool = False) -> list[dict[str, str]]:
@@ -130,6 +152,8 @@ def _find_overlaps(first: Sequence[Event], second: Sequence[Event], *, same_coll
 				continue
 			if left.physical_id == right.physical_id and left.domain == right.domain:
 				continue
+			if _same_locked_assignment(left, right):
+				continue
 			if not _overlap(left, right):
 				continue
 			key = (
@@ -147,6 +171,57 @@ def _find_overlaps(first: Sequence[Event], second: Sequence[Event], *, same_coll
 				"other": f"{right.course_code}:{right.instance_id} ({right.domain})",
 			}
 	return list(violations.values())
+
+
+def _reserved_lab_assignment_violations(
+	theory: Sequence[Mapping[str, str]],
+	lab: Sequence[Mapping[str, str]],
+	reservations: Sequence[Mapping[str, str]],
+) -> list[str]:
+	"""Require owned reservations and keep their department free in those cells."""
+	violations: list[str] = []
+	for reserved in reservations:
+		day = _day(reserved.get("day"))
+		session = _norm(reserved.get("session_name"))
+		instance = _norm(reserved.get("course_instance_id"))
+		teacher = normalize_teacher_id(reserved.get("teacher_id"))
+		room = _norm(reserved.get("room_id"))
+		department = _norm(reserved.get("department"))
+		start, end = _interval(reserved.get("time_range"))
+
+		matches = [
+			row for row in lab
+			if _day(row.get("day")) == day
+			and _norm(row.get("session_name")) == session
+			and _norm(row.get("course_instance_id")) == instance
+			and normalize_teacher_id(row.get("teacher_id")) == teacher
+			and _norm(row.get("room_id")) == room
+		]
+		if len(matches) != 1:
+			violations.append(
+				f"{instance} {day} {session}: expected exactly one reserved assignment, found {len(matches)}"
+			)
+
+		for row in lab:
+			if (
+				_day(row.get("day")) == day
+				and _norm(row.get("session_name")) == session
+				and _norm(row.get("department")) == department
+				and _norm(row.get("course_instance_id")) != instance
+			):
+				violations.append(
+					f"{instance} {day} {session}: overlaps department lab {_norm(row.get('course_instance_id'))}"
+				)
+
+		for row in theory:
+			if _day(row.get("day")) != day or _norm(row.get("department")) != department:
+				continue
+			theory_start, theory_end = _interval(row.get("time_slot"))
+			if start < theory_end and theory_start < end:
+				violations.append(
+					f"{instance} {day} {session}: overlaps department theory {_norm(row.get('course_instance_id'))}"
+				)
+	return sorted(set(violations))
 
 
 def _pairing_violations(theory: Sequence[Mapping[str, str]]) -> tuple[list[str], int, int]:
@@ -187,8 +262,13 @@ def _pairing_violations(theory: Sequence[Mapping[str, str]]) -> tuple[list[str],
 		]
 		if len(counterparts) != 1:
 			violations.append(f"{instance}<->{partner} at {key[0]} slot {key[1]} has {len(counterparts)} reciprocal rows")
-		elif _norm(counterparts[0].get("teacher_id")) == _norm(row.get("teacher_id")):
-			violations.append(f"{instance}<->{partner}: both 25-minute halves use teacher {_norm(row.get('teacher_id'))}")
+		elif normalize_teacher_id(counterparts[0].get("teacher_id")) == normalize_teacher_id(
+			row.get("teacher_id")
+		):
+			violations.append(
+				f"{instance}<->{partner}: both 25-minute halves use teacher "
+				f"{normalize_teacher_id(row.get('teacher_id'))}"
+			)
 	for instance, partners in partner_sets.items():
 		if len(partners) > 1:
 			violations.append(f"{instance}: partner changes across sessions: {sorted(partners)}")
@@ -302,6 +382,67 @@ def _batch_overlap_violations(lab: Sequence[Mapping[str, str]]) -> list[str]:
 	return violations
 
 
+def _odd_math_singleton_violations(theory: Sequence[Mapping[str, str]]) -> list[str]:
+	"""Verify that an odd cohort leaves its configured maths course unpaired."""
+
+	cohorts: dict[tuple[str, str], dict[str, list[Mapping[str, str]]]] = defaultdict(
+		lambda: defaultdict(list)
+	)
+	for row in theory:
+		instance = _norm(row.get("course_instance_id"))
+		cohort = (_norm(row.get("department")), _section_id(instance))
+		cohorts[cohort][instance].append(row)
+
+	violations: list[str] = []
+	for (department, section), instances in cohorts.items():
+		if len(instances) % 2 == 0:
+			continue
+		candidates: list[tuple[int, str, str]] = []
+		for instance, rows in instances.items():
+			code = _norm(rows[0].get("course_code") or rows[0].get("course_code_display")).upper()
+			if code in ODD_SINGLETON_EXACT_CODES:
+				candidates.append((0, code, instance))
+			elif code.startswith(ODD_SINGLETON_PREFIXES):
+				candidates.append((1, code, instance))
+		if not candidates:
+			continue
+		_priority, code, instance = min(candidates)
+		if any(_truthy(row.get("is_co_scheduled")) for row in instances[instance]):
+			violations.append(
+				f"{department}/{section}: odd-cohort maths {code}:{instance} is Kutty-paired"
+			)
+	return violations
+
+
+def _teacher_day_window_violations(
+	theory: Sequence[Mapping[str, str]],
+	lab: Sequence[Mapping[str, str]],
+	fixed_theory: Sequence[Mapping[str, str]],
+	fixed_lab: Sequence[Mapping[str, str]],
+) -> list[str]:
+	"""Detect ordinary teachers whose generated+locked work spans Mon and Sat."""
+
+	def ordinary(row: Mapping[str, str]) -> bool:
+		code = _norm(row.get("course_code") or row.get("course_code_display")).upper()
+		return code not in EXTERNAL_COMBINED_CODES
+
+	new_teacher_ids = {
+		normalize_teacher_id(row.get("teacher_id"))
+		for row in (*theory, *lab)
+		if ordinary(row) and normalize_teacher_id(row.get("teacher_id"))
+	}
+	days: dict[str, set[str]] = defaultdict(set)
+	for row in (*theory, *lab, *fixed_theory, *fixed_lab):
+		teacher_id = normalize_teacher_id(row.get("teacher_id"))
+		if teacher_id in new_teacher_ids and ordinary(row):
+			days[teacher_id].add(_day(row.get("day")))
+	return [
+		f"teacher {teacher_id}: ordinary schedule uses both Monday and Saturday"
+		for teacher_id, teacher_days in sorted(days.items())
+		if "monday" in teacher_days and "saturday" in teacher_days
+	]
+
+
 def _combined_lab_window_violations(lab: Sequence[Mapping[str, str]]) -> list[str]:
 	violations: list[str] = []
 	for row in lab:
@@ -320,13 +461,26 @@ def validate(args: argparse.Namespace) -> dict[str, object]:
 	lab = _read_csv(args.lab)
 	fixed_theory = _read_csv(args.fixed_theory)
 	fixed_lab = _read_csv(args.fixed_lab)
+	dept_block_lab_path = getattr(args, "dept_block_lab", None)
+	dept_block_lab = (
+		_read_csv(dept_block_lab_path)
+		if dept_block_lab_path is not None and dept_block_lab_path.is_file()
+		else []
+	)
 
 	pairing, stable_pair_count, physical_pair_sessions = _pairing_violations(theory)
 	coverage = _coverage_violations(theory)
+	odd_math_singleton = _odd_math_singleton_violations(theory)
+	teacher_day_window = _teacher_day_window_violations(theory, lab, fixed_theory, fixed_lab)
 	lunch = _lunch_violations(theory, lab)
 	consecutive, consecutive_codes = _consecutive_violations(lab, args.config)
 	batch_overlap = _batch_overlap_violations(lab)
 	combined_lab_window = _combined_lab_window_violations(lab)
+	reserved_lab_assignments = _reserved_lab_assignment_violations(
+		theory,
+		lab,
+		dept_block_lab,
+	)
 
 	new_teacher_events = [
 		_event(row, domain="theory", resource_field="teacher_id", physical_id="theory:" + _norm(row.get("course_instance_id")))
@@ -368,10 +522,13 @@ def validate(args: argparse.Namespace) -> dict[str, object]:
 	violations = {
 		"pairing": pairing,
 		"coverage": coverage,
+		"odd_math_singleton": odd_math_singleton,
+		"teacher_day_window": teacher_day_window,
 		"hard_lunch": lunch,
 		"consecutive_batches": consecutive,
 		"batch_overlap": batch_overlap,
 		"combined_lab_blocked_session": combined_lab_window,
+		"reserved_lab_assignments": reserved_lab_assignments,
 		"fixed_teacher": fixed_teacher_conflicts,
 		"fixed_room": fixed_room_conflicts,
 		"internal_teacher": internal_teacher_conflicts,
@@ -396,6 +553,7 @@ def _parser() -> argparse.ArgumentParser:
 	parser.add_argument("--lab", type=Path, required=True)
 	parser.add_argument("--fixed-theory", type=Path, default=Path("prod/theory_schedule_lock.csv"))
 	parser.add_argument("--fixed-lab", type=Path, default=Path("prod/lab_schedule_lock.csv"))
+	parser.add_argument("--dept-block-lab", type=Path, default=Path("prod/csd-dept_block.csv"))
 	parser.add_argument("--config", type=Path, default=Path("config/scheduler.yaml"))
 	parser.add_argument("--json-output", type=Path)
 	return parser

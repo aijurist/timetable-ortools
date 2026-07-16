@@ -19,7 +19,36 @@ from ..base import Constraint, ConstraintMetadata
 from ..context import ConstraintContext
 from ..schema import ConstraintApplicationResult, ConstraintStatus
 from ..utils import iter_course_timeslot_variables, iter_lab_session_variables, iter_theory_room_variables
+from ...data.pop_availability import normalize_teacher_id
 from ...utils.time_utils import DayNormalizer
+
+
+_WINDOW_ALIASES = {
+	"mf": "mon_fri",
+	"monfri": "mon_fri",
+	"mondayfriday": "mon_fri",
+	"ts": "tue_sat",
+	"tuesat": "tue_sat",
+	"tuesdaysaturday": "tue_sat",
+}
+
+
+def _normalize_forced_windows(raw: object) -> Mapping[str, str]:
+	if raw in (None, ""):
+		return {}
+	if not isinstance(raw, Mapping):
+		raise ValueError("teacher_day_window forced_windows must be a teacher-to-window mapping")
+	normalized: dict[str, str] = {}
+	for raw_teacher_id, raw_window in raw.items():
+		teacher_id = normalize_teacher_id(raw_teacher_id)
+		token = "".join(character for character in str(raw_window or "").lower() if character.isalnum())
+		window = _WINDOW_ALIASES.get(token)
+		if not teacher_id or window is None:
+			raise ValueError(
+				f"Invalid teacher day window assignment: {raw_teacher_id!r}={raw_window!r}"
+			)
+		normalized[teacher_id] = window
+	return normalized
 
 
 @dataclass
@@ -86,7 +115,7 @@ class TeacherDayWindowConstraint(Constraint):
 			context.model.Add(use_mf + use_ts == 1)
 			stats.teachers_constrained += 1
 
-			forced = forced_windows.get(teacher_id)
+			forced = forced_windows.get(normalize_teacher_id(teacher_id))
 			if forced == "mon_fri":
 				context.model.Add(use_mf == 1)
 				stats.teachers_forced_mon_fri += 1
@@ -183,6 +212,7 @@ class TeacherDayWindowConstraint(Constraint):
 		stats: TeacherDayWindowStats,
 	) -> Mapping[str, str]:
 		params = self.params or {}
+		explicit_windows = _normalize_forced_windows(params.get("forced_windows"))
 		lab_csv = str(params.get("window_lab_csv_path") or "").strip()
 		theory_csv = str(params.get("window_theory_csv_path") or "").strip()
 		snapshot_path = (
@@ -193,14 +223,13 @@ class TeacherDayWindowConstraint(Constraint):
 
 		teacher_days: MutableMapping[str, set[str]] = {}
 
+		sources: list[str] = []
 		if lab_csv or theory_csv:
-			stats.forced_window_source = "csv"
+			sources.append("csv")
 			self._load_from_csv(context, lab_csv, theory_csv, teacher_days)
 		elif snapshot_path:
-			stats.forced_window_source = "json"
+			sources.append("json")
 			self._load_from_json(context, snapshot_path, teacher_days)
-		else:
-			return {}
 
 		forced: dict[str, str] = {}
 		for teacher_id, days in teacher_days.items():
@@ -212,6 +241,11 @@ class TeacherDayWindowConstraint(Constraint):
 				forced[teacher_id] = "tue_sat"
 			else:
 				forced[teacher_id] = "ambiguous"
+		if explicit_windows:
+			# The production-wide plan is authoritative over any diagnostic snapshot.
+			forced.update(explicit_windows)
+			sources.append("explicit")
+		stats.forced_window_source = "+".join(sources) or None
 		return forced
 
 	def _load_from_csv(
@@ -315,6 +349,7 @@ def build_teacher_day_window_constraint(
 
 __all__ = [
 	"TeacherDayWindowConstraint",
+	"_normalize_forced_windows",
 	"build_teacher_day_window_constraint",
 ]
 
