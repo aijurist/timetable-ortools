@@ -40,6 +40,7 @@ from ...data.pop_availability import normalize_teacher_id
 
 CohortKey = Tuple[str, Optional[int], Optional[int]]
 SlotKey = Tuple[int, int]
+CourseCodePair = Tuple[str, str]
 
 
 def _sanitize(value: object) -> str:
@@ -89,6 +90,96 @@ def _maximum_matching_size(vertex_count: int, edges: Mapping[Tuple[int, int], ob
 		return best
 
 	return solve((1 << vertex_count) - 1)
+
+
+def _configured_forced_course_pairs(
+	payload: object,
+	*,
+	department: object,
+	section_id: object,
+) -> Optional[Tuple[CourseCodePair, ...]]:
+	"""Return the audited course-code pairs for one department section, if any."""
+
+	if not isinstance(payload, Mapping):
+		return None
+	department_key = str(department or "").strip().casefold()
+	department_payload = next(
+		(
+			value
+			for key, value in payload.items()
+			if str(key or "").strip().casefold() == department_key
+		),
+		None,
+	)
+	if department_payload is None:
+		return None
+	if isinstance(department_payload, Mapping):
+		section_key = str(section_id)
+		raw_pairs = department_payload.get(section_key)
+		if raw_pairs is None:
+			raw_pairs = department_payload.get("*")
+	else:
+		raw_pairs = department_payload
+	if raw_pairs is None:
+		return None
+
+	result: List[CourseCodePair] = []
+	for raw_pair in raw_pairs:
+		if not isinstance(raw_pair, (list, tuple)) or len(raw_pair) != 2:
+			raise ValueError(
+				f"Invalid certified Kutty pair for {department!r}/section {section_id!r}: "
+				f"{raw_pair!r}"
+			)
+		left = str(raw_pair[0]).strip().upper()
+		right = str(raw_pair[1]).strip().upper()
+		if not left or not right or left == right:
+			raise ValueError(
+				f"Invalid certified Kutty course codes for {department!r}/section "
+				f"{section_id!r}: {raw_pair!r}"
+			)
+		result.append((left, right))
+	return tuple(result)
+
+
+def _resolve_forced_pair_edges(
+	courses: List[Tuple[str, object]],
+	pair_vars: Mapping[Tuple[int, int], object],
+	configured_pairs: Tuple[CourseCodePair, ...],
+	*,
+	cohort_key: CohortKey,
+) -> frozenset[Tuple[int, int]]:
+	"""Map audited course-code pairs to candidate graph edges and reject data drift."""
+
+	indices_by_code: Dict[str, List[int]] = defaultdict(list)
+	for index, (_course_id, requirement) in enumerate(courses):
+		code = str(getattr(requirement, "course_code", "")).strip().upper()
+		indices_by_code[code].append(index)
+
+	selected: set[Tuple[int, int]] = set()
+	used_indices: set[int] = set()
+	for left_code, right_code in configured_pairs:
+		left_indices = indices_by_code.get(left_code, [])
+		right_indices = indices_by_code.get(right_code, [])
+		if len(left_indices) != 1 or len(right_indices) != 1:
+			raise ValueError(
+				f"Certified Kutty pair {left_code}+{right_code} does not uniquely match "
+				f"cohort {cohort_key!r}"
+			)
+		left, right = left_indices[0], right_indices[0]
+		if left in used_indices or right in used_indices:
+			raise ValueError(
+				f"Certified Kutty pair reuses a course in cohort {cohort_key!r}: "
+				f"{left_code}+{right_code}"
+			)
+		edge = (left, right) if left < right else (right, left)
+		if edge not in pair_vars:
+			raise ValueError(
+				f"Certified Kutty pair is not staff/load compatible in cohort "
+				f"{cohort_key!r}: {left_code}+{right_code}"
+			)
+		selected.add(edge)
+		used_indices.update((left, right))
+	return frozenset(selected)
 
 
 def _forced_solo_indices_for_odd_cohort(
@@ -149,6 +240,7 @@ class BundledTheoryConstraint(Constraint):
 		allow_partial = bool(self.params.get("allow_partial_pairing", False))
 		odd_solo_codes = self.params.get("odd_cohort_forced_solo_course_codes", ())
 		odd_solo_prefixes = self.params.get("odd_cohort_forced_solo_course_prefixes", ())
+		forced_pairs_payload = self.params.get("forced_course_pairs_by_department", {})
 
 		# Combined lab-block courses are individual (never bundled) — exclude their codes.
 		combined_cfg = getattr(getattr(context.config, "model", None), "combined_lab_courses", {}) or {}
@@ -177,6 +269,7 @@ class BundledTheoryConstraint(Constraint):
 		forced_pair_count = 0
 		forced_singleton_count = 0
 		configured_singleton_count = 0
+		certified_pair_count = 0
 
 		for cohort_key, courses in cohort_courses.items():
 			if len(courses) < 2:
@@ -229,6 +322,28 @@ class BundledTheoryConstraint(Constraint):
 						f"bundle_pair_{_sanitize(cid_a)}__{_sanitize(cid_b)}"
 					)
 					pair_share[(a, b)] = min(base_a, base_b)
+
+			configured_pairs = _configured_forced_course_pairs(
+				forced_pairs_payload,
+				department=cohort_key[0],
+				section_id=cohort_key[2],
+			)
+			if configured_pairs is not None:
+				forced_edges = _resolve_forced_pair_edges(
+					courses,
+					pair_vars,
+					configured_pairs,
+					cohort_key=cohort_key,
+				)
+				maximum_pairs = _maximum_matching_size(len(courses), pair_vars)
+				if len(forced_edges) != maximum_pairs:
+					raise ValueError(
+						f"Certified Kutty pairs cover {len(forced_edges)} edges but cohort "
+						f"{cohort_key!r} requires {maximum_pairs} maximum pairs"
+					)
+				for edge, pair_var in pair_vars.items():
+					model.Add(pair_var == int(edge in forced_edges))
+				certified_pair_count += len(forced_edges)
 
 			# Role: each course is either solo or in exactly one pair.
 			for i, (course_id, _req) in enumerate(courses):
@@ -353,6 +468,7 @@ class BundledTheoryConstraint(Constraint):
 				"eligible_courses": total_courses,
 				"force_maximal_pairing": force_maximal,
 				"forced_pairs": forced_pair_count,
+				"certified_pairs": certified_pair_count,
 				"forced_singletons": forced_singleton_count,
 				"configured_odd_cohort_singletons": configured_singleton_count,
 			},

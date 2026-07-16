@@ -52,3 +52,11 @@ def test_yugasini_civil_window_is_tuesday_to_friday_eight_to_five() -> None:
 
 	assert not availability.allows_theory("Monday", "8:00 - 8:50")
 	assert not availability.allows_theory("Saturday", "8:00 - 8:50")
+
+
+def test_s_kaviya_is_not_pop_restricted() -> None:
+	pop_path = Path(__file__).resolve().parents[3] / "data" / "pop.csv"
+	with pop_path.open(newline="", encoding="utf-8") as handle:
+		availability = build_pop_availability(csv.DictReader(handle))
+
+	assert "1037" not in availability

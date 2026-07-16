@@ -57,6 +57,20 @@ from src.models.model_builder import ModelBuilder
 from src.runtime.extractor import ScheduleExtractor
 
 base = Path.cwd()
+CERTIFIED_KUTTY_PAIRS_PATH = Path(
+    os.environ.get("CERTIFIED_KUTTY_PAIRS", "config/kutty_certified_pairs.json")
+)
+CERTIFIED_KUTTY_PAIRS = (
+    json.loads(CERTIFIED_KUTTY_PAIRS_PATH.read_text(encoding="utf-8"))
+    if CERTIFIED_KUTTY_PAIRS_PATH.is_file()
+    else {}
+)
+CERTIFIED_DEPARTMENT_LABS_PATH = Path(
+    os.environ.get(
+        "CERTIFIED_DEPARTMENT_LABS",
+        "config/department_lab_certified_plan.json",
+    )
+)
 COMB_FAMILY = {"CS23332": "DBMS", "CB23333": "DBMS", "CS23333": "OOPS"}
 COMB = set(COMB_FAMILY)
 COMB_ROOM_POOLS = {
@@ -70,11 +84,55 @@ L2T = {"L1": (0,1), "L2": (2,3), "L3": (3,4,5), "L4": (5,6), "L5": (7,8)}
 def _day_token(value):
     token = str(value or "").strip().lower()
     return {"wednesday": "wed", "thursday": "thur", "friday": "fri"}.get(token, token)
+
+
+def _load_certified_department_labs(path):
+    if not path.is_file():
+        return {}, {}
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    assignments = {}
+    cell_owners = {}
+    for department, instance_map in payload.items():
+        if not isinstance(instance_map, dict):
+            raise ValueError(f"Invalid certified lab department payload: {department!r}")
+        for instance_id, raw_cells in instance_map.items():
+            key = (str(department).strip(), str(instance_id).strip())
+            cells = set()
+            for raw_cell in raw_cells:
+                if not isinstance(raw_cell, list) or len(raw_cell) != 3:
+                    raise ValueError(f"Invalid certified lab cell for {key}: {raw_cell!r}")
+                day = _day_token(raw_cell[0])
+                session = str(raw_cell[1]).strip()
+                room = str(raw_cell[2]).strip()
+                if session not in L2T or not room:
+                    raise ValueError(f"Invalid certified lab cell for {key}: {raw_cell!r}")
+                cell = (room, day, session)
+                owner = cell_owners.get(cell)
+                if owner is not None and owner != key:
+                    raise ValueError(
+                        f"Certified lab cell {cell} is assigned to both {owner} and {key}"
+                    )
+                cell_owners[cell] = key
+                cells.add(cell)
+            assignments[key] = frozenset(cells)
+    return assignments, cell_owners
+
+
+CERTIFIED_DEPARTMENT_LAB_ASSIGNMENTS, CERTIFIED_DEPARTMENT_LAB_CELL_OWNERS = (
+    _load_certified_department_labs(CERTIFIED_DEPARTMENT_LABS_PATH)
+)
 ORDER = [
     # Civil has a narrow B-block theory-room anchor set. Schedule it before the
     # flexible computing departments so only its actual cells are reserved;
     # later departments can then choose from their wider room candidate pools.
     "Civil Engineering",
+    # These departments have certified Kutty course-pair matchings.  Place them
+    # immediately after Civil so flexible earlier departments cannot consume a
+    # different, equally-optimal room/teacher footprint and make the certified
+    # matching infeasible later in the sequential pass.  Biotechnology's B126
+    # ordinary-lab cells are additionally locked by the certified lab plan.
+    "Robotics and Automation",
+    "Biotechnology",
     # Combined-lab departments are kept in the established compact-to-large order.
     # The CSE-only filtered run is independently certified 5/5 feasible; a global
     # eight-department run still needs combined-footprint presolve to remove the
@@ -88,10 +146,10 @@ ORDER = [
     "Computer Science & Engineering A",
     "Computer Science & Engineering B",
     # workshop / single-section lab-dense depts (use dept-private specialised labs, not ANEW)
-    "Robotics and Automation", "Aeronautical Engineering", "Biomedical Engineering",
+    "Aeronautical Engineering", "Biomedical Engineering",
     "Automobile Engineering",
     # flexible remainder
-    "Electronics and Communication Engineering", "Biotechnology", "Mechatronics Engineering",
+    "Electronics and Communication Engineering", "Mechatronics Engineering",
     "Mechanical Engineering", "Food Technology", "Electrical and Electronics Engineering",
     "Chemical Engineering",
 ]
@@ -250,14 +308,22 @@ def build(dept, rseed=1, parallel=None, late_mode="hard", interleave=True, combi
         raise ValueError("Second-year production solves require hard lunch alignment")
     if parallel is None:
         parallel = PARALLEL
+    cse_math_bundle_departments = {
+        "Computer Science & Engineering",
+        "Computer Science & Engineering A",
+        "Computer Science & Engineering B",
+    }
+    odd_solo_prefixes = [] if dept in cse_math_bundle_departments else ["MA"]
     cross = {"bundled_theory": {"enabled": True, "priority": 2, "weight": 1.0,
               "params": {"eligible_cohorts": ["*_S3"], "force_maximal_pairing": True,
                          "solo_penalty_weight": 50, "pair_load_gap_penalty_weight": 5,
                          "enforce_shared_room": True,
                          # For an odd course count, maths remains the one ordinary
-                         # 50-minute singleton. CB23331 is CSBS's maths exception.
-                         "odd_cohort_forced_solo_course_prefixes": ["MA"],
+                         # 50-minute singleton. CSE explicitly keeps maths pairable;
+                         # CB23331 is CSBS's maths exception.
+                         "odd_cohort_forced_solo_course_prefixes": odd_solo_prefixes,
                          "odd_cohort_forced_solo_course_codes": ["CB23331"],
+                         "forced_course_pairs_by_department": CERTIFIED_KUTTY_PAIRS,
                          # per-slot partial pairing: unequal-hour courses bundle their
                          # overlapping hours, the longer course's extra hour(s) go solo.
                          "allow_partial_pairing": True}}}
@@ -432,6 +498,17 @@ def load_seniors():
                 sen_hard_room_slots.add((room_number, day, s))
                 sen_teacher[normalize_teacher_id(r["teacher_id"])].add((day, s))
 load_seniors()
+
+for (room, day, session), owner in CERTIFIED_DEPARTMENT_LAB_CELL_OWNERS.items():
+    conflicts = [
+        slot for slot in L2T.get(session, ())
+        if (room, day, slot) in sen_hard_room_slots
+    ]
+    if conflicts:
+        raise ValueError(
+            f"Certified department lab {owner} conflicts with a production lock at "
+            f"{room}/{day}/{session}: theory slots {conflicts}"
+        )
 
 
 def _collect_combined_preallocation_instances():
@@ -687,6 +764,12 @@ def phase1(rseed):
     for room, day, session in COMBINED_PLAN_OCCUPANCY:
         for slot in L2T.get(session, ()):
             thbusy.add((room, day, slot))
+    # Reserve certified ordinary-lab cells before any department solves. The owner
+    # is allowed through below and locked to the exact instance footprint; every
+    # earlier department must schedule around the reservation.
+    for room, day, session in CERTIFIED_DEPARTMENT_LAB_CELL_OWNERS:
+        for slot in L2T.get(session, ()):
+            thbusy.add((room, day, slot))
     for t, s in sen_teacher.items(): tbusy[t] |= s
     combined_history = list(fixed_combined_records)
     prior_combined_groups = collect_footprint_groups(combined_history, COMB_FAMILY)
@@ -705,6 +788,12 @@ def phase1(rseed):
             phase1_base_terms, phase1_lab_count, phase1_pair_count = _phase1_lab_objective_terms(cm)
             # reserve labs + theory + teachers
             anew_cell = defaultdict(list)   # (rn,aday,sess) -> [(course_code, students, var), ...]
+            certified_expected = {
+                key: cells
+                for key, cells in CERTIFIED_DEPARTMENT_LAB_ASSIGNMENTS.items()
+                if key[0] == dept
+            }
+            certified_matched = {key: set() for key in certified_expected}
             for tid, cmap in lb.assignments.items():
                 for inst, dmap in cmap.items():
                     pat = lb.day_patterns.get(inst, ())
@@ -721,6 +810,21 @@ def phase1(rseed):
                             )
                             for rid, var in rmap.items():
                                 rn = rid2num.get(str(rid), str(rid))
+                                cell = (str(rn), aday, str(sess))
+                                assignment_key = (dept, str(inst).strip())
+                                reserved_owner = CERTIFIED_DEPARTMENT_LAB_CELL_OWNERS.get(cell)
+                                planned_cells = certified_expected.get(assignment_key)
+                                if reserved_owner is not None and reserved_owner != assignment_key:
+                                    model.Add(var == 0)
+                                    continue
+                                if planned_cells is not None:
+                                    selected = cell in planned_cells
+                                    model.Add(var == int(selected))
+                                    if selected:
+                                        certified_matched[assignment_key].add(cell)
+                                        if tconf:
+                                            model.Add(var == 0)
+                                    continue
                                 is_owned_fixed = (
                                     str(getattr(_req, "department", dept) or dept).strip(),
                                     normalize_teacher_id(tid),
@@ -737,6 +841,13 @@ def phase1(rseed):
                                 if rn in big_nums or rn in ANEW_NUMS: anew_cell[(rn, aday, sess)].append((code, students, var))
                                 elif not is_owned_fixed and labbusy.get((rn, aday, sess), 0) >= 1:
                                     model.Add(var == 0)
+            for assignment_key, expected_cells in certified_expected.items():
+                missing_cells = expected_cells - certified_matched[assignment_key]
+                if missing_cells:
+                    raise ValueError(
+                        f"Certified lab footprint is not available in {dept}'s model for "
+                        f"{assignment_key[1]}: {sorted(missing_cells)}"
+                    )
             combined_cell_terms = []
             for (rn, aday, sess), items in anew_cell.items():
                 # block combined-lab cell entirely if seniors (or already-placed depts)
@@ -845,7 +956,13 @@ def phase1(rseed):
         # Late-day and lunch caps both remain hard. External combined courses are
         # exempt from the late-day cap in the constraint itself, so no soft fallback
         # is needed. Half-cohort batch interleave remains enabled.
-        department_late_mode = "soft" if dept == "Computer Science and Design" else "hard"
+        soft_late_departments = {
+            "Computer Science and Design",
+            "Computer Science & Engineering",
+            "Computer Science & Engineering A",
+            "Computer Science & Engineering B",
+        }
+        department_late_mode = "soft" if dept in soft_late_departments else "hard"
         candidates = [(PARALLEL, department_late_mode, True, True, "hard")]
         first = candidates[0]
         used_parallel, used_late, used_il, used_cs, used_lunch = (
