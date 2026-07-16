@@ -1,3 +1,6 @@
+import csv
+from pathlib import Path
+
 from src.data.pop_availability import build_pop_availability
 
 
@@ -22,3 +25,17 @@ def test_rajalakshmy_window_allows_only_tuesday_to_friday_before_three() -> None
 	assert not availability.allows_theory("Monday", "8:00 - 8:50")
 	assert not availability.allows_theory("Saturday", "8:00 - 8:50")
 	assert not availability.allows_theory("Friday", "3:10 - 4:00")
+
+
+def test_indhu_bala_ece_window_is_monday_to_friday_nine_to_three() -> None:
+	pop_path = Path(__file__).resolve().parents[3] / "data" / "pop.csv"
+	with pop_path.open(newline="", encoding="utf-8") as handle:
+		availability = build_pop_availability(csv.DictReader(handle))["351"]
+
+	for day in ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"):
+		assert availability.allows_theory(day, "9:00 - 9:50")
+		assert availability.allows_theory(day, "2:00 - 2:50")
+		assert not availability.allows_theory(day, "8:00 - 8:50")
+		assert not availability.allows_theory(day, "3:10 - 4:00")
+
+	assert not availability.allows_theory("Saturday", "9:00 - 9:50")

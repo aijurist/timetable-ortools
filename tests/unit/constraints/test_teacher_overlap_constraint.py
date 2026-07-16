@@ -302,3 +302,26 @@ def test_prevents_theory_conflicts_for_equivalent_numeric_teacher_ids() -> None:
 
 	solver = cp_model.CpSolver()
 	assert solver.Solve(context.model) == cp_model.INFEASIBLE
+
+
+def test_kutty_half_still_blocks_the_teacher_for_the_full_physical_cell() -> None:
+	context, theory_vars, _ = _build_context(
+		theory_groups={"KUTTY_A": "T1", "KUTTY_B": "T2", "OTHER": "T1"}
+	)
+	pair_literal = context.model.NewBoolVar("bundle_pair_kutty_a_kutty_b")
+	context.extra["bundles"] = {
+		(DEPARTMENT, SEMESTER, 1): {
+			"pairs": [(pair_literal, "KUTTY_A_C", "KUTTY_B_C")],
+		}
+	}
+	constraint = build_teacher_overlap_constraint(metadata=_metadata("kutty_full_cell"))
+	constraint.apply(context)
+
+	context.model.Add(pair_literal == 1)
+	context.model.Add(theory_vars["KUTTY_A"] == 1)
+	context.model.Add(theory_vars["KUTTY_B"] == 1)
+	context.model.Add(theory_vars["OTHER"] == 1)
+
+	# T1 teaches only one 25-minute half of the bundle, but the shared 50-minute
+	# cell is nevertheless unavailable for T1's OTHER course.
+	assert cp_model.CpSolver().Solve(context.model) == cp_model.INFEASIBLE

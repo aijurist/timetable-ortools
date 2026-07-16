@@ -13,6 +13,10 @@ from ..context import ConstraintContext
 from ..schema import ConstraintApplicationResult, ConstraintStatus
 from ..utils import build_presence_literal, register_objective_penalty
 
+# CP-SAT linear expressions use integer coefficients.  Represent teacher load in
+# half-hour units so a normal 50-minute theory cell is 2 units and one Kutty half
+# is 1 unit.  Lab/fixed-schedule hours are converted with the same scale.
+HALF_HOUR_UNITS_PER_HOUR = 2
 HourLiteral = Tuple[cp_model.IntVar, int]
 
 
@@ -112,10 +116,10 @@ class TeacherDailyWorkloadConstraint(Constraint):
 			stats.teachers_considered += 1
 			for day_name in _sort_day_names(day_names, working_days):
 				terms = []
-				for literal in theory_literals.get(teacher_id, {}).get(day_name, tuple()):
-					terms.append((literal, 1))
+				for literal, half_hour_units in theory_literals.get(teacher_id, {}).get(day_name, tuple()):
+					terms.append((literal, half_hour_units))
 				for literal, hours in lab_literals.get(teacher_id, {}).get(day_name, tuple()):
-					terms.append((literal, hours))
+					terms.append((literal, hours * HALF_HOUR_UNITS_PER_HOUR))
 				if not terms:
 					continue
 
@@ -124,8 +128,10 @@ class TeacherDailyWorkloadConstraint(Constraint):
 					fixed_hours = 0
 				if fixed_hours > 0:
 					stats.fixed_hours_applied += 1
-				remaining_capacity = config.max_daily_hours - fixed_hours
-				total_hours = sum(weight * literal for literal, weight in terms)
+				fixed_units = int(fixed_hours) * HALF_HOUR_UNITS_PER_HOUR
+				max_daily_units = config.max_daily_hours * HALF_HOUR_UNITS_PER_HOUR
+				remaining_capacity = max_daily_units - fixed_units
+				total_half_hours = sum(weight * literal for literal, weight in terms)
 				
 				# context.logger.info(
 				# 	"Workload check: Teacher=%s Day=%s Fixed=%d Limit=%d Terms=%d",
@@ -134,9 +140,9 @@ class TeacherDailyWorkloadConstraint(Constraint):
 
 				if fixed_hours > 0:
 					effective_limit = max(0, remaining_capacity)
-					max_overage = 24
+					max_overage = 48
 					overage = context.model.NewIntVar(0, max_overage, f"teacher_daily_overage_fix_{teacher_id}_{day_name}")
-					context.model.Add(total_hours <= effective_limit + overage)
+					context.model.Add(total_half_hours <= effective_limit + overage)
 
 					weight = config.penalty_weight * 2 if config.penalty_weight > 0 else 10
 					register_objective_penalty(
@@ -154,12 +160,12 @@ class TeacherDailyWorkloadConstraint(Constraint):
 				else:
 					stats.hard_constraints += 1
 					if config.mode == "soft" and config.soft_cap_hours:
-						cap = max(0, config.soft_cap_hours - fixed_hours)
-						context.model.Add(total_hours <= cap)
+						cap = max(0, config.soft_cap_hours * HALF_HOUR_UNITS_PER_HOUR - fixed_units)
+						context.model.Add(total_half_hours <= cap)
 						if cap > remaining_capacity:
 							max_overage = cap - remaining_capacity
 							overage = context.model.NewIntVar(0, max_overage, f"teacher_daily_overage_{teacher_id}_{day_name}")
-							context.model.Add(total_hours - remaining_capacity <= overage)
+							context.model.Add(total_half_hours - remaining_capacity <= overage)
 							register_objective_penalty(
 								context,
 								overage,
@@ -169,10 +175,10 @@ class TeacherDailyWorkloadConstraint(Constraint):
 							stats.soft_penalties += 1
 							# context.logger.info("  -> Configured Soft mode applied: cap=%d, buffer_limit=%d", cap, remaining_capacity)
 						else:
-							context.model.Add(total_hours <= remaining_capacity)
+							context.model.Add(total_half_hours <= remaining_capacity)
 							# context.logger.info("  -> Configured Soft mode (hard equivalent) applied: limit=%d", remaining_capacity)
 					else:
-						context.model.Add(total_hours <= remaining_capacity)
+						context.model.Add(total_half_hours <= remaining_capacity)
 						# context.logger.info("  -> Hard constraint applied: limit=%d", remaining_capacity)
 
 
@@ -183,6 +189,9 @@ class TeacherDailyWorkloadConstraint(Constraint):
 				"mode": config.mode,
 				"max_daily_hours": config.max_daily_hours,
 				"soft_cap_hours": config.soft_cap_hours,
+				"workload_unit_minutes": 25,
+				"ordinary_theory_units": HALF_HOUR_UNITS_PER_HOUR,
+				"kutty_half_units": 1,
 			}
 		)
 		return ConstraintApplicationResult(
@@ -197,7 +206,19 @@ class TeacherDailyWorkloadConstraint(Constraint):
 
 def _collect_theory_daily_literals(
 	context: ConstraintContext,
-) -> Mapping[str, Mapping[str, Tuple[cp_model.IntVar, ...]]]:
+) -> Mapping[str, Mapping[str, Tuple[HourLiteral, ...]]]:
+	"""Collect pair-aware theory load in integer half-hour units.
+
+	Every theory course variable initially contributes two units (one ordinary
+	50-minute cell).  For an active Kutty pair, each shared cell then subtracts
+	one unit from each partner teacher, leaving a net load of one unit/0.5 hour.
+	For unequal-load pairs the shorter course identifies exactly the shared cells,
+	so the longer course's remaining solo cells keep their full two-unit weight.
+
+	This weighting is deliberately used only for workload.  ``teacher_overlap``
+	continues to treat the same variable as occupying the full physical cell, which
+	prevents another lab/theory assignment during either half of those 50 minutes.
+	"""
 	assignments = getattr(context.variables.theory, "assignments", {}) or {}
 	day_patterns = getattr(context.variables.theory, "course_day_patterns", {}) or {}
 	course_reqs = getattr(context.variables.theory, "course_requirements", {}) or {}
@@ -206,7 +227,11 @@ def _collect_theory_daily_literals(
 	combined_codes = frozenset(
 		str(c).strip().upper() for c in combined_cfg.get("course_codes", ()) if str(c).strip()
 	)
-	collector: MutableMapping[str, MutableMapping[str, list[cp_model.IntVar]]] = defaultdict(lambda: defaultdict(list))
+	collector: MutableMapping[str, MutableMapping[str, list[HourLiteral]]] = defaultdict(
+		lambda: defaultdict(list)
+	)
+	# course -> (day index, slot index) -> (teacher, day label, course literal)
+	course_slots: Dict[str, Dict[Tuple[int, int], Tuple[str, str, cp_model.IntVar]]] = defaultdict(dict)
 
 	for teacher_id, course_map in assignments.items():
 		for course_id, day_map in course_map.items():
@@ -218,7 +243,46 @@ def _collect_theory_daily_literals(
 				if not slot_map:
 					continue
 				day_name = _safe_day_name(pattern, day_idx)
-				collector[teacher_id][day_name].extend(slot_map.values())
+				for slot_idx, literal in slot_map.items():
+					collector[teacher_id][day_name].append(
+						(literal, HALF_HOUR_UNITS_PER_HOUR)
+					)
+					course_slots[str(course_id)][(int(day_idx), int(slot_idx))] = (
+						str(teacher_id),
+						day_name,
+						literal,
+					)
+
+	# ``bundled_theory`` runs at priority 2 and publishes its pair candidates before
+	# this priority-9 workload constraint.  Each stored pair is short-course first;
+	# for equal loads either course can act as the shared-cell marker.
+	bundles = context.extra.get("bundles")
+	if isinstance(bundles, Mapping):
+		for bundle in bundles.values():
+			if not isinstance(bundle, Mapping):
+				continue
+			for entry in bundle.get("pairs", ()) or ():
+				if not isinstance(entry, (tuple, list)) or len(entry) < 3:
+					continue
+				pair_literal, short_course_id, long_course_id = entry[:3]
+				short_map = course_slots.get(str(short_course_id), {})
+				long_map = course_slots.get(str(long_course_id), {})
+				for coordinate, short_entry in short_map.items():
+					long_entry = long_map.get(coordinate)
+					if long_entry is None:
+						# Such a cell cannot be shared by bundled_theory, so it has no
+						# half-hour discount to apply.
+						continue
+					short_teacher, short_day, short_slot_literal = short_entry
+					long_teacher, long_day, _long_slot_literal = long_entry
+					shared_literal = _build_and_literal(
+						context.model,
+						pair_literal,
+						short_slot_literal,
+						f"teacher_kutty_half_{short_course_id}_{long_course_id}_d{coordinate[0]}_s{coordinate[1]}",
+					)
+					collector[short_teacher][short_day].append((shared_literal, -1))
+					collector[long_teacher][long_day].append((shared_literal, -1))
 
 	return {
 		teacher_id: {
@@ -228,6 +292,21 @@ def _collect_theory_daily_literals(
 		}
 		for teacher_id, day_map in collector.items()
 	}
+
+
+def _build_and_literal(
+	model: cp_model.CpModel,
+	left: cp_model.IntVar,
+	right: cp_model.IntVar,
+	name: str,
+) -> cp_model.IntVar:
+	"""Return an exact Boolean conjunction for two CP-SAT literals."""
+
+	literal = model.NewBoolVar(name)
+	model.Add(literal <= left)
+	model.Add(literal <= right)
+	model.Add(literal >= left + right - 1)
+	return literal
 
 
 
