@@ -39,3 +39,16 @@ def test_indhu_bala_ece_window_is_monday_to_friday_nine_to_three() -> None:
 		assert not availability.allows_theory(day, "3:10 - 4:00")
 
 	assert not availability.allows_theory("Saturday", "9:00 - 9:50")
+
+
+def test_yugasini_civil_window_is_tuesday_to_friday_eight_to_five() -> None:
+	pop_path = Path(__file__).resolve().parents[3] / "data" / "pop.csv"
+	with pop_path.open(newline="", encoding="utf-8") as handle:
+		availability = build_pop_availability(csv.DictReader(handle))["175"]
+
+	for day in ("Tuesday", "Wednesday", "Thursday", "Friday"):
+		assert availability.allows_theory(day, "8:00 - 8:50")
+		assert availability.allows_theory(day, "4:10 - 5:00")
+
+	assert not availability.allows_theory("Monday", "8:00 - 8:50")
+	assert not availability.allows_theory("Saturday", "8:00 - 8:50")
